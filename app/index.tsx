@@ -1,13 +1,15 @@
 import { View, Text, StyleSheet } from 'react-native';
 
-export default function HomeScreen() {
+const HomeScreen = () => {
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Benvenuto in myLoyaltyCards!</Text>
-      <Text style={styles.subtitle}>La tua app per gestire le carte fedeltà</Text>
+      <Text style={styles.title}>Welcome to myLoyaltyCards!</Text>
+      <Text style={styles.subtitle}>Your app for managing loyalty cards</Text>
     </View>
   );
-}
+};
+
+export default HomeScreen;
 
 const styles = StyleSheet.create({
   container: {
