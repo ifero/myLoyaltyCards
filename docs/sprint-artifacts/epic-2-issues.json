@@ -1,0 +1,73 @@
+{
+  "epic": {
+    "name": "Epic 2: Card Management & Barcode Display",
+    "goal": "Users can add their loyalty cards and display their barcodes at checkout — the core product value.",
+    "phase": 1,
+    "frs_covered": "FR1-FR7, FR9-FR13, FR48-FR51, FR59-FR65"
+  },
+  "issues": [
+    {
+      "id": "2.1",
+      "title": "[Epic 2] Story 2.1: Display Card List",
+      "labels": ["epic-2", "story", "phase-1", "mvp", "UI"],
+      "body": "### User Story\n\n**As a** user,\n**I want** to see all my loyalty cards in a clean grid,\n**So that** I can quickly find and access any card.\n\n### Acceptance Criteria\n\n**Given** I have no cards saved\n**When** I view the main screen\n**Then** I see a friendly empty state encouraging me to add my first card\n**And** the empty state includes a prominent \"Add Card\" call-to-action\n\n**Given** I have cards saved\n**When** I view the main screen\n**Then** I see my cards in a responsive grid (2 columns on standard phones, 3 on larger screens)\n**And** each card shows its name and visual identifier (logo or Virtual Logo)\n**And** cards are ordered by creation date (newest first)\n**And** the list scrolls smoothly at 60fps\n**And** the list works completely offline\n\n### Technical Notes\n\n- Phase 1 list order: newest first (createdAt descending)\n- Card schema includes sorting fields (lastUsedAt, usageCount, isFavorite) but they remain inactive until Phase 2\n- Responsive grid: 2 columns (standard phones), 3+ columns (larger phones/tablets)\n\n### Related\n\n- Epic 2: Card Management & Barcode Display\n- Depends on: Story 1.4 (Set Up Local Database), Story 1.5 (Build App Shell)"
+    },
+    {
+      "id": "2.2",
+      "title": "[Epic 2] Story 2.2: Add Card Manually",
+      "labels": ["epic-2", "story", "phase-1", "mvp", "feature"],
+      "body": "### User Story\n\n**As a** user,\n**I want** to add a loyalty card by entering its details,\n**So that** I can digitize any card even without scanning.\n\n### Acceptance Criteria\n\n**Given** I tap the \"+\" button in the header\n**When** I choose to add a card manually\n**Then** I see a form with fields for: card name (required, max 50 chars), barcode number (required)\n**And** I can select a barcode format from a picker (Code128, EAN-13, EAN-8, QR, CODE39, UPCA)\n**And** I can select a color for the card from the 5-color palette\n**And** the barcode field shows a numeric keypad by default\n**And** inline validation shows errors for empty required fields\n\n**Given** I submit a valid card\n**When** the save completes\n**Then** the card is saved to the local database with a client-generated UUID\n**And** I am returned to the card list showing my new card\n**And** I see a brief success confirmation (haptic + checkmark)\n\n### Technical Notes\n\n- Use React Hook Form for form handling\n- Use Zod schema validation (loyaltyCardSchema)\n- Client-generated UUIDs\n- Save to expo-sqlite database within transaction\n- 5-color palette: Blue (#3B82F6), Red (#EF4444), Green (#22C55E), Orange (#F97316), Grey (#6B7280)\n- Haptic feedback on success\n\n### Related\n\n- Epic 2: Card Management & Barcode Display\n- Depends on: Story 1.3 (Core Data Schema), Story 1.4 (Local Database), Story 1.5 (App Shell)"
+    },
+    {
+      "id": "2.3",
+      "title": "[Epic 2] Story 2.3: Scan Barcode with Camera",
+      "labels": ["epic-2", "story", "phase-1", "mvp", "feature", "camera"],
+      "body": "### User Story\n\n**As a** user,\n**I want** to scan a barcode using my camera,\n**So that** I can add cards quickly without typing.\n\n### Acceptance Criteria\n\n**Given** I tap the \"+\" button and choose to scan\n**When** I grant camera permission\n**Then** I see a camera viewfinder with barcode detection active\n**And** there is always a visible \"Enter Manually\" button below the viewfinder\n\n**Given** the camera detects a valid barcode\n**When** detection completes\n**Then** the barcode value is automatically captured\n**And** the detected format is identified (Code128, EAN-13, etc.)\n**And** I am taken to a form pre-filled with the scanned barcode to enter a name\n**And** I can save the card immediately\n\n**Given** camera permission is denied\n**When** I try to scan\n**Then** I see a clear error message explaining why the camera is needed\n**And** I am offered the manual entry option as fallback\n\n### Technical Notes\n\n- Use expo-camera for barcode scanning\n- Support formats: Code128, EAN-13, EAN-8, QR, CODE39, UPCA\n- Auto-detect barcode format\n- Zippy Scanner Interface: viewfinder + auto-save on barcode detection\n- Always provide manual entry fallback\n- Handle permission denial gracefully\n\n### Related\n\n- Epic 2: Card Management & Barcode Display\n- Depends on: Story 2.2 (Add Card Manually)"
+    },
+    {
+      "id": "2.4",
+      "title": "[Epic 2] Story 2.4: Display Virtual Logo",
+      "labels": ["epic-2", "story", "phase-1", "mvp", "UI"],
+      "body": "### User Story\n\n**As a** user,\n**I want** cards without official brand logos to show a distinctive visual,\n**So that** I can quickly recognize any card in my list.\n\n### Acceptance Criteria\n\n**Given** a card does not have a brand logo (brandId is null)\n**When** the card is displayed in the list\n**Then** it shows a Virtual Logo: 1-3 initials from the card name on a colored background\n**And** the background color is the color selected when the card was created\n**And** the initials use high-contrast white text\n**And** the Virtual Logo has the same dimensions as brand logos for consistent grid layout\n\n### Technical Notes\n\n- Virtual Logo Card: 1-3 initials + color background for cards without official logo\n- Extract 1-3 initials from card name (first letter of each word, max 3)\n- Use card's color property for background\n- White text color for contrast\n- Same dimensions as brand logos (consistent grid)\n- Fallback when brandId is null\n\n### Related\n\n- Epic 2: Card Management & Barcode Display\n- Depends on: Story 2.1 (Display Card List)"
+    },
+    {
+      "id": "2.5",
+      "title": "[Epic 2] Story 2.5: Display Barcode (Barcode Flash)",
+      "labels": ["epic-2", "story", "phase-1", "mvp", "feature", "critical"],
+      "body": "### User Story\n\n**As a** user,\n**I want** to display my card's barcode in a format optimized for scanning,\n**So that** the cashier can scan it quickly at checkout.\n\n### Acceptance Criteria\n\n**Given** I tap on a card in my list\n**When** the barcode displays\n**Then** I see the Barcode Flash overlay: full-screen white background with centered barcode\n**And** the barcode is rendered in the correct format (Code128, EAN-13, QR, etc.)\n**And** barcode rendering completes in ≤100ms\n**And** the barcode number is displayed as text below the barcode\n**And** screen brightness is maximized automatically\n**And** I can dismiss the overlay by tapping anywhere or swiping\n\n**Given** I am in a location with no network\n**When** I tap on a card\n**Then** the barcode displays identically (100% offline)\n\n### Technical Notes\n\n- Barcode Flash Overlay: full-screen, white background, centered barcode\n- Multi-format barcode rendering: Code128, EAN-13, EAN-8, QR, CODE39, UPCA\n- Performance target: ≤100ms rendering\n- Max brightness during display\n- Zero-Confirmation Policy: tap leads directly to barcode display\n- Haptic feedback on tap\n- Dismiss: tap anywhere or swipe gesture\n- Complete offline functionality\n- Barcode round-trip testing required in CI\n\n### Related\n\n- Epic 2: Card Management & Barcode Display\n- Depends on: Story 2.1 (Display Card List)"
+    },
+    {
+      "id": "2.6",
+      "title": "[Epic 2] Story 2.6: View Card Details",
+      "labels": ["epic-2", "story", "phase-1", "mvp", "UI"],
+      "body": "### User Story\n\n**As a** user,\n**I want** to view all details of a card,\n**So that** I can see the full barcode number and manage the card.\n\n### Acceptance Criteria\n\n**Given** I am viewing the Barcode Flash\n**When** I tap a \"Details\" button or swipe up\n**Then** I see the card detail screen showing:\n  - Card name\n  - Barcode (displayed and as text for copying)\n  - Barcode format\n  - Card color\n  - Date added\n**And** I see options to Edit or Delete the card\n**And** I can return to the card list easily\n\n### Technical Notes\n\n- Show all card properties\n- Display barcode visually and as copyable text\n- Provide Edit and Delete actions\n- Easy navigation back to list\n- Consider swipe-up gesture from Barcode Flash\n\n### Related\n\n- Epic 2: Card Management & Barcode Display\n- Depends on: Story 2.5 (Display Barcode)"
+    },
+    {
+      "id": "2.7",
+      "title": "[Epic 2] Story 2.7: Edit Card",
+      "labels": ["epic-2", "story", "phase-1", "mvp", "feature"],
+      "body": "### User Story\n\n**As a** user,\n**I want** to update my card's information,\n**So that** I can fix mistakes or update details.\n\n### Acceptance Criteria\n\n**Given** I am viewing a card's details\n**When** I tap \"Edit\"\n**Then** I see a form pre-filled with the card's current values\n**And** I can update the name, barcode, format, and color\n**And** validation rules are the same as when adding\n\n**Given** I save my changes\n**When** the update completes\n**Then** the card is updated in the database with a new `updatedAt` timestamp\n**And** I see the updated card details\n**And** I see a brief success confirmation\n\n### Technical Notes\n\n- Reuse form component from Story 2.2 (Add Card Manually)\n- Pre-fill form with current card values\n- Same validation rules as add\n- Update database within transaction\n- Update `updatedAt` timestamp (ISO 8601 UTC)\n- Success confirmation with haptic feedback\n- Preserve `id` and `createdAt` fields\n\n### Related\n\n- Epic 2: Card Management & Barcode Display\n- Depends on: Story 2.6 (View Card Details), Story 2.2 (Add Card Manually)"
+    },
+    {
+      "id": "2.8",
+      "title": "[Epic 2] Story 2.8: Delete Card",
+      "labels": ["epic-2", "story", "phase-1", "mvp", "feature"],
+      "body": "### User Story\n\n**As a** user,\n**I want** to remove a card I no longer need,\n**So that** my card list stays clean and relevant.\n\n### Acceptance Criteria\n\n**Given** I am viewing a card's details\n**When** I tap \"Delete\"\n**Then** I see a confirmation dialog asking \"Delete [Card Name]?\"\n**And** the dialog has Cancel and Delete buttons\n**And** the Delete button is styled as destructive (red text)\n\n**Given** I confirm deletion\n**When** the delete completes\n**Then** the card is removed from the database\n**And** I am returned to the card list\n**And** the deleted card no longer appears\n\n### Technical Notes\n\n- Confirmation dialog required (prevent accidental deletion)\n- Destructive button style (red text)\n- Delete from database within transaction\n- Navigate back to card list after deletion\n- Card should be immediately removed from list\n- Consider: soft delete vs hard delete (hard delete for MVP)\n\n### Related\n\n- Epic 2: Card Management & Barcode Display\n- Depends on: Story 2.6 (View Card Details)"
+    }
+  ],
+  "metadata": {
+    "total_stories": 8,
+    "suggested_implementation_order": [
+      "2.1 - Display Card List (foundation)",
+      "2.2 - Add Card Manually (foundation)",
+      "2.5 - Display Barcode (core value)",
+      "2.4 - Display Virtual Logo (visual polish)",
+      "2.6 - View Card Details (management)",
+      "2.7 - Edit Card (management)",
+      "2.8 - Delete Card (management)",
+      "2.3 - Scan Barcode with Camera (enhancement)"
+    ],
+    "dependencies": "All stories depend on Epic 1 foundation (data schema, database, app shell)",
+    "tracking_file": "docs/sprint-artifacts/sprint-status.yaml"
+  }
+}
