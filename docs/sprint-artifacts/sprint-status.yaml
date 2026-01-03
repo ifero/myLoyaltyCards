@@ -1,0 +1,150 @@
+# generated: 2026-01-03
+# project: myLoyaltyCards
+# tracking_system: file-system
+# story_location: docs/sprint-artifacts
+
+# STATUS DEFINITIONS:
+# ==================
+# Epic Status:
+#   - backlog: Epic not yet started
+#   - in-progress: Epic actively being worked on
+#   - done: All stories in epic completed
+#
+# Epic Status Transitions:
+#   - backlog → in-progress: Automatically when first story is created (via create-story)
+#   - in-progress → done: Manually when all stories reach 'done' status
+#
+# Story Status:
+#   - backlog: Story only exists in epic file
+#   - drafted: Story file created in stories folder
+#   - ready-for-dev: Draft approved and story context created
+#   - in-progress: Developer actively working on implementation
+#   - review: Ready for code review (via Dev's code-review workflow)
+#   - done: Story completed
+#
+# Retrospective Status:
+#   - optional: Can be completed but not required
+#   - completed: Retrospective has been done
+#
+# WORKFLOW NOTES:
+# ===============
+# - Epic transitions to 'in-progress' automatically when first story is created
+# - Stories can be worked in parallel if team capacity allows
+# - SM typically drafts next story after previous one is 'done' to incorporate learnings
+# - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
+
+generated: 2026-01-03
+project: myLoyaltyCards
+tracking_system: file-system
+story_location: docs/sprint-artifacts
+
+development_status:
+  # ============================================
+  # PHASE 1 - CORE MVP
+  # ============================================
+
+  # Epic 1: Project Foundation & App Shell
+  epic-1: backlog
+  1-1-configure-development-environment: backlog
+  1-2-implement-design-system-foundation: backlog
+  1-3-create-core-data-schema: backlog
+  1-4-set-up-local-database: backlog
+  1-5-build-app-shell-with-header-navigation: backlog
+  epic-1-retrospective: optional
+
+  # Epic 2: Card Management & Barcode Display
+  epic-2: backlog
+  2-1-display-card-list: backlog
+  2-2-add-card-manually: backlog
+  2-3-scan-barcode-with-camera: backlog
+  2-4-display-virtual-logo: backlog
+  2-5-display-barcode-barcode-flash: backlog
+  2-6-view-card-details: backlog
+  2-7-edit-card: backlog
+  2-8-delete-card: backlog
+  epic-2-retrospective: optional
+
+  # Epic 3: Italian Brand Catalogue
+  epic-3: backlog
+  3-1-create-italian-catalogue-data: backlog
+  3-2-browse-catalogue-grid: backlog
+  3-3-add-card-from-catalogue: backlog
+  3-4-cache-catalogue-for-offline: backlog
+  3-5-update-catalogue-via-ota: backlog
+  epic-3-retrospective: optional
+
+  # Epic 4: Onboarding Experience
+  epic-4: backlog
+  4-1-welcome-screen: backlog
+  4-2-first-card-guidance: backlog
+  4-3-help-faq-access: backlog
+  epic-4-retrospective: optional
+
+  # Epic 5: Apple Watch App
+  epic-5: backlog
+  5-1-create-watchos-project-structure: backlog
+  5-2-generate-catalogue-for-watchos: backlog
+  5-3-implement-card-list-carbon-ui: backlog
+  5-4-display-barcode-on-watch: backlog
+  5-5-store-cards-locally-on-watch: backlog
+  5-6-sync-cards-from-phone: backlog
+  5-7-create-watch-complication: backlog
+  epic-5-retrospective: optional
+
+  # Epic 6: User Authentication & Privacy
+  epic-6: backlog
+  6-1-set-up-supabase-backend: backlog
+  6-2-implement-guest-mode: backlog
+  6-3-create-account-with-email: backlog
+  6-4-sign-in-with-email: backlog
+  6-5-sign-in-with-apple: backlog
+  6-6-sign-in-with-google: backlog
+  6-7-upgrade-guest-to-account: backlog
+  6-8-password-reset: backlog
+  6-9-logout: backlog
+  6-10-delete-account: backlog
+  6-11-privacy-consent: backlog
+  epic-6-retrospective: optional
+
+  # Epic 7: Cloud Synchronization
+  epic-7: backlog
+  7-1-upload-cards-to-cloud: backlog
+  7-2-download-cards-from-cloud: backlog
+  7-3-sync-card-changes: backlog
+  7-4-implement-delta-sync: backlog
+  7-5-handle-offline-queue: backlog
+  7-6-resolve-sync-conflicts: backlog
+  7-7-display-sync-status: backlog
+  epic-7-retrospective: optional
+
+  # Epic 8: Settings & Preferences
+  epic-8: backlog
+  8-1-create-settings-screen: backlog
+  8-2-toggle-theme-light-dark: backlog
+  8-3-select-language: backlog
+  8-4-export-data-as-json: backlog
+  8-5-display-app-info: backlog
+  epic-8-retrospective: optional
+
+  # ============================================
+  # PHASE 2 - ENHANCEMENTS
+  # ============================================
+
+  # Epic 9: Smart Card Sorting
+  epic-9: backlog
+  9-1-track-card-usage: backlog
+  9-2-mark-card-as-favorite: backlog
+  9-3-implement-sorting-algorithm: backlog
+  9-4-sync-sorting-to-watch: backlog
+  epic-9-retrospective: optional
+
+  # Epic 10: Wear OS App
+  epic-10: backlog
+  10-1-create-wear-os-project-structure: backlog
+  10-2-generate-catalogue-for-wear-os: backlog
+  10-3-implement-card-list-carbon-ui: backlog
+  10-4-display-barcode-on-wear-os: backlog
+  10-5-store-cards-locally: backlog
+  10-6-sync-cards-from-phone: backlog
+  epic-10-retrospective: optional
+
