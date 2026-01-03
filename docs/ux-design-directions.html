@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>myLoyaltyCards - Design Directions Showcase</title>
+    <style>
+        :root {
+            --sage: #73A973;
+            --black: #000000;
+            --charcoal: #121212;
+            --off-white: #F8F9F8;
+            --white: #FFFFFF;
+            --grey: #8E8E93;
+            --spacing: 8px;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: #f0f0f0;
+            color: #333;
+            margin: 0;
+            padding: 40px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        h1 { margin-bottom: 10px; }
+        p.subtitle { margin-bottom: 40px; color: #666; text-align: center; max-width: 600px; }
+
+        .container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 40px;
+            width: 100%;
+            max-width: 1200px;
+        }
+
+        .direction-card {
+            background: white;
+            padding: 24px;
+            border-radius: 16px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .direction-header {
+            border-bottom: 1px solid #eee;
+            padding-bottom: 12px;
+        }
+
+        .direction-title {
+            font-size: 20px;
+            font-weight: bold;
+            color: var(--sage);
+            margin: 0;
+        }
+
+        .direction-desc {
+            font-size: 14px;
+            color: #666;
+            margin-top: 4px;
+        }
+
+        /* Device Mockups */
+        .mockup-container {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            padding: 20px;
+            background: #fafafa;
+            border-radius: 12px;
+        }
+
+        .phone-mockup {
+            width: 160px;
+            height: 320px;
+            background: var(--black);
+            border: 8px solid #333;
+            border-radius: 24px;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .watch-mockup {
+            width: 100px;
+            height: 120px;
+            background: var(--black);
+            border: 6px solid #333;
+            border-radius: 20px;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            align-self: center;
+        }
+
+        /* UI Elements */
+        .ui-header { height: 30px; border-bottom: 1px solid #333; display: flex; align-items: center; padding: 0 10px; font-size: 10px; color: white; }
+        .ui-content { flex: 1; padding: 10px; overflow: hidden; }
+
+        /* Direction Specific Styles */
+        
+        /* D1: Carbon Utility */
+        .d1 .card { background: #1a1a1a; border-radius: 4px; padding: 8px; margin-bottom: 6px; display: flex; align-items: center; gap: 8px; border-left: 3px solid var(--sage); }
+        .d1 .card-name { font-size: 10px; color: white; font-weight: 500; }
+        .d1 .watch-card { background: #1a1a1a; padding: 6px; border-radius: 4px; margin-bottom: 4px; border-left: 2px solid var(--sage); font-size: 8px; color: white; }
+
+        /* D2: Soft Sage Grid */
+        .d2 .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+        .d2 .card { background: var(--sage); border-radius: 12px; height: 50px; display: flex; align-items: flex-end; padding: 8px; }
+        .d2 .card-name { font-size: 9px; color: white; font-weight: bold; }
+        .d2 .watch-card { background: var(--sage); height: 30px; border-radius: 10px; margin-bottom: 6px; padding: 4px; font-size: 8px; color: white; font-weight: bold; }
+
+        /* D3: Glancable Stack */
+        .d3 .stack { position: relative; margin-top: 10px; }
+        .d3 .card { height: 100px; border-radius: 12px; background: #333; border: 1px solid #444; position: absolute; width: 90%; transition: transform 0.3s; }
+        .d3 .card:nth-child(1) { transform: translateY(0); z-index: 3; background: var(--sage); }
+        .d3 .card:nth-child(2) { transform: translateY(20px); z-index: 2; opacity: 0.8; }
+        .d3 .card:nth-child(3) { transform: translateY(40px); z-index: 1; opacity: 0.6; }
+        .d3 .watch-stack { display: flex; flex-direction: column; gap: -10px; }
+        .d3 .watch-card { height: 40px; background: var(--sage); border-radius: 8px; margin-bottom: -25px; border: 1px solid rgba(0,0,0,0.2); font-size: 8px; color: white; padding: 4px; }
+
+        /* D4: High Contrast Punch */
+        .d4 .card { background: white; border-radius: 0; padding: 12px; margin-bottom: 8px; border-bottom: 4px solid var(--sage); }
+        .d4 .card-name { color: black; font-weight: 900; font-size: 12px; text-transform: uppercase; }
+        .d4 .watch-card { background: white; padding: 10px; margin-bottom: 6px; border-left: 6px solid var(--sage); color: black; font-weight: bold; font-size: 10px; }
+
+        .tag {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 100px;
+            font-size: 12px;
+            background: #eee;
+            margin-right: 5px;
+        }
+        .tag-sage { background: var(--sage); color: white; }
+
+        .footer {
+            margin-top: 60px;
+            padding: 20px;
+            text-align: center;
+            color: #999;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>myLoyaltyCards</h1>
+    <p class="subtitle">Design Direction Showcase: Exploring the "Fumble-Free Flash" Experience with Accessible Sage theme.</p>
+
+    <div class="container">
+        
+        <!-- Direction 1 -->
+        <div class="direction-card d1">
+            <div class="direction-header">
+                <p class="direction-title">1. The Carbon Utility</p>
+                <p class="direction-desc">Precision-engineered for speed and battery life.</p>
+            </div>
+            <div class="mockup-container">
+                <div class="phone-mockup">
+                    <div class="ui-header">myLoyaltyCards</div>
+                    <div class="ui-content">
+                        <div class="card"><div class="card-name">Esselunga Fìdaty</div></div>
+                        <div class="card"><div class="card-name">Conad Card</div></div>
+                        <div class="card"><div class="card-name">Coop Membership</div></div>
+                        <div class="card"><div class="card-name">Carrefour Pay</div></div>
+                    </div>
+                </div>
+                <div class="watch-mockup">
+                    <div class="ui-content">
+                        <div class="watch-card">Esselunga</div>
+                        <div class="watch-card">Conad</div>
+                        <div class="watch-card">Coop</div>
+                    </div>
+                </div>
+            </div>
+            <div>
+                <span class="tag">Minimalist</span>
+                <span class="tag">OLED-Ready</span>
+                <span class="tag">Dense</span>
+            </div>
+        </div>
+
+        <!-- Direction 2 -->
+        <div class="direction-card d2">
+            <div class="direction-header">
+                <p class="direction-title">2. Soft Sage Grid</p>
+                <p class="direction-desc">Approachable, modern, and lifestyle-focused.</p>
+            </div>
+            <div class="mockup-container">
+                <div class="phone-mockup">
+                    <div class="ui-header">Wallet</div>
+                    <div class="ui-content">
+                        <div class="grid">
+                            <div class="card"><div class="card-name">Esselunga</div></div>
+                            <div class="card"><div class="card-name">Conad</div></div>
+                            <div class="card"><div class="card-name">Coop</div></div>
+                            <div class="card"><div class="card-name">Decathlon</div></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="watch-mockup">
+                    <div class="ui-content">
+                        <div class="watch-card">Esselunga</div>
+                        <div class="watch-card">Conad</div>
+                    </div>
+                </div>
+            </div>
+            <div>
+                <span class="tag">Friendly</span>
+                <span class="tag">Grid</span>
+                <span class="tag tag-sage">Modern</span>
+            </div>
+        </div>
+
+        <!-- Direction 3 -->
+        <div class="direction-card d3">
+            <div class="direction-header">
+                <p class="direction-title">3. The Glancable Stack</p>
+                <p class="direction-desc">Familiar wallet-style interaction for muscle memory.</p>
+            </div>
+            <div class="mockup-container">
+                <div class="phone-mockup">
+                    <div class="ui-header">Passes</div>
+                    <div class="ui-content">
+                        <div class="stack">
+                            <div class="card"></div>
+                            <div class="card"></div>
+                            <div class="card"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="watch-mockup">
+                    <div class="ui-content">
+                        <div class="watch-stack">
+                            <div class="watch-card">Esselunga</div>
+                            <div class="watch-card">Conad</div>
+                            <div class="watch-card">Coop</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div>
+                <span class="tag">Tactile</span>
+                <span class="tag">Familiar</span>
+                <span class="tag">Fast</span>
+            </div>
+        </div>
+
+        <!-- Direction 4 -->
+        <div class="direction-card d4">
+            <div class="direction-header">
+                <p class="direction-title">4. High Contrast Punch</p>
+                <p class="direction-desc">Bold and authoritative. Readable in any light.</p>
+            </div>
+            <div class="mockup-container">
+                <div class="phone-mockup" style="background: #eee;">
+                    <div class="ui-header" style="color: black; border-bottom: 2px solid black;">CARDS</div>
+                    <div class="ui-content">
+                        <div class="card"><div class="card-name">ESSELUNGA</div></div>
+                        <div class="card"><div class="card-name">CONAD</div></div>
+                        <div class="card"><div class="card-name">COOP</div></div>
+                    </div>
+                </div>
+                <div class="watch-mockup">
+                    <div class="ui-content">
+                        <div class="watch-card">ESSELUNGA</div>
+                        <div class="watch-card">CONAD</div>
+                    </div>
+                </div>
+            </div>
+            <div>
+                <span class="tag">Bold</span>
+                <span class="tag">High Contrast</span>
+                <span class="tag">Accessible</span>
+            </div>
+        </div>
+
+    </div>
+
+    <div class="footer">
+        Generated by Sally - Senior UX Designer | BMAD BMM Workflow
+    </div>
+
+</body>
+</html>
+

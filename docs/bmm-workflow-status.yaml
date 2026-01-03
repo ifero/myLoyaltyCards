@@ -1,0 +1,126 @@
+# Workflow Status Template
+
+# This tracks progress through BMM methodology Analysis, Planning, and Solutioning phases.
+# Implementation phase is tracked separately in sprint-status.yaml
+
+# STATUS DEFINITIONS:
+# ==================
+# Initial Status (before completion):
+#   - required: Must be completed to progress
+#   - optional: Can be completed but not required
+#   - recommended: Strongly suggested but not required
+#   - conditional: Required only if certain conditions met (e.g., if_has_ui)
+#
+# Completion Status:
+#   - {file-path}: File created/found (e.g., "docs/product-brief.md")
+#   - skipped: Optional/conditional workflow that was skipped
+
+generated: "2025-12-11 17:33:39"
+project: "myLoyaltyCards"
+project_type: "mobile-app"
+selected_track: "bmad-method"
+field_type: "greenfield"
+workflow_path: ".bmad/bmm/workflows/workflow-status/paths/method-greenfield.yaml"
+workflow_status:
+  # Phase 0: Discovery (Optional)
+  - id: "brainstorm-project"
+    phase: 0
+    name: "Brainstorm Project"
+    status: "optional"
+    agent: "analyst"
+    command: "brainstorm-project"
+    included: true
+    note: "Uses core brainstorming workflow with project context template"
+  
+  - id: "research"
+    phase: 0
+    name: "Research"
+    status: "optional"
+    agent: "analyst"
+    command: "research"
+    included: true
+    note: "Can have multiple research workflows"
+  
+  - id: "product-brief"
+    phase: 0
+    name: "Product Brief"
+    status: "optional"
+    agent: "analyst"
+    command: "product-brief"
+    included: true
+    note: "Recommended for greenfield Method projects"
+  
+  # Phase 1: Planning
+  - id: "prd"
+    phase: 1
+    name: "Product Requirements Document"
+    status: "docs/prd.md"
+    agent: "pm"
+    command: "prd"
+    output: "Product Requirements Document with FRs and NFRs"
+    completed: "2025-12-22"
+  
+  - id: "create-ux-design"
+    phase: 1
+    name: "UX Design"
+    status: "docs/ux-design-specification.md"
+    agent: "ux-designer"
+    command: "create-ux-design"
+    completed: "2025-12-22"
+    note: "Determined after PRD - user/agent decides if needed"
+  
+  # Phase 2: Solutioning
+  - id: "create-architecture"
+    phase: 2
+    name: "Architecture"
+    status: "docs/architecture.md"
+    agent: "architect"
+    command: "create-architecture"
+    output: "System architecture document"
+    completed: "2025-12-31"
+    note: "Complete system design for greenfield projects"
+  
+  - id: "create-epics-and-stories"
+    phase: 2
+    name: "Create Epics and Stories"
+    status: "docs/epics.md"
+    agent: "pm"
+    command: "create-epics-and-stories"
+    completed: "2025-01-03"
+    note: "Required: Break down PRD into implementable epics and stories with full context (PRD + UX + Architecture)"
+  
+  - id: "test-design"
+    phase: 2
+    name: "Test Design"
+    status: "recommended"
+    agent: "tea"
+    command: "test-design"
+    output: "System-level testability review"
+    note: "Testability assessment before gate check - auto-detects system-level mode"
+  
+  - id: "validate-architecture"
+    phase: 2
+    name: "Validate Architecture"
+    status: "optional"
+    agent: "architect"
+    command: "validate-architecture"
+    note: "Quality check for architecture completeness"
+  
+  - id: "implementation-readiness"
+    phase: 2
+    name: "Implementation Readiness"
+    status: "required"
+    agent: "architect"
+    command: "implementation-readiness"
+    note: "Validates PRD + Architecture + Epics + UX (optional)"
+  
+  # Phase 3: Implementation
+  - id: "sprint-planning"
+    phase: 3
+    name: "Sprint Planning"
+    status: "docs/sprint-artifacts/sprint-status.yaml"
+    agent: "sm"
+    command: "sprint-planning"
+    completed: "2026-01-03"
+    note: "Creates sprint plan - subsequent work tracked there"
+
