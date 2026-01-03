@@ -1,14 +1,37 @@
+import '../global.css';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 
-const RootLayout = () => {
+import { ThemeProvider, useTheme } from '@/shared/theme';
+
+const RootLayoutContent = () => {
+  const { isDark, theme } = useTheme();
+
   return (
     <>
-      <Stack>
+      <Stack
+        screenOptions={{
+          headerStyle: {
+            backgroundColor: theme.surface,
+          },
+          headerTintColor: theme.textPrimary,
+          contentStyle: {
+            backgroundColor: theme.background,
+          },
+        }}
+      >
         <Stack.Screen name="index" options={{ title: 'myLoyaltyCards' }} />
       </Stack>
-      <StatusBar style="auto" />
+      <StatusBar style={isDark ? 'light' : 'dark'} />
     </>
+  );
+};
+
+const RootLayout = () => {
+  return (
+    <ThemeProvider>
+      <RootLayoutContent />
+    </ThemeProvider>
   );
 };
 
