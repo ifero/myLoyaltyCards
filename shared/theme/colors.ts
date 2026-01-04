@@ -8,6 +8,8 @@
  * - Light/dark mode semantic colors
  */
 
+import { CARD_COLOR_KEYS as CARD_COLOR_KEYS_FROM_SCHEMA, type CardColor } from '@/core/schemas';
+
 /**
  * Primary Sage Green color palette
  */
@@ -28,7 +30,7 @@ export const SAGE_COLORS = {
  * 5-color card palette for Virtual Logo system
  * Used when cards don't have official logos
  */
-export const CARD_COLORS = {
+export const CARD_COLORS: Record<CardColor, string> = {
   blue: '#3B82F6',
   red: '#EF4444',
   green: '#22C55E',
@@ -38,19 +40,15 @@ export const CARD_COLORS = {
 
 /**
  * Card color keys for type safety
+ * Re-exported from core/schemas (single source of truth)
  */
-export type CardColorKey = keyof typeof CARD_COLORS;
+export type CardColorKey = CardColor;
 
 /**
  * Array of card color keys for iteration
+ * Re-exported from core/schemas (single source of truth)
  */
-export const CARD_COLOR_KEYS: CardColorKey[] = [
-  'blue',
-  'red',
-  'green',
-  'orange',
-  'grey',
-];
+export const CARD_COLOR_KEYS = CARD_COLOR_KEYS_FROM_SCHEMA;
 
 /**
  * OLED Black for dark mode backgrounds

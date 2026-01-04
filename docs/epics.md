@@ -400,7 +400,9 @@ This document provides the complete epic and story breakdown for myLoyaltyCards,
 
 ---
 
-### Story 1.3: Create Core Data Schema
+### Story 1.3: Create Core Data Schema ✅
+
+**Status:** Complete
 
 **As a** developer,
 **I want** a single source of truth for data structures,

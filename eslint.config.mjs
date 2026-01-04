@@ -38,6 +38,8 @@ export default [
     },
     rules: {
       ...tseslint.configs.recommended.rules,
+      // TypeScript handles undefined variables better than ESLint
+      'no-undef': 'off',
       // Feature boundary enforcement
       'boundaries/element-types': [
         'error',
