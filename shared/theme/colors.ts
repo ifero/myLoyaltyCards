@@ -53,11 +53,28 @@ export const CARD_COLOR_KEYS: CardColorKey[] = [
 ];
 
 /**
+ * OLED Black for dark mode backgrounds
+ */
+export const OLED_COLORS = {
+  black: '#000000',
+} as const;
+
+/**
+ * Off-white for light mode backgrounds
+ */
+export const OFFWHITE_COLORS = {
+  DEFAULT: '#FAFAFA',
+  50: '#FFFFFF',
+  100: '#FAFAFA',
+  200: '#F5F5F5',
+} as const;
+
+/**
  * Light theme colors
  */
 export const LIGHT_THEME = {
-  background: '#FAFAFA', // Off-white
-  surface: '#FFFFFF',
+  background: OFFWHITE_COLORS.DEFAULT,
+  surface: OFFWHITE_COLORS[50],
   textPrimary: '#1F2937',
   textSecondary: '#6B7280',
   primary: SAGE_COLORS[500],
@@ -70,7 +87,7 @@ export const LIGHT_THEME = {
  * Dark theme colors (OLED optimized)
  */
 export const DARK_THEME = {
-  background: '#000000', // OLED black
+  background: OLED_COLORS.black,
   surface: '#1A1A1A',
   textPrimary: '#FFFFFF',
   textSecondary: '#9CA3AF',
@@ -101,4 +118,37 @@ export const SEMANTIC_COLORS = {
 export const BARCODE_FLASH = {
   background: '#FFFFFF',
   foreground: '#000000',
+} as const;
+
+/**
+ * Tailwind-compatible background colors for theming
+ * Used in tailwind.config.js to avoid duplication
+ */
+export const TAILWIND_BACKGROUND_COLORS = {
+  light: LIGHT_THEME.background,
+  dark: DARK_THEME.background,
+} as const;
+
+/**
+ * Tailwind-compatible surface colors for theming
+ * Used in tailwind.config.js to avoid duplication
+ */
+export const TAILWIND_SURFACE_COLORS = {
+  light: LIGHT_THEME.surface,
+  dark: DARK_THEME.surface,
+} as const;
+
+/**
+ * Tailwind-compatible text colors for theming
+ * Used in tailwind.config.js to avoid duplication
+ */
+export const TAILWIND_TEXT_COLORS = {
+  primary: {
+    light: LIGHT_THEME.textPrimary,
+    dark: DARK_THEME.textPrimary,
+  },
+  secondary: {
+    light: LIGHT_THEME.textSecondary,
+    dark: DARK_THEME.textSecondary,
+  },
 } as const;
