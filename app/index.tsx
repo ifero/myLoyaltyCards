@@ -31,7 +31,7 @@ const HomeScreen = () => {
         {CARD_COLOR_KEYS.map((colorKey) => (
           <Pressable
             key={colorKey}
-            // Minimum touch target: 44x44px (min-w-touch min-h-touch)
+            // Minimum touch target: 44x44px (w-5.5 and h-5.5 map to 44px)
             className="w-5.5 h-5.5 rounded-lg items-center justify-center"
             style={{ backgroundColor: CARD_COLORS[colorKey] }}
             accessibilityLabel={`${colorKey} card color`}
