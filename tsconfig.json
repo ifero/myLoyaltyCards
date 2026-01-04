@@ -7,12 +7,28 @@
     "noFallthroughCasesInSwitch": true,
     "baseUrl": ".",
     "paths": {
-      "@/*": ["./*"],
-      "@/features/*": ["features/*"],
-      "@/shared/*": ["shared/*"],
-      "@/core/*": ["core/*"],
-      "@/catalogue/*": ["catalogue/*"]
+      "@/*": [
+        "./*"
+      ],
+      "@/features/*": [
+        "features/*"
+      ],
+      "@/shared/*": [
+        "shared/*"
+      ],
+      "@/core/*": [
+        "core/*"
+      ],
+      "@/catalogue/*": [
+        "catalogue/*"
+      ]
     }
   },
-  "include": ["**/*.ts", "**/*.tsx", ".expo/types/**/*.ts", "expo-env.d.ts"]
+  "include": [
+    "**/*.ts",
+    "**/*.tsx",
+    ".expo/types/**/*.ts",
+    "expo-env.d.ts",
+    "nativewind-env.d.ts"
+  ]
 }
