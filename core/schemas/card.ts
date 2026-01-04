@@ -7,7 +7,7 @@
  * across all platforms (phone, watch, cloud).
  */
 
-import { z } from 'zod';
+import * as z from 'zod';
 
 /**
  * Barcode format enum - supported barcode types
@@ -23,10 +23,16 @@ export const barcodeFormatSchema = z.enum([
 ]);
 
 /**
- * Card color enum - 5-color palette for Virtual Logo system
+ * Card color keys - 5-color palette for Virtual Logo system
  * Used when cards don't have official brand logos
+ * This is the canonical list - shared/theme imports from here
  */
-export const cardColorSchema = z.enum(['blue', 'red', 'green', 'orange', 'grey']);
+export const CARD_COLOR_KEYS = ['blue', 'red', 'green', 'orange', 'grey'] as const;
+
+/**
+ * Card color enum - derived from CARD_COLOR_KEYS
+ */
+export const cardColorSchema = z.enum(CARD_COLOR_KEYS);
 
 /**
  * Loyalty Card Schema - Source of Truth

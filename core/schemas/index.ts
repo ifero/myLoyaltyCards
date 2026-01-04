@@ -6,13 +6,14 @@
  * for safe parsing with error logging.
  */
 
-import { z } from 'zod';
+import * as z from 'zod';
 
 // Re-export all card-related schemas and types
 export {
   loyaltyCardSchema,
   barcodeFormatSchema,
   cardColorSchema,
+  CARD_COLOR_KEYS,
   type LoyaltyCard,
   type BarcodeFormat,
   type CardColor,
