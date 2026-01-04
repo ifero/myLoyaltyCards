@@ -422,7 +422,9 @@ This document provides the complete epic and story breakdown for myLoyaltyCards,
 
 ---
 
-### Story 1.4: Set Up Local Database
+### Story 1.4: Set Up Local Database ✅
+
+**Status:** Complete
 
 **As a** user,
 **I want** my cards stored reliably on my device,
