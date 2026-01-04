@@ -66,10 +66,10 @@ export default [
               from: 'shared',
               allow: ['core', 'catalogue'],
             },
-            // core can import from catalogue
+            // core can import from catalogue and other core modules
             {
               from: 'core',
-              allow: ['catalogue'],
+              allow: ['catalogue', 'core'],
             },
             // catalogue is standalone
             {
