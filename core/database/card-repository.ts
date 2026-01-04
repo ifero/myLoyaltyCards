@@ -49,13 +49,13 @@ function rowToCard(row: CardRow): LoyaltyCard {
 
 /**
  * Get all cards from the database
- * Orders by createdAt descending (newest first) for MVP
+ * Orders alphabetically by name for easier navigation
  */
 export async function getAllCards(
   db: SQLiteDatabase = getDatabase()
 ): Promise<LoyaltyCard[]> {
   const rows = await db.getAllAsync<CardRow>(
-    'SELECT * FROM loyalty_cards ORDER BY created_at DESC'
+    'SELECT * FROM loyalty_cards ORDER BY name ASC'
   );
   return rows.map(rowToCard);
 }
