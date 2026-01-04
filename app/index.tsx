@@ -1,60 +1,40 @@
-import { View, Text, Pressable } from 'react-native';
+import { View, Text } from 'react-native';
 
-import { useTheme, CARD_COLORS, CARD_COLOR_KEYS } from '@/shared/theme';
+import { useTheme } from '@/shared/theme';
 
+/**
+ * Home Screen
+ *
+ * Story 1.5: Main screen with card list (empty state placeholder).
+ * Will be implemented in future stories with actual card list from database.
+ */
 const HomeScreen = () => {
-  const { theme, isDark } = useTheme();
+  const { theme } = useTheme();
 
   return (
     <View
       className="flex-1 items-center justify-center p-4"
       style={{ backgroundColor: theme.background }}
     >
+      {/* Empty state when no cards exist */}
       <Text
-        className="text-2xl font-bold mb-2"
+        className="text-6xl mb-4"
+        accessibilityLabel="No cards icon"
+      >
+        💳
+      </Text>
+      <Text
+        className="text-xl font-semibold mb-2 text-center"
         style={{ color: theme.textPrimary }}
       >
-        Welcome to myLoyaltyCards!
+        No loyalty cards yet
       </Text>
-      <Text className="text-base mb-6" style={{ color: theme.textSecondary }}>
-        Your app for managing loyalty cards
-      </Text>
-
-      {/* Card color palette demo */}
       <Text
-        className="text-lg font-semibold mb-3"
-        style={{ color: theme.textPrimary }}
+        className="text-base text-center"
+        style={{ color: theme.textSecondary }}
       >
-        Card Color Palette
+        Tap the + button to add your first card
       </Text>
-      <View className="flex-row gap-3 mb-6">
-        {CARD_COLOR_KEYS.map((colorKey) => (
-          <Pressable
-            key={colorKey}
-            // Minimum touch target: 44x44px (w-5.5 and h-5.5 map to 44px)
-            className="w-5.5 h-5.5 rounded-lg items-center justify-center"
-            style={{ backgroundColor: CARD_COLORS[colorKey] }}
-            accessibilityLabel={`${colorKey} card color`}
-            accessibilityRole="button"
-          >
-            {/* High contrast text for card buttons - always white for visibility on colored backgrounds */}
-            <Text className="text-xs font-bold uppercase" style={{ color: '#FFFFFF' }}>
-              {colorKey.charAt(0)}
-            </Text>
-          </Pressable>
-        ))}
-      </View>
-
-      {/* Theme indicator */}
-      <View
-        className="px-4 py-2 rounded-full"
-        style={{ backgroundColor: theme.primary }}
-      >
-        {/* High contrast text for primary button - always white for visibility on Sage green */}
-        <Text className="font-semibold" style={{ color: '#FFFFFF' }}>
-          {isDark ? '🌙 Dark Mode' : '☀️ Light Mode'}
-        </Text>
-      </View>
     </View>
   );
 };

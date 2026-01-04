@@ -8,7 +8,11 @@
  * - Light/dark mode semantic colors
  */
 
-import { CARD_COLOR_KEYS as CARD_COLOR_KEYS_FROM_SCHEMA, type CardColor } from '@/core/schemas';
+/**
+ * Card color type - matches core/schemas/card.ts CardColor
+ * Duplicated here to avoid circular dependency with Tailwind config
+ */
+type CardColor = 'blue' | 'red' | 'green' | 'orange' | 'grey';
 
 /**
  * Primary Sage Green color palette
@@ -37,18 +41,6 @@ export const CARD_COLORS: Record<CardColor, string> = {
   orange: '#F97316',
   grey: '#6B7280',
 } as const;
-
-/**
- * Card color keys for type safety
- * Re-exported from core/schemas (single source of truth)
- */
-export type CardColorKey = CardColor;
-
-/**
- * Array of card color keys for iteration
- * Re-exported from core/schemas (single source of truth)
- */
-export const CARD_COLOR_KEYS = CARD_COLOR_KEYS_FROM_SCHEMA;
 
 /**
  * OLED Black for dark mode backgrounds

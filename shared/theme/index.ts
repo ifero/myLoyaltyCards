@@ -7,7 +7,6 @@ export { SPACING, TOUCH_TARGET, TAILWIND_SPACING, TAILWIND_TOUCH_TARGET } from '
 export {
   SAGE_COLORS,
   CARD_COLORS,
-  CARD_COLOR_KEYS,
   OLED_COLORS,
   OFFWHITE_COLORS,
   LIGHT_THEME,
@@ -18,5 +17,5 @@ export {
   TAILWIND_SURFACE_COLORS,
   TAILWIND_TEXT_COLORS,
 } from './colors';
-export type { CardColorKey, Theme } from './colors';
+export type { Theme } from './colors';
 export { ThemeProvider, useTheme } from './ThemeProvider';
