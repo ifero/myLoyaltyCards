@@ -1,34 +1,12 @@
 /**
- * Design System Constants
+ * Color Constants
  * Story 1.2: Implement Design System Foundation
  *
- * This file contains the core design tokens for the myLoyaltyCards app.
- * - 8px base grid spacing
+ * This file contains the color tokens for the myLoyaltyCards app.
  * - Accessible Sage color palette
  * - 5-color card palette
  * - Light/dark mode semantic colors
- * - Minimum touch target sizes
  */
-
-/**
- * 8px base grid spacing system
- */
-export const SPACING = {
-  xs: 4, // 0.5 grid units
-  sm: 8, // 1 grid unit
-  md: 16, // 2 grid units
-  lg: 24, // 3 grid units
-  xl: 32, // 4 grid units
-  xxl: 48, // 6 grid units
-} as const;
-
-/**
- * Minimum touch target size for accessibility (44x44px)
- */
-export const TOUCH_TARGET = {
-  min: 44,
-  watch: 32, // Smaller minimum for watch screens
-} as const;
 
 /**
  * Primary Sage Green color palette

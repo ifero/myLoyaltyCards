@@ -3,9 +3,8 @@
  * Story 1.2: Design System Foundation
  */
 
+export { SPACING, TOUCH_TARGET } from './spacing';
 export {
-  SPACING,
-  TOUCH_TARGET,
   SAGE_COLORS,
   CARD_COLORS,
   CARD_COLOR_KEYS,

@@ -1,3 +1,5 @@
+const { SAGE_COLORS, CARD_COLORS } = require('./shared/theme/colors');
+
 /** @type {import('tailwindcss').Config} */
 module.exports = {
   content: [
@@ -30,19 +32,8 @@ module.exports = {
       },
       // Accessible color palette from design spec
       colors: {
-        // Primary Sage Green palette
-        sage: {
-          50: '#f4f9f4',
-          100: '#e8f3e8',
-          200: '#c5dfc5',
-          300: '#a2cba2',
-          400: '#8cbf8c',
-          500: '#73A973', // Primary Sage Green
-          600: '#5c9a5c',
-          700: '#4a7d4a',
-          800: '#3a623a',
-          900: '#2d4d2d',
-        },
+        // Primary Sage Green palette - imported from colors.ts
+        sage: SAGE_COLORS,
         // OLED Black for dark mode backgrounds
         oled: {
           black: '#000000',
@@ -54,14 +45,8 @@ module.exports = {
           100: '#FAFAFA',
           200: '#F5F5F5',
         },
-        // 5-color card palette
-        card: {
-          blue: '#3B82F6',
-          red: '#EF4444',
-          green: '#22C55E',
-          orange: '#F97316',
-          grey: '#6B7280',
-        },
+        // 5-color card palette - imported from colors.ts
+        card: CARD_COLORS,
         // Semantic colors for light/dark mode
         background: {
           light: '#FAFAFA', // Off-white

@@ -37,7 +37,8 @@ const HomeScreen = () => {
             accessibilityLabel={`${colorKey} card color`}
             accessibilityRole="button"
           >
-            <Text className="text-white text-xs font-bold uppercase">
+            {/* High contrast text for card buttons - always white for visibility on colored backgrounds */}
+            <Text className="text-xs font-bold uppercase" style={{ color: '#FFFFFF' }}>
               {colorKey.charAt(0)}
             </Text>
           </Pressable>
@@ -49,7 +50,8 @@ const HomeScreen = () => {
         className="px-4 py-2 rounded-full"
         style={{ backgroundColor: theme.primary }}
       >
-        <Text className="text-white font-semibold">
+        {/* High contrast text for primary button - always white for visibility on Sage green */}
+        <Text className="font-semibold" style={{ color: '#FFFFFF' }}>
           {isDark ? '🌙 Dark Mode' : '☀️ Light Mode'}
         </Text>
       </View>
