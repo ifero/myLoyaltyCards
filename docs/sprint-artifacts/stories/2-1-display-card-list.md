@@ -265,6 +265,7 @@ app/index.tsx
 
 - `features/cards/index.ts` - Added exports for new components/hooks
 - `app/index.tsx` - Replaced placeholder with CardList
+- `app/_layout.tsx` - Added database initialization on bootstrap
 - `package.json` - Added @shopify/flash-list dependency
 
 ### Change Log

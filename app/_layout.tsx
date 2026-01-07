@@ -1,7 +1,10 @@
 import '../global.css';
 import { Stack, useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { Pressable, Text } from 'react-native';
+import { useEffect, useState } from 'react';
+import { ActivityIndicator, Pressable, Text, View } from 'react-native';
+
+import { initializeDatabase } from '@/core/database';
 
 import { ThemeProvider, useTheme } from '@/shared/theme';
 
@@ -16,8 +19,7 @@ const HeaderRight = () => {
       onPress={() => router.push('/settings')}
       accessibilityLabel="Go to settings"
       accessibilityRole="button"
-      className="w-11 h-11 items-center justify-center"
-    >
+      className="h-11 w-11 items-center justify-center">
       <Text className="text-xl">⚙️</Text>
     </Pressable>
   );
@@ -35,8 +37,7 @@ const HeaderLeft = () => {
       onPress={() => router.push('/add-card')}
       accessibilityLabel="Add new card"
       accessibilityRole="button"
-      className="w-11 h-11 items-center justify-center"
-    >
+      className="h-11 w-11 items-center justify-center">
       <Text className="text-2xl font-semibold" style={{ color: theme.primary }}>
         +
       </Text>
@@ -59,8 +60,7 @@ const RootLayoutContent = () => {
             backgroundColor: theme.background,
           },
           animation: 'slide_from_right',
-        }}
-      >
+        }}>
         <Stack.Screen
           name="index"
           options={{
@@ -88,6 +88,35 @@ const RootLayoutContent = () => {
 };
 
 const RootLayout = () => {
+  const [isDbReady, setIsDbReady] = useState(false);
+  const [dbError, setDbError] = useState<string | null>(null);
+
+  useEffect(() => {
+    initializeDatabase()
+      .then(() => setIsDbReady(true))
+      .catch((error) => {
+        console.error('Database initialization failed:', error);
+        setDbError(error instanceof Error ? error.message : 'Database init failed');
+      });
+  }, []);
+
+  if (dbError) {
+    return (
+      <View className="flex-1 items-center justify-center bg-neutral-900">
+        <Text className="text-lg text-red-500">Database Error</Text>
+        <Text className="mt-2 text-neutral-400">{dbError}</Text>
+      </View>
+    );
+  }
+
+  if (!isDbReady) {
+    return (
+      <View className="flex-1 items-center justify-center bg-neutral-900">
+        <ActivityIndicator size="large" color="#73A973" />
+      </View>
+    );
+  }
+
   return (
     <ThemeProvider>
       <RootLayoutContent />
