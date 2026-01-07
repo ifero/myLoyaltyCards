@@ -51,12 +51,8 @@ function rowToCard(row: CardRow): LoyaltyCard {
  * Get all cards from the database
  * Orders alphabetically by name for easier navigation
  */
-export async function getAllCards(
-  db: SQLiteDatabase = getDatabase()
-): Promise<LoyaltyCard[]> {
-  const rows = await db.getAllAsync<CardRow>(
-    'SELECT * FROM loyalty_cards ORDER BY name ASC'
-  );
+export async function getAllCards(db: SQLiteDatabase = getDatabase()): Promise<LoyaltyCard[]> {
+  const rows = await db.getAllAsync<CardRow>('SELECT * FROM loyalty_cards ORDER BY name ASC');
   return rows.map(rowToCard);
 }
 
@@ -68,10 +64,7 @@ export async function getCardById(
   id: string,
   db: SQLiteDatabase = getDatabase()
 ): Promise<LoyaltyCard | null> {
-  const row = await db.getFirstAsync<CardRow>(
-    'SELECT * FROM loyalty_cards WHERE id = ?',
-    [id]
-  );
+  const row = await db.getFirstAsync<CardRow>('SELECT * FROM loyalty_cards WHERE id = ?', [id]);
   return row ? rowToCard(row) : null;
 }
 
@@ -147,10 +140,7 @@ export async function updateCard(
  * Delete a card from the database
  * Uses a transaction for data integrity
  */
-export async function deleteCard(
-  id: string,
-  db: SQLiteDatabase = getDatabase()
-): Promise<void> {
+export async function deleteCard(id: string, db: SQLiteDatabase = getDatabase()): Promise<void> {
   await db.withTransactionAsync(async () => {
     await db.runAsync('DELETE FROM loyalty_cards WHERE id = ?', [id]);
   });
@@ -192,9 +182,7 @@ export async function upsertCard(
  * Uses a transaction for data integrity
  * Useful for testing and data reset scenarios
  */
-export async function deleteAllCards(
-  db: SQLiteDatabase = getDatabase()
-): Promise<void> {
+export async function deleteAllCards(db: SQLiteDatabase = getDatabase()): Promise<void> {
   await db.withTransactionAsync(async () => {
     await db.runAsync('DELETE FROM loyalty_cards');
   });
@@ -203,9 +191,7 @@ export async function deleteAllCards(
 /**
  * Get the count of cards in the database
  */
-export async function getCardCount(
-  db: SQLiteDatabase = getDatabase()
-): Promise<number> {
+export async function getCardCount(db: SQLiteDatabase = getDatabase()): Promise<number> {
   const result = await db.getFirstAsync<{ count: number }>(
     'SELECT COUNT(*) as count FROM loyalty_cards'
   );
