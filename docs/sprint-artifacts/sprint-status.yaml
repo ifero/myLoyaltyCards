@@ -1,4 +1,5 @@
 # generated: 2026-01-03
+# updated: 2026-01-07
 # project: myLoyaltyCards
 # tracking_system: file-system
 # story_location: docs/sprint-artifacts
@@ -34,34 +35,57 @@
 # - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
 
 generated: 2026-01-03
+updated: 2026-01-07
 project: myLoyaltyCards
 tracking_system: file-system
 story_location: docs/sprint-artifacts
+
+# ============================================
+# CURRENT SPRINT
+# ============================================
+current_sprint:
+  number: 1
+  name: "Sprint 1: Card Management & Barcode Display"
+  goal: "Deliver core card management functionality — users can add, view, and interact with their loyalty cards"
+  start_date: 2026-01-07
+  end_date: 2026-01-14
+  duration: 1 week
+  epic: 2
+  stories:
+    - 2-1-display-card-list
+    - 2-2-add-card-manually
+    - 2-3-scan-barcode-with-camera
+    - 2-4-display-virtual-logo
+    - 2-5-display-barcode-barcode-flash
+    - 2-6-view-card-details
+    - 2-7-edit-card
+    - 2-8-delete-card
 
 development_status:
   # ============================================
   # PHASE 1 - CORE MVP
   # ============================================
 
-  # Epic 1: Project Foundation & App Shell
-  epic-1: backlog
-  1-1-configure-development-environment: backlog
-  1-2-implement-design-system-foundation: backlog
-  1-3-create-core-data-schema: backlog
-  1-4-set-up-local-database: backlog
-  1-5-build-app-shell-with-header-navigation: backlog
+  # Epic 1: Project Foundation & App Shell ✅ COMPLETE
+  epic-1: done
+  1-1-configure-development-environment: done
+  1-2-implement-design-system-foundation: done
+  1-3-create-core-data-schema: done
+  1-4-set-up-local-database: done
+  1-5-build-app-shell-with-header-navigation: done
   epic-1-retrospective: optional
+  epic-1-completed: 2026-01-07
 
-  # Epic 2: Card Management & Barcode Display
-  epic-2: backlog
-  2-1-display-card-list: backlog
-  2-2-add-card-manually: backlog
-  2-3-scan-barcode-with-camera: backlog
-  2-4-display-virtual-logo: backlog
-  2-5-display-barcode-barcode-flash: backlog
-  2-6-view-card-details: backlog
-  2-7-edit-card: backlog
-  2-8-delete-card: backlog
+  # Epic 2: Card Management & Barcode Display 🚧 IN PROGRESS
+  epic-2: in-progress
+  2-1-display-card-list: review
+  2-2-add-card-manually: ready-for-dev
+  2-3-scan-barcode-with-camera: ready-for-dev
+  2-4-display-virtual-logo: ready-for-dev
+  2-5-display-barcode-barcode-flash: ready-for-dev
+  2-6-view-card-details: ready-for-dev
+  2-7-edit-card: ready-for-dev
+  2-8-delete-card: ready-for-dev
   epic-2-retrospective: optional
 
   # Epic 3: Italian Brand Catalogue
@@ -147,4 +171,3 @@ development_status:
   10-5-store-cards-locally: backlog
   10-6-sync-cards-from-phone: backlog
   epic-10-retrospective: optional
-
