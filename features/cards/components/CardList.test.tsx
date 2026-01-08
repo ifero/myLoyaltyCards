@@ -49,13 +49,19 @@ jest.mock('react-native', () => {
   };
 });
 
-// Mock FlashList
+// Mock FlashList and track numColumns prop
+let mockFlashListNumColumns: number | undefined;
 jest.mock('@shopify/flash-list', () => {
   const React = require('react');
-  const { View, Text } = require('react-native');
+  const { View } = require('react-native');
 
   return {
-    FlashList: ({ data, renderItem, ListEmptyComponent, testID }: any) => {
+    FlashList: (props: any) => {
+      const { data, renderItem, ListEmptyComponent, testID, numColumns } = props;
+      
+      // Store numColumns for test assertions
+      mockFlashListNumColumns = numColumns;
+
       if (data.length === 0 && ListEmptyComponent) {
         return React.createElement(ListEmptyComponent);
       }
@@ -105,6 +111,7 @@ describe('CardList', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
+    mockFlashListNumColumns = undefined; // Reset captured value
     mockUseCards.mockReturnValue({
       cards: [],
       isLoading: false,
@@ -208,8 +215,8 @@ describe('CardList', () => {
 
       render(<CardList />);
 
-      // FlashList should receive numColumns=2
-      // We verify cards render (FlashList is mocked)
+      // Verify FlashList receives numColumns=2
+      expect(mockFlashListNumColumns).toBe(2);
       expect(screen.getByText('Apple Store')).toBeTruthy();
     });
 
@@ -224,7 +231,8 @@ describe('CardList', () => {
 
       render(<CardList />);
 
-      // FlashList should receive numColumns=3
+      // Verify FlashList receives numColumns=3
+      expect(mockFlashListNumColumns).toBe(3);
       expect(screen.getByText('Apple Store')).toBeTruthy();
     });
   });
