@@ -7,7 +7,8 @@
  */
 
 import { FlashList } from '@shopify/flash-list';
-import React from 'react';
+import { useFocusEffect } from 'expo-router';
+import React, { useCallback } from 'react';
 import { View, Text, useWindowDimensions, ActivityIndicator, StyleSheet } from 'react-native';
 
 import { LoyaltyCard } from '@/core/schemas';
@@ -40,7 +41,14 @@ const MAX_COLUMNS = 3;
 export const CardList: React.FC = () => {
   const { theme } = useTheme();
   const { width } = useWindowDimensions();
-  const { cards, isLoading, error } = useCards();
+  const { cards, isLoading, error, refetch } = useCards();
+
+  // Refresh cards when screen comes into focus (e.g., returning from add-card)
+  useFocusEffect(
+    useCallback(() => {
+      refetch();
+    }, [refetch])
+  );
 
   // Determine number of columns based on screen width
   const numColumns = width < COLUMN_BREAKPOINT ? MIN_COLUMNS : MAX_COLUMNS;
