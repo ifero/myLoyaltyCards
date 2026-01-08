@@ -79,7 +79,7 @@ development_status:
   # Epic 2: Card Management & Barcode Display 🚧 IN PROGRESS
   epic-2: in-progress
   2-1-display-card-list: review
-  2-2-add-card-manually: ready-for-dev
+  2-2-add-card-manually: review
   2-3-scan-barcode-with-camera: ready-for-dev
   2-4-display-virtual-logo: ready-for-dev
   2-5-display-barcode-barcode-flash: ready-for-dev

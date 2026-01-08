@@ -1,3 +1,4 @@
+import 'react-native-get-random-values'; // Must be imported before uuid
 import '../global.css';
 import { Stack, useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';

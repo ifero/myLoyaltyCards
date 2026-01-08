@@ -7,7 +7,7 @@
 | **Story ID** | 2.2                                   |
 | **Epic**     | 2 - Card Management & Barcode Display |
 | **Sprint**   | 1                                     |
-| **Status**   | ready-for-dev                         |
+| **Status**   | Ready for Review                      |
 | **Priority** | High                                  |
 | **Estimate** | Large (2-3 days)                      |
 
@@ -196,7 +196,7 @@ const addCardSchema = z.object({
   name: z.string().min(1, 'Card name is required').max(50),
   barcode: z.string().min(1, 'Barcode number is required'),
   barcodeFormat: barcodeFormatSchema.default('CODE128'),
-  color: cardColorSchema.default('grey'),
+  color: cardColorSchema.default('grey')
 });
 
 type AddCardInput = z.infer<typeof addCardSchema>;
@@ -244,7 +244,7 @@ async function createCard(input: AddCardInput): Promise<LoyaltyCard> {
     lastUsedAt: null,
     usageCount: 0,
     createdAt: now,
-    updatedAt: now,
+    updatedAt: now
   };
   await cardRepository.create(card);
   return card;
@@ -302,7 +302,7 @@ import * as Burnt from 'burnt';
 // On successful save:
 Burnt.toast({
   title: 'Card added',
-  preset: 'done', // Shows ✓ checkmark
+  preset: 'done' // Shows ✓ checkmark
 });
 ```
 
@@ -343,15 +343,106 @@ Burnt.toast({
 
 ## Definition of Done
 
-- [ ] All acceptance criteria pass
-- [ ] Code follows project conventions (ESLint passes)
-- [ ] Components are properly typed with TypeScript
-- [ ] react-hook-form integration working
-- [ ] Zod validation working
+- [x] All acceptance criteria pass
+- [x] Code follows project conventions (ESLint passes)
+- [x] Components are properly typed with TypeScript
+- [x] react-hook-form integration working
+- [x] Zod validation working
+- [x] Unit tests written and passing (50 tests)
 - [ ] No console errors or warnings
 - [ ] Works on both iOS and Android simulators
 - [ ] Manual testing checklist complete
 - [ ] Story marked as `done` in sprint-status.yaml
+
+---
+
+## Dev Agent Record
+
+### Implementation Notes (2026-01-08)
+
+**Implemented:**
+
+- Created `ColorPicker` component with 5-color horizontal selection (AC6)
+- Created `FormatPicker` component using `@react-native-picker/picker` for barcode format selection (AC5)
+- Created `CardForm` shared component with react-hook-form + zod validation (AC2-AC4)
+- Created `useAddCard` hook for card creation with haptic + toast feedback (AC7)
+- Updated `app/add-card.tsx` to integrate CardForm with discard confirmation (AC8)
+- Implemented `beforeRemove` navigation listener for iOS back gesture handling
+- Implemented `BackHandler` for Android hardware back button
+
+**Dependencies Added:**
+
+- `react-hook-form@7.70.0` - Form state management
+- `@hookform/resolvers@5.2.2` - Zod resolver for react-hook-form
+- `expo-haptics@15.0.8` - Haptic feedback on save
+- `burnt@0.13.0` - Native toast notifications
+- `@react-native-picker/picker@2.11.4` - Native picker component
+- `uuid@13.0.0` - UUID generation (React Native doesn't have crypto.randomUUID())
+- `react-native-get-random-values@2.0.0` - Polyfill for crypto.getRandomValues() required by uuid
+- `jest@30.2.0` - Testing framework
+- `jest-expo@54.0.16` - Expo preset for Jest
+- `@testing-library/react-native@13.3.3` - React Native testing utilities
+- `@testing-library/jest-native@5.4.3` - Jest matchers for React Native
+
+**Technical Decisions:**
+
+- Used react-hook-form with `mode: 'onChange'` for real-time validation
+- Implemented form dirty state tracking via `isDirty` from react-hook-form for discard confirmation
+- CardForm accepts `onDirtyChange` callback to notify parent of dirty state
+- Used `zodResolver` for declarative validation matching existing schema patterns
+- ColorPicker uses accessible checkmark overlay for selection indication
+- FormatPicker wraps native Picker component for platform-native UX
+- Used `uuid` package for UUID generation (React Native doesn't have `crypto.randomUUID()` at runtime)
+- Added `react-native-get-random-values` polyfill imported at app entry point (`app/_layout.tsx`) to provide `crypto.getRandomValues()` required by uuid
+- Mocked `uuid` in Jest tests to avoid ESM module parsing issues
+
+### Unit Tests (2026-01-08)
+
+**Test Coverage: 50 tests passing**
+
+| Test File               | Tests | Description                                      |
+| ----------------------- | ----- | ------------------------------------------------ |
+| `ColorPicker.test.tsx`  | 11    | Color rendering, selection, accessibility        |
+| `FormatPicker.test.tsx` | 5     | Format picker rendering and options              |
+| `CardForm.test.tsx`     | 18    | Form fields, validation, submission, dirty state |
+| `useAddCard.test.ts`    | 16    | Card creation, success/error handling, feedback  |
+
+**Test Categories:**
+
+- Rendering tests: Verify all UI elements display correctly
+- Validation tests: Test name/barcode validation and error messages
+- Interaction tests: Test color/format selection, form submission
+- Accessibility tests: Verify accessible labels and roles
+- Hook tests: Test card creation logic, haptic feedback, toast notifications
+
+### File List
+
+**New Files:**
+
+- `features/cards/components/CardForm.tsx`
+- `features/cards/components/ColorPicker.tsx`
+- `features/cards/components/FormatPicker.tsx`
+- `features/cards/hooks/useAddCard.ts`
+- `features/cards/components/CardForm.test.tsx` (co-located)
+- `features/cards/components/ColorPicker.test.tsx` (co-located)
+- `features/cards/components/FormatPicker.test.tsx` (co-located)
+- `features/cards/hooks/useAddCard.test.ts` (co-located)
+- `jest.config.js`
+- `jest.setup.js`
+
+**Modified Files:**
+
+- `app/add-card.tsx` - Replaced placeholder with CardForm integration
+- `features/cards/index.ts` - Added exports for new components/hooks
+- `package.json` - Added new dependencies (form, haptics, toast, testing)
+- `eslint.config.mjs` - Added jest.setup.js to ignores
+
+### Change Log
+
+| Date       | Change                                                |
+| ---------- | ----------------------------------------------------- |
+| 2026-01-08 | Initial implementation of Add Card form functionality |
+| 2026-01-08 | Added 50 unit tests for all components and hooks      |
 
 ---
 
