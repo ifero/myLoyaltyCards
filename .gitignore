@@ -50,3 +50,6 @@ ios/
 
 expo-env.d.ts
 # @end expo-cli
+
+# Lock files
+package-lock.json
