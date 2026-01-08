@@ -39,32 +39,50 @@ jest.mock('@/shared/theme', () => ({
   })
 }));
 
-// Mock useWindowDimensions
-const mockDimensions = { width: 375, height: 667 };
+// Mock useWindowDimensions - declare before jest.mock for proper hoisting
+const mockUseWindowDimensions = jest.fn();
+
+// Mock react-native
 jest.mock('react-native', () => {
-  const RN = jest.requireActual('react-native');
+  const React = require('react');
   return {
-    ...RN,
-    useWindowDimensions: () => mockDimensions
+    View: (props: any) => React.createElement('View', props, props.children),
+    Text: (props: any) => React.createElement('Text', props, props.children),
+    Pressable: (props: any) => React.createElement('Pressable', props, props.children),
+    ActivityIndicator: (props: any) => React.createElement('ActivityIndicator', props),
+    StyleSheet: { 
+      create: (styles: any) => styles,
+      flatten: (style: any) => style,
+    },
+    useWindowDimensions: () => mockUseWindowDimensions(),
   };
 });
 
 // Mock FlashList
+const mockFlashListRender = jest.fn();
 jest.mock('@shopify/flash-list', () => {
   const React = require('react');
-  const { View, Text } = require('react-native');
-
+  
   return {
-    FlashList: ({ data, renderItem, ListEmptyComponent, testID }: any) => {
+    FlashList: (props: any) => {
+      // Call the spy function with props so we can inspect them in tests
+      const mockRender = (global as any).__mockFlashListRender;
+      if (mockRender) {
+        mockRender(props);
+      }
+      
+      const { data, renderItem, ListEmptyComponent } = props;
+      
       if (data.length === 0 && ListEmptyComponent) {
         return React.createElement(ListEmptyComponent);
       }
 
+      // Use a simple div-like structure without importing react-native
       return React.createElement(
-        View,
-        { testID },
+        'View',
+        { 'data-testid': 'flash-list' },
         data.map((item: any, index: number) =>
-          React.createElement(View, { key: item.id || index }, renderItem({ item }))
+          React.createElement('View', { key: item.id || index }, renderItem({ item }))
         )
       );
     }
@@ -105,6 +123,17 @@ describe('CardList', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
+    mockFlashListRender.mockClear();
+    (global as any).__mockFlashListRender = mockFlashListRender;
+    
+    // Set default dimensions
+    mockUseWindowDimensions.mockReturnValue({
+      width: 375,
+      height: 667,
+      scale: 2,
+      fontScale: 1,
+    });
+    
     mockUseCards.mockReturnValue({
       cards: [],
       isLoading: false,
@@ -122,10 +151,8 @@ describe('CardList', () => {
         refetch: mockRefetch
       });
 
-      const { UNSAFE_getByType } = render(<CardList />);
-      const activityIndicator = UNSAFE_getByType(
-        require('react-native').ActivityIndicator
-      );
+      render(<CardList />);
+      const activityIndicator = screen.getByTestId('activity-indicator');
       expect(activityIndicator).toBeTruthy();
     });
   });
@@ -198,7 +225,13 @@ describe('CardList', () => {
 
   describe('Responsive Columns - AC2', () => {
     it('uses 2 columns on screens < 400dp width', () => {
-      mockDimensions.width = 375; // iPhone SE width
+      mockUseWindowDimensions.mockReturnValue({
+        width: 375, // iPhone SE width
+        height: 667,
+        scale: 2,
+        fontScale: 1,
+      });
+      
       mockUseCards.mockReturnValue({
         cards: mockCards,
         isLoading: false,
@@ -208,13 +241,21 @@ describe('CardList', () => {
 
       render(<CardList />);
 
-      // FlashList should receive numColumns=2
-      // We verify cards render (FlashList is mocked)
+      // Verify FlashList receives numColumns=2
+      expect(mockFlashListRender).toHaveBeenCalledWith(
+        expect.objectContaining({ numColumns: 2 })
+      );
       expect(screen.getByText('Apple Store')).toBeTruthy();
     });
 
     it('uses 3 columns on screens >= 400dp width', () => {
-      mockDimensions.width = 428; // iPhone 15 Pro Max width
+      mockUseWindowDimensions.mockReturnValue({
+        width: 428, // iPhone 15 Pro Max width
+        height: 926,
+        scale: 3,
+        fontScale: 1,
+      });
+      
       mockUseCards.mockReturnValue({
         cards: mockCards,
         isLoading: false,
@@ -224,7 +265,10 @@ describe('CardList', () => {
 
       render(<CardList />);
 
-      // FlashList should receive numColumns=3
+      // Verify FlashList receives numColumns=3
+      expect(mockFlashListRender).toHaveBeenCalledWith(
+        expect.objectContaining({ numColumns: 3 })
+      );
       expect(screen.getByText('Apple Store')).toBeTruthy();
     });
   });

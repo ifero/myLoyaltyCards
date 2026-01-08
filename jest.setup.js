@@ -3,6 +3,12 @@
  * Story 2.2: Add Card Manually - Testing Setup
  */
 
+// Polyfill for TransformStream (needed by expo in jsdom environment)
+if (typeof global.TransformStream === 'undefined') {
+  // @ts-ignore
+  global.TransformStream = class TransformStream {};
+}
+
 // Built-in matchers are automatically available in @testing-library/react-native v12.4+
 
 // Mock crypto.randomUUID (not available in jsdom)
@@ -27,6 +33,12 @@ Object.defineProperty(globalThis, 'crypto', {
   writable: true,
   configurable: true
 });
+
+// Mock expo-sqlite
+jest.mock('expo-sqlite', () => ({
+  openDatabaseAsync: jest.fn(),
+  SQLiteDatabase: jest.fn()
+}));
 
 // Mock expo-haptics
 jest.mock('expo-haptics', () => ({
@@ -65,22 +77,21 @@ jest.mock('expo-router', () => ({
 // Mock @react-native-picker/picker
 jest.mock('@react-native-picker/picker', () => {
   const mockReact = require('react');
-  const mockRN = require('react-native');
 
-  const MockPickerItem = ({ label, value }) => {
+  const MockPickerItem = ({ label, value }: any) => {
     return mockReact.createElement(
-      mockRN.View,
-      { testID: `picker-item-${value}` },
-      mockReact.createElement(mockRN.Text, null, label)
+      'View',
+      { 'data-testid': `picker-item-${value}` },
+      mockReact.createElement('Text', {}, label)
     );
   };
   MockPickerItem.displayName = 'Picker.Item';
 
-  const MockPicker = ({ selectedValue, children, testID }) => {
+  const MockPicker = ({ selectedValue, children, testID }: any) => {
     return mockReact.createElement(
-      mockRN.View,
-      { testID: testID },
-      mockReact.createElement(mockRN.Text, null, selectedValue),
+      'View',
+      { 'data-testid': testID },
+      mockReact.createElement('Text', {}, selectedValue),
       children
     );
   };

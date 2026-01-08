@@ -57,7 +57,7 @@ export const CardList: React.FC = () => {
   if (isLoading) {
     return (
       <View style={[styles.centered, { backgroundColor: theme.background }]}>
-        <ActivityIndicator size="large" color={theme.primary} />
+        <ActivityIndicator size="large" color={theme.primary} testID="activity-indicator" />
       </View>
     );
   }
