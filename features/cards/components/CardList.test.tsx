@@ -315,7 +315,7 @@ describe('CardList', () => {
   });
 
   describe('Performance - AC4', () => {
-    it('uses FlashList for high-performance rendering', () => {
+    it('renders many cards without errors', () => {
       const manyCards: LoyaltyCard[] = Array.from({ length: 50 }, (_, i) => ({
         id: `${i}`,
         name: `Store ${i}`,
@@ -339,8 +339,7 @@ describe('CardList', () => {
 
       render(<CardList />);
 
-      // FlashList should handle many cards efficiently
-      // We verify it renders without errors
+      // Verify rendering works with large dataset
       expect(screen.getByText('Store 0')).toBeTruthy();
     });
   });
