@@ -12,12 +12,6 @@ import { useCards } from '../hooks/useCards';
 import { CardList } from './CardList';
 import { EmptyState } from './EmptyState';
 
-// Mock expo-sqlite to prevent import errors
-jest.mock('expo-sqlite', () => ({
-  openDatabaseAsync: jest.fn(),
-  SQLiteDatabase: jest.fn()
-}));
-
 // Mock useCards hook
 jest.mock('../hooks/useCards');
 const mockUseCards = useCards as jest.MockedFunction<typeof useCards>;
@@ -43,34 +37,6 @@ jest.mock('@/shared/theme', () => ({
     },
     isDark: false
   })
-}));
-
-// Mock useWindowDimensions
-const mockDimensions = { width: 375, height: 667, scale: 2, fontScale: 1 };
-jest.mock('react-native/Libraries/Utilities/useWindowDimensions', () => ({
-  default: jest.fn(() => mockDimensions),
-}));
-
-// Mock FlashList - using a simple approach
-const mockFlashListRender = jest.fn();
-jest.mock('@shopify/flash-list', () => ({
-  FlashList: (props: any) => {
-    // Call the spy function with props so we can inspect them in tests
-    const mockRender = (global as any).__mockFlashListRender;
-    if (mockRender) {
-      mockRender(props);
-    }
-    
-    const { data, renderItem, ListEmptyComponent } = props;
-    
-    // For empty data, return the component (testing library will handle rendering)
-    if (data.length === 0 && ListEmptyComponent) {
-      return ListEmptyComponent({});
-    }
-
-    // For data, render items
-    return data.map((item: any, index: number) => renderItem({ item, index }));
-  }
 }));
 
 describe('CardList', () => {
@@ -104,17 +70,18 @@ describe('CardList', () => {
   ];
 
   const mockRefetch = jest.fn();
+  
+  // Mock useWindowDimensions
+  const mockDimensions = { width: 375, height: 667, scale: 1, fontScale: 1 };
+  let useWindowDimensionsSpy: jest.SpyInstance;
 
   beforeEach(() => {
     jest.clearAllMocks();
-    mockFlashListRender.mockClear();
-    (global as any).__mockFlashListRender = mockFlashListRender;
+    (global as any).mockFlashListState.numColumns = undefined; // Reset captured value
     
-    // Reset default dimensions
-    mockDimensions.width = 375;
-    mockDimensions.height = 667;
-    mockDimensions.scale = 2;
-    mockDimensions.fontScale = 1;
+    // Spy on useWindowDimensions
+    const RN = require('react-native');
+    useWindowDimensionsSpy = jest.spyOn(RN, 'useWindowDimensions').mockReturnValue(mockDimensions);
     
     mockUseCards.mockReturnValue({
       cards: [],
@@ -122,6 +89,12 @@ describe('CardList', () => {
       error: null,
       refetch: mockRefetch
     });
+  });
+  
+  afterEach(() => {
+    if (useWindowDimensionsSpy) {
+      useWindowDimensionsSpy.mockRestore();
+    }
   });
 
   describe('Loading State', () => {
@@ -221,9 +194,7 @@ describe('CardList', () => {
       render(<CardList />);
 
       // Verify FlashList receives numColumns=2
-      expect(mockFlashListRender).toHaveBeenCalledWith(
-        expect.objectContaining({ numColumns: 2 })
-      );
+      expect((global as any).mockFlashListState.numColumns).toBe(2);
       expect(screen.getByText('Apple Store')).toBeTruthy();
     });
 
@@ -240,9 +211,7 @@ describe('CardList', () => {
       render(<CardList />);
 
       // Verify FlashList receives numColumns=3
-      expect(mockFlashListRender).toHaveBeenCalledWith(
-        expect.objectContaining({ numColumns: 3 })
-      );
+      expect((global as any).mockFlashListState.numColumns).toBe(3);
       expect(screen.getByText('Apple Store')).toBeTruthy();
     });
   });
