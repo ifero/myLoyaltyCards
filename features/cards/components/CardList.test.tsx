@@ -10,7 +10,6 @@ import { LoyaltyCard } from '@/core/schemas';
 
 import { useCards } from '../hooks/useCards';
 import { CardList } from './CardList';
-import { EmptyState } from './EmptyState';
 
 // Mock useCards hook
 jest.mock('../hooks/useCards');
@@ -218,6 +217,8 @@ describe('CardList', () => {
 
   describe('Card Order - AC3', () => {
     it('displays cards in alphabetical order', () => {
+      // Mock returns cards in unordered state, but useCards hook
+      // should call getAllCards which orders them alphabetically
       const unorderedCards: LoyaltyCard[] = [
         {
           id: '2',
@@ -247,19 +248,46 @@ describe('CardList', () => {
         }
       ];
 
+      // In reality, useCards calls getAllCards which returns cards ordered alphabetically
+      // So we mock it to return cards in alphabetical order as it would in production
+      const orderedCards = [...unorderedCards].sort((a, b) => a.name.localeCompare(b.name));
+
       mockUseCards.mockReturnValue({
-        cards: unorderedCards,
+        cards: orderedCards,
         isLoading: false,
         error: null,
         refetch: mockRefetch
       });
 
-      render(<CardList />);
+      const { toJSON } = render(<CardList />);
 
-      // Cards should be ordered alphabetically by useCards hook
-      // (which calls getAllCards that orders by name ASC)
-      expect(screen.getByText('Apple Store')).toBeTruthy();
-      expect(screen.getByText('Zebra Store')).toBeTruthy();
+      // Verify that cards are rendered in alphabetical order by name
+      const tree = toJSON();
+      const texts: string[] = [];
+
+      const collectText = (node: any): void => {
+        if (!node) return;
+        if (typeof node === 'string') {
+          texts.push(node);
+          return;
+        }
+        if (Array.isArray(node)) {
+          node.forEach(collectText);
+          return;
+        }
+        if (node.children) {
+          node.children.forEach(collectText);
+        }
+      };
+
+      collectText(tree);
+
+      const appleIndex = texts.indexOf('Apple Store');
+      const zebraIndex = texts.indexOf('Zebra Store');
+
+      expect(appleIndex).not.toBe(-1);
+      expect(zebraIndex).not.toBe(-1);
+      expect(appleIndex).toBeLessThan(zebraIndex);
     });
   });
 

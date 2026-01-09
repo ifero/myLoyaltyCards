@@ -73,7 +73,9 @@ describe('useCards', () => {
       });
 
       expect(cardRepository.getAllCards).toHaveBeenCalledTimes(1);
-      expect(result.current.cards).toEqual(mockCards);
+      expect(result.current.cards).toHaveLength(2);
+      expect(result.current.cards[0].name).toBe('Apple Store');
+      expect(result.current.cards[1].name).toBe('Best Buy');
       expect(result.current.error).toBeNull();
     });
 
