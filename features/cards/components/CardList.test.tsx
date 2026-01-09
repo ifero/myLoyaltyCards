@@ -44,6 +44,8 @@ const mockUseWindowDimensions = jest.fn();
 
 // Mock react-native
 jest.mock('react-native', () => {
+  // React is needed to create proper React elements for the testing library
+  // React Native components are built on React, so we use React.createElement
   const React = require('react');
   return {
     View: (props: any) => React.createElement('View', props, props.children),
@@ -61,6 +63,7 @@ jest.mock('react-native', () => {
 // Mock FlashList
 const mockFlashListRender = jest.fn();
 jest.mock('@shopify/flash-list', () => {
+  // React is needed to create proper React elements for the testing library
   const React = require('react');
   
   return {
