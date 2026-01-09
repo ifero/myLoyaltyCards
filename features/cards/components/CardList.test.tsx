@@ -39,38 +39,6 @@ jest.mock('@/shared/theme', () => ({
   })
 }));
 
-// Mock useWindowDimensions
-const mockDimensions = { width: 375, height: 667 };
-jest.mock('react-native', () => {
-  const RN = jest.requireActual('react-native');
-  return {
-    ...RN,
-    useWindowDimensions: () => mockDimensions
-  };
-});
-
-// Mock FlashList
-jest.mock('@shopify/flash-list', () => {
-  const React = require('react');
-  const { View, Text } = require('react-native');
-
-  return {
-    FlashList: ({ data, renderItem, ListEmptyComponent, testID }: any) => {
-      if (data.length === 0 && ListEmptyComponent) {
-        return React.createElement(ListEmptyComponent);
-      }
-
-      return React.createElement(
-        View,
-        { testID },
-        data.map((item: any, index: number) =>
-          React.createElement(View, { key: item.id || index }, renderItem({ item }))
-        )
-      );
-    }
-  };
-});
-
 describe('CardList', () => {
   const mockCards: LoyaltyCard[] = [
     {
@@ -102,15 +70,31 @@ describe('CardList', () => {
   ];
 
   const mockRefetch = jest.fn();
+  
+  // Mock useWindowDimensions
+  const mockDimensions = { width: 375, height: 667, scale: 1, fontScale: 1 };
+  let useWindowDimensionsSpy: jest.SpyInstance;
 
   beforeEach(() => {
     jest.clearAllMocks();
+    global.mockFlashListState.numColumns = undefined; // Reset captured value
+    
+    // Spy on useWindowDimensions
+    const RN = require('react-native');
+    useWindowDimensionsSpy = jest.spyOn(RN, 'useWindowDimensions').mockReturnValue(mockDimensions);
+    
     mockUseCards.mockReturnValue({
       cards: [],
       isLoading: false,
       error: null,
       refetch: mockRefetch
     });
+  });
+  
+  afterEach(() => {
+    if (useWindowDimensionsSpy) {
+      useWindowDimensionsSpy.mockRestore();
+    }
   });
 
   describe('Loading State', () => {
@@ -208,8 +192,8 @@ describe('CardList', () => {
 
       render(<CardList />);
 
-      // FlashList should receive numColumns=2
-      // We verify cards render (FlashList is mocked)
+      // Verify FlashList receives numColumns=2
+      expect(global.mockFlashListState.numColumns).toBe(2);
       expect(screen.getByText('Apple Store')).toBeTruthy();
     });
 
@@ -224,7 +208,8 @@ describe('CardList', () => {
 
       render(<CardList />);
 
-      // FlashList should receive numColumns=3
+      // Verify FlashList receives numColumns=3
+      expect(global.mockFlashListState.numColumns).toBe(3);
       expect(screen.getByText('Apple Store')).toBeTruthy();
     });
   });
