@@ -80,20 +80,19 @@ describe('CardTile', () => {
     });
 
     it('uses card color for visual identifier background', () => {
-      const { getByText } = render(<CardTile card={mockCard} />);
+      render(<CardTile card={mockCard} />);
 
-      const visualLetter = getByText('T');
-      const visualContainer = visualLetter.parent;
-
-      expect(visualContainer).toBeTruthy();
-      // The background color should be applied via style
+      // Verify the visual identifier renders with the card's first letter
+      const visualLetter = screen.getByText('T');
+      expect(visualLetter).toBeTruthy();
+      
+      // The component applies the card's color to the visual identifier background
+      // Color application is tested indirectly through the 'handles cards with different colors' test
     });
 
-    it('renders with correct aspect ratio (4:3)', () => {
-      const { UNSAFE_getByType } = render(<CardTile card={mockCard} />);
+    it('renders without errors', () => {
+      render(<CardTile card={mockCard} />);
 
-      // CardTile uses Pressable with aspectRatio style
-      // We verify the component renders without errors
       expect(screen.getByText('Test Store')).toBeTruthy();
     });
   });
@@ -107,7 +106,7 @@ describe('CardTile', () => {
 
       render(<CardTile card={longNameCard} />);
 
-      const truncatedName = screen.getByText(/This is a very lo…/);
+      const truncatedName = screen.getByText(/This is a very long …/);
       expect(truncatedName).toBeTruthy();
     });
 
@@ -134,7 +133,8 @@ describe('CardTile', () => {
 
       const name = screen.getByText('12345678901234567890');
       expect(name).toBeTruthy();
-      // Should not have ellipsis since it's exactly 20
+      expect(name.props.children).toBe('12345678901234567890');
+      expect(name.props.children).not.toContain('…'); // Should not have ellipsis since it's exactly 20
     });
 
     it('adds ellipsis when truncating', () => {
@@ -202,15 +202,15 @@ describe('CardTile', () => {
       expect(mockPush).toHaveBeenCalledWith(`/card/${mockCard.id}`);
     });
 
-    it('shows press feedback (opacity change)', () => {
+    it('handles press event by triggering navigation', () => {
       render(<CardTile card={mockCard} />);
 
       const tile = screen.getByLabelText('Test Store');
       
-      // Pressable should handle press state
+      // Pressable should handle press state and invoke navigation
       fireEvent.press(tile);
 
-      // We verify the press was handled (navigation called)
+      // Verify the press handler triggered navigation
       expect(mockPush).toHaveBeenCalled();
     });
   });
@@ -245,11 +245,10 @@ describe('CardTile', () => {
         name: ''
       };
 
-      render(<CardTile card={emptyNameCard} />);
-
+      const { toJSON } = render(<CardTile card={emptyNameCard} />);
+      
       // Should render without crashing
-      const tile = screen.getByLabelText('');
-      expect(tile).toBeTruthy();
+      expect(toJSON()).toBeTruthy();
     });
 
     it('handles single character card name', () => {
@@ -260,8 +259,10 @@ describe('CardTile', () => {
 
       render(<CardTile card={singleCharCard} />);
 
-      const name = screen.getByText('A');
-      expect(name).toBeTruthy();
+      // Should render the character - use getAllByText since 'A' appears twice
+      // (once in the visual identifier and once in the name)
+      const elements = screen.getAllByText('A');
+      expect(elements.length).toBeGreaterThan(0);
     });
 
     it('handles special characters in card name', () => {

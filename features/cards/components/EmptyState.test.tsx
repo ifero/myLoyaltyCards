@@ -79,11 +79,9 @@ describe('EmptyState', () => {
   });
 
   describe('Layout - AC1', () => {
-    it('is centered vertically and horizontally', () => {
-      const { getByTestId } = render(<EmptyState />);
+    it('renders a layout container for the empty state', () => {
+      render(<EmptyState />);
 
-      // The component uses flex-1 items-center justify-center
-      // We can't directly test className, but we can verify the structure
       const container = screen.getByLabelText('Credit card icon').parent;
       expect(container).toBeTruthy();
     });
