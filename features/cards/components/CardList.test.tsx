@@ -183,6 +183,7 @@ describe('CardList', () => {
   describe('Responsive Columns - AC2', () => {
     it('uses 2 columns on screens < 400dp width', () => {
       mockDimensions.width = 375; // iPhone SE width
+      
       mockUseCards.mockReturnValue({
         cards: mockCards,
         isLoading: false,
@@ -199,6 +200,7 @@ describe('CardList', () => {
 
     it('uses 3 columns on screens >= 400dp width', () => {
       mockDimensions.width = 428; // iPhone 15 Pro Max width
+      
       mockUseCards.mockReturnValue({
         cards: mockCards,
         isLoading: false,
