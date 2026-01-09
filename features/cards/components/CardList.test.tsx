@@ -77,7 +77,7 @@ describe('CardList', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
-    (global as any).mockFlashListState.numColumns = undefined; // Reset captured value
+    global.mockFlashListState.numColumns = undefined; // Reset captured value
     
     // Spy on useWindowDimensions
     const RN = require('react-native');
@@ -194,7 +194,7 @@ describe('CardList', () => {
       render(<CardList />);
 
       // Verify FlashList receives numColumns=2
-      expect((global as any).mockFlashListState.numColumns).toBe(2);
+      expect(global.mockFlashListState.numColumns).toBe(2);
       expect(screen.getByText('Apple Store')).toBeTruthy();
     });
 
@@ -211,7 +211,7 @@ describe('CardList', () => {
       render(<CardList />);
 
       // Verify FlashList receives numColumns=3
-      expect((global as any).mockFlashListState.numColumns).toBe(3);
+      expect(global.mockFlashListState.numColumns).toBe(3);
       expect(screen.getByText('Apple Store')).toBeTruthy();
     });
   });
