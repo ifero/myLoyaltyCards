@@ -12,6 +12,12 @@ import { useCards } from '../hooks/useCards';
 import { CardList } from './CardList';
 import { EmptyState } from './EmptyState';
 
+// Mock expo-sqlite to prevent import errors
+jest.mock('expo-sqlite', () => ({
+  openDatabaseAsync: jest.fn(),
+  SQLiteDatabase: jest.fn()
+}));
+
 // Mock useCards hook
 jest.mock('../hooks/useCards');
 const mockUseCards = useCards as jest.MockedFunction<typeof useCards>;
@@ -39,58 +45,33 @@ jest.mock('@/shared/theme', () => ({
   })
 }));
 
-// Mock useWindowDimensions - declare before jest.mock for proper hoisting
-const mockUseWindowDimensions = jest.fn();
+// Mock useWindowDimensions
+const mockDimensions = { width: 375, height: 667, scale: 2, fontScale: 1 };
+jest.mock('react-native/Libraries/Utilities/useWindowDimensions', () => ({
+  default: jest.fn(() => mockDimensions),
+}));
 
-// Mock react-native
-jest.mock('react-native', () => {
-  // React is needed to create proper React elements for the testing library
-  // React Native components are built on React, so we use React.createElement
-  const React = require('react');
-  return {
-    View: (props: any) => React.createElement('View', props, props.children),
-    Text: (props: any) => React.createElement('Text', props, props.children),
-    Pressable: (props: any) => React.createElement('Pressable', props, props.children),
-    ActivityIndicator: (props: any) => React.createElement('ActivityIndicator', props),
-    StyleSheet: { 
-      create: (styles: any) => styles,
-      flatten: (style: any) => style,
-    },
-    useWindowDimensions: () => mockUseWindowDimensions(),
-  };
-});
-
-// Mock FlashList
+// Mock FlashList - using a simple approach
 const mockFlashListRender = jest.fn();
-jest.mock('@shopify/flash-list', () => {
-  // React is needed to create proper React elements for the testing library
-  const React = require('react');
-  
-  return {
-    FlashList: (props: any) => {
-      // Call the spy function with props so we can inspect them in tests
-      const mockRender = (global as any).__mockFlashListRender;
-      if (mockRender) {
-        mockRender(props);
-      }
-      
-      const { data, renderItem, ListEmptyComponent } = props;
-      
-      if (data.length === 0 && ListEmptyComponent) {
-        return React.createElement(ListEmptyComponent);
-      }
-
-      // Use a simple div-like structure without importing react-native
-      return React.createElement(
-        'View',
-        { 'data-testid': 'flash-list' },
-        data.map((item: any, index: number) =>
-          React.createElement('View', { key: item.id || index }, renderItem({ item }))
-        )
-      );
+jest.mock('@shopify/flash-list', () => ({
+  FlashList: (props: any) => {
+    // Call the spy function with props so we can inspect them in tests
+    const mockRender = (global as any).__mockFlashListRender;
+    if (mockRender) {
+      mockRender(props);
     }
-  };
-});
+    
+    const { data, renderItem, ListEmptyComponent } = props;
+    
+    // For empty data, return the component (testing library will handle rendering)
+    if (data.length === 0 && ListEmptyComponent) {
+      return ListEmptyComponent({});
+    }
+
+    // For data, render items
+    return data.map((item: any, index: number) => renderItem({ item, index }));
+  }
+}));
 
 describe('CardList', () => {
   const mockCards: LoyaltyCard[] = [
@@ -129,13 +110,11 @@ describe('CardList', () => {
     mockFlashListRender.mockClear();
     (global as any).__mockFlashListRender = mockFlashListRender;
     
-    // Set default dimensions
-    mockUseWindowDimensions.mockReturnValue({
-      width: 375,
-      height: 667,
-      scale: 2,
-      fontScale: 1,
-    });
+    // Reset default dimensions
+    mockDimensions.width = 375;
+    mockDimensions.height = 667;
+    mockDimensions.scale = 2;
+    mockDimensions.fontScale = 1;
     
     mockUseCards.mockReturnValue({
       cards: [],
@@ -154,8 +133,10 @@ describe('CardList', () => {
         refetch: mockRefetch
       });
 
-      render(<CardList />);
-      const activityIndicator = screen.getByTestId('activity-indicator');
+      const { UNSAFE_getByType } = render(<CardList />);
+      const activityIndicator = UNSAFE_getByType(
+        require('react-native').ActivityIndicator
+      );
       expect(activityIndicator).toBeTruthy();
     });
   });
@@ -228,12 +209,7 @@ describe('CardList', () => {
 
   describe('Responsive Columns - AC2', () => {
     it('uses 2 columns on screens < 400dp width', () => {
-      mockUseWindowDimensions.mockReturnValue({
-        width: 375, // iPhone SE width
-        height: 667,
-        scale: 2,
-        fontScale: 1,
-      });
+      mockDimensions.width = 375; // iPhone SE width
       
       mockUseCards.mockReturnValue({
         cards: mockCards,
@@ -252,12 +228,7 @@ describe('CardList', () => {
     });
 
     it('uses 3 columns on screens >= 400dp width', () => {
-      mockUseWindowDimensions.mockReturnValue({
-        width: 428, // iPhone 15 Pro Max width
-        height: 926,
-        scale: 3,
-        fontScale: 1,
-      });
+      mockDimensions.width = 428; // iPhone 15 Pro Max width
       
       mockUseCards.mockReturnValue({
         cards: mockCards,

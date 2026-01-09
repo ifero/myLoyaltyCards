@@ -7,7 +7,7 @@ module.exports = {
   preset: 'react-native',
   setupFilesAfterEnv: ['<rootDir>/jest.setup.js'],
   transformIgnorePatterns: [
-    'node_modules/(?!(react-native|@react-native|expo|expo-.*|@expo|expo-modules-core|burnt|zod|@hookform|react-hook-form|@react-native-picker)/)',
+    'node_modules/(?!(react-native|@react-native|expo|@expo|expo-modules-core|expo-haptics|burnt|zod|@hookform|react-hook-form|@react-native-picker)/)',
   ],
   moduleNameMapper: {
     '^@/(.*)$': '<rootDir>/$1',
