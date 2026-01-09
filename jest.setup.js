@@ -5,6 +5,11 @@
 
 // Built-in matchers are automatically available in @testing-library/react-native v12.4+
 
+// Polyfill for TransformStream (required by expo)
+if (typeof global.TransformStream === 'undefined') {
+  global.TransformStream = class TransformStream {};
+}
+
 // Mock crypto.randomUUID (not available in jsdom)
 // Set on both global and globalThis for compatibility
 const mockUUID = '123e4567-e89b-12d3-a456-426614174000';
@@ -27,6 +32,12 @@ Object.defineProperty(globalThis, 'crypto', {
   writable: true,
   configurable: true
 });
+
+// Mock expo-sqlite
+jest.mock('expo-sqlite', () => ({
+  openDatabaseAsync: jest.fn(),
+  SQLiteDatabase: jest.fn()
+}));
 
 // Mock expo-haptics
 jest.mock('expo-haptics', () => ({
@@ -89,6 +100,35 @@ jest.mock('@react-native-picker/picker', () => {
 
   return {
     Picker: MockPicker
+  };
+});
+
+// Mock @shopify/flash-list
+// Export state object to allow tests to capture props
+global.mockFlashListState = { numColumns: undefined };
+jest.mock('@shopify/flash-list', () => {
+  const mockReact = require('react');
+  const mockRN = require('react-native');
+
+  return {
+    FlashList: (props) => {
+      const { data, renderItem, ListEmptyComponent, testID, numColumns } = props;
+      
+      // Store numColumns in global state for test assertions
+      global.mockFlashListState.numColumns = numColumns;
+
+      if (data.length === 0 && ListEmptyComponent) {
+        return mockReact.createElement(ListEmptyComponent);
+      }
+
+      return mockReact.createElement(
+        mockRN.View,
+        { testID },
+        data.map((item, index) =>
+          mockReact.createElement(mockRN.View, { key: item.id || index }, renderItem({ item }))
+        )
+      );
+    }
   };
 });
 
