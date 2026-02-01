@@ -108,6 +108,12 @@ const RootLayoutContent = () => {
             title: 'Card Details'
           }}
         />
+        <Stack.Screen
+          name="card/[id]/edit"
+          options={{
+            title: 'Edit Card'
+          }}
+        />
       </Stack>
       <StatusBar style={isDark ? 'light' : 'dark'} />
     </>

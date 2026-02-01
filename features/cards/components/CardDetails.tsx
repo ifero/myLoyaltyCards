@@ -112,11 +112,8 @@ export const CardDetails: React.FC<CardDetailsProps> = ({ card, onCopy }) => {
    * Navigate to Edit Card screen (Story 2.7)
    */
   const handleEditCard = useCallback(() => {
-    // Navigate to edit screen (will be implemented in Story 2.7)
-    // For now, show placeholder
-    Alert.alert('Edit Card', 'Edit functionality coming in Story 2.7');
-    // router.push(`/edit-card/${card.id}`);
-  }, []);
+    router.push(`/card/${card.id}/edit`);
+  }, [router, card.id]);
 
   /**
    * Show delete confirmation (Story 2.8)

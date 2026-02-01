@@ -17,6 +17,7 @@ Prioritize mobile-first patterns, performance, and cross-platform compatibility.
 Before implementing code that uses a library:
 
 1. **Resolve the library ID first**:
+
    ```
    Use mcp_context7_resolve-library-id with the library name
    ```
@@ -91,9 +92,11 @@ npx expo export -p web && npx eas-cli@latest deploy   # Deploy web to EAS Hostin
 **ALWAYS use the following process when adding new libraries:**
 
 1. **Use Expo's install command:**
+
    ```bash
    npx expo install [library-name]
    ```
+
    - This ensures version compatibility with the current Expo SDK
    - **NEVER use `yarn add` or `npm install` directly** for Expo-compatible libraries
 
@@ -102,6 +105,7 @@ npx expo export -p web && npx eas-cli@latest deploy   # Deploy web to EAS Hostin
    - Check for any additional setup steps (permissions, plugins, etc.)
 
 **Why This Matters:**
+
 - Expo SDK versions have specific compatible library versions
 - Using `npx expo install` automatically resolves the correct version
 - Manual installation with yarn/npm can cause version conflicts and runtime errors
@@ -111,6 +115,7 @@ npx expo export -p web && npx eas-cli@latest deploy   # Deploy web to EAS Hostin
 **When using `uuid` or any crypto-dependent library:**
 
 1. **MUST import `react-native-get-random-values` BEFORE any library that uses it**
+
    ```typescript
    import 'react-native-get-random-values'; // Must be FIRST
    import { v4 as uuidv4 } from 'uuid';
@@ -121,6 +126,7 @@ npx expo export -p web && npx eas-cli@latest deploy   # Deploy web to EAS Hostin
 3. **Typical location:** Root layout file (`app/_layout.tsx`) as the very first import
 
 **Why This Matters:**
+
 - React Native doesn't have native `crypto.getRandomValues()` support
 - Without this polyfill, uuid and crypto libraries will crash at runtime
 - Import order is critical - the polyfill must execute before any dependent code
@@ -179,7 +185,6 @@ If there are errors in **Expo Go** or the project is not running, create a **dev
 When working on this project:
 
 1. **Always start by consulting the appropriate documentation**:
-
    - For general Expo questions: https://docs.expo.dev/llms-full.txt
    - For EAS/deployment questions: https://docs.expo.dev/llms-eas.txt
    - For SDK/API questions: https://docs.expo.dev/llms-sdk.txt
@@ -187,3 +192,80 @@ When working on this project:
 2. **Understand before implementing**: Read the relevant docs section before writing code
 
 3. **Follow existing patterns**: Look at existing components and screens for patterns to follow
+
+## 🚨 Git Workflow (MANDATORY)
+
+**ALWAYS follow this git workflow when implementing features or fixes:**
+
+### 1. Create a Meaningful Branch
+
+Before starting any work, create a feature branch with a descriptive name:
+
+```bash
+git checkout -b feature/<story-id>-<short-description>
+# Examples:
+# git checkout -b feature/2.7-edit-card
+# git checkout -b fix/barcode-scanner-crash
+# git checkout -b refactor/card-form-validation
+```
+
+**Branch naming conventions:**
+
+- `feature/` - New features or stories
+- `fix/` - Bug fixes
+- `refactor/` - Code refactoring without functional changes
+- `docs/` - Documentation updates
+
+### 2. Atomic Commits
+
+Make commits that are **small, focused, and self-contained**:
+
+- Each commit should represent a single logical change
+- Commit message should clearly describe what changed and why
+- Use conventional commit format:
+
+```bash
+git commit -m "feat(scope): short description
+
+- Bullet point details
+- What was added/changed
+- Acceptance criteria met"
+```
+
+**Commit types:**
+
+- `feat` - New feature
+- `fix` - Bug fix
+- `refactor` - Code refactoring
+- `docs` - Documentation
+- `test` - Adding or updating tests
+- `chore` - Maintenance tasks
+
+### 3. Push and Update Sprint Status
+
+After completing work:
+
+1. Push the branch to remote
+2. Update `docs/sprint-artifacts/sprint-status.yaml` to reflect progress
+3. Mark story status appropriately (`in-progress` → `review` → `done`)
+
+### 4. Code Review and PR Workflow (MANDATORY)
+
+When work is complete, follow this workflow:
+
+1. **Update status to `review`** in `sprint-status.yaml`
+2. **Run code review with Dev agent**:
+   ```
+   Use runSubagent with agentName: "bmd-custom-bmm-dev"
+   Provide full context about files changed and acceptance criteria
+   ```
+3. **If APPROVED**:
+   - Update status to `done` in `sprint-status.yaml`
+   - Create Pull Request with:
+     - Clear title: `feat(scope): description (Story X.Y)`
+     - Body with summary, changes, acceptance criteria checklist
+     - Link to code review approval
+4. **If CHANGES_REQUESTED**:
+   - Address the feedback
+   - Re-run code review
+   - Repeat until approved
