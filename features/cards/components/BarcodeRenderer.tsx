@@ -114,16 +114,32 @@ function generateBarcodeSvg(
       }
     };
 
-    // Run JsBarcode
-    JsBarcode(mockSvg as unknown as SVGElement, value, {
-      format: jsFormat,
-      width: 2,
-      height,
-      displayValue: false,
-      margin: 10,
-      lineColor: color,
-      background: 'transparent'
-    });
+    // JsBarcode uses document.createElementNS internally, so we need to mock document
+    const mockDocument = {
+      createElementNS(_ns: string, tagName: string) {
+        return mockSvg.createElementNS(_ns, tagName);
+      }
+    };
+
+    // Temporarily set global.document for JsBarcode
+    const originalDocument = (global as { document?: unknown }).document;
+    (global as { document?: unknown }).document = mockDocument;
+
+    try {
+      // Run JsBarcode
+      JsBarcode(mockSvg as unknown as SVGElement, value, {
+        format: jsFormat,
+        width: 2,
+        height,
+        displayValue: false,
+        margin: 10,
+        lineColor: color,
+        background: 'transparent'
+      });
+    } finally {
+      // Always restore original document
+      (global as { document?: unknown }).document = originalDocument;
+    }
 
     // Build SVG string from the mock element
     svgContent = `<svg xmlns="${svgNS}" width="${mockSvg._attributes.width || svgWidth}" height="${mockSvg._attributes.height || svgHeight}" viewBox="0 0 ${mockSvg._attributes.width || svgWidth} ${mockSvg._attributes.height || svgHeight}">`;
