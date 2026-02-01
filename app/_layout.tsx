@@ -93,6 +93,15 @@ const RootLayoutContent = () => {
             headerShown: false
           }}
         />
+        <Stack.Screen
+          name="barcode/[id]"
+          options={{
+            title: 'Barcode',
+            presentation: 'fullScreenModal',
+            headerShown: false,
+            animation: 'fade'
+          }}
+        />
       </Stack>
       <StatusBar style={isDark ? 'light' : 'dark'} />
     </>
