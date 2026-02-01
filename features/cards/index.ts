@@ -4,6 +4,7 @@
  * Story 2.2: Add Card Manually
  * Story 2.3: Scan Barcode with Camera
  * Story 2.4: Display Virtual Logo
+ * Story 2.5: Display Barcode (Barcode Flash)
  *
  * Exports card-related components and hooks.
  */
@@ -18,6 +19,10 @@ export { ColorPicker } from './components/ColorPicker';
 export { FormatPicker } from './components/FormatPicker';
 export { BarcodeScanner } from './components/BarcodeScanner';
 export { VirtualLogo } from './components/VirtualLogo';
+export { BarcodeRenderer } from './components/BarcodeRenderer';
+export type { BarcodeRendererProps } from './components/BarcodeRenderer';
+export { BarcodeFlash } from './components/BarcodeFlash';
+export type { BarcodeFlashProps } from './components/BarcodeFlash';
 
 // Hooks
 export { useCards } from './hooks/useCards';
@@ -25,6 +30,8 @@ export { useAddCard } from './hooks/useAddCard';
 export type { AddCardInput } from './hooks/useAddCard';
 export { useBarcodeScanner } from './hooks/useBarcodeScanner';
 export type { ScanResult } from './hooks/useBarcodeScanner';
+export { useBrightness } from './hooks/useBrightness';
+export type { UseBrightnessReturn } from './hooks/useBrightness';
 
 // Utils
 export { generateInitials } from './utils/initials';
