@@ -118,12 +118,12 @@ describe('useDeleteCard', () => {
   });
 
   describe('Loading State', () => {
-    it('sets isDeleting to true during operation', async () => {
-      let resolveDelete: (value?: unknown) => void;
+    it('sets isDeleting to true during operation and resets on failure', async () => {
+      let rejectDelete: (reason?: unknown) => void;
       (cardRepository.deleteCard as jest.Mock).mockImplementation(
         () =>
-          new Promise((resolve) => {
-            resolveDelete = resolve;
+          new Promise((_, reject) => {
+            rejectDelete = reject;
           })
       );
 
@@ -138,13 +138,26 @@ describe('useDeleteCard', () => {
       // Check loading state is true
       expect(result.current.isDeleting).toBe(true);
 
-      // Complete the operation
+      // Complete the operation with failure
       await act(async () => {
-        resolveDelete!();
+        rejectDelete!(new Error('Failed'));
         await deletePromise;
       });
 
+      // Should be false after failure
       expect(result.current.isDeleting).toBe(false);
+    });
+
+    it('remains isDeleting=true on success (avoids unmount update)', async () => {
+      const { result } = renderHook(() => useDeleteCard(mockCardId));
+
+      await act(async () => {
+        await result.current.deleteCard();
+      });
+
+      // Should remain true because we navigated away and didn't reset state
+      // This prevents "Can't perform a React state update on an unmounted component" warning
+      expect(result.current.isDeleting).toBe(true);
     });
   });
 

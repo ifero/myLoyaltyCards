@@ -85,7 +85,7 @@ development_status:
   2-5-display-barcode-barcode-flash: done
   2-6-view-card-details: done
   2-7-edit-card: done
-  2-8-delete-card: review
+  2-8-delete-card: done
   epic-2-retrospective: optional
 
   # Epic 3: Italian Brand Catalogue

@@ -87,9 +87,8 @@ export function useDeleteCard(cardId: string): UseDeleteCardReturn {
         duration: 3
       });
 
+      setIsDeleting(false); // Only reset loading state on failure (success unmounts)
       return false;
-    } finally {
-      setIsDeleting(false);
     }
   }, [cardId]);
 
