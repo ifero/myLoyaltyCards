@@ -85,6 +85,9 @@ function generateBarcodeSvg(
       getAttribute(name: string) {
         return this._attributes[name];
       },
+      hasAttribute(name: string) {
+        return name in this._attributes;
+      },
       appendChild(child: { tagName: string; attributes: Record<string, string> }) {
         this._children.push(child);
       },
@@ -96,11 +99,15 @@ function generateBarcodeSvg(
           tagName: string;
           attributes: Record<string, string>;
           setAttribute: (name: string, value: string) => void;
+          hasAttribute: (name: string) => boolean;
         } = {
           tagName,
           attributes: {},
           setAttribute(name: string, value: string) {
             this.attributes[name] = value;
+          },
+          hasAttribute(name: string) {
+            return name in this.attributes;
           }
         };
         return element;
