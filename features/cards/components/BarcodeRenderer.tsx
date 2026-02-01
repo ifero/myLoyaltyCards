@@ -3,17 +3,16 @@
  * Story 2.5: Display Barcode (Barcode Flash)
  *
  * Multi-format barcode rendering component that supports:
- * - Linear barcodes: CODE128, EAN13, EAN8, CODE39, UPCA (via JsBarcode)
- * - 2D barcodes: QR (via react-native-qrcode-svg)
+ * - Linear barcodes: CODE128, EAN13, EAN8, CODE39, UPCA
+ * - 2D barcodes: QR
  *
- * Renders barcodes as SVG for crisp, scalable display.
+ * Uses @bwip-js/react-native for native barcode generation.
+ * Renders barcodes as PNG images via data URLs for optimal performance.
  */
 
-import JsBarcode from 'jsbarcode';
-import React, { useMemo } from 'react';
-import { View } from 'react-native';
-import QRCode from 'react-native-qrcode-svg';
-import { SvgXml } from 'react-native-svg';
+import { toDataURL, type DataURL, type RenderOptions } from '@bwip-js/react-native';
+import React, { useEffect, useState } from 'react';
+import { Image, PixelRatio, View } from 'react-native';
 
 import type { BarcodeFormat } from '@/core/schemas';
 
@@ -36,136 +35,29 @@ export interface BarcodeRendererProps {
 }
 
 /**
- * Map BarcodeFormat to JsBarcode format string
+ * Map BarcodeFormat to bwip-js bcid (barcode identifier)
  */
-const JSBARCODE_FORMAT_MAP: Record<Exclude<BarcodeFormat, 'QR'>, string> = {
-  CODE128: 'CODE128',
-  EAN13: 'EAN13',
-  EAN8: 'EAN8',
-  CODE39: 'CODE39',
-  UPCA: 'UPC'
+const BWIPJS_FORMAT_MAP: Record<BarcodeFormat, string> = {
+  CODE128: 'code128',
+  EAN13: 'ean13',
+  EAN8: 'ean8',
+  CODE39: 'code39',
+  UPCA: 'upca',
+  QR: 'qrcode'
 };
 
 /**
- * Generate SVG string for linear barcode using JsBarcode
+ * Convert hex color to bwip-js format (without #)
  */
-function generateBarcodeSvg(
-  value: string,
-  format: Exclude<BarcodeFormat, 'QR'>,
-  width: number,
-  height: number,
-  color: string
-): string | null {
-  try {
-    // Create a minimal SVG document for JsBarcode
-    const svgNS = 'http://www.w3.org/2000/svg';
-
-    // Create encoder options
-    const jsFormat = JSBARCODE_FORMAT_MAP[format];
-
-    // We need to calculate the encoding first to get dimensions
-    // JsBarcode expects a DOM element, so we'll use a custom approach
-    // by creating an SVG string directly
-
-    // For now, use xmldom-like approach with a simple string builder
-    let svgContent = '';
-    let svgWidth = width;
-    let svgHeight = height;
-
-    // Create a mock element that JsBarcode can use
-    const mockSvg = {
-      nodeName: 'svg',
-      _attributes: {} as Record<string, string>,
-      _children: [] as Array<{ tagName: string; attributes: Record<string, string> }>,
-      setAttribute(name: string, value: string) {
-        this._attributes[name] = value;
-        if (name === 'width') svgWidth = parseFloat(value);
-        if (name === 'height') svgHeight = parseFloat(value);
-      },
-      getAttribute(name: string) {
-        return this._attributes[name];
-      },
-      hasAttribute(name: string) {
-        return name in this._attributes;
-      },
-      appendChild(child: { tagName: string; attributes: Record<string, string> }) {
-        this._children.push(child);
-      },
-      getElementsByTagName() {
-        return [];
-      },
-      createElementNS(_ns: string, tagName: string) {
-        const element: {
-          tagName: string;
-          attributes: Record<string, string>;
-          setAttribute: (name: string, value: string) => void;
-          hasAttribute: (name: string) => boolean;
-        } = {
-          tagName,
-          attributes: {},
-          setAttribute(name: string, value: string) {
-            this.attributes[name] = value;
-          },
-          hasAttribute(name: string) {
-            return name in this.attributes;
-          }
-        };
-        return element;
-      }
-    };
-
-    // JsBarcode uses document.createElementNS internally, so we need to mock document
-    const mockDocument = {
-      createElementNS(_ns: string, tagName: string) {
-        return mockSvg.createElementNS(_ns, tagName);
-      }
-    };
-
-    // Temporarily set global.document for JsBarcode
-    const originalDocument = (global as { document?: unknown }).document;
-    (global as { document?: unknown }).document = mockDocument;
-
-    try {
-      // Run JsBarcode
-      JsBarcode(mockSvg as unknown as SVGElement, value, {
-        format: jsFormat,
-        width: 2,
-        height,
-        displayValue: false,
-        margin: 10,
-        lineColor: color,
-        background: 'transparent'
-      });
-    } finally {
-      // Always restore original document
-      (global as { document?: unknown }).document = originalDocument;
-    }
-
-    // Build SVG string from the mock element
-    svgContent = `<svg xmlns="${svgNS}" width="${mockSvg._attributes.width || svgWidth}" height="${mockSvg._attributes.height || svgHeight}" viewBox="0 0 ${mockSvg._attributes.width || svgWidth} ${mockSvg._attributes.height || svgHeight}">`;
-
-    for (const child of mockSvg._children) {
-      const attrs = Object.entries(child.attributes)
-        .map(([key, val]) => `${key}="${val}"`)
-        .join(' ');
-      svgContent += `<${child.tagName} ${attrs}/>`;
-    }
-
-    svgContent += '</svg>';
-
-    return svgContent;
-  } catch (error) {
-    console.warn('Failed to generate barcode:', error);
-    return null;
-  }
+function hexToBwipColor(hex: string): string {
+  return hex.replace(/^#/, '');
 }
 
 /**
  * BarcodeRenderer Component
  *
  * Renders barcodes in various formats optimized for scanning.
- * Linear barcodes use JsBarcode + react-native-svg.
- * QR codes use react-native-qrcode-svg.
+ * Uses bwip-js native React Native integration for all barcode types.
  *
  * @example
  * ```tsx
@@ -180,46 +72,75 @@ export function BarcodeRenderer({
   color = '#000000',
   backgroundColor = 'transparent'
 }: BarcodeRendererProps) {
+  const [source, setSource] = useState<DataURL | null>(null);
+  const [error, setError] = useState<boolean>(false);
+
   const isQR = format === 'QR';
   const barcodeWidth = width ?? (isQR ? 200 : 280);
 
-  // Generate SVG for linear barcodes (must be called unconditionally per React rules)
-  const svgXml = useMemo(() => {
-    if (isQR) return null;
-    return generateBarcodeSvg(
-      value,
-      format as Exclude<BarcodeFormat, 'QR'>,
-      barcodeWidth,
-      height,
-      color
-    );
-  }, [value, format, barcodeWidth, height, color, isQR]);
+  useEffect(() => {
+    let cancelled = false;
 
-  // QR Code rendering
-  if (isQR) {
-    return (
-      <View
-        style={{ backgroundColor }}
-        accessibilityLabel={`QR code for ${value}`}
-        accessibilityRole="image"
-      >
-        <QRCode value={value} size={barcodeWidth} color={color} backgroundColor={backgroundColor} />
-      </View>
-    );
-  }
+    async function generateBarcode() {
+      try {
+        const bcid = BWIPJS_FORMAT_MAP[format];
+        const barColor = hexToBwipColor(color);
 
-  if (!svgXml) {
-    // Fallback for invalid barcode
+        // Calculate scale based on device pixel ratio for crisp rendering
+        const scale = PixelRatio.get();
+
+        // bwip-js options
+        const options: RenderOptions = {
+          bcid,
+          text: value,
+          scale,
+          height: isQR ? barcodeWidth / 10 : height / 10, // Convert to mm (bwip uses mm)
+          includetext: false, // Don't show text below barcode
+          barcolor: barColor,
+          ...(backgroundColor !== 'transparent' && {
+            backgroundcolor: hexToBwipColor(backgroundColor)
+          })
+        };
+
+        // For QR codes, set width equal to height for square aspect
+        if (isQR) {
+          options.width = barcodeWidth / 10;
+        }
+
+        const result = await toDataURL(options);
+
+        if (!cancelled) {
+          setSource(result);
+          setError(false);
+        }
+      } catch (err) {
+        console.warn('Failed to generate barcode:', err);
+        if (!cancelled) {
+          setError(true);
+          setSource(null);
+        }
+      }
+    }
+
+    generateBarcode();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [value, format, barcodeWidth, height, color, backgroundColor, isQR]);
+
+  // Error or loading fallback
+  if (error || !source) {
     return (
       <View
         style={{
           width: barcodeWidth,
-          height,
-          backgroundColor: '#f0f0f0',
+          height: isQR ? barcodeWidth : height,
+          backgroundColor: error ? '#f0f0f0' : 'transparent',
           alignItems: 'center',
           justifyContent: 'center'
         }}
-        accessibilityLabel="Invalid barcode"
+        accessibilityLabel={error ? 'Invalid barcode' : 'Loading barcode'}
         accessibilityRole="image"
       />
     );
@@ -227,11 +148,18 @@ export function BarcodeRenderer({
 
   return (
     <View
-      style={{ backgroundColor, width: barcodeWidth, height }}
+      style={{ backgroundColor }}
       accessibilityLabel={`${format} barcode for ${value}`}
       accessibilityRole="image"
     >
-      <SvgXml xml={svgXml} width={barcodeWidth} height={height} />
+      <Image
+        source={{ uri: source.uri }}
+        style={{
+          width: barcodeWidth,
+          height: isQR ? barcodeWidth : height
+        }}
+        resizeMode="contain"
+      />
     </View>
   );
 }

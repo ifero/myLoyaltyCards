@@ -16,6 +16,7 @@
     "prepare": "husky"
   },
   "dependencies": {
+    "@bwip-js/react-native": "^4.8.0",
     "@hookform/resolvers": "^5.2.2",
     "@react-native-picker/picker": "2.11.1",
     "@shopify/flash-list": "2.0.2",

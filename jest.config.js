@@ -11,6 +11,7 @@ module.exports = {
   ],
   moduleNameMapper: {
     '^@/(.*)$': '<rootDir>/$1',
+    '^@bwip-js/react-native$': '<rootDir>/__mocks__/@bwip-js/react-native.js',
   },
   testMatch: ['**/*.test.[jt]s?(x)'],
   testPathIgnorePatterns: ['/node_modules/', 'babel.config.test.js'],
