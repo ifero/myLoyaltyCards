@@ -1,4 +1,4 @@
-/* eslint-env jest, node */
+/* global jest, module */
 /**
  * Mock for @bwip-js/react-native
  * Used in Jest tests for barcode rendering
