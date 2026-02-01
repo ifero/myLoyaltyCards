@@ -130,7 +130,7 @@ describe('BarcodeRenderer', () => {
 
     it('should use custom background color', async () => {
       const { getByLabelText } = render(
-        <BarcodeRenderer value="test" format="CODE128" backgroundColor="#FFFFFF" />
+        <BarcodeRenderer value="test" format="CODE128" backgroundColor="#00FF00" />
       );
 
       await waitFor(() => {
@@ -139,7 +139,21 @@ describe('BarcodeRenderer', () => {
 
       expect(mockToDataURL).toHaveBeenCalledWith(
         expect.objectContaining({
-          backgroundcolor: 'FFFFFF' // bwip-js uses color without #
+          backgroundcolor: '00FF00' // bwip-js uses color without #
+        })
+      );
+    });
+
+    it('should use white background by default', async () => {
+      const { getByLabelText } = render(<BarcodeRenderer value="test" format="CODE128" />);
+
+      await waitFor(() => {
+        expect(getByLabelText('CODE128 barcode for test')).toBeTruthy();
+      });
+
+      expect(mockToDataURL).toHaveBeenCalledWith(
+        expect.objectContaining({
+          backgroundcolor: 'FFFFFF'
         })
       );
     });
@@ -163,6 +177,42 @@ describe('BarcodeRenderer', () => {
       await waitFor(() => {
         expect(getByLabelText('CODE128 barcode for test')).toBeTruthy();
       });
+
+      // Default height is 12mm (120px / 10)
+      expect(mockToDataURL).toHaveBeenCalledWith(
+        expect.objectContaining({
+          height: 12
+        })
+      );
+    });
+
+    it('should use custom width for linear barcodes', async () => {
+      const { getByLabelText } = render(
+        <BarcodeRenderer value="test" format="CODE128" width={350} />
+      );
+
+      await waitFor(() => {
+        expect(getByLabelText('CODE128 barcode for test')).toBeTruthy();
+      });
+
+      // Width doesn't affect bwip-js options for linear barcodes, but barcode renders
+      expect(mockToDataURL).toHaveBeenCalled();
+    });
+
+    it('should use custom height for linear barcodes', async () => {
+      const { getByLabelText } = render(
+        <BarcodeRenderer value="test" format="CODE128" height={80} />
+      );
+
+      await waitFor(() => {
+        expect(getByLabelText('CODE128 barcode for test')).toBeTruthy();
+      });
+
+      expect(mockToDataURL).toHaveBeenCalledWith(
+        expect.objectContaining({
+          height: 8 // 80 / 10 (converted to mm)
+        })
+      );
     });
 
     it('should use default width of 200 for QR codes', async () => {
@@ -177,6 +227,32 @@ describe('BarcodeRenderer', () => {
           width: 20 // 200 / 10 (converted to mm)
         })
       );
+    });
+
+    it('should use custom width for QR codes', async () => {
+      const { getByLabelText } = render(<BarcodeRenderer value="test" format="QR" width={300} />);
+
+      await waitFor(() => {
+        expect(getByLabelText('QR barcode for test')).toBeTruthy();
+      });
+
+      expect(mockToDataURL).toHaveBeenCalledWith(
+        expect.objectContaining({
+          width: 30, // 300 / 10 (converted to mm)
+          height: 30 // QR codes use width for both dimensions
+        })
+      );
+    });
+
+    it('should accept containerStyle prop', async () => {
+      const customStyle = { marginTop: 20 };
+      const { getByLabelText } = render(
+        <BarcodeRenderer value="test" format="CODE128" containerStyle={customStyle} />
+      );
+
+      await waitFor(() => {
+        expect(getByLabelText('CODE128 barcode for test')).toBeTruthy();
+      });
     });
   });
 

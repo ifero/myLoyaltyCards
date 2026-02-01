@@ -11,10 +11,13 @@
  */
 
 import { toDataURL, type DataURL, type RenderOptions } from '@bwip-js/react-native';
-import React, { useEffect, useState } from 'react';
-import { Image, PixelRatio, View } from 'react-native';
+import React, { memo, useEffect, useMemo, useState } from 'react';
+import { Image, PixelRatio, type ViewStyle, View } from 'react-native';
 
 import type { BarcodeFormat } from '@/core/schemas';
+
+/** Conversion ratio from pixels to millimeters (bwip-js uses mm) */
+const PX_TO_MM_RATIO = 10;
 
 /**
  * Props for BarcodeRenderer component
@@ -30,8 +33,10 @@ export interface BarcodeRendererProps {
   height?: number;
   /** Color of the barcode bars/modules (default: #000000) */
   color?: string;
-  /** Background color (default: transparent) */
+  /** Background color (default: #FFFFFF) */
   backgroundColor?: string;
+  /** Optional container style override */
+  containerStyle?: ViewStyle;
 }
 
 /**
@@ -64,13 +69,14 @@ function hexToBwipColor(hex: string): string {
  * <BarcodeRenderer value="1234567890128" format="EAN13" />
  * ```
  */
-export function BarcodeRenderer({
+export const BarcodeRenderer = memo(function BarcodeRenderer({
   value,
   format,
   width,
   height = 120,
   color = '#000000',
-  backgroundColor = 'transparent'
+  backgroundColor = '#FFFFFF',
+  containerStyle
 }: BarcodeRendererProps) {
   const [source, setSource] = useState<DataURL | null>(null);
   const [error, setError] = useState<boolean>(false);
@@ -78,43 +84,46 @@ export function BarcodeRenderer({
   const isQR = format === 'QR';
   const barcodeWidth = width ?? (isQR ? 200 : 280);
 
+  // Memoize bwip-js options to avoid recreating on every render
+  const bwipOptions = useMemo((): RenderOptions => {
+    const bcid = BWIPJS_FORMAT_MAP[format];
+    const barColor = hexToBwipColor(color);
+    const scale = PixelRatio.get();
+
+    const options: RenderOptions = {
+      bcid,
+      text: value,
+      scale,
+      height: isQR ? barcodeWidth / PX_TO_MM_RATIO : height / PX_TO_MM_RATIO,
+      includetext: false,
+      barcolor: barColor,
+      ...(backgroundColor !== 'transparent' && {
+        backgroundcolor: hexToBwipColor(backgroundColor)
+      })
+    };
+
+    if (isQR) {
+      options.width = barcodeWidth / PX_TO_MM_RATIO;
+    }
+
+    return options;
+  }, [format, value, barcodeWidth, height, color, backgroundColor, isQR]);
+
   useEffect(() => {
     let cancelled = false;
 
     async function generateBarcode() {
       try {
-        const bcid = BWIPJS_FORMAT_MAP[format];
-        const barColor = hexToBwipColor(color);
-
-        // Calculate scale based on device pixel ratio for crisp rendering
-        const scale = PixelRatio.get();
-
-        // bwip-js options
-        const options: RenderOptions = {
-          bcid,
-          text: value,
-          scale,
-          height: isQR ? barcodeWidth / 10 : height / 10, // Convert to mm (bwip uses mm)
-          includetext: false, // Don't show text below barcode
-          barcolor: barColor,
-          ...(backgroundColor !== 'transparent' && {
-            backgroundcolor: hexToBwipColor(backgroundColor)
-          })
-        };
-
-        // For QR codes, set width equal to height for square aspect
-        if (isQR) {
-          options.width = barcodeWidth / 10;
-        }
-
-        const result = await toDataURL(options);
+        const result = await toDataURL(bwipOptions);
 
         if (!cancelled) {
           setSource(result);
           setError(false);
         }
       } catch (err) {
-        console.warn('Failed to generate barcode:', err);
+        if (__DEV__) {
+          console.warn('Failed to generate barcode:', err);
+        }
         if (!cancelled) {
           setError(true);
           setSource(null);
@@ -127,7 +136,7 @@ export function BarcodeRenderer({
     return () => {
       cancelled = true;
     };
-  }, [value, format, barcodeWidth, height, color, backgroundColor, isQR]);
+  }, [bwipOptions]);
 
   // Error or loading fallback
   if (error || !source) {
@@ -148,7 +157,7 @@ export function BarcodeRenderer({
 
   return (
     <View
-      style={{ backgroundColor }}
+      style={[{ backgroundColor, paddingHorizontal: 16 }, containerStyle]}
       accessibilityLabel={`${format} barcode for ${value}`}
       accessibilityRole="image"
     >
@@ -162,4 +171,4 @@ export function BarcodeRenderer({
       />
     </View>
   );
-}
+});
