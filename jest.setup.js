@@ -121,7 +121,7 @@ jest.mock('@shopify/flash-list', () => {
   return {
     FlashList: (props) => {
       const { data, renderItem, ListEmptyComponent, testID, numColumns } = props;
-      
+
       // Store numColumns in global state for test assertions
       global.mockFlashListState.numColumns = numColumns;
 
@@ -215,16 +215,24 @@ jest.mock('react-native-css-interop', () => ({
 }));
 
 // Mock the wrap-jsx runtime that's causing the displayName issue
-jest.mock('react-native-css-interop/src/runtime/wrap-jsx', () => ({
-  wrapJSX: (element) => element,
-  __esModule: true
-}), { virtual: true });
+jest.mock(
+  'react-native-css-interop/src/runtime/wrap-jsx',
+  () => ({
+    wrapJSX: (element) => element,
+    __esModule: true
+  }),
+  { virtual: true }
+);
 
 // Mock the third-party libs file that causes the displayName issue
-jest.mock('react-native-css-interop/src/runtime/third-party-libs/react-native-safe-area-context.native', () => ({
-  maybeHijackSafeAreaProvider: (element) => element,
-  __esModule: true
-}), { virtual: true });
+jest.mock(
+  'react-native-css-interop/src/runtime/third-party-libs/react-native-safe-area-context.native',
+  () => ({
+    maybeHijackSafeAreaProvider: (element) => element,
+    __esModule: true
+  }),
+  { virtual: true }
+);
 
 // Silence console warnings in tests
 const originalWarn = console.warn;

@@ -5,6 +5,7 @@
  * Story 2.3: Scan Barcode with Camera
  * Story 2.4: Display Virtual Logo
  * Story 2.5: Display Barcode (Barcode Flash)
+ * Story 2.6: View Card Details
  *
  * Exports card-related components and hooks.
  */
@@ -23,6 +24,8 @@ export { BarcodeRenderer } from './components/BarcodeRenderer';
 export type { BarcodeRendererProps } from './components/BarcodeRenderer';
 export { BarcodeFlash } from './components/BarcodeFlash';
 export type { BarcodeFlashProps } from './components/BarcodeFlash';
+export { CardDetails } from './components/CardDetails';
+export { DetailRow } from './components/DetailRow';
 
 // Hooks
 export { useCards } from './hooks/useCards';
