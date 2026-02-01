@@ -7,7 +7,7 @@
 | **Story ID** | 2.8                                   |
 | **Epic**     | 2 - Card Management & Barcode Display |
 | **Sprint**   | 1                                     |
-| **Status**   | ready-for-dev                         |
+| **Status**   | review                                |
 | **Priority** | Medium                                |
 | **Estimate** | Small (half day)                      |
 
@@ -163,7 +163,7 @@ Alert.alert(
   `Are you sure you want to delete "${card.name}"? This action cannot be undone.`,
   [
     { text: 'Cancel', style: 'cancel' },
-    { text: 'Delete', style: 'destructive', onPress: handleDelete },
+    { text: 'Delete', style: 'destructive', onPress: handleDelete }
   ]
 );
 ```

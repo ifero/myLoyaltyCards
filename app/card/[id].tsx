@@ -1,6 +1,7 @@
 /**
  * Card Details Screen
  * Story 2.6: View Card Details
+ * Story 2.8: Delete Card
  *
  * Displays full details of a loyalty card with ability to:
  * - View all card information
@@ -21,7 +22,7 @@ import { LoyaltyCard } from '@/core/schemas';
 import { useTheme, SAGE_COLORS } from '@/shared/theme';
 import { SPACING } from '@/shared/theme/spacing';
 
-import { CardDetails } from '@/features/cards';
+import { CardDetails, useDeleteCard } from '@/features/cards';
 
 const CardDetailsScreen = () => {
   const { theme } = useTheme();
@@ -30,6 +31,9 @@ const CardDetailsScreen = () => {
   const [card, setCard] = useState<LoyaltyCard | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  // Delete card hook (Story 2.8)
+  const { deleteCard, isDeleting } = useDeleteCard(id ?? '');
 
   /**
    * Fetch card data from database
@@ -150,7 +154,7 @@ const CardDetailsScreen = () => {
           title: card.name
         }}
       />
-      <CardDetails card={card} onCopy={handleCopy} />
+      <CardDetails card={card} onCopy={handleCopy} onDelete={deleteCard} isDeleting={isDeleting} />
     </>
   );
 };

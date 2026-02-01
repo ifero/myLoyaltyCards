@@ -211,20 +211,70 @@ describe('CardDetails', () => {
     });
   });
 
-  describe('Delete Confirmation', () => {
-    it('shows delete confirmation dialog when Delete button is tapped', () => {
+  describe('Delete Confirmation - Story 2.8', () => {
+    it('shows delete confirmation dialog with correct message (AC2)', () => {
       const { getByTestId } = render(<CardDetails card={mockCard} />);
 
       fireEvent.press(getByTestId('card-details-delete-button'));
 
       expect(Alert.alert).toHaveBeenCalledWith(
-        'Delete Card',
-        'Are you sure you want to delete "Test Store"?',
+        'Delete Card?',
+        'Are you sure you want to delete "Test Store"? This action cannot be undone.',
         expect.arrayContaining([
           expect.objectContaining({ text: 'Cancel', style: 'cancel' }),
           expect.objectContaining({ text: 'Delete', style: 'destructive' })
-        ])
+        ]),
+        { cancelable: true }
       );
+    });
+
+    it('calls onDelete callback when Delete is confirmed (AC3)', () => {
+      const mockOnDelete = jest.fn();
+      const { getByTestId } = render(<CardDetails card={mockCard} onDelete={mockOnDelete} />);
+
+      fireEvent.press(getByTestId('card-details-delete-button'));
+
+      // Get the onPress callback from the Delete button in the alert
+      const alertCall = (Alert.alert as jest.Mock).mock.calls[0];
+      const buttons = alertCall[2];
+      const deleteButton = buttons.find((b: { text: string }) => b.text === 'Delete');
+
+      // Simulate pressing Delete in the alert
+      deleteButton.onPress();
+
+      expect(mockOnDelete).toHaveBeenCalled();
+    });
+
+    it('does not call onDelete when Cancel is pressed (AC4)', () => {
+      const mockOnDelete = jest.fn();
+      const { getByTestId } = render(<CardDetails card={mockCard} onDelete={mockOnDelete} />);
+
+      fireEvent.press(getByTestId('card-details-delete-button'));
+
+      // Get the Cancel button - it has no onPress, so pressing it should not call onDelete
+      expect(mockOnDelete).not.toHaveBeenCalled();
+    });
+
+    it('disables buttons when isDeleting is true', () => {
+      const { getByTestId } = render(<CardDetails card={mockCard} isDeleting={true} />);
+
+      const editButton = getByTestId('card-details-edit-button');
+      const deleteButton = getByTestId('card-details-delete-button');
+
+      expect(editButton.props.accessibilityState?.disabled).toBe(true);
+      expect(deleteButton.props.accessibilityState?.disabled).toBe(true);
+    });
+
+    it('shows "Deleting..." text when isDeleting is true', () => {
+      const { getByText } = render(<CardDetails card={mockCard} isDeleting={true} />);
+
+      expect(getByText('Deleting...')).toBeTruthy();
+    });
+
+    it('shows "Delete Card" text when not deleting', () => {
+      const { getByText } = render(<CardDetails card={mockCard} isDeleting={false} />);
+
+      expect(getByText('Delete Card')).toBeTruthy();
     });
   });
 
@@ -290,6 +340,13 @@ describe('CardDetails', () => {
       const deleteButton = getByTestId('card-details-delete-button');
       expect(deleteButton.props.accessibilityRole).toBe('button');
       expect(deleteButton.props.accessibilityLabel).toBe('Delete card');
+    });
+
+    it('delete button has "Deleting card" label when isDeleting', () => {
+      const { getByTestId } = render(<CardDetails card={mockCard} isDeleting={true} />);
+
+      const deleteButton = getByTestId('card-details-delete-button');
+      expect(deleteButton.props.accessibilityLabel).toBe('Deleting card');
     });
   });
 });

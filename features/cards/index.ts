@@ -6,6 +6,8 @@
  * Story 2.4: Display Virtual Logo
  * Story 2.5: Display Barcode (Barcode Flash)
  * Story 2.6: View Card Details
+ * Story 2.7: Edit Card
+ * Story 2.8: Delete Card
  *
  * Exports card-related components and hooks.
  */
@@ -33,6 +35,8 @@ export { useAddCard } from './hooks/useAddCard';
 export type { AddCardInput } from './hooks/useAddCard';
 export { useEditCard } from './hooks/useEditCard';
 export type { EditCardInput } from './hooks/useEditCard';
+export { useDeleteCard } from './hooks/useDeleteCard';
+export type { UseDeleteCardReturn } from './hooks/useDeleteCard';
 export { useBarcodeScanner } from './hooks/useBarcodeScanner';
 export type { ScanResult } from './hooks/useBarcodeScanner';
 export { useBrightness } from './hooks/useBrightness';

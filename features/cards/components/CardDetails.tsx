@@ -1,6 +1,7 @@
 /**
  * CardDetails Component
  * Story 2.6: View Card Details
+ * Story 2.8: Delete Card
  *
  * Displays full details of a loyalty card including:
  * - Virtual Logo
@@ -34,6 +35,10 @@ interface CardDetailsProps {
   card: LoyaltyCard;
   /** Callback when copy is successful - for toast notifications */
   onCopy?: () => void;
+  /** Callback when delete is confirmed - parent handles deletion logic */
+  onDelete?: () => void;
+  /** Whether delete operation is in progress */
+  isDeleting?: boolean;
 }
 
 /**
@@ -82,7 +87,12 @@ function formatDate(isoString: string): string {
  * - Detail rows for format, color, and date
  * - Action buttons at bottom
  */
-export const CardDetails: React.FC<CardDetailsProps> = ({ card, onCopy }) => {
+export const CardDetails: React.FC<CardDetailsProps> = ({
+  card,
+  onCopy,
+  onDelete,
+  isDeleting = false
+}) => {
   const { theme } = useTheme();
   const router = useRouter();
   const insets = useSafeAreaInsets();
@@ -116,22 +126,29 @@ export const CardDetails: React.FC<CardDetailsProps> = ({ card, onCopy }) => {
   }, [router, card.id]);
 
   /**
-   * Show delete confirmation (Story 2.8)
+   * Show delete confirmation dialog (Story 2.8)
+   * Uses native Alert.alert for platform-consistent UI
+   * AC2: Confirmation dialog with Cancel and Delete buttons
+   * AC4: Cancel closes dialog without deleting
+   * AC7: Hardware back button closes dialog (native behavior)
    */
   const handleDeleteCard = useCallback(() => {
-    // Show confirmation dialog (will be fully implemented in Story 2.8)
-    Alert.alert('Delete Card', `Are you sure you want to delete "${card.name}"?`, [
-      { text: 'Cancel', style: 'cancel' },
-      {
-        text: 'Delete',
-        style: 'destructive',
-        onPress: () => {
-          // Delete functionality coming in Story 2.8
-          Alert.alert('Delete', 'Delete functionality coming in Story 2.8');
+    Alert.alert(
+      'Delete Card?',
+      `Are you sure you want to delete "${card.name}"? This action cannot be undone.`,
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: () => {
+            onDelete?.();
+          }
         }
-      }
-    ]);
-  }, [card.name]);
+      ],
+      { cancelable: true } // Allows backdrop tap and hardware back to dismiss
+    );
+  }, [card.name, onDelete]);
 
   return (
     <ScrollView
@@ -222,10 +239,12 @@ export const CardDetails: React.FC<CardDetailsProps> = ({ card, onCopy }) => {
         {/* Edit Button */}
         <Pressable
           onPress={handleEditCard}
+          disabled={isDeleting}
           style={({ pressed }) => [
             styles.editButton,
             { backgroundColor: SAGE_COLORS[500] },
-            pressed && styles.pressed
+            pressed && styles.pressed,
+            isDeleting && styles.disabled
           ]}
           accessibilityRole="button"
           accessibilityLabel="Edit card"
@@ -237,12 +256,17 @@ export const CardDetails: React.FC<CardDetailsProps> = ({ card, onCopy }) => {
         {/* Delete Button */}
         <Pressable
           onPress={handleDeleteCard}
-          style={({ pressed }) => [styles.deleteButton, pressed && styles.pressed]}
+          disabled={isDeleting}
+          style={({ pressed }) => [
+            styles.deleteButton,
+            pressed && styles.pressed,
+            isDeleting && styles.disabled
+          ]}
           accessibilityRole="button"
-          accessibilityLabel="Delete card"
+          accessibilityLabel={isDeleting ? 'Deleting card' : 'Delete card'}
           testID="card-details-delete-button"
         >
-          <Text style={styles.deleteButtonText}>Delete Card</Text>
+          <Text style={styles.deleteButtonText}>{isDeleting ? 'Deleting...' : 'Delete Card'}</Text>
         </Pressable>
       </View>
     </ScrollView>
@@ -324,5 +348,8 @@ const styles = StyleSheet.create({
     color: '#EF4444',
     fontSize: 16,
     fontWeight: '600'
+  },
+  disabled: {
+    opacity: 0.5
   }
 });
