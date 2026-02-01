@@ -10,6 +10,7 @@ import React from 'react';
 import { View, Text, StyleSheet, ViewStyle } from 'react-native';
 
 import { CardColor } from '@/core/schemas';
+
 import { CARD_COLORS } from '@/shared/theme/colors';
 
 import { generateInitials } from '../utils/initials';
@@ -33,12 +34,7 @@ interface VirtualLogoProps {
  * - Text: White, bold, centered
  * - Font size: 40% of container for 1 initial, 30% for 2-3 initials
  */
-export function VirtualLogo({
-  name,
-  color,
-  size = 80,
-  style,
-}: VirtualLogoProps) {
+export function VirtualLogo({ name, color, size = 80, style }: VirtualLogoProps) {
   const initials = generateInitials(name);
   const backgroundColor = CARD_COLORS[color] || CARD_COLORS.grey;
   const fontSize = initials.length === 1 ? size * 0.4 : size * 0.3;
@@ -52,9 +48,9 @@ export function VirtualLogo({
           width: size,
           height: size,
           backgroundColor,
-          borderRadius,
+          borderRadius
         },
-        style,
+        style
       ]}
       accessibilityLabel={`${name} card logo`}
     >
@@ -62,8 +58,8 @@ export function VirtualLogo({
         style={[
           styles.initials,
           {
-            fontSize,
-          },
+            fontSize
+          }
         ]}
       >
         {initials}
@@ -75,11 +71,11 @@ export function VirtualLogo({
 const styles = StyleSheet.create({
   container: {
     alignItems: 'center',
-    justifyContent: 'center',
+    justifyContent: 'center'
   },
   initials: {
     color: '#FFFFFF',
     fontWeight: '700',
-    letterSpacing: 1,
-  },
+    letterSpacing: 1
+  }
 });

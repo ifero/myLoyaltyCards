@@ -28,12 +28,15 @@ jest.mock('expo-haptics', () => ({
 }));
 
 // Mock react-native-safe-area-context
-jest.mock('react-native-safe-area-context', () => ({
-  SafeAreaView: ({ children, ...props }: any) => {
-    const { View } = require('react-native');
-    return <View {...props}>{children}</View>;
-  }
-}));
+jest.mock('react-native-safe-area-context', () => {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const { View } = require('react-native');
+  return {
+    SafeAreaView: ({ children, ...props }: { children?: React.ReactNode }) => {
+      return <View {...props}>{children}</View>;
+    }
+  };
+});
 
 // Mock ThemeProvider
 jest.mock('@/shared/theme', () => ({

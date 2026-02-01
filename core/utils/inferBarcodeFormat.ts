@@ -67,7 +67,7 @@ export function inferBarcodeFormat(value: string): BarcodeFormat {
   // Code 39: Limited character set (uppercase letters, digits, and specific symbols)
   // Common for inventory/industrial use
   // Only match if content is already uppercase (no lowercase letters)
-  const code39Regex = /^[A-Z0-9\s\-.$\/+%]+$/;
+  const code39Regex = /^[A-Z0-9\s\-.$/+%]+$/;
   if (code39Regex.test(trimmed) && trimmed.length <= 43 && !/[a-z]/.test(trimmed)) {
     return 'CODE39';
   }

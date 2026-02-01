@@ -74,8 +74,8 @@ describe('useCards', () => {
 
       expect(cardRepository.getAllCards).toHaveBeenCalledTimes(1);
       expect(result.current.cards).toHaveLength(2);
-      expect(result.current.cards[0].name).toBe('Apple Store');
-      expect(result.current.cards[1].name).toBe('Best Buy');
+      expect(result.current.cards[0]!.name).toBe('Apple Store');
+      expect(result.current.cards[1]!.name).toBe('Best Buy');
       expect(result.current.error).toBeNull();
     });
 
@@ -109,9 +109,7 @@ describe('useCards', () => {
   describe('Error Handling', () => {
     it('handles fetch errors gracefully', async () => {
       const errorMessage = 'Database error';
-      (cardRepository.getAllCards as jest.Mock).mockRejectedValue(
-        new Error(errorMessage)
-      );
+      (cardRepository.getAllCards as jest.Mock).mockRejectedValue(new Error(errorMessage));
 
       const { result } = renderHook(() => useCards());
 
@@ -194,9 +192,7 @@ describe('useCards', () => {
 
     it('clears error on successful refetch', async () => {
       // First call fails
-      (cardRepository.getAllCards as jest.Mock).mockRejectedValue(
-        new Error('Initial error')
-      );
+      (cardRepository.getAllCards as jest.Mock).mockRejectedValue(new Error('Initial error'));
 
       const { result } = renderHook(() => useCards());
 
