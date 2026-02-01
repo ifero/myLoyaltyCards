@@ -111,9 +111,9 @@ And deletion is cancelled
 
 ### New Files to Create
 
-| File                                      | Purpose                 |
-| ----------------------------------------- | ----------------------- |
-| `features/cards/hooks/useDeleteCard.ts`   | Hook for delete logic   |
+| File                                    | Purpose               |
+| --------------------------------------- | --------------------- |
+| `features/cards/hooks/useDeleteCard.ts` | Hook for delete logic |
 
 ### Files to Modify
 
@@ -294,13 +294,16 @@ Burnt.toast({ title: 'Card deleted', preset: 'done' });
 **Reviewer:** GitHub Copilot (Dev Agent)
 
 ### Outcome
+
 **APPROVED** with auto-fixes.
 
 ### Findings
+
 1. **Unmounted State Update**: Fixed a React warning in `useDeleteCard.ts` where state was updated after navigation away from the screen.
 2. **Documentation Clean-up**: Removed `DeleteConfirmDialog.tsx` from planned files as `Alert.alert` was used for MVP.
 3. **Android AC Adjustment**: Updated AC2 to acknowledge that native Android alerts do not support destructive specific styling in the standard API.
 
 ### Next Steps
+
 - Story marked as DONE.
 - Deployment ready.

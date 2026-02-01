@@ -44,22 +44,19 @@ story_location: docs/sprint-artifacts
 # CURRENT SPRINT
 # ============================================
 current_sprint:
-  number: 1
-  name: 'Sprint 1: Card Management & Barcode Display'
-  goal: 'Deliver core card management functionality — users can add, view, and interact with their loyalty cards'
-  start_date: 2026-01-07
-  end_date: 2026-01-14
+  number: 2
+  name: 'Sprint 2: Italian Brand Catalogue'
+  goal: 'Implement catalogue browsing and data structure to allow adding cards from popular Italian brands'
+  start_date: 2026-02-01
+  end_date: 2026-02-08
   duration: 1 week
-  epic: 2
+  epic: 3
   stories:
-    - 2-1-display-card-list
-    - 2-2-add-card-manually
-    - 2-3-scan-barcode-with-camera
-    - 2-4-display-virtual-logo
-    - 2-5-display-barcode-barcode-flash
-    - 2-6-view-card-details
-    - 2-7-edit-card
-    - 2-8-delete-card
+    - 3-1-create-italian-catalogue-data
+    - 3-2-browse-catalogue-grid
+    - 3-3-add-card-from-catalogue
+    - 3-4-cache-catalogue-for-offline
+    - 3-5-update-catalogue-via-ota
 
 development_status:
   # ============================================
@@ -76,8 +73,8 @@ development_status:
   epic-1-retrospective: optional
   epic-1-completed: 2026-01-07
 
-  # Epic 2: Card Management & Barcode Display 🚧 IN PROGRESS
-  epic-2: in-progress
+  # Epic 2: Card Management & Barcode Display ✅ COMPLETE
+  epic-2: done
   2-1-display-card-list: done
   2-2-add-card-manually: done
   2-3-scan-barcode-with-camera: done
@@ -86,15 +83,16 @@ development_status:
   2-6-view-card-details: done
   2-7-edit-card: done
   2-8-delete-card: done
+  epic-2-completed: 2026-02-01
   epic-2-retrospective: optional
 
   # Epic 3: Italian Brand Catalogue
-  epic-3: backlog
-  3-1-create-italian-catalogue-data: backlog
-  3-2-browse-catalogue-grid: backlog
-  3-3-add-card-from-catalogue: backlog
-  3-4-cache-catalogue-for-offline: backlog
-  3-5-update-catalogue-via-ota: backlog
+  epic-3: in-progress
+  3-1-create-italian-catalogue-data: ready-for-dev
+  3-2-browse-catalogue-grid: ready-for-dev
+  3-3-add-card-from-catalogue: ready-for-dev
+  3-4-cache-catalogue-for-offline: ready-for-dev
+  3-5-update-catalogue-via-ota: ready-for-dev
   epic-3-retrospective: optional
 
   # Epic 4: Onboarding Experience
