@@ -202,15 +202,12 @@ describe('CardDetails', () => {
   });
 
   describe('Edit Navigation', () => {
-    it('shows edit placeholder alert when Edit button is tapped', () => {
+    it('navigates to edit screen when Edit button is tapped', () => {
       const { getByTestId } = render(<CardDetails card={mockCard} />);
 
       fireEvent.press(getByTestId('card-details-edit-button'));
 
-      expect(Alert.alert).toHaveBeenCalledWith(
-        'Edit Card',
-        'Edit functionality coming in Story 2.7'
-      );
+      expect(mockPush).toHaveBeenCalledWith(`/card/${mockCard.id}/edit`);
     });
   });
 

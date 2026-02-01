@@ -31,6 +31,8 @@ export { DetailRow } from './components/DetailRow';
 export { useCards } from './hooks/useCards';
 export { useAddCard } from './hooks/useAddCard';
 export type { AddCardInput } from './hooks/useAddCard';
+export { useEditCard } from './hooks/useEditCard';
+export type { EditCardInput } from './hooks/useEditCard';
 export { useBarcodeScanner } from './hooks/useBarcodeScanner';
 export type { ScanResult } from './hooks/useBarcodeScanner';
 export { useBrightness } from './hooks/useBrightness';

@@ -11,8 +11,8 @@
  */
 
 import burnt from 'burnt';
-import { useLocalSearchParams, Stack } from 'expo-router';
-import React, { useEffect, useState, useCallback } from 'react';
+import { useLocalSearchParams, Stack, useFocusEffect } from 'expo-router';
+import React, { useState, useCallback } from 'react';
 import { View, Text, ActivityIndicator } from 'react-native';
 
 import { getCardById } from '@/core/database';
@@ -33,32 +33,37 @@ const CardDetailsScreen = () => {
 
   /**
    * Fetch card data from database
+   * Uses useFocusEffect to refresh data when returning from edit screen
    */
-  useEffect(() => {
-    const fetchCard = async () => {
-      if (!id) {
-        setError('Invalid card ID');
-        setIsLoading(false);
-        return;
-      }
-
-      try {
-        const cardData = await getCardById(id);
-        if (cardData) {
-          setCard(cardData);
-        } else {
-          setError('Card not found');
+  useFocusEffect(
+    useCallback(() => {
+      const fetchCard = async () => {
+        if (!id) {
+          setError('Invalid card ID');
+          setIsLoading(false);
+          return;
         }
-      } catch (err) {
-        console.error('Failed to fetch card:', err);
-        setError('Failed to load card details');
-      } finally {
-        setIsLoading(false);
-      }
-    };
 
-    fetchCard();
-  }, [id]);
+        try {
+          setIsLoading(true);
+          const cardData = await getCardById(id);
+          if (cardData) {
+            setCard(cardData);
+            setError(null);
+          } else {
+            setError('Card not found');
+          }
+        } catch (err) {
+          console.error('Failed to fetch card:', err);
+          setError('Failed to load card details');
+        } finally {
+          setIsLoading(false);
+        }
+      };
+
+      fetchCard();
+    }, [id])
+  );
 
   /**
    * Show toast notification when barcode is copied
