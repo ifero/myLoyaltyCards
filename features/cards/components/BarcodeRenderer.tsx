@@ -204,11 +204,11 @@ export function BarcodeRenderer({
 
   return (
     <View
-      style={{ backgroundColor }}
+      style={{ backgroundColor, width: barcodeWidth, height }}
       accessibilityLabel={`${format} barcode for ${value}`}
       accessibilityRole="image"
     >
-      <SvgXml xml={svgXml} />
+      <SvgXml xml={svgXml} width={barcodeWidth} height={height} />
     </View>
   );
 }

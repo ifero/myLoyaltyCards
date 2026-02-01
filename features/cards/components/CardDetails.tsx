@@ -172,8 +172,8 @@ export const CardDetails: React.FC<CardDetailsProps> = ({ card, onCopy }) => {
           <BarcodeRenderer
             value={card.barcode}
             format={card.barcodeFormat}
-            width={card.barcodeFormat === 'QR' ? 150 : 200}
-            height={80}
+            width={card.barcodeFormat === 'QR' ? 150 : 240}
+            height={100}
           />
         </Pressable>
         <Text style={[styles.barcodeHint, { color: theme.textSecondary }]}>Tap to enlarge</Text>
