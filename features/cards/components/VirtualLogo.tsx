@@ -6,7 +6,7 @@
  * Used as the visual identifier in the card list and detail screens.
  */
 
-import React from 'react';
+import React, { useMemo } from 'react';
 import { View, Text, StyleSheet, ViewStyle } from 'react-native';
 
 import { CardColor } from '@/core/schemas';
@@ -24,6 +24,8 @@ interface VirtualLogoProps {
   size?: number;
   /** Additional styles for the container */
   style?: ViewStyle;
+  /** Test ID for E2E testing */
+  testID?: string;
 }
 
 /**
@@ -33,12 +35,25 @@ interface VirtualLogoProps {
  * - Background: Card's selected color from 5-color palette
  * - Text: White, bold, centered
  * - Font size: 40% of container for 1 initial, 30% for 2-3 initials
+ *
+ * Memoized for performance in long lists (FlatList).
  */
-export function VirtualLogo({ name, color, size = 80, style }: VirtualLogoProps) {
-  const initials = generateInitials(name);
-  const backgroundColor = CARD_COLORS[color] || CARD_COLORS.grey;
-  const fontSize = initials.length === 1 ? size * 0.4 : size * 0.3;
-  const borderRadius = size * 0.1;
+export const VirtualLogo = React.memo(function VirtualLogo({
+  name,
+  color,
+  size = 80,
+  style,
+  testID
+}: VirtualLogoProps) {
+  const { initials, backgroundColor, fontSize, borderRadius } = useMemo(() => {
+    const generatedInitials = generateInitials(name);
+    return {
+      initials: generatedInitials,
+      backgroundColor: CARD_COLORS[color] || CARD_COLORS.grey,
+      fontSize: generatedInitials.length === 1 ? size * 0.4 : size * 0.3,
+      borderRadius: size * 0.1
+    };
+  }, [name, color, size]);
 
   return (
     <View
@@ -53,6 +68,7 @@ export function VirtualLogo({ name, color, size = 80, style }: VirtualLogoProps)
         style
       ]}
       accessibilityLabel={`${name} card logo`}
+      testID={testID}
     >
       <Text
         style={[
@@ -66,7 +82,7 @@ export function VirtualLogo({ name, color, size = 80, style }: VirtualLogoProps)
       </Text>
     </View>
   );
-}
+});
 
 const styles = StyleSheet.create({
   container: {

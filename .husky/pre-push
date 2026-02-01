@@ -1,10 +1,13 @@
 #!/bin/sh
-# Pre-push hook: Run full typecheck
+# Pre-push hook: Run full typecheck and tests
 
 echo "Running typecheck..."
 yarn typecheck || exit 1
 
 echo "Running lint..."
 yarn lint || exit 1
+
+echo "Running tests..."
+yarn test || exit 1
 
 echo "All checks passed!"

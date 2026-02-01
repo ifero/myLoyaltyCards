@@ -42,9 +42,7 @@ export const CardTile: React.FC<CardTileProps> = ({ card }) => {
   };
 
   // Truncate card name to 20 characters
-  const displayName = card.name.length > 20
-    ? `${card.name.slice(0, 20)}…`
-    : card.name;
+  const displayName = card.name.length > 20 ? `${card.name.slice(0, 20)}…` : card.name;
 
   return (
     <Pressable
@@ -52,7 +50,7 @@ export const CardTile: React.FC<CardTileProps> = ({ card }) => {
       style={({ pressed }) => [
         styles.container,
         { backgroundColor: theme.surface },
-        pressed && styles.pressed,
+        pressed && styles.pressed
       ]}
       accessibilityRole="button"
       accessibilityLabel={card.name}
@@ -60,11 +58,7 @@ export const CardTile: React.FC<CardTileProps> = ({ card }) => {
     >
       {/* Virtual Logo */}
       <View style={styles.visualContainer}>
-        <VirtualLogo
-          name={card.name}
-          color={card.color}
-          size={60}
-        />
+        <VirtualLogo name={card.name} color={card.color} size={60} />
       </View>
 
       {/* Card name */}
@@ -87,25 +81,24 @@ const styles = StyleSheet.create({
     aspectRatio: 4 / 3,
     borderRadius: SPACING.sm, // 8px
     overflow: 'hidden',
-    margin: SPACING.sm / 2, // 4px for 8px total gap between items
+    margin: SPACING.sm / 2 // 4px for 8px total gap between items
   },
   pressed: {
-    opacity: 0.7,
+    opacity: 0.7
   },
   visualContainer: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    padding: SPACING.sm,
+    padding: SPACING.sm
   },
   nameContainer: {
     paddingHorizontal: SPACING.sm,
-    paddingBottom: SPACING.sm,
+    paddingBottom: SPACING.sm
   },
   cardName: {
     fontSize: 14,
     fontWeight: '600',
-    textAlign: 'center',
-  },
+    textAlign: 'center'
+  }
 });
-
