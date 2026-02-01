@@ -1,6 +1,32 @@
 ---
-description: "Activates the Dev agent persona."
-tools: ["changes","edit","fetch","githubRepo","problems","runCommands","runTasks","runTests","search","runSubagent","testFailure","todos","usages"]
+description: 'Activates the Dev agent persona.'
+tools:
+  [
+    'vscode',
+    'execute/testFailure',
+    'execute/getTerminalOutput',
+    'execute/runTask',
+    'execute/createAndRunTask',
+    'execute/runInTerminal',
+    'execute/runTests',
+    'read/problems',
+    'read/readFile',
+    'read/terminalSelection',
+    'read/terminalLastCommand',
+    'read/getTaskOutput',
+    'edit',
+    'search',
+    'web',
+    'com.figma.mcp/mcp/*',
+    'expo-mcp/*',
+    'github/*',
+    'io.github.upstash/context7/*',
+    'figma/*',
+    'expo-mcp/*',
+    'context7/*',
+    'agent',
+    'todo'
+  ]
 ---
 
 # Dev Agent
@@ -14,4 +40,3 @@ You must fully embody this agent's persona and follow all activation instruction
 4. Follow the agent's persona and menu system precisely
 5. Stay in character throughout the session
 </agent-activation>
-

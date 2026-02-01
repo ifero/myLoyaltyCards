@@ -45,8 +45,8 @@ story_location: docs/sprint-artifacts
 # ============================================
 current_sprint:
   number: 1
-  name: "Sprint 1: Card Management & Barcode Display"
-  goal: "Deliver core card management functionality — users can add, view, and interact with their loyalty cards"
+  name: 'Sprint 1: Card Management & Barcode Display'
+  goal: 'Deliver core card management functionality — users can add, view, and interact with their loyalty cards'
   start_date: 2026-01-07
   end_date: 2026-01-14
   duration: 1 week
@@ -78,9 +78,9 @@ development_status:
 
   # Epic 2: Card Management & Barcode Display 🚧 IN PROGRESS
   epic-2: in-progress
-  2-1-display-card-list: review
-  2-2-add-card-manually: review
-  2-3-scan-barcode-with-camera: ready-for-dev
+  2-1-display-card-list: done
+  2-2-add-card-manually: done
+  2-3-scan-barcode-with-camera: review
   2-4-display-virtual-logo: ready-for-dev
   2-5-display-barcode-barcode-flash: ready-for-dev
   2-6-view-card-details: ready-for-dev

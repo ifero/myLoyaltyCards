@@ -1,15 +1,18 @@
 /**
  * Add Card Screen
  * Story 2.2: Add Card Manually
+ * Story 2.3: Scan Barcode with Camera (integration)
  *
  * Screen for adding a new loyalty card with form validation.
+ * Supports barcode scanning via route params.
  */
 
-import { useRouter, useFocusEffect, useNavigation } from 'expo-router';
-import { useCallback, useRef, useEffect } from 'react';
-import { View, Alert, BackHandler } from 'react-native';
+import { useRouter, useFocusEffect, useNavigation, useLocalSearchParams } from 'expo-router';
+import { useCallback, useRef, useEffect, useMemo, useState } from 'react';
+import { View, Alert, BackHandler, Text, Pressable } from 'react-native';
 
-import { useTheme } from '@/shared/theme';
+import { BarcodeFormat } from '@/core/schemas';
+import { useTheme, SEMANTIC_COLORS } from '@/shared/theme';
 
 import { CardForm, CardFormInput } from '@/features/cards/components/CardForm';
 import { useAddCard } from '@/features/cards/hooks/useAddCard';
@@ -22,11 +25,44 @@ import { useAddCard } from '@/features/cards/hooks/useAddCard';
  * - AC2-AC6: Form with validation via CardForm
  * - AC7: Save with haptic + toast feedback via useAddCard
  * - AC8: Back navigation with discard confirmation (only on explicit back button)
+ * - Story 2.3 AC1: "Scan Barcode" option to access scanner
+ * - Story 2.3 AC5: Pre-fill barcode from scanner with success indicator
  */
 const AddCardScreen = () => {
   const { theme } = useTheme();
   const router = useRouter();
   const { addCard, isLoading } = useAddCard();
+
+  // Get scanned barcode from route params (Story 2.3 AC5)
+  const params = useLocalSearchParams<{
+    scannedBarcode?: string;
+    scannedFormat?: BarcodeFormat;
+  }>();
+
+  // Track if we've shown the scan success indicator
+  const [showScanSuccess, setShowScanSuccess] = useState(false);
+
+  // Show success indicator when barcode is scanned (Story 2.3 AC5)
+  useEffect(() => {
+    if (params.scannedBarcode) {
+      setShowScanSuccess(true);
+      // Hide after 3 seconds
+      const timer = setTimeout(() => setShowScanSuccess(false), 3000);
+      return () => clearTimeout(timer);
+    }
+    return undefined;
+  }, [params.scannedBarcode]);
+
+  // Calculate default values from scanned data
+  const defaultValues = useMemo(() => {
+    if (params.scannedBarcode) {
+      return {
+        barcode: params.scannedBarcode,
+        barcodeFormat: params.scannedFormat || ('CODE128' as BarcodeFormat)
+      };
+    }
+    return undefined;
+  }, [params.scannedBarcode, params.scannedFormat]);
 
   // Track if form has been modified for AC8
   const isFormDirtyRef = useRef(false);
@@ -142,14 +178,57 @@ const AddCardScreen = () => {
     }, [showDiscardConfirmation])
   );
 
+  /**
+   * Navigate to barcode scanner - Story 2.3 AC1
+   */
+  const handleScanBarcode = useCallback(() => {
+    router.push('/scan');
+  }, [router]);
+
   return (
     <View className="flex-1" style={{ backgroundColor: theme.background }}>
+      {/* Scan Success Indicator - Story 2.3 AC5 */}
+      {showScanSuccess && (
+        <View
+          className="mx-4 mt-2 rounded-lg p-3"
+          style={{ backgroundColor: SEMANTIC_COLORS.success + '20' }}
+        >
+          <Text
+            className="text-center text-sm font-medium"
+            style={{ color: SEMANTIC_COLORS.success }}
+          >
+            ✓ Barcode scanned!
+          </Text>
+        </View>
+      )}
+
+      {/* Scan Barcode Button - Story 2.3 AC1 */}
+      {!params.scannedBarcode && (
+        <Pressable
+          onPress={handleScanBarcode}
+          className="mx-4 mt-4 h-12 flex-row items-center justify-center rounded-lg border"
+          style={{
+            borderColor: theme.primary,
+            backgroundColor: theme.primary + '10'
+          }}
+          accessibilityRole="button"
+          accessibilityLabel="Scan Barcode"
+          testID="scan-barcode-button"
+        >
+          <Text className="text-base font-semibold" style={{ color: theme.primary }}>
+            📷 Scan Barcode
+          </Text>
+        </Pressable>
+      )}
+
       <CardForm
+        defaultValues={defaultValues}
         onSubmit={handleSubmit}
         submitLabel="Add Card"
         isLoading={isLoading}
         onDirtyChange={handleDirtyChange}
         testID="add-card-form"
+        focusNameOnMount={!!params.scannedBarcode}
       />
     </View>
   );
