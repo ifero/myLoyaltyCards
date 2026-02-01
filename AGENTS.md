@@ -248,3 +248,24 @@ After completing work:
 1. Push the branch to remote
 2. Update `docs/sprint-artifacts/sprint-status.yaml` to reflect progress
 3. Mark story status appropriately (`in-progress` → `review` → `done`)
+
+### 4. Code Review and PR Workflow (MANDATORY)
+
+When work is complete, follow this workflow:
+
+1. **Update status to `review`** in `sprint-status.yaml`
+2. **Run code review with Dev agent**:
+   ```
+   Use runSubagent with agentName: "bmd-custom-bmm-dev"
+   Provide full context about files changed and acceptance criteria
+   ```
+3. **If APPROVED**:
+   - Update status to `done` in `sprint-status.yaml`
+   - Create Pull Request with:
+     - Clear title: `feat(scope): description (Story X.Y)`
+     - Body with summary, changes, acceptance criteria checklist
+     - Link to code review approval
+4. **If CHANGES_REQUESTED**:
+   - Address the feedback
+   - Re-run code review
+   - Repeat until approved
