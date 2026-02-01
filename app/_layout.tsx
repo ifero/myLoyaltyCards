@@ -20,7 +20,8 @@ const HeaderRight = () => {
       onPress={() => router.push('/settings')}
       accessibilityLabel="Go to settings"
       accessibilityRole="button"
-      className="h-11 w-11 items-center justify-center">
+      className="h-11 w-11 items-center justify-center"
+    >
       <Text className="text-xl">⚙️</Text>
     </Pressable>
   );
@@ -38,7 +39,8 @@ const HeaderLeft = () => {
       onPress={() => router.push('/add-card')}
       accessibilityLabel="Add new card"
       accessibilityRole="button"
-      className="h-11 w-11 items-center justify-center">
+      className="h-11 w-11 items-center justify-center"
+    >
       <Text className="text-2xl font-semibold" style={{ color: theme.primary }}>
         +
       </Text>
@@ -54,32 +56,41 @@ const RootLayoutContent = () => {
       <Stack
         screenOptions={{
           headerStyle: {
-            backgroundColor: theme.surface,
+            backgroundColor: theme.surface
           },
           headerTintColor: theme.textPrimary,
           contentStyle: {
-            backgroundColor: theme.background,
+            backgroundColor: theme.background
           },
-          animation: 'slide_from_right',
-        }}>
+          animation: 'slide_from_right'
+        }}
+      >
         <Stack.Screen
           name="index"
           options={{
             title: 'myLoyaltyCards',
             headerLeft: () => <HeaderLeft />,
-            headerRight: () => <HeaderRight />,
+            headerRight: () => <HeaderRight />
           }}
         />
         <Stack.Screen
           name="add-card"
           options={{
-            title: 'Add Card',
+            title: 'Add Card'
           }}
         />
         <Stack.Screen
           name="settings"
           options={{
-            title: 'Settings',
+            title: 'Settings'
+          }}
+        />
+        <Stack.Screen
+          name="scan"
+          options={{
+            title: 'Scan Barcode',
+            presentation: 'fullScreenModal',
+            headerShown: false
           }}
         />
       </Stack>

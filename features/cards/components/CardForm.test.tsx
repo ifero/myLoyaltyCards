@@ -43,7 +43,7 @@ describe('CardForm', () => {
 
       expect(screen.getByTestId('card-name-input')).toBeTruthy();
       expect(screen.getByTestId('barcode-input')).toBeTruthy();
-      expect(screen.getByTestId('format-picker-container')).toBeTruthy();
+      expect(screen.getByTestId('format-display')).toBeTruthy(); // Format auto-detected, not picked
       expect(screen.getByTestId('color-picker-container')).toBeTruthy();
     });
 
@@ -120,11 +120,12 @@ describe('CardForm', () => {
   });
 
   describe('Default Values', () => {
-    it('uses CODE128 as default barcode format', () => {
+    it('uses CODE128 as default barcode format when empty', () => {
       render(<CardForm onSubmit={mockOnSubmit} submitLabel="Add Card" />);
 
-      // The FormatPicker will display the selected value
-      expect(screen.getByText('CODE128')).toBeTruthy();
+      // Format is auto-detected - shows "Code 128 (Universal)" description when empty
+      expect(screen.getByTestId('format-display')).toBeTruthy();
+      expect(screen.getByText('Code 128 (Universal)')).toBeTruthy();
     });
 
     it('uses grey as default color', () => {
@@ -197,7 +198,7 @@ describe('CardForm', () => {
         expect(mockOnSubmit).toHaveBeenCalledWith({
           name: 'Test Card',
           barcode: '1234567890',
-          barcodeFormat: 'CODE128',
+          barcodeFormat: 'CODE128', // Auto-detected: 10 digits -> CODE128
           color: 'grey'
         });
       });

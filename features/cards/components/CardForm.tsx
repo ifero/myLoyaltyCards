@@ -4,6 +4,8 @@
  *
  * Shared form component for Add Card and Edit Card (Story 2.7).
  * Uses react-hook-form with zod validation.
+ *
+ * Updated: Barcode format is auto-detected from value - user doesn't need to select it.
  */
 
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -20,12 +22,12 @@ import {
 } from 'react-native';
 import * as z from 'zod';
 
-import { barcodeFormatSchema, cardColorSchema } from '@/core/schemas';
+import { barcodeFormatSchema, cardColorSchema, BarcodeFormat } from '@/core/schemas';
+import { inferBarcodeFormat, getBarcodeFormatDescription } from '@/core/utils';
 
 import { useTheme } from '@/shared/theme';
 
 import { ColorPicker } from './ColorPicker';
-import { FormatPicker } from './FormatPicker';
 
 /**
  * Form validation schema per AC3 & AC4
@@ -51,16 +53,18 @@ interface CardFormProps {
   isLoading?: boolean;
   onDirtyChange?: (isDirty: boolean) => void;
   testID?: string;
+  /** Focus name field on mount (defaults to true, set to true explicitly for scanned barcode flow) */
+  focusNameOnMount?: boolean;
 }
 
 /**
  * CardForm - Shared form for Add/Edit card
  *
  * Features per acceptance criteria:
- * - AC2: Card Name, Barcode Number, Barcode Format, Card Color fields
+ * - AC2: Card Name, Barcode Number, Card Color fields
  * - AC3: Name validation with 50 char limit and character counter
  * - AC4: Numeric keypad for barcode input
- * - AC5: Format picker with 6 options, Code 128 default
+ * - AC5: Format auto-detected from barcode value (user doesn't select)
  * - AC6: Color picker with 5 options, Grey default
  * - Save button disabled when form invalid
  */
@@ -70,7 +74,8 @@ export const CardForm = ({
   submitLabel,
   isLoading = false,
   onDirtyChange,
-  testID
+  testID,
+  focusNameOnMount = true
 }: CardFormProps) => {
   const { theme } = useTheme();
   const nameInputRef = useRef<TextInput>(null);
@@ -79,13 +84,14 @@ export const CardForm = ({
     control,
     handleSubmit,
     watch,
+    setValue,
     formState: { errors, isValid, isDirty }
   } = useForm<CardFormInput>({
     resolver: zodResolver(cardFormSchema),
     defaultValues: {
       name: '',
       barcode: '',
-      barcodeFormat: 'CODE128',
+      barcodeFormat: defaultValues?.barcodeFormat || 'CODE128',
       color: 'grey',
       ...defaultValues
     },
@@ -94,19 +100,37 @@ export const CardForm = ({
 
   const nameValue = watch('name');
   const nameLength = nameValue?.length || 0;
+  const barcodeValue = watch('barcode');
+  const barcodeFormat = watch('barcodeFormat');
+
+  // Auto-detect barcode format when barcode value changes (only for manual entry)
+  useEffect(() => {
+    // Skip auto-detection if format was provided via defaultValues (e.g., from scanner)
+    if (defaultValues?.barcodeFormat) {
+      return;
+    }
+
+    const inferredFormat = inferBarcodeFormat(barcodeValue || '');
+    if (inferredFormat !== barcodeFormat) {
+      setValue('barcodeFormat', inferredFormat);
+    }
+  }, [barcodeValue, defaultValues?.barcodeFormat, setValue, barcodeFormat]);
 
   // Notify parent of dirty state changes for discard confirmation (AC8)
   useEffect(() => {
     onDirtyChange?.(isDirty);
   }, [isDirty, onDirtyChange]);
 
-  // Auto-focus card name field per AC2
+  // Auto-focus card name field per AC2 (or when returning from scanner with scanned barcode)
   useEffect(() => {
-    const timeout = setTimeout(() => {
-      nameInputRef.current?.focus();
-    }, 100);
-    return () => clearTimeout(timeout);
-  }, []);
+    if (focusNameOnMount) {
+      const timeout = setTimeout(() => {
+        nameInputRef.current?.focus();
+      }, 100);
+      return () => clearTimeout(timeout);
+    }
+    return undefined;
+  }, [focusNameOnMount]);
 
   const handleFormSubmit = handleSubmit(async (data) => {
     await onSubmit(data);
@@ -191,15 +215,20 @@ export const CardForm = ({
           )}
         </View>
 
-        {/* Barcode Format Picker - AC5 */}
-        <View className="mb-4">
-          <Controller
-            control={control}
-            name="barcodeFormat"
-            render={({ field: { onChange, value } }) => (
-              <FormatPicker value={value} onChange={onChange} testID="format-picker-container" />
-            )}
-          />
+        {/* Barcode Format Display - AC5 (Auto-detected) */}
+        <View className="mb-4" testID="format-display">
+          <Text className="mb-1 text-xs text-gray-500">Barcode Format (Auto-detected)</Text>
+          <View
+            className="rounded-lg border px-3 py-3"
+            style={{
+              borderColor: theme.border,
+              backgroundColor: theme.surface
+            }}
+          >
+            <Text style={{ color: theme.textPrimary }}>
+              {getBarcodeFormatDescription(barcodeFormat)}
+            </Text>
+          </View>
         </View>
 
         {/* Color Picker - AC6 */}
