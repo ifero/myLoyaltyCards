@@ -10,6 +10,14 @@ if (typeof global.TransformStream === 'undefined') {
   global.TransformStream = class TransformStream {};
 }
 
+// Polyfill for setImmediate and clearImmediate (required by React Native StatusBar)
+if (typeof global.setImmediate === 'undefined') {
+  global.setImmediate = (fn, ...args) => setTimeout(fn, 0, ...args);
+}
+if (typeof global.clearImmediate === 'undefined') {
+  global.clearImmediate = (id) => clearTimeout(id);
+}
+
 // Mock crypto.randomUUID (not available in jsdom)
 // Set on both global and globalThis for compatibility
 const mockUUID = '123e4567-e89b-12d3-a456-426614174000';
@@ -137,10 +145,86 @@ jest.mock('uuid', () => ({
   v4: jest.fn(() => '123e4567-e89b-12d3-a456-426614174000')
 }));
 
+// Mock react-native-reanimated
+jest.mock('react-native-reanimated', () => {
+  const mockReact = require('react');
+  const mockRN = require('react-native');
+
+  const AnimatedView = mockReact.forwardRef((props, ref) =>
+    mockReact.createElement(mockRN.View, { ...props, ref })
+  );
+  AnimatedView.displayName = 'Animated.View';
+
+  const Animated = {
+    View: AnimatedView,
+    Text: mockRN.Text,
+    Image: mockRN.Image,
+    ScrollView: mockRN.ScrollView,
+    FlatList: mockRN.FlatList
+  };
+
+  return {
+    __esModule: true,
+    default: Animated,
+    useSharedValue: (initial) => ({ value: initial }),
+    useAnimatedStyle: () => ({}),
+    withTiming: (value, _config, callback) => {
+      if (callback) callback();
+      return value;
+    },
+    withSpring: (value) => value,
+    runOnJS: (fn) => fn
+  };
+});
+
+// Mock react-native-gesture-handler
+jest.mock('react-native-gesture-handler', () => {
+  const mockReact = require('react');
+  const mockRN = require('react-native');
+
+  return {
+    GestureHandlerRootView: ({ children, style }) =>
+      mockReact.createElement(mockRN.View, { style, testID: 'gesture-root' }, children),
+    GestureDetector: ({ children }) =>
+      mockReact.createElement(mockRN.View, { testID: 'gesture-detector' }, children),
+    Gesture: {
+      Pan: () => ({
+        onUpdate: function () {
+          return this;
+        },
+        onEnd: function () {
+          return this;
+        }
+      })
+    }
+  };
+});
+
 // Mock NativeWind/CSS interop to prevent issues in tests
 jest.mock('nativewind', () => ({
   styled: (component) => component
 }));
+
+// Mock react-native-css-interop to prevent displayName access issues
+// This completely mocks the runtime to prevent wrap-jsx from processing components
+jest.mock('react-native-css-interop', () => ({
+  cssInterop: (component) => component,
+  remapProps: (component) => component,
+  // Mock the internal runtime functions
+  __esModule: true
+}));
+
+// Mock the wrap-jsx runtime that's causing the displayName issue
+jest.mock('react-native-css-interop/src/runtime/wrap-jsx', () => ({
+  wrapJSX: (element) => element,
+  __esModule: true
+}), { virtual: true });
+
+// Mock the third-party libs file that causes the displayName issue
+jest.mock('react-native-css-interop/src/runtime/third-party-libs/react-native-safe-area-context.native', () => ({
+  maybeHijackSafeAreaProvider: (element) => element,
+  __esModule: true
+}), { virtual: true });
 
 // Silence console warnings in tests
 const originalWarn = console.warn;

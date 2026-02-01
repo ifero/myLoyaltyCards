@@ -134,6 +134,7 @@ export default [
       '*.config.js',
       '*.config.mjs',
       'babel.config.js',
+      'babel.config.test.js',
       'jest.setup.js',
     ],
   },

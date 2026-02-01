@@ -157,26 +157,33 @@ export function BarcodeRenderer({
   color = '#000000',
   backgroundColor = 'transparent'
 }: BarcodeRendererProps) {
-  // QR Code handling
-  if (format === 'QR') {
-    const qrSize = width ?? 200;
+  const isQR = format === 'QR';
+  const barcodeWidth = width ?? (isQR ? 200 : 280);
+
+  // Generate SVG for linear barcodes (must be called unconditionally per React rules)
+  const svgXml = useMemo(() => {
+    if (isQR) return null;
+    return generateBarcodeSvg(
+      value,
+      format as Exclude<BarcodeFormat, 'QR'>,
+      barcodeWidth,
+      height,
+      color
+    );
+  }, [value, format, barcodeWidth, height, color, isQR]);
+
+  // QR Code rendering
+  if (isQR) {
     return (
       <View
         style={{ backgroundColor }}
         accessibilityLabel={`QR code for ${value}`}
         accessibilityRole="image"
       >
-        <QRCode value={value} size={qrSize} color={color} backgroundColor={backgroundColor} />
+        <QRCode value={value} size={barcodeWidth} color={color} backgroundColor={backgroundColor} />
       </View>
     );
   }
-
-  // Linear barcode handling
-  const barcodeWidth = width ?? 280;
-
-  const svgXml = useMemo(() => {
-    return generateBarcodeSvg(value, format, barcodeWidth, height, color);
-  }, [value, format, barcodeWidth, height, color]);
 
   if (!svgXml) {
     // Fallback for invalid barcode
