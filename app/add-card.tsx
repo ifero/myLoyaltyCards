@@ -12,6 +12,7 @@ import { useCallback, useRef, useEffect, useMemo, useState } from 'react';
 import { View, Alert, BackHandler, Text, Pressable } from 'react-native';
 
 import { BarcodeFormat } from '@/core/schemas';
+
 import { useTheme, SEMANTIC_COLORS } from '@/shared/theme';
 
 import { CardForm, CardFormInput } from '@/features/cards/components/CardForm';

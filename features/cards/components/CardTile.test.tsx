@@ -1,6 +1,7 @@
 /**
  * CardTile Component Tests
  * Story 2.1: Display Card List - AC2, AC6
+ * Story 2.4: Display Virtual Logo
  */
 
 import { render, screen, fireEvent } from '@testing-library/react-native';
@@ -72,20 +73,21 @@ describe('CardTile', () => {
       expect(cardName).toBeTruthy();
     });
 
-    it('renders visual identifier with first letter', () => {
+    it('renders visual identifier with initials', () => {
       render(<CardTile card={mockCard} />);
 
-      const visualLetter = screen.getByText('T');
-      expect(visualLetter).toBeTruthy();
+      // VirtualLogo shows initials (TS for "Test Store")
+      const visualInitials = screen.getByText('TS');
+      expect(visualInitials).toBeTruthy();
     });
 
     it('uses card color for visual identifier background', () => {
       render(<CardTile card={mockCard} />);
 
-      // Verify the visual identifier renders with the card's first letter
-      const visualLetter = screen.getByText('T');
-      expect(visualLetter).toBeTruthy();
-      
+      // Verify the visual identifier renders with the card's initials
+      const visualInitials = screen.getByText('TS');
+      expect(visualInitials).toBeTruthy();
+
       // The component applies the card's color to the visual identifier background
       // Color application is tested indirectly through the 'handles cards with different colors' test
     });
@@ -151,7 +153,7 @@ describe('CardTile', () => {
   });
 
   describe('Visual Identifier - AC2', () => {
-    it('displays first letter of card name in uppercase', () => {
+    it('displays initials in uppercase', () => {
       const lowercaseCard: LoyaltyCard = {
         ...mockCard,
         name: 'test store'
@@ -159,20 +161,19 @@ describe('CardTile', () => {
 
       render(<CardTile card={lowercaseCard} />);
 
-      const visualLetter = screen.getByText('T');
-      expect(visualLetter).toBeTruthy();
+      // VirtualLogo generates uppercase initials
+      const visualInitials = screen.getByText('TS');
+      expect(visualInitials).toBeTruthy();
     });
 
     it('handles cards with different colors', () => {
       const colors: Array<LoyaltyCard['color']> = ['blue', 'red', 'green', 'orange', 'grey'];
 
       colors.forEach((color) => {
-        const { unmount } = render(
-          <CardTile card={{ ...mockCard, color }} />
-        );
+        const { unmount } = render(<CardTile card={{ ...mockCard, color }} />);
 
-        const visualLetter = screen.getByText('T');
-        expect(visualLetter).toBeTruthy();
+        const visualInitials = screen.getByText('TS');
+        expect(visualInitials).toBeTruthy();
 
         unmount();
       });
@@ -186,8 +187,8 @@ describe('CardTile', () => {
 
       render(<CardTile card={invalidColorCard} />);
 
-      const visualLetter = screen.getByText('T');
-      expect(visualLetter).toBeTruthy();
+      const visualInitials = screen.getByText('TS');
+      expect(visualInitials).toBeTruthy();
     });
   });
 
@@ -206,7 +207,7 @@ describe('CardTile', () => {
       render(<CardTile card={mockCard} />);
 
       const tile = screen.getByLabelText('Test Store');
-      
+
       // Pressable should handle press state and invoke navigation
       fireEvent.press(tile);
 
@@ -246,7 +247,7 @@ describe('CardTile', () => {
       };
 
       const { toJSON } = render(<CardTile card={emptyNameCard} />);
-      
+
       // Should render without crashing
       expect(toJSON()).toBeTruthy();
     });

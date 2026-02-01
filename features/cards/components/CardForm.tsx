@@ -22,7 +22,7 @@ import {
 } from 'react-native';
 import * as z from 'zod';
 
-import { barcodeFormatSchema, cardColorSchema, BarcodeFormat } from '@/core/schemas';
+import { barcodeFormatSchema, cardColorSchema } from '@/core/schemas';
 import { inferBarcodeFormat, getBarcodeFormatDescription } from '@/core/utils';
 
 import { useTheme } from '@/shared/theme';

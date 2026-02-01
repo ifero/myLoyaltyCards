@@ -81,7 +81,7 @@ development_status:
   2-1-display-card-list: done
   2-2-add-card-manually: done
   2-3-scan-barcode-with-camera: review
-  2-4-display-virtual-logo: ready-for-dev
+  2-4-display-virtual-logo: review
   2-5-display-barcode-barcode-flash: ready-for-dev
   2-6-view-card-details: ready-for-dev
   2-7-edit-card: ready-for-dev

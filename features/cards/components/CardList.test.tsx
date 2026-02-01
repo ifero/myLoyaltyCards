@@ -8,8 +8,13 @@ import { useFocusEffect } from 'expo-router';
 
 import { LoyaltyCard } from '@/core/schemas';
 
-import { useCards } from '../hooks/useCards';
 import { CardList } from './CardList';
+import { useCards } from '../hooks/useCards';
+
+// Extend global type for test mocks
+declare global {
+  var mockFlashListState: { numColumns: number | undefined };
+}
 
 // Mock useCards hook
 jest.mock('../hooks/useCards');
@@ -69,7 +74,7 @@ describe('CardList', () => {
   ];
 
   const mockRefetch = jest.fn();
-  
+
   // Mock useWindowDimensions
   const mockDimensions = { width: 375, height: 667, scale: 1, fontScale: 1 };
   let useWindowDimensionsSpy: jest.SpyInstance;
@@ -77,11 +82,12 @@ describe('CardList', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     global.mockFlashListState.numColumns = undefined; // Reset captured value
-    
+
     // Spy on useWindowDimensions
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
     const RN = require('react-native');
     useWindowDimensionsSpy = jest.spyOn(RN, 'useWindowDimensions').mockReturnValue(mockDimensions);
-    
+
     mockUseCards.mockReturnValue({
       cards: [],
       isLoading: false,
@@ -89,7 +95,7 @@ describe('CardList', () => {
       refetch: mockRefetch
     });
   });
-  
+
   afterEach(() => {
     if (useWindowDimensionsSpy) {
       useWindowDimensionsSpy.mockRestore();
@@ -107,6 +113,7 @@ describe('CardList', () => {
 
       const { UNSAFE_getByType } = render(<CardList />);
       const activityIndicator = UNSAFE_getByType(
+        // eslint-disable-next-line @typescript-eslint/no-require-imports
         require('react-native').ActivityIndicator
       );
       expect(activityIndicator).toBeTruthy();
@@ -182,7 +189,7 @@ describe('CardList', () => {
   describe('Responsive Columns - AC2', () => {
     it('uses 2 columns on screens < 400dp width', () => {
       mockDimensions.width = 375; // iPhone SE width
-      
+
       mockUseCards.mockReturnValue({
         cards: mockCards,
         isLoading: false,
@@ -199,7 +206,7 @@ describe('CardList', () => {
 
     it('uses 3 columns on screens >= 400dp width', () => {
       mockDimensions.width = 428; // iPhone 15 Pro Max width
-      
+
       mockUseCards.mockReturnValue({
         cards: mockCards,
         isLoading: false,
@@ -265,7 +272,7 @@ describe('CardList', () => {
       const tree = toJSON();
       const texts: string[] = [];
 
-      const collectText = (node: any): void => {
+      const collectText = (node: unknown): void => {
         if (!node) return;
         if (typeof node === 'string') {
           texts.push(node);
@@ -275,8 +282,11 @@ describe('CardList', () => {
           node.forEach(collectText);
           return;
         }
-        if (node.children) {
-          node.children.forEach(collectText);
+        if (typeof node === 'object' && node !== null && 'children' in node) {
+          const nodeWithChildren = node as { children?: unknown[] };
+          if (nodeWithChildren.children) {
+            nodeWithChildren.children.forEach(collectText);
+          }
         }
       };
 
@@ -304,7 +314,7 @@ describe('CardList', () => {
 
       // useFocusEffect should call the callback
       expect(useFocusEffect).toHaveBeenCalled();
-      
+
       // The callback should call refetch
       // Since useFocusEffect is mocked to immediately call the callback,
       // refetch should be called
