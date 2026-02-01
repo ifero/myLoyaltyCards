@@ -102,6 +102,12 @@ const RootLayoutContent = () => {
             animation: 'fade'
           }}
         />
+        <Stack.Screen
+          name="card/[id]"
+          options={{
+            title: 'Card Details'
+          }}
+        />
       </Stack>
       <StatusBar style={isDark ? 'light' : 'dark'} />
     </>
