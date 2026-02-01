@@ -1,5 +1,5 @@
 # generated: 2026-01-03
-# updated: 2026-01-07
+# updated: 2026-02-01
 # project: myLoyaltyCards
 # tracking_system: file-system
 # story_location: docs/sprint-artifacts
@@ -35,7 +35,7 @@
 # - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
 
 generated: 2026-01-03
-updated: 2026-01-07
+updated: 2026-02-01
 project: myLoyaltyCards
 tracking_system: file-system
 story_location: docs/sprint-artifacts
@@ -82,8 +82,8 @@ development_status:
   2-2-add-card-manually: done
   2-3-scan-barcode-with-camera: review
   2-4-display-virtual-logo: review
-  2-5-display-barcode-barcode-flash: ready-for-dev
-  2-6-view-card-details: in-progress
+  2-5-display-barcode-barcode-flash: done
+  2-6-view-card-details: done
   2-7-edit-card: ready-for-dev
   2-8-delete-card: ready-for-dev
   epic-2-retrospective: optional
