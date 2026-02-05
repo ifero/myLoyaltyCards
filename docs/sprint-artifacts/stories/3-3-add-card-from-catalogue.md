@@ -30,3 +30,51 @@
 2.  Update `useAddCard` hook to merge brand data into the form default values.
 3.  Verify `CardItem` component (from Story 2.1/2.4) correctly prefers Logo Image over `VirtualLogo` when `brandId` is resolved.
 4.  Add integration test: Select Brand -> Save -> Verify DB entry has `brandId`.
+
+## Tasks/Subtasks
+
+- [ ] Brand-aware navigation
+  - [ ] Accept `brandId`/`brandName`/`brandColor` params in scan/manual routes
+- [ ] Form defaults
+  - [ ] Update add-card hook/form to prefill name and color from brand
+  - [ ] Ensure `brandId` persisted in database
+- [ ] UI indicators
+  - [ ] Show brand name in header
+  - [ ] Render brand logo in add-card flow
+- [ ] Logo rendering
+  - [ ] Prefer official logo when `brandId` is present
+- [ ] Fallback flow
+  - [ ] Preserve brand context in “Enter Manually”
+- [ ] Tests
+  - [ ] Integration test for brand selection → save → `brandId` persisted
+
+## Dev Notes
+
+- Keep route params as source of truth for selected brand.
+- Ensure brand color defaults do not override user choice after edit.
+
+## Dev Agent Record
+
+### Implementation Plan
+
+- TBD
+
+### Debug Log
+
+- None
+
+### Completion Notes
+
+- None
+
+## File List
+
+- None
+
+## Change Log
+
+- None
+
+## Status
+
+- Status: ready-for-dev

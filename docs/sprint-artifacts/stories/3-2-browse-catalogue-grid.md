@@ -32,3 +32,51 @@
 2.  Implement `CatalogueGrid` component.
 3.  Implement `BrandCard` item component.
 4.  Connect navigation (pass brand data to scanner).
+
+## Tasks/Subtasks
+
+- [ ] Update Add Card entry point
+  - [ ] Make catalogue grid the default view in `app/add-card.tsx`
+- [ ] Build catalogue grid UI
+  - [ ] Create `features/cards/components/CatalogueGrid.tsx`
+  - [ ] Create `BrandCard` item component
+  - [ ] Use `expo-image` for logo rendering
+- [ ] List performance
+  - [ ] Use `FlashList` (or optimized FlatList) for smooth scrolling
+- [ ] Add Custom Card CTA
+  - [ ] Add prominent “Add Custom Card” action (sticky header or top of list)
+- [ ] Navigation
+  - [ ] On brand tap, navigate to scanner/input with `brandId` and `brandName`
+- [ ] Tests
+  - [ ] Add UI or integration coverage for grid render and navigation params
+
+## Dev Notes
+
+- Use NativeWind grid utilities or flex-wrap to achieve responsive columns.
+- Keep list virtualization tuned for low memory and 60fps scrolling.
+
+## Dev Agent Record
+
+### Implementation Plan
+
+- TBD
+
+### Debug Log
+
+- None
+
+### Completion Notes
+
+- None
+
+## File List
+
+- None
+
+## Change Log
+
+- None
+
+## Status
+
+- Status: ready-for-dev

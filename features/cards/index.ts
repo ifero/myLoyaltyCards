@@ -8,6 +8,7 @@
  * Story 2.6: View Card Details
  * Story 2.7: Edit Card
  * Story 2.8: Delete Card
+ * Story 3.2: Browse Catalogue Grid
  *
  * Exports card-related components and hooks.
  */
@@ -28,6 +29,7 @@ export { BarcodeFlash } from './components/BarcodeFlash';
 export type { BarcodeFlashProps } from './components/BarcodeFlash';
 export { CardDetails } from './components/CardDetails';
 export { DetailRow } from './components/DetailRow';
+export { CatalogueGrid } from './components/CatalogueGrid';
 
 // Hooks
 export { useCards } from './hooks/useCards';

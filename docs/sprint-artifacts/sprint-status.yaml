@@ -88,8 +88,8 @@ development_status:
 
   # Epic 3: Italian Brand Catalogue
   epic-3: in-progress
-  3-1-create-italian-catalogue-data: ready-for-dev
-  3-2-browse-catalogue-grid: ready-for-dev
+  3-1-create-italian-catalogue-data: done
+  3-2-browse-catalogue-grid: in-progress
   3-3-add-card-from-catalogue: ready-for-dev
   3-4-cache-catalogue-for-offline: ready-for-dev
   3-5-update-catalogue-via-ota: ready-for-dev

@@ -2,9 +2,11 @@
  * Add Card Screen
  * Story 2.2: Add Card Manually
  * Story 2.3: Scan Barcode with Camera (integration)
+ * Story 3.2: Browse Catalogue Grid
  *
- * Screen for adding a new loyalty card with form validation.
- * Supports barcode scanning via route params.
+ * Screen for adding a new loyalty card.
+ * - Default view: Catalogue Grid (Story 3.2)
+ * - Fallback: Manual entry form (Story 2.2) or scanner (Story 2.3)
  */
 
 import { useRouter, useFocusEffect, useNavigation, useLocalSearchParams } from 'expo-router';
@@ -16,6 +18,7 @@ import { BarcodeFormat } from '@/core/schemas';
 import { useTheme, SEMANTIC_COLORS } from '@/shared/theme';
 
 import { CardForm, CardFormInput } from '@/features/cards/components/CardForm';
+import { CatalogueGrid } from '@/features/cards/components/CatalogueGrid';
 import { useAddCard } from '@/features/cards/hooks/useAddCard';
 
 /**
@@ -23,8 +26,10 @@ import { useAddCard } from '@/features/cards/hooks/useAddCard';
  *
  * Features per acceptance criteria:
  * - AC1: Access via "+" button in header
- * - AC2-AC6: Form with validation via CardForm
- * - AC7: Save with haptic + toast feedback via useAddCard
+ * - Story 3.2 AC2: Default view is Catalogue Grid
+ * - Story 3.2 AC: "Add Custom Card" button for manual/scan flow
+ * - Story 2.2 AC2-AC6: Form with validation via CardForm (when toggled)
+ * - Story 2.2 AC7: Save with haptic + toast feedback via useAddCard
  * - AC8: Back navigation with discard confirmation (only on explicit back button)
  * - Story 2.3 AC1: "Scan Barcode" option to access scanner
  * - Story 2.3 AC5: Pre-fill barcode from scanner with success indicator
@@ -39,6 +44,11 @@ const AddCardScreen = () => {
     scannedBarcode?: string;
     scannedFormat?: BarcodeFormat;
   }>();
+
+  // Track view mode: 'catalogue' (default) or 'form' (manual/scan)
+  const [viewMode, setViewMode] = useState<'catalogue' | 'form'>(
+    params.scannedBarcode ? 'form' : 'catalogue'
+  );
 
   // Track if we've shown the scan success indicator
   const [showScanSuccess, setShowScanSuccess] = useState(false);
@@ -203,34 +213,63 @@ const AddCardScreen = () => {
         </View>
       )}
 
-      {/* Scan Barcode Button - Story 2.3 AC1 */}
-      {!params.scannedBarcode && (
-        <Pressable
-          onPress={handleScanBarcode}
-          className="mx-4 mt-4 h-12 flex-row items-center justify-center rounded-lg border"
-          style={{
-            borderColor: theme.primary,
-            backgroundColor: theme.primary + '10'
-          }}
-          accessibilityRole="button"
-          accessibilityLabel="Scan Barcode"
-          testID="scan-barcode-button"
-        >
-          <Text className="text-base font-semibold" style={{ color: theme.primary }}>
-            📷 Scan Barcode
-          </Text>
-        </Pressable>
+      {/* Story 3.2: Catalogue Grid (default view) */}
+      {viewMode === 'catalogue' && (
+        <>
+          {/* Add Custom Card Button - Story 3.2 AC: Prominent fallback action */}
+          <Pressable
+            onPress={() => setViewMode('form')}
+            className="mx-4 mt-4 h-12 flex-row items-center justify-center rounded-lg border"
+            style={{
+              borderColor: theme.primary,
+              backgroundColor: theme.primary + '10'
+            }}
+            accessibilityRole="button"
+            accessibilityLabel="Add Custom Card"
+            testID="add-custom-card-button"
+          >
+            <Text className="text-base font-semibold" style={{ color: theme.primary }}>
+              ➕ Add Custom Card
+            </Text>
+          </Pressable>
+
+          <CatalogueGrid />
+        </>
       )}
 
-      <CardForm
-        defaultValues={defaultValues}
-        onSubmit={handleSubmit}
-        submitLabel="Add Card"
-        isLoading={isLoading}
-        onDirtyChange={handleDirtyChange}
-        testID="add-card-form"
-        focusNameOnMount={!!params.scannedBarcode}
-      />
+      {/* Story 2.2/2.3: Manual Form (legacy flow) */}
+      {viewMode === 'form' && (
+        <>
+          {/* Scan Barcode Button - Story 2.3 AC1 */}
+          {!params.scannedBarcode && (
+            <Pressable
+              onPress={handleScanBarcode}
+              className="mx-4 mt-4 h-12 flex-row items-center justify-center rounded-lg border"
+              style={{
+                borderColor: theme.primary,
+                backgroundColor: theme.primary + '10'
+              }}
+              accessibilityRole="button"
+              accessibilityLabel="Scan Barcode"
+              testID="scan-barcode-button"
+            >
+              <Text className="text-base font-semibold" style={{ color: theme.primary }}>
+                📷 Scan Barcode
+              </Text>
+            </Pressable>
+          )}
+
+          <CardForm
+            defaultValues={defaultValues}
+            onSubmit={handleSubmit}
+            submitLabel="Add Card"
+            isLoading={isLoading}
+            onDirtyChange={handleDirtyChange}
+            testID="add-card-form"
+            focusNameOnMount={!!params.scannedBarcode}
+          />
+        </>
+      )}
     </View>
   );
 };
