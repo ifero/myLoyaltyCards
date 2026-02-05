@@ -43,6 +43,7 @@ export { useBarcodeScanner } from './hooks/useBarcodeScanner';
 export type { ScanResult } from './hooks/useBarcodeScanner';
 export { useBrightness } from './hooks/useBrightness';
 export type { UseBrightnessReturn } from './hooks/useBrightness';
+export { useBrandLogo } from './hooks/useBrandLogo';
 
 // Utils
 export { generateInitials } from './utils/initials';

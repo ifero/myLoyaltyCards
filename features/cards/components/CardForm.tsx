@@ -41,7 +41,8 @@ const cardFormSchema = z.object({
     .max(50, 'Card name must be 50 characters or less'),
   barcode: z.string().min(1, 'Barcode number is required'),
   barcodeFormat: barcodeFormatSchema,
-  color: cardColorSchema
+  color: cardColorSchema,
+  brandId: z.string().optional() // Story 3.3: Optional brand ID
 });
 
 export type CardFormInput = z.infer<typeof cardFormSchema>;
