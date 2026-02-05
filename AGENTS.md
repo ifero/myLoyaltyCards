@@ -254,18 +254,62 @@ After completing work:
 When work is complete, follow this workflow:
 
 1. **Update status to `review`** in `sprint-status.yaml`
-2. **Run code review with Dev agent**:
+
+2. **Request Code Review from Dev Agent** (Different LLM):
+
    ```
    Use runSubagent with agentName: "bmd-custom-bmm-dev"
-   Provide full context about files changed and acceptance criteria
+   Provide context:
+   - Files changed in this PR
+   - Implementation approach and design decisions
+   - Acceptance criteria checklist
+   - Any known limitations or TODOs
+
+   Wait for review feedback:
+   - APPROVED ✅ → Move to step 3
+   - CHANGES_REQUESTED ⚠️ → Move to step 4
    ```
-3. **If APPROVED**:
-   - Update status to `done` in `sprint-status.yaml`
+
+3. **If APPROVED by Dev Agent**:
    - Create Pull Request with:
      - Clear title: `feat(scope): description (Story X.Y)`
-     - Body with summary, changes, acceptance criteria checklist
-     - Link to code review approval
-4. **If CHANGES_REQUESTED**:
-   - Address the feedback
-   - Re-run code review
-   - Repeat until approved
+     - Body with:
+       - Summary of changes
+       - Acceptance criteria checklist (mark completed items)
+       - Link to code review approval message
+       - Test results summary (test counts, coverage if applicable)
+     - Set reviewers if using GitHub PRs
+   - **STOP HERE** - Do NOT merge. Wait for user to review and merge the PR
+   - Update `sprint-status.yaml`: mark story status as `done` (after user merges)
+
+4. **If CHANGES_REQUESTED by Dev Agent**:
+   - Address all feedback and issues raised
+   - Make focused commits with clear messages
+   - Push changes to feature branch
+   - **Request NEW code review from a different Dev Agent**:
+     ```
+     Use runSubagent with agentName: "bmd-custom-bmm-dev" (or alternate if available)
+     Include:
+     - Summary of changes made in response to feedback
+     - Files modified since last review
+     - Explanation of design decisions
+     ```
+   - Repeat review process until APPROVED
+   - Once approved, proceed to step 3
+
+**CODE REVIEW CHECKLIST (for reviewers):**
+
+- [ ] Does code follow project conventions and patterns?
+- [ ] Are acceptance criteria satisfied?
+- [ ] Is test coverage adequate (new tests for new features)?
+- [ ] Are there any performance or security concerns?
+- [ ] Is the implementation approach sound?
+- [ ] Are TypeScript types properly used?
+- [ ] Are comments/documentation clear and necessary?
+- [ ] Are there any edge cases not handled?
+
+**PR APPROVAL AND MERGE:**
+
+- After user reviews and approves the PR, they will merge it to main
+- Once merged, the story status should be finalized as `done` in sprint-status.yaml
+- Update relevant documentation to reflect completion
