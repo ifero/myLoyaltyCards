@@ -33,3 +33,46 @@
     - Function: `getBrands()` -> returns `Brand[]`.
     - Logic: `import data from '@/catalogue/italy.json'` (Bundled).
 2.  Add a test case ensuring `getBrands()` returns data without mocking network.
+
+## Tasks/Subtasks
+
+- [ ] Bundle catalogue data
+  - [ ] Ensure `italy.json` is imported from app bundle
+- [ ] Catalogue repository
+  - [ ] Implement `CatalogueRepository.getBrands()` using bundled JSON
+- [ ] Image caching
+  - [ ] Confirm `expo-image` caching policy for brand logos
+- [ ] Offline validation
+  - [ ] Add a test ensuring catalogue loads without network
+  - [ ] Manual offline check steps documented
+
+## Dev Notes
+
+- Keep repository fast-async and avoid network dependency.
+- Document any caching assumptions for remote logos.
+
+## Dev Agent Record
+
+### Implementation Plan
+
+- TBD
+
+### Debug Log
+
+- None
+
+### Completion Notes
+
+- None
+
+## File List
+
+- None
+
+## Change Log
+
+- None
+
+## Status
+
+- Status: ready-for-dev

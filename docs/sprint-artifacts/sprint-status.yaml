@@ -35,7 +35,7 @@
 # - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
 
 generated: 2026-01-03
-updated: 2026-02-01
+updated: 2026-02-05
 project: myLoyaltyCards
 tracking_system: file-system
 story_location: docs/sprint-artifacts
@@ -88,8 +88,8 @@ development_status:
 
   # Epic 3: Italian Brand Catalogue
   epic-3: in-progress
-  3-1-create-italian-catalogue-data: ready-for-dev
-  3-2-browse-catalogue-grid: ready-for-dev
+  3-1-create-italian-catalogue-data: done
+  3-2-browse-catalogue-grid: done
   3-3-add-card-from-catalogue: ready-for-dev
   3-4-cache-catalogue-for-offline: ready-for-dev
   3-5-update-catalogue-via-ota: ready-for-dev

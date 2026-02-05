@@ -28,3 +28,45 @@
 1.  Add "Catalogue Version: {data.version}" to the Settings screen (Epic 8, but we can add a small text in Add Card footer for debug).
 2.  (Ops Task) Document the process: "To update catalogue: Edit json -> Commit -> `eas update`".
 3.  No major code changes needed if we stick to "Import JSON" strategy; this is purely infrastructure.
+
+## Tasks/Subtasks
+
+- [ ] Expo Updates integration
+  - [ ] Confirm OTA update flow for JSON changes
+- [ ] Version visibility
+  - [ ] Display catalogue version in Settings (or Add Card footer for debug)
+- [ ] Update procedure
+  - [ ] Document steps for publishing catalogue updates
+- [ ] Verification
+  - [ ] Validate new brand appears after OTA update
+
+## Dev Notes
+
+- Prefer Expo Updates (Option A) per acceptance criteria.
+- Keep catalogue version ISO date for deterministic comparisons.
+
+## Dev Agent Record
+
+### Implementation Plan
+
+- TBD
+
+### Debug Log
+
+- None
+
+### Completion Notes
+
+- None
+
+## File List
+
+- None
+
+## Change Log
+
+- None
+
+## Status
+
+- Status: ready-for-dev
