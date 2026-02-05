@@ -35,8 +35,8 @@
 
 ## Tasks/Subtasks
 
-- [ ] Update Add Card entry point
-  - [ ] Make catalogue grid the default view in `app/add-card.tsx`
+- [x] Update Add Card entry point
+  - [x] Make catalogue grid the default view in `app/add-card.tsx`
 - [ ] Build catalogue grid UI
   - [ ] Create `features/cards/components/CatalogueGrid.tsx`
   - [ ] Create `BrandCard` item component
@@ -59,7 +59,13 @@
 
 ### Implementation Plan
 
-- TBD
+Task 1: Update Add Card entry point
+
+- Following red-green-refactor: wrote failing tests first
+- Created stub CatalogueGrid component
+- Refactored add-card.tsx to show catalogue by default
+- Added view mode toggle (catalogue vs form)
+- Tests pass ✓
 
 ### Debug Log
 
@@ -67,15 +73,22 @@
 
 ### Completion Notes
 
-- None
+Task 1 complete:
+
+- add-card.tsx now shows catalogue grid by default (AC: Entry Point)
+- "Add Custom Card" button provides fallback to manual/scan flow (AC: Fallback Action)
+- All tests passing
 
 ## File List
 
-- None
+- app/add-card.tsx
+- app/**tests**/add-card.test.tsx
+- features/cards/components/CatalogueGrid.tsx
+- features/cards/index.ts
 
 ## Change Log
 
-- None
+- 2026-02-05: Task 1 complete - refactored add-card.tsx for catalogue grid default view
 
 ## Status
 
