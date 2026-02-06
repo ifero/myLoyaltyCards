@@ -17,6 +17,6 @@ import { CatalogueBrand } from '@/catalogue/types';
 export function useBrandLogo(brandId: string | null): CatalogueBrand | undefined {
   return useMemo(() => {
     if (!brandId) return undefined;
-    return catalogueData.brands.find((b) => b.id === brandId);
+    return catalogueData.brands.find((b) => b.id === brandId) as CatalogueBrand | undefined;
   }, [brandId]);
 }
