@@ -14,8 +14,9 @@ import { View, Text, Pressable, useWindowDimensions, StyleSheet } from 'react-na
 import { useTheme } from '@/shared/theme';
 import { SPACING } from '@/shared/theme/spacing';
 
-import catalogueData from '@/catalogue/italy.json';
 import { CatalogueBrand } from '@/catalogue/types';
+
+import { catalogueRepository } from '../repositories/catalogue-repository';
 
 /**
  * Breakpoint for responsive columns
@@ -101,8 +102,8 @@ export function CatalogueGrid() {
   // Determine number of columns based on screen width
   const numColumns = width < COLUMN_BREAKPOINT ? MIN_COLUMNS : MAX_COLUMNS;
 
-  // Memoize brands data
-  const brands = useMemo(() => catalogueData.brands, []);
+  // Memoize brands data from catalogue repository
+  const brands = useMemo(() => catalogueRepository.getBrands(), []);
 
   /**
    * Handle brand tap - navigate to scanner with brand context
