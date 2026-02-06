@@ -72,12 +72,12 @@ const AddCardScreen = () => {
   // Calculate default values from scanned data and brand context (Story 3.3)
   const defaultValues = useMemo(() => {
     const values: Partial<CardFormInput> = {};
-    
+
     if (params.scannedBarcode) {
       values.barcode = params.scannedBarcode;
       values.barcodeFormat = params.scannedFormat || ('CODE128' as BarcodeFormat);
     }
-    
+
     // Story 3.3: Prefill from brand context
     if (params.brandId) {
       values.brandId = params.brandId;
@@ -92,9 +92,16 @@ const AddCardScreen = () => {
         values.barcodeFormat = params.brandFormat as BarcodeFormat;
       }
     }
-    
+
     return Object.keys(values).length > 0 ? values : undefined;
-  }, [params.scannedBarcode, params.scannedFormat, params.brandId, params.brandName, params.brandColor, params.brandFormat]);
+  }, [
+    params.scannedBarcode,
+    params.scannedFormat,
+    params.brandId,
+    params.brandName,
+    params.brandColor,
+    params.brandFormat
+  ]);
 
   // Track if form has been modified for AC8
   const isFormDirtyRef = useRef(false);
@@ -225,10 +232,7 @@ const AddCardScreen = () => {
           className="mx-4 mt-2 rounded-lg p-3"
           style={{ backgroundColor: (params.brandColor || theme.primary) + '15' }}
         >
-          <Text
-            className="text-center text-sm font-semibold"
-            style={{ color: theme.textPrimary }}
-          >
+          <Text className="text-center text-sm font-semibold" style={{ color: theme.textPrimary }}>
             Adding {params.brandName} Card
           </Text>
         </View>
