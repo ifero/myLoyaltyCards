@@ -72,7 +72,7 @@ const BrandCard: React.FC<{
         {/* Brand Name */}
         <Text
           className="text-center text-xs font-medium"
-          style={{ color: theme.text }}
+          style={{ color: theme.textPrimary }}
           numberOfLines={2}
         >
           {brand.name}
@@ -129,7 +129,7 @@ export function CatalogueGrid() {
   return (
     <View className="flex-1" style={{ backgroundColor: theme.background }} testID="catalogue-grid">
       <FlashList
-        data={brands}
+        data={brands as readonly CatalogueBrand[]}
         renderItem={renderItem}
         numColumns={numColumns}
         keyExtractor={(item) => item.id}

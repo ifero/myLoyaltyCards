@@ -14,6 +14,7 @@ import { useCallback, useRef, useEffect, useMemo, useState } from 'react';
 import { View, Alert, BackHandler, Text, Pressable } from 'react-native';
 
 import { BarcodeFormat } from '@/core/schemas';
+import { mapHexToCardColor } from '@/core/utils';
 
 import { useTheme, SEMANTIC_COLORS } from '@/shared/theme';
 
@@ -39,15 +40,19 @@ const AddCardScreen = () => {
   const router = useRouter();
   const { addCard, isLoading } = useAddCard();
 
-  // Get scanned barcode from route params (Story 2.3 AC5)
+  // Get scanned barcode and brand context from route params (Story 2.3 AC5, Story 3.3)
   const params = useLocalSearchParams<{
     scannedBarcode?: string;
     scannedFormat?: BarcodeFormat;
+    brandId?: string;
+    brandName?: string;
+    brandColor?: string;
+    brandFormat?: string;
   }>();
 
-  // Track view mode: 'catalogue' (default) or 'form' (manual/scan)
+  // Track view mode: 'catalogue' (default) or 'form' (manual/scan/brand-selected)
   const [viewMode, setViewMode] = useState<'catalogue' | 'form'>(
-    params.scannedBarcode ? 'form' : 'catalogue'
+    params.scannedBarcode || params.brandId ? 'form' : 'catalogue'
   );
 
   // Track if we've shown the scan success indicator
@@ -64,16 +69,39 @@ const AddCardScreen = () => {
     return undefined;
   }, [params.scannedBarcode]);
 
-  // Calculate default values from scanned data
+  // Calculate default values from scanned data and brand context (Story 3.3)
   const defaultValues = useMemo(() => {
+    const values: Partial<CardFormInput> = {};
+
     if (params.scannedBarcode) {
-      return {
-        barcode: params.scannedBarcode,
-        barcodeFormat: params.scannedFormat || ('CODE128' as BarcodeFormat)
-      };
+      values.barcode = params.scannedBarcode;
+      values.barcodeFormat = params.scannedFormat || ('CODE128' as BarcodeFormat);
     }
-    return undefined;
-  }, [params.scannedBarcode, params.scannedFormat]);
+
+    // Story 3.3: Prefill from brand context
+    if (params.brandId) {
+      values.brandId = params.brandId;
+      if (params.brandName) {
+        values.name = params.brandName;
+      }
+      if (params.brandColor) {
+        // Map hex color to CardColor palette (Story 3.3)
+        values.color = mapHexToCardColor(params.brandColor);
+      }
+      if (params.brandFormat) {
+        values.barcodeFormat = params.brandFormat as BarcodeFormat;
+      }
+    }
+
+    return Object.keys(values).length > 0 ? values : undefined;
+  }, [
+    params.scannedBarcode,
+    params.scannedFormat,
+    params.brandId,
+    params.brandName,
+    params.brandColor,
+    params.brandFormat
+  ]);
 
   // Track if form has been modified for AC8
   const isFormDirtyRef = useRef(false);
@@ -198,6 +226,18 @@ const AddCardScreen = () => {
 
   return (
     <View className="flex-1" style={{ backgroundColor: theme.background }}>
+      {/* Brand Context Indicator - Story 3.3 AC: Show brand name in header area */}
+      {params.brandId && params.brandName && (
+        <View
+          className="mx-4 mt-2 rounded-lg p-3"
+          style={{ backgroundColor: (params.brandColor || theme.primary) + '15' }}
+        >
+          <Text className="text-center text-sm font-semibold" style={{ color: theme.textPrimary }}>
+            Adding {params.brandName} Card
+          </Text>
+        </View>
+      )}
+
       {/* Scan Success Indicator - Story 2.3 AC5 */}
       {showScanSuccess && (
         <View

@@ -1,11 +1,12 @@
 /**
  * Scan Screen
  * Story 2.3: Scan Barcode with Camera
+ * Story 3.3: Brand-aware scanning
  *
  * Full-screen barcode scanner route.
  */
 
-import { useRouter } from 'expo-router';
+import { useRouter, useLocalSearchParams } from 'expo-router';
 
 import { BarcodeScanner } from '@/features/cards';
 import type { ScanResult } from '@/features/cards';
@@ -21,27 +22,53 @@ import type { ScanResult } from '@/features/cards';
  */
 export default function ScanScreen() {
   const router = useRouter();
+  
+  // Get brand context from route params (Story 3.3)
+  const params = useLocalSearchParams<{
+    brandId?: string;
+    brandName?: string;
+    brandColor?: string;
+    brandFormat?: string;
+  }>();
 
   /**
    * Handle successful barcode scan - AC4, AC5
+   * Story 3.3: Forward brand context
    */
   const handleScan = (result: ScanResult) => {
-    // Navigate back to add-card with scanned data
+    // Navigate back to add-card with scanned data + brand context
     router.replace({
       pathname: '/add-card',
       params: {
         scannedBarcode: result.barcode,
-        scannedFormat: result.format
+        scannedFormat: result.format,
+        ...(params.brandId && {
+          brandId: params.brandId,
+          brandName: params.brandName,
+          brandColor: params.brandColor,
+          brandFormat: params.brandFormat
+        })
       }
     });
   };
 
   /**
    * Handle manual entry fallback - AC7
+   * Story 3.3: Preserve brand context
    */
   const handleManualEntry = () => {
-    // Navigate back to add-card without scanned data
-    router.back();
+    // Navigate back to add-card with brand context (no scanned data)
+    router.replace({
+      pathname: '/add-card',
+      params: {
+        ...(params.brandId && {
+          brandId: params.brandId,
+          brandName: params.brandName,
+          brandColor: params.brandColor,
+          brandFormat: params.brandFormat
+        })
+      }
+    });
   };
 
   /**

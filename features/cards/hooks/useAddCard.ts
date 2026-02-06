@@ -22,6 +22,7 @@ export interface AddCardInput {
   barcode: string;
   barcodeFormat: BarcodeFormat;
   color: CardColor;
+  brandId?: string; // Optional brand ID from catalogue
 }
 
 interface UseAddCardReturn {
@@ -57,7 +58,7 @@ export function useAddCard(): UseAddCardReturn {
         name: input.name.trim(),
         barcode: input.barcode.trim(),
         barcodeFormat: input.barcodeFormat,
-        brandId: null, // Custom card
+        brandId: input.brandId ?? null, // Use provided brandId or null for custom cards
         color: input.color,
         isFavorite: false,
         lastUsedAt: null,

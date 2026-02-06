@@ -2,9 +2,10 @@
  * CardTile Component
  * Story 2.1: Display Card List (AC2, AC6)
  * Story 2.4: Display Virtual Logo
+ * Story 3.3: Display official brand logo when brandId present
  *
  * Individual card tile for the grid layout.
- * Shows card name and Virtual Logo visual identifier.
+ * Shows card name and brand logo (or Virtual Logo for custom cards).
  */
 
 import { useRouter } from 'expo-router';
@@ -17,6 +18,7 @@ import { useTheme } from '@/shared/theme';
 import { SPACING } from '@/shared/theme/spacing';
 
 import { VirtualLogo } from './VirtualLogo';
+import { useBrandLogo } from '../hooks/useBrandLogo';
 
 interface CardTileProps {
   /** The loyalty card to display */
@@ -28,13 +30,15 @@ interface CardTileProps {
  *
  * - Fixed 4:3 aspect ratio
  * - Card name at bottom (truncated > 20 chars with ellipsis)
- * - Virtual Logo centered (colored square with initials)
+ * - Official brand logo if brandId present (Story 3.3)
+ * - Virtual Logo fallback for custom cards (colored square with initials)
  * - Pressable with opacity feedback
  * - Accessible with proper roles and labels
  */
 export const CardTile: React.FC<CardTileProps> = ({ card }) => {
   const { theme } = useTheme();
   const router = useRouter();
+  const brand = useBrandLogo(card.brandId);
 
   const handlePress = () => {
     // Navigate to card details (Story 2.6)
@@ -56,9 +60,28 @@ export const CardTile: React.FC<CardTileProps> = ({ card }) => {
       accessibilityLabel={card.name}
       accessibilityHint="Opens card details"
     >
-      {/* Virtual Logo */}
+      {/* Brand Logo or Virtual Logo */}
       <View style={styles.visualContainer}>
-        <VirtualLogo name={card.name} color={card.color} size={60} />
+        {brand ? (
+          /* Story 3.3: Show official brand logo placeholder */
+          <View
+            style={{
+              width: 60,
+              height: 60,
+              backgroundColor: brand.color + '30',
+              borderRadius: 8,
+              justifyContent: 'center',
+              alignItems: 'center'
+            }}
+          >
+            <Text style={{ color: brand.color, fontWeight: 'bold', fontSize: 16 }}>
+              {brand.name.substring(0, 2).toUpperCase()}
+            </Text>
+          </View>
+        ) : (
+          /* Fallback: Virtual Logo for custom cards */
+          <VirtualLogo name={card.name} color={card.color} size={60} />
+        )}
       </View>
 
       {/* Card name */}
