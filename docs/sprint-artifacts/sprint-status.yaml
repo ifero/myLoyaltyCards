@@ -91,7 +91,7 @@ development_status:
   3-1-create-italian-catalogue-data: done
   3-2-browse-catalogue-grid: done
   3-3-add-card-from-catalogue: done
-  3-4-cache-catalogue-for-offline: in-progress
+  3-4-cache-catalogue-for-offline: done
   3-5-update-catalogue-via-ota: ready-for-dev
   epic-3-retrospective: optional
 
