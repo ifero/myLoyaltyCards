@@ -132,14 +132,14 @@ describe('useAddCard', () => {
       });
     });
 
-    it('navigates back on success', async () => {
+    it('navigates to main cards list on success', async () => {
       const { result } = renderHook(() => useAddCard());
 
       await act(async () => {
         await result.current.addCard(mockCardInput);
       });
 
-      expect(router.back).toHaveBeenCalled();
+      expect(router.replace).toHaveBeenCalledWith('/');
     });
   });
 
@@ -228,7 +228,7 @@ describe('useAddCard', () => {
         await result.current.addCard(mockCardInput);
       });
 
-      expect(router.back).not.toHaveBeenCalled();
+      expect(router.replace).not.toHaveBeenCalled();
     });
 
     it('handles non-Error exceptions', async () => {
