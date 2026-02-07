@@ -42,10 +42,12 @@ jest.mock('@/shared/theme', () => ({
 
 // Mock catalogue data
 jest.mock('@/catalogue/italy.json', () => ({
+  version: '2026-02-01',
   brands: [
     {
       id: 'esselunga',
       name: 'Esselunga',
+      aliases: ['fidaty', 'market', 'grocery'],
       color: '#FF6B35',
       defaultFormat: 'CODE128',
       logo: 'esselunga'
@@ -53,6 +55,7 @@ jest.mock('@/catalogue/italy.json', () => ({
     {
       id: 'carrefour',
       name: 'Carrefour',
+      aliases: ['payback', 'market', 'express'],
       color: '#0066FF',
       defaultFormat: 'CODE128',
       logo: 'carrefour'
