@@ -84,7 +84,7 @@ describe('CatalogueRepository', () => {
     it('should search brands by name', () => {
       const results = catalogueRepository.searchBrands('esselunga');
       expect(results.length).toBeGreaterThan(0);
-      expect(results[0].id).toBe('esselunga');
+      expect(results[0]?.id).toBe('esselunga');
     });
 
     it('should search brands case-insensitively', () => {
@@ -150,10 +150,7 @@ describe('CatalogueRepository', () => {
       const brands = catalogueRepository.getBrands();
       const hexRegex = /^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/;
       brands.forEach((brand) => {
-        expect(hexRegex.test(brand.color)).toBe(
-          true,
-          `Brand ${brand.id} has invalid color: ${brand.color}`
-        );
+        expect(hexRegex.test(brand.color)).toBe(true);
       });
     });
 
