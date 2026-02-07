@@ -76,8 +76,8 @@ export function useAddCard(): UseAddCardReturn {
         preset: 'done'
       });
 
-      // Navigate back to card list
-      router.back();
+      // Navigate to main cards list page (Story 3.3: from catalogue)
+      router.replace('/');
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Failed to add card';
       setError(message);

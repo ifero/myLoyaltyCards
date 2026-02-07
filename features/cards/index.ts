@@ -9,8 +9,9 @@
  * Story 2.7: Edit Card
  * Story 2.8: Delete Card
  * Story 3.2: Browse Catalogue Grid
+ * Story 3.4: Cache Catalogue for Offline
  *
- * Exports card-related components and hooks.
+ * Exports card-related components, hooks, and repositories.
  */
 
 // Components
@@ -44,6 +45,9 @@ export type { ScanResult } from './hooks/useBarcodeScanner';
 export { useBrightness } from './hooks/useBrightness';
 export type { UseBrightnessReturn } from './hooks/useBrightness';
 export { useBrandLogo } from './hooks/useBrandLogo';
+
+// Repositories
+export { CatalogueRepository, catalogueRepository } from './repositories/catalogue-repository';
 
 // Utils
 export { generateInitials } from './utils/initials';
