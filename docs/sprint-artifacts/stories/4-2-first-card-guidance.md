@@ -76,10 +76,11 @@ Testing notes:
 ## Tasks/Subtasks
 
 - [x] Design onboarding overlay (UX)
-- [ ] Implement `features/onboarding/OnboardingOverlay.tsx`
+- [x] Implement `features/onboarding/OnboardingOverlay.tsx`
 - [ ] Add persistent flag `onboarding_completed`
 - [ ] Integrate with `app/index.tsx` to show when appropriate
-- [ ] Add unit and integration tests (simulate flows)
+- [x] Add unit tests for overlay (intro, permission-denied, success)
+- [ ] Add integration tests (simulate flows)
 - [ ] **Obtain stakeholder (Ifero) review and explicit approval before committing each implementation step.**
 
 ---
