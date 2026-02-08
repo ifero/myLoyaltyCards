@@ -75,7 +75,7 @@ Testing notes:
 
 ## Tasks/Subtasks
 
-- [ ] Design onboarding overlay (UX)
+- [x] Design onboarding overlay (UX)
 - [ ] Implement `features/onboarding/OnboardingOverlay.tsx`
 - [ ] Add persistent flag `onboarding_completed`
 - [ ] Integrate with `app/index.tsx` to show when appropriate
