@@ -55,9 +55,9 @@ describe('OnboardingOverlay', () => {
     permissionError.name = 'PermissionDenied';
     const onScan = jest.fn().mockRejectedValue(permissionError);
 
-    const openSettingsSpy = jest
-      .spyOn(Linking as unknown as { openSettings: () => void }, 'openSettings')
-      .mockImplementation(jest.fn());
+    const openSettingsSpy = jest.fn();
+    (Linking as unknown as { openSettings?: (...args: unknown[]) => unknown }).openSettings =
+      openSettingsSpy;
 
     const { getByTestId, getByText } = render(
       <OnboardingOverlay
