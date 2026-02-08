@@ -2,6 +2,8 @@ import { View, Text } from 'react-native';
 
 import { useTheme } from '@/shared/theme';
 
+import { catalogueRepository } from '@/features/cards/repositories/catalogue-repository';
+
 /**
  * Settings Screen
  *
@@ -10,21 +12,27 @@ import { useTheme } from '@/shared/theme';
  */
 const SettingsScreen = () => {
   const { theme } = useTheme();
+  const catalogueVersion = catalogueRepository.getVersion();
 
   return (
     <View
       className="flex-1 items-center justify-center p-4"
       style={{ backgroundColor: theme.background }}
     >
-      <Text
-        className="text-2xl font-bold mb-2"
-        style={{ color: theme.textPrimary }}
-      >
+      <Text className="mb-2 text-2xl font-bold" style={{ color: theme.textPrimary }}>
         Settings
       </Text>
-      <Text className="text-base text-center" style={{ color: theme.textSecondary }}>
+      <Text className="text-center text-base" style={{ color: theme.textSecondary }}>
         App settings coming soon!
       </Text>
+      <View className="mt-6 items-center">
+        <Text className="text-sm font-semibold" style={{ color: theme.textPrimary }}>
+          Catalogue Version
+        </Text>
+        <Text className="text-sm" style={{ color: theme.textSecondary }}>
+          {catalogueVersion}
+        </Text>
+      </View>
     </View>
   );
 };

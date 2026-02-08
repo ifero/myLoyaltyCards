@@ -2,6 +2,7 @@ import 'react-native-get-random-values'; // Must be imported before uuid
 import '../global.css';
 import { Stack, useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
+import * as Updates from 'expo-updates';
 import { useEffect, useState } from 'react';
 import { ActivityIndicator, Pressable, Text, View } from 'react-native';
 
@@ -131,6 +132,26 @@ const RootLayout = () => {
         console.error('Database initialization failed:', error);
         setDbError(error instanceof Error ? error.message : 'Database init failed');
       });
+  }, []);
+
+  useEffect(() => {
+    const checkForUpdates = async () => {
+      if (!Updates.isEnabled) {
+        return;
+      }
+
+      try {
+        const update = await Updates.checkForUpdateAsync();
+        if (update.isAvailable) {
+          await Updates.fetchUpdateAsync();
+          await Updates.reloadAsync();
+        }
+      } catch (error) {
+        console.warn('Expo update check failed:', error);
+      }
+    };
+
+    checkForUpdates();
   }, []);
 
   if (dbError) {
