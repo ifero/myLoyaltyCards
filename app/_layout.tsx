@@ -2,6 +2,7 @@ import 'react-native-get-random-values'; // Must be imported before uuid
 import '../global.css';
 import { Stack, useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
+import * as Updates from 'expo-updates';
 import { useEffect, useState } from 'react';
 import { ActivityIndicator, Pressable, Text, View } from 'react-native';
 
@@ -121,16 +122,37 @@ const RootLayoutContent = () => {
 };
 
 const RootLayout = () => {
-  const [isDbReady, setIsDbReady] = useState(false);
+  const [isReady, setIsReady] = useState(false);
   const [dbError, setDbError] = useState<string | null>(null);
 
   useEffect(() => {
-    initializeDatabase()
-      .then(() => setIsDbReady(true))
-      .catch((error) => {
-        console.error('Database initialization failed:', error);
-        setDbError(error instanceof Error ? error.message : 'Database init failed');
-      });
+    const initializeApp = async () => {
+      try {
+        // Check for updates first (if enabled) to ensure reload happens during splash
+        if (Updates.isEnabled) {
+          try {
+            const update = await Updates.checkForUpdateAsync();
+            if (update.isAvailable) {
+              await Updates.fetchUpdateAsync();
+              // Reload will happen here, before UI is shown
+              await Updates.reloadAsync();
+            }
+          } catch (error) {
+            console.warn('Expo update check failed:', error);
+            // Continue with app initialization even if update check fails
+          }
+        }
+
+        // Initialize database after update check completes
+        await initializeDatabase();
+        setIsReady(true);
+      } catch (error) {
+        console.error('App initialization failed:', error);
+        setDbError(error instanceof Error ? error.message : 'Initialization failed');
+      }
+    };
+
+    initializeApp();
   }, []);
 
   if (dbError) {
@@ -142,7 +164,7 @@ const RootLayout = () => {
     );
   }
 
-  if (!isDbReady) {
+  if (!isReady) {
     return (
       <View className="flex-1 items-center justify-center bg-neutral-900">
         <ActivityIndicator size="large" color="#73A973" />
