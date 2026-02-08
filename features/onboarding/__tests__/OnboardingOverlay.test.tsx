@@ -1,6 +1,6 @@
 import { render, fireEvent, waitFor } from '@testing-library/react-native';
 import React from 'react';
-import * as Linking from 'react-native/Libraries/Linking/Linking';
+import { Linking } from 'react-native';
 
 import OnboardingOverlay from '../OnboardingOverlay';
 
@@ -55,7 +55,9 @@ describe('OnboardingOverlay', () => {
     permissionError.name = 'PermissionDenied';
     const onScan = jest.fn().mockRejectedValue(permissionError);
 
+    const originalOpenSettings = Linking.openSettings;
     const openSettingsSpy = jest.fn();
+    // Inject mock implementation
     (Linking as unknown as { openSettings?: (...args: unknown[]) => unknown }).openSettings =
       openSettingsSpy;
 
@@ -76,7 +78,9 @@ describe('OnboardingOverlay', () => {
 
     expect(openSettingsSpy).toHaveBeenCalled();
 
-    openSettingsSpy.mockRestore();
+    // Restore original implementation
+    (Linking as unknown as { openSettings?: (...args: unknown[]) => unknown }).openSettings =
+      originalOpenSettings;
   });
 
   it('skip calls onRequestClose and onComplete', () => {
