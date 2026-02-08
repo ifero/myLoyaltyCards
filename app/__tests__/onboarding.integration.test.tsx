@@ -70,11 +70,14 @@ describe('Home onboarding integration', () => {
 
   it('shows permission denied state when Scan is tapped and permission is denied, opens Settings and back returns to intro', async () => {
     // Mock camera permission to be denied for this test
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     jest
       .spyOn(ExpoCamera, 'useCameraPermissions')
       .mockImplementation(
-        () => [{ granted: false }, jest.fn().mockResolvedValue({ granted: false })] as any
+        () =>
+          [
+            { granted: false },
+            jest.fn().mockResolvedValue({ granted: false })
+          ] as unknown as ReturnType<typeof ExpoCamera.useCameraPermissions>
       );
 
     (getAllCards as jest.Mock).mockResolvedValue([]);
