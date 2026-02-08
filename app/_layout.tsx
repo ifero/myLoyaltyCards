@@ -126,32 +126,33 @@ const RootLayout = () => {
   const [dbError, setDbError] = useState<string | null>(null);
 
   useEffect(() => {
-    initializeDatabase()
-      .then(() => setIsDbReady(true))
-      .catch((error) => {
+    const initializeApp = async () => {
+      try {
+        // Check for updates first, before showing UI
+        if (Updates.isEnabled) {
+          try {
+            const update = await Updates.checkForUpdateAsync();
+            if (update.isAvailable) {
+              await Updates.fetchUpdateAsync();
+              // Reload immediately during startup, before UI is shown
+              await Updates.reloadAsync();
+            }
+          } catch (error) {
+            console.warn('Expo update check failed:', error);
+            // Continue with app initialization even if update check fails
+          }
+        }
+
+        // Initialize database after update check completes
+        await initializeDatabase();
+        setIsDbReady(true);
+      } catch (error) {
         console.error('Database initialization failed:', error);
         setDbError(error instanceof Error ? error.message : 'Database init failed');
-      });
-  }, []);
-
-  useEffect(() => {
-    const checkForUpdates = async () => {
-      if (!Updates.isEnabled) {
-        return;
-      }
-
-      try {
-        const update = await Updates.checkForUpdateAsync();
-        if (update.isAvailable) {
-          await Updates.fetchUpdateAsync();
-          await Updates.reloadAsync();
-        }
-      } catch (error) {
-        console.warn('Expo update check failed:', error);
       }
     };
 
-    checkForUpdates();
+    initializeApp();
   }, []);
 
   if (dbError) {
