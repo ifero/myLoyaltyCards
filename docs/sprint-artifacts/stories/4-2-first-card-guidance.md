@@ -77,10 +77,12 @@ Testing notes:
 
 - [x] Design onboarding overlay (UX)
 - [x] Implement `features/onboarding/OnboardingOverlay.tsx`
-- [ ] Add persistent flag `onboarding_completed`
-- [ ] Integrate with `app/index.tsx` to show when appropriate
+- [x] Add persistent flag `onboarding_completed`
+- [x] Integrate with `app/index.tsx` to show when appropriate
 - [x] Add unit tests for overlay (intro, permission-denied, success)
 - [ ] Add integration tests (simulate flows)
+  - [x] Basic flows (overlay visibility, Add manually navigation)
+  - [ ] Camera permission denial integration test (open Settings flow)
 - [ ] **Obtain stakeholder (Ifero) review and explicit approval before committing each implementation step.**
 
 ---
