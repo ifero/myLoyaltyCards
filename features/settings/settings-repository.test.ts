@@ -12,7 +12,14 @@ declare const global: typeof globalThis & {
 
 import Storage from 'expo-sqlite/kv-store';
 
-import { isFirstLaunch, completeFirstLaunch, resetFirstLaunch } from './settings-repository';
+import {
+  isFirstLaunch,
+  completeFirstLaunch,
+  resetFirstLaunch,
+  isOnboardingCompleted,
+  completeOnboarding,
+  resetOnboarding
+} from './settings-repository';
 
 describe('Settings Repository — first_launch', () => {
   beforeEach(() => {
@@ -60,6 +67,32 @@ describe('Settings Repository — first_launch', () => {
       resetFirstLaunch();
       expect(Storage.removeItemSync).toHaveBeenCalledWith('first_launch');
       expect(isFirstLaunch()).toBe(true);
+    });
+  });
+
+  describe('onboarding', () => {
+    it('returns false when key is not set', () => {
+      expect(isOnboardingCompleted()).toBe(false);
+      expect(Storage.getItemSync).toHaveBeenCalledWith('onboarding_completed');
+    });
+
+    it('returns true when stored value is "true"', () => {
+      global.__kvStoreData['onboarding_completed'] = 'true';
+      expect(isOnboardingCompleted()).toBe(true);
+    });
+
+    it('completeOnboarding stores "true"', () => {
+      completeOnboarding();
+      expect(Storage.setItemSync).toHaveBeenCalledWith('onboarding_completed', 'true');
+      expect(global.__kvStoreData['onboarding_completed']).toBe('true');
+    });
+
+    it('resetOnboarding removes the key', () => {
+      completeOnboarding();
+      expect(isOnboardingCompleted()).toBe(true);
+      resetOnboarding();
+      expect(Storage.removeItemSync).toHaveBeenCalledWith('onboarding_completed');
+      expect(isOnboardingCompleted()).toBe(false);
     });
   });
 });
