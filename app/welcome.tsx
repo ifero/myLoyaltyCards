@@ -9,11 +9,15 @@
  */
 
 import { useRouter } from 'expo-router';
+import { useState } from 'react';
 import { Pressable, Text, View } from 'react-native';
 
 import { useTheme } from '@/shared/theme';
 
 import { completeFirstLaunch } from '@/features/settings';
+
+/** Append a hex alpha channel to a 6-digit hex colour. */
+const withAlpha = (hex: string, alpha: string) => `${hex}${alpha}`;
 
 /**
  * WelcomeScreen — shown once on first app launch.
@@ -24,8 +28,11 @@ import { completeFirstLaunch } from '@/features/settings';
 const WelcomeScreen = () => {
   const { theme } = useTheme();
   const router = useRouter();
+  const [navigating, setNavigating] = useState(false);
 
   const handleGetStarted = () => {
+    if (navigating) return;
+    setNavigating(true);
     completeFirstLaunch();
     // Navigate to first-card guidance (Story 4.2)
     // For now, navigates to add-card as the guidance flow is not yet implemented
@@ -33,6 +40,8 @@ const WelcomeScreen = () => {
   };
 
   const handleSkip = () => {
+    if (navigating) return;
+    setNavigating(true);
     completeFirstLaunch();
     router.replace('/');
   };
@@ -48,7 +57,7 @@ const WelcomeScreen = () => {
       <View
         testID="welcome-illustration"
         className="mb-8 h-40 w-52 items-center justify-center rounded-2xl"
-        style={{ backgroundColor: theme.primary + '1A' }}
+        style={{ backgroundColor: withAlpha(theme.primary, '1A') }}
         accessibilityElementsHidden
         importantForAccessibility="no-hide-descendants"
       >

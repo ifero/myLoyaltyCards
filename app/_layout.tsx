@@ -59,7 +59,7 @@ const RootLayoutContent = () => {
     if (isFirstLaunch()) {
       router.replace('/welcome');
     }
-  }, []);
+  }, [router]);
 
   return (
     <>
