@@ -44,19 +44,17 @@ story_location: docs/sprint-artifacts
 # CURRENT SPRINT
 # ============================================
 current_sprint:
-  number: 2
-  name: 'Sprint 2: Italian Brand Catalogue'
-  goal: 'Implement catalogue browsing and data structure to allow adding cards from popular Italian brands'
-  start_date: 2026-02-01
-  end_date: 2026-02-08
+  number: 3
+  name: 'Sprint 3: Onboarding Experience'
+  goal: 'Implement onboarding flows: Welcome Screen, First-Card Guidance, and Help/FAQ access'
+  start_date: 2026-02-09
+  end_date: 2026-02-15
   duration: 1 week
-  epic: 3
+  epic: 4
   stories:
-    - 3-1-create-italian-catalogue-data
-    - 3-2-browse-catalogue-grid
-    - 3-3-add-card-from-catalogue
-    - 3-4-cache-catalogue-for-offline
-    - 3-5-update-catalogue-via-ota
+    - 4-1-welcome-screen
+    - 4-2-first-card-guidance
+    - 4-3-help-faq-access
 
 development_status:
   # ============================================
@@ -87,19 +85,20 @@ development_status:
   epic-2-retrospective: optional
 
   # Epic 3: Italian Brand Catalogue
-  epic-3: in-progress
+  epic-3: done
   3-1-create-italian-catalogue-data: done
   3-2-browse-catalogue-grid: done
   3-3-add-card-from-catalogue: done
   3-4-cache-catalogue-for-offline: done
-  3-5-update-catalogue-via-ota: review
+  3-5-update-catalogue-via-ota: done
   epic-3-retrospective: optional
+  epic-3-completed: 2026-02-08
 
   # Epic 4: Onboarding Experience
-  epic-4: backlog
-  4-1-welcome-screen: backlog
-  4-2-first-card-guidance: backlog
-  4-3-help-faq-access: backlog
+  epic-4: in-progress
+  4-1-welcome-screen: ready-for-dev
+  4-2-first-card-guidance: ready-for-dev
+  4-3-help-faq-access: ready-for-dev
   epic-4-retrospective: optional
 
   # Epic 5: Apple Watch App

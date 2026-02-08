@@ -1,0 +1,20 @@
+[
+  {
+    "id": "1",
+    "question": "How do I add my first card?",
+    "answer": "Tap Add Card on the main screen, then choose Scan Barcode or Add Manually. For guided help, use the First-Card Guidance overlay from the Welcome screen.",
+    "tags": ["add", "first-time", "onboarding"]
+  },
+  {
+    "id": "2",
+    "question": "Why is my camera not working?",
+    "answer": "Ensure camera permission is granted. If denied, open Settings > MyLoyaltyCards > Camera and allow access, or use 'Add Manually' as a fallback.",
+    "tags": ["camera", "permissions", "troubleshooting"]
+  },
+  {
+    "id": "3",
+    "question": "How do I update the catalogue?",
+    "answer": "Catalogue updates are delivered OTA. See Settings > About > Catalogue Version to verify the active version.",
+    "tags": ["catalogue", "updates"]
+  }
+]
