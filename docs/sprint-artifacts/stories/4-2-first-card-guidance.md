@@ -80,6 +80,7 @@ Testing notes:
 - [ ] Add persistent flag `onboarding_completed`
 - [ ] Integrate with `app/index.tsx` to show when appropriate
 - [ ] Add unit and integration tests (simulate flows)
+- [ ] **Obtain stakeholder (Ifero) review and explicit approval before committing each implementation step.**
 
 ---
 
