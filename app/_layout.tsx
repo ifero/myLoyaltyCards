@@ -122,36 +122,37 @@ const RootLayoutContent = () => {
 };
 
 const RootLayout = () => {
-  const [isDbReady, setIsDbReady] = useState(false);
+  const [isReady, setIsReady] = useState(false);
   const [dbError, setDbError] = useState<string | null>(null);
 
   useEffect(() => {
-    initializeDatabase()
-      .then(() => setIsDbReady(true))
-      .catch((error) => {
-        console.error('Database initialization failed:', error);
-        setDbError(error instanceof Error ? error.message : 'Database init failed');
-      });
-  }, []);
-
-  useEffect(() => {
-    const checkForUpdates = async () => {
-      if (!Updates.isEnabled) {
-        return;
-      }
-
+    const initializeApp = async () => {
       try {
-        const update = await Updates.checkForUpdateAsync();
-        if (update.isAvailable) {
-          await Updates.fetchUpdateAsync();
-          await Updates.reloadAsync();
+        // Check for updates first (if enabled) to ensure reload happens during splash
+        if (Updates.isEnabled) {
+          try {
+            const update = await Updates.checkForUpdateAsync();
+            if (update.isAvailable) {
+              await Updates.fetchUpdateAsync();
+              // Reload will happen here, before UI is shown
+              await Updates.reloadAsync();
+            }
+          } catch (error) {
+            console.warn('Expo update check failed:', error);
+            // Continue with app initialization even if update check fails
+          }
         }
+
+        // Initialize database after update check completes
+        await initializeDatabase();
+        setIsReady(true);
       } catch (error) {
-        console.warn('Expo update check failed:', error);
+        console.error('App initialization failed:', error);
+        setDbError(error instanceof Error ? error.message : 'Initialization failed');
       }
     };
 
-    checkForUpdates();
+    initializeApp();
   }, []);
 
   if (dbError) {
@@ -163,7 +164,7 @@ const RootLayout = () => {
     );
   }
 
-  if (!isDbReady) {
+  if (!isReady) {
     return (
       <View className="flex-1 items-center justify-center bg-neutral-900">
         <ActivityIndicator size="large" color="#73A973" />
