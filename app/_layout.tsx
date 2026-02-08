@@ -10,6 +10,8 @@ import { initializeDatabase } from '@/core/database';
 
 import { ThemeProvider, useTheme } from '@/shared/theme';
 
+import { isFirstLaunch } from '@/features/settings';
+
 /**
  * Header Right component with Settings button
  */
@@ -51,6 +53,13 @@ const HeaderLeft = () => {
 
 const RootLayoutContent = () => {
   const { isDark, theme } = useTheme();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (isFirstLaunch()) {
+      router.replace('/welcome');
+    }
+  }, []);
 
   return (
     <>
@@ -72,6 +81,14 @@ const RootLayoutContent = () => {
             title: 'myLoyaltyCards',
             headerLeft: () => <HeaderLeft />,
             headerRight: () => <HeaderRight />
+          }}
+        />
+        <Stack.Screen
+          name="welcome"
+          options={{
+            title: 'Welcome',
+            headerShown: false,
+            animation: 'fade'
           }}
         />
         <Stack.Screen
