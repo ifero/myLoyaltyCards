@@ -96,7 +96,7 @@ development_status:
 
   # Epic 4: Onboarding Experience
   epic-4: in-progress
-  4-1-welcome-screen: ready-for-dev
+  4-1-welcome-screen: review
   4-2-first-card-guidance: ready-for-dev
   4-3-help-faq-access: ready-for-dev
   epic-4-retrospective: optional

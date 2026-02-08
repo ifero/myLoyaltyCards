@@ -47,6 +47,26 @@ jest.mock('expo-sqlite', () => ({
   SQLiteDatabase: jest.fn()
 }));
 
+// Mock expo-sqlite/kv-store (used by features/settings)
+const kvStoreData = {};
+jest.mock('expo-sqlite/kv-store', () => ({
+  __esModule: true,
+  default: {
+    getItemSync: jest.fn((key) => kvStoreData[key] ?? null),
+    setItemSync: jest.fn((key, value) => {
+      kvStoreData[key] = value;
+    }),
+    removeItemSync: jest.fn((key) => {
+      delete kvStoreData[key];
+    }),
+    clearSync: jest.fn(() => {
+      Object.keys(kvStoreData).forEach((k) => delete kvStoreData[k]);
+    })
+  }
+}));
+// Expose kvStoreData for tests to inspect/reset
+global.__kvStoreData = kvStoreData;
+
 // Mock expo-haptics
 jest.mock('expo-haptics', () => ({
   notificationAsync: jest.fn(),
