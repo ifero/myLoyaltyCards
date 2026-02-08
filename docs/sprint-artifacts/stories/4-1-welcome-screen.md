@@ -77,7 +77,7 @@ Testing notes:
 
 ## Tasks/Subtasks
 
-- [ ] Design welcome layout and illustration (ux-designer)
+- [x] Design welcome layout and illustration (ux-designer)
 - [ ] Implement `app/welcome.tsx` screen
 - [ ] Add persistence for `first_launch` flag
 - [ ] Hook screen into app bootstrap flow and routing
