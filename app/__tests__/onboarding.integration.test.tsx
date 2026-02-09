@@ -70,7 +70,7 @@ describe('Home onboarding integration', () => {
 
   it('shows permission denied state when Scan is tapped and permission is denied, opens Settings and back returns to intro', async () => {
     // Mock camera permission to be denied for this test
-    jest
+    const cameraSpy = jest
       .spyOn(ExpoCamera, 'useCameraPermissions')
       .mockImplementation(
         () =>
@@ -101,5 +101,6 @@ describe('Home onboarding integration', () => {
     await waitFor(() => expect(getByTestId('onboard-scan')).toBeTruthy());
 
     openSettingsSpy.mockRestore();
+    cameraSpy.mockRestore();
   });
 });

@@ -254,6 +254,25 @@ jest.mock(
   { virtual: true }
 );
 
+// Mock expo-clipboard to avoid ESM parse issues in Jest
+jest.mock('expo-clipboard', () => ({
+  __esModule: true,
+  setStringAsync: jest.fn().mockResolvedValue(undefined),
+  getStringAsync: jest.fn().mockResolvedValue('')
+}));
+
+// Mock expo-brightness to avoid ESM parse issues in Jest (some native modules export ESM)
+jest.mock('expo-brightness', () => ({
+  __esModule: true,
+  getBrightnessAsync: jest.fn().mockResolvedValue(1),
+  setBrightnessAsync: jest.fn().mockResolvedValue(undefined)
+}));
+
+// Clear mock calls after each test to prevent leakage (do not restore spies defined at top-level)
+afterEach(() => {
+  jest.clearAllMocks();
+});
+
 // Silence console warnings in tests
 const originalWarn = console.warn;
 console.warn = (...args) => {

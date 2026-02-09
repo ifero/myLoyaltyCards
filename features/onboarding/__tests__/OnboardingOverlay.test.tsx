@@ -1,4 +1,4 @@
-import { render, fireEvent, waitFor } from '@testing-library/react-native';
+import { render, fireEvent, waitFor, screen } from '@testing-library/react-native';
 import React from 'react';
 import { Linking } from 'react-native';
 
@@ -55,11 +55,42 @@ describe('OnboardingOverlay', () => {
     permissionError.name = 'PermissionDenied';
     const onScan = jest.fn().mockRejectedValue(permissionError);
 
-    const originalOpenSettings = Linking.openSettings;
-    const openSettingsSpy = jest.fn();
-    // Inject mock implementation
-    (Linking as unknown as { openSettings?: (...args: unknown[]) => unknown }).openSettings =
-      openSettingsSpy;
+    const openSettingsSpy = jest
+      .spyOn(Linking as unknown as { openSettings?: () => void }, 'openSettings')
+      .mockImplementation(jest.fn());
+
+    const { getByTestId, getByText } = render(
+      <OnboardingOverlay
+        visible
+        onRequestClose={onRequestClose}
+        onAddManual={() => {}}
+        onScan={onScan}
+      />
+    );
+
+    // Accessibility labels (use screen-level queries)
+    expect(screen.getByLabelText('Onboarding: Scan barcode')).toBeTruthy();
+    expect(screen.getByLabelText('Onboarding: Add manually')).toBeTruthy();
+
+    fireEvent.press(getByTestId('onboard-scan'));
+
+    await waitFor(() => expect(getByText('Camera access required')).toBeTruthy());
+
+    fireEvent.press(getByTestId('onboard-open-settings'));
+
+    expect(openSettingsSpy).toHaveBeenCalled();
+
+    openSettingsSpy.mockRestore();
+  });
+
+  it('uses permission message detection (no name) to show Settings state', async () => {
+    const onRequestClose = jest.fn();
+    const err = new Error('camera permission missing');
+    const onScan = jest.fn().mockRejectedValue(err);
+
+    const openSettingsSpy = jest
+      .spyOn(Linking as unknown as { openSettings?: () => void }, 'openSettings')
+      .mockImplementation(jest.fn());
 
     const { getByTestId, getByText } = render(
       <OnboardingOverlay
@@ -74,13 +105,32 @@ describe('OnboardingOverlay', () => {
 
     await waitFor(() => expect(getByText('Camera access required')).toBeTruthy());
 
-    fireEvent.press(getByTestId('onboard-open-settings'));
+    openSettingsSpy.mockRestore();
+  });
 
-    expect(openSettingsSpy).toHaveBeenCalled();
+  it('pressing Done calls onRequestClose and onComplete', async () => {
+    const onRequestClose = jest.fn();
+    const onScan = jest.fn().mockResolvedValue(undefined);
+    const onComplete = jest.fn();
 
-    // Restore original implementation
-    (Linking as unknown as { openSettings?: (...args: unknown[]) => unknown }).openSettings =
-      originalOpenSettings;
+    const { getByTestId, getByText } = render(
+      <OnboardingOverlay
+        visible
+        onRequestClose={onRequestClose}
+        onAddManual={() => {}}
+        onScan={onScan}
+        onComplete={onComplete}
+      />
+    );
+
+    fireEvent.press(getByTestId('onboard-scan'));
+
+    await waitFor(() => expect(getByText('Nice! Your card is ready')).toBeTruthy());
+
+    fireEvent.press(getByTestId('onboard-done'));
+
+    expect(onRequestClose).toHaveBeenCalled();
+    expect(onComplete).toHaveBeenCalled();
   });
 
   it('skip calls onRequestClose and onComplete', () => {

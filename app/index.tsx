@@ -31,8 +31,6 @@ const HomeScreen = () => {
   };
 
   const handleAddManual = () => {
-    completeOnboarding();
-    setVisible(false);
     router.push('/add-card');
   };
 
@@ -43,8 +41,6 @@ const HomeScreen = () => {
       (err as { name?: string }).name = 'PermissionDenied';
       throw err;
     }
-    completeOnboarding();
-    setVisible(false);
     router.push('/scan');
   };
 

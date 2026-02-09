@@ -43,15 +43,22 @@ export const OnboardingOverlay: React.FC<OnboardingOverlayProps> = ({
       visible={visible}
       transparent
       animationType="fade"
-      accessibilityViewIsModal
+      accessibilityViewIsModal={true}
       onRequestClose={onRequestClose}
     >
       <View style={styles.scrim} testID="onboard-overlay">
-        <View style={styles.card} accessibilityLabel="Add your first card">
+        <View
+          style={styles.card}
+          accessibilityLabel="Add your first card"
+          accessibilityRole="dialog"
+          accessible
+        >
           {step === 'intro' && (
             <>
               <View style={styles.headerRow}>
-                <Text style={styles.title}>Add your first card</Text>
+                <Text style={styles.title} accessibilityRole="header">
+                  Add your first card
+                </Text>
               </View>
               <Text style={styles.body}>
                 Use your camera to scan a barcode or add details manually.
@@ -76,7 +83,7 @@ export const OnboardingOverlay: React.FC<OnboardingOverlayProps> = ({
                   onComplete?.();
                 }}
               >
-                <Text style={styles.buttonText}>Add manually</Text>
+                <Text style={[styles.buttonText, styles.secondaryButtonText]}>Add manually</Text>
               </TouchableOpacity>
 
               <TouchableOpacity
@@ -92,7 +99,9 @@ export const OnboardingOverlay: React.FC<OnboardingOverlayProps> = ({
 
           {step === 'permission-denied' && (
             <>
-              <Text style={styles.title}>Camera access required</Text>
+              <Text style={styles.title} accessibilityRole="header">
+                Camera access required
+              </Text>
               <Text style={styles.body}>
                 Camera access is required to scan. Enable camera in Settings.
               </Text>
@@ -113,7 +122,9 @@ export const OnboardingOverlay: React.FC<OnboardingOverlayProps> = ({
 
           {step === 'success' && (
             <>
-              <Text style={styles.title}>Nice! Your card is ready</Text>
+              <Text style={styles.title} accessibilityRole="header">
+                Nice! Your card is ready
+              </Text>
               <TouchableOpacity
                 testID="onboard-done"
                 style={[styles.button, styles.primary]}
@@ -178,6 +189,10 @@ const styles = StyleSheet.create({
   },
   buttonText: {
     color: '#fff',
+    fontWeight: '600'
+  },
+  secondaryButtonText: {
+    color: '#111111',
     fontWeight: '600'
   },
   skip: {
