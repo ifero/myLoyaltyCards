@@ -7,7 +7,7 @@
 | **Story ID** | 4.3                                         |
 | **Epic**     | 4 - Onboarding Experience                   |
 | **Sprint**   | 3                                           |
-| **Status**   | ready-for-dev                               |
+| **Status**   | in-progress                                 |
 | **Priority** | Medium                                      |
 | **Estimate** | Small (0.5-1 day)                           |
 | **Owners**   | PM: John · Tech Writer: Paige · Dev: Amelia |
@@ -68,11 +68,11 @@ Then content loads from a bundled `help.json` fallback
 
 ## Tasks/Subtasks
 
-- [ ] Author initial FAQ entries (Tech Writer: Paige) — add `docs/help.json` sample payload
-- [ ] Implement `app/help.tsx` and wire route(s) (Dev: Amelia)
-- [ ] Add search and expand/collapse UI (Dev: Amelia)
-- [ ] Bundle fallback FAQ data (Dev: Amelia)
-- [ ] Add unit and component tests (Dev: Amelia) — include offline fallback test
+- [x] Author initial FAQ entries (Tech Writer: Paige) — add `docs/help.json` sample payload
+- [x] Implement `app/help.tsx` and wire route(s) (Dev: Amelia)
+- [x] Add search and expand/collapse UI (Dev: Amelia)
+- [x] Bundle fallback FAQ data (Dev: Amelia)
+- [x] Add unit and component tests (Dev: Amelia) — include offline fallback test
 
 ---
 
@@ -96,3 +96,80 @@ Then content loads from a bundled `help.json` fallback
 ## Dev Agent Record
 
 - Implementation notes and file changes will be recorded by Dev during work.
+
+### Implementation Plan
+
+- Author initial FAQ entries in `docs/help.json` to cover add card, scan, permissions, privacy, and support.
+- Proceed to UI implementation tasks next.
+
+### Debug Log
+
+- None.
+
+### Completion Notes
+
+- Added initial FAQ entries to `docs/help.json` covering required topics.
+- Implemented `app/help.tsx` and wired Help & FAQ access from Welcome and Settings.
+- Added search filtering and expand/collapse behavior for FAQ items.
+- Added bundled fallback FAQ data for offline-safe rendering.
+- Added Help actions for contact support and feedback.
+- Added safe link handling with user-facing fallback messaging.
+- Added Help entry-point tests for Welcome and Settings.
+- Refactored route files to re-export feature screens; moved Help/Welcome/Settings UI into features.
+- Added FAQ step rendering and data sync test between docs and bundled help data.
+- Fixed cross-feature boundary by moving catalogue repository access to core for Settings.
+- Added steps to fallback FAQ data and tests for offline steps.
+- Moved settings repository to core and updated mocks to match.
+- Tests passing (370).
+
+### Senior Developer Review (AI)
+
+- Review Date: 2026-02-10
+- Verdict: CHANGES_REQUESTED
+
+Findings:
+
+- MEDIUM: Route files contain full UI logic; project standards require app/ routes to re-export feature modules only (see app/help.tsx, app/welcome.tsx, app/settings.tsx).
+- MEDIUM: Help data is required from docs/help.json, which risks not being bundled in production builds. Move to app/ or assets/ and adjust import path accordingly.
+- MEDIUM: Offline fallback test requirement not fully met; current tests only cover empty override and do not validate bundled fallback behavior or link failure alert handling.
+- MEDIUM: Git shows a modified file not listed in this story File List (.github/agents/bmd-custom-bmm-dev.agent.md). Update the story File List or revert the change.
+
+## File List
+
+- app/**tests**/help.test.tsx
+- app/**tests**/settings.test.tsx
+- app/**tests**/welcome.test.tsx
+- app/help.tsx
+- app/help-fallback.ts
+- app/settings.tsx
+- app/welcome.tsx
+- docs/help.json
+- core/catalogue/catalogue-repository.ts
+- core/settings/settings-repository.ts
+- features/help/help-data.json
+- features/help/help-fallback.ts
+- features/help/HelpScreen.tsx
+- features/onboarding/WelcomeScreen.tsx
+- features/settings/SettingsScreen.tsx
+- features/settings/settings-repository.ts
+- docs/sprint-artifacts/stories/4-3-help-faq-access.md
+- docs/sprint-artifacts/sprint-status.yaml
+
+## Change Log
+
+- 2026-02-10: Authored initial FAQ entries; story moved to in-progress.
+- 2026-02-10: Implemented Help screen and routed access from Welcome and Settings.
+- 2026-02-10: Added Help search and FAQ expand/collapse behavior.
+- 2026-02-10: Added bundled fallback FAQ data for Help screen.
+- 2026-02-10: Added Help actions and unit/component tests (including fallback).
+- 2026-02-10: Story marked Ready for Review.
+- 2026-02-10: Addressed code review feedback (link handling, copy, entry-point tests).
+- 2026-02-10: Moved Help/Welcome/Settings UI to feature modules and re-exported route files.
+- 2026-02-10: Added FAQ steps and synced bundled help data with docs source-of-truth.
+- 2026-02-10: Fixed feature boundary for catalogue repository and added fallback steps.
+- 2026-02-10: Moved settings repository to core and updated tests.
+- 2026-02-10: Code review requested changes; status set to in-progress.
+
+## Status
+
+- Status: in-progress

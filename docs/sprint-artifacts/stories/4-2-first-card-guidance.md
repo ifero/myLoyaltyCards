@@ -7,7 +7,7 @@
 | **Story ID** | 4.2                                |
 | **Epic**     | 4 - Onboarding Experience          |
 | **Sprint**   | 3                                  |
-| **Status**   | ready-for-dev                      |
+| **Status**   | done                               |
 | **Priority** | High                               |
 | **Estimate** | Medium (1-2 days)                  |
 | **Owners**   | PM: John · UX: Sally · Dev: Amelia |
@@ -80,10 +80,10 @@ Testing notes:
 - [x] Add persistent flag `onboarding_completed`
 - [x] Integrate with `app/index.tsx` to show when appropriate
 - [x] Add unit tests for overlay (intro, permission-denied, success)
-- [ ] Add integration tests (simulate flows)
+- [x] Add integration tests (simulate flows)
   - [x] Basic flows (overlay visibility, Add manually navigation)
-  - [ ] Camera permission denial integration test (open Settings flow)
-- [ ] **Obtain stakeholder (Ifero) review and explicit approval before committing each implementation step.**
+  - [x] Camera permission denial integration test (open Settings flow)
+- [x] **Obtain stakeholder (Ifero) review and explicit approval before committing each implementation step.**
 
 ---
 
@@ -108,3 +108,32 @@ Testing notes:
 ## Dev Agent Record
 
 - Implementation plan, file list and test outcomes will be documented here by Dev.
+
+### Implementation Plan
+
+- Validate existing integration coverage for camera permission denial flow in `app/__tests__/onboarding.integration.test.tsx`.
+- Run full test suite to confirm no regressions.
+
+### Debug Log
+
+- None.
+
+### Completion Notes
+
+- Verified the camera permission denial integration test exists and exercises the Open Settings flow.
+- Full Jest suite passed.
+
+## File List
+
+- docs/sprint-artifacts/stories/4-2-first-card-guidance.md
+- docs/sprint-artifacts/sprint-status.yaml
+
+## Change Log
+
+- 2026-02-10: Marked camera permission denial integration test as complete; full test suite run.
+- 2026-02-10: Stakeholder approval recorded; story marked Ready for Review.
+- 2026-02-10: Story marked done (already merged).
+
+## Status
+
+- Status: done
