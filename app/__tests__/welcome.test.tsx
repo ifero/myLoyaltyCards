@@ -14,11 +14,12 @@ import WelcomeScreen from '../welcome';
 
 // Track navigation calls
 const mockReplace = jest.fn();
+const mockPush = jest.fn();
 
 jest.mock('expo-router', () => ({
   useRouter: () => ({
     replace: mockReplace,
-    push: jest.fn(),
+    push: mockPush,
     back: jest.fn()
   })
 }));
@@ -39,7 +40,7 @@ jest.mock('@/shared/theme', () => ({
 }));
 
 const mockCompleteFirstLaunch = jest.fn();
-jest.mock('@/features/settings', () => ({
+jest.mock('@/core/settings/settings-repository', () => ({
   completeFirstLaunch: (...args: unknown[]) => mockCompleteFirstLaunch(...args)
 }));
 
@@ -106,6 +107,13 @@ describe('WelcomeScreen — Story 4.1', () => {
 
       expect(mockCompleteFirstLaunch).toHaveBeenCalledTimes(1);
       expect(mockReplace).toHaveBeenCalledWith('/');
+    });
+
+    it('"Help & FAQ" navigates to help screen', () => {
+      const { getByTestId } = render(<WelcomeScreen />);
+      fireEvent.press(getByTestId('welcome-help'));
+
+      expect(mockPush).toHaveBeenCalledWith('/help');
     });
   });
 
