@@ -47,12 +47,7 @@ export const OnboardingOverlay: React.FC<OnboardingOverlayProps> = ({
       onRequestClose={onRequestClose}
     >
       <View style={styles.scrim} testID="onboard-overlay">
-        <View
-          style={styles.card}
-          accessibilityLabel="Add your first card"
-          accessibilityRole="dialog"
-          accessible
-        >
+        <View style={styles.card} accessibilityLabel="Add your first card" accessible>
           {step === 'intro' && (
             <>
               <View style={styles.headerRow}>

@@ -83,23 +83,22 @@ jest.mock('burnt', () => ({
 }));
 
 // Mock expo-router
-jest.mock('expo-router', () => ({
-  router: {
-    back: jest.fn(),
-    push: jest.fn(),
-    replace: jest.fn()
-  },
-  useRouter: () => ({
-    back: jest.fn(),
-    push: jest.fn(),
-    replace: jest.fn()
-  }),
-  useNavigation: () => ({
-    addListener: jest.fn(() => jest.fn()),
-    dispatch: jest.fn()
-  }),
-  useFocusEffect: jest.fn((callback) => callback())
-}));
+jest.mock('expo-router', () => {
+  const push = jest.fn();
+  const back = jest.fn();
+  const replace = jest.fn();
+  const routerObj = { push, back, replace };
+
+  return {
+    router: routerObj,
+    useRouter: () => routerObj,
+    useNavigation: () => ({
+      addListener: jest.fn(() => jest.fn()),
+      dispatch: jest.fn()
+    }),
+    useFocusEffect: jest.fn((callback) => callback())
+  };
+});
 
 // Mock @react-native-picker/picker
 jest.mock('@react-native-picker/picker', () => {

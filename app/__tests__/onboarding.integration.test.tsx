@@ -1,32 +1,45 @@
 import { render, fireEvent, waitFor } from '@testing-library/react-native';
 import * as ExpoCamera from 'expo-camera';
-import { router } from 'expo-router';
+import { useRouter } from 'expo-router';
 import Storage from 'expo-sqlite/kv-store';
 import React from 'react';
 import { Linking } from 'react-native';
 
-// Mock router for navigation assertions
-jest.mock('expo-router', () => ({
-  router: {
-    push: jest.fn(),
-    back: jest.fn(),
-    replace: jest.fn()
-  },
-  useRouter: () => ({
-    push: jest.fn(),
-    back: jest.fn(),
-    replace: jest.fn()
-  })
-}));
+// Use global `expo-router` mock from jest.setup.js for stable spies
 
 // Mock getAllCards to return empty list
 jest.mock('@/core/database', () => ({
   getAllCards: jest.fn()
 }));
 
+// Mock useCards hook to avoid async state updates during render
+jest.mock('@/features/cards/hooks/useCards', () => ({
+  useCards: () => ({
+    cards: [],
+    isLoading: false,
+    error: null,
+    refetch: jest.fn()
+  })
+}));
+
 import { getAllCards } from '@/core/database';
 
 import HomeScreen from '../index';
+
+// Mock ThemeProvider used by components rendered in HomeScreen
+jest.mock('@/shared/theme', () => ({
+  useTheme: () => ({
+    theme: {
+      background: '#FAFAFA',
+      surface: '#FFFFFF',
+      textPrimary: '#1F2937',
+      textSecondary: '#6B7280',
+      primary: '#73A973',
+      border: '#E5E7EB'
+    },
+    isDark: false
+  })
+}));
 
 // Mock expo-camera hook used by HomeScreen — default granted, tests can override
 jest.mock('expo-camera', () => ({
@@ -52,7 +65,7 @@ describe('Home onboarding integration', () => {
   });
 
   it('navigates to add-card when Add manually is tapped and marks onboarding completed', async () => {
-    const pushSpy = router.push as jest.Mock;
+    const pushSpy = useRouter().push as jest.Mock;
 
     (getAllCards as jest.Mock).mockResolvedValue([]);
 
