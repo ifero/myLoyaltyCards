@@ -1,5 +1,4 @@
 import { render, fireEvent, waitFor } from '@testing-library/react-native';
-import * as ExpoCamera from 'expo-camera';
 import { useRouter } from 'expo-router';
 import Storage from 'expo-sqlite/kv-store';
 import React from 'react';
@@ -41,9 +40,11 @@ jest.mock('@/shared/theme', () => ({
   })
 }));
 
+const mockUseCameraPermissions = jest.fn();
+
 // Mock expo-camera hook used by HomeScreen — default granted, tests can override
 jest.mock('expo-camera', () => ({
-  useCameraPermissions: () => [{ granted: true }, jest.fn().mockResolvedValue({ granted: true })]
+  useCameraPermissions: () => mockUseCameraPermissions()
 }));
 
 describe('Home onboarding integration', () => {
@@ -54,6 +55,11 @@ describe('Home onboarding integration', () => {
     if (g.__kvStoreData) {
       delete g.__kvStoreData['onboarding_completed'];
     }
+
+    mockUseCameraPermissions.mockReturnValue([
+      { granted: true },
+      jest.fn().mockResolvedValue({ granted: true })
+    ]);
   });
 
   it('shows the onboarding overlay when there are zero cards and onboarding not completed', async () => {
@@ -83,15 +89,10 @@ describe('Home onboarding integration', () => {
 
   it('shows permission denied state when Scan is tapped and permission is denied, opens Settings and back returns to intro', async () => {
     // Mock camera permission to be denied for this test
-    const cameraSpy = jest
-      .spyOn(ExpoCamera, 'useCameraPermissions')
-      .mockImplementation(
-        () =>
-          [
-            { granted: false },
-            jest.fn().mockResolvedValue({ granted: false })
-          ] as unknown as ReturnType<typeof ExpoCamera.useCameraPermissions>
-      );
+    mockUseCameraPermissions.mockReturnValue([
+      { granted: false },
+      jest.fn().mockResolvedValue({ granted: false })
+    ]);
 
     (getAllCards as jest.Mock).mockResolvedValue([]);
 
@@ -114,6 +115,5 @@ describe('Home onboarding integration', () => {
     await waitFor(() => expect(getByTestId('onboard-scan')).toBeTruthy());
 
     openSettingsSpy.mockRestore();
-    cameraSpy.mockRestore();
   });
 });
