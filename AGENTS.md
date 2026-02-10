@@ -241,6 +241,13 @@ git commit -m "feat(scope): short description
 - `test` - Adding or updating tests
 - `chore` - Maintenance tasks
 
+### Stakeholder sign-off before commits ✅
+
+- **Before committing any change that implements a story task, feature, or visible UX/behavior change, obtain explicit stakeholder (Ifero) review and approval for that step.**
+- Present the minimal diff or a short description of the change to the stakeholder and wait for an approval reply before creating the commit.
+- This applies to all commits that meaningfully affect user-visible behavior (features, fixes, refactors that change behavior, and documentation of UX changes).
+- This is intentionally complementary to the PR-level code review — the purpose is to enable iterative stakeholder feedback during development.
+
 ### 3. Push and Update Sprint Status
 
 After completing work:

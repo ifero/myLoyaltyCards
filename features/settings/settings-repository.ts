@@ -10,7 +10,8 @@ import Storage from 'expo-sqlite/kv-store';
 
 /** Settings keys — centralised to avoid magic strings */
 const KEYS = {
-  FIRST_LAUNCH: 'first_launch'
+  FIRST_LAUNCH: 'first_launch',
+  ONBOARDING_COMPLETED: 'onboarding_completed'
 } as const;
 
 /**
@@ -37,4 +38,26 @@ export const completeFirstLaunch = (): void => {
  */
 export const resetFirstLaunch = (): void => {
   Storage.removeItemSync(KEYS.FIRST_LAUNCH);
+};
+
+/**
+ * Check whether onboarding guidance has been completed
+ */
+export const isOnboardingCompleted = (): boolean => {
+  const value = Storage.getItemSync(KEYS.ONBOARDING_COMPLETED);
+  return value === 'true';
+};
+
+/**
+ * Mark onboarding guidance as completed
+ */
+export const completeOnboarding = (): void => {
+  Storage.setItemSync(KEYS.ONBOARDING_COMPLETED, 'true');
+};
+
+/**
+ * Reset onboarding flag (useful for testing / dev).
+ */
+export const resetOnboarding = (): void => {
+  Storage.removeItemSync(KEYS.ONBOARDING_COMPLETED);
 };

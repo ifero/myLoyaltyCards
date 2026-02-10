@@ -83,23 +83,22 @@ jest.mock('burnt', () => ({
 }));
 
 // Mock expo-router
-jest.mock('expo-router', () => ({
-  router: {
-    back: jest.fn(),
-    push: jest.fn(),
-    replace: jest.fn()
-  },
-  useRouter: () => ({
-    back: jest.fn(),
-    push: jest.fn(),
-    replace: jest.fn()
-  }),
-  useNavigation: () => ({
-    addListener: jest.fn(() => jest.fn()),
-    dispatch: jest.fn()
-  }),
-  useFocusEffect: jest.fn((callback) => callback())
-}));
+jest.mock('expo-router', () => {
+  const push = jest.fn();
+  const back = jest.fn();
+  const replace = jest.fn();
+  const routerObj = { push, back, replace };
+
+  return {
+    router: routerObj,
+    useRouter: () => routerObj,
+    useNavigation: () => ({
+      addListener: jest.fn(() => jest.fn()),
+      dispatch: jest.fn()
+    }),
+    useFocusEffect: jest.fn((callback) => callback())
+  };
+});
 
 // Mock @react-native-picker/picker
 jest.mock('@react-native-picker/picker', () => {
@@ -253,6 +252,25 @@ jest.mock(
   }),
   { virtual: true }
 );
+
+// Mock expo-clipboard to avoid ESM parse issues in Jest
+jest.mock('expo-clipboard', () => ({
+  __esModule: true,
+  setStringAsync: jest.fn().mockResolvedValue(undefined),
+  getStringAsync: jest.fn().mockResolvedValue('')
+}));
+
+// Mock expo-brightness to avoid ESM parse issues in Jest (some native modules export ESM)
+jest.mock('expo-brightness', () => ({
+  __esModule: true,
+  getBrightnessAsync: jest.fn().mockResolvedValue(1),
+  setBrightnessAsync: jest.fn().mockResolvedValue(undefined)
+}));
+
+// Clear mock calls after each test to prevent leakage (do not restore spies defined at top-level)
+afterEach(() => {
+  jest.clearAllMocks();
+});
 
 // Silence console warnings in tests
 const originalWarn = console.warn;
