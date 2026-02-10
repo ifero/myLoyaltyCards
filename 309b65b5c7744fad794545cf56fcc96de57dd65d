@@ -1,0 +1,33 @@
+core/settings/settings-repository.ts
+  83f9d2795903b57b 1-63
+features/cards/repositories/catalogue-repository.ts
+  83f9d2795903b57b 1
+app/help-fallback.ts
+  83f9d2795903b57b 1
+features/help/help-fallback.ts
+  83f9d2795903b57b 14,21,28
+core/catalogue/catalogue-repository.ts
+  83f9d2795903b57b 1-90
+features/settings/SettingsScreen.tsx
+  83f9d2795903b57b 6
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.1.1",
+  "base_commit_sha": "309b65b5c7744fad794545cf56fcc96de57dd65d",
+  "prompts": {
+    "83f9d2795903b57b": {
+      "agent_id": {
+        "tool": "github-copilot",
+        "id": "0942ed50-f526-4f49-a07d-865e78dc9b4b",
+        "model": "copilot/gpt-5.2-codex"
+      },
+      "human_author": "Andrea Pacino",
+      "messages": [],
+      "total_additions": 169,
+      "total_deletions": 184,
+      "accepted_lines": 161,
+      "overriden_lines": 0
+    }
+  }
+}
