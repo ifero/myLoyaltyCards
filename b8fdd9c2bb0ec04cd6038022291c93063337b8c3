@@ -1,0 +1,54 @@
+.agents/skills/native-watchos/SKILL.md
+  b6a6fe9e7db78ef2 1-86
+docs/epics.md
+  95b73993bc8332f0 15,17,29-47,312,318,326,362,397,399,403-404,416,426,461,484,495,533-536,745-747,754,764,766,770,889-892,986-989,1010,1014,1024-1025,1028,1032,1041,1045,1158,1160-1161,1184-1185,1188,1191-1192,1197,1199-1213,1215,1219-1230,1234,1256,1272,1279,1289,1300,1315,1321,1336,1341,1358,1368,1378,1399,1414-1415,1422,1453,1455-1456,1488-1489,1510,1532-1533,1537,1542,1645,1647-1648,1800,1802-1803,1902-1904,1922,1926,1943,2038-2041
+.agents/skills/native-watchos/references/apple-watchos-links.md
+  b6a6fe9e7db78ef2 1-25
+docs/implementation-readiness-report-2026-02-10.md
+  95b73993bc8332f0 4-6,20-23,37-194,196-204,270-272,274-278,281-294,298-301,303-304,306-307,309-310,312-313,318-319,323,327-329,333
+docs/sprint-artifacts/stories/5-6-sync-cards-from-phone.md
+  b6a6fe9e7db78ef2 1-55,57-62
+docs/sprint-artifacts/stories/5-2-generate-catalogue-for-watchos.md
+  b6a6fe9e7db78ef2 1-20,22-32,34-42,44-62,64-93
+docs/sprint-artifacts/stories/5-3-implement-card-list-carbon-ui.md
+  b6a6fe9e7db78ef2 1-32,34-59,62-93
+docs/sprint-artifacts/stories/5-5-store-cards-locally-on-watch.md
+  b6a6fe9e7db78ef2 1-65
+docs/ux-design-specification.md
+  95b73993bc8332f0 248,256,272,284,306
+docs/implementation-readiness-report-2026-02-11.md
+  b6a6fe9e7db78ef2 20-23
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.1.1",
+  "base_commit_sha": "b8fdd9c2bb0ec04cd6038022291c93063337b8c3",
+  "prompts": {
+    "95b73993bc8332f0": {
+      "agent_id": {
+        "tool": "github-copilot",
+        "id": "aac470c2-da68-42e3-9bfc-41c688f079b5",
+        "model": "copilot/gpt-5.2-codex"
+      },
+      "human_author": "Andrea Pacino",
+      "messages": [],
+      "total_additions": 492,
+      "total_deletions": 157,
+      "accepted_lines": 375,
+      "overriden_lines": 5
+    },
+    "b6a6fe9e7db78ef2": {
+      "agent_id": {
+        "tool": "github-copilot",
+        "id": "76c00f3f-6f7e-4429-9da9-01b7dbe8edb3",
+        "model": "copilot/gpt-5.2-codex"
+      },
+      "human_author": "Andrea Pacino",
+      "messages": [],
+      "total_additions": 601,
+      "total_deletions": 0,
+      "accepted_lines": 420,
+      "overriden_lines": 5
+    }
+  }
+}
