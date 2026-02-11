@@ -1,5 +1,5 @@
 # generated: 2026-01-03
-# updated: 2026-02-01
+# updated: 2026-02-11
 # project: myLoyaltyCards
 # tracking_system: file-system
 # story_location: docs/sprint-artifacts
@@ -35,7 +35,7 @@
 # - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
 
 generated: 2026-01-03
-updated: 2026-02-07
+updated: 2026-02-11
 project: myLoyaltyCards
 tracking_system: file-system
 story_location: docs/sprint-artifacts
@@ -44,17 +44,20 @@ story_location: docs/sprint-artifacts
 # CURRENT SPRINT
 # ============================================
 current_sprint:
-  number: 3
-  name: 'Sprint 3: Onboarding Experience'
-  goal: 'Implement onboarding flows: Welcome Screen, First-Card Guidance, and Help/FAQ access'
-  start_date: 2026-02-09
-  end_date: 2026-02-15
+  number: 5
+  name: 'Sprint 5: Apple Watch App'
+  goal: 'Start Apple Watch app foundation and core flows'
+  start_date: 2026-02-11
+  end_date: 2026-02-17
   duration: 1 week
-  epic: 4
+  epic: 5
   stories:
-    - 4-1-welcome-screen
-    - 4-2-first-card-guidance
-    - 4-3-help-faq-access
+    - 5-1-create-watchos-project-structure
+    - 5-2-generate-catalogue-for-watchos
+    - 5-3-implement-card-list-carbon-ui
+    - 5-4-display-barcode-on-watch
+    - 5-5-store-cards-locally-on-watch
+    - 5-6-sync-cards-from-phone
 
 development_status:
   # ============================================
@@ -95,20 +98,20 @@ development_status:
   epic-3-completed: 2026-02-08
 
   # Epic 4: Onboarding Experience
-  epic-4: in-progress
-  4-1-welcome-screen: review
+  epic-4: done
+  4-1-welcome-screen: done
   4-2-first-card-guidance: done
   4-3-help-faq-access: done
   epic-4-retrospective: optional
 
   # Epic 5: Apple Watch App
-  epic-5: backlog
-  5-1-create-watchos-project-structure: backlog
-  5-2-generate-catalogue-for-watchos: backlog
-  5-3-implement-card-list-carbon-ui: backlog
-  5-4-display-barcode-on-watch: backlog
-  5-5-store-cards-locally-on-watch: backlog
-  5-6-sync-cards-from-phone: backlog
+  epic-5: in-progress
+  5-1-create-watchos-project-structure: ready-for-dev
+  5-2-generate-catalogue-for-watchos: ready-for-dev
+  5-3-implement-card-list-carbon-ui: ready-for-dev
+  5-4-display-barcode-on-watch: ready-for-dev
+  5-5-store-cards-locally-on-watch: ready-for-dev
+  5-6-sync-cards-from-phone: ready-for-dev
   5-7-create-watch-complication: backlog
   epic-5-retrospective: optional
 

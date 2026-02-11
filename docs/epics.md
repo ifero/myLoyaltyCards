@@ -12,9 +12,9 @@ project_name: 'myLoyaltyCards'
 user_name: 'Ifero'
 date: '2025-01-03'
 totalEpics: 10
-totalStories: 63
+totalStories: 65
 phase1Epics: 8
-phase1Stories: 53
+phase1Stories: 55
 phase2Epics: 2
 phase2Stories: 10
 frsConvered: 72
@@ -26,11 +26,31 @@ frsConvered: 72
 
 This document provides the complete epic and story breakdown for myLoyaltyCards, decomposing the requirements from the PRD, UX Design, and Architecture into implementable stories.
 
+## Epic Conventions & Dependency Map
+
+### Conventions
+
+- **Epic Type:** Each epic is labeled as **User-Facing** or **Enabling**. Enabling epics/stories are permitted only when they directly unlock a user-facing outcome in the same phase.
+- **Enabling Stories:** Stories written from a developer perspective are explicitly tagged as **Enabling** and must map to a specific user-facing outcome.
+- **Post-MVP Items:** Any requirement tagged post-MVP must be listed in **Future Enhancements** and referenced in the FR coverage map.
+
+### Dependency Map (Phase 1)
+
+1. Epic 1 → Foundation for all Phase 1 epics
+2. Epic 2 → Core card flows (prereq for Epic 5)
+3. Epic 3 → Catalogue (prereq for Epic 4)
+4. Epic 4 → Onboarding (depends on Epic 3)
+5. Epic 5 → Apple Watch app (depends on Epics 2–3)
+6. Epic 6 → Authentication (prereq for Epic 7)
+7. Epic 7 → Cloud Sync (depends on Epic 6)
+8. Epic 8 → Settings & Help (depends on Epic 4)
+
 ## Requirements Inventory
 
 ### Functional Requirements
 
 **Card Management (FR1-FR9)**
+
 - FR1: Users can add a loyalty card by selecting a brand from the Italian catalogue
 - FR2: Users can add a custom loyalty card by manually entering card details
 - FR3: Users can scan a barcode using the device camera to capture loyalty card information
@@ -42,12 +62,14 @@ This document provides the complete epic and story breakdown for myLoyaltyCards,
 - FR9: Users can view detailed information about a specific loyalty card
 
 **Barcode Display (FR10-FR13)**
+
 - FR10: Users can display a loyalty card's barcode in a scannable format
 - FR11: The system can render barcodes in multiple formats (Code 128, EAN-13, EAN-8, QR Code, CODE39, UPCA)
 - FR12: Users can display barcodes on wearable devices (Apple Watch, Android Wear)
 - FR13: The system can optimize barcode brightness and contrast for scanner readability
 
 **Italian Brand Catalogue (FR14-FR20)**
+
 - FR14: Users can browse the Italian loyalty card catalogue on a dedicated screen
 - FR15: The system can display catalogue brands with their names, logos, and aliases
 - FR16: The system can fetch the latest catalogue from cloud storage
@@ -57,12 +79,14 @@ This document provides the complete epic and story breakdown for myLoyaltyCards,
 - FR20: The system can detect if local catalogue is outdated based on last sync timestamp
 
 **Smart Card Sorting (FR21-FR24)**
+
 - FR21: The system can automatically sort cards based on usage frequency
 - FR22: The system can display most recently used cards at the top of the list
 - FR23: Users can pin favorite cards to remain at the top regardless of usage
 - FR24: The system can apply alphabetical sorting as a fallback for unused cards
 
 **User Authentication & Account Management (FR25-FR33)**
+
 - FR25: Users can use the app in guest mode without creating an account with full feature access
 - FR26: Users can create an account using email and password
 - FR27: Users can sign in using Sign in with Apple
@@ -74,6 +98,7 @@ This document provides the complete epic and story breakdown for myLoyaltyCards,
 - FR33: Users can upgrade from guest mode to authenticated mode without losing data
 
 **Data Synchronization (FR34-FR42)**
+
 - FR34: The system can sync cards between phone and watch via Bluetooth in guest mode
 - FR35: The system can sync cards to cloud backend when user is authenticated
 - FR36: The system can sync cards across multiple devices for authenticated users
@@ -85,6 +110,7 @@ This document provides the complete epic and story breakdown for myLoyaltyCards,
 - FR42: The system can sync bidirectionally (phone ↔ watch, phone ↔ cloud)
 
 **Wearable Experience (FR43-FR47)**
+
 - FR43: Users can open the wearable app and access cards without phone connection
 - FR44: The system can store loyalty cards locally on the wearable device
 - FR45: Users can navigate through their card list on the wearable interface
@@ -92,6 +118,7 @@ This document provides the complete epic and story breakdown for myLoyaltyCards,
 - FR47: The system can automatically sync new/edited/deleted cards between phone and watch
 
 **Offline Functionality (FR48-FR52)**
+
 - FR48: Users can access all core features without network connectivity
 - FR49: Users can add, edit, and delete cards while offline
 - FR50: Users can display barcodes while offline
@@ -99,6 +126,7 @@ This document provides the complete epic and story breakdown for myLoyaltyCards,
 - FR52: The system can function on wearables without phone or network connection
 
 **Privacy & Data Management - GDPR (FR53-FR58)**
+
 - FR53: Users can view what personal data is collected and stored
 - FR54: Users can export all their loyalty card data in JSON format
 - FR55: Users can request deletion of all their data from cloud storage
@@ -107,6 +135,7 @@ This document provides the complete epic and story breakdown for myLoyaltyCards,
 - FR58: Users can provide consent before account creation and data collection
 
 **User Feedback & Error Handling (FR59-FR65)**
+
 - FR59: The system can display loading indicators during data operations
 - FR60: The system can show sync status indicators to users
 - FR61: The system can display confirmation messages for successful operations
@@ -116,16 +145,19 @@ This document provides the complete epic and story breakdown for myLoyaltyCards,
 - FR65: The system can provide recovery options for failed operations
 
 **App Settings & Preferences (FR66-FR69)**
+
 - FR66: Users can select their preferred language for the app interface
 - FR67: Users can toggle between light mode and dark mode
 - FR68: Users can access app settings from a dedicated settings screen
 - FR69: Users can view app version and build information
 
 **Data Validation - Post-MVP (FR70-FR71)**
+
 - FR70: The system can validate barcode format based on brand requirements
 - FR71: The system can provide validation feedback when manually entering barcodes
 
 **Onboarding & Help (FR72-FR74)**
+
 - FR72: New users can view a welcome screen explaining the app concept
 - FR73: Users can access help documentation or FAQs
 - FR74: The system can provide onboarding guidance for first-time card addition
@@ -133,6 +165,7 @@ This document provides the complete epic and story breakdown for myLoyaltyCards,
 ### NonFunctional Requirements
 
 **Performance (NFR-P1 to NFR-P9)**
+
 - NFR-P1: Card display on wearable devices must complete in ≤3 seconds from wrist raise to barcode visible
 - NFR-P2: Mobile app cold start must complete in ≤1 second
 - NFR-P3: Wearable app cold start must complete in ≤2 seconds
@@ -144,6 +177,7 @@ This document provides the complete epic and story breakdown for myLoyaltyCards,
 - NFR-P9: Catalogue caching must optimize storage usage without degrading performance
 
 **Security & Privacy (NFR-S1 to NFR-S12)**
+
 - NFR-S1: All user data must be encrypted at rest in cloud database using AES-256
 - NFR-S2: All API communication must use HTTPS/TLS 1.2 or higher
 - NFR-S3: User passwords must be hashed using bcrypt or equivalent
@@ -158,6 +192,7 @@ This document provides the complete epic and story breakdown for myLoyaltyCards,
 - NFR-S12: Social login must follow platform security best practices
 
 **Reliability & Availability (NFR-R1 to NFR-R10)**
+
 - NFR-R1: 100% of core features must function without network connectivity
 - NFR-R2: Offline data operations must succeed with zero data loss
 - NFR-R3: Wearable app must function independently without phone or network connection
@@ -170,6 +205,7 @@ This document provides the complete epic and story breakdown for myLoyaltyCards,
 - NFR-R10: Sync operations must maintain data consistency across devices
 
 **Usability (NFR-U1 to NFR-U8)**
+
 - NFR-U1: User experience must be consistent across iOS and Android mobile platforms
 - NFR-U2: Wearable apps must provide adapted but consistent UX for screen size constraints
 - NFR-U3: All platforms must achieve feature parity within MVP scope
@@ -180,6 +216,7 @@ This document provides the complete epic and story breakdown for myLoyaltyCards,
 - NFR-U8: Text labels and messages must be externalized for localization
 
 **Maintainability & Code Quality (NFR-M1 to NFR-M8)**
+
 - NFR-M1: Codebase must follow React Native and Expo best practices
 - NFR-M2: Code must be well-documented with clear comments for complex logic
 - NFR-M3: Project structure must be organized for easy navigation by contributors
@@ -190,6 +227,7 @@ This document provides the complete epic and story breakdown for myLoyaltyCards,
 - NFR-M8: Performance targets must be validated through testing on actual devices
 
 **Accessibility - Post-MVP (NFR-A1 to NFR-A3)**
+
 - NFR-A1: Future versions should support screen reader compatibility
 - NFR-A2: Future versions should support voice control on supported platforms
 - NFR-A3: Future versions should provide high contrast modes for visual accessibility
@@ -197,12 +235,14 @@ This document provides the complete epic and story breakdown for myLoyaltyCards,
 ### Additional Requirements
 
 **From Architecture - Starter Template & Foundation:**
+
 - ARCH-1: Project initialized with Expo SDK 54.0.0, React 19.1.0, React Native 0.81.5, Expo Router 6.0.15, TypeScript 5.6.0
 - ARCH-2: Phased development approach - Phase 1: iOS + watchOS; Phase 2: Android + Wear OS
 - ARCH-3: Feature-first project structure with app/, features/, shared/, core/ directories
 - ARCH-4: ESLint rules enforcing feature boundaries (features cannot import from other features)
 
 **From Architecture - Data Layer:**
+
 - ARCH-5: Phone Local DB using expo-sqlite with migration pattern
 - ARCH-6: watchOS Storage using SwiftData (iOS 17+)
 - ARCH-7: Cloud Database using Supabase (PostgreSQL) with Row-Level Security
@@ -213,6 +253,7 @@ This document provides the complete epic and story breakdown for myLoyaltyCards,
 - ARCH-12: JSON payloads must include ALL fields (use null, never omit)
 
 **From Architecture - State & Communication:**
+
 - ARCH-13: State Management using Zustand with Immer middleware
 - ARCH-14: Data Fetching using TanStack Query with offline-first defaults (staleTime: Infinity)
 - ARCH-15: Form Handling using React Hook Form with Zod validation
@@ -223,6 +264,7 @@ This document provides the complete epic and story breakdown for myLoyaltyCards,
 - ARCH-20: Watch is READ-ONLY for MVP (editing only happens on phone)
 
 **From Architecture - Infrastructure:**
+
 - ARCH-21: CI/CD using GitHub Actions + Fastlane
 - ARCH-22: Two environments: Dev (TestFlight/Internal Track) and Production (App Store/Google Play)
 - ARCH-23: Error tracking using Sentry
@@ -231,12 +273,14 @@ This document provides the complete epic and story breakdown for myLoyaltyCards,
 - ARCH-26: Supabase Auth for authentication (Email, Apple, Google)
 
 **From Architecture - Catalogue:**
+
 - ARCH-27: Single source catalogue at /catalogue/italy.json
 - ARCH-28: Phone imports JSON directly, updates via Expo OTA
 - ARCH-29: Watch apps use build-time code generation (Brands.swift, Brands.kt)
 - ARCH-30: Generated files in .gitignore (never committed)
 
 **From Architecture - Cross-Platform Patterns:**
+
 - ARCH-31: Database naming: snake_case for tables/columns
 - ARCH-32: TypeScript naming: camelCase for variables/functions, PascalCase for components/types
 - ARCH-33: parseWithLogging function for all cross-platform data parsing
@@ -244,12 +288,14 @@ This document provides the complete epic and story breakdown for myLoyaltyCards,
 - ARCH-35: Test fixtures at /test-fixtures/ for cross-platform validation
 
 **From UX Design - Design System:**
+
 - UX-1: NativeWind (Tailwind CSS) for React Native styling
 - UX-2: 8px base grid for all spacing
 - UX-3: Touch targets: minimum 44x44px on phone, 32x32px on watch
 - UX-4: System Sans-Serif typeface (San Francisco/Roboto)
 
 **From UX Design - Visual Design:**
+
 - UX-5: Theme: Accessible Sage Minimalist
 - UX-6: Primary Accent: Accessible Sage (#73A973) with 4.5:1 contrast ratio
 - UX-7: Backgrounds: OLED Black (#000000) for watch, Off-White (#F8F9F8) for barcode display
@@ -257,26 +303,30 @@ This document provides the complete epic and story breakdown for myLoyaltyCards,
 - UX-9: Semantic colors with double-encoding (color + icon for accessibility)
 
 **From UX Design - Watch Experience:**
+
 - UX-10: Carbon Utility approach: OLED-black, high-contrast, minimal styling
 - UX-11: Vertical infinite scroll list with Digital Crown support
 - UX-12: Single tap to display barcode (NO confirmation dialogs)
 - UX-13: Haptic feedback on tap
 - UX-14: Barcode Flash: full-screen white background with max brightness
-- UX-15: Watch complication for quick launch (graphic circular type)
+- UX-15: Watch complication for quick launch (graphic circular type) **(Post-MVP)**
 
 **From UX Design - Phone Experience:**
+
 - UX-16: Soft Sage Grid approach with brand logos prominently displayed
 - UX-17: Responsive grid: 2 columns (standard phones), 3+ columns (larger phones/tablets)
-- UX-18: Landscape support: 4-5 columns with orientation lock option in settings
+- UX-18: Landscape support: 4-5 columns with orientation lock option in settings **(orientation lock Post-MVP)**
 - UX-19: Tab-based navigation: Dashboard, Add, Settings
 
 **From UX Design - Custom Components:**
+
 - UX-20: Virtual Logo Card: 1-3 initials + color background for cards without official logo
 - UX-21: Barcode Flash Overlay: full-screen, white background, centered barcode
 - UX-22: Carbon Watch Card: OLED-optimized list item with thin borders
-- UX-23: Zippy Scanner Interface: viewfinder + auto-save on barcode detection
+- UX-23: Zippy Scanner Interface: viewfinder + fast save flow **(auto-save Post-MVP)**
 
 **From UX Design - Interaction Patterns:**
+
 - UX-24: Zero-Confirmation Policy: taps lead directly to actions
 - UX-25: Catalogue-First Onboarding: lead with familiar brand visuals, not empty states
 - UX-26: Button hierarchy: Primary (Sage Green), Secondary (outline), Destructive (red text)
@@ -285,33 +335,35 @@ This document provides the complete epic and story breakdown for myLoyaltyCards,
 - UX-29: Numeric keypad default for barcode entry
 
 **From UX Design - Accessibility:**
+
 - UX-30: WCAG 2.1 AA Compliance for contrast and touch targets
 - UX-31: Dynamic Type support (respect system font size)
 - UX-32: Screen reader navigation support for Add Card flow
 
 ### FR Coverage Map
 
-| FR Range | Epic | Description |
-|----------|------|-------------|
-| FR1-FR7, FR9 | Epic 2 | Card Management (add, view, edit, delete) |
-| FR8 | Epic 9 | Mark favorites (Phase 2) |
-| FR10-FR13 | Epic 2 | Barcode Display (multi-format rendering, brightness) |
-| FR14-FR20 | Epic 3 | Italian Brand Catalogue (browse, cache, update) |
-| FR21-FR24 | Epic 9 | Smart Card Sorting (Phase 2) |
-| FR25-FR33 | Epic 6 | User Authentication & Account Management |
-| FR34 | Epic 5 | Phone-Watch Bluetooth Sync |
-| FR35-FR42 | Epic 7 | Cloud Synchronization |
-| FR43-FR47 | Epic 5 | Wearable Experience (watchOS) |
-| FR48-FR51 | Epic 2 | Offline Functionality |
-| FR52 | Epic 5 | Wearable Offline Operation |
-| FR53, FR55-FR58 | Epic 6 | Privacy & GDPR |
-| FR54 | Epic 8 | Data Export (Settings) |
-| FR59-FR65 | Epic 2 | User Feedback & Error Handling |
-| FR66-FR69 | Epic 8 | App Settings & Preferences |
-| FR70-FR71 | — | Data Validation (Post-MVP, not in scope) |
-| FR72-FR74 | Epic 4 | Onboarding & Help |
+| FR Range        | Epic                | Description                                          |
+| --------------- | ------------------- | ---------------------------------------------------- |
+| FR1-FR7, FR9    | Epic 2              | Card Management (add, view, edit, delete)            |
+| FR8             | Epic 9              | Mark favorites (Phase 2)                             |
+| FR10-FR13       | Epic 2              | Barcode Display (multi-format rendering, brightness) |
+| FR14-FR20       | Epic 3              | Italian Brand Catalogue (browse, cache, update)      |
+| FR21-FR24       | Epic 9              | Smart Card Sorting (Phase 2)                         |
+| FR25-FR33       | Epic 6              | User Authentication & Account Management             |
+| FR34            | Epic 5              | Phone-Watch Bluetooth Sync                           |
+| FR35-FR42       | Epic 7              | Cloud Synchronization                                |
+| FR43-FR47       | Epic 5              | Wearable Experience (watchOS)                        |
+| FR48-FR51       | Epic 2              | Offline Functionality                                |
+| FR52            | Epic 5              | Wearable Offline Operation                           |
+| FR53, FR55-FR58 | Epic 6              | Privacy & GDPR                                       |
+| FR54            | Epic 8              | Data Export (Settings)                               |
+| FR59-FR65       | Epic 2              | User Feedback & Error Handling                       |
+| FR66-FR69       | Epic 8              | App Settings & Preferences                           |
+| FR70-FR71       | Future Enhancements | Data Validation (Post-MVP, not in scope)             |
+| FR72-FR74       | Epic 4              | Onboarding & Help                                    |
 
 **Coverage Summary:**
+
 - Phase 1 (Epics 1-8): 68 FRs covered
 - Phase 2 (Epics 9-10): 4 FRs (FR21-24 sorting) + FR43-47/FR52 for Wear OS
 - Post-MVP: FR70-FR71 (data validation)
@@ -322,35 +374,38 @@ This document provides the complete epic and story breakdown for myLoyaltyCards,
 
 ### Phase 1 — Core MVP 🚀
 
-| Epic | Title | FRs | User Value |
-|------|-------|-----|------------|
-| 1 | Project Foundation & App Shell | Foundation for FR48, FR51 | Launch a fast, responsive app |
-| 2 | Card Management & Barcode Display | FR1-13, FR48-51, FR59-65 | Add cards, display barcodes at checkout |
-| 3 | Italian Brand Catalogue | FR14-20 | Quick add from Italian brands |
-| 4 | Onboarding Experience | FR72-74 | Guided first-run in <60 seconds |
-| 5 | Apple Watch App ⌚ | FR12, FR34, FR43-47, FR52 | Cards on wrist — 'Fumble-Free Flash' |
-| 6 | User Authentication & Privacy | FR25-33, FR53, FR55-58 | Optional cloud account with GDPR control |
-| 7 | Cloud Synchronization | FR35-42 | Cards sync across all devices |
-| 8 | Settings & Preferences | FR54, FR57, FR66-69, FR73 | Customize app, export data |
+| Epic | Title                             | FRs                       | User Value                               |
+| ---- | --------------------------------- | ------------------------- | ---------------------------------------- |
+| 1    | Project Foundation & App Shell    | Foundation for FR48, FR51 | Launch a fast, responsive app            |
+| 2    | Card Management & Barcode Display | FR1-13, FR48-51, FR59-65  | Add cards, display barcodes at checkout  |
+| 3    | Italian Brand Catalogue           | FR14-20                   | Quick add from Italian brands            |
+| 4    | Onboarding Experience             | FR72-74                   | Guided first-run in <60 seconds          |
+| 5    | Apple Watch App ⌚                | FR12, FR34, FR43-47, FR52 | Cards on wrist — 'Fumble-Free Flash'     |
+| 6    | User Authentication & Privacy     | FR25-33, FR53, FR55-58    | Optional cloud account with GDPR control |
+| 7    | Cloud Synchronization             | FR35-42                   | Cards sync across all devices            |
+| 8    | Settings & Preferences            | FR54, FR57, FR66-69, FR73 | Customize app, export data               |
 
 ### Phase 2 — Enhancements 📈
 
-| Epic | Title | FRs | User Value |
-|------|-------|-----|------------|
-| 9 | Smart Card Sorting | FR21-24 | Most-used cards always on top |
-| 10 | Wear OS App | FR12, FR43-47, FR52 | Cards on Android watch |
+| Epic | Title              | FRs                 | User Value                    |
+| ---- | ------------------ | ------------------- | ----------------------------- |
+| 9    | Smart Card Sorting | FR21-24             | Most-used cards always on top |
+| 10   | Wear OS App        | FR12, FR43-47, FR52 | Cards on Android watch        |
 
 ---
 
-## Epic 1: Project Foundation & App Shell
+## Epic 1: App Foundation & First Launch Experience
 
-**Goal:** Users can launch a fast, responsive app with smooth navigation and a polished look.
+**Goal:** Users can launch the app quickly, navigate core screens, and trust that data persists offline from the first run.
 
 **Phase:** 1 (MVP)
+
+**Epic Type:** Enabling (directly supports Epic 2 user flows)
 
 **FRs Covered:** Foundation enabling FR48 (offline access), FR51 (local storage)
 
 **Scope:**
+
 - Extend existing Expo SDK 54 setup with required dependencies
 - Configure NativeWind with Sage Green theming (light/dark mode)
 - Set up expo-sqlite database with Zod schemas
@@ -358,14 +413,17 @@ This document provides the complete epic and story breakdown for myLoyaltyCards,
 - Configure ESLint rules for feature boundaries
 - Set up Zustand stores and TanStack Query with offline-first defaults
 
+**Enabling Note:** Stories 1.1–1.4 are enabling tasks that unlock the first user-facing experience in Epic 2.
+
 **Technical Notes:**
+
 - Project already initialized with `npx create-expo-app@latest`
 - Dependencies to add: NativeWind, Zustand, TanStack Query, React Hook Form, Zod, expo-sqlite, expo-camera
 - Feature-first project structure: app/, features/, shared/, core/
 
 ---
 
-### Story 1.1: Configure Development Environment
+### Story 1.1: Configure Development Environment [Enabling]
 
 **As a** developer,
 **I want** a properly configured TypeScript and ESLint environment,
@@ -400,7 +458,7 @@ This document provides the complete epic and story breakdown for myLoyaltyCards,
 
 ---
 
-### Story 1.3: Create Core Data Schema ✅
+### Story 1.3: Create Core Data Schema ✅ [Enabling]
 
 **Status:** Complete
 
@@ -413,16 +471,17 @@ This document provides the complete epic and story breakdown for myLoyaltyCards,
 **Given** I need to work with loyalty card data
 **When** I import from `@/core/schemas`
 **Then** the `loyaltyCardSchema` Zod schema is available with all fields:
-  - id (UUID), name (string max 50), barcode (string), barcodeFormat (enum)
-  - brandId (nullable string), color (enum of 5 colors), isFavorite (boolean)
-  - lastUsedAt (nullable ISO datetime), usageCount (integer), createdAt, updatedAt
-**And** TypeScript types are inferred from Zod schemas
-**And** `parseWithLogging` utility function is available for safe parsing
-**And** test fixtures exist at `/test-fixtures/card-valid.json`
+
+- id (UUID), name (string max 50), barcode (string), barcodeFormat (enum)
+- brandId (nullable string), color (enum of 5 colors), isFavorite (boolean)
+- lastUsedAt (nullable ISO datetime), usageCount (integer), createdAt, updatedAt
+  **And** TypeScript types are inferred from Zod schemas
+  **And** `parseWithLogging` utility function is available for safe parsing
+  **And** test fixtures exist at `/test-fixtures/card-valid.json`
 
 ---
 
-### Story 1.4: Set Up Local Database ✅
+### Story 1.4: Set Up Local Database ✅ [Enabling]
 
 **Status:** Complete
 
@@ -433,7 +492,7 @@ This document provides the complete epic and story breakdown for myLoyaltyCards,
 **Acceptance Criteria:**
 
 **Given** I am using the app for the first time
-**When** the app launches
+**When** I open the card list for the first time
 **Then** expo-sqlite database is initialized with the loyalty_cards table
 **And** the migration pattern handles both fresh installs and future upgrades
 **And** database version tracking is implemented
@@ -471,9 +530,14 @@ This document provides the complete epic and story breakdown for myLoyaltyCards,
 
 **Phase:** 1 (MVP)
 
+**Epic Type:** User-Facing
+
+**Dependencies:** Epic 1 (foundation)
+
 **FRs Covered:** FR1-FR7, FR9-FR13, FR48-FR51, FR59-FR65 (FR8 favorites moved to Epic 9)
 
 **Scope:**
+
 - Card list screen (Soft Sage Grid, responsive 2-3 columns)
 - Add card flow with camera barcode scanning (primary) and manual entry (fallback)
 - Card detail view with edit and delete functionality
@@ -485,6 +549,7 @@ This document provides the complete epic and story breakdown for myLoyaltyCards,
 - User feedback: loading indicators, success confirmations, error messages
 
 **Technical Notes:**
+
 - Card schema includes sorting fields (lastUsedAt, usageCount, isFavorite) but they remain inactive until Phase 2
 - Phase 1 list order: newest first (createdAt descending)
 - Barcode round-trip testing required in CI
@@ -616,13 +681,14 @@ This document provides the complete epic and story breakdown for myLoyaltyCards,
 **Given** I am viewing the Barcode Flash
 **When** I tap a "Details" button or swipe up
 **Then** I see the card detail screen showing:
-  - Card name
-  - Barcode (displayed and as text for copying)
-  - Barcode format
-  - Card color
-  - Date added
-**And** I see options to Edit or Delete the card
-**And** I can return to the card list easily
+
+- Card name
+- Barcode (displayed and as text for copying)
+- Barcode format
+- Card color
+- Date added
+  **And** I see options to Edit or Delete the card
+  **And** I can return to the card list easily
 
 ---
 
@@ -676,23 +742,32 @@ This document provides the complete epic and story breakdown for myLoyaltyCards,
 
 **Phase:** 1 (MVP)
 
+**Epic Type:** User-Facing
+
+**Dependencies:** Epic 1 (foundation)
+
 **FRs Covered:** FR14-FR20
 
 **Scope:**
+
 - Catalogue browsing screen with brand logos grid
-- Brand selection flow: tap logo → camera scanner → auto-save
+- Brand selection flow: tap logo → camera scanner → pre-filled form → Save
 - Catalogue caching for offline browsing
 - ISO date-based versioning for catalogue updates
 - OTA catalogue updates via Expo Updates
 
 **Technical Notes:**
+
 - Source of truth: /catalogue/italy.json
 - Top 20 Italian brands with logos (SVG preferred, PNG fallback)
 - Build-time generation for watchOS (Brands.swift) occurs during Epic 5
+- Catalogue updates delivered via OTA
+
+**Enabling Note:** Story 3.1 is an enabling task that unlocks user-facing catalogue browsing.
 
 ---
 
-### Story 3.1: Create Italian Catalogue Data
+### Story 3.1: Create Italian Catalogue Data [Enabling]
 
 **As a** developer,
 **I want** a structured catalogue of Italian loyalty brands,
@@ -708,7 +783,7 @@ This document provides the complete epic and story breakdown for myLoyaltyCards,
 **And** the file includes a version field with ISO date (e.g., "2025-12-31")
 **And** the JSON schema is validated and documented
 
-*Example brands: Esselunga, Conad, Coop, Carrefour, Lidl, Eurospin, Pam, Despar, etc.*
+_Example brands: Esselunga, Conad, Coop, Carrefour, Lidl, Eurospin, Pam, Despar, etc._
 
 ---
 
@@ -749,12 +824,14 @@ This document provides the complete epic and story breakdown for myLoyaltyCards,
 
 **Given** I scan a barcode successfully
 **When** the scan completes
-**Then** the card is saved with:
-  - Name pre-filled with the brand name (editable)
-  - The scanned barcode and detected format
-  - The brandId linking to the catalogue entry
-**And** the card displays with the official brand logo (not Virtual Logo)
-**And** I see a success confirmation and return to the card list
+**Then** I see a form pre-filled with:
+
+- Name pre-filled with the brand name (editable)
+- The scanned barcode and detected format
+- The brandId linking to the catalogue entry
+  **And** I can tap Save to create the card
+  **And** the card displays with the official brand logo (not Virtual Logo)
+  **And** I see a success confirmation and return to the card list
 
 **Given** I cannot scan the barcode
 **When** I tap "Enter Manually"
@@ -791,7 +868,7 @@ This document provides the complete epic and story breakdown for myLoyaltyCards,
 **Acceptance Criteria:**
 
 **Given** a new version of the catalogue is published
-**When** the app checks for updates (via Expo Updates)
+**When** the app checks for updates
 **Then** the catalogue is updated in the background
 **And** new brands appear in the catalogue on next app launch
 **And** the update does not interrupt my current session
@@ -809,15 +886,21 @@ This document provides the complete epic and story breakdown for myLoyaltyCards,
 
 **Phase:** 1 (MVP)
 
+**Epic Type:** User-Facing
+
+**Dependencies:** Epic 3 (catalogue)
+
 **FRs Covered:** FR72-FR74
 
 **Scope:**
+
 - Welcome screen explaining the 'Fumble-Free Flash' concept
 - Catalogue-first onboarding (lead with familiar brands, not empty state)
 - First card guidance with scanner
 - Help documentation / FAQs accessible from settings
 
 **Technical Notes:**
+
 - Onboarding showcases the Italian catalogue (requires Epic 3)
 - Silent watch sync in background if Apple Watch is paired
 
@@ -834,11 +917,12 @@ This document provides the complete epic and story breakdown for myLoyaltyCards,
 **Given** I launch the app for the first time
 **When** the app opens
 **Then** I see a welcome screen explaining the core concept:
-  - "Your loyalty cards, instantly on your wrist"
-  - Highlight: offline, fast, Apple Watch support
-**And** there is a single prominent "Get Started" button
-**And** the welcome screen only appears once (first launch)
-**And** the design uses the Sage Green accent color
+
+- "Your loyalty cards, instantly on your wrist"
+- Highlight: offline, fast, Apple Watch support
+  **And** there is a single prominent "Get Started" button
+  **And** the welcome screen only appears once (first launch)
+  **And** the design uses the Sage Green accent color
 
 **Given** I have used the app before
 **When** I launch the app
@@ -883,12 +967,13 @@ This document provides the complete epic and story breakdown for myLoyaltyCards,
 **Given** I am in the Settings screen
 **When** I tap "Help & FAQ"
 **Then** I see a list of common questions and answers:
-  - "How do I add a card?"
-  - "How does the Apple Watch work?"
-  - "What if my brand isn't in the catalogue?"
-  - "Is my data safe?"
-**And** each FAQ expands to show the answer
-**And** the content works offline (bundled, not fetched)
+
+- "How do I add a card?"
+- "How does the Apple Watch work?"
+- "What if my brand isn't in the catalogue?"
+- "Is my data safe?"
+  **And** each FAQ expands to show the answer
+  **And** the content works offline (bundled, not fetched)
 
 ---
 
@@ -898,9 +983,14 @@ This document provides the complete epic and story breakdown for myLoyaltyCards,
 
 **Phase:** 1 (MVP)
 
+**Epic Type:** User-Facing (with enabling tasks)
+
+**Dependencies:** Epic 2 (card data), Epic 3 (catalogue generation)
+
 **FRs Covered:** FR12, FR34, FR43-FR47, FR52
 
 **Scope:**
+
 - Native Swift/SwiftUI watchOS app
 - Carbon Utility design (OLED-black, high-contrast, minimal)
 - Vertical infinite scroll list with Digital Crown support
@@ -909,17 +999,19 @@ This document provides the complete epic and story breakdown for myLoyaltyCards,
 - Barcode Flash: full-screen white background for scanning
 - WatchConnectivity for phone ↔ watch sync
 - Local SwiftData storage for standalone operation
-- Watch complication for quick launch (graphic circular type)
 - Build-time catalogue generation (Brands.swift from italy.json)
 
 **Technical Notes:**
+
 - Watch is READ-ONLY for MVP (card editing only on phone)
 - Card list order matches phone (newest first / alphabetical)
 - Sync protocol uses versioned messages (CARDS_UPDATED, CARD_ADDED, etc.)
 
+**Enabling Note:** Stories 5.1–5.2 are enabling tasks required for the watch user experience.
+
 ---
 
-### Story 5.1: Create watchOS Project Structure
+### Story 5.1: Create watchOS Project Structure [Enabling]
 
 **As a** developer,
 **I want** a properly structured watchOS project,
@@ -929,15 +1021,15 @@ This document provides the complete epic and story breakdown for myLoyaltyCards,
 
 **Given** the existing Expo/React Native project
 **When** I set up the watchOS project
-**Then** the `/watch-ios/` folder contains a native Swift/SwiftUI project
-**And** the project targets watchOS 10+ (for SwiftData support)
+**Then** the `/watch-ios/` folder contains a native watch app project
+**And** the project targets the required watchOS version for local persistence
 **And** the project structure follows Apple's recommended patterns
 **And** a README documents that this is native Swift (not React Native)
-**And** the project builds successfully in Xcode
+**And** the project builds successfully with standard watchOS tooling
 
 ---
 
-### Story 5.2: Generate Catalogue for watchOS
+### Story 5.2: Generate Catalogue for watchOS [Enabling]
 
 **As a** developer,
 **I want** the Italian catalogue available as Swift code,
@@ -946,11 +1038,11 @@ This document provides the complete epic and story breakdown for myLoyaltyCards,
 **Acceptance Criteria:**
 
 **Given** the `/catalogue/italy.json` file exists
-**When** I run the build script `/watch-ios/Scripts/generate-catalogue.swift`
+**When** I run the catalogue generation step
 **Then** it generates `Brands.swift` in the `/watch-ios/Generated/` folder
 **And** the generated file contains a Swift struct with all brand data
 **And** the generated file is in `.gitignore` (never committed)
-**And** the build process runs this script before compiling
+**And** the build process runs this generation step before compiling
 
 ---
 
@@ -1057,37 +1149,20 @@ This document provides the complete epic and story breakdown for myLoyaltyCards,
 
 ---
 
-### Story 5.7: Create Watch Complication
-
-**As a** user,
-**I want** to launch the app from my watch face,
-**So that** I can access my cards with a single tap.
-
-**Acceptance Criteria:**
-
-**Given** I have added the myLoyaltyCards complication to my watch face
-**When** I tap the complication
-**Then** the app opens directly to my card list
-**And** the transition is fast (app appears within 2 seconds)
-
-**Given** I am configuring my watch face
-**When** I look for myLoyaltyCards complications
-**Then** I see a graphic circular complication option
-**And** the complication displays the app icon
-
-**Technical Note:** Simple icon complication for MVP. No dynamic data displayed.
-
----
-
 ## Epic 6: User Authentication & Privacy
 
 **Goal:** Users can optionally create an account to enable cloud backup, with full control over their data.
 
 **Phase:** 1 (MVP)
 
+**Epic Type:** User-Facing (with enabling tasks)
+
+**Dependencies:** Epic 1 (foundation)
+
 **FRs Covered:** FR25-FR33, FR53, FR55-FR58
 
 **Scope:**
+
 - Guest mode with full feature access (no account required)
 - Supabase Auth: Email/password registration and login
 - Sign in with Apple (required for iOS)
@@ -1101,32 +1176,62 @@ This document provides the complete epic and story breakdown for myLoyaltyCards,
 - View collected data summary
 
 **Technical Notes:**
+
 - expo-secure-store for token storage (Keychain/Keystore)
 - Supabase Row-Level Security policies for data protection
 - GDPR compliant: right to access, portability, erasure
 
+**Enabling Note:** Story 6.1 is an enabling task required before user-facing auth flows.
+
 ---
 
-### Story 6.1: Set Up Supabase Backend
+### Story 6.1: Create Supabase Project & Environments [Enabling]
 
 **As a** developer,
-**I want** a configured Supabase backend,
-**So that** the app can store user data securely in the cloud.
+**I want** a Supabase project with Dev and Production environments,
+**So that** the app can be configured for secure cloud storage.
 
 **Acceptance Criteria:**
 
 **Given** the project needs cloud storage
-**When** I set up Supabase
+**When** I create Supabase environments
 **Then** a Supabase project exists with Dev and Production environments
-**And** the `loyalty_cards` table is created with proper schema (matching Zod)
-**And** Row-Level Security (RLS) policies ensure users only access their own data
-**And** the `users` table stores user profiles
-**And** environment variables are configured in `app.config.ts`
-**And** Supabase client is initialized in the app
+**And** environment URLs/keys are available for configuration
 
 ---
 
-### Story 6.2: Implement Guest Mode
+### Story 6.2: Define Cloud Schema & RLS [Enabling]
+
+**As a** developer,
+**I want** the cloud schema and security policies defined,
+**So that** user data is stored safely and access is restricted.
+
+**Acceptance Criteria:**
+
+**Given** the Supabase project is available
+**When** I define the database schema
+**Then** the `loyalty_cards` table is created with proper schema (matching Zod)
+**And** the `users` table stores user profiles
+**And** Row-Level Security (RLS) policies ensure users only access their own data
+
+---
+
+### Story 6.3: Configure App Client [Enabling]
+
+**As a** developer,
+**I want** the app configured to connect to Supabase,
+**So that** authenticated flows can call the backend.
+
+**Acceptance Criteria:**
+
+**Given** Supabase keys and URLs are available
+**When** I configure the app
+**Then** environment variables are configured in `app.config.ts`
+**And** the Supabase client is initialized in the app
+
+---
+
+### Story 6.4: Implement Guest Mode
 
 **As a** user,
 **I want** to use the app without creating an account,
@@ -1148,7 +1253,7 @@ This document provides the complete epic and story breakdown for myLoyaltyCards,
 
 ---
 
-### Story 6.3: Create Account with Email
+### Story 6.5: Create Account with Email
 
 **As a** user,
 **I want** to create an account with my email,
@@ -1164,14 +1269,14 @@ This document provides the complete epic and story breakdown for myLoyaltyCards,
 
 **Given** I submit valid registration details
 **When** registration succeeds
-**Then** my account is created in Supabase
+**Then** my account is created in the cloud backend
 **And** I am automatically signed in
 **And** my auth token is stored securely (expo-secure-store)
 **And** I see a success confirmation
 
 ---
 
-### Story 6.4: Sign In with Email
+### Story 6.6: Sign In with Email
 
 **As a** returning user,
 **I want** to sign in with my email and password,
@@ -1181,7 +1286,7 @@ This document provides the complete epic and story breakdown for myLoyaltyCards,
 
 **Given** I tap "Sign In" in Settings
 **When** I enter my email and password
-**Then** I am authenticated against Supabase
+**Then** I am authenticated successfully
 **And** my auth token is stored securely
 **And** I am returned to the app with my account active
 
@@ -1192,7 +1297,7 @@ This document provides the complete epic and story breakdown for myLoyaltyCards,
 
 ---
 
-### Story 6.5: Sign In with Apple
+### Story 6.7: Sign In with Apple
 
 **As a** user,
 **I want** to sign in with my Apple ID,
@@ -1207,13 +1312,13 @@ This document provides the complete epic and story breakdown for myLoyaltyCards,
 
 **Given** Apple authentication succeeds
 **When** the callback completes
-**Then** my account is created or linked in Supabase
+**Then** my account is created or linked in the cloud backend
 **And** I am signed in automatically
 **And** I can use my Apple email or a private relay email
 
 ---
 
-### Story 6.6: Sign In with Google
+### Story 6.8: Sign In with Google
 
 **As a** user,
 **I want** to sign in with my Google account,
@@ -1228,12 +1333,12 @@ This document provides the complete epic and story breakdown for myLoyaltyCards,
 
 **Given** Google authentication succeeds
 **When** the callback completes
-**Then** my account is created or linked in Supabase
+**Then** my account is created or linked in the cloud backend
 **And** I am signed in automatically
 
 ---
 
-### Story 6.7: Upgrade Guest to Account
+### Story 6.9: Upgrade Guest to Account
 
 **As a** guest user,
 **I want** to create an account without losing my cards,
@@ -1250,7 +1355,7 @@ This document provides the complete epic and story breakdown for myLoyaltyCards,
 
 ---
 
-### Story 6.8: Password Reset
+### Story 6.10: Password Reset
 
 **As a** user,
 **I want** to reset my password if I forget it,
@@ -1260,7 +1365,7 @@ This document provides the complete epic and story breakdown for myLoyaltyCards,
 
 **Given** I tap "Forgot Password" on the sign-in screen
 **When** I enter my email address
-**Then** Supabase sends a password reset email
+**Then** the system sends a password reset email
 **And** I see a message: "Check your email for reset instructions"
 
 **Given** I receive the reset email
@@ -1270,7 +1375,7 @@ This document provides the complete epic and story breakdown for myLoyaltyCards,
 
 ---
 
-### Story 6.9: Logout
+### Story 6.11: Logout
 
 **As a** user,
 **I want** to sign out of my account,
@@ -1291,7 +1396,7 @@ This document provides the complete epic and story breakdown for myLoyaltyCards,
 
 ---
 
-### Story 6.10: Delete Account
+### Story 6.12: Delete Account
 
 **As a** user,
 **I want** to delete my account and all cloud data,
@@ -1306,15 +1411,15 @@ This document provides the complete epic and story breakdown for myLoyaltyCards,
 
 **Given** I confirm deletion
 **When** the deletion completes
-**Then** my user record is deleted from Supabase
-**And** all my cards are deleted from Supabase
+**Then** my cloud account is deleted
+**And** all my cards are deleted from the cloud backend
 **And** my auth token is removed
 **And** I am returned to guest mode
 **And** my local cards remain on the device
 
 ---
 
-### Story 6.11: Privacy & Consent
+### Story 6.13: Privacy & Consent
 
 **As a** user,
 **I want** to understand how my data is used,
@@ -1331,10 +1436,11 @@ This document provides the complete epic and story breakdown for myLoyaltyCards,
 **When** I access Settings
 **Then** I can view the Privacy Policy
 **And** I can see what data is collected (summary view):
-  - Email address
-  - Card names and barcodes
-  - Timestamps
-**And** I can access the data export feature (Epic 8)
+
+- Email address
+- Card names and barcodes
+- Timestamps
+  **And** I can access the data export feature (Epic 8)
 
 ---
 
@@ -1344,9 +1450,14 @@ This document provides the complete epic and story breakdown for myLoyaltyCards,
 
 **Phase:** 1 (MVP)
 
+**Epic Type:** User-Facing
+
+**Dependencies:** Epic 6 (authentication)
+
 **FRs Covered:** FR35-FR42
 
 **Scope:**
+
 - Supabase REST API integration for phone ↔ cloud sync
 - Background synchronization (automatic)
 - Delta sync (only changed cards)
@@ -1358,6 +1469,7 @@ This document provides the complete epic and story breakdown for myLoyaltyCards,
 - Error handling with overlay messages for sync failures
 
 **Technical Notes:**
+
 - Network connectivity detection
 - Bidirectional sync: phone ↔ cloud, propagates to watch via Epic 5
 
@@ -1373,8 +1485,8 @@ This document provides the complete epic and story breakdown for myLoyaltyCards,
 
 **Given** I sign in to my account for the first time
 **When** authentication succeeds
-**Then** all my local cards are uploaded to Supabase
-**And** the upload respects the 5-minute sync throttle
+**Then** all my local cards are uploaded to the cloud backend
+**And** the upload respects the configured sync throttle window
 **And** I see a subtle sync indicator during upload
 **And** cards remain accessible during the upload process
 
@@ -1395,7 +1507,7 @@ This document provides the complete epic and story breakdown for myLoyaltyCards,
 
 **Given** I sign in on a new device
 **When** authentication succeeds
-**Then** all my cards from Supabase are downloaded
+**Then** all my cards from the cloud backend are downloaded
 **And** the cards appear in my card list
 **And** brand logos display correctly (using bundled catalogue)
 **And** I can use the cards immediately after download
@@ -1417,17 +1529,17 @@ This document provides the complete epic and story breakdown for myLoyaltyCards,
 
 **Given** I am signed in
 **When** I add a new card
-**Then** the card is uploaded to Supabase in the background
-**And** the sync occurs within the 5-minute throttle window
+**Then** the card is uploaded to the cloud backend in the background
+**And** the sync occurs within the configured throttle window
 
 **Given** I am signed in
 **When** I edit a card
-**Then** the updated card is synced to Supabase
+**Then** the updated card is synced to the cloud backend
 **And** the `updatedAt` timestamp is refreshed
 
 **Given** I am signed in
 **When** I delete a card
-**Then** the card is marked as deleted in Supabase
+**Then** the card is marked as deleted in the cloud backend
 **And** the deletion syncs to other devices
 
 ---
@@ -1530,9 +1642,14 @@ This document provides the complete epic and story breakdown for myLoyaltyCards,
 
 **Phase:** 1 (MVP)
 
+**Epic Type:** User-Facing
+
+**Dependencies:** Epic 4 (Help/FAQ content)
+
 **FRs Covered:** FR54, FR57, FR66-FR69, FR73
 
 **Scope:**
+
 - Settings screen with organized sections
 - Theme toggle (light/dark mode, respects system default)
 - Language selection (English for MVP, externalized for future localization)
@@ -1543,6 +1660,7 @@ This document provides the complete epic and story breakdown for myLoyaltyCards,
 - Open source licenses
 
 **Technical Notes:**
+
 - Settings persisted in AsyncStorage
 - Theme preference syncs with system but allows manual override
 
@@ -1559,14 +1677,15 @@ This document provides the complete epic and story breakdown for myLoyaltyCards,
 **Given** I tap the ⚙️ button in the header
 **When** the Settings screen opens
 **Then** I see organized sections:
-  - **Account** (if signed in: email, Sign Out, Delete Account)
-  - **Account** (if guest: Create Account, Sign In)
-  - **Appearance** (Theme)
-  - **Language**
-  - **Data** (Export Data)
-  - **About** (Help, Privacy Policy, App Info)
-**And** each section has clear headings
-**And** the screen matches the app's design system
+
+- **Account** (if signed in: email, Sign Out, Delete Account)
+- **Account** (if guest: Create Account, Sign In)
+- **Appearance** (Theme)
+- **Language**
+- **Data** (Export Data)
+- **About** (Help, Privacy Policy, App Info)
+  **And** each section has clear headings
+  **And** the screen matches the app's design system
 
 ---
 
@@ -1656,10 +1775,11 @@ This document provides the complete epic and story breakdown for myLoyaltyCards,
 **Given** I am in Settings > About
 **When** I view the About section
 **Then** I see:
-  - App version and build number
-  - "Help & FAQ" link (opens FAQ from Epic 4)
-  - "Privacy Policy" link (opens privacy policy)
-  - "Open Source Licenses" link (shows MIT license and dependencies)
+
+- App version and build number
+- "Help & FAQ" link (opens FAQ from Epic 4)
+- "Privacy Policy" link (opens privacy policy)
+- "Open Source Licenses" link (shows MIT license and dependencies)
 
 **Given** I tap "Privacy Policy"
 **When** the policy loads
@@ -1677,9 +1797,14 @@ This document provides the complete epic and story breakdown for myLoyaltyCards,
 
 **Phase:** 2 (Enhancement)
 
+**Epic Type:** User-Facing
+
+**Dependencies:** Epic 2 (card list + display)
+
 **FRs Covered:** FR8, FR21-FR24
 
 **Scope:**
+
 - Usage tracking: increment usageCount and update lastUsedAt on card display
 - Sorting algorithm: favorites first → frequency → recency → alphabetical
 - Favorites/pinning functionality (long-press to pin)
@@ -1687,6 +1812,7 @@ This document provides the complete epic and story breakdown for myLoyaltyCards,
 - Sorting applies to both phone and watch lists
 
 **Technical Notes:**
+
 - Schema fields already exist from Epic 2 (just inactive)
 - Activate tracking and sorting logic
 - Target: correct card in top 3 positions 95% of time
@@ -1740,10 +1866,11 @@ This document provides the complete epic and story breakdown for myLoyaltyCards,
 **Given** I have multiple cards with varying usage
 **When** I view my card list
 **Then** cards are sorted by:
-  1. Favorites first (isFavorite = true)
-  2. Then by usage frequency (usageCount descending)
-  3. Then by recency (lastUsedAt descending)
-  4. Then alphabetically by name (fallback)
+
+1. Favorites first (isFavorite = true)
+2. Then by usage frequency (usageCount descending)
+3. Then by recency (lastUsedAt descending)
+4. Then alphabetically by name (fallback)
 
 **Given** I have 10 cards with usage data
 **When** I visit my usual store
@@ -1772,9 +1899,14 @@ This document provides the complete epic and story breakdown for myLoyaltyCards,
 
 **Phase:** 2 (Enhancement)
 
+**Epic Type:** User-Facing (with enabling tasks)
+
+**Dependencies:** Epic 2 (card data), Epic 3 (catalogue generation)
+
 **FRs Covered:** FR12, FR43-FR47, FR52 (Wear OS specific)
 
 **Scope:**
+
 - Native Kotlin/Compose Wear OS app
 - Carbon Utility design (same as watchOS)
 - Wearable Data Layer API for phone ↔ watch sync
@@ -1783,12 +1915,15 @@ This document provides the complete epic and story breakdown for myLoyaltyCards,
 - Apply learnings from watchOS development
 
 **Technical Notes:**
+
 - Same sync protocol as watchOS (versioned messages)
 - Watch is READ-ONLY (consistent with watchOS behavior)
 
+**Enabling Note:** Stories 10.1–10.2 are enabling tasks required for the Wear OS experience.
+
 ---
 
-### Story 10.1: Create Wear OS Project Structure
+### Story 10.1: Create Wear OS Project Structure [Enabling]
 
 **As a** developer,
 **I want** a properly structured Wear OS project,
@@ -1805,7 +1940,7 @@ This document provides the complete epic and story breakdown for myLoyaltyCards,
 
 ---
 
-### Story 10.2: Generate Catalogue for Wear OS
+### Story 10.2: Generate Catalogue for Wear OS [Enabling]
 
 **As a** developer,
 **I want** the Italian catalogue available as Kotlin code,
@@ -1889,17 +2024,21 @@ This document provides the complete epic and story breakdown for myLoyaltyCards,
 
 ## Future Enhancements (Post-MVP Backlog)
 
-*This section captures ideas for future development beyond Phase 2.*
+_This section captures ideas for future development beyond Phase 2._
 
 ### Potential Future Epics:
 
-| Epic | Description | Source |
-|------|-------------|--------|
-| EU Market Expansion | Expand catalogue to Spain, France, Germany, etc. | PRD Vision |
-| Contextual Card Detection | Location-based auto-card selection | PRD Vision |
-| Data Validation | Barcode format validation per brand (FR70-FR71) | PRD Post-MVP |
-| Accessibility | Screen reader, voice control, high contrast (NFR-A1-A3) | PRD Post-MVP |
-| Admin Panel | Web-based catalogue management | PRD Growth |
+| Epic                      | Description                                             | Source          |
+| ------------------------- | ------------------------------------------------------- | --------------- |
+| EU Market Expansion       | Expand catalogue to Spain, France, Germany, etc.        | PRD Vision      |
+| Contextual Card Detection | Location-based auto-card selection                      | PRD Vision      |
+| Data Validation           | Barcode format validation per brand (FR70-FR71)         | PRD Post-MVP    |
+| Accessibility             | Screen reader, voice control, high contrast (NFR-A1-A3) | PRD Post-MVP    |
+| Admin Panel               | Web-based catalogue management                          | PRD Growth      |
+| Watch Complication        | Quick launch complication (Apple Watch)                 | UX / PRD Future |
+| Biometric/PIN Lock        | Optional app lock in settings                           | UX Future       |
+| Orientation Lock Toggle   | Lock portrait orientation in settings                   | UX Future       |
+| Auto-Save on Scan         | Skip confirmation after barcode scan                    | UX Future       |
 
 ### How to Add Future Features:
 
@@ -1908,4 +2047,3 @@ This document provides the complete epic and story breakdown for myLoyaltyCards,
 3. **Map to requirements** — Reference PRD FRs or create new ones
 4. **Break into stories** — Same format with acceptance criteria
 5. **Update coverage map** — Ensure all FRs are tracked
-
