@@ -97,8 +97,8 @@ development_status:
   # Epic 4: Onboarding Experience
   epic-4: in-progress
   4-1-welcome-screen: review
-  4-2-first-card-guidance: ready-for-dev
-  4-3-help-faq-access: ready-for-dev
+  4-2-first-card-guidance: done
+  4-3-help-faq-access: done
   epic-4-retrospective: optional
 
   # Epic 5: Apple Watch App
