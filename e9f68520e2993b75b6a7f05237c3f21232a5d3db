@@ -1,0 +1,27 @@
+watch-ios/__tests__/generate-catalogue.test.ts
+  4d23d97fab72a0bc 3,26-29,57-59,61-65,71-109
+watch-ios/Scripts/generate-catalogue.swift
+  4d23d97fab72a0bc 71-80,82-83
+docs/sprint-artifacts/stories/5-2-generate-catalogue-for-watchos.md
+  4d23d97fab72a0bc 83-85,91-93
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.1.3",
+  "base_commit_sha": "e9f68520e2993b75b6a7f05237c3f21232a5d3db",
+  "prompts": {
+    "4d23d97fab72a0bc": {
+      "agent_id": {
+        "tool": "github-copilot",
+        "id": "8327bf09-48de-4f78-a211-043f27b62ef9",
+        "model": "copilot/gpt-5.3-codex"
+      },
+      "human_author": "Andrea Pacino",
+      "messages": [],
+      "total_additions": 73,
+      "total_deletions": 8,
+      "accepted_lines": 71,
+      "overriden_lines": 0
+    }
+  }
+}
