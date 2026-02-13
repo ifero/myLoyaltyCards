@@ -1,0 +1,36 @@
+.gitignore
+  4d23d97fab72a0bc 60
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.1.3",
+  "base_commit_sha": "410f777cb8221fbf009934973e470e68245bd7c7",
+  "prompts": {
+    "4d23d97fab72a0bc": {
+      "agent_id": {
+        "tool": "github-copilot",
+        "id": "8327bf09-48de-4f78-a211-043f27b62ef9",
+        "model": "copilot/gpt-5.3-codex"
+      },
+      "human_author": "Andrea Pacino",
+      "messages": [],
+      "total_additions": 0,
+      "total_deletions": 0,
+      "accepted_lines": 36,
+      "overriden_lines": 0
+    },
+    "bd00c81b10256cc1": {
+      "agent_id": {
+        "tool": "github-copilot",
+        "id": "d3f0594d-4f24-43d3-8030-cc825d3beaff",
+        "model": "copilot/gpt-5.2-codex"
+      },
+      "human_author": "Andrea Pacino",
+      "messages": [],
+      "total_additions": 0,
+      "total_deletions": 0,
+      "accepted_lines": 2,
+      "overriden_lines": 0
+    }
+  }
+}
