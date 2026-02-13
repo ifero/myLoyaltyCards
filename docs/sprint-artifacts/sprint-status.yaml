@@ -35,7 +35,7 @@
 # - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
 
 generated: 2026-01-03
-updated: 2026-02-11
+updated: 2026-02-12
 project: myLoyaltyCards
 tracking_system: file-system
 story_location: docs/sprint-artifacts
@@ -106,7 +106,8 @@ development_status:
 
   # Epic 5: Apple Watch App
   epic-5: in-progress
-  5-1-create-watchos-project-structure: ready-for-dev
+  5-1-create-watchos-project-structure: done
+  5-1-completed: 2026-02-12
   5-2-generate-catalogue-for-watchos: ready-for-dev
   5-3-implement-card-list-carbon-ui: ready-for-dev
   5-4-display-barcode-on-watch: ready-for-dev
