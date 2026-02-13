@@ -7,7 +7,7 @@
 | **Story ID** | 5.2                                                     |
 | **Epic**     | 5 - Apple Watch App                                     |
 | **Sprint**   | 4                                                       |
-| **Status**   | ready-for-dev                                           |
+| **Status**   | Ready for Review                                        |
 | **Priority** | High                                                    |
 | **Estimate** | Small (0.5-1 day)                                       |
 | **Owners**   | PM: John · UX: Sally · Dev: Amelia · Tech Writer: Paige |
@@ -71,10 +71,10 @@ Testing notes:
 
 ## Tasks/Subtasks
 
-- [ ] Create generate-catalogue.swift script
-- [ ] Add Xcode build phase to run script
-- [ ] Add watch-ios/Generated/ to gitignore
-- [ ] Verify generated file compiles in watch app
+- [x] Create generate-catalogue.swift script
+- [x] Add Xcode build phase to run script
+- [x] Add watch-ios/Generated/ to gitignore
+- [x] Verify generated file compiles in watch app
 
 ---
 
@@ -91,3 +91,33 @@ Testing notes:
 - [ ] All acceptance criteria pass
 - [ ] Build-time generation works in a clean clone
 - [ ] Generated files are not committed
+
+---
+
+## Dev Agent Record
+
+### Debug Log
+
+- Added Jest coverage for generator behavior and Xcode integration assertions.
+- Implemented Swift generator script at watch-ios/Scripts/generate-catalogue.swift.
+- Updated watchOS project build phases to generate watch-ios/Generated/Brands.swift before compilation.
+- Fixed build phase Swift invocation to use macOS SDK via xcrun inside Xcode script environment.
+
+### Completion Notes
+
+- AC1: `catalogue/italy.json` now generates `watch-ios/Generated/Brands.swift` with brand `id` and derived `logoUrl`, plus optional `name` and `aliases`.
+- AC2: Xcode target now runs `Generate Watch Catalogue` pre-build script and compiles generated `Brands.swift` from `watch-ios/Generated`.
+- AC3: `watch-ios/Generated` is ignored in `.gitignore`.
+- Validation: story-specific tests pass, full suite passes (372), lint passes, and clean watch build succeeds when `watch-ios/Generated` is absent.
+
+## File List
+
+- .gitignore
+- docs/sprint-artifacts/stories/5-2-generate-catalogue-for-watchos.md
+- watch-ios/MyLoyaltyCardsWatch.xcodeproj/project.pbxproj
+- watch-ios/Scripts/generate-catalogue.swift
+- watch-ios/__tests__/generate-catalogue.test.ts
+
+## Change Log
+
+- 2026-02-13: Implemented watchOS catalogue generation pipeline, integrated pre-build Xcode script phase, added automated tests, and marked story ready for review.
