@@ -28,6 +28,9 @@ enum GeneratorError: Error, LocalizedError {
 func swiftStringLiteral(_ value: String) -> String {
   value
     .replacingOccurrences(of: "\\", with: "\\\\")
+    .replacingOccurrences(of: "\n", with: "\\n")
+    .replacingOccurrences(of: "\r", with: "\\r")
+    .replacingOccurrences(of: "\t", with: "\\t")
     .replacingOccurrences(of: "\"", with: "\\\"")
 }
 
@@ -65,7 +68,19 @@ func resolvePaths() throws -> (catalogueURL: URL, outputURL: URL) {
     throw GeneratorError.invalidRepositoryStructure
   }
 
-  let catalogueURL = repoRoot.appendingPathComponent("catalogue/italy.json")
+  let environment = ProcessInfo.processInfo.environment
+  let catalogueURL: URL
+
+  if let overridePath = environment["CATALOGUE_JSON_PATH"], overridePath.isEmpty == false {
+    if overridePath.hasPrefix("/") {
+      catalogueURL = URL(fileURLWithPath: overridePath)
+    } else {
+      catalogueURL = repoRoot.appendingPathComponent(overridePath)
+    }
+  } else {
+    catalogueURL = repoRoot.appendingPathComponent("catalogue/italy.json")
+  }
+
   let outputURL = watchDirectory.appendingPathComponent("Generated/Brands.swift")
   return (catalogueURL, outputURL)
 }

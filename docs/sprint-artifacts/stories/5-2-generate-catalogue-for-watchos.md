@@ -80,17 +80,17 @@ Testing notes:
 
 ## Testing Checklist
 
-- [ ] Generated file matches italy.json content
-- [ ] Clean build works without pre-generated files
-- [ ] Watch app compiles with generated data
+- [x] Generated file matches italy.json content
+- [x] Clean build works without pre-generated files
+- [x] Watch app compiles with generated data
 
 ---
 
 ## Definition of Done
 
-- [ ] All acceptance criteria pass
-- [ ] Build-time generation works in a clean clone
-- [ ] Generated files are not committed
+- [x] All acceptance criteria pass
+- [x] Build-time generation works in a clean clone
+- [x] Generated files are not committed
 
 ---
 
