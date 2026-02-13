@@ -1,0 +1,251 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 60;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		0A1B2C3D4E5F678901234572 /* MyLoyaltyCardsWatchApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A1B2C3D4E5F67890123456E /* MyLoyaltyCardsWatchApp.swift */; };
+		0A1B2C3D4E5F678901234573 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A1B2C3D4E5F67890123456F /* ContentView.swift */; };
+		0A1B2C3D4E5F678901234574 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 0A1B2C3D4E5F678901234570 /* Assets.xcassets */; };
+		0A1B2C3D4E5F678901234575 /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 0A1B2C3D4E5F678901234571 /* Preview Assets.xcassets */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		0A1B2C3D4E5F67890123456D /* MyLoyaltyCardsWatch.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; path = MyLoyaltyCardsWatch.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		0A1B2C3D4E5F67890123456E /* MyLoyaltyCardsWatchApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MyLoyaltyCardsWatchApp.swift; sourceTree = "<group>"; };
+		0A1B2C3D4E5F67890123456F /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
+		0A1B2C3D4E5F678901234570 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		0A1B2C3D4E5F678901234571 /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		0A1B2C3D4E5F678901234578 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		0A1B2C3D4E5F678901234568 = {
+			isa = PBXGroup;
+			children = (
+				0A1B2C3D4E5F678901234569 /* MyLoyaltyCardsWatch */,
+				0A1B2C3D4E5F67890123456B /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		0A1B2C3D4E5F678901234569 /* MyLoyaltyCardsWatch */ = {
+			isa = PBXGroup;
+			children = (
+				0A1B2C3D4E5F67890123456E /* MyLoyaltyCardsWatchApp.swift */,
+				0A1B2C3D4E5F67890123456F /* ContentView.swift */,
+				0A1B2C3D4E5F678901234570 /* Assets.xcassets */,
+				0A1B2C3D4E5F67890123456A /* Preview Content */,
+			);
+			path = MyLoyaltyCardsWatch;
+			sourceTree = "<group>";
+		};
+		0A1B2C3D4E5F67890123456A /* Preview Content */ = {
+			isa = PBXGroup;
+			children = (
+				0A1B2C3D4E5F678901234571 /* Preview Assets.xcassets */,
+			);
+			path = "Preview Content";
+			sourceTree = "<group>";
+		};
+		0A1B2C3D4E5F67890123456B /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				0A1B2C3D4E5F67890123456D /* MyLoyaltyCardsWatch.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		0A1B2C3D4E5F67890123456C /* MyLoyaltyCardsWatch */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 0A1B2C3D4E5F67890123457A /* Build configuration list for PBXNativeTarget "MyLoyaltyCardsWatch" */;
+			buildPhases = (
+				0A1B2C3D4E5F678901234576 /* Sources */,
+				0A1B2C3D4E5F678901234577 /* Resources */,
+				0A1B2C3D4E5F678901234578 /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = MyLoyaltyCardsWatch;
+			productName = MyLoyaltyCardsWatch;
+			productReference = 0A1B2C3D4E5F67890123456D /* MyLoyaltyCardsWatch.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		0A1B2C3D4E5F678901234567 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				LastUpgradeCheck = 1500;
+				TargetAttributes = {
+					0A1B2C3D4E5F67890123456C = {
+						CreatedOnToolsVersion = 15.0;
+					};
+				};
+			};
+			buildConfigurationList = 0A1B2C3D4E5F678901234579 /* Build configuration list for PBXProject "MyLoyaltyCardsWatch" */;
+			compatibilityVersion = "Xcode 15.0";
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+			);
+			mainGroup = 0A1B2C3D4E5F678901234568;
+			productRefGroup = 0A1B2C3D4E5F67890123456B /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				0A1B2C3D4E5F67890123456C /* MyLoyaltyCardsWatch */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		0A1B2C3D4E5F678901234577 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				0A1B2C3D4E5F678901234574 /* Assets.xcassets in Resources */,
+				0A1B2C3D4E5F678901234575 /* Preview Assets.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		0A1B2C3D4E5F678901234576 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				0A1B2C3D4E5F678901234572 /* MyLoyaltyCardsWatchApp.swift in Sources */,
+				0A1B2C3D4E5F678901234573 /* ContentView.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		0A1B2C3D4E5F67890123457B /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CLANG_ANALYZER_LOCALIZABILITY_NONLOCALIZED = YES;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++17";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = NO;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				SDKROOT = watchos;
+				SUPPORTED_PLATFORMS = "watchos watchsimulator";
+				SWIFT_VERSION = 5.0;
+				WATCHOS_DEPLOYMENT_TARGET = 10.0;
+			};
+			name = Debug;
+		};
+		0A1B2C3D4E5F67890123457C /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CLANG_ANALYZER_LOCALIZABILITY_NONLOCALIZED = YES;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++17";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = NO;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				SDKROOT = watchos;
+				SUPPORTED_PLATFORMS = "watchos watchsimulator";
+				SWIFT_VERSION = 5.0;
+				WATCHOS_DEPLOYMENT_TARGET = 10.0;
+			};
+			name = Release;
+		};
+		0A1B2C3D4E5F67890123457D /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				"ARCHS[sdk=watchsimulator*]" = arm64;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_ASSET_PATHS = "MyLoyaltyCardsWatch/Preview\\ Content";
+				DEVELOPMENT_TEAM = 7KU8K25XK5;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = MyLoyaltyCards;
+				INFOPLIST_KEY_WKCompanionAppBundleIdentifier = com.iferoporefi.myloyaltycards;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.iferoporefi.myloyaltycards.watch;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = watchos;
+				SUPPORTED_PLATFORMS = "watchos watchsimulator";
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 4;
+				WATCHOS_DEPLOYMENT_TARGET = 10.0;
+			};
+			name = Debug;
+		};
+		0A1B2C3D4E5F67890123457E /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				"ARCHS[sdk=watchsimulator*]" = arm64;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_ASSET_PATHS = "MyLoyaltyCardsWatch/Preview\\ Content";
+				DEVELOPMENT_TEAM = 7KU8K25XK5;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = MyLoyaltyCards;
+				INFOPLIST_KEY_WKCompanionAppBundleIdentifier = com.iferoporefi.myloyaltycards;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.iferoporefi.myloyaltycards.watch;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = watchos;
+				SUPPORTED_PLATFORMS = "watchos watchsimulator";
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 4;
+				WATCHOS_DEPLOYMENT_TARGET = 10.0;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		0A1B2C3D4E5F678901234579 /* Build configuration list for PBXProject "MyLoyaltyCardsWatch" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				0A1B2C3D4E5F67890123457B /* Debug */,
+				0A1B2C3D4E5F67890123457C /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		0A1B2C3D4E5F67890123457A /* Build configuration list for PBXNativeTarget "MyLoyaltyCardsWatch" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				0A1B2C3D4E5F67890123457D /* Debug */,
+				0A1B2C3D4E5F67890123457E /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = 0A1B2C3D4E5F678901234567 /* Project object */;
+}

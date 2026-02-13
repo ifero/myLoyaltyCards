@@ -15,14 +15,14 @@
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.myloyaltycards.app"
+      "bundleIdentifier": "com.iferoporefi.myloyaltycards"
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "package": "com.myloyaltycards.app"
+      "package": "com.iferoporefi.myloyaltycards"
     },
     "web": {
       "bundler": "metro",

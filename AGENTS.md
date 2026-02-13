@@ -57,6 +57,10 @@ These documentation files are specifically formatted for AI agents and should be
 
 ## Essential Commands
 
+### Package Manager
+
+- **Use Yarn only** for project scripts and installs (avoid npm).
+
 ### Development
 
 ```bash

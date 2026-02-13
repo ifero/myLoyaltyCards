@@ -23,6 +23,7 @@ _This document builds collaboratively through step-by-step discovery. Sections a
 
 **Functional Requirements:**
 74 functional requirements organized into 13 categories:
+
 - Card Management (FR1-9): Core CRUD operations with barcode scanning
 - Barcode Display (FR10-13): Multi-format rendering for phone and wearables
 - Italian Brand Catalogue (FR14-20): JSON-based catalogue with offline caching
@@ -37,6 +38,7 @@ _This document builds collaboratively through step-by-step discovery. Sections a
 - Onboarding (FR72-74): First-time user guidance
 
 **Non-Functional Requirements:**
+
 - Performance: ≤3s wearable card display, <1s phone cold start, <2s watch cold start, 60fps UI
 - Security: AES-256 encryption at rest, TLS 1.2+, bcrypt password hashing
 - Privacy: Full GDPR compliance including data export, deletion, and consent
@@ -45,6 +47,7 @@ _This document builds collaboratively through step-by-step discovery. Sections a
 - Maintainability: Open-source quality standards, MIT license
 
 **Scale & Complexity:**
+
 - Primary domain: Cross-platform Mobile + Wearable
 - Complexity level: Medium-High
 - Estimated architectural components: 8-12 major modules
@@ -52,17 +55,20 @@ _This document builds collaboratively through step-by-step discovery. Sections a
 ### Technical Constraints & Dependencies
 
 **Platform Constraints:**
+
 - React Native + Expo as development framework
 - 4 target platforms: iOS, Android, watchOS, Wear OS
 - Wearable storage limits (~100MB for app + data)
 - Expo dev client with custom native modules for wearable features
 
 **Technology Stack (Pre-decided):**
+
 - React Native + Expo SDK (latest)
 - NativeWind (Tailwind CSS) for styling
 - Native components for wearable apps
 
 **Market Constraints:**
+
 - Italy-only catalogue for MVP
 - EU GDPR compliance required
 - Open-source MIT license
@@ -107,12 +113,14 @@ _This document builds collaboratively through step-by-step discovery. Sections a
 ### Primary Technology Domain
 
 Cross-platform Mobile + Wearable application requiring:
+
 - Phone apps via React Native + Expo (iOS, Android)
 - Wearable apps via native development (watchOS, Wear OS)
 
 ### Existing Foundation Evaluated
 
 Project initialized with `npx create-expo-app@latest` providing:
+
 - Expo SDK 54.0.0 (December 2024 release)
 - React 19.1.0 with React Native 0.81.5
 - Expo Router 6.0.15 (file-based navigation)
@@ -122,6 +130,7 @@ Project initialized with `npx create-expo-app@latest` providing:
 ### Wearable Architecture Decision (Tree of Thoughts Analysis)
 
 **Options Evaluated:**
+
 1. **Expo + Native Wearable Companions** - Native Swift/Kotlin for watches
 2. **React Native + Custom Native Modules** - JS bridges to native watch APIs
 3. **Flutter Rewrite** - Complete stack change
@@ -133,17 +142,20 @@ Project initialized with `npx create-expo-app@latest` providing:
 ### Selected Approach: iOS-First Phased Development
 
 **Phase 1: iOS-First MVP**
+
 - Phone: Expo/React Native (existing setup)
 - Apple Watch: Native Swift/SwiftUI
 - Goal: Validate "wrist raise → 3 seconds" with real users
 - Rationale: Apple Watch is the primary wearable use case; validate concept before expanding
 
 **Phase 2: Android Expansion**
+
 - Phone: Same Expo codebase (already cross-platform)
 - Wear OS: Native Kotlin/Compose
 - Apply learnings from watchOS development
 
 **Rationale for Phased Approach:**
+
 1. Reduces risk by validating on ONE wearable platform first
 2. Apple Watch has larger market share for standalone apps
 3. Learning Swift/SwiftUI provides foundation for quality native development
@@ -211,11 +223,13 @@ myLoyaltyCards/
 ```
 
 **Watch App Documentation Strategy:**
+
 - Root `README.md`: Overview table showing which folders are React Native vs Native
 - `watch-ios/README.md`: Swift/SwiftUI build instructions, Xcode setup
 - `watch-android/README.md`: Kotlin/Compose build instructions, Android Studio setup
 
 Each watch README must include:
+
 1. Clear statement: "This is NOT React Native"
 2. Technology stack (language, framework, IDE)
 3. Build instructions
@@ -225,16 +239,19 @@ Each watch README must include:
 ### Architectural Decisions Provided by Starter
 
 **Language & Runtime:**
+
 - TypeScript 5.6 with strict mode (phone)
 - Swift 5.9+ with SwiftUI (watchOS - Phase 1)
 - Kotlin with Jetpack Compose (Wear OS - Phase 2)
 
 **Navigation Solution:**
+
 - Expo Router 6.x with file-based routing (phone)
 - NavigationStack (watchOS)
 - Navigation Compose (Wear OS)
 
 **Build Tooling:**
+
 - GitHub Actions for CI/CD (free for OSS, transparent to contributors)
 - Fastlane for build automation (iOS, Android, watchOS, Wear OS)
 - Xcode for watchOS builds (via macOS GitHub runners)
@@ -242,6 +259,7 @@ Each watch README must include:
 - Expo Development Build to bridge phone and native code
 
 **Data Synchronization:**
+
 - WatchConnectivity framework (iOS ↔ watchOS)
 - Wearable Data Layer API (Android ↔ Wear OS)
 - JSON schemas shared across all platforms for consistency
@@ -249,6 +267,7 @@ Each watch README must include:
 ### Additional Dependencies Required
 
 **Phone App (React Native/Expo):**
+
 - `nativewind` + `tailwindcss` - Styling per UX spec
 - `expo-camera` - Barcode scanning
 - `expo-sqlite` - Offline data persistence
@@ -256,11 +275,13 @@ Each watch README must include:
 - `expo-auth-session` - OAuth flows
 
 **watchOS App (Swift/SwiftUI):**
+
 - WatchConnectivity - Phone sync
 - SwiftData or CoreData - Local persistence
 - Native barcode rendering
 
 **Wear OS App (Kotlin/Compose - Phase 2):**
+
 - Wearable Data Layer API - Phone sync
 - Room Database - Local persistence
 - ZXing or native barcode rendering
@@ -268,11 +289,13 @@ Each watch README must include:
 ### Risk Mitigation
 
 **Learning Curve (Swift/SwiftUI):**
+
 - SwiftUI is declarative like React - transferable mental model
 - Apple's documentation is excellent
 - watchOS apps are small in scope (card list + barcode display)
 
 **Phased Approach Benefits:**
+
 - Validate core concept before multi-platform investment
 - Can ship iOS + Apple Watch to App Store while Wear OS in development
 - Real user feedback informs Android wearable design
@@ -282,90 +305,94 @@ Each watch README must include:
 ### Decision Priority Analysis
 
 **Critical Decisions (Block Implementation):**
+
 - Local database strategy (expo-sqlite)
 - Cloud backend selection (Supabase)
 - Phone-Watch sync framework (WatchConnectivity / Wearable Data Layer)
 - CI/CD platform (GitHub Actions + Fastlane)
 
 **Important Decisions (Shape Architecture):**
+
 - State management (Zustand)
 - Data fetching (TanStack Query)
 - Authentication flow (Supabase Auth)
 - Catalogue distribution (Bundled + OTA)
 
 **Deferred Decisions (Post-MVP):**
+
 - Advanced caching strategies
 - Analytics integration
 - Push notification infrastructure
 
 ### Data Architecture
 
-| Component | Technology | Version | Rationale |
-|-----------|------------|---------|-----------|
-| Phone Local DB | expo-sqlite | Latest | Structured queries for smart sorting |
-| watchOS Storage | SwiftData | iOS 17+ | Modern Swift-native persistence |
-| Wear OS Storage | Room | Latest | Kotlin-native, Jetpack standard |
-| Cloud Database | Supabase (PostgreSQL) | Latest | Structured data, built-in auth, free tier |
-| Sync Strategy | Delta sync | — | Timestamp-based, changed cards only |
-| Conflict Resolution | Last-write-wins | — | Simple, predictable behavior |
+| Component           | Technology            | Version | Rationale                                 |
+| ------------------- | --------------------- | ------- | ----------------------------------------- |
+| Phone Local DB      | expo-sqlite           | Latest  | Structured queries for smart sorting      |
+| watchOS Storage     | SwiftData             | iOS 17+ | Modern Swift-native persistence           |
+| Wear OS Storage     | Room                  | Latest  | Kotlin-native, Jetpack standard           |
+| Cloud Database      | Supabase (PostgreSQL) | Latest  | Structured data, built-in auth, free tier |
+| Sync Strategy       | Delta sync            | —       | Timestamp-based, changed cards only       |
+| Conflict Resolution | Last-write-wins       | —       | Simple, predictable behavior              |
 
 ### Authentication & Security
 
-| Component | Technology | Rationale |
-|-----------|------------|-----------|
-| Auth Provider | Supabase Auth | Email, Apple, Google out-of-box |
-| Token Storage | expo-secure-store | Keychain (iOS) / Keystore (Android) |
-| API Security | Supabase RLS | Row-level security policies |
-| Transport | TLS 1.2+ | Supabase default |
-| Local Card Data | Plain SQLite | Barcodes aren't secrets; performance |
-| Password Hashing | bcrypt | Supabase default |
+| Component        | Technology        | Rationale                            |
+| ---------------- | ----------------- | ------------------------------------ |
+| Auth Provider    | Supabase Auth     | Email, Apple, Google out-of-box      |
+| Token Storage    | expo-secure-store | Keychain (iOS) / Keystore (Android)  |
+| API Security     | Supabase RLS      | Row-level security policies          |
+| Transport        | TLS 1.2+          | Supabase default                     |
+| Local Card Data  | Plain SQLite      | Barcodes aren't secrets; performance |
+| Password Hashing | bcrypt            | Supabase default                     |
 
 ### API & Communication Patterns
 
-| Pattern | Technology | Notes |
-|---------|------------|-------|
-| Phone ↔ Cloud | Supabase REST API | Via @supabase/supabase-js |
-| iOS ↔ watchOS | WatchConnectivity | Apple's native framework |
-| Android ↔ Wear OS | Wearable Data Layer API | Google's native framework |
-| Catalogue Updates | Bundled + OTA | No runtime fetch, Expo Updates |
-| Offline Queue | Local queue + retry | Operations queued when offline |
+| Pattern           | Technology              | Notes                          |
+| ----------------- | ----------------------- | ------------------------------ |
+| Phone ↔ Cloud     | Supabase REST API       | Via @supabase/supabase-js      |
+| iOS ↔ watchOS     | WatchConnectivity       | Apple's native framework       |
+| Android ↔ Wear OS | Wearable Data Layer API | Google's native framework      |
+| Catalogue Updates | Bundled + OTA           | No runtime fetch, Expo Updates |
+| Offline Queue     | Local queue + retry     | Operations queued when offline |
 
 ### Frontend Architecture
 
-| Component | Technology | Version | Rationale |
-|-----------|------------|---------|-----------|
-| State Management | Zustand | ^4.x | Minimal boilerplate, hooks-based |
-| Data Fetching | TanStack Query | ^5.x | Caching, offline, background sync |
-| Form Handling | React Hook Form | ^7.x | Performant, minimal re-renders |
-| Validation | Zod | ^3.x | Shared schemas, TypeScript inference |
-| Styling | NativeWind | ^4.x | Tailwind CSS for React Native |
+| Component        | Technology      | Version | Rationale                            |
+| ---------------- | --------------- | ------- | ------------------------------------ |
+| State Management | Zustand         | ^4.x    | Minimal boilerplate, hooks-based     |
+| Data Fetching    | TanStack Query  | ^5.x    | Caching, offline, background sync    |
+| Form Handling    | React Hook Form | ^7.x    | Performant, minimal re-renders       |
+| Validation       | Zod             | ^3.x    | Shared schemas, TypeScript inference |
+| Styling          | NativeWind      | ^4.x    | Tailwind CSS for React Native        |
 
 ### Infrastructure & Deployment
 
-| Component | Technology | Rationale |
-|-----------|------------|-----------|
-| CI/CD Platform | GitHub Actions | Free for OSS, transparent workflows |
-| Build Automation | Fastlane | Industry standard for iOS/Android |
-| Phone Builds | GitHub Actions + Fastlane | Expo prebuild + native builds |
-| watchOS Builds | GitHub Actions (macOS) + Fastlane | Native Swift builds |
-| Wear OS Builds | GitHub Actions + Fastlane | Native Kotlin builds |
-| Environment Config | app.config.ts + GitHub Environments | Per-environment switching |
-| Error Tracking | Sentry | Free tier, crash reporting |
-| OTA Updates | Expo Updates | JS-only updates without app store |
+| Component          | Technology                          | Rationale                           |
+| ------------------ | ----------------------------------- | ----------------------------------- |
+| CI/CD Platform     | GitHub Actions                      | Free for OSS, transparent workflows |
+| Build Automation   | Fastlane                            | Industry standard for iOS/Android   |
+| Phone Builds       | GitHub Actions + Fastlane           | Expo prebuild + native builds       |
+| watchOS Builds     | GitHub Actions (macOS) + Fastlane   | Native Swift builds                 |
+| Wear OS Builds     | GitHub Actions + Fastlane           | Native Kotlin builds                |
+| Environment Config | app.config.ts + GitHub Environments | Per-environment switching           |
+| Error Tracking     | Sentry                              | Free tier, crash reporting          |
+| OTA Updates        | Expo Updates                        | JS-only updates without app store   |
 
 ### Environment Strategy (Dev + Production)
 
-| Aspect | Dev | Production |
-|--------|-----|------------|
-| **Purpose** | Testing, PR previews | App Store releases |
-| **Supabase** | `myloyaltycards-dev` | `myloyaltycards-prod` |
-| **iOS Distribution** | TestFlight | App Store |
-| **Android Distribution** | Internal Track | Google Play |
-| **Trigger** | Push to main, PRs | Manual / git tags (v*) |
-| **Approval** | None | Required (GitHub Environment) |
-| **Logging** | Verbose (console + Sentry) | Errors only (Sentry) |
+| Aspect                   | Dev                        | Production                    |
+| ------------------------ | -------------------------- | ----------------------------- |
+| **Purpose**              | Testing, PR previews       | App Store releases            |
+| **Supabase**             | `myloyaltycards-dev`       | `myloyaltycards-prod`         |
+| **iOS Distribution**     | TestFlight                 | App Store                     |
+| **Android Distribution** | Internal Track             | Google Play                   |
+| **Trigger**              | Push to main, PRs          | Manual / git tags (v\*)       |
+| **Approval**             | None                       | Required (GitHub Environment) |
+| **Logging**              | Verbose (console + Sentry) | Errors only (Sentry)          |
 
 **CI/CD Workflow Files:**
+
 ```
 .github/workflows/
 ├── dev-phone.yml           # Build on PR/push → TestFlight/Internal
@@ -376,6 +403,7 @@ Each watch README must include:
 ```
 
 **Fastlane Structure:**
+
 ```
 fastlane/
 ├── Fastfile                # Build lanes (ios:build_dev, ios:release, etc.)
@@ -385,14 +413,15 @@ fastlane/
 
 **GitHub Secrets per Environment:**
 
-| Secret | Dev | Production |
-|--------|-----|------------|
-| `SUPABASE_ANON_KEY` | Dev project | Prod project |
-| `MATCH_PASSWORD` | Shared | Shared |
-| `ASC_API_KEY` | — | App Store Connect |
-| `PLAY_SERVICE_ACCOUNT` | Internal | Production |
+| Secret                 | Dev         | Production        |
+| ---------------------- | ----------- | ----------------- |
+| `SUPABASE_ANON_KEY`    | Dev project | Prod project      |
+| `MATCH_PASSWORD`       | Shared      | Shared            |
+| `ASC_API_KEY`          | —           | App Store Connect |
+| `PLAY_SERVICE_ACCOUNT` | Internal    | Production        |
 
 **Expo Environment Configuration:**
+
 ```typescript
 // app.config.ts
 const ENV = process.env.APP_ENV || 'dev';
@@ -401,17 +430,18 @@ const envConfig = {
   dev: {
     name: 'myLoyaltyCards (Dev)',
     bundleIdentifier: 'com.myloyaltycards.dev',
-    supabaseUrl: process.env.SUPABASE_URL_DEV,
+    supabaseUrl: process.env.SUPABASE_URL_DEV
   },
   production: {
     name: 'myLoyaltyCards',
-    bundleIdentifier: 'com.myloyaltycards.app',
-    supabaseUrl: process.env.SUPABASE_URL_PROD,
-  },
+    bundleIdentifier: 'com.iferoporefi.myloyaltycards',
+    supabaseUrl: process.env.SUPABASE_URL_PROD
+  }
 };
 ```
 
 **Watch App Environment Handling:**
+
 - Build-time configuration via preprocessor flags (`DEBUG` / `RELEASE`)
 - Dev builds connect to dev Supabase, production to prod
 - Same pattern for both Swift and Kotlin
@@ -419,6 +449,7 @@ const envConfig = {
 ### Decision Impact Analysis
 
 **Implementation Sequence:**
+
 1. Expo project setup with NativeWind, Zustand, TanStack Query
 2. Local database schema (expo-sqlite)
 3. Card management UI (React Hook Form + Zod)
@@ -430,6 +461,7 @@ const envConfig = {
 9. Wear OS companion app (Phase 2)
 
 **Cross-Component Dependencies:**
+
 - Zod schemas shared between phone validation and Supabase types
 - Card data model consistent across SQLite, SwiftData, Room, and Supabase
 - Sync timestamps used by all platforms for delta sync
@@ -437,7 +469,7 @@ const envConfig = {
 
 ## Implementation Patterns & Consistency Rules
 
-*Patterns refined through 7 advanced elicitation methods: Code Review Gauntlet, Devil's Advocate, Pre-mortem Analysis, Failure Mode Analysis, Cross-Functional War Room, and Occam's Razor Application.*
+_Patterns refined through 7 advanced elicitation methods: Code Review Gauntlet, Devil's Advocate, Pre-mortem Analysis, Failure Mode Analysis, Cross-Functional War Room, and Occam's Razor Application._
 
 ### Pattern Categories Defined
 
@@ -446,11 +478,13 @@ const envConfig = {
 ### Naming Patterns
 
 **Database Naming (Supabase/PostgreSQL):**
+
 - Tables: `snake_case` plural (e.g., `loyalty_cards`, `users`)
 - Columns: `snake_case` (e.g., `card_name`, `created_at`)
 - Foreign keys: `{table}_id` (e.g., `user_id`)
 
 **TypeScript/JavaScript Naming:**
+
 - Variables/Functions: `camelCase` (e.g., `getUserCards()`)
 - Components: `PascalCase` (e.g., `CardList`)
 - Component Files: `PascalCase.tsx` (e.g., `CardList.tsx`)
@@ -460,11 +494,13 @@ const envConfig = {
 - Zod Schemas: `camelCase` + `Schema` suffix (e.g., `loyaltyCardSchema`)
 
 **Swift/Kotlin Naming:**
+
 - Follow platform conventions (camelCase vars, PascalCase types)
 
 ### TypeScript Configuration (Required)
 
 All agents MUST ensure these compiler options:
+
 ```json
 {
   "compilerOptions": {
@@ -479,21 +515,25 @@ All agents MUST ensure these compiler options:
 ### API & Data Formats
 
 **API Response Format:**
+
 - Use Supabase default: `{ data, error, count }`
 - No custom wrappers
 
 **JSON Field Naming:**
+
 - Database/API: `snake_case`
 - Client/TypeScript: `camelCase`
 - Transform at client boundary
 
 **Date/Time Format:**
+
 - Always UTC timezone
 - ISO 8601 with milliseconds: `2025-12-24T10:30:00.123Z`
 - Compare as strings (lexicographic sort works for ISO 8601)
 - `updatedAt` is set by the device making the change
 
 **UUID Generation Strategy:**
+
 - Client-generated on all platforms (collision risk is negligible: 1 in 2^122)
 - Phone: `crypto.randomUUID()` or `uuid` package
 - watchOS: `UUID().uuidString`
@@ -501,6 +541,7 @@ All agents MUST ensure these compiler options:
 - Supabase: Accepts client UUIDs, does not auto-generate
 
 **Card Data Schema (Source of Truth):**
+
 ```typescript
 const loyaltyCardSchema = z.object({
   id: z.string().uuid(),
@@ -513,23 +554,24 @@ const loyaltyCardSchema = z.object({
   lastUsedAt: z.string().datetime().nullable(),
   usageCount: z.number().int().default(0),
   createdAt: z.string().datetime(),
-  updatedAt: z.string().datetime(),
-})
+  updatedAt: z.string().datetime()
+});
 ```
 
 ### Type Location Guidelines (Hybrid Approach)
 
 **Principle:** Zod for data that needs validation, pure TypeScript for structural types.
 
-| Type Category | Location | Example |
-|--------------|----------|---------|
-| **Data types** (cards, users, sync payloads) | `core/schemas/` | `z.infer<typeof loyaltyCardSchema>` |
-| **Navigation params** | `core/types/navigation.ts` | `RootStackParamList` |
-| **Utility types** | `core/types/utilities.ts` | `DeepPartial<T>`, `Nullable<T>` |
-| **Component props** | Co-located with component | `ButtonProps` in `Button.tsx` |
-| **Feature-specific types** | Inside the feature folder | `AddCardFormData` in `features/add-card/` |
+| Type Category                                | Location                   | Example                                   |
+| -------------------------------------------- | -------------------------- | ----------------------------------------- |
+| **Data types** (cards, users, sync payloads) | `core/schemas/`            | `z.infer<typeof loyaltyCardSchema>`       |
+| **Navigation params**                        | `core/types/navigation.ts` | `RootStackParamList`                      |
+| **Utility types**                            | `core/types/utilities.ts`  | `DeepPartial<T>`, `Nullable<T>`           |
+| **Component props**                          | Co-located with component  | `ButtonProps` in `Button.tsx`             |
+| **Feature-specific types**                   | Inside the feature folder  | `AddCardFormData` in `features/add-card/` |
 
 **Structure:**
+
 ```
 core/
 ├── schemas/              # Zod schemas (runtime validation)
@@ -543,6 +585,7 @@ core/
 ```
 
 **Decision Rule:**
+
 - "Will this be validated at runtime?" → **Zod schema** in `core/schemas/`
 - "Is this just for TypeScript type checking?" → **Pure TS** in `core/types/`
 - "Is this only used by one component?" → **Co-locate** with the component
@@ -551,6 +594,7 @@ core/
 
 **Date/Time Storage:**
 All platforms store dates as ISO 8601 strings, NOT native date types:
+
 - Swift: `let createdAt: String` (not `Date`)
 - Kotlin: `val createdAt: String` (not `Instant`)
 - TypeScript: `createdAt: string`
@@ -559,6 +603,7 @@ Parse to native date only at display time using platform formatters.
 
 **JSON Null Handling:**
 All JSON payloads MUST include ALL fields:
+
 - Present but empty: `"brandId": null` ✅
 - Field omitted: `{}` ❌ FORBIDDEN
 
@@ -567,11 +612,13 @@ This ensures Swift Codable and Kotlin Serialization work without special handlin
 ### Enum Serialization Patterns
 
 **TypeScript (Source):**
+
 ```typescript
-const barcodeFormatSchema = z.enum(['CODE128', 'EAN13', 'EAN8', 'QR', 'CODE39', 'UPCA'])
+const barcodeFormatSchema = z.enum(['CODE128', 'EAN13', 'EAN8', 'QR', 'CODE39', 'UPCA']);
 ```
 
 **Swift:**
+
 ```swift
 enum BarcodeFormat: String, Codable {
   case code128 = "CODE128"
@@ -584,6 +631,7 @@ enum BarcodeFormat: String, Codable {
 ```
 
 **Kotlin:**
+
 ```kotlin
 @Serializable
 enum class BarcodeFormat {
@@ -599,17 +647,18 @@ enum class BarcodeFormat {
 ### Zod Parsing Pattern (Critical)
 
 Always log parse failures to catch cross-platform schema mismatches:
+
 ```typescript
 function parseWithLogging<T>(schema: z.ZodSchema<T>, data: unknown, context: string): T | null {
-  const result = schema.safeParse(data)
+  const result = schema.safeParse(data);
   if (!result.success) {
     logger.error(`Schema validation failed: ${context}`, {
       errors: result.error.issues,
-      data: JSON.stringify(data).slice(0, 500),
-    })
-    return null
+      data: JSON.stringify(data).slice(0, 500)
+    });
+    return null;
   }
-  return result.data
+  return result.data;
 }
 ```
 
@@ -620,6 +669,7 @@ function parseWithLogging<T>(schema: z.ZodSchema<T>, data: unknown, context: str
 Rationale: Maximizes AI agent clarity ("find add-card code" → `features/add-card/`), scales naturally, and keeps related code together while maintaining Expo Router compatibility.
 
 **Phone App (Feature-First with Expo Router):**
+
 ```
 app/                        # Thin routing layer (delegates to features)
 ├── _layout.tsx             # Root layout, header with +/⚙️ buttons
@@ -674,18 +724,21 @@ catalogue/                  # Brand catalogue JSON (bundled)
 
 **Route → Feature Mapping:**
 Routes are thin wrappers that re-export feature screens:
+
 ```typescript
 // app/add.tsx
-export { default } from '@/features/add-card'
+export { default } from '@/features/add-card';
 ```
 
 **Test Location:** Co-located with source files within features:
+
 ```
 features/cards/components/CardItem.tsx
 features/cards/components/CardItem.test.tsx  ← Next to source
 ```
 
 **Barrel Export Pattern:**
+
 ```
 core/stores/index.ts            ✅ Export all stores
 core/db/index.ts                ✅ Export public queries
@@ -698,32 +751,33 @@ shared/components/ui/           ❌ NO barrel (many small files)
 
 ```typescript
 // features/cards/index.tsx
-export { default } from './CardListScreen'       // Main screen (default)
-export { CardDetail } from './CardDetail'        // Sub-screen (named)
+export { default } from './CardListScreen'; // Main screen (default)
+export { CardDetail } from './CardDetail'; // Sub-screen (named)
 
 // DO NOT export internal components, hooks, or utilities
 ```
 
 ```typescript
 // app/index.tsx (route file)
-export { default } from '@/features/cards'
+export { default } from '@/features/cards';
 
 // app/card/[id].tsx (route file)
-import { CardDetail } from '@/features/cards'
-export default CardDetail
+import { CardDetail } from '@/features/cards';
+export default CardDetail;
 ```
 
 **Feature Export Rules:**
 
-| Type | Export from index? | Reason |
-|------|-------------------|--------|
-| Main screen | ✅ `default` | Primary entry point |
-| Sub-screens | ✅ Named | Routes need access |
-| Components | ❌ Never | Internal to feature |
-| Hooks | ❌ Never | Internal to feature |
-| Utilities | ❌ Never | Move to `shared/` if needed elsewhere |
+| Type        | Export from index? | Reason                                |
+| ----------- | ------------------ | ------------------------------------- |
+| Main screen | ✅ `default`       | Primary entry point                   |
+| Sub-screens | ✅ Named           | Routes need access                    |
+| Components  | ❌ Never           | Internal to feature                   |
+| Hooks       | ❌ Never           | Internal to feature                   |
+| Utilities   | ❌ Never           | Move to `shared/` if needed elsewhere |
 
 **Feature Boundaries:**
+
 - Features MUST NOT import from other features directly
 - Features import from: `@/shared/*`, `@/core/*`, `@/catalogue`
 - If code is needed by 2+ features, move it to `shared/` or `core/`
@@ -732,22 +786,23 @@ export default CardDetail
 
 ```typescript
 // ✅ Same feature - use RELATIVE (max 2 levels deep)
-import { CardItem } from './CardItem'
-import { useCards } from '../hooks/useCards'
+import { CardItem } from './CardItem';
+import { useCards } from '../hooks/useCards';
 
 // ✅ Cross-boundary - use ABSOLUTE
-import { Button } from '@/shared/components/ui'
-import { useCardsStore } from '@/core/stores'
-import { LoyaltyCard } from '@/core/schemas'
+import { Button } from '@/shared/components/ui';
+import { useCardsStore } from '@/core/stores';
+import { LoyaltyCard } from '@/core/schemas';
 
 // ❌ TOO DEEP - switch to absolute if more than 2 "../"
-import { something } from '../../../other/thing'  // BAD
+import { something } from '../../../other/thing'; // BAD
 
 // ✅ FIXED
-import { something } from '@/features/cards/other/thing'
+import { something } from '@/features/cards/other/thing';
 ```
 
 **Rules:**
+
 1. Within same feature folder → Relative imports
 2. Cross-boundary (shared, core, other features) → Absolute imports
 3. Depth limit: Max 2 levels (`../`) for relative imports
@@ -756,6 +811,7 @@ import { something } from '@/features/cards/other/thing'
 **Path Aliases (tsconfig.json):**
 
 Use Expo's default single catch-all alias:
+
 ```json
 {
   "compilerOptions": {
@@ -769,15 +825,16 @@ Use Expo's default single catch-all alias:
 
 **Valid Path Patterns:**
 
-| Pattern | Maps To | Use For |
-|---------|---------|---------|
-| `@/app/*` | `./app/*` | Route files (rarely imported) |
-| `@/features/*` | `./features/*` | Feature modules |
-| `@/shared/*` | `./shared/*` | Cross-feature UI & hooks |
-| `@/core/*` | `./core/*` | Business logic, DB, sync, schemas, types |
-| `@/catalogue/*` | `./catalogue/*` | Brand catalogue JSON |
+| Pattern         | Maps To         | Use For                                  |
+| --------------- | --------------- | ---------------------------------------- |
+| `@/app/*`       | `./app/*`       | Route files (rarely imported)            |
+| `@/features/*`  | `./features/*`  | Feature modules                          |
+| `@/shared/*`    | `./shared/*`    | Cross-feature UI & hooks                 |
+| `@/core/*`      | `./core/*`      | Business logic, DB, sync, schemas, types |
+| `@/catalogue/*` | `./catalogue/*` | Brand catalogue JSON                     |
 
 **Why single catch-all:**
+
 - Expo default, zero config
 - ESLint `no-restricted-imports` already enforces layer boundaries
 - Consistent `@/` prefix everywhere
@@ -785,6 +842,7 @@ Use Expo's default single catch-all alias:
 ### Database Patterns
 
 **Transaction Pattern (expo-sqlite):**
+
 ```typescript
 async function saveCard(card: LoyaltyCard) {
   await db.withTransactionAsync(async () => {
@@ -798,46 +856,50 @@ async function saveCard(card: LoyaltyCard) {
 
 **Migration Pattern:**
 Handle both fresh installs and upgrades:
+
 ```typescript
-const DB_VERSION = 2
+const DB_VERSION = 2;
 
 async function initializeDatabase(db: SQLiteDatabase) {
-  const currentVersion = await getDbVersion(db) // Returns 0 if not set
-  
+  const currentVersion = await getDbVersion(db); // Returns 0 if not set
+
   // Fresh install: Create current schema directly
   if (currentVersion === 0) {
-    await createCurrentSchema(db)
-    await setDbVersion(db, DB_VERSION)
-    return
+    await createCurrentSchema(db);
+    await setDbVersion(db, DB_VERSION);
+    return;
   }
-  
+
   // Upgrade path: Run incremental migrations
   if (currentVersion < 2) {
-    await migrateV1toV2(db)
+    await migrateV1toV2(db);
   }
   // Add future migrations here
-  
-  await setDbVersion(db, DB_VERSION)
+
+  await setDbVersion(db, DB_VERSION);
 }
 ```
 
 ### State & Communication Patterns
 
 **Zustand with Immer:**
+
 ```typescript
-import { immer } from 'zustand/middleware/immer'
+import { immer } from 'zustand/middleware/immer';
 
 const useCardsStore = create<CardsState>()(
   immer((set) => ({
     cards: [],
-    addCard: (card) => set((state) => { 
-      state.cards.push(card)
-    }),
+    addCard: (card) =>
+      set((state) => {
+        state.cards.push(card);
+      })
   }))
-)
+);
 ```
 
 **TanStack Query Configuration (Offline-First):**
+
 ```typescript
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -848,60 +910,63 @@ const queryClient = new QueryClient({
       refetchOnWindowFocus: false,
       refetchOnReconnect: false,
       retry: 2,
-      retryDelay: (attempt) => Math.min(1000 * 2 ** attempt, 30000),
+      retryDelay: (attempt) => Math.min(1000 * 2 ** attempt, 30000)
     },
     mutations: {
       retry: 1,
       onError: (error) => {
-        logger.error('Mutation failed', error)
-        showToast('Action failed. Please try again.')
-      },
-    },
-  },
-})
+        logger.error('Mutation failed', error);
+        showToast('Action failed. Please try again.');
+      }
+    }
+  }
+});
 ```
 
 **TanStack Query Keys:**
+
 ```typescript
 const queryKeys = {
   cards: {
     all: ['cards'] as const,
-    detail: (id: string) => ['cards', id] as const,
+    detail: (id: string) => ['cards', id] as const
   },
   catalogue: { all: ['catalogue'] as const },
-  sync: { status: ['sync', 'status'] as const },
-}
+  sync: { status: ['sync', 'status'] as const }
+};
 ```
 
 ### Sync Patterns
 
 **Cloud Sync (Phone ↔ Supabase) - Persistent Throttling:**
+
 ```typescript
-const CLOUD_SYNC_COOLDOWN_MS = 5 * 60 * 1000 // 5 minutes
+const CLOUD_SYNC_COOLDOWN_MS = 5 * 60 * 1000; // 5 minutes
 
 async function syncWithCloud() {
-  const lastSyncStr = await AsyncStorage.getItem('lastCloudSync')
-  const lastSync = lastSyncStr ? parseInt(lastSyncStr) : 0
-  const now = Date.now()
-  
-  if (lastSync && (now - lastSync) < CLOUD_SYNC_COOLDOWN_MS) {
-    logger.log('Cloud sync skipped: cooldown active')
-    return { skipped: true }
+  const lastSyncStr = await AsyncStorage.getItem('lastCloudSync');
+  const lastSync = lastSyncStr ? parseInt(lastSyncStr) : 0;
+  const now = Date.now();
+
+  if (lastSync && now - lastSync < CLOUD_SYNC_COOLDOWN_MS) {
+    logger.log('Cloud sync skipped: cooldown active');
+    return { skipped: true };
   }
-  
-  await supabase.from('loyalty_cards').upsert(cards)
-  await AsyncStorage.setItem('lastCloudSync', now.toString())
-  return { skipped: false }
+
+  await supabase.from('loyalty_cards').upsert(cards);
+  await AsyncStorage.setItem('lastCloudSync', now.toString());
+  return { skipped: false };
 }
 
 // Manual "Force Sync" bypasses throttle
 async function forceSyncWithCloud() {
-  await supabase.from('loyalty_cards').upsert(cards)
-  await AsyncStorage.setItem('lastCloudSync', Date.now().toString())
+  await supabase.from('loyalty_cards').upsert(cards);
+  await AsyncStorage.setItem('lastCloudSync', Date.now().toString());
 }
 ```
 
 **Watch Sync (Phone ↔ Watch) - No Throttling:**
+
 ```typescript
 async function syncWithWatch(cards: LoyaltyCard[]) {
   for (let attempt = 0; attempt < 3; attempt++) {
@@ -909,24 +974,25 @@ async function syncWithWatch(cards: LoyaltyCard[]) {
       await WatchConnectivity.sendMessage({
         version: 1,
         type: 'CARDS_UPDATED',
-        payload: cards,
-      })
-      return
+        payload: cards
+      });
+      return;
     } catch {
-      await delay(1000 * (attempt + 1))
+      await delay(1000 * (attempt + 1));
     }
   }
-  logger.log('Watch sync failed after 3 attempts')
+  logger.log('Watch sync failed after 3 attempts');
 }
 ```
 
 **Sync Message Versioning:**
+
 ```typescript
 type SyncMessage = {
-  version: number
-  type: 'CARDS_UPDATED' | 'CARD_ADDED' | 'CARD_DELETED' | 'REQUEST_FULL_SYNC' | 'SYNC_COMPLETE'
-  payload: unknown
-}
+  version: number;
+  type: 'CARDS_UPDATED' | 'CARD_ADDED' | 'CARD_DELETED' | 'REQUEST_FULL_SYNC' | 'SYNC_COMPLETE';
+  payload: unknown;
+};
 
 // Watch MUST handle unknown versions gracefully:
 // - If version > supported: Log warning, ignore, request full sync
@@ -934,6 +1000,7 @@ type SyncMessage = {
 ```
 
 **Watch App Editing Policy (MVP):**
+
 - Watch is READ-ONLY for MVP
 - Card editing only happens on phone
 - Prevents sync conflicts entirely
@@ -942,48 +1009,53 @@ type SyncMessage = {
 ### Error & Loading Patterns
 
 **Error Shape:**
+
 ```typescript
 interface AppError {
-  code: string      // Machine-readable
-  message: string   // User-friendly
-  details?: unknown // Debug info
+  code: string; // Machine-readable
+  message: string; // User-friendly
+  details?: unknown; // Debug info
 }
 ```
 
 **Loading State Names:**
+
 - `isLoading` - Initial load
 - `isRefreshing` - Background refresh
 - `isSyncing` - Sync in progress
 - `isPending` - Mutation pending
 
 **Simplified Logging:**
+
 ```typescript
 const logger = {
   log: (msg: string, data?: object) => {
-    if (__DEV__) console.log(msg, data)
+    if (__DEV__) console.log(msg, data);
   },
   error: (msg: string, error: unknown) => {
-    console.error(msg, error)
-    if (!__DEV__) Sentry.captureException(error)
-  },
-}
+    console.error(msg, error);
+    if (!__DEV__) Sentry.captureException(error);
+  }
+};
 ```
 
 ### Auth Pattern
 
 Let Supabase SDK handle token refresh:
+
 ```typescript
 supabase.auth.onAuthStateChange((event) => {
   if (event === 'SIGNED_OUT') {
-    clearLocalData()
-    router.replace('/welcome')
+    clearLocalData();
+    router.replace('/welcome');
   }
-})
+});
 ```
 
 ### Barcode Scanner Pattern
 
 Always-visible manual entry option:
+
 ```typescript
 // Scan screen layout:
 // ┌─────────────────────┐
@@ -996,25 +1068,28 @@ Always-visible manual entry option:
 ```
 
 **Barcode Round-Trip Test (CI Required):**
+
 ```typescript
 test('barcode round-trip for all formats', () => {
-  const formats = ['CODE128', 'EAN13', 'EAN8', 'QR', 'CODE39', 'UPCA']
+  const formats = ['CODE128', 'EAN13', 'EAN8', 'QR', 'CODE39', 'UPCA'];
   for (const format of formats) {
-    const testData = getTestDataForFormat(format)
-    const image = BarcodeGenerator.generate(testData, format)
-    const decoded = BarcodeScanner.decode(image)
-    expect(decoded).toBe(testData)
+    const testData = getTestDataForFormat(format);
+    const image = BarcodeGenerator.generate(testData, format);
+    const decoded = BarcodeScanner.decode(image);
+    expect(decoded).toBe(testData);
   }
-})
+});
 ```
 
 ### Environment Configuration
 
 **Phone App:**
+
 - Use `expo-constants` + `app.config.ts` for environment switching
 - Supabase URL/Key bundled in app (not secret - RLS protects data)
 
 **Watch Apps:**
+
 - Build-time configuration only (no runtime env vars)
 - Supabase credentials embedded at compile time
 
@@ -1025,11 +1100,13 @@ test('barcode round-trip for all formats', () => {
 **Source of Truth:** `/catalogue/italy.json` (root level, first-class concept)
 
 **Phone App (React Native):**
+
 - Imports JSON directly: `import catalogue from '@/catalogue/italy.json'`
 - Updates pushed via Expo OTA (no app store review needed)
 - NO runtime network fetch for catalogue
 
 **Watch Apps (Build-Time Code Generation):**
+
 - Build scripts read `/catalogue/italy.json` at compile time
 - Generate native-compatible code (not runtime JSON parsing)
 - watchOS: Generates `Brands.swift` (struct with static data)
@@ -1037,17 +1114,20 @@ test('barcode round-trip for all formats', () => {
 - Generated files are in `.gitignore` (never committed)
 
 **Build Script Locations:**
+
 ```
 watch-ios/Scripts/generate-catalogue.swift   # Reads JSON → Brands.swift
 watch-android/scripts/generate-catalogue.kts # Reads JSON → Brands.kt
 ```
 
 **Consistency Guarantee:**
+
 - Single source = all platforms always in sync
 - No manual duplication, no drift possible
 - CI validates catalogue format before every deploy
 
 **Why Root Level:**
+
 - Visible, easy to find ("where's the brand list?" → `/catalogue/`)
 - Build scripts from any subfolder can reference `../catalogue/`
 - Clear separation from code (it's data, not logic)
@@ -1055,22 +1135,26 @@ watch-android/scripts/generate-catalogue.kts # Reads JSON → Brands.kt
 ### Wearable Quick Launch (MVP)
 
 **watchOS Complication:**
+
 - Type: Simple icon complication (graphic circular)
 - Tap action: Launch app to card list
 - No dynamic data displayed (keeps implementation simple)
 
 **Wear OS Tile:**
+
 - Deferred to Phase 2
 - Focus on standalone app launch first
 
 ### Localization Pattern
 
 **Phone App:**
+
 - Library: `i18next` + `react-i18next`
 - Error messages use translation keys: `AppError.messageKey`
 - Structure for i18n from start, English-only for MVP
 
 **Watch Apps:**
+
 - iOS: `String(localized:)` with Localizable.strings
 - Wear OS: `stringResource()` with strings.xml
 
@@ -1081,15 +1165,16 @@ watch-android/scripts/generate-catalogue.kts # Reads JSON → Brands.kt
 ```typescript
 // CI test: Verify all platforms can parse same test data
 test('cross-platform schema compatibility', () => {
-  const testCard = generateTestCard()
-  const json = JSON.stringify(testCard)
-  
+  const testCard = generateTestCard();
+  const json = JSON.stringify(testCard);
+
   // This test file is also used by Swift/Kotlin tests
-  writeFileSync('test-fixtures/card.json', json)
-})
+  writeFileSync('test-fixtures/card.json', json);
+});
 ```
 
 **Color Palette (Virtual Logos):**
+
 - Blue: `#3B82F6`
 - Red: `#EF4444`
 - Green: `#22C55E`
@@ -1099,6 +1184,7 @@ test('cross-platform schema compatibility', () => {
 ### Enforcement Guidelines
 
 **All AI Agents MUST:**
+
 1. Follow naming conventions exactly as specified
 2. Use Zod schema as source of truth for data structures
 3. Use `parseWithLogging` for all cross-platform data parsing
@@ -1116,6 +1202,7 @@ test('cross-platform schema compatibility', () => {
 15. Include ALL fields in JSON (use null, never omit)
 
 **Pattern Verification:**
+
 - TypeScript compiler catches type mismatches (strict mode required)
 - ESLint rules enforce naming conventions
 - CI validates cross-platform schema compatibility
@@ -1124,11 +1211,12 @@ test('cross-platform schema compatibility', () => {
 
 ## Structural Safeguards
 
-*Added via Failure Mode Analysis to prevent common architectural violations.*
+_Added via Failure Mode Analysis to prevent common architectural violations._
 
 ### ESLint Rules for Feature Boundaries
 
 **Feature Isolation Rule:**
+
 ```javascript
 // .eslintrc.js
 module.exports = {
@@ -1137,47 +1225,67 @@ module.exports = {
       // Prevent features from importing each other
       files: ['features/**/*.{ts,tsx}'],
       rules: {
-        'no-restricted-imports': ['error', {
-          patterns: [
-            {
-              group: ['@/features/*/*', '../../../features/*'],
-              message: 'Features cannot import from other features. Move shared code to @/shared or @/core.'
-            }
-          ]
-        }]
+        'no-restricted-imports': [
+          'error',
+          {
+            patterns: [
+              {
+                group: ['@/features/*/*', '../../../features/*'],
+                message:
+                  'Features cannot import from other features. Move shared code to @/shared or @/core.'
+              }
+            ]
+          }
+        ]
       }
     },
     {
       // Prevent React imports in core/ (except stores)
       files: ['core/**/*.ts', '!core/stores/**/*.ts'],
       rules: {
-        'no-restricted-imports': ['error', {
-          paths: [
-            { name: 'react', message: 'core/ should not import React. Use shared/ for React code.' },
-            { name: 'react-native', message: 'core/ should not import React Native. Use shared/ for UI code.' }
-          ]
-        }]
+        'no-restricted-imports': [
+          'error',
+          {
+            paths: [
+              {
+                name: 'react',
+                message: 'core/ should not import React. Use shared/ for React code.'
+              },
+              {
+                name: 'react-native',
+                message: 'core/ should not import React Native. Use shared/ for UI code.'
+              }
+            ]
+          }
+        ]
       }
     },
     {
       // Route files must only re-export (no hooks/state)
       files: ['app/**/*.tsx', '!app/**/_layout.tsx'],
       rules: {
-        'no-restricted-imports': ['error', {
-          paths: [
-            { name: 'react', importNames: ['useState', 'useEffect', 'useCallback', 'useMemo'], 
-              message: 'Route files should only re-export from features. No hooks allowed.' }
-          ]
-        }]
+        'no-restricted-imports': [
+          'error',
+          {
+            paths: [
+              {
+                name: 'react',
+                importNames: ['useState', 'useEffect', 'useCallback', 'useMemo'],
+                message: 'Route files should only re-export from features. No hooks allowed.'
+              }
+            ]
+          }
+        ]
       }
     }
   ]
-}
+};
 ```
 
 ### Dependency Direction Enforcement
 
 **Allowed Import Directions:**
+
 ```
 app/ → features/ → shared/ → core/
          ↓
@@ -1185,12 +1293,14 @@ app/ → features/ → shared/ → core/
 ```
 
 **Forbidden Directions:**
+
 - `core/` → `features/` ❌
 - `core/` → `shared/` ❌ (except importing types)
 - `shared/` → `features/` ❌
 - `features/X` → `features/Y` ❌
 
 **CI Check - Circular Dependency Detection:**
+
 ```json
 // package.json
 {
@@ -1203,6 +1313,7 @@ app/ → features/ → shared/ → core/
 ### Shared Test Fixtures
 
 **Cross-Platform Schema Validation:**
+
 ```
 /test-fixtures/
 ├── card-valid.json           # Standard card, all platforms must parse
@@ -1212,6 +1323,7 @@ app/ → features/ → shared/ → core/
 ```
 
 **CI Pipeline - Schema Compatibility:**
+
 ```yaml
 # .github/workflows/test-schemas.yml
 name: Cross-Platform Schema Tests
@@ -1252,29 +1364,31 @@ jobs:
 
 ### Layer Definitions (Reference)
 
-*Refined via First Principles Analysis - the split provides useful guardrails with minimal overhead.*
+_Refined via First Principles Analysis - the split provides useful guardrails with minimal overhead._
 
-| Layer | Contains | File Types | Imports From |
-|-------|----------|------------|--------------|
-| `app/` | Route files (re-exports), layouts | `.tsx` | features, shared |
-| `features/` | Screens, feature-specific components/hooks | `.tsx`, `.ts` | shared, core |
-| `shared/` | **Code that renders UI or uses React hooks** | `.tsx`, `.ts` | core |
-| `core/` | **Code that manages data and business rules** | `.ts` only* | Nothing (leaf) |
+| Layer       | Contains                                      | File Types    | Imports From     |
+| ----------- | --------------------------------------------- | ------------- | ---------------- |
+| `app/`      | Route files (re-exports), layouts             | `.tsx`        | features, shared |
+| `features/` | Screens, feature-specific components/hooks    | `.tsx`, `.ts` | shared, core     |
+| `shared/`   | **Code that renders UI or uses React hooks**  | `.tsx`, `.ts` | core             |
+| `core/`     | **Code that manages data and business rules** | `.ts` only\*  | Nothing (leaf)   |
 
 **Key Distinction:**
+
 - `shared/` = Has `.tsx` files OR imports `react`
 - `core/` = Only `.ts` files, manages data not UI
 
-*Exception: Zustand stores live in `core/stores/` because they're state management (business logic), even though Zustand uses React internally. This is the only permitted React import in `core/`.
+\*Exception: Zustand stores live in `core/stores/` because they're state management (business logic), even though Zustand uses React internally. This is the only permitted React import in `core/`.
 
 **Decision Rationale:** Keeping both folders prevents React components from appearing in database/sync code. Even if imperfect (Zustand exception), the split provides useful friction and clear AI agent guidance.
 
 ### Route File Template
 
 All route files MUST follow this pattern:
+
 ```typescript
 // app/add.tsx
-export { default } from '@/features/add-card'
+export { default } from '@/features/add-card';
 
 // That's it. No other code allowed in route files.
 // Layouts (_layout.tsx) are the exception - they define navigation chrome.
@@ -1283,22 +1397,25 @@ export { default } from '@/features/add-card'
 ### Feature Growth Guidelines
 
 **When to split a feature:**
+
 - More than 20 files in the feature folder
-- More than 3 distinct "sub-screens" 
+- More than 3 distinct "sub-screens"
 - Clear sub-domain emerges (e.g., `add-card/scan/` vs `add-card/manual/`)
 
 **How to split:**
+
 1. Create sub-folders within the feature: `features/add-card/scan/`
 2. OR promote to separate feature if truly independent
 
 ## Architecture Validation Results
 
-*Validated on 2025-12-31 through comprehensive analysis including 4 advanced elicitation methods and Code Review Gauntlet with 6 topics resolved.*
+_Validated on 2025-12-31 through comprehensive analysis including 4 advanced elicitation methods and Code Review Gauntlet with 6 topics resolved._
 
 ### Coherence Validation ✅
 
 **Decision Compatibility:**
 All technology choices work together without conflicts:
+
 - Expo SDK 54 + React Native 0.81 + TypeScript 5.6 (latest, compatible)
 - Zustand 4.x + TanStack Query 5.x (complementary state management)
 - React Hook Form 7.x + Zod 3.x (designed to work together)
@@ -1307,12 +1424,14 @@ All technology choices work together without conflicts:
 - Native watch stacks (Swift/SwiftUI, Kotlin/Compose) are platform standards
 
 **Pattern Consistency:**
+
 - Naming conventions consistent across DB (snake_case), TS (camelCase), Swift/Kotlin (platform conventions)
 - Data formats unified: ISO 8601 dates, client-generated UUIDs, explicit null handling
 - Sync protocol versioned with message types defined
 - Error handling patterns consistent across platforms
 
 **Structure Alignment:**
+
 - Feature-first organization supports all architectural decisions
 - Layer boundaries enforced via ESLint (app → features → shared → core)
 - Test co-location supports feature isolation
@@ -1322,6 +1441,7 @@ All technology choices work together without conflicts:
 
 **Functional Requirements Coverage:**
 All 74 functional requirements across 13 categories have architectural support:
+
 - Card Management (FR1-9): expo-sqlite, Zustand, React Hook Form
 - Barcode Display (FR10-13): Native rendering on all platforms
 - Italian Brand Catalogue (FR14-20): Bundled JSON + OTA + build-time generation
@@ -1337,6 +1457,7 @@ All 74 functional requirements across 13 categories have architectural support:
 
 **Non-Functional Requirements Coverage:**
 All NFRs addressed:
+
 - Performance: ≤3s wearable (native apps), <1s phone cold start, 60fps UI
 - Security: AES-256 at rest (Supabase), TLS 1.2+, bcrypt passwords
 - Privacy: GDPR export/deletion via Supabase, no tracking
@@ -1346,6 +1467,7 @@ All NFRs addressed:
 ### Implementation Readiness Validation ✅
 
 **Decision Completeness:**
+
 - All technology versions specified
 - Database schema defined (Zod source of truth)
 - API patterns documented (Supabase REST, sync message types)
@@ -1353,6 +1475,7 @@ All NFRs addressed:
 - CI/CD pipeline defined (GitHub Actions + Fastlane, Dev/Prod environments)
 
 **Structure Completeness:**
+
 - Complete directory structure with all folders defined
 - File naming conventions documented
 - Feature organization specified (cards, add-card, settings, auth)
@@ -1360,6 +1483,7 @@ All NFRs addressed:
 - Test fixtures location defined
 
 **Pattern Completeness:**
+
 - 45+ conflict points addressed through advanced elicitation
 - Database transactions, migrations, and versioning patterns
 - State management patterns (Zustand with Immer, TanStack Query offline defaults)
@@ -1371,6 +1495,7 @@ All NFRs addressed:
 **Critical Gaps:** None identified ✅
 
 **Issues Resolved During Elicitation:**
+
 - Feature boundary enforcement → ESLint rules added
 - Circular dependency detection → madge CI check added
 - shared/ vs core/ confusion → First Principles Analysis clarified
@@ -1382,6 +1507,7 @@ All NFRs addressed:
 - Environment separation → Dev + Production with GitHub Environments
 
 **Nice-to-Have (Future Enhancement):**
+
 - Accessibility patterns for screen readers
 - Performance monitoring hooks
 - Feature flags for gradual rollouts
@@ -1389,30 +1515,35 @@ All NFRs addressed:
 ### Architecture Completeness Checklist
 
 **✅ Requirements Analysis**
+
 - [x] Project context thoroughly analyzed (74 FRs, 30+ NFRs)
 - [x] Scale and complexity assessed (Medium-High)
 - [x] Technical constraints identified (4 platforms)
 - [x] Cross-cutting concerns mapped (6 areas)
 
 **✅ Architectural Decisions**
+
 - [x] Critical decisions documented with versions
 - [x] Technology stack fully specified
 - [x] Integration patterns defined (phone↔cloud, phone↔watch)
 - [x] Performance considerations addressed
 
 **✅ Implementation Patterns**
+
 - [x] Naming conventions established (DB, TS, Swift, Kotlin)
 - [x] Structure patterns defined (feature-first)
 - [x] Communication patterns specified (sync protocol)
 - [x] Process patterns documented (error handling, logging)
 
 **✅ Project Structure**
+
 - [x] Complete directory structure defined
 - [x] Component boundaries established (ESLint enforced)
 - [x] Integration points mapped
 - [x] Requirements to structure mapping complete
 
 **✅ CI/CD & Environments**
+
 - [x] GitHub Actions workflows defined
 - [x] Fastlane build automation specified
 - [x] Dev/Production environments separated
@@ -1425,6 +1556,7 @@ All NFRs addressed:
 **Confidence Level:** HIGH
 
 **Key Strengths:**
+
 1. Comprehensive patterns with 45+ conflict points addressed
 2. Cross-platform consistency via shared schemas and CI validation
 3. Enforced boundaries through ESLint rules
@@ -1435,6 +1567,7 @@ All NFRs addressed:
 8. Clear environment separation (Dev/Production)
 
 **Areas for Future Enhancement:**
+
 - Accessibility patterns (post-MVP)
 - Performance monitoring integration
 - Feature flag system for gradual rollouts
@@ -1444,6 +1577,7 @@ All NFRs addressed:
 **AI Agent Guidelines:**
 
 All AI agents implementing this architecture MUST:
+
 1. Follow naming conventions exactly as specified
 2. Use Zod schema as source of truth for data structures
 3. Use `parseWithLogging` for all cross-platform data parsing
@@ -1463,6 +1597,7 @@ All AI agents implementing this architecture MUST:
 17. Use relative imports within features, absolute across
 
 **First Implementation Priority:**
+
 ```bash
 # 1. Project setup
 - Configure tsconfig.json with strict options
@@ -1535,18 +1670,21 @@ All AI agents implementing this architecture MUST:
 ### Quality Assurance Checklist
 
 **✅ Architecture Coherence**
+
 - [x] All decisions work together without conflicts
 - [x] Technology choices are compatible
 - [x] Patterns support the architectural decisions
 - [x] Structure aligns with all choices
 
 **✅ Requirements Coverage**
+
 - [x] All functional requirements are supported
 - [x] All non-functional requirements are addressed
 - [x] Cross-cutting concerns are handled
 - [x] Integration points are defined
 
 **✅ Implementation Readiness**
+
 - [x] Decisions are specific and actionable
 - [x] Patterns prevent agent conflicts
 - [x] Structure is complete and unambiguous

@@ -53,3 +53,7 @@ expo-env.d.ts
 
 # Lock files
 package-lock.json
+
+# WatchOS
+watch-ios/.derivedData
+watch-ios/build
