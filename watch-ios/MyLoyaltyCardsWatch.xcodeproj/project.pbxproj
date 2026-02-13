@@ -11,6 +11,7 @@
 		0A1B2C3D4E5F678901234573 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A1B2C3D4E5F67890123456F /* ContentView.swift */; };
 		0A1B2C3D4E5F678901234574 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 0A1B2C3D4E5F678901234570 /* Assets.xcassets */; };
 		0A1B2C3D4E5F678901234575 /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 0A1B2C3D4E5F678901234571 /* Preview Assets.xcassets */; };
+		0A1B2C3D4E5F678901234580 /* Brands.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A1B2C3D4E5F678901234581 /* Brands.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -19,6 +20,8 @@
 		0A1B2C3D4E5F67890123456F /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		0A1B2C3D4E5F678901234570 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		0A1B2C3D4E5F678901234571 /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
+		0A1B2C3D4E5F678901234581 /* Brands.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ../Generated/Brands.swift; sourceTree = "<group>"; };
+		0A1B2C3D4E5F678901234583 /* generate-catalogue.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = generate-catalogue.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -36,6 +39,7 @@
 			isa = PBXGroup;
 			children = (
 				0A1B2C3D4E5F678901234569 /* MyLoyaltyCardsWatch */,
+				0A1B2C3D4E5F678901234582 /* Scripts */,
 				0A1B2C3D4E5F67890123456B /* Products */,
 			);
 			sourceTree = "<group>";
@@ -45,10 +49,19 @@
 			children = (
 				0A1B2C3D4E5F67890123456E /* MyLoyaltyCardsWatchApp.swift */,
 				0A1B2C3D4E5F67890123456F /* ContentView.swift */,
+				0A1B2C3D4E5F678901234581 /* Brands.swift */,
 				0A1B2C3D4E5F678901234570 /* Assets.xcassets */,
 				0A1B2C3D4E5F67890123456A /* Preview Content */,
 			);
 			path = MyLoyaltyCardsWatch;
+			sourceTree = "<group>";
+		};
+		0A1B2C3D4E5F678901234582 /* Scripts */ = {
+			isa = PBXGroup;
+			children = (
+				0A1B2C3D4E5F678901234583 /* generate-catalogue.swift */,
+			);
+			path = Scripts;
 			sourceTree = "<group>";
 		};
 		0A1B2C3D4E5F67890123456A /* Preview Content */ = {
@@ -74,6 +87,7 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = 0A1B2C3D4E5F67890123457A /* Build configuration list for PBXNativeTarget "MyLoyaltyCardsWatch" */;
 			buildPhases = (
+				0A1B2C3D4E5F678901234584 /* Generate Watch Catalogue */,
 				0A1B2C3D4E5F678901234576 /* Sources */,
 				0A1B2C3D4E5F678901234577 /* Resources */,
 				0A1B2C3D4E5F678901234578 /* Frameworks */,
@@ -117,6 +131,30 @@
 		};
 /* End PBXProject section */
 
+/* Begin PBXShellScriptBuildPhase section */
+		0A1B2C3D4E5F678901234584 /* Generate Watch Catalogue */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+				"$(SRCROOT)/../catalogue/italy.json",
+				"$(SRCROOT)/Scripts/generate-catalogue.swift",
+			);
+			name = "Generate Watch Catalogue";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+				"$(SRCROOT)/Generated/Brands.swift",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "set -euo pipefail\n/usr/bin/xcrun --sdk macosx swift \"${SRCROOT}/Scripts/generate-catalogue.swift\"\n";
+		};
+/* End PBXShellScriptBuildPhase section */
+
 /* Begin PBXResourcesBuildPhase section */
 		0A1B2C3D4E5F678901234577 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
@@ -136,6 +174,7 @@
 			files = (
 				0A1B2C3D4E5F678901234572 /* MyLoyaltyCardsWatchApp.swift in Sources */,
 				0A1B2C3D4E5F678901234573 /* ContentView.swift in Sources */,
+				0A1B2C3D4E5F678901234580 /* Brands.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
