@@ -7,7 +7,7 @@
 | **Story ID** | 5.2                                                     |
 | **Epic**     | 5 - Apple Watch App                                     |
 | **Sprint**   | 4                                                       |
-| **Status**   | Ready for Review                                        |
+| **Status**   | Done                                                    |
 | **Priority** | High                                                    |
 | **Estimate** | Small (0.5-1 day)                                       |
 | **Owners**   | PM: John · UX: Sally · Dev: Amelia · Tech Writer: Paige |
@@ -116,7 +116,7 @@ Testing notes:
 - docs/sprint-artifacts/stories/5-2-generate-catalogue-for-watchos.md
 - watch-ios/MyLoyaltyCardsWatch.xcodeproj/project.pbxproj
 - watch-ios/Scripts/generate-catalogue.swift
-- watch-ios/__tests__/generate-catalogue.test.ts
+- watch-ios/**tests**/generate-catalogue.test.ts
 
 ## Change Log
 
