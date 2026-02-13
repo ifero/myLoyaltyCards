@@ -57,3 +57,4 @@ package-lock.json
 # WatchOS
 watch-ios/.derivedData
 watch-ios/build
+watch-ios/Generated
