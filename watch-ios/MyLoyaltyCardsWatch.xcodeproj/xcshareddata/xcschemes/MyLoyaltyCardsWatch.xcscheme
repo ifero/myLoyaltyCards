@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Scheme LastUpgradeVersion="1510" version="1.7">
+	<BuildAction parallelizeBuildables="YES" buildImplicitDependencies="YES">
+		<BuildActionEntries>
+			<BuildActionEntry buildForTesting="YES" buildForRunning="YES" buildForProfiling="NO" buildForArchiving="NO" buildForAnalyzing="NO">
+				<BuildableReference BuildableIdentifier="primary" BlueprintIdentifier="0A1B2C3D4E5F67890123456C" BuildableName="MyLoyaltyCardsWatch.app" BlueprintName="MyLoyaltyCardsWatch" ReferencedContainer="container:MyLoyaltyCardsWatch.xcodeproj"/>
+			</BuildActionEntry>
+		</BuildActionEntries>
+	</BuildAction>
+	<TestAction selectedDebuggerIdentifier="Xcode.DebuggerFoundation.Debugger.LLDB" selectedLauncherIdentifier="Xcode.DebuggerFoundation.Launcher.LLDB" shouldUseLaunchSchemeArgsEnv="YES" buildConfiguration="Debug">
+		<Testables>
+			<TestableReference>
+				<BuildableReference BuildableIdentifier="primary" BlueprintIdentifier="F5F5F5F5F5F5F5F5F5F5F5F5" BuildableName="MyLoyaltyCardsWatchTests.xctest" BlueprintName="MyLoyaltyCardsWatchTests" ReferencedContainer="container:MyLoyaltyCardsWatch.xcodeproj"/>
+			</TestableReference>
+			<TestableReference>
+				<BuildableReference BuildableIdentifier="primary" BlueprintIdentifier="E5E5E5E5E5E5E5E5E5E5E5E5" BuildableName="MyLoyaltyCardsWatchUITests.xctest" BlueprintName="MyLoyaltyCardsWatchUITests" ReferencedContainer="container:MyLoyaltyCardsWatch.xcodeproj"/>
+			</TestableReference>
+		</Testables>
+		<MacroExpansion>
+			<BuildableReference BuildableIdentifier="primary" BlueprintIdentifier="0A1B2C3D4E5F67890123456C" BuildableName="MyLoyaltyCardsWatch.app" BlueprintName="MyLoyaltyCardsWatch" ReferencedContainer="container:MyLoyaltyCardsWatch.xcodeproj"/>
+		</MacroExpansion>
+	</TestAction>
+	<LaunchAction selectedDebuggerIdentifier="Xcode.DebuggerFoundation.Debugger.LLDB" selectedLauncherIdentifier="Xcode.DebuggerFoundation.Launcher.LLDB" buildConfiguration="Debug">
+		<BuildableProductRunnable>
+			<BuildableReference BuildableIdentifier="primary" BlueprintIdentifier="0A1B2C3D4E5F67890123456C" BuildableName="MyLoyaltyCardsWatch.app" BlueprintName="MyLoyaltyCardsWatch" ReferencedContainer="container:MyLoyaltyCardsWatch.xcodeproj"/>
+		</BuildableProductRunnable>
+	</LaunchAction>
+	<ProfileAction buildConfiguration="Release">
+		<BuildableReference BuildableIdentifier="primary" BlueprintIdentifier="0A1B2C3D4E5F67890123456C" BuildableName="MyLoyaltyCardsWatch.app" BlueprintName="MyLoyaltyCardsWatch" ReferencedContainer="container:MyLoyaltyCardsWatch.xcodeproj"/>
+	</ProfileAction>
+	<AnalyzeAction buildConfiguration="Debug">
+		<BuildableReference BuildableIdentifier="primary" BlueprintIdentifier="0A1B2C3D4E5F67890123456C" BuildableName="MyLoyaltyCardsWatch.app" BlueprintName="MyLoyaltyCardsWatch" ReferencedContainer="container:MyLoyaltyCardsWatch.xcodeproj"/>
+	</AnalyzeAction>
+	<ArchiveAction buildConfiguration="Release" revealArchiveInOrganizer="YES">
+		<BuildableReference BuildableIdentifier="primary" BlueprintIdentifier="0A1B2C3D4E5F67890123456C" BuildableName="MyLoyaltyCardsWatch.app" BlueprintName="MyLoyaltyCardsWatch" ReferencedContainer="container:MyLoyaltyCardsWatch.xcodeproj"/>
+	</ArchiveAction>
+</Scheme>
