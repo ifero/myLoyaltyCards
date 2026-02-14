@@ -76,7 +76,12 @@ struct BarcodeFlashView: View {
       guard barcodeImage == nil && !isLoading else { return }
       isLoading = true
 
-      if let img = await BarcodeGenerator.generateImage(value: value, formatString: format, targetSize: CGSize(width: 160, height: 80)) {
+      let img = await BarcodeGenerator.generateImage(value: value, formatString: format, targetSize: CGSize(width: 160, height: 80))
+      if Task.isCancelled {
+        isLoading = false
+        return
+      }
+      if let img = img {
         barcodeImage = img
       }
       isLoading = false

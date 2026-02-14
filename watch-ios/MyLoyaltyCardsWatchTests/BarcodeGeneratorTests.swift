@@ -39,6 +39,22 @@ final class BarcodeGeneratorTests: XCTestCase {
     XCTAssertNotNil(img2)
   }
 
+  #if DEBUG
+  func test_generateImage_respectsCancellation() async throws {
+    // make CGImage creation take a small amount of time so cancellation is reliable
+    BarcodeGenerator.debugDelayForTests = 0.25
+    defer { BarcodeGenerator.debugDelayForTests = 0 }
+
+    let size = CGSize(width: 200, height: 80)
+    let task = Task { await BarcodeGenerator.generateImage(value: "test-cancel", formatString: "QR", targetSize: size) }
+    // cancel immediately
+    task.cancel()
+
+    let result = await task.value
+    XCTAssertNil(result, "generateImage should return nil when the calling task is cancelled")
+  }
+  #endif
+
   func test_generateCIImage_supportsUTF8_forQR() throws {
     let ci = BarcodeGenerator.generateCIImage(value: "テスト", format: .QR)
     XCTAssertNotNil(ci)

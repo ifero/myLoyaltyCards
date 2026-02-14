@@ -59,6 +59,7 @@ struct BarcodeGenerator {
   }
 
   /// Produce a SwiftUI Image sized at `targetSize` from CIImage (scaled with nearest sampling for crisp bars).
+  @MainActor
   static func image(from ciImage: CIImage, targetSize: CGSize) -> Image? {
     // Determine scale to fit targetSize preserving aspect
     let extent = ciImage.extent.integral
@@ -108,6 +109,11 @@ struct BarcodeGenerator {
     // Create CGImage off the main thread
     let cgImage: CGImage? = await withCheckedContinuation { cont in
       DispatchQueue.global(qos: .userInitiated).async {
+        #if DEBUG
+        if debugDelayForTests > 0 {
+          Thread.sleep(forTimeInterval: debugDelayForTests)
+        }
+        #endif
         let cg = ciContext.createCGImage(transformed, from: transformed.extent)
         cont.resume(returning: cg)
       }
@@ -117,17 +123,20 @@ struct BarcodeGenerator {
     // Respect cancellation before touching UI
     if Task.isCancelled { return nil }
 
-    // Construct UIImage on the MainActor (UIKit is main-thread-only) and cache it
-    let uiImage = await MainActor.run { UIImage(cgImage: safeCG) }
+    // Construct UIImage on the MainActor (UIKit is main-thread-only) and capture scale for cost
+    let (uiImage, screenScale) = await MainActor.run { (UIImage(cgImage: safeCG), UIScreen.main.scale) }
 
     // approximate memory cost (bytes) and cache
-    let cost = Int(targetSize.width * targetSize.height * UIScreen.main.scale * 4)
+    let cost = Int(targetSize.width * targetSize.height * screenScale * 4)
     uiImageCache.setObject(uiImage, forKey: key, cost: cost)
 
     return Image(uiImage: uiImage)
   }
 
   #if DEBUG
+  /// Optional delay (seconds) to make cancellation tests deterministic.
+  static var debugDelayForTests: TimeInterval = 0
+
   /// Test helper: check whether a generated image is present in the cache.
   static func isImageCached(value: String, formatString: String?, targetSize: CGSize) -> Bool {
     let key = "\(value)|\((formatString ?? "").uppercased())|\(Int(targetSize.width))x\(Int(targetSize.height))" as NSString
