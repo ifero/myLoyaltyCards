@@ -12,9 +12,6 @@
 			<TestableReference>
 				<BuildableReference BuildableIdentifier="primary" BlueprintIdentifier="F5F5F5F5F5F5F5F5F5F5F5F5" BuildableName="MyLoyaltyCardsWatchTests.xctest" BlueprintName="MyLoyaltyCardsWatchTests" ReferencedContainer="container:MyLoyaltyCardsWatch.xcodeproj"/>
 			</TestableReference>
-			<TestableReference>
-				<BuildableReference BuildableIdentifier="primary" BlueprintIdentifier="E5E5E5E5E5E5E5E5E5E5E5E5" BuildableName="MyLoyaltyCardsWatchUITests.xctest" BlueprintName="MyLoyaltyCardsWatchUITests" ReferencedContainer="container:MyLoyaltyCardsWatch.xcodeproj"/>
-			</TestableReference>
 		</Testables>
 		<MacroExpansion>
 			<BuildableReference BuildableIdentifier="primary" BlueprintIdentifier="0A1B2C3D4E5F67890123456C" BuildableName="MyLoyaltyCardsWatch.app" BlueprintName="MyLoyaltyCardsWatch" ReferencedContainer="container:MyLoyaltyCardsWatch.xcodeproj"/>
