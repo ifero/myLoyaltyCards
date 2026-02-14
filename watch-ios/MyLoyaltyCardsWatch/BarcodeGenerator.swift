@@ -14,7 +14,13 @@ enum WatchBarcodeFormat: String {
 /// Helper to generate barcode CIImage/UIImage on watchOS.
 struct BarcodeGenerator {
   private static let ciContext = CIContext()
-  private static let uiImageCache = NSCache<NSString, UIImage>()
+  private static let uiImageCache: NSCache<NSString, UIImage> = {
+    let c = NSCache<NSString, UIImage>()
+    c.countLimit = 64                       // keep a reasonable number of cached barcode images
+    c.totalCostLimit = 4 * 1024 * 1024      // ~4 MB budget
+    c.name = "BarcodeGenerator.uiImageCache"
+    return c
+  }()
 
   /// Generate a CIImage for the given value + format. Returns nil on failure.
   static func generateCIImage(value: String, format: WatchBarcodeFormat) -> CIImage? {
@@ -77,18 +83,21 @@ struct BarcodeGenerator {
     return Image(uiImage: uiImage)
   }
 
-  /// Convenience: generate SwiftUI Image from value + format + targetSize (with caching)
-  static func generateImage(value: String, formatString: String?, targetSize: CGSize) -> Image? {
-    let key = "\(value)|\(formatString ?? "")|\(Int(targetSize.width))x\(Int(targetSize.height))" as NSString
+  /// Convenience: asynchronously generate SwiftUI Image from value + format + targetSize (with caching)
+  static func generateImage(value: String, formatString: String?, targetSize: CGSize) async -> Image? {
+    // Normalize format string for key (avoid duplicate cache entries)
+    let fmtKey = (formatString ?? "").uppercased()
+    let key = "\(value)|\(fmtKey)|\(Int(targetSize.width))x\(Int(targetSize.height))" as NSString
+
     if let cached = uiImageCache.object(forKey: key) {
       return Image(uiImage: cached)
     }
 
-    // Accept case-insensitive format strings
-    guard let fmtString = formatString?.uppercased(), let fmt = WatchBarcodeFormat(rawValue: fmtString) else { return nil }
+    // Validate format and CI generation
+    guard let fmt = WatchBarcodeFormat(rawValue: fmtKey) else { return nil }
     guard let ci = generateCIImage(value: value, format: fmt) else { return nil }
 
-    // Scale CIImage to requested target size and create UIImage
+    // Scale CIImage to requested target size
     let extent = ci.extent.integral
     guard extent.width > 0 && extent.height > 0 else { return nil }
     let scaleX = targetSize.width / extent.width
@@ -96,10 +105,33 @@ struct BarcodeGenerator {
     let scale = min(scaleX, scaleY)
     let transformed = ci.transformed(by: CGAffineTransform(scaleX: scale, y: scale))
 
-    guard let cgImage = ciContext.createCGImage(transformed, from: transformed.extent) else { return nil }
-    let uiImage = UIImage(cgImage: cgImage)
+    // Create CGImage off the main thread
+    let cgImage: CGImage? = await withCheckedContinuation { cont in
+      DispatchQueue.global(qos: .userInitiated).async {
+        let cg = ciContext.createCGImage(transformed, from: transformed.extent)
+        cont.resume(returning: cg)
+      }
+    }
+    guard let safeCG = cgImage else { return nil }
 
-    uiImageCache.setObject(uiImage, forKey: key)
+    // Respect cancellation before touching UI
+    if Task.isCancelled { return nil }
+
+    // Construct UIImage on the MainActor (UIKit is main-thread-only) and cache it
+    let uiImage = await MainActor.run { UIImage(cgImage: safeCG) }
+
+    // approximate memory cost (bytes) and cache
+    let cost = Int(targetSize.width * targetSize.height * UIScreen.main.scale * 4)
+    uiImageCache.setObject(uiImage, forKey: key, cost: cost)
+
     return Image(uiImage: uiImage)
   }
+
+  #if DEBUG
+  /// Test helper: check whether a generated image is present in the cache.
+  static func isImageCached(value: String, formatString: String?, targetSize: CGSize) -> Bool {
+    let key = "\(value)|\((formatString ?? "").uppercased())|\(Int(targetSize.width))x\(Int(targetSize.height))" as NSString
+    return uiImageCache.object(forKey: key) != nil
+  }
+  #endif
 }

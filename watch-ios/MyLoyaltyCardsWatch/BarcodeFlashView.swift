@@ -8,6 +8,7 @@ struct BarcodeFlashView: View {
   @Environment(\.dismiss) private var dismiss
   @State private var barcodeImage: Image? = nil
   @State private var isLoading: Bool = false
+  @FocusState private var isFocused: Bool
   @State private var crownRotation: Double = 0.0
   @State private var crownTriggered: Bool = false
 
@@ -38,6 +39,7 @@ struct BarcodeFlashView: View {
             .foregroundColor(.black)
             .frame(maxHeight: 80)
             .accessibilityIdentifier("barcode-image")
+            .accessibilityLabel("Barcode for \(card.name)")
             .onTapGesture { dismiss() }
         }
 
@@ -52,11 +54,12 @@ struct BarcodeFlashView: View {
       }
       .padding(.horizontal, 6)
       .focusable(true)
+      .focused($isFocused)
       .digitalCrownRotation($crownRotation, from: -1.0, through: 1.0, by: 0.1, sensitivity: .low, isContinuous: true, isHapticFeedbackEnabled: true)
       .onChange(of: crownRotation) { newValue in
         // Dismiss on any crown movement (single-shot)
         guard !crownTriggered else { return }
-        if abs(newValue) > 0.0001 {
+        if abs(newValue) > 0.01 {
           crownTriggered = true
           dismiss()
         }
@@ -64,23 +67,23 @@ struct BarcodeFlashView: View {
     }
     .navigationTitle("")
     .accessibilityIdentifier("barcode-view")
-    .onAppear {
-      // Immediate haptic
+    .task(id: card.id) {
+      // focus the view for crown events and play haptic
+      isFocused = true
       WKInterfaceDevice.current().play(.success)
 
-      // Async generate barcode image off the main thread to avoid UI jank
       guard let value = card.barcodeValue, let format = card.barcodeFormat else { return }
       guard barcodeImage == nil && !isLoading else { return }
       isLoading = true
 
-      Task.detached {
-        let img = BarcodeGenerator.generateImage(
-          value: value, formatString: format, targetSize: CGSize(width: 160, height: 80))
-        await MainActor.run {
-          self.barcodeImage = img
-          self.isLoading = false
-        }
+      if let img = await BarcodeGenerator.generateImage(value: value, formatString: format, targetSize: CGSize(width: 160, height: 80)) {
+        barcodeImage = img
       }
+      isLoading = false
+    }
+    .onDisappear {
+      // reset focus so crown events don't leak to other screens
+      isFocused = false
     }
   }
 }
