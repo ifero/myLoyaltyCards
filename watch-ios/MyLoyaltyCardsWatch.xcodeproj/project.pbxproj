@@ -58,7 +58,7 @@
 				0A1B2C3D4E5F67890123456F /* ContentView.swift */,
 				222222222222222222222222 /* CardListView.swift */,
 				444444444444444444444444 /* BarcodeFlashView.swift */, 
-				0A1B2C3D4E5F678901234581 /* Brands.swift ",
+			0A1B2C3D4E5F678901234581 /* Brands.swift */, 
 				0A1B2C3D4E5F678901234570 /* Assets.xcassets */,
 				0A1B2C3D4E5F67890123456A /* Preview Content */,
 			);
