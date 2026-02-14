@@ -1,0 +1,44 @@
+docs/sprint-artifacts/stories/5-4-display-barcode-on-watch.md
+  15afaf4e9f733261 75,81-83
+docs/sprint-artifacts/stories/5-8-incremental-catalogue-generation.md
+  23e1266f3afc1bed 1-117
+watch-ios/MyLoyaltyCardsWatch/BarcodeFlashView.swift
+  15afaf4e9f733261 8-11,16,21-22,25,29-30,32,39,56,58-64,67-68,70
+watch-ios/MyLoyaltyCardsWatchTests/BarcodeGeneratorTests.swift
+  15afaf4e9f733261 20-29,31
+watch-ios/MyLoyaltyCardsWatch/BarcodeGenerator.swift
+  15afaf4e9f733261 17,21-22,80,82-88,90-103
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.1.3",
+  "base_commit_sha": "733d7150c00f0e0a84b925ade50efaa352b22b3f",
+  "prompts": {
+    "15afaf4e9f733261": {
+      "agent_id": {
+        "tool": "github-copilot",
+        "id": "d7dfe001-a297-44e4-807c-03f3c0e586ea",
+        "model": "copilot/oswe-vscode-prime"
+      },
+      "human_author": "Andrea Pacino",
+      "messages": [],
+      "total_additions": 65,
+      "total_deletions": 16,
+      "accepted_lines": 63,
+      "overriden_lines": 2
+    },
+    "23e1266f3afc1bed": {
+      "agent_id": {
+        "tool": "github-copilot",
+        "id": "a394d1c9-f7c5-44a1-a99e-28177f74b738",
+        "model": "copilot/oswe-vscode-prime"
+      },
+      "human_author": "Andrea Pacino",
+      "messages": [],
+      "total_additions": 0,
+      "total_deletions": 0,
+      "accepted_lines": 117,
+      "overriden_lines": 0
+    }
+  }
+}
