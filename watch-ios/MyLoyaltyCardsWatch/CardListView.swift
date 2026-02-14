@@ -17,12 +17,21 @@ final class CardStore: ObservableObject {
 
   // Minimal loader: reads from UserDefaults (sync target) or keeps empty
   private func loadPersistedCards() {
+    // Test hook: allow UI tests to inject cards via environment variable
+    if let env = ProcessInfo.processInfo.environment["UITEST_CARDS"],
+       let envData = env.data(using: .utf8),
+       let decodedFromEnv = try? JSONDecoder().decode([WatchCard].self, from: envData) {
+      self.cards = decodedFromEnv
+      return
+    }
+
     if let data = UserDefaults.standard.data(forKey: "watch.cards") {
       if let decoded = try? JSONDecoder().decode([WatchCard].self, from: data) {
         self.cards = decoded
         return
       }
     }
+
     // default: empty (empty-state should be visible)
     self.cards = []
   }
