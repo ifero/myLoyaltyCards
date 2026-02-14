@@ -127,12 +127,21 @@ struct CardListView: View {
           .listStyle(.plain)
         }
       }
-      .navigationTitle("")
-      .navigationBarHidden(true)
-      .background(Color.black)
-      .scrollContentBackground(.hidden)
     }
+    #if DEBUG
+    .toolbar {
+      ToolbarItem(placement: .navigationBarTrailing) {
+        Button(action: importSampleCards) {
+          Text("Import sample cards")
+        }
+        .accessibilityIdentifier("import-sample-cards")
+      }
+    }
+    #endif
+    .navigationTitle("")
+    .navigationBarHidden(true)
     .background(Color.black)
+    .scrollContentBackground(.hidden)
     .onAppear {
       // placeholder: real sync will populate UserDefaults via WatchConnectivity
     }
@@ -151,6 +160,24 @@ struct CardListView: View {
     }
     .padding()
   }
+
+  #if DEBUG
+  private func importSampleCards() {
+    let sample: [WatchCard] = [
+      WatchCard(id: "1", name: "Esselunga", brandId: "brand-special", colorHex: "#1e90ff"),
+      WatchCard(id: "2", name: "Local Bakery", brandId: nil, colorHex: "#ff6b6b"),
+      WatchCard(id: "3", name: "Healthy Market", brandId: nil, colorHex: "green")
+    ]
+
+    if let data = try? JSONEncoder().encode(sample) {
+      UserDefaults.standard.set(data, forKey: "watch.cards")
+    }
+
+    // Immediately refresh visible store
+    store.cards = sample
+    WKInterfaceDevice.current().play(.success)
+  }
+  #endif
 
   private func openCard(_ card: WatchCard) {
     // Post-MVP: navigate to barcode view. For now no-op (watch is read-only).

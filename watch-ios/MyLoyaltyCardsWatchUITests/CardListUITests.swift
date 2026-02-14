@@ -43,4 +43,20 @@ final class CardListUITests: XCTestCase {
     let third = app.staticTexts["Card C"]
     XCTAssertTrue(third.waitForExistence(timeout: 2))
   }
+
+  func test_importSampleCards_buttonAddsCards() throws {
+    // Start with empty state so the debug import is visible
+    app.launchEnvironment["UITEST_CARDS"] = "[]"
+    app.launch()
+
+    let importButton = app.buttons["import-sample-cards"]
+    XCTAssertTrue(importButton.waitForExistence(timeout: 2), "Import button should be visible in DEBUG")
+
+    importButton.tap()
+
+    // Imported sample should appear
+    let first = app.staticTexts["Esselunga"]
+    XCTAssertTrue(first.waitForExistence(timeout: 2))
+  }
 }
+
