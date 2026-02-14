@@ -1,0 +1,47 @@
+docs/sprint-artifacts/sprint-status.yaml
+  23e1266f3afc1bed 112
+watch-ios/MyLoyaltyCardsWatch/BarcodeFlashView.swift
+  15afaf4e9f733261 1-48
+watch-ios/MyLoyaltyCardsWatchUITests/CardListUITests.swift
+  23e1266f3afc1bed 66-84
+docs/sprint-artifacts/stories/5-4-display-barcode-on-watch.md
+  15afaf4e9f733261 10,72
+watch-ios/MyLoyaltyCardsWatch/CardListView.swift
+  23e1266f3afc1bed 133
+watch-ios/MyLoyaltyCardsWatch.xcodeproj/project.pbxproj
+  23e1266f3afc1bed 16
+  15afaf4e9f733261 23,60-61,243
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.1.3",
+  "base_commit_sha": "0ba74f1c8b6826d2c4fcbac913b422e6a8a52924",
+  "prompts": {
+    "15afaf4e9f733261": {
+      "agent_id": {
+        "tool": "github-copilot",
+        "id": "d7dfe001-a297-44e4-807c-03f3c0e586ea",
+        "model": "copilot/oswe-vscode-prime"
+      },
+      "human_author": "Andrea Pacino",
+      "messages": [],
+      "total_additions": 52,
+      "total_deletions": 4,
+      "accepted_lines": 54,
+      "overriden_lines": 0
+    },
+    "23e1266f3afc1bed": {
+      "agent_id": {
+        "tool": "github-copilot",
+        "id": "a394d1c9-f7c5-44a1-a99e-28177f74b738",
+        "model": "copilot/oswe-vscode-prime"
+      },
+      "human_author": "Andrea Pacino",
+      "messages": [],
+      "total_additions": 23,
+      "total_deletions": 3,
+      "accepted_lines": 140,
+      "overriden_lines": 0
+    }
+  }
+}
