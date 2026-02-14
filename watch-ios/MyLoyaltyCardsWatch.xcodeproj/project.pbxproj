@@ -348,6 +348,7 @@
 			buildSettings = {
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_CFBundleDisplayName = MyLoyaltyCardsTests;
 				PRODUCT_BUNDLE_IDENTIFIER = com.iferoporefi.myloyaltycards.watch.tests;
 				SDKROOT = watchos;
@@ -361,6 +362,7 @@
 			buildSettings = {
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_CFBundleDisplayName = MyLoyaltyCardsTests;
 				PRODUCT_BUNDLE_IDENTIFIER = com.iferoporefi.myloyaltycards.watch.tests;
 				SDKROOT = watchos;
@@ -374,6 +376,7 @@
 			buildSettings = {
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_CFBundleDisplayName = MyLoyaltyCardsUITests;
 				PRODUCT_BUNDLE_IDENTIFIER = com.iferoporefi.myloyaltycards.watch.uitests;
 				SDKROOT = watchos;
@@ -387,6 +390,7 @@
 			buildSettings = {
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_CFBundleDisplayName = MyLoyaltyCardsUITests;
 				PRODUCT_BUNDLE_IDENTIFIER = com.iferoporefi.myloyaltycards.watch.uitests;
 				SDKROOT = watchos;

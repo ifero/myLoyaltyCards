@@ -37,6 +37,34 @@ final class CardStore: ObservableObject {
   }
 }
 
+// MARK: - Helpers (file-level, testable)
+
+func initials(from name: String) -> String {
+  let trimmed = name.trimmingCharacters(in: .whitespacesAndNewlines)
+  guard !trimmed.isEmpty else { return "" }
+  let parts = trimmed.split(separator: " ")
+  if parts.count >= 2 {
+    let first = parts[0].first.map(String.init) ?? ""
+    let second = parts[1].first.map(String.init) ?? ""
+    return (first + second).uppercased()
+  }
+  return String(trimmed.prefix(2)).uppercased()
+}
+
+func mapColor(hex: String?) -> Color? {
+  guard let hex = hex?.trimmingCharacters(in: .whitespacesAndNewlines), !hex.isEmpty else { return nil }
+  switch hex.lowercased() {
+  case "#1e90ff", "blue": return Color.blue
+  case "#ff6b6b", "red": return Color.red
+  case "#2ecc71", "green": return Color.green
+  case "#ffa500", "orange": return Color.orange
+  case "#9ca3af", "gray":
+    return Color(red: 156/255, green: 163/255, blue: 175/255)
+  default:
+    return Color.gray
+  }
+}
+
 struct CardRowView: View {
   let card: WatchCard
 
@@ -79,37 +107,17 @@ struct CardRowView: View {
     }
   }
 
-  private func initials(from name: String) -> String {
-    let parts = name.split(separator: " ")
-    if parts.count >= 2 {
-      return String(parts[0].first!).uppercased() + String(parts[1].first!).uppercased()
-    }
-    return String(name.prefix(2)).uppercased()
-  }
-
   private func brandInitials(name: String) -> String {
     return String(name.trimmingCharacters(in: .whitespacesAndNewlines).prefix(2)).uppercased()
-  }
-
-  private func mapColor(hex: String?) -> Color? {
-    guard let hex = hex?.trimmingCharacters(in: .whitespacesAndNewlines), !hex.isEmpty else { return nil }
-    // Lightweight palette mapping for Carbon watch cards (avoid expensive parsing)
-    switch hex.lowercased() {
-    case "#1e90ff", "blue": return Color.blue
-    case "#ff6b6b", "red": return Color.red
-    case "#2ecc71", "green": return Color.green
-    case "#ffa500", "orange": return Color.orange
-    case "#9ca3af", "gray":
-      // approximate hex for systemGray3 on watchOS
-      return Color(red: 156/255, green: 163/255, blue: 175/255)
-    default:
-      return Color.gray
-    }
   }
 }
 
 struct CardListView: View {
-  @StateObject private var store = CardStore()
+  @StateObject private var store: CardStore
+
+  init(store: CardStore = CardStore()) {
+    _store = StateObject(wrappedValue: store)
+  }
 
   var body: some View {
     NavigationStack {
@@ -123,6 +131,7 @@ struct CardListView: View {
                 .listRowBackground(Color.clear)
             }
             .buttonStyle(.plain)
+            .accessibilityIdentifier("card-row-\(card.id)")
           }
           .listStyle(.plain)
         }
@@ -210,12 +219,9 @@ struct CardListView_Previews: PreviewProvider {
   struct CardListViewMock: View {
     let cards: [WatchCard]
     var body: some View {
-      CardListView()
-        .environmentObject({
-          let s = CardStore()
-          s.cards = cards
-          return s
-        }())
+      let s = CardStore()
+      s.cards = cards
+      return CardListView(store: s)
     }
   }
 }

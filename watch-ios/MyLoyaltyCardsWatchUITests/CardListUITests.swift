@@ -27,9 +27,12 @@ final class CardListUITests: XCTestCase {
     app.launchEnvironment["UITEST_CARDS"] = json
     app.launch()
 
-    // Verify first card visible
+    // Verify first card visible (by text and accessibility identifier)
     let first = app.staticTexts["Card A"]
     XCTAssertTrue(first.waitForExistence(timeout: 2))
+
+    let firstRow = app.buttons["card-row-1"]
+    XCTAssertTrue(firstRow.waitForExistence(timeout: 2), "Row identifier should be present")
 
     // Attempt to scroll: simulate a crown rotation or swipe
     if #available(watchOS 10.0, *) {
