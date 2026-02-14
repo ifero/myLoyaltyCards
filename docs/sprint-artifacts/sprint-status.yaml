@@ -109,7 +109,7 @@ development_status:
   5-1-create-watchos-project-structure: done
   5-2-generate-catalogue-for-watchos: done
   5-3-implement-card-list-carbon-ui: done
-  5-4-display-barcode-on-watch: in-progress
+  5-4-display-barcode-on-watch: done
   5-5-store-cards-locally-on-watch: ready-for-dev
   5-6-sync-cards-from-phone: ready-for-dev
   5-7-create-watch-complication: backlog
