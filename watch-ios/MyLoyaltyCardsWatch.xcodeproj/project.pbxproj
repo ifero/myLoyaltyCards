@@ -13,13 +13,14 @@
 		0A1B2C3D4E5F678901234575 /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 0A1B2C3D4E5F678901234571 /* Preview Assets.xcassets */; };
 		0A1B2C3D4E5F678901234580 /* Brands.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A1B2C3D4E5F678901234581 /* Brands.swift */; };
 			111111111111111111111111 /* CardListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 222222222222222222222222 /* CardListView.swift */; };
+			333333333333333333333333 /* BarcodeFlashView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 444444444444444444444444 /* BarcodeFlashView.swift */; };
 		E2E2E2E2E2E2E2E2E2E2E2E2 /* CardListUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1E1E1E1E1E1E1E1E1E1E1E1 /* CardListUITests.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
 		0A1B2C3D4E5F67890123456D /* MyLoyaltyCardsWatch.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; path = MyLoyaltyCardsWatch.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		0A1B2C3D4E5F67890123456E /* MyLoyaltyCardsWatchApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MyLoyaltyCardsWatchApp.swift; sourceTree = "<group>"; };
-		0A1B2C3D4E5F67890123456F /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };			222222222222222222222222 /* CardListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CardListView.swift; sourceTree = "<group>"; };		0A1B2C3D4E5F678901234570 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+0A1B2C3D4E5F67890123456F /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };\t\t222222222222222222222222 /* CardListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CardListView.swift; sourceTree = "<group>"; };\t\t444444444444444444444444 /* BarcodeFlashView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BarcodeFlashView.swift; sourceTree = "<group>"; };\t\t0A1B2C3D4E5F678901234570 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		0A1B2C3D4E5F678901234571 /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
 		0A1B2C3D4E5F678901234581 /* Brands.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ../Generated/Brands.swift; sourceTree = "<group>"; };
 		0A1B2C3D4E5F678901234583 /* generate-catalogue.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = generate-catalogue.swift; sourceTree = "<group>"; };
@@ -56,7 +57,8 @@
 				0A1B2C3D4E5F67890123456E /* MyLoyaltyCardsWatchApp.swift */,
 				0A1B2C3D4E5F67890123456F /* ContentView.swift */,
 				222222222222222222222222 /* CardListView.swift */,
-				0A1B2C3D4E5F678901234581 /* Brands.swift */,
+				444444444444444444444444 /* BarcodeFlashView.swift */, 
+			0A1B2C3D4E5F678901234581 /* Brands.swift */, 
 				0A1B2C3D4E5F678901234570 /* Assets.xcassets */,
 				0A1B2C3D4E5F67890123456A /* Preview Content */,
 			);
@@ -238,6 +240,7 @@
 				0A1B2C3D4E5F678901234572 /* MyLoyaltyCardsWatchApp.swift in Sources */,
 				0A1B2C3D4E5F678901234573 /* ContentView.swift in Sources */,
 				111111111111111111111111 /* CardListView.swift in Sources */,
+				333333333333333333333333 /* BarcodeFlashView.swift in Sources */,
 				0A1B2C3D4E5F678901234580 /* Brands.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

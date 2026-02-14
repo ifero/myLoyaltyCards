@@ -19,7 +19,7 @@ final class CardListUITests: XCTestCase {
     let cards = [
       ["id": "1", "name": "Card A", "brandId": NSNull(), "colorHex": "#1e90ff"],
       ["id": "2", "name": "Card B", "brandId": NSNull(), "colorHex": "#ff6b6b"],
-      ["id": "3", "name": "Card C", "brandId": NSNull(), "colorHex": "green"]
+      ["id": "3", "name": "Card C", "brandId": NSNull(), "colorHex": "green"],
     ]
     let jsonData = try JSONSerialization.data(withJSONObject: cards, options: [])
     let json = String(data: jsonData, encoding: .utf8)!
@@ -53,7 +53,8 @@ final class CardListUITests: XCTestCase {
     app.launch()
 
     let importButton = app.buttons["import-sample-cards"]
-    XCTAssertTrue(importButton.waitForExistence(timeout: 2), "Import button should be visible in DEBUG")
+    XCTAssertTrue(
+      importButton.waitForExistence(timeout: 2), "Import button should be visible in DEBUG")
 
     importButton.tap()
 
@@ -61,5 +62,86 @@ final class CardListUITests: XCTestCase {
     let first = app.staticTexts["Esselunga"]
     XCTAssertTrue(first.waitForExistence(timeout: 2))
   }
-}
 
+  func test_tapCard_displaysBarcode() throws {
+    let cards = [
+      [
+        "id": "1", "name": "Esselunga", "brandId": NSNull(), "colorHex": "#1e90ff",
+        "barcodeValue": "5901234123457", "barcodeFormat": "EAN13",
+      ]
+    ]
+    let jsonData = try JSONSerialization.data(withJSONObject: cards, options: [])
+    let json = String(data: jsonData, encoding: .utf8)!
+
+    app.launchEnvironment["UITEST_CARDS"] = json
+    app.launch()
+
+    let firstRow = app.buttons["card-row-1"]
+    XCTAssertTrue(firstRow.waitForExistence(timeout: 2))
+    firstRow.tap()
+
+    let barcodeView = app.otherElements["barcode-view"]
+    // Enforce latency target: barcode must appear within 1s
+    XCTAssertTrue(barcodeView.waitForExistence(timeout: 1))
+    let cardName = app.staticTexts["barcode-card-name"]
+    XCTAssertTrue(cardName.waitForExistence(timeout: 1))
+
+    // Barcode image should be present (generated from card data)
+    let barcodeImage = app.images["barcode-image"]
+    XCTAssertTrue(barcodeImage.waitForExistence(timeout: 1))
+  }
+
+  func test_tapBarcode_dismissesToList() throws {
+    let cards = [
+      ["id": "1", "name": "Esselunga", "brandId": NSNull(), "colorHex": "#1e90ff", "barcodeValue": "5901234123457", "barcodeFormat": "EAN13"]
+    ]
+    let jsonData = try JSONSerialization.data(withJSONObject: cards, options: [])
+    let json = String(data: jsonData, encoding: .utf8)!
+
+    app.launchEnvironment["UITEST_CARDS"] = json
+    app.launch()
+
+    let firstRow = app.buttons["card-row-1"]
+    XCTAssertTrue(firstRow.waitForExistence(timeout: 2))
+    firstRow.tap()
+
+    let barcodeImage = app.images["barcode-image"]
+    XCTAssertTrue(barcodeImage.waitForExistence(timeout: 1))
+
+    // Tap to dismiss
+    barcodeImage.tap()
+
+    // Back to list
+    XCTAssertTrue(firstRow.waitForExistence(timeout: 1))
+  }
+
+  func test_crownRotation_dismissesToList() throws {
+    let cards = [
+      ["id": "1", "name": "Esselunga", "brandId": NSNull(), "colorHex": "#1e90ff", "barcodeValue": "5901234123457", "barcodeFormat": "EAN13"]
+    ]
+    let jsonData = try JSONSerialization.data(withJSONObject: cards, options: [])
+    let json = String(data: jsonData, encoding: .utf8)!
+
+    app.launchEnvironment["UITEST_CARDS"] = json
+    app.launch()
+
+    let firstRow = app.buttons["card-row-1"]
+    XCTAssertTrue(firstRow.waitForExistence(timeout: 2))
+    firstRow.tap()
+
+    let barcodeImage = app.images["barcode-image"]
+    XCTAssertTrue(barcodeImage.waitForExistence(timeout: 1))
+
+    // Simulate Digital Crown rotation to dismiss (watchOS simulator)
+    if #available(watchOS 10.0, *) {
+      XCUIRemote.shared().rotate(.clockwise, withVelocity: 4)
+    } else {
+      // Fallback: swipe down to simulate dismissal
+      app.swipeDown()
+    }
+
+    // Back to list
+    XCTAssertTrue(firstRow.waitForExistence(timeout: 1))
+  }
+  }
+}
