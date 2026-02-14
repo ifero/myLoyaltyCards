@@ -1,4 +1,5 @@
 import SwiftUI
+import SwiftData
 
 // Simple watch-side card model (read-only snapshot for display)
 struct WatchCard: Identifiable, Codable {
@@ -120,19 +121,37 @@ struct CardRowView: View {
 }
 
 struct CardListView: View {
+  @Environment(\.modelContext) private var modelContext
+  @Query(sort: \WatchCardEntity.createdAt, order: .reverse) private var persistedEntities: [WatchCardEntity]
   @StateObject private var store: CardStore
 
   init(store: CardStore = CardStore()) {
     _store = StateObject(wrappedValue: store)
   }
 
+  private var displayCards: [WatchCard] {
+    if !persistedEntities.isEmpty {
+      return persistedEntities.map { e in
+        WatchCard(
+          id: e.id,
+          name: e.name,
+          brandId: e.brandId,
+          colorHex: e.color,
+          barcodeValue: e.barcode,
+          barcodeFormat: e.barcodeFormat
+        )
+      }
+    }
+    return store.cards
+  }
+
   var body: some View {
     NavigationStack {
       Group {
-        if store.cards.isEmpty {
+        if displayCards.isEmpty {
           emptyState
         } else {
-          List(store.cards) { card in
+          List(displayCards) { card in
             NavigationLink(destination: BarcodeFlashView(card: card)) {
               CardRowView(card: card)
                 .listRowBackground(Color.clear)
@@ -158,7 +177,30 @@ struct CardListView: View {
     .background(Color.black)
     .scrollContentBackground(.hidden)
     .onAppear {
-      // placeholder: real sync will populate UserDefaults via WatchConnectivity
+      // If SwiftData contains records we prefer them. Otherwise migrate from older UserDefaults payload.
+      if persistedEntities.isEmpty, let data = UserDefaults.standard.data(forKey: "watch.cards"), let decoded = try? JSONDecoder().decode([WatchCard].self, from: data) {
+        for c in decoded {
+          let entity = WatchCardEntity(
+            id: c.id,
+            name: c.name,
+            barcode: c.barcodeValue ?? "",
+            barcodeFormat: c.barcodeFormat ?? "CODE128",
+            brandId: c.brandId,
+            color: c.colorHex ?? "gray",
+            isFavorite: false,
+            lastUsedAt: nil,
+            usageCount: 0,
+            createdAt: Date(),
+            updatedAt: Date(),
+            rawPayload: nil
+          )
+          modelContext.insert(entity)
+        }
+        try? modelContext.save()
+        UserDefaults.standard.removeObject(forKey: "watch.cards")
+      }
+
+      // existing behavior: store still used as fallback for UI tests or older builds
     }
   }
 

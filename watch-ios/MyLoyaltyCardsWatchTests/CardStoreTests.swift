@@ -33,4 +33,9 @@ final class CardStoreTests: XCTestCase {
     XCTAssertEqual(store.cards.count, 1)
     XCTAssertEqual(store.cards.first?.name, "Env Card")
   }
+
+  func test_migration_fromUserDefaults_to_SwiftData_placeholder() throws {
+    // Placeholder: migration test requires SwiftData ModelContainer setup for test target.
+    throw XCTSkip("Migration test placeholder — implement after SwiftData test container is configured")
+  }
 }
