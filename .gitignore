@@ -58,3 +58,4 @@ package-lock.json
 watch-ios/.derivedData
 watch-ios/build
 watch-ios/Generated
+watch-ios/test-results*
