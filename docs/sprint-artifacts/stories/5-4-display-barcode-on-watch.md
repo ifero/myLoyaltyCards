@@ -7,7 +7,7 @@
 | **Story ID** | 5.4                                                     |
 | **Epic**     | 5 - Apple Watch App                                     |
 | **Sprint**   | 4                                                       |
-| **Status**   | ready-for-dev                                           |
+| **Status**   | in-progress                                             |
 | **Priority** | High                                                    |
 | **Estimate** | Medium (1-2 days)                                       |
 | **Owners**   | PM: John · UX: Sally · Dev: Amelia · Tech Writer: Paige |
@@ -69,7 +69,7 @@ Testing notes:
 
 ## Tasks/Subtasks
 
-- [ ] Implement BarcodeFlashView in watch-ios
+- [x] Implement BarcodeFlashView in watch-ios
 - [ ] Add haptic feedback on card tap
 - [ ] Render barcode with correct format mapping
 - [ ] Add tap-to-dismiss behavior

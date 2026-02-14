@@ -5,7 +5,7 @@ struct WatchCard: Identifiable, Codable {
   let id: String
   let name: String
   let brandId: String?
-  let colorHex: String? // optional color hex (e.g. "#FF6B6B")
+  let colorHex: String?  // optional color hex (e.g. "#FF6B6B")
 }
 
 final class CardStore: ObservableObject {
@@ -19,8 +19,9 @@ final class CardStore: ObservableObject {
   private func loadPersistedCards() {
     // Test hook: allow UI tests to inject cards via environment variable
     if let env = ProcessInfo.processInfo.environment["UITEST_CARDS"],
-       let envData = env.data(using: .utf8),
-       let decodedFromEnv = try? JSONDecoder().decode([WatchCard].self, from: envData) {
+      let envData = env.data(using: .utf8),
+      let decodedFromEnv = try? JSONDecoder().decode([WatchCard].self, from: envData)
+    {
       self.cards = decodedFromEnv
       return
     }
@@ -52,14 +53,16 @@ func initials(from name: String) -> String {
 }
 
 func mapColor(hex: String?) -> Color? {
-  guard let hex = hex?.trimmingCharacters(in: .whitespacesAndNewlines), !hex.isEmpty else { return nil }
+  guard let hex = hex?.trimmingCharacters(in: .whitespacesAndNewlines), !hex.isEmpty else {
+    return nil
+  }
   switch hex.lowercased() {
   case "#1e90ff", "blue": return Color.blue
   case "#ff6b6b", "red": return Color.red
   case "#2ecc71", "green": return Color.green
   case "#ffa500", "orange": return Color.orange
   case "#9ca3af", "gray":
-    return Color(red: 156/255, green: 163/255, blue: 175/255)
+    return Color(red: 156 / 255, green: 163 / 255, blue: 175 / 255)
   default:
     return Color.gray
   }
@@ -89,7 +92,8 @@ struct CardRowView: View {
   @ViewBuilder
   private var visualIdentifier: some View {
     if let brandId = card.brandId,
-       let brand = WatchBrands.all.first(where: { $0.id == brandId }) {
+      let brand = WatchBrands.all.first(where: { $0.id == brandId })
+    {
       // For now show brand initials from generated catalogue (watch-side asset mapping is handled elsewhere)
       ZStack {
         Color.gray.opacity(0.15)
@@ -126,11 +130,10 @@ struct CardListView: View {
           emptyState
         } else {
           List(store.cards) { card in
-            Button(action: { openCard(card) }) {
+            NavigationLink(destination: BarcodeFlashView(card: card)) {
               CardRowView(card: card)
                 .listRowBackground(Color.clear)
             }
-            .buttonStyle(.plain)
             .accessibilityIdentifier("card-row-\(card.id)")
           }
           .listStyle(.plain)
@@ -138,14 +141,14 @@ struct CardListView: View {
       }
     }
     #if DEBUG
-    .toolbar {
-      ToolbarItem(placement: .navigationBarTrailing) {
-        Button(action: importSampleCards) {
-          Text("Import sample cards")
+      .toolbar {
+        ToolbarItem(placement: .navigationBarTrailing) {
+          Button(action: importSampleCards) {
+            Text("Import sample cards")
+          }
+          .accessibilityIdentifier("import-sample-cards")
         }
-        .accessibilityIdentifier("import-sample-cards")
       }
-    }
     #endif
     .navigationTitle("")
     .navigationBarHidden(true)
@@ -171,21 +174,21 @@ struct CardListView: View {
   }
 
   #if DEBUG
-  private func importSampleCards() {
-    let sample: [WatchCard] = [
-      WatchCard(id: "1", name: "Esselunga", brandId: "brand-special", colorHex: "#1e90ff"),
-      WatchCard(id: "2", name: "Local Bakery", brandId: nil, colorHex: "#ff6b6b"),
-      WatchCard(id: "3", name: "Healthy Market", brandId: nil, colorHex: "green")
-    ]
+    private func importSampleCards() {
+      let sample: [WatchCard] = [
+        WatchCard(id: "1", name: "Esselunga", brandId: "brand-special", colorHex: "#1e90ff"),
+        WatchCard(id: "2", name: "Local Bakery", brandId: nil, colorHex: "#ff6b6b"),
+        WatchCard(id: "3", name: "Healthy Market", brandId: nil, colorHex: "green"),
+      ]
 
-    if let data = try? JSONEncoder().encode(sample) {
-      UserDefaults.standard.set(data, forKey: "watch.cards")
+      if let data = try? JSONEncoder().encode(sample) {
+        UserDefaults.standard.set(data, forKey: "watch.cards")
+      }
+
+      // Immediately refresh visible store
+      store.cards = sample
+      WKInterfaceDevice.current().play(.success)
     }
-
-    // Immediately refresh visible store
-    store.cards = sample
-    WKInterfaceDevice.current().play(.success)
-  }
   #endif
 
   private func openCard(_ card: WatchCard) {
@@ -211,7 +214,7 @@ struct CardListView_Previews: PreviewProvider {
       CardListViewMock(cards: [
         WatchCard(id: "1", name: "Esselunga", brandId: "brand-special", colorHex: "#1e90ff"),
         WatchCard(id: "2", name: "Local Bakery", brandId: nil, colorHex: "#ff6b6b"),
-        WatchCard(id: "3", name: "Healthy Market", brandId: nil, colorHex: "green")
+        WatchCard(id: "3", name: "Healthy Market", brandId: nil, colorHex: "green"),
       ])
     }
   }
