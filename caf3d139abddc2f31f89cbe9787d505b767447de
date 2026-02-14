@@ -1,0 +1,23 @@
+watch-ios/MyLoyaltyCardsWatch.xcodeproj/xcshareddata/xcschemes/MyLoyaltyCardsWatch.xcscheme
+  23e1266f3afc1bed 1-37
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.1.3",
+  "base_commit_sha": "caf3d139abddc2f31f89cbe9787d505b767447de",
+  "prompts": {
+    "23e1266f3afc1bed": {
+      "agent_id": {
+        "tool": "github-copilot",
+        "id": "a394d1c9-f7c5-44a1-a99e-28177f74b738",
+        "model": "copilot/oswe-vscode-prime"
+      },
+      "human_author": "Andrea Pacino",
+      "messages": [],
+      "total_additions": 37,
+      "total_deletions": 0,
+      "accepted_lines": 37,
+      "overriden_lines": 0
+    }
+  }
+}
