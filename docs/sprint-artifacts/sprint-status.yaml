@@ -108,7 +108,7 @@ development_status:
   epic-5: in-progress
   5-1-create-watchos-project-structure: done
   5-2-generate-catalogue-for-watchos: done
-  5-3-implement-card-list-carbon-ui: ready-for-dev
+  5-3-implement-card-list-carbon-ui: in-progress
   5-4-display-barcode-on-watch: ready-for-dev
   5-5-store-cards-locally-on-watch: ready-for-dev
   5-6-sync-cards-from-phone: ready-for-dev
