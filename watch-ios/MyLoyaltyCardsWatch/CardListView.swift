@@ -71,7 +71,7 @@ struct CardRowView: View {
       }
     } else {
       ZStack {
-        mapColor(hex: card.colorHex) ?? Color(.systemGray)
+        mapColor(hex: card.colorHex) ?? Color.gray
         Text(initials(from: card.name))
           .font(.system(size: 12, weight: .bold))
           .foregroundColor(.black)
@@ -99,9 +99,11 @@ struct CardRowView: View {
     case "#ff6b6b", "red": return Color.red
     case "#2ecc71", "green": return Color.green
     case "#ffa500", "orange": return Color.orange
-    case "#9ca3af", "gray": return Color(.systemGray3)
+    case "#9ca3af", "gray":
+      // approximate hex for systemGray3 on watchOS
+      return Color(red: 156/255, green: 163/255, blue: 175/255)
     default:
-      return Color(.systemGray)
+      return Color.gray
     }
   }
 }
