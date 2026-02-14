@@ -13,6 +13,8 @@
     "test": "jest",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
+    "test:watchos": "xcodebuild test -project watch-ios/MyLoyaltyCardsWatch.xcodeproj -scheme MyLoyaltyCardsWatch -destination 'platform=watchOS Simulator,name=Apple Watch Series 9 (45mm)' -configuration Debug",
+    "test:all": "yarn test && yarn test:watchos",
     "watch:build": "xcodebuild -project watch-ios/MyLoyaltyCardsWatch.xcodeproj -scheme MyLoyaltyCardsWatch -configuration Debug -destination \"platform=watchOS Simulator,name=Apple Watch Series 9 (45mm)\" -derivedDataPath watch-ios/.derivedData build",
     "watch:run": "yarn watch:build && xcrun simctl bootstatus \"Apple Watch Series 9 (45mm)\" -b && xcrun simctl install \"Apple Watch Series 9 (45mm)\" watch-ios/.derivedData/Build/Products/Debug-watchsimulator/MyLoyaltyCardsWatch.app && xcrun simctl launch \"Apple Watch Series 9 (45mm)\" com.iferoporefi.myloyaltycards.watch",
     "prepare": "husky"
