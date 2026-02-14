@@ -5,31 +5,38 @@ import WatchKit
 struct BarcodeFlashView: View {
   let card: WatchCard
 
+  @Environment(\.dismiss) private var dismiss
+  @State private var barcodeImage: Image? = nil
+  @State private var isLoading: Bool = false
+
   var body: some View {
     ZStack {
       // White background per story
       Color.white
-        .edgesIgnoringSafeArea(.all)
+        .ignoresSafeArea()
 
       VStack(spacing: 12) {
         Spacer()
 
-        // Barcode image (generated from card data when available)
-        if let value = card.barcodeValue, let format = card.barcodeFormat,
-           let barcodeImage = BarcodeGenerator.generateImage(value: value, formatString: format, targetSize: CGSize(width: 160, height: 80)) {
+        // Async-generated barcode image (cached)
+        if let barcodeImage = barcodeImage {
           barcodeImage
             .resizable()
+            .interpolation(.none)
             .scaledToFit()
             .frame(maxHeight: 80)
             .accessibilityIdentifier("barcode-image")
+            .accessibilityLabel("Barcode for \(card.name)")
+            .onTapGesture { dismiss() }
         } else {
-          // Fallback placeholder (SF Symbol)
+          // Placeholder while generating (still dismissible)
           Image(systemName: "barcode")
             .resizable()
             .scaledToFit()
             .foregroundColor(.black)
             .frame(maxHeight: 80)
             .accessibilityIdentifier("barcode-image")
+            .onTapGesture { dismiss() }
         }
 
         // Card name (visible on barcode screen)
@@ -46,8 +53,21 @@ struct BarcodeFlashView: View {
     .navigationTitle("")
     .accessibilityIdentifier("barcode-view")
     .onAppear {
-      // Provide immediate haptic feedback when the barcode is shown (AC1)
+      // Immediate haptic
       WKInterfaceDevice.current().play(.success)
+
+      // Async generate barcode image off the main thread to avoid UI jank
+      guard let value = card.barcodeValue, let format = card.barcodeFormat else { return }
+      guard barcodeImage == nil && !isLoading else { return }
+      isLoading = true
+
+      Task.detached {
+        let img = BarcodeGenerator.generateImage(value: value, formatString: format, targetSize: CGSize(width: 160, height: 80))
+        await MainActor.run {
+          self.barcodeImage = img
+          self.isLoading = false
+        }
+      }
     }
   }
 }

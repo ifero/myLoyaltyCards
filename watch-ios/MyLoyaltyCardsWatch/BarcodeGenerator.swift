@@ -1,6 +1,6 @@
-import SwiftUI
 import CoreImage
 import CoreImage.CIFilterBuiltins
+import SwiftUI
 
 enum WatchBarcodeFormat: String {
   case CODE128
@@ -14,10 +14,12 @@ enum WatchBarcodeFormat: String {
 /// Helper to generate barcode CIImage/UIImage on watchOS.
 struct BarcodeGenerator {
   private static let ciContext = CIContext()
+  private static let uiImageCache = NSCache<NSString, UIImage>()
 
   /// Generate a CIImage for the given value + format. Returns nil on failure.
   static func generateCIImage(value: String, format: WatchBarcodeFormat) -> CIImage? {
-    let data = value.data(using: .ascii) ?? value.data(using: .utf8) ?? Data()
+    // Prefer UTF-8 to support QR payloads with non-ASCII characters
+    let data = value.data(using: .utf8) ?? value.data(using: .ascii) ?? Data()
 
     switch format {
     case .QR:
@@ -62,21 +64,42 @@ struct BarcodeGenerator {
 
     let transformed = ciImage.transformed(by: CGAffineTransform(scaleX: scale, y: scale))
 
-    guard let cgImage = ciContext.createCGImage(transformed, from: transformed.extent) else { return nil }
+    guard let cgImage = ciContext.createCGImage(transformed, from: transformed.extent) else {
+      return nil
+    }
 
     #if os(watchOS)
-    let uiImage = UIImage(cgImage: cgImage)
+      let uiImage = UIImage(cgImage: cgImage)
     #else
-    let uiImage = UIImage(cgImage: cgImage)
+      let uiImage = UIImage(cgImage: cgImage)
     #endif
 
     return Image(uiImage: uiImage)
   }
 
-  /// Convenience: generate SwiftUI Image from value + format + targetSize
+  /// Convenience: generate SwiftUI Image from value + format + targetSize (with caching)
   static func generateImage(value: String, formatString: String?, targetSize: CGSize) -> Image? {
-    guard let fmt = formatString.flatMap({ WatchBarcodeFormat(rawValue: $0) }) else { return nil }
+    let key = "\(value)|\(formatString ?? "")|\(Int(targetSize.width))x\(Int(targetSize.height))" as NSString
+    if let cached = uiImageCache.object(forKey: key) {
+      return Image(uiImage: cached)
+    }
+
+    // Accept case-insensitive format strings
+    guard let fmtString = formatString?.uppercased(), let fmt = WatchBarcodeFormat(rawValue: fmtString) else { return nil }
     guard let ci = generateCIImage(value: value, format: fmt) else { return nil }
-    return image(from: ci, targetSize: targetSize)
+
+    // Scale CIImage to requested target size and create UIImage
+    let extent = ci.extent.integral
+    guard extent.width > 0 && extent.height > 0 else { return nil }
+    let scaleX = targetSize.width / extent.width
+    let scaleY = targetSize.height / extent.height
+    let scale = min(scaleX, scaleY)
+    let transformed = ci.transformed(by: CGAffineTransform(scaleX: scale, y: scale))
+
+    guard let cgImage = ciContext.createCGImage(transformed, from: transformed.extent) else { return nil }
+    let uiImage = UIImage(cgImage: cgImage)
+
+    uiImageCache.setObject(uiImage, forKey: key)
+    return Image(uiImage: uiImage)
   }
 }

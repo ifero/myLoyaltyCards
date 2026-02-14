@@ -17,4 +17,15 @@ final class BarcodeGeneratorTests: XCTestCase {
     let ci = BarcodeGenerator.generateCIImage(value: "5901234123457", format: .EAN13)
     XCTAssertNotNil(ci)
   }
+
+  func test_generateImage_acceptsCaseInsensitiveFormat() throws {
+    let img = BarcodeGenerator.generateImage(value: "test", formatString: "qr", targetSize: CGSize(width: 160, height: 160))
+    XCTAssertNotNil(img)
+  }
+
+  func test_generateCIImage_supportsUTF8_forQR() throws {
+    let ci = BarcodeGenerator.generateCIImage(value: "テスト", format: .QR)
+    XCTAssertNotNil(ci)
+  }
 }
+

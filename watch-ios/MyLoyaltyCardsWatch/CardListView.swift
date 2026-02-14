@@ -8,9 +8,8 @@ struct WatchCard: Identifiable, Codable {
   let colorHex: String?  // optional color hex (e.g. "#FF6B6B")
   // Optional barcode fields (may be absent for older persisted payloads)
   let barcodeValue: String?
-  let barcodeFormat: String? // values like "CODE128", "EAN13", "QR" etc.
+  let barcodeFormat: String?  // values like "CODE128", "EAN13", "QR" etc.
 }
-
 
 final class CardStore: ObservableObject {
   @Published var cards: [WatchCard] = []
@@ -180,9 +179,15 @@ struct CardListView: View {
   #if DEBUG
     private func importSampleCards() {
       let sample: [WatchCard] = [
-        WatchCard(id: "1", name: "Esselunga", brandId: "brand-special", colorHex: "#1e90ff", barcodeValue: "5901234123457", barcodeFormat: "EAN13"),
-        WatchCard(id: "2", name: "Local Bakery", brandId: nil, colorHex: "#ff6b6b", barcodeValue: "012345678905", barcodeFormat: "UPCA"),
-        WatchCard(id: "3", name: "Healthy Market", brandId: nil, colorHex: "green", barcodeValue: "https://example.com", barcodeFormat: "QR"),
+        WatchCard(
+          id: "1", name: "Esselunga", brandId: "brand-special", colorHex: "#1e90ff",
+          barcodeValue: "5901234123457", barcodeFormat: "EAN13"),
+        WatchCard(
+          id: "2", name: "Local Bakery", brandId: nil, colorHex: "#ff6b6b",
+          barcodeValue: "012345678905", barcodeFormat: "UPCA"),
+        WatchCard(
+          id: "3", name: "Healthy Market", brandId: nil, colorHex: "green",
+          barcodeValue: "https://example.com", barcodeFormat: "QR"),
       ]
 
       if let data = try? JSONEncoder().encode(sample) {
@@ -216,9 +221,15 @@ struct CardListView_Previews: PreviewProvider {
   struct CardListViewPreviewData: View {
     var body: some View {
       CardListViewMock(cards: [
-        WatchCard(id: "1", name: "Esselunga", brandId: "brand-special", colorHex: "#1e90ff", barcodeValue: "5901234123457", barcodeFormat: "EAN13"),
-        WatchCard(id: "2", name: "Local Bakery", brandId: nil, colorHex: "#ff6b6b", barcodeValue: "012345678905", barcodeFormat: "UPCA"),
-        WatchCard(id: "3", name: "Healthy Market", brandId: nil, colorHex: "green", barcodeValue: "https://example.com", barcodeFormat: "QR"),
+        WatchCard(
+          id: "1", name: "Esselunga", brandId: "brand-special", colorHex: "#1e90ff",
+          barcodeValue: "5901234123457", barcodeFormat: "EAN13"),
+        WatchCard(
+          id: "2", name: "Local Bakery", brandId: nil, colorHex: "#ff6b6b",
+          barcodeValue: "012345678905", barcodeFormat: "UPCA"),
+        WatchCard(
+          id: "3", name: "Healthy Market", brandId: nil, colorHex: "green",
+          barcodeValue: "https://example.com", barcodeFormat: "QR"),
       ])
     }
   }
