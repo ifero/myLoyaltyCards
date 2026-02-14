@@ -114,5 +114,34 @@ final class CardListUITests: XCTestCase {
     // Back to list
     XCTAssertTrue(firstRow.waitForExistence(timeout: 1))
   }
+
+  func test_crownRotation_dismissesToList() throws {
+    let cards = [
+      ["id": "1", "name": "Esselunga", "brandId": NSNull(), "colorHex": "#1e90ff", "barcodeValue": "5901234123457", "barcodeFormat": "EAN13"]
+    ]
+    let jsonData = try JSONSerialization.data(withJSONObject: cards, options: [])
+    let json = String(data: jsonData, encoding: .utf8)!
+
+    app.launchEnvironment["UITEST_CARDS"] = json
+    app.launch()
+
+    let firstRow = app.buttons["card-row-1"]
+    XCTAssertTrue(firstRow.waitForExistence(timeout: 2))
+    firstRow.tap()
+
+    let barcodeImage = app.images["barcode-image"]
+    XCTAssertTrue(barcodeImage.waitForExistence(timeout: 1))
+
+    // Simulate Digital Crown rotation to dismiss (watchOS simulator)
+    if #available(watchOS 10.0, *) {
+      XCUIRemote.shared().rotate(.clockwise, withVelocity: 4)
+    } else {
+      // Fallback: swipe down to simulate dismissal
+      app.swipeDown()
+    }
+
+    // Back to list
+    XCTAssertTrue(firstRow.waitForExistence(timeout: 1))
+  }
   }
 }

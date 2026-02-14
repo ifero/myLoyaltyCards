@@ -8,6 +8,8 @@ struct BarcodeFlashView: View {
   @Environment(\.dismiss) private var dismiss
   @State private var barcodeImage: Image? = nil
   @State private var isLoading: Bool = false
+  @State private var crownRotation: Double = 0.0
+  @State private var crownTriggered: Bool = false
 
   var body: some View {
     ZStack {
@@ -49,6 +51,16 @@ struct BarcodeFlashView: View {
         Spacer()
       }
       .padding(.horizontal, 6)
+      .focusable(true)
+      .digitalCrownRotation($crownRotation, from: -1.0, through: 1.0, by: 0.1, sensitivity: .low, isContinuous: true, isHapticFeedbackEnabled: true)
+      .onChange(of: crownRotation) { newValue in
+        // Dismiss on any crown movement (single-shot)
+        guard !crownTriggered else { return }
+        if abs(newValue) > 0.0001 {
+          crownTriggered = true
+          dismiss()
+        }
+      }
     }
     .navigationTitle("")
     .accessibilityIdentifier("barcode-view")
@@ -62,7 +74,8 @@ struct BarcodeFlashView: View {
       isLoading = true
 
       Task.detached {
-        let img = BarcodeGenerator.generateImage(value: value, formatString: format, targetSize: CGSize(width: 160, height: 80))
+        let img = BarcodeGenerator.generateImage(
+          value: value, formatString: format, targetSize: CGSize(width: 160, height: 80))
         await MainActor.run {
           self.barcodeImage = img
           self.isLoading = false
