@@ -70,7 +70,7 @@ Testing notes:
 ## Tasks/Subtasks
 
 - [x] Implement BarcodeFlashView in watch-ios
-- [ ] Add haptic feedback on card tap
+- [x] Add haptic feedback on card tap
 - [ ] Render barcode with correct format mapping
 - [ ] Add tap-to-dismiss behavior
 

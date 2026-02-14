@@ -1,4 +1,5 @@
 import SwiftUI
+import WatchKit
 
 // Full-screen barcode flash view (Task 1 - UI only)
 struct BarcodeFlashView: View {
@@ -34,6 +35,10 @@ struct BarcodeFlashView: View {
     }
     .navigationTitle("")
     .accessibilityIdentifier("barcode-view")
+    .onAppear {
+      // Provide immediate haptic feedback when the barcode is shown (AC1)
+      WKInterfaceDevice.current().play(.success)
+    }
   }
 }
 
