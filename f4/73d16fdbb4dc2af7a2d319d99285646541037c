@@ -1,0 +1,25 @@
+docs/sprint-artifacts/stories/5-5-store-cards-locally-on-watch.md
+  a05b008f9bcf444c 10
+docs/sprint-artifacts/sprint-status.yaml
+  a05b008f9bcf444c 113
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.1.3",
+  "base_commit_sha": "f473d16fdbb4dc2af7a2d319d99285646541037c",
+  "prompts": {
+    "a05b008f9bcf444c": {
+      "agent_id": {
+        "tool": "github-copilot",
+        "id": "17f7d541-ac96-422a-911a-e822e52433f8",
+        "model": "copilot/oswe-vscode-prime"
+      },
+      "human_author": "Andrea Pacino",
+      "messages": [],
+      "total_additions": 2,
+      "total_deletions": 2,
+      "accepted_lines": 2,
+      "overriden_lines": 0
+    }
+  }
+}
