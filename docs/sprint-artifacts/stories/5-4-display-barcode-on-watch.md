@@ -71,7 +71,7 @@ Testing notes:
 
 - [x] Implement BarcodeFlashView in watch-ios
 - [x] Add haptic feedback on card tap
-- [ ] Render barcode with correct format mapping
+- [x] Render barcode with correct format mapping
 - [ ] Add tap-to-dismiss behavior
 
 ---

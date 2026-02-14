@@ -65,7 +65,7 @@ final class CardListUITests: XCTestCase {
 
   func test_tapCard_displaysBarcode() throws {
     let cards = [
-      ["id": "1", "name": "Esselunga", "brandId": NSNull(), "colorHex": "#1e90ff"]
+      ["id": "1", "name": "Esselunga", "brandId": NSNull(), "colorHex": "#1e90ff", "barcodeValue": "5901234123457", "barcodeFormat": "EAN13"]
     ]
     let jsonData = try JSONSerialization.data(withJSONObject: cards, options: [])
     let json = String(data: jsonData, encoding: .utf8)!
@@ -81,5 +81,9 @@ final class CardListUITests: XCTestCase {
     XCTAssertTrue(barcodeView.waitForExistence(timeout: 2))
     let cardName = app.staticTexts["barcode-card-name"]
     XCTAssertTrue(cardName.waitForExistence(timeout: 2))
+
+    // Barcode image should be present (generated from card data)
+    let barcodeImage = app.images["barcode-image"]
+    XCTAssertTrue(barcodeImage.waitForExistence(timeout: 2))
   }
 }

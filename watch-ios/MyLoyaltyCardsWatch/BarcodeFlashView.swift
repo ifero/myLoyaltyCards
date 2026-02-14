@@ -14,13 +14,23 @@ struct BarcodeFlashView: View {
       VStack(spacing: 12) {
         Spacer()
 
-        // Large barcode placeholder (use SF Symbol for MVP)
-        Image(systemName: "barcode")
-          .resizable()
-          .scaledToFit()
-          .foregroundColor(.black)
-          .frame(maxHeight: 80)
-          .accessibilityIdentifier("barcode-image")
+        // Barcode image (generated from card data when available)
+        if let value = card.barcodeValue, let format = card.barcodeFormat,
+           let barcodeImage = BarcodeGenerator.generateImage(value: value, formatString: format, targetSize: CGSize(width: 160, height: 80)) {
+          barcodeImage
+            .resizable()
+            .scaledToFit()
+            .frame(maxHeight: 80)
+            .accessibilityIdentifier("barcode-image")
+        } else {
+          // Fallback placeholder (SF Symbol)
+          Image(systemName: "barcode")
+            .resizable()
+            .scaledToFit()
+            .foregroundColor(.black)
+            .frame(maxHeight: 80)
+            .accessibilityIdentifier("barcode-image")
+        }
 
         // Card name (visible on barcode screen)
         Text(card.name)
