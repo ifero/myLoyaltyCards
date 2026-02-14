@@ -12,15 +12,14 @@
 		0A1B2C3D4E5F678901234574 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 0A1B2C3D4E5F678901234570 /* Assets.xcassets */; };
 		0A1B2C3D4E5F678901234575 /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 0A1B2C3D4E5F678901234571 /* Preview Assets.xcassets */; };
 		0A1B2C3D4E5F678901234580 /* Brands.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A1B2C3D4E5F678901234581 /* Brands.swift */; };
-		F2F2F2F2F2F2F2F2F2F2F2F2 /* CardStoreTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1F1F1F1F1F1F1F1F1F1F1F1 /* CardStoreTests.swift */; };
+			111111111111111111111111 /* CardListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 222222222222222222222222 /* CardListView.swift */; };
 		E2E2E2E2E2E2E2E2E2E2E2E2 /* CardListUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1E1E1E1E1E1E1E1E1E1E1E1 /* CardListUITests.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
 		0A1B2C3D4E5F67890123456D /* MyLoyaltyCardsWatch.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; path = MyLoyaltyCardsWatch.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		0A1B2C3D4E5F67890123456E /* MyLoyaltyCardsWatchApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MyLoyaltyCardsWatchApp.swift; sourceTree = "<group>"; };
-		0A1B2C3D4E5F67890123456F /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
-		0A1B2C3D4E5F678901234570 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		0A1B2C3D4E5F67890123456F /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };			222222222222222222222222 /* CardListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CardListView.swift; sourceTree = "<group>"; };		0A1B2C3D4E5F678901234570 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		0A1B2C3D4E5F678901234571 /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
 		0A1B2C3D4E5F678901234581 /* Brands.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ../Generated/Brands.swift; sourceTree = "<group>"; };
 		0A1B2C3D4E5F678901234583 /* generate-catalogue.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = generate-catalogue.swift; sourceTree = "<group>"; };
@@ -56,6 +55,7 @@
 			children = (
 				0A1B2C3D4E5F67890123456E /* MyLoyaltyCardsWatchApp.swift */,
 				0A1B2C3D4E5F67890123456F /* ContentView.swift */,
+				222222222222222222222222 /* CardListView.swift */,
 				0A1B2C3D4E5F678901234581 /* Brands.swift */,
 				0A1B2C3D4E5F678901234570 /* Assets.xcassets */,
 				0A1B2C3D4E5F67890123456A /* Preview Content */,
@@ -237,6 +237,7 @@
 			files = (
 				0A1B2C3D4E5F678901234572 /* MyLoyaltyCardsWatchApp.swift in Sources */,
 				0A1B2C3D4E5F678901234573 /* ContentView.swift in Sources */,
+				111111111111111111111111 /* CardListView.swift in Sources */,
 				0A1B2C3D4E5F678901234580 /* Brands.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
