@@ -2,6 +2,10 @@ import CoreImage
 import CoreImage.CIFilterBuiltins
 import SwiftUI
 
+#if canImport(UIKit)
+import UIKit
+#endif
+
 enum WatchBarcodeFormat: String {
   case CODE128
   case EAN13
@@ -16,8 +20,8 @@ struct BarcodeGenerator {
   private static let ciContext = CIContext()
   private static let uiImageCache: NSCache<NSString, UIImage> = {
     let c = NSCache<NSString, UIImage>()
-    c.countLimit = 64                       // keep a reasonable number of cached barcode images
-    c.totalCostLimit = 4 * 1024 * 1024      // ~4 MB budget
+    c.countLimit = 64  // keep a reasonable number of cached barcode images
+    c.totalCostLimit = 4 * 1024 * 1024  // ~4 MB budget
     c.name = "BarcodeGenerator.uiImageCache"
     return c
   }()
@@ -85,9 +89,11 @@ struct BarcodeGenerator {
   }
 
   /// Convenience: asynchronously generate SwiftUI Image from value + format + targetSize (with caching)
-  static func generateImage(value: String, formatString: String?, targetSize: CGSize) async -> Image? {
+  static func generateImage(value: String, formatString: String?, targetSize: CGSize) async
+    -> Image?
+  {
     // Normalize format string for key (avoid duplicate cache entries)
-    let fmtKey = (formatString ?? "").uppercased()
+    let fmtKey = (formatString ?? "").trimmingCharacters(in: .whitespacesAndNewlines).uppercased()
     let key = "\(value)|\(fmtKey)|\(Int(targetSize.width))x\(Int(targetSize.height))" as NSString
 
     if let cached = uiImageCache.object(forKey: key) {
@@ -110,9 +116,9 @@ struct BarcodeGenerator {
     let cgImage: CGImage? = await withCheckedContinuation { cont in
       DispatchQueue.global(qos: .userInitiated).async {
         #if DEBUG
-        if debugDelayForTests > 0 {
-          Thread.sleep(forTimeInterval: debugDelayForTests)
-        }
+          if debugDelayForTests > 0 {
+            Thread.sleep(forTimeInterval: debugDelayForTests)
+          }
         #endif
         let cg = ciContext.createCGImage(transformed, from: transformed.extent)
         cont.resume(returning: cg)
@@ -124,7 +130,9 @@ struct BarcodeGenerator {
     if Task.isCancelled { return nil }
 
     // Construct UIImage on the MainActor (UIKit is main-thread-only) and capture scale for cost
-    let (uiImage, screenScale) = await MainActor.run { (UIImage(cgImage: safeCG), UIScreen.main.scale) }
+    let (uiImage, screenScale) = await MainActor.run {
+      (UIImage(cgImage: safeCG), UIScreen.main.scale)
+    }
 
     // approximate memory cost (bytes) and cache
     let cost = Int(targetSize.width * targetSize.height * screenScale * 4)
@@ -134,13 +142,14 @@ struct BarcodeGenerator {
   }
 
   #if DEBUG
-  /// Optional delay (seconds) to make cancellation tests deterministic.
-  static var debugDelayForTests: TimeInterval = 0
+    /// Optional delay (seconds) to make cancellation tests deterministic.
+    static var debugDelayForTests: TimeInterval = 0
 
-  /// Test helper: check whether a generated image is present in the cache.
-  static func isImageCached(value: String, formatString: String?, targetSize: CGSize) -> Bool {
-    let key = "\(value)|\((formatString ?? "").uppercased())|\(Int(targetSize.width))x\(Int(targetSize.height))" as NSString
-    return uiImageCache.object(forKey: key) != nil
-  }
+    /// Test helper: check whether a generated image is present in the cache.
+    static func isImageCached(value: String, formatString: String?, targetSize: CGSize) -> Bool {
+      let fmtKey = (formatString ?? "").trimmingCharacters(in: .whitespacesAndNewlines).uppercased()
+      let key = "\(value)|\(fmtKey)|\(Int(targetSize.width))x\(Int(targetSize.height))" as NSString
+      return uiImageCache.object(forKey: key) != nil
+    }
   #endif
 }
