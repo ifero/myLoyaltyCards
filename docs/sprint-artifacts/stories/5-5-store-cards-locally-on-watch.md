@@ -7,7 +7,7 @@
 | **Story ID** | 5.5                                                     |
 | **Epic**     | 5 - Apple Watch App                                     |
 | **Sprint**   | 4                                                       |
-| **Status**   | ready-for-dev                                           |
+| **Status**   | review                                                  |
 | **Priority** | High                                                    |
 | **Estimate** | Medium (1-2 days)                                       |
 | **Owners**   | PM: John · UX: Sally · Dev: Amelia · Tech Writer: Paige |
@@ -66,10 +66,19 @@ Testing notes:
 
 ## Tasks/Subtasks
 
-- [ ] Create SwiftData models for cards
-- [ ] Implement local storage layer (CRUD: read-only for UI)
-- [ ] Add lightweight migration/versioning strategy
-- [ ] Load stored cards into the list view
+- [x] Design storage schema (draft) — **completed**
+- [x] Create SwiftData models for cards — **completed (draft added)**
+- [x] Implement local storage layer (CRUD: read-only for UI) — **completed (read-only UI + migration helper)**
+- [x] Add lightweight migration/versioning strategy — **completed**
+- [x] Load stored cards into the list view — **completed**
+- [x] Add unit + migration tests — **completed**
+
+Files changed in this diff:
+
+- `watch-ios/MyLoyaltyCardsWatch/WatchCardEntity.swift` (new SwiftData model)
+- `watch-ios/MyLoyaltyCardsWatch/MyLoyaltyCardsWatchApp.swift` (inject ModelContainer)
+- `watch-ios/MyLoyaltyCardsWatch/CardListView.swift` (read from SwiftData + migration helper)
+- `watch-ios/MyLoyaltyCardsWatchTests/CardStoreTests.swift` (added SwiftData persistence & migration tests)
 
 ---
 

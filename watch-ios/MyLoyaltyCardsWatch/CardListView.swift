@@ -1,3 +1,4 @@
+import SwiftData
 import SwiftUI
 
 // Simple watch-side card model (read-only snapshot for display)
@@ -39,6 +40,37 @@ final class CardStore: ObservableObject {
     // default: empty (empty-state should be visible)
     self.cards = []
   }
+
+  // Migration helper — extracts migration logic so it can be unit-tested.
+  func migrateUserDefaults(to modelContext: ModelContext) {
+    guard let data = UserDefaults.standard.data(forKey: "watch.cards"),
+      let decoded = try? JSONDecoder().decode([WatchCard].self, from: data)
+    else {
+      return
+    }
+
+    for c in decoded {
+      let raw = try? JSONEncoder().encode(c)
+      let entity = WatchCardEntity(
+        id: c.id,
+        name: c.name,
+        barcode: c.barcodeValue ?? "",
+        barcodeFormat: c.barcodeFormat ?? "CODE128",
+        brandId: c.brandId,
+        color: c.colorHex ?? "grey",
+        isFavorite: false,
+        lastUsedAt: nil,
+        usageCount: 0,
+        createdAt: Date(),
+        updatedAt: Date(),
+        rawPayload: raw
+      )
+      modelContext.insert(entity)
+    }
+
+    try? modelContext.save()
+    UserDefaults.standard.removeObject(forKey: "watch.cards")
+  }
 }
 
 // MARK: - Helpers (file-level, testable)
@@ -64,7 +96,7 @@ func mapColor(hex: String?) -> Color? {
   case "#ff6b6b", "red": return Color.red
   case "#2ecc71", "green": return Color.green
   case "#ffa500", "orange": return Color.orange
-  case "#9ca3af", "gray":
+  case "#9ca3af", "gray", "grey":
     return Color(red: 156 / 255, green: 163 / 255, blue: 175 / 255)
   default:
     return Color.gray
@@ -120,19 +152,38 @@ struct CardRowView: View {
 }
 
 struct CardListView: View {
+  @Environment(\.modelContext) private var modelContext
+  @Query(sort: \WatchCardEntity.createdAt, order: .reverse) private var persistedEntities:
+    [WatchCardEntity]
   @StateObject private var store: CardStore
 
   init(store: CardStore = CardStore()) {
     _store = StateObject(wrappedValue: store)
   }
 
+  private var displayCards: [WatchCard] {
+    if !persistedEntities.isEmpty {
+      return persistedEntities.map { e in
+        WatchCard(
+          id: e.id,
+          name: e.name,
+          brandId: e.brandId,
+          colorHex: e.color,
+          barcodeValue: e.barcode,
+          barcodeFormat: e.barcodeFormat
+        )
+      }
+    }
+    return store.cards
+  }
+
   var body: some View {
     NavigationStack {
       Group {
-        if store.cards.isEmpty {
+        if displayCards.isEmpty {
           emptyState
         } else {
-          List(store.cards) { card in
+          List(displayCards) { card in
             NavigationLink(destination: BarcodeFlashView(card: card)) {
               CardRowView(card: card)
                 .listRowBackground(Color.clear)
@@ -158,7 +209,12 @@ struct CardListView: View {
     .background(Color.black)
     .scrollContentBackground(.hidden)
     .onAppear {
-      // placeholder: real sync will populate UserDefaults via WatchConnectivity
+      // If SwiftData contains records we prefer them. Otherwise migrate from older UserDefaults payload.
+      if persistedEntities.isEmpty {
+        store.migrateUserDefaults(to: modelContext)
+      }
+
+      // existing behavior: store still used as fallback for UI tests or older builds
     }
   }
 
