@@ -17,6 +17,7 @@ import { router } from 'expo-router';
 import { useCallback, useState } from 'react';
 
 import { deleteCard as deleteCardFromDb } from '@/core/database';
+import { syncCardDelete } from '@/core/utils/watch-sync';
 
 export interface UseDeleteCardReturn {
   /** Async function to delete the card */
@@ -58,6 +59,9 @@ export function useDeleteCard(cardId: string): UseDeleteCardReturn {
     try {
       // Delete from local database
       await deleteCardFromDb(cardId);
+
+      // Fire-and-forget: notify watch of deletion
+      void syncCardDelete(cardId);
 
       // Success feedback - haptic
       await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);

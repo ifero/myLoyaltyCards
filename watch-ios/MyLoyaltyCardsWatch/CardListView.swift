@@ -1,5 +1,11 @@
 import SwiftData
 import SwiftUI
+import Foundation
+
+// Notification for when watch card payloads have been applied
+extension Notification.Name {
+  static let watchCardsDidChange = Notification.Name("watch.cards.didChange")
+}
 
 // Simple watch-side card model (read-only snapshot for display)
 struct WatchCard: Identifiable, Codable {
@@ -17,6 +23,18 @@ final class CardStore: ObservableObject {
 
   init() {
     loadPersistedCards()
+
+    // Listen for incoming sync updates applied by the WatchConnectivity receiver
+    NotificationCenter.default.addObserver(
+      self,
+      selector: #selector(handleWatchCardsChangedNotification),
+      name: .watchCardsDidChange,
+      object: nil
+    )
+  }
+
+  deinit {
+    NotificationCenter.default.removeObserver(self, name: .watchCardsDidChange, object: nil)
   }
 
   // Minimal loader: reads from UserDefaults (sync target) or keeps empty
@@ -39,6 +57,63 @@ final class CardStore: ObservableObject {
 
     // default: empty (empty-state should be visible)
     self.cards = []
+  }
+
+  @objc
+  private func handleWatchCardsChangedNotification() {
+    // Reload persisted cards from UserDefaults when a sync payload is applied
+    loadPersistedCards()
+  }
+
+  /// Apply an incoming sync payload (used by WatchConnectivity receiver).
+  /// - Payload format: { "version": String, "upserts": [Card], "deletes": [String] }
+  static func applySyncPayload(_ payload: [String: Any]) {
+    // Load current persisted watch cards
+    var current: [WatchCard] = []
+    if let data = UserDefaults.standard.data(forKey: "watch.cards"),
+      let decoded = try? JSONDecoder().decode([WatchCard].self, from: data)
+    {
+      current = decoded
+    }
+
+    // Handle upserts (replace or append)
+    if let upserts = payload["upserts"] as? [[String: Any]] {
+      for c in upserts {
+        guard let id = c["id"] as? String else { continue }
+        let name = c["name"] as? String ?? ""
+        let brandId = c["brandId"] as? String
+        // Accept either `color` (key) or `colorHex` from sender
+        let colorHex = (c["colorHex"] as? String) ?? (c["color"] as? String)
+        let barcodeValue = c["barcode"] as? String
+        let barcodeFormat = c["barcodeFormat"] as? String
+
+        let watchCard = WatchCard(
+          id: id,
+          name: name,
+          brandId: brandId,
+          colorHex: colorHex,
+          barcodeValue: barcodeValue,
+          barcodeFormat: barcodeFormat
+        )
+
+        if let idx = current.firstIndex(where: { $0.id == id }) {
+          current[idx] = watchCard
+        } else {
+          current.append(watchCard)
+        }
+      }
+    }
+
+    // Handle deletes
+    if let deletes = payload["deletes"] as? [String], !deletes.isEmpty {
+      current.removeAll { deletes.contains($0.id) }
+    }
+
+    // Persist updated list and notify observers
+    if let out = try? JSONEncoder().encode(current) {
+      UserDefaults.standard.set(out, forKey: "watch.cards")
+      NotificationCenter.default.post(name: .watchCardsDidChange, object: nil)
+    }
   }
 
   // Migration helper — extracts migration logic so it can be unit-tested.

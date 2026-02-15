@@ -12,6 +12,7 @@ import { useCallback, useState } from 'react';
 
 import { updateCard as updateCardInDb, getCardById } from '@/core/database';
 import { LoyaltyCard, BarcodeFormat, CardColor } from '@/core/schemas';
+import { syncCardUpsert } from '@/core/utils/watch-sync';
 
 /**
  * Input type for editing a card (subset of LoyaltyCard)
@@ -68,6 +69,9 @@ export function useEditCard(): UseEditCardReturn {
       };
 
       await updateCardInDb(updatedCard);
+
+      // Fire-and-forget: notify watch of updated card
+      void syncCardUpsert(updatedCard);
 
       // Success feedback per AC9
       await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);

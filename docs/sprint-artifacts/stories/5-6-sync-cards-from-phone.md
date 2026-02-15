@@ -68,9 +68,9 @@ Testing notes:
 ## Tasks/Subtasks
 
 - [ ] Implement WatchConnectivity messaging
-- [ ] Define sync message format and versioning
-- [ ] Add retry + error logging
-- [ ] Integrate with watch local storage
+- [x] Define sync message format and versioning
+- [x] Add retry + error logging
+- [x] Integrate with watch local storage
 
 ---
 

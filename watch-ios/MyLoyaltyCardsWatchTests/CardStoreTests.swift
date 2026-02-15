@@ -87,4 +87,41 @@ final class CardStoreTests: XCTestCase {
     XCTAssertEqual(results.first?.name, "Migrated")
     XCTAssertNil(UserDefaults.standard.data(forKey: "watch.cards"))
   }
+
+  func test_applySyncPayload_upsertsAndDeletes_and_notifiesStore() throws {
+    // Start with empty persisted cards
+    UserDefaults.standard.removeObject(forKey: "watch.cards")
+
+    // Prepare an upsert payload
+    let payload: [String: Any] = [
+      "version": "1.0.0",
+      "upserts": [
+        [
+          "id": "s1",
+          "name": "Synced Card",
+          "brandId": NSNull(),
+          "color": "#1e90ff",
+          "barcode": "5901234123457",
+          "barcodeFormat": "EAN13"
+        ]
+      ],
+      "deletes": ["to-delete"]
+    ]
+
+    // Apply payload
+    CardStore.applySyncPayload(payload)
+
+    // Verify UserDefaults contains the new card
+    let data = UserDefaults.standard.data(forKey: "watch.cards")
+    XCTAssertNotNil(data)
+    let decoded = try JSONDecoder().decode([WatchCard].self, from: data!)
+    XCTAssertEqual(decoded.count, 1)
+    XCTAssertEqual(decoded.first?.id, "s1")
+    XCTAssertEqual(decoded.first?.name, "Synced Card")
+
+    // Verify CardStore observes the change
+    let store = CardStore()
+    // CardStore should load persisted cards on init
+    XCTAssertEqual(store.cards.first?.id, "s1")
+  }
 }

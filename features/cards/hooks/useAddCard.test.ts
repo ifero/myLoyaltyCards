@@ -10,12 +10,18 @@ import { router } from 'expo-router';
 import { v4 as uuidv4 } from 'uuid';
 
 import * as cardRepository from '@/core/database';
+import * as watchSync from '@/core/utils/watch-sync';
 
 import { useAddCard, AddCardInput } from './useAddCard';
 
 // Mock card repository
 jest.mock('@/core/database', () => ({
   insertCard: jest.fn()
+}));
+
+// Mock watch sync helper (fire-and-forget)
+jest.mock('@/core/utils/watch-sync', () => ({
+  syncCardUpsert: jest.fn()
 }));
 
 // UUID is mocked in jest.setup.js
@@ -103,6 +109,9 @@ describe('useAddCard', () => {
       expect(insertedCard.createdAt >= beforeTime).toBe(true);
       expect(insertedCard.createdAt <= afterTime).toBe(true);
       expect(insertedCard.updatedAt).toBe(insertedCard.createdAt);
+
+      // sync helper should be called with the inserted card (fire-and-forget)
+      expect(watchSync.syncCardUpsert).toHaveBeenCalledWith(insertedCard);
     });
   });
 

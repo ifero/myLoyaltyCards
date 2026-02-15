@@ -17,6 +17,11 @@ import { router } from 'expo-router';
 import * as cardRepository from '@/core/database';
 
 import { useDeleteCard } from './useDeleteCard';
+import * as watchSync from '@/core/utils/watch-sync';
+
+jest.mock('@/core/utils/watch-sync', () => ({
+  syncCardDelete: jest.fn()
+}));
 
 // Mock card repository
 jest.mock('@/core/database', () => ({
@@ -62,6 +67,19 @@ describe('useDeleteCard', () => {
       });
 
       expect(success).toBe(true);
+
+      // watch sync should be invoked (fire-and-forget)
+      expect(watchSync.syncCardDelete).toHaveBeenCalledWith(mockCardId);
+    });
+
+    it('notifies watch on delete (sync helper called)', async () => {
+      const { result } = renderHook(() => useDeleteCard(mockCardId));
+
+      await act(async () => {
+        await result.current.deleteCard();
+      });
+
+      expect(watchSync.syncCardDelete).toHaveBeenCalledTimes(1);
     });
 
     it('works offline - local database operation (AC6)', async () => {

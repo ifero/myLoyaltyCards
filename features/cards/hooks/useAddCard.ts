@@ -13,6 +13,7 @@ import { v4 as uuidv4 } from 'uuid';
 
 import { insertCard } from '@/core/database';
 import { LoyaltyCard, BarcodeFormat, CardColor } from '@/core/schemas';
+import { syncCardUpsert } from '@/core/utils/watch-sync';
 
 /**
  * Input type for adding a card (subset of LoyaltyCard)
@@ -68,6 +69,10 @@ export function useAddCard(): UseAddCardReturn {
       };
 
       await insertCard(card);
+
+      // Fire-and-forget: notify watch of new card (retry/backoff handled)
+      // Do not block UI navigation on sync
+      void syncCardUpsert(card);
 
       // Success feedback per AC7
       await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
