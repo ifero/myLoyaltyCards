@@ -1,0 +1,25 @@
+docs/sprint-artifacts/sprint-status.yaml
+  a05b008f9bcf444c 60,116
+docs/sprint-artifacts/stories/5-9-remove-userdefaults-fallback.md
+  a05b008f9bcf444c 1-134
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.1.3",
+  "base_commit_sha": "83fcaf66243b5f462e833bd0721485d0314ec738",
+  "prompts": {
+    "a05b008f9bcf444c": {
+      "agent_id": {
+        "tool": "github-copilot",
+        "id": "17f7d541-ac96-422a-911a-e822e52433f8",
+        "model": "copilot/oswe-vscode-prime"
+      },
+      "human_author": "Andrea Pacino",
+      "messages": [],
+      "total_additions": 224,
+      "total_deletions": 30,
+      "accepted_lines": 237,
+      "overriden_lines": 4
+    }
+  }
+}
