@@ -57,7 +57,7 @@ final class CardStore: ObservableObject {
         barcode: c.barcodeValue ?? "",
         barcodeFormat: c.barcodeFormat ?? "CODE128",
         brandId: c.brandId,
-        color: c.colorHex ?? "gray",
+        color: c.colorHex ?? "grey",
         isFavorite: false,
         lastUsedAt: nil,
         usageCount: 0,
@@ -96,7 +96,7 @@ func mapColor(hex: String?) -> Color? {
   case "#ff6b6b", "red": return Color.red
   case "#2ecc71", "green": return Color.green
   case "#ffa500", "orange": return Color.orange
-  case "#9ca3af", "gray":
+  case "#9ca3af", "gray", "grey":
     return Color(red: 156 / 255, green: 163 / 255, blue: 175 / 255)
   default:
     return Color.gray
