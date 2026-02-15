@@ -57,6 +57,7 @@ current_sprint:
     - 5-3-implement-card-list-carbon-ui
     - 5-4-display-barcode-on-watch
     - 5-5-store-cards-locally-on-watch
+    - 5-9-remove-userdefaults-fallback
     - 5-6-sync-cards-from-phone
 
 development_status:
@@ -112,6 +113,7 @@ development_status:
   5-4-display-barcode-on-watch: done
   5-5-store-cards-locally-on-watch: in-progress
   5-6-sync-cards-from-phone: ready-for-dev
+  5-9-remove-userdefaults-fallback: ready-for-dev
   5-7-create-watch-complication: backlog
   5-8-incremental-catalogue-generation: ready-for-dev
   epic-5-retrospective: optional
