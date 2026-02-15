@@ -1,0 +1,29 @@
+docs/sprint-artifacts/stories/5-5-store-cards-locally-on-watch.md
+  a05b008f9bcf444c 10,69-70,72,74-79
+watch-ios/MyLoyaltyCardsWatchTests/CardStoreTests.swift
+  a05b008f9bcf444c 1,3,39-88
+watch-ios/MyLoyaltyCardsWatch/CardListView.swift
+  a05b008f9bcf444c 2,43-72,214
+docs/sprint-artifacts/sprint-status.yaml
+  a05b008f9bcf444c 114
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.1.3",
+  "base_commit_sha": "a8071fad09149505bd0aaff86aa2018b0eebea45",
+  "prompts": {
+    "a05b008f9bcf444c": {
+      "agent_id": {
+        "tool": "github-copilot",
+        "id": "17f7d541-ac96-422a-911a-e822e52433f8",
+        "model": "copilot/oswe-vscode-prime"
+      },
+      "human_author": "Andrea Pacino",
+      "messages": [],
+      "total_additions": 4,
+      "total_deletions": 4,
+      "accepted_lines": 95,
+      "overriden_lines": 0
+    }
+  }
+}
