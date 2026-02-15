@@ -1,4 +1,6 @@
+import SwiftData
 import XCTest
+
 @testable import MyLoyaltyCardsWatch
 
 final class CardStoreTests: XCTestCase {
@@ -34,8 +36,55 @@ final class CardStoreTests: XCTestCase {
     XCTAssertEqual(store.cards.first?.name, "Env Card")
   }
 
-  func test_migration_fromUserDefaults_to_SwiftData_placeholder() throws {
-    // Placeholder: migration test requires SwiftData ModelContainer setup for test target.
-    throw XCTSkip("Migration test placeholder — implement after SwiftData test container is configured")
+  func test_watchCardEntity_persistence_inModelContext() throws {
+    let container = try ModelContainer(for: [WatchCardEntity.self])
+    let context = ModelContext(container: container)
+
+    let entity = WatchCardEntity(
+      id: "persist-1",
+      name: "Persisted Card",
+      barcode: "5901234123457",
+      barcodeFormat: "EAN13",
+      brandId: nil,
+      color: "#1e90ff",
+      isFavorite: false,
+      lastUsedAt: nil,
+      usageCount: 0,
+      createdAt: Date(),
+      updatedAt: Date(),
+      rawPayload: nil
+    )
+
+    context.insert(entity)
+    try context.save()
+
+    let results = try context.fetch(FetchDescriptor<WatchCardEntity>())
+    XCTAssertEqual(results.count, 1)
+    XCTAssertEqual(results.first?.name, "Persisted Card")
+  }
+
+  func test_migration_fromUserDefaults_to_SwiftData() throws {
+    // Arrange: seed UserDefaults with old JSON payload
+    let cards = [
+      WatchCard(
+        id: "m1", name: "Migrated", brandId: nil, colorHex: "#ff6b6b", barcodeValue: "12345",
+        barcodeFormat: "QR")
+    ]
+    let data = try JSONEncoder().encode(cards)
+    UserDefaults.standard.set(data, forKey: "watch.cards")
+
+    // Prepare an in-memory SwiftData container
+    let container = try ModelContainer(for: [WatchCardEntity.self])
+    let context = ModelContext(container: container)
+
+    // Act: run migration helper
+    let store = CardStore()
+    store.migrateUserDefaults(to: context)
+
+    // Assert: entity exists and UserDefaults cleared
+    let results = try context.fetch(FetchDescriptor<WatchCardEntity>())
+    XCTAssertEqual(results.count, 1)
+    XCTAssertEqual(results.first?.name, "Migrated")
+    XCTAssertNil(UserDefaults.standard.data(forKey: "watch.cards"))
   }
 }
