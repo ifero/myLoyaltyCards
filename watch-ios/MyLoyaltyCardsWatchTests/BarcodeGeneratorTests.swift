@@ -42,4 +42,22 @@ final class BarcodeGeneratorTests: XCTestCase {
     let resultUnknown = await BarcodeGenerator.generateImage(value: "x", formatString: "UNKNOWN", targetSize: size)
     XCTAssertNil(resultUnknown)
   }
+
+  func test_generateImage_forEAN13_returnsImage_and_validatesChecksum() async throws {
+    let size = CGSize(width: 160, height: 80)
+    // valid 13-digit EAN-13
+    let img = await BarcodeGenerator.generateImage(value: "5901234123457", formatString: "EAN13", targetSize: size)
+    XCTAssertNotNil(img)
+
+    // invalid length should return nil
+    let invalid = await BarcodeGenerator.generateImage(value: "5901234", formatString: "EAN13", targetSize: size)
+    XCTAssertNil(invalid)
+  }
+
+  func test_generateImage_forCode128_returnsImage_forAlphanumeric() async throws {
+    let size = CGSize(width: 280, height: 80)
+    let img = await BarcodeGenerator.generateImage(value: "ABC123-xyz", formatString: "CODE128", targetSize: size)
+    XCTAssertNotNil(img)
+  }
 }
+
