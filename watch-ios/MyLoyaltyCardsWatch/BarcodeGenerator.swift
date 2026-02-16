@@ -49,7 +49,7 @@ struct BarcodeGenerator {
       modules = encodeCode128(value: value)
     case .EAN8, .UPCA, .CODE39:
       // pragmatic fallback: render as Code128 so scanners can still read it
-      modules = encodeCode128B(value: value)
+      modules = encodeCode128(value: value)
     case .QR:
       // QR is not implemented on-watch; keep textual placeholder for now.
       let uiImage = renderPlaceholderImage(text: value, size: targetSize)
