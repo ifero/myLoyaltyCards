@@ -36,46 +36,53 @@ final class BarcodeGeneratorTests: XCTestCase {
   func test_generateImage_returnsNil_forUnknownOrNilFormat() async throws {
     let size = CGSize(width: 160, height: 80)
 
-    let resultNil = await BarcodeGenerator.generateImage(value: "x", formatString: nil, targetSize: size)
+    let resultNil = await BarcodeGenerator.generateImage(
+      value: "x", formatString: nil, targetSize: size)
     XCTAssertNil(resultNil)
 
-    let resultUnknown = await BarcodeGenerator.generateImage(value: "x", formatString: "UNKNOWN", targetSize: size)
+    let resultUnknown = await BarcodeGenerator.generateImage(
+      value: "x", formatString: "UNKNOWN", targetSize: size)
     XCTAssertNil(resultUnknown)
   }
 
   func test_generateImage_forEAN13_returnsImage_and_validatesChecksum() async throws {
     let size = CGSize(width: 160, height: 80)
     // valid 13-digit EAN-13
-    let img = await BarcodeGenerator.generateImage(value: "5901234123457", formatString: "EAN13", targetSize: size)
+    let img = await BarcodeGenerator.generateImage(
+      value: "5901234123457", formatString: "EAN13", targetSize: size)
     XCTAssertNotNil(img)
 
     // invalid length should return nil
-    let invalid = await BarcodeGenerator.generateImage(value: "5901234", formatString: "EAN13", targetSize: size)
+    let invalid = await BarcodeGenerator.generateImage(
+      value: "5901234", formatString: "EAN13", targetSize: size)
     XCTAssertNil(invalid)
   }
 
   func test_generateImage_forCode128_returnsImage_forAlphanumeric() async throws {
     let size = CGSize(width: 280, height: 80)
-    let img = await BarcodeGenerator.generateImage(value: "ABC123-xyz", formatString: "CODE128", targetSize: size)
+    let img = await BarcodeGenerator.generateImage(
+      value: "ABC123-xyz", formatString: "CODE128", targetSize: size)
     XCTAssertNotNil(img)
   }
 
   func test_generateImage_code128_usesCodeC_forEvenDigits() async throws {
     let size = CGSize(width: 280, height: 80)
-    let img = await BarcodeGenerator.generateImage(value: "12345678", formatString: "CODE128", targetSize: size)
+    let img = await BarcodeGenerator.generateImage(
+      value: "12345678", formatString: "CODE128", targetSize: size)
     XCTAssertNotNil(img)
   }
 
   func test_generateImage_code128_handlesOddDigitRun() async throws {
     let size = CGSize(width: 300, height: 80)
-    let img = await BarcodeGenerator.generateImage(value: "A12345B", formatString: "CODE128", targetSize: size)
+    let img = await BarcodeGenerator.generateImage(
+      value: "A12345B", formatString: "CODE128", targetSize: size)
     XCTAssertNotNil(img)
   }
 
   func test_generateImage_code128_twoDigits_entireString() async throws {
     let size = CGSize(width: 60, height: 40)
-    let img = await BarcodeGenerator.generateImage(value: "12", formatString: "CODE128", targetSize: size)
+    let img = await BarcodeGenerator.generateImage(
+      value: "12", formatString: "CODE128", targetSize: size)
     XCTAssertNotNil(img)
   }
 }
-

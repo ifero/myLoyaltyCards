@@ -73,7 +73,10 @@ struct BarcodeFlashView: View {
       .padding(.horizontal, 6)
       .focusable(true)
       .focused($isFocused)
-      .digitalCrownRotation($crownRotation, from: -1.0, through: 1.0, by: 0.1, sensitivity: .low, isContinuous: true, isHapticFeedbackEnabled: true)
+      .digitalCrownRotation(
+        $crownRotation, from: -1.0, through: 1.0, by: 0.1, sensitivity: .low, isContinuous: true,
+        isHapticFeedbackEnabled: true
+      )
       .onChange(of: crownRotation) { newValue in
         // Dismiss on any crown movement (single-shot)
         guard !crownTriggered else { return }
@@ -94,7 +97,8 @@ struct BarcodeFlashView: View {
       guard barcodeImage == nil && !isLoading else { return }
       isLoading = true
 
-      let img = await BarcodeGenerator.generateImage(value: value, formatString: format, targetSize: CGSize(width: 160, height: 80))
+      let img = await BarcodeGenerator.generateImage(
+        value: value, formatString: format, targetSize: CGSize(width: 160, height: 80))
       if Task.isCancelled {
         isLoading = false
         return
@@ -114,7 +118,9 @@ struct BarcodeFlashView: View {
 struct BarcodeFlashView_Previews: PreviewProvider {
   static var previews: some View {
     BarcodeFlashView(
-      card: WatchCard(id: "1", name: "Esselunga", brandId: "brand-special", colorHex: "#1e90ff", barcodeValue: "5901234123457", barcodeFormat: "EAN13")
+      card: WatchCard(
+        id: "1", name: "Esselunga", brandId: "brand-special", colorHex: "#1e90ff",
+        barcodeValue: "5901234123457", barcodeFormat: "EAN13")
     )
     .previewDisplayName("Barcode flash")
     .previewDevice(PreviewDevice(rawValue: "Apple Watch Series 9 - 44mm"))
