@@ -1,0 +1,23 @@
+watch-ios/MyLoyaltyCardsWatch.xcodeproj/project.pbxproj
+  825cb313148ab502 15,17-18,24,67-68,245,280-281,297-298,320,322,359-360,373-374,387-388
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.1.3",
+  "base_commit_sha": "b5daa93302d5814679ffaafa1f8011b6ca13ebfd",
+  "prompts": {
+    "825cb313148ab502": {
+      "agent_id": {
+        "tool": "github-copilot",
+        "id": "8ac24a68-f50f-4660-ae76-a251c7dcbe10",
+        "model": "copilot/oswe-vscode-prime"
+      },
+      "human_author": null,
+      "messages": [],
+      "total_additions": 0,
+      "total_deletions": 0,
+      "accepted_lines": 19,
+      "overriden_lines": 0
+    }
+  }
+}
