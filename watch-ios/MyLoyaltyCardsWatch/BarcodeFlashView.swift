@@ -32,15 +32,33 @@ struct BarcodeFlashView: View {
             .accessibilityLabel("Barcode for \(card.name)")
             .onTapGesture { dismiss() }
         } else {
-          // Placeholder while generating (still dismissible)
-          Image(systemName: "barcode")
-            .resizable()
-            .scaledToFit()
-            .foregroundColor(.black)
-            .frame(maxHeight: 80)
+          // Show a textual placeholder (card barcode value) while renderer is not available.
+          if let value = card.barcodeValue, !value.isEmpty {
+            ZStack {
+              RoundedRectangle(cornerRadius: 6)
+                .stroke(Color.black, lineWidth: 1)
+                .frame(maxHeight: 80)
+
+              Text(value)
+                .font(.system(size: 14, weight: .semibold, design: .monospaced))
+                .foregroundColor(.black)
+                .lineLimit(1)
+                .minimumScaleFactor(0.5)
+                .padding(.horizontal, 6)
+            }
             .accessibilityIdentifier("barcode-image")
-            .accessibilityLabel("Barcode for \(card.name)")
+            .accessibilityLabel("Barcode value for \(card.name)")
             .onTapGesture { dismiss() }
+          } else {
+            Image(systemName: "barcode")
+              .resizable()
+              .scaledToFit()
+              .foregroundColor(.black)
+              .frame(maxHeight: 80)
+              .accessibilityIdentifier("barcode-image")
+              .accessibilityLabel("Barcode for \(card.name)")
+              .onTapGesture { dismiss() }
+          }
         }
 
         // Card name (visible on barcode screen)

@@ -1,7 +1,3 @@
-#if canImport(CoreImage)
-import CoreImage
-import CoreImage.CIFilterBuiltins
-#endif
 import SwiftUI
 
 #if canImport(UIKit)
@@ -17,11 +13,13 @@ enum WatchBarcodeFormat: String {
   case QR
 }
 
-/// Helper to generate barcode CIImage/UIImage on watchOS.
+/// Helper to generate barcode images on the watch.
+///
+/// NOTE: CoreImage-based barcode generation is not available on watchOS in this
+/// build — the CI-based renderer was removed.  This file currently returns a
+/// simple textual placeholder (barcode value) and logs a TODO for future work
+/// (implement a CoreGraphics renderer or fetch from phone/server).
 struct BarcodeGenerator {
-  #if canImport(CoreImage)
-  private static let ciContext = CIContext()
-  #endif
   private static let uiImageCache: NSCache<NSString, UIImage> = {
     let c = NSCache<NSString, UIImage>()
     c.countLimit = 64  // keep a reasonable number of cached barcode images
@@ -30,132 +28,73 @@ struct BarcodeGenerator {
     return c
   }()
 
-  #if canImport(CoreImage)
-  /// Generate a CIImage for the given value + format. Returns nil on failure.
-  static func generateCIImage(value: String, format: WatchBarcodeFormat) -> CIImage? {
-    // Prefer UTF-8 to support QR payloads with non-ASCII characters
-    let data = value.data(using: .utf8) ?? value.data(using: .ascii) ?? Data()
-
-    switch format {
-    case .QR:
-      let filter = CIFilter.qrCodeGenerator()
-      filter.setValue(data, forKey: "inputMessage")
-      // Default correction level M
-      filter.setValue("M", forKey: "inputCorrectionLevel")
-      return filter.outputImage
-
-    case .CODE128:
-      if let filter = CIFilter(name: "CICode128BarcodeGenerator") {
-        filter.setValue(data, forKey: "inputMessage")
-        // quiet space (optional)
-        filter.setValue(7.0, forKey: "inputQuietSpace")
-        return filter.outputImage
-      }
-      return nil
-
-    case .EAN13, .EAN8, .UPCA, .CODE39:
-      // CoreImage does not provide built-in EAN/UPC/CODE39 generators on watchOS.
-      // Fallback: encode as CODE128 so the barcode is scannable by most scanners.
-      // NOTE: This is an intentional pragmatic fallback for MVP — replace with
-      // proper format-specific renderer if/when a library or implementation is added.
-      if let filter = CIFilter(name: "CICode128BarcodeGenerator") {
-        filter.setValue(data, forKey: "inputMessage")
-        filter.setValue(7.0, forKey: "inputQuietSpace")
-        return filter.outputImage
-      }
-      return nil
-    }
-  }
-
-  /// Produce a SwiftUI Image sized at `targetSize` from CIImage (scaled with nearest sampling for crisp bars).
-  @MainActor
-  static func image(from ciImage: CIImage, targetSize: CGSize) -> Image? {
-    // Determine scale to fit targetSize preserving aspect
-    let extent = ciImage.extent.integral
-    guard extent.width > 0 && extent.height > 0 else { return nil }
-
-    let scaleX = targetSize.width / extent.width
-    let scaleY = targetSize.height / extent.height
-    let scale = min(scaleX, scaleY)
-
-    let transformed = ciImage.transformed(by: CGAffineTransform(scaleX: scale, y: scale))
-
-    guard let cgImage = ciContext.createCGImage(transformed, from: transformed.extent) else {
-      return nil
-    }
-
-    #if os(watchOS)
-      let uiImage = UIImage(cgImage: cgImage)
-    #else
-      let uiImage = UIImage(cgImage: cgImage)
+  /// Placeholder renderer + TODO log for missing CoreImage implementation.
+  /// Returns a textual image of the barcode `value` for known formats; returns
+  /// nil for unknown / missing format so callers can gracefully degrade.
+  static func generateImage(value: String, formatString: String?, targetSize: CGSize) async -> Image? {
+    // Log developer TODO once (debug builds)
+    #if DEBUG
+      print("TODO: CoreImage renderer removed on watchOS — returning textual placeholder. Implement CoreGraphics renderer or phone-side generation.")
     #endif
 
-    return Image(uiImage: uiImage)
-  }
-  #endif
-
-  /// Convenience: asynchronously generate SwiftUI Image from value + format + targetSize (with caching)
-  static func generateImage(value: String, formatString: String?, targetSize: CGSize) async
-    -> Image?
-  {
-    #if canImport(CoreImage)
-    // Normalize format string for key (avoid duplicate cache entries)
+    // Normalize/validate format string (maintain previous behavior)
     let fmtKey = (formatString ?? "").trimmingCharacters(in: .whitespacesAndNewlines).uppercased()
-    let key = "\(value)|\(fmtKey)|\(Int(targetSize.width))x\(Int(targetSize.height))" as NSString
+    guard !fmtKey.isEmpty, WatchBarcodeFormat(rawValue: fmtKey) != nil else { return nil }
 
+    // Build cache key
+    let key = "\(value)|\(fmtKey)|\(Int(targetSize.width))x\(Int(targetSize.height))" as NSString
     if let cached = uiImageCache.object(forKey: key) {
       return Image(uiImage: cached)
     }
 
-    // Validate format and CI generation
-    guard let fmt = WatchBarcodeFormat(rawValue: fmtKey) else { return nil }
-    guard let ci = generateCIImage(value: value, format: fmt) else { return nil }
+    // Create a simple text-based placeholder UIImage showing the barcode value.
+    let uiImage = renderPlaceholderImage(text: value, size: targetSize)
 
-    // Scale CIImage to requested target size
-    let extent = ci.extent.integral
-    guard extent.width > 0 && extent.height > 0 else { return nil }
-    let scaleX = targetSize.width / extent.width
-    let scaleY = targetSize.height / extent.height
-    let scale = min(scaleX, scaleY)
-    let transformed = ci.transformed(by: CGAffineTransform(scaleX: scale, y: scale))
-
-    // Create CGImage off the main thread
-    let cgImage: CGImage? = await withCheckedContinuation { cont in
-      DispatchQueue.global(qos: .userInitiated).async {
-        #if DEBUG
-          if debugDelayForTests > 0 {
-            Thread.sleep(forTimeInterval: debugDelayForTests)
-          }
-        #endif
-        let cg = ciContext.createCGImage(transformed, from: transformed.extent)
-        cont.resume(returning: cg)
-      }
-    }
-    guard let safeCG = cgImage else { return nil }
-
-    // Respect cancellation before touching UI
-    if Task.isCancelled { return nil }
-
-    // Construct UIImage on the MainActor (UIKit is main-thread-only) and capture scale for cost
-    let (uiImage, screenScale) = await MainActor.run {
-      (UIImage(cgImage: safeCG), UIScreen.main.scale)
-    }
-
-    // approximate memory cost (bytes) and cache
-    let cost = Int(targetSize.width * targetSize.height * screenScale * 4)
+    // Cache and return as SwiftUI Image
+    let cost = Int(targetSize.width * targetSize.height * UIScreen.main.scale * 4)
     uiImageCache.setObject(uiImage, forKey: key, cost: cost)
 
     return Image(uiImage: uiImage)
-    #else
-    // CoreImage not available on this platform (simulator); return nil so callers can gracefully degrade.
-    return nil
-    #endif
+  }
+
+  // MARK: - Helpers
+  private static func renderPlaceholderImage(text: String, size: CGSize) -> UIImage {
+    let scale = UIScreen.main.scale
+    let scaledSize = CGSize(width: max(1, size.width), height: max(1, size.height))
+
+    UIGraphicsBeginImageContextWithOptions(scaledSize, true, scale)
+    defer { UIGraphicsEndImageContext() }
+
+    // white background (matches barcode flash screen)
+    UIColor.white.setFill()
+    UIRectFill(CGRect(origin: .zero, size: scaledSize))
+
+    // draw monospaced text centered
+    let fontSize = max(10, min(scaledSize.height * 0.35, 26))
+    let font = UIFont.monospacedDigitSystemFont(ofSize: fontSize, weight: .semibold)
+    let paragraph = NSMutableParagraphStyle()
+    paragraph.alignment = .center
+
+    let attrs: [NSAttributedString.Key: Any] = [
+      .font: font,
+      .foregroundColor: UIColor.black,
+      .paragraphStyle: paragraph
+    ]
+
+    let insetRect = CGRect(x: 6, y: (scaledSize.height - font.lineHeight) / 2, width: scaledSize.width - 12, height: font.lineHeight)
+    (text as NSString).draw(in: insetRect, withAttributes: attrs)
+
+    // subtle border to suggest a placeholder barcode area
+    let borderRect = CGRect(x: 1 / scale, y: 1 / scale, width: scaledSize.width - 2 / scale, height: scaledSize.height - 2 / scale)
+    let borderPath = UIBezierPath(roundedRect: borderRect, cornerRadius: 6 / scale)
+    UIColor.black.setStroke()
+    borderPath.lineWidth = 1 / scale
+    borderPath.stroke()
+
+    return UIGraphicsGetImageFromCurrentImageContext() ?? UIImage()
   }
 
   #if DEBUG
-    /// Optional delay (seconds) to make cancellation tests deterministic.
-    static var debugDelayForTests: TimeInterval = 0
-
     /// Test helper: check whether a generated image is present in the cache.
     static func isImageCached(value: String, formatString: String?, targetSize: CGSize) -> Bool {
       let fmtKey = (formatString ?? "").trimmingCharacters(in: .whitespacesAndNewlines).uppercased()
