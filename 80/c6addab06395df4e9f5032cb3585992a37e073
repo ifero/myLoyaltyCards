@@ -1,0 +1,23 @@
+watch-ios/MyLoyaltyCardsWatch.xcodeproj/project.pbxproj
+  852e44430d5a3738 19-21,38-39,117-118,287-289,414,429
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.1.3",
+  "base_commit_sha": "80c6addab06395df4e9f5032cb3585992a37e073",
+  "prompts": {
+    "852e44430d5a3738": {
+      "agent_id": {
+        "tool": "github-copilot",
+        "id": "688deb5b-5b19-4156-a76e-a5ea08976cf0",
+        "model": "copilot/oswe-vscode-prime"
+      },
+      "human_author": "Andrea Pacino",
+      "messages": [],
+      "total_additions": 15,
+      "total_deletions": 4,
+      "accepted_lines": 12,
+      "overriden_lines": 0
+    }
+  }
+}
