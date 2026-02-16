@@ -1,0 +1,25 @@
+watch-ios/MyLoyaltyCardsWatch/BarcodeGenerator.swift
+  852e44430d5a3738 49,150-157,160-166,169-225,230-231
+watch-ios/MyLoyaltyCardsWatchTests/BarcodeGeneratorTests.swift
+  852e44430d5a3738 62-79
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.1.3",
+  "base_commit_sha": "bbe7214fb1fd5df94ef6f26dab78982d4ef15403",
+  "prompts": {
+    "852e44430d5a3738": {
+      "agent_id": {
+        "tool": "github-copilot",
+        "id": "688deb5b-5b19-4156-a76e-a5ea08976cf0",
+        "model": "copilot/oswe-vscode-prime"
+      },
+      "human_author": "Andrea Pacino",
+      "messages": [],
+      "total_additions": 95,
+      "total_deletions": 14,
+      "accepted_lines": 95,
+      "overriden_lines": 0
+    }
+  }
+}
