@@ -59,7 +59,7 @@ struct BarcodeGenerator {
     case .QR:
       // QR is not implemented on-watch; keep textual placeholder for now.
       let uiImage = renderPlaceholderImage(text: value, size: targetSize)
-      let cost = Int(targetSize.width * targetSize.height * UIScreen.main.scale * 4)
+      let cost = Int(targetSize.width * targetSize.height * deviceScale * 4)
       uiImageCache.setObject(uiImage, forKey: key, cost: cost)
       return Image(uiImage: uiImage)
     }
