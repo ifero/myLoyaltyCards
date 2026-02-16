@@ -1,5 +1,7 @@
+#if canImport(CoreImage)
 import CoreImage
 import CoreImage.CIFilterBuiltins
+#endif
 import SwiftUI
 
 #if canImport(UIKit)
@@ -17,7 +19,9 @@ enum WatchBarcodeFormat: String {
 
 /// Helper to generate barcode CIImage/UIImage on watchOS.
 struct BarcodeGenerator {
+  #if canImport(CoreImage)
   private static let ciContext = CIContext()
+  #endif
   private static let uiImageCache: NSCache<NSString, UIImage> = {
     let c = NSCache<NSString, UIImage>()
     c.countLimit = 64  // keep a reasonable number of cached barcode images
@@ -26,6 +30,7 @@ struct BarcodeGenerator {
     return c
   }()
 
+  #if canImport(CoreImage)
   /// Generate a CIImage for the given value + format. Returns nil on failure.
   static func generateCIImage(value: String, format: WatchBarcodeFormat) -> CIImage? {
     // Prefer UTF-8 to support QR payloads with non-ASCII characters
@@ -87,11 +92,13 @@ struct BarcodeGenerator {
 
     return Image(uiImage: uiImage)
   }
+  #endif
 
   /// Convenience: asynchronously generate SwiftUI Image from value + format + targetSize (with caching)
   static func generateImage(value: String, formatString: String?, targetSize: CGSize) async
     -> Image?
   {
+    #if canImport(CoreImage)
     // Normalize format string for key (avoid duplicate cache entries)
     let fmtKey = (formatString ?? "").trimmingCharacters(in: .whitespacesAndNewlines).uppercased()
     let key = "\(value)|\(fmtKey)|\(Int(targetSize.width))x\(Int(targetSize.height))" as NSString
@@ -139,6 +146,10 @@ struct BarcodeGenerator {
     uiImageCache.setObject(uiImage, forKey: key, cost: cost)
 
     return Image(uiImage: uiImage)
+    #else
+    // CoreImage not available on this platform (simulator); return nil so callers can gracefully degrade.
+    return nil
+    #endif
   }
 
   #if DEBUG

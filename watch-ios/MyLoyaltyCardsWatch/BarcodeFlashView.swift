@@ -96,7 +96,7 @@ struct BarcodeFlashView: View {
 struct BarcodeFlashView_Previews: PreviewProvider {
   static var previews: some View {
     BarcodeFlashView(
-      card: WatchCard(id: "1", name: "Esselunga", brandId: "brand-special", colorHex: "#1e90ff")
+      card: WatchCard(id: "1", name: "Esselunga", brandId: "brand-special", colorHex: "#1e90ff", barcodeValue: "5901234123457", barcodeFormat: "EAN13")
     )
     .previewDisplayName("Barcode flash")
     .previewDevice(PreviewDevice(rawValue: "Apple Watch Series 9 - 44mm"))

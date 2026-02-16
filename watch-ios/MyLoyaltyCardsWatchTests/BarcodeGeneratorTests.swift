@@ -2,6 +2,7 @@ import XCTest
 
 @testable import MyLoyaltyCardsWatch
 
+#if canImport(CoreImage)
 final class BarcodeGeneratorTests: XCTestCase {
   func test_generateQRCode_returnsCIImage() throws {
     let ci = BarcodeGenerator.generateCIImage(value: "https://example.com", format: .QR)
@@ -83,3 +84,4 @@ final class BarcodeGeneratorTests: XCTestCase {
     XCTAssertNotNil(ci)
   }
 }
+#endif

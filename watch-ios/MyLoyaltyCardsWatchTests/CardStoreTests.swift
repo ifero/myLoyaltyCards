@@ -37,7 +37,7 @@ final class CardStoreTests: XCTestCase {
   }
 
   func test_watchCardEntity_persistence_inModelContext() throws {
-    let container = try ModelContainer(for: [WatchCardEntity.self])
+    let container = try ModelContainer(for: WatchCardEntity.self)
     let context = ModelContext(container: container)
 
     let entity = WatchCardEntity(
@@ -74,7 +74,7 @@ final class CardStoreTests: XCTestCase {
     UserDefaults.standard.set(data, forKey: "watch.cards")
 
     // Prepare an in-memory SwiftData container
-    let container = try ModelContainer(for: [WatchCardEntity.self])
+    let container = try ModelContainer(for: WatchCardEntity.self)
     let context = ModelContext(container: container)
 
     // Act: run migration helper
