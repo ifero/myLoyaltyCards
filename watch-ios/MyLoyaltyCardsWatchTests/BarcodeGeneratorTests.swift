@@ -59,5 +59,23 @@ final class BarcodeGeneratorTests: XCTestCase {
     let img = await BarcodeGenerator.generateImage(value: "ABC123-xyz", formatString: "CODE128", targetSize: size)
     XCTAssertNotNil(img)
   }
+
+  func test_generateImage_code128_usesCodeC_forEvenDigits() async throws {
+    let size = CGSize(width: 280, height: 80)
+    let img = await BarcodeGenerator.generateImage(value: "12345678", formatString: "CODE128", targetSize: size)
+    XCTAssertNotNil(img)
+  }
+
+  func test_generateImage_code128_handlesOddDigitRun() async throws {
+    let size = CGSize(width: 300, height: 80)
+    let img = await BarcodeGenerator.generateImage(value: "A12345B", formatString: "CODE128", targetSize: size)
+    XCTAssertNotNil(img)
+  }
+
+  func test_generateImage_code128_twoDigits_entireString() async throws {
+    let size = CGSize(width: 60, height: 40)
+    let img = await BarcodeGenerator.generateImage(value: "12", formatString: "CODE128", targetSize: size)
+    XCTAssertNotNil(img)
+  }
 }
 

@@ -46,7 +46,7 @@ struct BarcodeGenerator {
     case .EAN13:
       modules = encodeEAN13(value: value)
     case .CODE128:
-      modules = encodeCode128B(value: value)
+      modules = encodeCode128(value: value)
     case .EAN8, .UPCA, .CODE39:
       // pragmatic fallback: render as Code128 so scanners can still read it
       modules = encodeCode128B(value: value)
@@ -147,24 +147,88 @@ struct BarcodeGenerator {
     return (10 - (sum % 10)) % 10
   }
 
-  /// Encode using Code128 (Code Set B only). Returns module widths sequence.
-  private static func encodeCode128B(value: String) -> [Int]? {
-    // validate allowed characters (32..126)
-    let bytes = Array(value.utf8)
-    for b in bytes {
-      if b < 32 || b > 126 { return nil }
+  /// Encode using Code128 with automatic Code Set C optimization.
+  /// Returns module widths sequence for rendering.
+  private static func encodeCode128(value: String) -> [Int]? {
+    // Validate that characters are in the supported ASCII range (32..126).
+    // Numeric digits (48..57) are additionally used for Code Set C pairs.
+    let chars = Array(value)
+    for ch in chars {
+      guard let ascii = ch.asciiValue, ascii >= 32 && ascii <= 126 else { return nil }
     }
 
-    // Code Set B: start code = 104
-    var codes: [Int] = [104]
-    for b in bytes {
-      codes.append(Int(b) - 32)
+    // Helper: count consecutive digits starting at index
+    func digitRunLength(from idx: Int) -> Int {
+      var j = idx
+      while j < chars.count, let a = chars[j].asciiValue, a >= 48 && a <= 57 {
+        j += 1
+      }
+      return j - idx
+    }
+
+    // Decide whether to start in Code C:
+    // - if the entire string is digits and length is even (>=2) -> start C
+    // - or if a digit run of length >= 4 starts at 0 -> start C
+    let entireDigits = digitRunLength(from: 0) == chars.count
+    let startDigitRun = digitRunLength(from: 0)
+    var usingC = false
+    if entireDigits && chars.count % 2 == 0 && chars.count >= 2 {
+      usingC = true
+    } else if startDigitRun >= 4 {
+      usingC = true
+    }
+
+    // Start code: Start B = 104, Start C = 105
+    var codes: [Int] = [usingC ? 105 : 104]
+
+    var i = 0
+    while i < chars.count {
+      if usingC {
+        // Encode pairs of digits while possible
+        let run = digitRunLength(from: i)
+        if run >= 2 {
+          // take as many pairs as possible
+          let pairs = run / 2
+          for _ in 0..<pairs {
+            let a = Int(chars[i].asciiValue! - 48)
+            let b = Int(chars[i + 1].asciiValue! - 48)
+            let val = a * 10 + b
+            codes.append(val)
+            i += 2
+          }
+          // if an odd digit remains, switch to Code B for the last digit
+          if i < chars.count && (chars[i].asciiValue! >= 48 && chars[i].asciiValue! <= 57) {
+            // switch to Code B (100)
+            codes.append(100)
+            usingC = false
+            // fallthrough to encode the single digit in Code B loop
+          }
+        } else {
+          // cannot encode in C, switch to B
+          codes.append(100)
+          usingC = false
+        }
+      } else {
+        // In Code B: check upcoming digit run to decide to switch to C
+        let run = digitRunLength(from: i)
+        // Use Code C if beneficial: at least 4 digits in the middle/start
+        if run >= 4 {
+          codes.append(99) // Code C
+          usingC = true
+          continue // next loop will encode in C
+        }
+
+        // Encode single character in Code B
+        let ascii = Int(chars[i].asciiValue!)
+        codes.append(ascii - 32)
+        i += 1
+      }
     }
 
     // checksum
     var sum = codes[0]
-    for (i, c) in codes.dropFirst().enumerated() {
-      sum += c * (i + 1)
+    for (idx, c) in codes.dropFirst().enumerated() {
+      sum += c * (idx + 1)
     }
     let check = sum % 103
     codes.append(check)
@@ -185,7 +249,6 @@ struct BarcodeGenerator {
       "114131","311141","411131","211412","211214","211232","233111","211214","233111","211214"
     ]
 
-    // Note: last entries include STOP; above table contains patterns for codes 0..106
     // convert codes -> module widths
     var modules: [Int] = []
     for c in codes {
