@@ -196,7 +196,8 @@ struct CardListView: View {
     }
     #if DEBUG
       .toolbar {
-        ToolbarItem(placement: .navigationBarTrailing) {
+        // use a watch-safe placement for the debug import button
+        ToolbarItem(placement: .automatic) {
           Button(action: importSampleCards) {
             Text("Import sample cards")
           }

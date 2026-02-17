@@ -345,6 +345,8 @@
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = watchos;
 				SUPPORTED_PLATFORMS = "watchos watchsimulator";
+				ENABLE_TESTABILITY = YES;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
 					SWIFT_VERSION = 5.9;
 					TARGETED_DEVICE_FAMILY = 4;
 					WATCHOS_DEPLOYMENT_TARGET = 10.0;
@@ -413,6 +415,9 @@
 				PRODUCT_BUNDLE_IDENTIFIER = com.iferoporefi.myloyaltycards.watch.tests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = watchos;
+				"ARCHS[sdk=watchsimulator*]" = arm64;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/MyLoyaltyCardsWatch.app/MyLoyaltyCardsWatch";
+				BUNDLE_LOADER = "$(TEST_HOST)";
 					SWIFT_VERSION = 5.9;
 					WATCHOS_DEPLOYMENT_TARGET = 10.0;
 			};
@@ -428,6 +433,8 @@
 				PRODUCT_BUNDLE_IDENTIFIER = com.iferoporefi.myloyaltycards.watch.tests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = watchos;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/MyLoyaltyCardsWatch.app/MyLoyaltyCardsWatch";
+				BUNDLE_LOADER = "$(TEST_HOST)";
 				SWIFT_VERSION = 5.9;
 				WATCHOS_DEPLOYMENT_TARGET = 10.0;
 			};

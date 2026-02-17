@@ -1,5 +1,5 @@
-/* eslint-disable @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires */
-
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-require-imports */
 
 describe('watch-connectivity wrapper (scaffold)', () => {
   afterEach(() => {
@@ -10,6 +10,8 @@ describe('watch-connectivity wrapper (scaffold)', () => {
   test('isWatchConnectivityAvailable() returns false when native module missing', () => {
     // ensure require will throw
     jest.isolateModules(() => {
+      // mock an empty native module to simulate 'missing' API surface
+      jest.doMock('react-native-watch-connectivity', () => ({}), { virtual: true });
       const mod = require('./watch-connectivity');
       expect(mod.isWatchConnectivityAvailable()).toBe(false);
     });
@@ -20,28 +22,32 @@ describe('watch-connectivity wrapper (scaffold)', () => {
 
     // isolate module loading so the mocked native module is used by the tested module
     // then call the async API outside the isolation block
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     let mod: any = null;
     jest.isolateModules(() => {
-      jest.doMock('react-native-watch-connectivity', () => ({ sendMessage: mockSend }), { virtual: true });
-      // eslint-disable-next-line @typescript-eslint/no-var-requires
+      // Provide both CommonJS and ES default shapes to be robust in tests
+      jest.doMock(
+        'react-native-watch-connectivity',
+        () => ({ default: { sendMessage: mockSend }, sendMessage: mockSend }),
+        { virtual: true }
+      );
       mod = require('./watch-connectivity');
     });
 
     // call the wrapper; ensure it triggers native sendMessage
     await mod.sendMessageToWatch({ hello: 'watch' });
     // verify native function called
-    // eslint-disable-next-line @typescript-eslint/no-var-requires
     const pkg = require('react-native-watch-connectivity');
     expect(pkg.sendMessage).toHaveBeenCalledWith({ hello: 'watch' });
   });
 
   test('subscribeToWatchMessages no-ops cleanly when native module missing', () => {
-    // eslint-disable-next-line @typescript-eslint/no-var-requires
-    const mod = require('./watch-connectivity');
-    const unsubscribe = mod.subscribeToWatchMessages(() => {});
-    expect(typeof unsubscribe).toBe('function');
-    // should not throw when called
-    expect(() => unsubscribe()).not.toThrow();
+    jest.isolateModules(() => {
+      jest.doMock('react-native-watch-connectivity', () => ({}), { virtual: true });
+      const mod = require('./watch-connectivity');
+      const unsubscribe = mod.subscribeToWatchMessages(() => {});
+      expect(typeof unsubscribe).toBe('function');
+      // should not throw when called
+      expect(() => unsubscribe()).not.toThrow();
+    });
   });
 });

@@ -77,7 +77,9 @@ struct BarcodeGenerator {
 
     if Task.isCancelled { return nil }
 
-    let uiImage = await MainActor.run { UIImage(cgImage: safeCG, scale: deviceScale, orientation: .up) }
+    let uiImage = await MainActor.run {
+      UIImage(cgImage: safeCG, scale: deviceScale, orientation: .up)
+    }
 
     // Cache and return
     let cost = Int(targetSize.width * targetSize.height * deviceScale * 4)

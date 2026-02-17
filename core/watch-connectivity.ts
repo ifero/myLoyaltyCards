@@ -10,67 +10,90 @@
  * `react-native-watch-connectivity` then replace the fallbacks.
  */
 
-/* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unused-vars, @typescript-eslint/no-require-imports */
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-require-imports */
 
 type Unsubscribe = () => void;
 
-export const isWatchConnectivityAvailable = (): boolean => {
+function getNativeModule(): any | null {
   try {
-    // dynamic require so the app doesn't crash if the native module isn't installed yet
-    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    // runtime require to avoid import-time native checks during Jest
+
     const pkg = require('react-native-watch-connectivity');
-    return !!pkg && (typeof pkg.sendMessage === 'function' || typeof pkg.updateApplicationContext === 'function');
-  } catch (_err) {
-    return false;
+    return pkg;
+  } catch {
+    return null;
   }
+}
+
+// Message schema used for phone <-> watch communication in story 5.6
+export type WatchMessage =
+  | { type: 'requestCards' }
+  | { type: 'syncCard'; payload: { id: string; cardData: any } }
+  | { type: 'ack'; payload?: { id?: string } }
+  | { type: string; payload?: any };
+
+export const isWatchConnectivityAvailable = (): boolean => {
+  const native = getNativeModule();
+  return (
+    !!native &&
+    (typeof native.sendMessage === 'function' ||
+      typeof native.updateApplicationContext === 'function')
+  );
 };
 
-export async function sendMessageToWatch(payload: any): Promise<boolean> {
+export async function sendMessageToWatch(message: WatchMessage): Promise<boolean> {
+  const native = getNativeModule();
+  if (!native) return false;
   try {
-    // eslint-disable-next-line @typescript-eslint/no-var-requires
-    const pkg = require('react-native-watch-connectivity');
-    if (typeof pkg.sendMessage === 'function') {
-      // attempt send; treat presence of the function as a success regardless
-      // of the resolved value to provide a best-effort API surface.
-      try { await pkg.sendMessage(payload); } catch { /* ignore */ }
+    if (typeof native.sendMessage === 'function') {
+      await native.sendMessage(message).catch(() => {});
       return true;
     }
-    if (typeof pkg.updateApplicationContext === 'function') {
-      await pkg.updateApplicationContext(payload);
+    if (typeof native.updateApplicationContext === 'function') {
+      await native.updateApplicationContext(message).catch(() => {});
       return true;
     }
     return false;
-  } catch (_err) {
-    // native module not present (or runtime error) — treat as noop for now
+  } catch {
     return false;
   }
 }
 
-export function subscribeToWatchMessages(handler: (msg: any) => void): Unsubscribe {
-  try {
-    // eslint-disable-next-line @typescript-eslint/no-var-requires
-    const pkg = require('react-native-watch-connectivity');
+export function subscribeToWatchMessages(handler: (msg: WatchMessage) => void): Unsubscribe {
+  const native = getNativeModule();
+  if (!native) return () => {};
 
-    // Common RN native API shapes vary; attempt to wire common hooks.
-    if (typeof pkg.addListener === 'function') {
-      const subscription = pkg.addListener('message', handler);
-      return () => { if (subscription && typeof subscription.remove === 'function') subscription.remove(); };
-    }
-
-    if (typeof pkg.onMessage === 'function') {
-      pkg.onMessage(handler);
-      return () => { if (typeof pkg.removeMessageListener === 'function') pkg.removeMessageListener(handler); };
-    }
-
-    // Last-resort: no-op unsubscribe
-    return () => {};
-  } catch (_err) {
-    return () => {};
+  // Common shapes: `addListener('message', cb)` or `onMessage(cb)`
+  if (typeof native.addListener === 'function') {
+    const subscription = native.addListener('message', handler);
+    return () => {
+      if (subscription && typeof subscription.remove === 'function') subscription.remove();
+    };
   }
+
+  if (typeof native.onMessage === 'function') {
+    native.onMessage(handler);
+    return () => {
+      if (typeof native.removeMessageListener === 'function') native.removeMessageListener(handler);
+    };
+  }
+
+  return () => {};
+}
+
+export function requestCardsFromPhone(): Promise<boolean> {
+  return sendMessageToWatch({ type: 'requestCards' });
+}
+
+export function syncCardToWatch(id: string, cardData: any): Promise<boolean> {
+  return sendMessageToWatch({ type: 'syncCard', payload: { id, cardData } });
 }
 
 export default {
   isWatchConnectivityAvailable,
   sendMessageToWatch,
   subscribeToWatchMessages,
+  requestCardsFromPhone,
+  syncCardToWatch
 };
