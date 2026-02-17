@@ -17,12 +17,17 @@ describe('watch-connectivity wrapper (scaffold)', () => {
 
   test('sendMessageToWatch uses sendMessage when available', async () => {
     const mockSend = jest.fn().mockResolvedValue(true);
-    jest.doMock('react-native-watch-connectivity', () => ({ sendMessage: mockSend }), { virtual: true });
 
-    // require the module so Jest can use the mocked native implementation
-    // (avoids dynamic import issues in the test environment)
-    // eslint-disable-next-line @typescript-eslint/no-var-requires
-    const mod = require('./watch-connectivity');
+    // isolate module loading so the mocked native module is used by the tested module
+    // then call the async API outside the isolation block
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    let mod: any = null;
+    jest.isolateModules(() => {
+      jest.doMock('react-native-watch-connectivity', () => ({ sendMessage: mockSend }), { virtual: true });
+      // eslint-disable-next-line @typescript-eslint/no-var-requires
+      mod = require('./watch-connectivity');
+    });
+
     const ok = await mod.sendMessageToWatch({ hello: 'watch' });
     expect(ok).toBe(true);
     // verify native function called
