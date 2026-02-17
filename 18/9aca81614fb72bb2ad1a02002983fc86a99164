@@ -1,0 +1,29 @@
+core/watch-connectivity.ts
+  852e44430d5a3738 18,20-21,23-25,27-34,37-38,41-42,45-46,49-50,63-65,69-71,73,75-79,81-82,89-90
+app/_layout.tsx
+  852e44430d5a3738 193-194,197
+docs/sprint-artifacts/sprint-status.yaml
+  852e44430d5a3738 115
+core/watch-connectivity.test.ts
+  852e44430d5a3738 27-28
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.1.3",
+  "base_commit_sha": "189aca81614fb72bb2ad1a02002983fc86a99164",
+  "prompts": {
+    "852e44430d5a3738": {
+      "agent_id": {
+        "tool": "github-copilot",
+        "id": "688deb5b-5b19-4156-a76e-a5ea08976cf0",
+        "model": "copilot/oswe-vscode-prime"
+      },
+      "human_author": "Andrea Pacino",
+      "messages": [],
+      "total_additions": 73,
+      "total_deletions": 52,
+      "accepted_lines": 58,
+      "overriden_lines": 0
+    }
+  }
+}
