@@ -32,7 +32,9 @@ describe('watch-connectivity wrapper (scaffold)', () => {
   });
 
   test('subscribeToWatchMessages no-ops cleanly when native module missing', () => {
-    const unsubscribe = subscribeToWatchMessages(() => {});
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    const mod = require('./watch-connectivity');
+    const unsubscribe = mod.subscribeToWatchMessages(() => {});
     expect(typeof unsubscribe).toBe('function');
     // should not throw when called
     expect(() => unsubscribe()).not.toThrow();
