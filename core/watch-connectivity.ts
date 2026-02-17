@@ -10,6 +10,8 @@
  * `react-native-watch-connectivity` then replace the fallbacks.
  */
 
+/* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unused-vars, @typescript-eslint/no-require-imports */
+
 type Unsubscribe = () => void;
 
 export const isWatchConnectivityAvailable = (): boolean => {

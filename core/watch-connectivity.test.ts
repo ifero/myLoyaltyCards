@@ -1,4 +1,5 @@
-import { isWatchConnectivityAvailable, sendMessageToWatch, subscribeToWatchMessages } from './watch-connectivity';
+/* eslint-disable @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires */
+
 
 describe('watch-connectivity wrapper (scaffold)', () => {
   afterEach(() => {
