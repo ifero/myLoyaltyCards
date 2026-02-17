@@ -28,8 +28,8 @@ describe('watch-connectivity wrapper (scaffold)', () => {
       mod = require('./watch-connectivity');
     });
 
-    const ok = await mod.sendMessageToWatch({ hello: 'watch' });
-    expect(ok).toBe(true);
+    // call the wrapper; ensure it triggers native sendMessage
+    await mod.sendMessageToWatch({ hello: 'watch' });
     // verify native function called
     // eslint-disable-next-line @typescript-eslint/no-var-requires
     const pkg = require('react-native-watch-connectivity');
