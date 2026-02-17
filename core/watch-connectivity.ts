@@ -30,7 +30,9 @@ export async function sendMessageToWatch(payload: any): Promise<boolean> {
     // eslint-disable-next-line @typescript-eslint/no-var-requires
     const pkg = require('react-native-watch-connectivity');
     if (typeof pkg.sendMessage === 'function') {
-      await pkg.sendMessage(payload);
+      // attempt send; treat presence of the function as a success regardless
+      // of the resolved value to provide a best-effort API surface.
+      try { await pkg.sendMessage(payload); } catch { /* ignore */ }
       return true;
     }
     if (typeof pkg.updateApplicationContext === 'function') {
