@@ -7,7 +7,7 @@
 | **Story ID** | 5.6                                                     |
 | **Epic**     | 5 - Apple Watch App                                     |
 | **Sprint**   | 4                                                       |
-| **Status**   | ready-for-dev                                           |
+| **Status**   | done                                                    |
 | **Priority** | High                                                    |
 | **Estimate** | Medium (1-2 days)                                       |
 | **Owners**   | PM: John · UX: Sally · Dev: Amelia · Tech Writer: Paige |
