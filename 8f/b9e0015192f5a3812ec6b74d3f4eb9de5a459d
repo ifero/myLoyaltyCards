@@ -1,0 +1,25 @@
+docs/sprint-artifacts/stories/11-1-block-pr-on-quality-gates.md
+  9ba47edeeefba820 7-9
+docs/sprint-artifacts/sprint-status.yaml
+  9ba47edeeefba820 178
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.1.3",
+  "base_commit_sha": "8fb9e0015192f5a3812ec6b74d3f4eb9de5a459d",
+  "prompts": {
+    "9ba47edeeefba820": {
+      "agent_id": {
+        "tool": "github-copilot",
+        "id": "fce07032-efb9-4986-9d4e-11a60f607bc3",
+        "model": "copilot/oswe-vscode-prime"
+      },
+      "human_author": "Andrea Pacino",
+      "messages": [],
+      "total_additions": 4,
+      "total_deletions": 2,
+      "accepted_lines": 4,
+      "overriden_lines": 0
+    }
+  }
+}
