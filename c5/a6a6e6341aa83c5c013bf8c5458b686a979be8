@@ -1,0 +1,71 @@
+README.md
+  5594a8ba9e5e786b 3-4
+.github/workflows/ci-quality-gates.yml
+  9ba47edeeefba820 1-61,63-64
+docs/sprint-artifacts/epic-11-cicd.yaml
+  afb9f724f3072a12 1,3-4,6,9,16,77
+  b509eb1a897d9dcd 24,40,53,59,67,73
+jest.config.js
+  9ba47edeeefba820 24-31
+docs/sprint-artifacts/stories/11-1-block-pr-on-quality-gates.md
+  9ba47edeeefba820 7
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.1.3",
+  "base_commit_sha": "c5a6a6e6341aa83c5c013bf8c5458b686a979be8",
+  "prompts": {
+    "5594a8ba9e5e786b": {
+      "agent_id": {
+        "tool": "github-copilot",
+        "id": "9913c680-2dba-4e61-a27e-8cbc476c4992",
+        "model": "copilot/auto"
+      },
+      "human_author": "Andrea Pacino",
+      "messages": [],
+      "total_additions": 2,
+      "total_deletions": 0,
+      "accepted_lines": 2,
+      "overriden_lines": 0
+    },
+    "9ba47edeeefba820": {
+      "agent_id": {
+        "tool": "github-copilot",
+        "id": "fce07032-efb9-4986-9d4e-11a60f607bc3",
+        "model": "copilot/auto"
+      },
+      "human_author": "Andrea Pacino",
+      "messages": [],
+      "total_additions": 122,
+      "total_deletions": 6,
+      "accepted_lines": 115,
+      "overriden_lines": 2
+    },
+    "afb9f724f3072a12": {
+      "agent_id": {
+        "tool": "github-copilot",
+        "id": "74ded8e7-8454-4d0e-979d-7d3d53a20260",
+        "model": "copilot/auto"
+      },
+      "human_author": "Andrea Pacino",
+      "messages": [],
+      "total_additions": 0,
+      "total_deletions": 0,
+      "accepted_lines": 7,
+      "overriden_lines": 6
+    },
+    "b509eb1a897d9dcd": {
+      "agent_id": {
+        "tool": "github-copilot",
+        "id": "8a551cc3-9d5d-4402-a6fc-0b1ec528e57d",
+        "model": "copilot/auto"
+      },
+      "human_author": "Andrea Pacino",
+      "messages": [],
+      "total_additions": 0,
+      "total_deletions": 0,
+      "accepted_lines": 6,
+      "overriden_lines": 5
+    }
+  }
+}
