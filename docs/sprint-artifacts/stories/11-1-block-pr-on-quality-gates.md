@@ -12,7 +12,7 @@ Implement a GitHub Actions workflow that blocks pull request merges if lint, typ
 
 - Minimum coverage: 80% lines/statements.
 - Tools: ESLint, TypeScript, Jest (unit/integration tests).
-- Notifications: GitHub (status check), Slack (#ci-alerts channel), email (dev lead).
+- Notifications: GitHub (status check), Slack (#ci-alerts channel).
 - Build/coverage badge in README.
 - Visual regression: not required for now, but pipeline should be ready for future addition.
 
@@ -23,7 +23,7 @@ Implement a GitHub Actions workflow that blocks pull request merges if lint, typ
 - [x] Clear report on GitHub
 - [x] Minimum 80% coverage enforced
 - [x] Build/coverage badge in README
-- [ ] Failure notifications (GitHub, Slack, email)
+- [ ] Failure notifications (GitHub, Slack)
 - [x] Pipeline ready for visual regression (even if not active)
 
 ## Implementation (in-progress)
@@ -32,11 +32,24 @@ Implement a GitHub Actions workflow that blocks pull request merges if lint, typ
 - Enforced Jest coverage threshold (80%) in `jest.config.js` ✅
 - Added CI and coverage badges to `README.md` ✅
 - Coverage report uploaded as workflow artifact (`coverage/`) ✅
-- Slack/email notifications: workflow contains optional steps but secrets must be configured ⚠️
+- Slack notifications: workflow supports Slack via the `SLACK_WEBHOOK_URL` secret. The email notification step has been removed. ⚠️
 
 ## Next steps
 
-1. Add repository secrets (`SLACK_WEBHOOK_URL`, SMTP credentials, `CI_FAILURE_EMAIL_TO/FROM`) to enable notifications.
-2. Configure branch protection rules to require the `CI — Quality Gates` check on PRs.
+1. Add repository secret (`SLACK_WEBHOOK_URL`) to enable Slack notifications.
+2. Configure branch protection rules to require the `CI — Quality Gates` check on PRs (see branch-protection note below).
 3. (Optional) Integrate a coverage service (Codecov) for a dynamic coverage badge.
 4. Open PR and request code review from Dev agent.
+
+### Coverage scope
+
+- The enforced 80% coverage threshold applies to the files listed in `jest.config.js` -> `collectCoverageFrom` (currently `features/` and `core/`).
+- To expand the coverage gate to other folders (for example `app/` or `shared/`), update `collectCoverageFrom` and add tests to meet the threshold.
+
+### Branch-protection note
+
+- In GitHub repo Settings → Branches → Add rule for `main`:
+  - Require status checks to pass before merging → select `CI — Quality Gates` (or the workflow job name)
+  - Require branches to be up to date before merging (optional)
+  - Protect matching branches (admins) as appropriate
+- This step is required to actually block merges when CI fails.

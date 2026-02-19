@@ -10,7 +10,7 @@
     Implement a GitHub Actions workflow that blocks pull request merges if lint, typecheck, tests, or code coverage do not pass.
     - Minimum coverage: 80% lines/statements.
     - Tools: ESLint, TypeScript, Jest (unit/integration tests).
-    - Notifications: GitHub (status check), Slack (#ci-alerts channel), email (dev lead).
+    - Notifications: GitHub (status check), Slack (#ci-alerts channel).
     - Build/coverage badge in README.
     - Visual regression: not required for now, but pipeline should be ready for future addition.
   acceptance_criteria:
@@ -19,7 +19,7 @@
     - Clear report on GitHub
     - Minimum 80% coverage enforced
     - Build/coverage badge in README
-    - Failure notifications (GitHub, Slack, email)
+    - Failure notifications (GitHub, Slack)
     - Pipeline ready for visual regression (even if not active)
 
 11-2-build-on-main-app-changes-only:
