@@ -1,5 +1,7 @@
 # myLoyaltyCards
 
+[![CI](https://github.com/ifero/myLoyaltyCards/actions/workflows/ci-quality-gates.yml/badge.svg)](https://github.com/ifero/myLoyaltyCards/actions/workflows/ci-quality-gates.yml) [![coverage](https://img.shields.io/badge/coverage-80%25-yellow.svg)](docs/)
+
 A mobile app for managing loyalty cards
 
 ## BMAD-METHOD Integration
