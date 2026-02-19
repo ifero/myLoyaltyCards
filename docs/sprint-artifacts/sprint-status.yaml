@@ -175,7 +175,7 @@ development_status:
 
   # Epic 11: CI/CD & Quality Gates
   epic-11: in-progress
-  11-1-block-pr-on-quality-gates: review
+  11-1-block-pr-on-quality-gates: done
   11-2-build-on-main-app-changes-only: drafted
   11-3-notify-on-build-status: drafted
   11-4-rollback-on-failed-deploy: drafted
