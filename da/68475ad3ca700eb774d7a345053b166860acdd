@@ -1,0 +1,40 @@
+README.md
+  5594a8ba9e5e786b 54-76,78-80
+core/watch-connectivity.test.ts
+  5594a8ba9e5e786b 53-72,74-80
+watch-ios/MyLoyaltyCardsWatchTests/CardStoreTests.swift
+  5594a8ba9e5e786b 98-117
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.1.3",
+  "base_commit_sha": "da68475ad3ca700eb774d7a345053b166860acdd",
+  "prompts": {
+    "5594a8ba9e5e786b": {
+      "agent_id": {
+        "tool": "github-copilot",
+        "id": "9913c680-2dba-4e61-a27e-8cbc476c4992",
+        "model": "copilot/auto"
+      },
+      "human_author": "Andrea Pacino",
+      "messages": [],
+      "total_additions": 71,
+      "total_deletions": 0,
+      "accepted_lines": 73,
+      "overriden_lines": 1
+    },
+    "852e44430d5a3738": {
+      "agent_id": {
+        "tool": "github-copilot",
+        "id": "688deb5b-5b19-4156-a76e-a5ea08976cf0",
+        "model": "copilot/oswe-vscode-prime"
+      },
+      "human_author": "Andrea Pacino",
+      "messages": [],
+      "total_additions": 106,
+      "total_deletions": 45,
+      "accepted_lines": 2,
+      "overriden_lines": 4
+    }
+  }
+}
