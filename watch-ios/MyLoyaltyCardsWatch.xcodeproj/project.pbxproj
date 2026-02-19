@@ -12,22 +12,33 @@
 		0A1B2C3D4E5F678901234574 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 0A1B2C3D4E5F678901234570 /* Assets.xcassets */; };
 		0A1B2C3D4E5F678901234575 /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 0A1B2C3D4E5F678901234571 /* Preview Assets.xcassets */; };
 		0A1B2C3D4E5F678901234580 /* Brands.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A1B2C3D4E5F678901234581 /* Brands.swift */; };
-			111111111111111111111111 /* CardListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 222222222222222222222222 /* CardListView.swift */; };
-			333333333333333333333333 /* BarcodeFlashView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 444444444444444444444444 /* BarcodeFlashView.swift */; };
-		E2E2E2E2E2E2E2E2E2E2E2E2 /* CardListUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1E1E1E1E1E1E1E1E1E1E1E1 /* CardListUITests.swift */; };
-/* End PBXBuildFile section */
+		111111111111111111111111 /* CardListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 222222222222222222222222 /* CardListView.swift */; };
+		1159EB790BE480CB2BCCBE18 /* BarcodeGenerator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 179242DA7DDFD6D70205E15A /* BarcodeGenerator.swift */; };
+		333333333333333333333333 /* BarcodeFlashView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 444444444444444444444444 /* BarcodeFlashView.swift */; };
+		5C5C5C5C5C5C5C5C5C5C5C5C /* WatchCardEntity.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5B5B5B5B5B5B5B5B5B5B5B5B /* WatchCardEntity.swift */; };
+		F11F11F11F11F11F11F11F11 /* CardStoreTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1F1F1F1F1F1F1F1F1F1F1F1 /* CardStoreTests.swift */; };
+		C2C2C2C2C2C2C2C2C2C2C2C2 /* BarcodeGeneratorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1C1C1C1C1C1C1C1C1C1C1C1 /* BarcodeGeneratorTests.swift */; };
+		D2D2D2D2D2D2D2D2D2D2D2D2 /* CardRowHelpersTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D1D1D1D1D1D1D1D1D1D1D1D1 /* CardRowHelpersTests.swift */; };
 
 /* Begin PBXFileReference section */
 		0A1B2C3D4E5F67890123456D /* MyLoyaltyCardsWatch.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; path = MyLoyaltyCardsWatch.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		0A1B2C3D4E5F67890123456E /* MyLoyaltyCardsWatchApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MyLoyaltyCardsWatchApp.swift; sourceTree = "<group>"; };
-0A1B2C3D4E5F67890123456F /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };\t\t222222222222222222222222 /* CardListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CardListView.swift; sourceTree = "<group>"; };\t\t444444444444444444444444 /* BarcodeFlashView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BarcodeFlashView.swift; sourceTree = "<group>"; };\t\t0A1B2C3D4E5F678901234570 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		0A1B2C3D4E5F67890123456F /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
+		0A1B2C3D4E5F678901234570 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		0A1B2C3D4E5F678901234571 /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
 		0A1B2C3D4E5F678901234581 /* Brands.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ../Generated/Brands.swift; sourceTree = "<group>"; };
-		0A1B2C3D4E5F678901234583 /* generate-catalogue.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = generate-catalogue.swift; sourceTree = "<group>"; };
-		F1F1F1F1F1F1F1F1F1F1F1F1 /* CardStoreTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MyLoyaltyCardsWatchTests/CardStoreTests.swift; sourceTree = "<group>"; };
+		0A1B2C3D4E5F678901234583 /* generate-catalogue.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "generate-catalogue.swift"; sourceTree = "<group>"; };
+		179242DA7DDFD6D70205E15A /* BarcodeGenerator.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = BarcodeGenerator.swift; sourceTree = "<group>"; };
+		222222222222222222222222 /* CardListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CardListView.swift; sourceTree = "<group>"; };
+		444444444444444444444444 /* BarcodeFlashView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BarcodeFlashView.swift; sourceTree = "<group>"; };
+		5B5B5B5B5B5B5B5B5B5B5B5B /* WatchCardEntity.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchCardEntity.swift; sourceTree = "<group>"; };
 		E1E1E1E1E1E1E1E1E1E1E1E1 /* CardListUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MyLoyaltyCardsWatchUITests/CardListUITests.swift; sourceTree = "<group>"; };
-		F6F6F6F6F6F6F6F6F6F6F6F6 /* MyLoyaltyCardsWatchTests.xctest */ = {isa = PBXFileReference; explicitFileType = "wrapper.cfbundle"; path = MyLoyaltyCardsWatchTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
-		E6E6E6E6E6E6E6E6E6E6E6E6 /* MyLoyaltyCardsWatchUITests.xctest */ = {isa = PBXFileReference; explicitFileType = "wrapper.cfbundle"; path = MyLoyaltyCardsWatchUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		E6E6E6E6E6E6E6E6E6E6E6E6 /* MyLoyaltyCardsWatchUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; path = MyLoyaltyCardsWatchUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		F1F1F1F1F1F1F1F1F1F1F1F1 /* CardStoreTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CardStoreTests.swift; sourceTree = "<group>"; };
+		C1C1C1C1C1C1C1C1C1C1C1C1 /* BarcodeGeneratorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BarcodeGeneratorTests.swift; sourceTree = "<group>"; };
+		D1D1D1D1D1D1D1D1D1D1D1D1 /* CardRowHelpersTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CardRowHelpersTests.swift; sourceTree = "<group>"; };
+		F6F6F6F6F6F6F6F6F6F6F6F6 /* MyLoyaltyCardsWatchTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; path = MyLoyaltyCardsWatchTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+/* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
 		0A1B2C3D4E5F678901234578 /* Frameworks */ = {
@@ -57,20 +68,14 @@
 				0A1B2C3D4E5F67890123456E /* MyLoyaltyCardsWatchApp.swift */,
 				0A1B2C3D4E5F67890123456F /* ContentView.swift */,
 				222222222222222222222222 /* CardListView.swift */,
-				444444444444444444444444 /* BarcodeFlashView.swift */, 
-			0A1B2C3D4E5F678901234581 /* Brands.swift */, 
+				444444444444444444444444 /* BarcodeFlashView.swift */,
+				5B5B5B5B5B5B5B5B5B5B5B5B /* WatchCardEntity.swift */,
+				0A1B2C3D4E5F678901234581 /* Brands.swift */,
 				0A1B2C3D4E5F678901234570 /* Assets.xcassets */,
 				0A1B2C3D4E5F67890123456A /* Preview Content */,
+				179242DA7DDFD6D70205E15A /* BarcodeGenerator.swift */,
 			);
 			path = MyLoyaltyCardsWatch;
-			sourceTree = "<group>";
-		};
-		0A1B2C3D4E5F678901234582 /* Scripts */ = {
-			isa = PBXGroup;
-			children = (
-				0A1B2C3D4E5F678901234583 /* generate-catalogue.swift */,
-			);
-			path = Scripts;
 			sourceTree = "<group>";
 		};
 		0A1B2C3D4E5F67890123456A /* Preview Content */ = {
@@ -81,12 +86,20 @@
 			path = "Preview Content";
 			sourceTree = "<group>";
 		};
-		F4F4F4F4F4F4F4F4F4F4F4F4 /* MyLoyaltyCardsWatchTests */ = {
+		0A1B2C3D4E5F67890123456B /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				F1F1F1F1F1F1F1F1F1F1F1F1 /* CardStoreTests.swift */,
+				0A1B2C3D4E5F67890123456D /* MyLoyaltyCardsWatch.app */,
 			);
-			path = "MyLoyaltyCardsWatchTests";
+			name = Products;
+			sourceTree = "<group>";
+		};
+		0A1B2C3D4E5F678901234582 /* Scripts */ = {
+			isa = PBXGroup;
+			children = (
+				0A1B2C3D4E5F678901234583 /* generate-catalogue.swift */,
+			);
+			path = Scripts;
 			sourceTree = "<group>";
 		};
 		E4E4E4E4E4E4E4E4E4E4E4E4 /* MyLoyaltyCardsWatchUITests */ = {
@@ -94,15 +107,17 @@
 			children = (
 				E1E1E1E1E1E1E1E1E1E1E1E1 /* CardListUITests.swift */,
 			);
-			path = "MyLoyaltyCardsWatchUITests";
+			path = MyLoyaltyCardsWatchUITests;
 			sourceTree = "<group>";
 		};
-		0A1B2C3D4E5F67890123456B /* Products */ = {
+		F4F4F4F4F4F4F4F4F4F4F4F4 /* MyLoyaltyCardsWatchTests */ = {
 			isa = PBXGroup;
 			children = (
-				0A1B2C3D4E5F67890123456D /* MyLoyaltyCardsWatch.app */,
+				F1F1F1F1F1F1F1F1F1F1F1F1 /* CardStoreTests.swift */,
+				C1C1C1C1C1C1C1C1C1C1C1C1 /* BarcodeGeneratorTests.swift */,
+				D1D1D1D1D1D1D1D1D1D1D1D1 /* CardRowHelpersTests.swift */,
 			);
-			name = Products;
+			path = MyLoyaltyCardsWatchTests;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -126,38 +141,55 @@
 			productReference = 0A1B2C3D4E5F67890123456D /* MyLoyaltyCardsWatch.app */;
 			productType = "com.apple.product-type.application";
 		};
-		F5F5F5F5F5F5F5F5F5F5F5F5 /* MyLoyaltyCardsWatchTests */ = {
-			isa = PBXNativeTarget;
-			buildConfigurationList = F9F9F9F9F9F9F9F9F9F9F9F9 /* Build configuration list for PBXNativeTarget "MyLoyaltyCardsWatchTests" */;
-			buildPhases = (
-				F3F3F3F3F3F3F3F3F3F3F3F3 /* MyLoyaltyCardsWatchTests Sources */,
-			);
-			buildRules = (
-			);
-			dependencies = (
-				D2D2D2D2D2D2D2D2D2D2D2D2 /* PBXTargetDependency */,
-			);
-			name = MyLoyaltyCardsWatchTests;
-			productName = MyLoyaltyCardsWatchTests;
-			productReference = F6F6F6F6F6F6F6F6F6F6F6F6 /* MyLoyaltyCardsWatchTests.xctest */;
-			productType = "com.apple.product-type.bundle.unit-test";
-		};
 		E5E5E5E5E5E5E5E5E5E5E5E5 /* MyLoyaltyCardsWatchUITests */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = E9E9E9E9E9E9E9E9E9E9E9E9 /* Build configuration list for PBXNativeTarget "MyLoyaltyCardsWatchUITests" */;
 			buildPhases = (
-				E3E3E3E3E3E3E3E3E3E3E3E3 /* MyLoyaltyCardsWatchUITests Sources */,
+				E3E3E3E3E3E3E3E3E3E3E3E3 /* Sources */,
 			);
 			buildRules = (
 			);
 			dependencies = (
-				C2C2C2C2C2C2C2C2C2C2C2C2 /* PBXTargetDependency */,
 			);
 			name = MyLoyaltyCardsWatchUITests;
 			productName = MyLoyaltyCardsWatchUITests;
 			productReference = E6E6E6E6E6E6E6E6E6E6E6E6 /* MyLoyaltyCardsWatchUITests.xctest */;
 			productType = "com.apple.product-type.bundle.ui-testing-target";
 		};
+		F5F5F5F5F5F5F5F5F5F5F5F5 /* MyLoyaltyCardsWatchTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = F9F9F9F9F9F9F9F9F9F9F9F9 /* Build configuration list for PBXNativeTarget "MyLoyaltyCardsWatchTests" */;
+			buildPhases = (
+				F3F3F3F3F3F3F3F3F3F3F3F3 /* Sources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				B1B1B1B1B1B1B1B1B1B1B1B1 /* MyLoyaltyCardsWatchTests -> MyLoyaltyCardsWatch */,
+			);
+			name = MyLoyaltyCardsWatchTests;
+			productName = MyLoyaltyCardsWatchTests;
+			productReference = F6F6F6F6F6F6F6F6F6F6F6F6 /* MyLoyaltyCardsWatchTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
+
+		/* PBXContainerItemProxy section */
+		A1A1A1A1A1A1A1A1A1A1A1A1 /* MyLoyaltyCardsWatch in Project */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 0A1B2C3D4E5F678901234567 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 0A1B2C3D4E5F67890123456C /* MyLoyaltyCardsWatch */;
+			remoteInfo = MyLoyaltyCardsWatch;
+		};
+
+		/* PBXTargetDependency section */
+		B1B1B1B1B1B1B1B1B1B1B1B1 /* MyLoyaltyCardsWatchTests -> MyLoyaltyCardsWatch */ = {
+			isa = PBXTargetDependency;
+			name = MyLoyaltyCardsWatch;
+			target = 0A1B2C3D4E5F67890123456C /* MyLoyaltyCardsWatch */;
+			targetProxy = A1A1A1A1A1A1A1A1A1A1A1A1 /* MyLoyaltyCardsWatch in Project */;
+		};
+
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -170,14 +202,8 @@
 						CreatedOnToolsVersion = 15.0;
 					};
 				};
-			};			/* Begin PBXContainerItemProxy section */
-			D1D1D1D1D1D1D1D1D1D1D1D1 /* Container item proxy for: MyLoyaltyCardsWatchTests */ = {isa = PBXContainerItemProxy; containerPortal = 0A1B2C3D4E5F678901234567 /* Project object */; proxyType = 1; remoteGlobalIDString = 0A1B2C3D4E5F67890123456C; remoteInfo = MyLoyaltyCardsWatch; };
-			C1C1C1C1C1C1C1C1C1C1C1C1 /* Container item proxy for: MyLoyaltyCardsWatchUITests */ = {isa = PBXContainerItemProxy; containerPortal = 0A1B2C3D4E5F678901234567 /* Project object */; proxyType = 1; remoteGlobalIDString = 0A1B2C3D4E5F67890123456C; remoteInfo = MyLoyaltyCardsWatch; };
-			/* End PBXContainerItemProxy section */
-			/* Begin PBXTargetDependency section */
-			D2D2D2D2D2D2D2D2D2D2D2D2 /* PBXTargetDependency */ = {isa = PBXTargetDependency; target = 0A1B2C3D4E5F67890123456C; targetProxy = D1D1D1D1D1D1D1D1D1D1D1D1 /* Container item proxy for: MyLoyaltyCardsWatchTests */; };
-			C2C2C2C2C2C2C2C2C2C2C2C2 /* PBXTargetDependency */ = {isa = PBXTargetDependency; target = 0A1B2C3D4E5F67890123456C; targetProxy = C1C1C1C1C1C1C1C1C1C1C1C1 /* Container item proxy for: MyLoyaltyCardsWatchUITests */; };
-			/* End PBXTargetDependency section */			buildConfigurationList = 0A1B2C3D4E5F678901234579 /* Build configuration list for PBXProject "MyLoyaltyCardsWatch" */;
+			};
+			buildConfigurationList = 0A1B2C3D4E5F678901234579 /* Build configuration list for PBXProject "MyLoyaltyCardsWatch" */;
 			compatibilityVersion = "Xcode 15.0";
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
@@ -195,6 +221,18 @@
 			);
 		};
 /* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		0A1B2C3D4E5F678901234577 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				0A1B2C3D4E5F678901234574 /* Assets.xcassets in Resources */,
+				0A1B2C3D4E5F678901234575 /* Preview Assets.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
 
 /* Begin PBXShellScriptBuildPhase section */
 		0A1B2C3D4E5F678901234584 /* Generate Watch Catalogue */ = {
@@ -220,18 +258,6 @@
 		};
 /* End PBXShellScriptBuildPhase section */
 
-/* Begin PBXResourcesBuildPhase section */
-		0A1B2C3D4E5F678901234577 /* Resources */ = {
-			isa = PBXResourcesBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-				0A1B2C3D4E5F678901234574 /* Assets.xcassets in Resources */,
-				0A1B2C3D4E5F678901234575 /* Preview Assets.xcassets in Resources */,
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-/* End PBXResourcesBuildPhase section */
-
 /* Begin PBXSourcesBuildPhase section */
 		0A1B2C3D4E5F678901234576 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
@@ -241,23 +267,26 @@
 				0A1B2C3D4E5F678901234573 /* ContentView.swift in Sources */,
 				111111111111111111111111 /* CardListView.swift in Sources */,
 				333333333333333333333333 /* BarcodeFlashView.swift in Sources */,
+				5C5C5C5C5C5C5C5C5C5C5C5C /* WatchCardEntity.swift in Sources */,
 				0A1B2C3D4E5F678901234580 /* Brands.swift in Sources */,
+				1159EB790BE480CB2BCCBE18 /* BarcodeGenerator.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		F3F3F3F3F3F3F3F3F3F3F3F3 /* MyLoyaltyCardsWatchTests Sources */ = {
+		E3E3E3E3E3E3E3E3E3E3E3E3 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				F2F2F2F2F2F2F2F2F2F2F2F2 /* CardStoreTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		E3E3E3E3E3E3E3E3E3E3E3E3 /* MyLoyaltyCardsWatchUITests Sources */ = {
+		F3F3F3F3F3F3F3F3F3F3F3F3 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				E2E2E2E2E2E2E2E2E2E2E2E2 /* CardListUITests.swift in Sources */,
+				F11F11F11F11F11F11F11F11 /* CardStoreTests.swift in Sources */,
+				C2C2C2C2C2C2C2C2C2C2C2C2 /* BarcodeGeneratorTests.swift in Sources */,
+				D2D2D2D2D2D2D2D2D2D2D2D2 /* CardRowHelpersTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -276,8 +305,8 @@
 				GCC_C_LANGUAGE_STANDARD = gnu11;
 				SDKROOT = watchos;
 				SUPPORTED_PLATFORMS = "watchos watchsimulator";
-				SWIFT_VERSION = 5.0;
-				WATCHOS_DEPLOYMENT_TARGET = 10.0;
+					SWIFT_VERSION = 5.9;
+					WATCHOS_DEPLOYMENT_TARGET = 10.0;
 			};
 			name = Debug;
 		};
@@ -293,16 +322,16 @@
 				GCC_C_LANGUAGE_STANDARD = gnu11;
 				SDKROOT = watchos;
 				SUPPORTED_PLATFORMS = "watchos watchsimulator";
-				SWIFT_VERSION = 5.0;
-				WATCHOS_DEPLOYMENT_TARGET = 10.0;
+					SWIFT_VERSION = 5.9;
+					WATCHOS_DEPLOYMENT_TARGET = 10.0;
 			};
 			name = Release;
 		};
 		0A1B2C3D4E5F67890123457D /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				"ARCHS[sdk=watchsimulator*]" = arm64;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_ASSET_PATHS = "MyLoyaltyCardsWatch/Preview\\ Content";
@@ -316,17 +345,19 @@
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = watchos;
 				SUPPORTED_PLATFORMS = "watchos watchsimulator";
-				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = 4;
-				WATCHOS_DEPLOYMENT_TARGET = 10.0;
+				ENABLE_TESTABILITY = YES;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+					SWIFT_VERSION = 5.9;
+					TARGETED_DEVICE_FAMILY = 4;
+					WATCHOS_DEPLOYMENT_TARGET = 10.0;
 			};
 			name = Debug;
 		};
 		0A1B2C3D4E5F67890123457E /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				"ARCHS[sdk=watchsimulator*]" = arm64;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_ASSET_PATHS = "MyLoyaltyCardsWatch/Preview\\ Content";
@@ -340,41 +371,13 @@
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = watchos;
 				SUPPORTED_PLATFORMS = "watchos watchsimulator";
-				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = 4;
-				WATCHOS_DEPLOYMENT_TARGET = 10.0;
+				SWIFT_VERSION = 5.9;
+					TARGETED_DEVICE_FAMILY = 4;
+					WATCHOS_DEPLOYMENT_TARGET = 10.0;
 			};
 			name = Release;
 		};
-		F7F7F7F7F7F7F7F7F7F7F7F7 /* MyLoyaltyCardsWatchTests Debug */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
-				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_KEY_CFBundleDisplayName = MyLoyaltyCardsTests;
-				PRODUCT_BUNDLE_IDENTIFIER = com.iferoporefi.myloyaltycards.watch.tests;
-				SDKROOT = watchos;
-				SWIFT_VERSION = 5.0;
-				WATCHOS_DEPLOYMENT_TARGET = 10.0;
-			};
-			name = Debug;
-		};
-		F8F8F8F8F8F8F8F8F8F8F8F8 /* MyLoyaltyCardsWatchTests Release */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
-				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_KEY_CFBundleDisplayName = MyLoyaltyCardsTests;
-				PRODUCT_BUNDLE_IDENTIFIER = com.iferoporefi.myloyaltycards.watch.tests;
-				SDKROOT = watchos;
-				SWIFT_VERSION = 5.0;
-				WATCHOS_DEPLOYMENT_TARGET = 10.0;
-			};
-			name = Release;
-		};
-		E7E7E7E7E7E7E7E7E7E7E7E7 /* MyLoyaltyCardsWatchUITests Debug */ = {
+		E7E7E7E7E7E7E7E7E7E7E7E7 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CODE_SIGN_STYLE = Automatic;
@@ -383,12 +386,12 @@
 				INFOPLIST_KEY_CFBundleDisplayName = MyLoyaltyCardsUITests;
 				PRODUCT_BUNDLE_IDENTIFIER = com.iferoporefi.myloyaltycards.watch.uitests;
 				SDKROOT = watchos;
-				SWIFT_VERSION = 5.0;
-				WATCHOS_DEPLOYMENT_TARGET = 10.0;
+					SWIFT_VERSION = 5.9;
+					WATCHOS_DEPLOYMENT_TARGET = 10.0;
 			};
 			name = Debug;
 		};
-		E8E8E8E8E8E8E8E8E8E8E8E8 /* MyLoyaltyCardsWatchUITests Release */ = {
+		E8E8E8E8E8E8E8E8E8E8E8E8 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CODE_SIGN_STYLE = Automatic;
@@ -397,7 +400,42 @@
 				INFOPLIST_KEY_CFBundleDisplayName = MyLoyaltyCardsUITests;
 				PRODUCT_BUNDLE_IDENTIFIER = com.iferoporefi.myloyaltycards.watch.uitests;
 				SDKROOT = watchos;
-				SWIFT_VERSION = 5.0;
+					SWIFT_VERSION = 5.9;
+					WATCHOS_DEPLOYMENT_TARGET = 10.0;
+			};
+			name = Release;
+		};
+		F7F7F7F7F7F7F7F7F7F7F7F7 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = MyLoyaltyCardsTests;
+				PRODUCT_BUNDLE_IDENTIFIER = com.iferoporefi.myloyaltycards.watch.tests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = watchos;
+				"ARCHS[sdk=watchsimulator*]" = arm64;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/MyLoyaltyCardsWatch.app/MyLoyaltyCardsWatch";
+				BUNDLE_LOADER = "$(TEST_HOST)";
+					SWIFT_VERSION = 5.9;
+					WATCHOS_DEPLOYMENT_TARGET = 10.0;
+			};
+			name = Debug;
+		};
+		F8F8F8F8F8F8F8F8F8F8F8F8 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = MyLoyaltyCardsTests;
+				PRODUCT_BUNDLE_IDENTIFIER = com.iferoporefi.myloyaltycards.watch.tests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = watchos;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/MyLoyaltyCardsWatch.app/MyLoyaltyCardsWatch";
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				SWIFT_VERSION = 5.9;
 				WATCHOS_DEPLOYMENT_TARGET = 10.0;
 			};
 			name = Release;
@@ -423,20 +461,20 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		F9F9F9F9F9F9F9F9F9F9F9F9 /* Build configuration list for PBXNativeTarget "MyLoyaltyCardsWatchTests" */ = {
+		E9E9E9E9E9E9E9E9E9E9E9E9 /* Build configuration list for PBXNativeTarget "MyLoyaltyCardsWatchUITests" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				F7F7F7F7F7F7F7F7F7F7F7F7 /* MyLoyaltyCardsWatchTests Debug */,
-				F8F8F8F8F8F8F8F8F8F8F8F8 /* MyLoyaltyCardsWatchTests Release */,
+				E7E7E7E7E7E7E7E7E7E7E7E7 /* Debug */,
+				E8E8E8E8E8E8E8E8E8E8E8E8 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		E9E9E9E9E9E9E9E9E9E9E9E9 /* Build configuration list for PBXNativeTarget "MyLoyaltyCardsWatchUITests" */ = {
+		F9F9F9F9F9F9F9F9F9F9F9F9 /* Build configuration list for PBXNativeTarget "MyLoyaltyCardsWatchTests" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				E7E7E7E7E7E7E7E7E7E7E7E7 /* MyLoyaltyCardsWatchUITests Debug */,
-				E8E8E8E8E8E8E8E8E8E8E8E8 /* MyLoyaltyCardsWatchUITests Release */,
+				F7F7F7F7F7F7F7F7F7F7F7F7 /* Debug */,
+				F8F8F8F8F8F8F8F8F8F8F8F8 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

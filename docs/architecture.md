@@ -329,7 +329,7 @@ Each watch README must include:
 | Component           | Technology            | Version | Rationale                                 |
 | ------------------- | --------------------- | ------- | ----------------------------------------- |
 | Phone Local DB      | expo-sqlite           | Latest  | Structured queries for smart sorting      |
-| watchOS Storage     | SwiftData             | iOS 17+ | Modern Swift-native persistence           |
+| watchOS Storage     | SwiftData             | iOS 18+ | Modern Swift-native persistence           |
 | Wear OS Storage     | Room                  | Latest  | Kotlin-native, Jetpack standard           |
 | Cloud Database      | Supabase (PostgreSQL) | Latest  | Structured data, built-in auth, free tier |
 | Sync Strategy       | Delta sync            | —       | Timestamp-based, changed cards only       |

@@ -2,7 +2,7 @@ import Foundation
 import SwiftData
 
 @Model
-final class WatchCardEntity: Identifiable, Codable {
+final class WatchCardEntity: Identifiable {
   @Attribute(.unique) var id: String
   var name: String
   var barcode: String

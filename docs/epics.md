@@ -244,7 +244,7 @@ This document provides the complete epic and story breakdown for myLoyaltyCards,
 **From Architecture - Data Layer:**
 
 - ARCH-5: Phone Local DB using expo-sqlite with migration pattern
-- ARCH-6: watchOS Storage using SwiftData (iOS 17+)
+- ARCH-6: watchOS Storage using SwiftData (iOS 18+)
 - ARCH-7: Cloud Database using Supabase (PostgreSQL) with Row-Level Security
 - ARCH-8: Zod schemas as source of truth for data structures across all platforms
 - ARCH-9: Card data schema: id, name, barcode, barcodeFormat, brandId, color, isFavorite, lastUsedAt, usageCount, createdAt, updatedAt

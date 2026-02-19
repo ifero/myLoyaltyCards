@@ -7,6 +7,8 @@ import { useEffect, useState } from 'react';
 import { ActivityIndicator, Pressable, Text, View } from 'react-native';
 
 import { initializeDatabase } from '@/core/database';
+import { getAllCards } from '@/core/database/card-repository';
+import { subscribeToWatchMessages, syncCardToWatch, WatchMessage } from '@/core/watch-connectivity';
 
 import { ThemeProvider, useTheme } from '@/shared/theme';
 
@@ -169,7 +171,31 @@ const RootLayout = () => {
       }
     };
 
-    initializeApp();
+    let unsubscribe: (() => void) | undefined;
+
+    initializeApp().then(() => {
+      // wire watch connectivity after DB initialized
+      try {
+        unsubscribe = subscribeToWatchMessages(async (msg: WatchMessage) => {
+          try {
+            if (msg?.type === 'requestCards') {
+              const cards = await getAllCards();
+              // send cards one by one (best-effort)
+              for (const c of cards) {
+                syncCardToWatch(c.id, c);
+              }
+            }
+          } catch (e) {
+            console.warn('Watch message handler error:', e);
+          }
+        });
+      } catch {
+        // ignore if native module missing
+      }
+    });
+    return () => {
+      if (typeof unsubscribe === 'function') unsubscribe();
+    };
   }, []);
 
   if (dbError) {
