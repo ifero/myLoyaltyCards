@@ -1,0 +1,65 @@
+name: CI — Quality Gates
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+  push:
+    branches: [main]
+
+jobs:
+  quality-gates:
+    name: Quality gates (lint, typecheck, test, coverage)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Use Node.js 18
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'yarn'
+
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+
+      - name: Lint
+        run: yarn lint
+
+      - name: Typecheck
+        run: yarn typecheck
+
+      - name: Run tests (with coverage)
+        run: yarn test:coverage --watchAll=false --runInBand
+
+      - name: Upload coverage report (artifact)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: coverage
+
+      - name: Slack notification on failure
+        if: failure() && secrets.SLACK_WEBHOOK_URL
+        uses: 8398a7/action-slack@v3
+        with:
+          status: ${{ job.status }}
+          fields: repo,commit,author,job
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+
+      - name: Optional email notification on failure
+        if: failure() && startsWith(secrets.SMTP_HOST || '', '')
+        uses: dawidd6/action-send-mail@v3
+        with:
+          server_address: ${{ secrets.SMTP_HOST }}
+          server_port: ${{ secrets.SMTP_PORT }}
+          username: ${{ secrets.SMTP_USER }}
+          password: ${{ secrets.SMTP_PASSWORD }}
+          subject: '[CI] myLoyaltyCards: workflow failure (${{ github.workflow }})'
+          to: ${{ secrets.CI_FAILURE_EMAIL_TO }}
+          from: ${{ secrets.CI_FAILURE_EMAIL_FROM }}
+          body: 'CI workflow failed for ${{ github.repository }} (ref: ${{ github.ref }}) — see ${{ github.run_url }}'

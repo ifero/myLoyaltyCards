@@ -1,0 +1,80 @@
+# Epic 11: CI/CD & Quality Gates
+# Goal: Implement robust CI/CD and quality gates for all platforms using GitHub Actions only
+
+# Stories
+11-1-block-pr-on-quality-gates:
+  epic: 11
+  title: 'Block PR merge if lint/typecheck/test/coverage fail'
+  status: in-progress
+  description: |
+    Implement a GitHub Actions workflow that blocks pull request merges if lint, typecheck, tests, or code coverage do not pass.
+    - Minimum coverage: 80% lines/statements.
+    - Tools: ESLint, TypeScript, Jest (unit/integration tests).
+    - Notifications: GitHub (status check), Slack (#ci-alerts channel), email (dev lead).
+    - Build/coverage badge in README.
+    - Visual regression: not required for now, but pipeline should be ready for future addition.
+  acceptance_criteria:
+    - CI runs on every PR
+    - Merge is blocked if lint/typecheck/test/coverage fail
+    - Clear report on GitHub
+    - Minimum 80% coverage enforced
+    - Build/coverage badge in README
+    - Failure notifications (GitHub, Slack, email)
+    - Pipeline ready for visual regression (even if not active)
+
+11-2-build-on-main-app-changes-only:
+  epic: 11
+  title: 'Build on main only if app code changes'
+  status: ready-for-dev
+  description: |
+    The build workflow is triggered only if app files (app/, core/, features/, shared/, android/, ios/) are modified.
+    - Exclude: docs/, config, test/, assets/, .github/, scripts/.
+    - Changes in android/ and ios/ MUST trigger build.
+    - Document how to update path filters.
+  acceptance_criteria:
+    - Build on main only if app/core/features/shared/android/ios files change
+    - No build on docs/config/test/assets/scripts/.github changes
+    - Documentation of included/excluded paths
+    - Native code changes trigger build
+    - Path filters are documented and easily updatable
+
+11-3-notify-on-build-status:
+  epic: 11
+  title: 'Notify team on build/deploy status'
+  status: ready-for-dev
+  description: |
+    Send automatic notifications on Slack (#ci-alerts), email (dev lead), GitHub (status check) for:
+    - build start, build success, build failure, deploy success, deploy failure, rollback.
+    - Recipients: all devs, dev lead, main stakeholders.
+  acceptance_criteria:
+    - Notifications sent on build/deploy/rollback
+    - Channels and recipients documented
+    - Notification content is clear and includes link to log/build
+
+11-4-rollback-on-failed-deploy:
+  epic: 11
+  title: 'Automatic rollback on failed deploy'
+  status: ready-for-dev
+  description: |
+    Implement automatic rollback on failed deploys to production (web/app) using GitHub Actions.
+    - Strategy: revert to last stable release.
+    - Environments: production (web/app), optional staging.
+    - Document manual override and fallback.
+  acceptance_criteria:
+    - Automatic rollback on failed deploy
+    - Rollback strategy documented (how revert works, limitations)
+    - Manual override/fallback documented
+
+11-5-document-cicd-pipeline:
+  epic: 11
+  title: 'Document CI/CD pipeline and quality gates'
+  status: ready-for-dev
+  description: |
+    Create and maintain documentation for the CI/CD pipeline, quality gates, and related workflows (GitHub Actions only).
+    - Location: docs/cicd.md (linked from README).
+    - List all quality gates and thresholds (lint, typecheck, test, 80% coverage).
+    - Document the process for updating the pipeline.
+  acceptance_criteria:
+    - Pipeline and quality gates documented in docs/cicd.md
+    - Documentation is up to date and accessible
+    - Update process is clear and described
