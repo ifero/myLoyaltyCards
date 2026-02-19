@@ -23,5 +23,20 @@ Implement a GitHub Actions workflow that blocks pull request merges if lint, typ
 - [x] Clear report on GitHub
 - [x] Minimum 80% coverage enforced
 - [x] Build/coverage badge in README
-- [x] Failure notifications (GitHub, Slack, email)
+- [ ] Failure notifications (GitHub, Slack, email)
 - [x] Pipeline ready for visual regression (even if not active)
+
+## Implementation (in-progress)
+
+- Created GitHub Actions workflow: `.github/workflows/ci-quality-gates.yml` ✅
+- Enforced Jest coverage threshold (80%) in `jest.config.js` ✅
+- Added CI and coverage badges to `README.md` ✅
+- Coverage report uploaded as workflow artifact (`coverage/`) ✅
+- Slack/email notifications: workflow contains optional steps but secrets must be configured ⚠️
+
+## Next steps
+
+1. Add repository secrets (`SLACK_WEBHOOK_URL`, SMTP credentials, `CI_FAILURE_EMAIL_TO/FROM`) to enable notifications.
+2. Configure branch protection rules to require the `CI — Quality Gates` check on PRs.
+3. (Optional) Integrate a coverage service (Codecov) for a dynamic coverage badge.
+4. Open PR and request code review from Dev agent.
