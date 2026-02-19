@@ -1,4 +1,5 @@
 # myLoyaltyCards
+
 A mobile app for managing loyalty cards
 
 ## BMAD-METHOD Integration
@@ -48,4 +49,32 @@ The BMAD framework is installed in the `.bmad-core/` directory with the followin
 ### Documentation
 
 For more information about BMAD-METHOD, visit:
+
 - [BMAD-METHOD Official Repository](https://github.com/bmad-code-org/BMAD-METHOD)
+
+## Apple Watch Sync Architecture (Overview)
+
+The Apple Watch companion app for myLoyaltyCards è progettata per essere **read-only**: tutte le modifiche (aggiunta, modifica, eliminazione carte) avvengono solo sull’app iPhone. La sincronizzazione avviene tramite WatchConnectivity:
+
+- **Flusso di sync**: quando una carta viene aggiunta/modificata/eliminata su iPhone, l’app invia un messaggio di sync al Watch contenente la versione e il payload della carta.
+- **Gestione conflitti**: la logica last-write-wins viene applicata lato telefono prima dell’invio; il Watch accetta sempre l’ultimo payload ricevuto.
+- **Retry e resilienza**: se il Watch non è connesso, il telefono effettua retry con backoff (fino a 3 tentativi) e logga eventuali errori.
+- **Storage locale**: il Watch salva le carte ricevute in UserDefaults/SwiftData, ma non permette modifiche locali.
+- **Read-only enforcement**: la UI e il modello CardStore non espongono azioni di modifica; eventuali tentativi di scrittura sono ignorati.
+
+### Diagramma di flusso (semplificato)
+
+```
+Phone (iOS)                Watch (watchOS)
+    |   add/edit/delete        |
+    |------------------------>|  (sync message: {version, card payload, brandId})
+    |                         |
+    |<------------------------|  (ack)
+    |   retry on failure      |
+```
+
+Per dettagli implementativi, vedi:
+
+- core/watch-connectivity.ts
+- CardListView.swift
+- CardStoreTests.swift

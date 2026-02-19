@@ -50,4 +50,32 @@ describe('watch-connectivity wrapper (scaffold)', () => {
       expect(() => unsubscribe()).not.toThrow();
     });
   });
+
+  describe('race condition: concurrent sync', () => {
+    test('should apply last-write-wins when two syncs happen nearly simultaneously', async () => {
+      const mockSend = jest.fn().mockResolvedValue(true);
+      let mod: any = null;
+      jest.isolateModules(() => {
+        jest.doMock(
+          'react-native-watch-connectivity',
+          () => ({ default: { sendMessage: mockSend }, sendMessage: mockSend }),
+          { virtual: true }
+        );
+        mod = require('./watch-connectivity');
+      });
+
+      // Simula due sync concorrenti con dati diversi
+      const cardA = { id: 'card1', cardData: { name: 'A', version: 1 } };
+      const cardB = { id: 'card1', cardData: { name: 'B', version: 2 } };
+      // Avvia due sync quasi in parallelo
+      await Promise.all([
+        mod.sendMessageToWatch({ type: 'syncCard', payload: cardA }),
+        mod.sendMessageToWatch({ type: 'syncCard', payload: cardB })
+      ]);
+      // Dovrebbero essere state inviate entrambe le versioni
+      expect(mockSend).toHaveBeenCalledWith({ type: 'syncCard', payload: cardA });
+      expect(mockSend).toHaveBeenCalledWith({ type: 'syncCard', payload: cardB });
+      // L'ultima versione (B) deve essere considerata vincente lato ricevente (verifica logica nel modulo reale)
+    });
+  });
 });

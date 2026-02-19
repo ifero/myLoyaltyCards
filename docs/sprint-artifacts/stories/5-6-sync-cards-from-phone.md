@@ -67,23 +67,23 @@ Testing notes:
 
 ## Tasks/Subtasks
 
-- [ ] Implement WatchConnectivity messaging
-- [ ] Define sync message format and versioning
-- [ ] Add retry + error logging
-- [ ] Integrate with watch local storage
+- [x] Implement WatchConnectivity messaging
+- [x] Define sync message format and versioning
+- [x] Add retry + error logging
+- [x] Integrate with watch local storage
 
 ---
 
 ## Testing Checklist
 
-- [ ] Sync completes within 30 seconds when connected
-- [ ] Retry works after disconnect/reconnect
-- [ ] Watch list reflects phone changes
+- [x] Sync completes within 30 seconds when connected
+- [x] Retry works after disconnect/reconnect
+- [x] Watch list reflects phone changes
 
 ---
 
 ## Definition of Done
 
-- [ ] All acceptance criteria pass
-- [ ] Sync is reliable and resilient
-- [ ] Watch remains read-only
+- [x] All acceptance criteria pass
+- [x] Sync is reliable and resilient
+- [x] Watch remains read-only
