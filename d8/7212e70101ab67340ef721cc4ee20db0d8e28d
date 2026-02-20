@@ -1,0 +1,23 @@
+.github/workflows/watchos-tests.yml
+  9ba47edeeefba820 1-37
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.1.4",
+  "base_commit_sha": "d87212e70101ab67340ef721cc4ee20db0d8e28d",
+  "prompts": {
+    "9ba47edeeefba820": {
+      "agent_id": {
+        "tool": "github-copilot",
+        "id": "fce07032-efb9-4986-9d4e-11a60f607bc3",
+        "model": "copilot/oswe-vscode-prime"
+      },
+      "human_author": "Andrea Pacino",
+      "messages": [],
+      "total_additions": 37,
+      "total_deletions": 0,
+      "accepted_lines": 37,
+      "overriden_lines": 0
+    }
+  }
+}
