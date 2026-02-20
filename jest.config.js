@@ -14,7 +14,7 @@ module.exports = {
     '^@bwip-js/react-native$': '<rootDir>/__mocks__/@bwip-js/react-native.js'
   },
   testMatch: ['**/*.test.[jt]s?(x)'],
-  testPathIgnorePatterns: ['/node_modules/', 'babel.config.test.js'],
+  testPathIgnorePatterns: ['/node_modules/', 'babel.config.test.js', 'watch-ios/'],
   collectCoverageFrom: [
     'features/**/*.{ts,tsx}',
     'core/**/*.{ts,tsx}',

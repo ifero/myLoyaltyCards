@@ -35,6 +35,7 @@ Implement a GitHub Actions workflow that blocks pull request merges if lint, typ
 - Added CI and coverage badges to `README.md` ✅
 - Coverage report uploaded as workflow artifact (`coverage/`) ✅
 - Slack notifications: workflow supports Slack via the `SLACK_WEBHOOK_URL` secret. The email notification step has been removed. ⚠️
+- watchOS tests are excluded from the generic JS quality-gates (Jest) and run only on macOS via `.github/workflows/watchos-tests.yml`. ✅
 
 ## Next steps
 
