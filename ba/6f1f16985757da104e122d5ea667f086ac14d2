@@ -1,0 +1,36 @@
+features/cards/hooks/useEditCard.test.ts
+  3b72e1d08a6f422d 1-130
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.1.4",
+  "base_commit_sha": "ba6f1f16985757da104e122d5ea667f086ac14d2",
+  "prompts": {
+    "3b72e1d08a6f422d": {
+      "agent_id": {
+        "tool": "github-copilot",
+        "id": "3c5acfd1-b06f-48c9-bd91-154b2b1a0490",
+        "model": "copilot/auto"
+      },
+      "human_author": "Andrea Pacino",
+      "messages": [],
+      "total_additions": 130,
+      "total_deletions": 0,
+      "accepted_lines": 130,
+      "overriden_lines": 0
+    },
+    "9ba47edeeefba820": {
+      "agent_id": {
+        "tool": "github-copilot",
+        "id": "fce07032-efb9-4986-9d4e-11a60f607bc3",
+        "model": "copilot/oswe-vscode-prime"
+      },
+      "human_author": "Andrea Pacino",
+      "messages": [],
+      "total_additions": 138,
+      "total_deletions": 0,
+      "accepted_lines": 138,
+      "overriden_lines": 0
+    }
+  }
+}
