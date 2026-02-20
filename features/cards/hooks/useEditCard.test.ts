@@ -22,12 +22,17 @@ jest.mock('@/core/database', () => ({
   updateCard: jest.fn()
 }));
 
+// create a valid card object with all required fields
 const baseCard: LoyaltyCard = {
   id: 'card-1',
   name: 'Original',
   barcode: '123',
-  barcodeFormat: BarcodeFormat.Code128,
-  color: CardColor.Blue,
+  barcodeFormat: 'CODE128',
+  brandId: null,
+  color: 'blue',
+  isFavorite: false,
+  lastUsedAt: null,
+  usageCount: 0,
   createdAt: '2025-01-01T00:00:00.000Z',
   updatedAt: '2025-01-01T00:00:00.000Z'
 };
@@ -63,8 +68,8 @@ describe('useEditCard', () => {
       const updated = (db.updateCard as jest.Mock).mock.calls[0][0];
       expect(updated.name).toBe('Edited');
       expect(updated.barcode).toBe('456');
-      expect(updated.barcodeFormat).toBe(BarcodeFormat.QRCode);
-      expect(updated.color).toBe(CardColor.Red);
+      expect(updated.barcodeFormat).toBe('QR');
+      expect(updated.color).toBe('red');
       expect(updated.createdAt).toBe(baseCard.createdAt);
       expect(updated.updatedAt).not.toBe(baseCard.updatedAt);
     });
@@ -118,7 +123,8 @@ describe('useEditCard', () => {
       (db.updateCard as jest.Mock).mockImplementation(
         () =>
           new Promise((res) => {
-            resolveDb = res;
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      resolveDb = res as any;
           })
       );
       const { result } = renderHook(() => useEditCard());
