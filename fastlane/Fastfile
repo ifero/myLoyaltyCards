@@ -1,0 +1,15 @@
+default_platform(:ios)
+
+platform :ios do
+  desc "Build iOS Dev app"
+  lane :build_dev do
+    build_app(scheme: "myLoyaltyCards", export_method: "development")
+  end
+end
+
+platform :android do
+  desc "Build Android Dev app"
+  lane :build_dev do
+    gradle(task: "assembleDebug")
+  end
+end

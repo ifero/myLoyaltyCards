@@ -1,0 +1,77 @@
+name: Beta Releases (RC)
+
+on:
+  push:
+    tags:
+      - 'v*.*.*-rc.*' # RC tags for beta builds
+
+jobs:
+  ios-testflight-beta:
+    name: Build iOS TestFlight (RC)
+    runs-on: macos-14
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'yarn'
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+      - name: Prebuild native projects
+        run: npx expo prebuild
+      - name: Set up Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '3.2'
+      - name: Install Bundler dependencies
+        run: bundle install --path vendor/bundle
+      - name: Cache Bundler
+        uses: actions/cache@v3
+        with:
+          path: vendor/bundle
+          key: ${{ runner.os }}-bundler-${{ hashFiles('**/Gemfile.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-bundler-
+      - name: Build iOS TestFlight (RC)
+        run: bundle exec fastlane beta
+        working-directory: ios
+        env:
+          MATCH_PASSWORD: ${{ secrets.MATCH_PASSWORD }}
+          APP_STORE_CONNECT_API_KEY: ${{ secrets.APP_STORE_CONNECT_API_KEY }}
+
+  android-beta:
+    name: Build Android Beta (RC)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'yarn'
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+      - name: Prebuild native projects
+        run: npx expo prebuild
+      - name: Set up Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '3.2'
+      - name: Install Bundler dependencies
+        run: bundle install --path vendor/bundle
+      - name: Cache Bundler
+        uses: actions/cache@v3
+        with:
+          path: vendor/bundle
+          key: ${{ runner.os }}-bundler-${{ hashFiles('**/Gemfile.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-bundler-
+      - name: Build Android Beta (RC)
+        run: bundle exec fastlane beta
+        working-directory: android
+        env:
+          MATCH_PASSWORD: ${{ secrets.MATCH_PASSWORD }}
+          PLAY_STORE_API_KEY: ${{ secrets.PLAY_STORE_API_KEY }}
