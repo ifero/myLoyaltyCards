@@ -1,9 +1,24 @@
 default_platform(:ios)
 
+
 platform :ios do
   desc "Build iOS Dev app"
   lane :build_dev do
     build_app(scheme: "myLoyaltyCards", export_method: "development")
+  end
+
+  desc "Build iOS AdHoc app"
+  lane :adhoc do
+    match(type: "adhoc")
+    build_app(scheme: "myLoyaltyCards", export_method: "ad-hoc")
+    # Optionally: upload to a distribution service
+  end
+
+  desc "Build and upload to TestFlight"
+  lane :beta do
+    match(type: "appstore")
+    build_app(scheme: "myLoyaltyCards")
+    upload_to_testflight
   end
 end
 
@@ -11,5 +26,17 @@ platform :android do
   desc "Build Android Dev app"
   lane :build_dev do
     gradle(task: "assembleDebug")
+  end
+
+  desc "Build Android AdHoc app"
+  lane :adhoc do
+    gradle(task: "assembleRelease")
+    # Optionally: upload to a distribution service
+  end
+
+  desc "Build and upload to Play Console (beta)"
+  lane :beta do
+    gradle(task: "assembleRelease")
+    # Optionally: upload to Play Console
   end
 end
