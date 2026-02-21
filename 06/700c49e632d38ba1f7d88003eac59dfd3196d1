@@ -1,0 +1,43 @@
+.github/workflows/android-release.yml
+  b33e716708bcfd56 1-8,15-25,28-34,36-44,47-49
+fastlane/README.md
+  b33e716708bcfd56 15-16,18-36,38-41,43-50,52-57,59-66,68-74,76-81,83-86
+.github/workflows/ios-release.yml
+  b33e716708bcfd56 1-8,15-25,28-34,36-44,47-49
+fastlane/Fastfile
+  b33e716708bcfd56 3,9-21,30-40
+  bdf8f53a6cecefe7 41
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.1.4",
+  "base_commit_sha": "06700c49e632d38ba1f7d88003eac59dfd3196d1",
+  "prompts": {
+    "b33e716708bcfd56": {
+      "agent_id": {
+        "tool": "github-copilot",
+        "id": "a312f7af-9443-47d5-9b51-248a21dda880",
+        "model": "copilot/auto"
+      },
+      "human_author": "Andrea Pacino",
+      "messages": [],
+      "total_additions": 0,
+      "total_deletions": 0,
+      "accepted_lines": 165,
+      "overriden_lines": 0
+    },
+    "bdf8f53a6cecefe7": {
+      "agent_id": {
+        "tool": "github-copilot",
+        "id": "c5b10ee5-d4bc-4c47-aba4-510000cc6c23",
+        "model": "copilot/auto"
+      },
+      "human_author": "Andrea Pacino",
+      "messages": [],
+      "total_additions": 0,
+      "total_deletions": 0,
+      "accepted_lines": 1,
+      "overriden_lines": 0
+    }
+  }
+}
