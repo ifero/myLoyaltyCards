@@ -1,0 +1,37 @@
+fastlane/Fastfile
+  5d13ab07da5386a1 29-30,32-33,41,47-48,50-51,53-54,58,71-73,75-76,84-88,90-91
+  65d6c007e52f2325 8,11,20,31,34,42-46,52,55,57,59,74,77,89,92
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.1.5",
+  "base_commit_sha": "4a99bd4ea14cb322b2765ab8efad50e866be65fd",
+  "prompts": {
+    "5d13ab07da5386a1": {
+      "agent_id": {
+        "tool": "github-copilot",
+        "id": "a4e84fcf-db40-45cb-88ec-f057964aef77",
+        "model": "copilot/auto"
+      },
+      "human_author": "Andrea Pacino",
+      "messages": [],
+      "total_additions": 30,
+      "total_deletions": 10,
+      "accepted_lines": 24,
+      "overriden_lines": 1
+    },
+    "65d6c007e52f2325": {
+      "agent_id": {
+        "tool": "github-copilot",
+        "id": "c93e5fcb-420a-4da7-96d8-849bb31de0bd",
+        "model": "copilot/auto"
+      },
+      "human_author": "Andrea Pacino",
+      "messages": [],
+      "total_additions": 235,
+      "total_deletions": 3,
+      "accepted_lines": 220,
+      "overriden_lines": 4
+    }
+  }
+}
