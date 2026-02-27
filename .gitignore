@@ -59,3 +59,7 @@ watch-ios/.derivedData
 watch-ios/build
 watch-ios/Generated
 watch-ios/test-results*
+
+# Fastlane
+bundler/
+fastlane/.env.default
