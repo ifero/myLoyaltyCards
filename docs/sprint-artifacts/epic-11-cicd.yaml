@@ -27,16 +27,38 @@
   title: 'Build on main only if app code changes'
   status: ready-for-dev
   description: |
-    The build workflow is triggered only if app files (app/, core/, features/, shared/, android/, ios/) are modified.
-    - Exclude: docs/, config, test/, assets/, .github/, scripts/.
-    - Changes in android/ and ios/ MUST trigger build.
-    - Document how to update path filters.
+    Configure the GitHub Actions workflow for the `main` branch so that the
+    build steps execute only when application code has been modified.  This
+    saves CI minutes by avoiding unnecessary builds triggered by non-app
+    changes.
+
+    - App paths entitle `app/`, `core/`, `features/`, `shared/`, `android/`, and
+      `ios/` directories.  Any change under these directories must kick off the
+      build workflow.
+    - Changes outside these locations (e.g. `docs/`, config files, tests,
+      asset files, `.github/` workflows, shell scripts) should **not** trigger a
+      build.
+    - Native platform code edits (anything in `android/` or `ios/`) are
+      particularly important and must always trigger a build, regardless of
+      whether the JS sources change.
+    - Implement using GitHub Actions `paths` filters.  Include a helper
+      reference (script or README snippet) showing how to keep the filters in
+      sync when new directories are added in future.
+    - Add (manual or automated) verification steps demonstrating filter
+      behavior with sample commits.
+    - Document the filter configuration and update procedure in the CI/CD
+      documentation (`docs/cicd.md`).
   acceptance_criteria:
-    - Build on main only if app/core/features/shared/android/ios files change
-    - No build on docs/config/test/assets/scripts/.github changes
-    - Documentation of included/excluded paths
-    - Native code changes trigger build
-    - Path filters are documented and easily updatable
+    - Builds on `main` only run when files under `app/`, `core/`, `features/`,
+      `shared/`, `android/`, or `ios/` are modified.
+    - Commits touching `docs/`, `config/`, `test/`, `assets/`, `scripts/`, or
+      `.github/` do not trigger a build.
+    - A clear configuration for path filters exists in the repo (e.g. in the
+      workflow YAML or a separate helper file).
+    - Documentation added to `docs/cicd.md` explaining the included/excluded
+      paths and how to update the filters when directory structure changes.
+    - Verified that native code changes trigger a build.
+    - Path filter logic is easily maintainable and clearly explained.
 
 11-3-notify-on-build-status:
   epic: 11

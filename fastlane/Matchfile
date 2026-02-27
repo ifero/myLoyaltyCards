@@ -1,2 +1,4 @@
-git_url("https://github.com/your-org/certificates.git")
-type("development")
+git_url("https://github.com/ifero/myloyaltycards-certificates.git")
+
+type("development") # The default type, can be: appstore, adhoc, enterprise or development
+

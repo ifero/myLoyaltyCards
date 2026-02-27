@@ -1,7 +1,23 @@
 default_platform(:ios)
 
+app_identifier = CredentialsManager::AppfileConfig.try_fetch_value(:app_identifier)
 
 platform :ios do
+  desc "Fetch certificates (appstore, adhoc, development)"
+  lane :fetch_certificates do
+    match(
+      type: 'development',
+      app_identifier: app_identifier
+    )
+    match(
+      type: 'adhoc',
+      app_identifier: app_identifier
+    )
+    match(
+      type: 'appstore',
+      app_identifier: app_identifier
+    )
+  end
   desc "Build iOS Dev app"
   lane :build_dev do
     build_app(scheme: "myLoyaltyCards", export_method: "development")
@@ -10,15 +26,37 @@ platform :ios do
   desc "Build iOS AdHoc app"
   lane :adhoc do
     match(type: "adhoc")
+    # Usa short commit hash come build number
+    commit_hash = sh("git rev-parse --short HEAD").strip
+    increment_build_number(
+      xcodeproj: "../ios/myLoyaltyCards.xcodeproj",
+      build_number: commit_hash
+    )
     build_app(scheme: "myLoyaltyCards", export_method: "ad-hoc")
     # Optionally: upload to a distribution service
   end
 
   desc "Build and upload to TestFlight"
   lane :beta do
-    match(type: "appstore")
-    build_app(scheme: "myLoyaltyCards")
-    upload_to_testflight
+      api_key = {
+        key_id: ENV['APP_STORE_CONNECT_API_KEY_KEY_ID'],
+        issuer_id: ENV['APP_STORE_CONNECT_API_KEY_ISSUER_ID'],
+        key: ENV['APP_STORE_CONNECT_API_KEY_KEY']
+      }
+      match(type: "appstore")
+      # Recupera ultimo build number da TestFlight e incrementa
+      last_build = latest_testflight_build_number(
+        app_identifier: app_identifier,
+        api_key: api_key
+      )
+      increment_build_number(
+        xcodeproj: "../ios/myLoyaltyCards.xcodeproj",
+        build_number: (last_build.to_i + 1).to_s
+      )
+      build_app(scheme: "myLoyaltyCards")
+      upload_to_testflight(
+        api_key: api_key
+      )
   end
 end
 
@@ -30,12 +68,28 @@ platform :android do
 
   desc "Build Android AdHoc app"
   lane :adhoc do
+    # Usa short commit hash come versionCode
+    commit_hash = sh("git rev-parse --short HEAD").strip
+    version_code = commit_hash.hex % 2147483647 # Android max int
+    increment_version_code(
+      gradle_file: "../android/app/build.gradle",
+      version_code: version_code
+    )
     gradle(task: "assembleRelease")
     # Optionally: upload to a distribution service
   end
 
   desc "Build and upload to Play Console (beta)"
   lane :beta do
+    # Recupera ultimo versionCode da Play Console e incrementa
+    last_version_code = google_play_track_version_codes(
+      package_name: ENV['ANDROID_PACKAGE_NAME'],
+      track: 'beta'
+    ).max || 1
+    increment_version_code(
+      gradle_file: "../android/app/build.gradle",
+      version_code: last_version_code + 1
+    )
     gradle(task: "assembleRelease")
     # Optionally: upload to Play Console
   end

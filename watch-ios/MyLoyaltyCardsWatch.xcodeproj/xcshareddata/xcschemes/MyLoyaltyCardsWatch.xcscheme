@@ -42,7 +42,7 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "F5F5F5F5F5F5F5F5F5F5F5F5"
-               BuildableName = ".xctest"
+               BuildableName = "MyLoyaltyCardsWatchTests.xctest"
                BlueprintName = "MyLoyaltyCardsWatchTests"
                ReferencedContainer = "container:MyLoyaltyCardsWatch.xcodeproj">
             </BuildableReference>

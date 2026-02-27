@@ -1,86 +1,83 @@
-# Store Credentials & Fastlane Match Setup
+## fastlane documentation
 
-This guide explains how to set up all required secrets and Fastlane Match for both Google Play Store (Android) and App Store Connect (iOS) for CI/CD.
+# Installation
 
----
+Make sure you have the latest version of the Xcode command line tools installed:
 
-## 1. iOS (App Store Connect)
+```sh
+xcode-select --install
+```
 
-### Required Secrets (GitHub Actions)
+For _fastlane_ installation instructions, see [Installing _fastlane_](https://docs.fastlane.tools/#installing-fastlane)
 
-- `MATCH_PASSWORD`: Password for the encrypted certificates repo (used by Fastlane Match)
-- `APP_STORE_CONNECT_API_KEY`: JSON key for App Store Connect API (for Fastlane upload)
-- `FASTLANE_APPLE_APPLICATION_SPECIFIC_PASSWORD`: (if needed for App Store upload)
-- `FASTLANE_SESSION`: (optional, for 2FA bypass)
+# Available Actions
 
-### Fastlane Match Setup
+## iOS
 
-1. Create a private repo for certificates (e.g., `my-org/certificates`).
-2. Run on your local machine:
-   ```sh
-   fastlane match init
-   fastlane match appstore --readonly # For App Store
-   fastlane match adhoc --readonly    # For AdHoc builds
-   ```
-3. Set the `MATCH_PASSWORD` secret in GitHub Actions to the password you used.
-4. Grant your CI user access to the certificates repo.
-5. Generate an App Store Connect API key:
-   - Go to App Store Connect > Users and Access > Keys
-   - Create a new API key (App Manager role)
-   - Download the JSON and set as `APP_STORE_CONNECT_API_KEY` secret
+### ios fetch_certificates
 
----
+```sh
+[bundle exec] fastlane ios fetch_certificates
+```
 
-## 2. Android (Google Play Console)
+Fetch certificates (appstore, adhoc, development)
 
-### Required Secrets (GitHub Actions)
+### ios build_dev
 
-- `PLAY_STORE_API_KEY`: JSON key for Google Play API access (Service Account)
-- `MATCH_PASSWORD`: (if using Fastlane Match for Android Keystore)
+```sh
+[bundle exec] fastlane ios build_dev
+```
 
-### Play Console Setup
+Build iOS Dev app
 
-1. Create a Google Cloud Service Account with access to Play Console API.
-2. Grant the Service Account "Release Manager" or "Editor" role in Play Console.
-3. Download the JSON key and set as `PLAY_STORE_API_KEY` secret in GitHub Actions.
-4. (Optional) Use Fastlane Supply for Play Store uploads.
+### ios adhoc
 
----
+```sh
+[bundle exec] fastlane ios adhoc
+```
 
-## 3. Fastlane Environment Variables
+Build iOS AdHoc app
 
-- All secrets must be set in GitHub Actions as repository or environment secrets.
-- Fastlane will automatically pick up these variables during CI runs.
+### ios beta
+
+```sh
+[bundle exec] fastlane ios beta
+```
+
+Build and upload to TestFlight
 
 ---
 
-## 4. References
+## Android
 
-- [Fastlane Match Docs](https://docs.fastlane.tools/actions/match/)
-- [App Store Connect API Key](https://docs.fastlane.tools/app-store-connect-api/)
-- [Google Play API Setup](https://docs.fastlane.tools/actions/supply/)
-- [GitHub Actions Secrets](https://docs.github.com/en/actions/security-guides/encrypted-secrets)
+### android build_dev
+
+```sh
+[bundle exec] fastlane android build_dev
+```
+
+Build Android Dev app
+
+### android adhoc
+
+```sh
+[bundle exec] fastlane android adhoc
+```
+
+Build Android AdHoc app
+
+### android beta
+
+```sh
+[bundle exec] fastlane android beta
+```
+
+Build and upload to Play Console (beta)
 
 ---
 
-## 5. Troubleshooting
+This README.md is auto-generated and will be re-generated every time [_fastlane_](https://fastlane.tools) is run.
 
-- If builds fail due to code signing, check the `MATCH_PASSWORD` and repo access.
-- For Play Store upload errors, verify the Service Account permissions and API key.
-- For App Store upload errors, check API key validity and Fastlane session status.
+More information about _fastlane_ can be found on [fastlane.tools](https://fastlane.tools).
 
----
-
-## 6. Updating Certificates/Keys
-
-- Rotate certificates/keys regularly and update secrets in GitHub Actions.
-- Re-run `fastlane match` locally to update provisioning profiles/certificates as needed.
-
----
-
-## 7. Example: Setting a Secret in GitHub Actions
-
-1. Go to your repo > Settings > Secrets and variables > Actions
-2. Click "New repository secret"
-3. Name: `MATCH_PASSWORD` Value: your-password
-4. Repeat for all required secrets above
+The documentation of _fastlane_ can be found on [docs.fastlane.tools](https://docs.fastlane.tools).

@@ -62,3 +62,4 @@ watch-ios/test-results*
 
 # Fastlane
 bundler/
+fastlane/.env.default

@@ -1,2 +1,2 @@
-app_identifier("com.myloyaltycards.dev") # Dev bundle ID
-apple_id("your@email.com") # Replace with real Apple ID
+app_identifier("com.iferoporefi.myloyaltycards")
+apple_id("andreapacino@me.com")
