@@ -1,0 +1,42 @@
+supabase/migrations/001_initial_schema.sql
+  6a8c69efd263fb35 1-112
+docs/schemas/README.md
+  6a8c69efd263fb35 15-17
+docs/sprint-artifacts/manual-supabase-steps-6-1.md
+  6a8c69efd263fb35 32
+supabase/README.md
+  93d35e4e71580cc1 121,151
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.1.7",
+  "base_commit_sha": "42eb4ead7553189b73758ecb81ed0dac58abe864",
+  "prompts": {
+    "6a8c69efd263fb35": {
+      "agent_id": {
+        "tool": "github-copilot",
+        "id": "7df7724a-8dfe-4694-9a3e-f07a4582df50",
+        "model": "copilot/claude-sonnet-4.6"
+      },
+      "human_author": "Andrea Pacino",
+      "messages": [],
+      "total_additions": 116,
+      "total_deletions": 4,
+      "accepted_lines": 116,
+      "overriden_lines": 0
+    },
+    "93d35e4e71580cc1": {
+      "agent_id": {
+        "tool": "github-copilot",
+        "id": "698a6e09-35b1-46de-9508-31431cc22a0e",
+        "model": "copilot/auto"
+      },
+      "human_author": "Andrea Pacino",
+      "messages": [],
+      "total_additions": 2,
+      "total_deletions": 2,
+      "accepted_lines": 2,
+      "overriden_lines": 0
+    }
+  }
+}
