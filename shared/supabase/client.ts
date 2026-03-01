@@ -16,7 +16,14 @@ type SupabaseEnv = {
   EXPO_PUBLIC_SUPABASE_KEY?: string;
 };
 
-export function getSupabaseCredentials(env: SupabaseEnv = process.env): {
+function getRuntimeSupabaseEnv(): SupabaseEnv {
+  return {
+    EXPO_PUBLIC_SUPABASE_URL: process.env.EXPO_PUBLIC_SUPABASE_URL,
+    EXPO_PUBLIC_SUPABASE_KEY: process.env.EXPO_PUBLIC_SUPABASE_KEY
+  };
+}
+
+export function getSupabaseCredentials(env: SupabaseEnv = getRuntimeSupabaseEnv()): {
   url: string;
   key: string;
 } {
@@ -42,7 +49,7 @@ export function getSupabaseCredentials(env: SupabaseEnv = process.env): {
   return { url, key };
 }
 
-export function createSupabaseClient(env: SupabaseEnv = process.env) {
+export function createSupabaseClient(env: SupabaseEnv = getRuntimeSupabaseEnv()) {
   const { url, key } = getSupabaseCredentials(env);
   return createClient(url, key);
 }
