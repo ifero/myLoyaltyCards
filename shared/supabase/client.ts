@@ -1,8 +1,9 @@
-import { createClient } from '@supabase/supabase-js';
+import { createClient, SupportedStorage } from '@supabase/supabase-js';
 
 /**
  * Supabase Client for Cloud Storage and Authentication
  * Story 6-1: Create Supabase Project & Environments
+ * Story 6-3: Configure App Client (SecureStore session adapter)
  *
  * Environment Variables Required:
  * - EXPO_PUBLIC_SUPABASE_URL: Your Supabase project URL
@@ -10,6 +11,61 @@ import { createClient } from '@supabase/supabase-js';
  *
  * Note: EXPO_PUBLIC_ prefix is required for Expo to expose env vars to client code.
  */
+
+// ---------------------------------------------------------------------------
+// SecureStore session storage adapter
+// ---------------------------------------------------------------------------
+
+/**
+ * Lazy-loaded SecureStore reference. Resolved at runtime to avoid import
+ * errors in web/Jest where the native module is absent.
+ */
+function getSecureStore(): typeof import('expo-secure-store') | null {
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    return require('expo-secure-store') as typeof import('expo-secure-store');
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Creates a `SupportedStorage` adapter from an optional SecureStore reference.
+ * When `store` is null (web / Jest) all methods are no-ops that resolve to null.
+ *
+ * ⚠️ Token values are NEVER logged. Do not add logging to these methods.
+ */
+export function createSecureStoreAdapter(
+  store: typeof import('expo-secure-store') | null
+): SupportedStorage {
+  return {
+    async getItem(key: string): Promise<string | null> {
+      if (!store) return null;
+      return store.getItemAsync(key);
+    },
+
+    async setItem(key: string, value: string): Promise<void> {
+      if (!store) return;
+      await store.setItemAsync(key, value);
+    },
+
+    async removeItem(key: string): Promise<void> {
+      if (!store) return;
+      await store.deleteItemAsync(key);
+    }
+  };
+}
+
+/**
+ * Adapter implementing Supabase's `SupportedStorage` interface backed by
+ * expo-secure-store on native platforms. Falls back gracefully to a noop
+ * on web / Jest environments where SecureStore is unavailable.
+ */
+export const SecureStoreAdapter: SupportedStorage = createSecureStoreAdapter(getSecureStore());
+
+// ---------------------------------------------------------------------------
+// Environment validation
+// ---------------------------------------------------------------------------
 
 type SupabaseEnv = {
   EXPO_PUBLIC_SUPABASE_URL?: string;
@@ -49,10 +105,28 @@ export function getSupabaseCredentials(env: SupabaseEnv = getRuntimeSupabaseEnv(
   return { url, key };
 }
 
-export function createSupabaseClient(env: SupabaseEnv = getRuntimeSupabaseEnv()) {
+// ---------------------------------------------------------------------------
+// Client factory
+// ---------------------------------------------------------------------------
+
+export function createSupabaseClient(
+  env: SupabaseEnv = getRuntimeSupabaseEnv(),
+  storage: SupportedStorage = SecureStoreAdapter
+) {
   const { url, key } = getSupabaseCredentials(env);
-  return createClient(url, key);
+  return createClient(url, key, {
+    auth: {
+      persistSession: true,
+      autoRefreshToken: true,
+      detectSessionInUrl: false, // Not applicable on mobile
+      storage
+    }
+  });
 }
+
+// ---------------------------------------------------------------------------
+// Singleton accessor (lazy-initialised)
+// ---------------------------------------------------------------------------
 
 let supabaseInstance: ReturnType<typeof createSupabaseClient> | null = null;
 
@@ -62,4 +136,9 @@ export function getSupabaseClient() {
   }
 
   return supabaseInstance;
+}
+
+/** Reset singleton — only for use in tests */
+export function resetSupabaseClientForTesting() {
+  supabaseInstance = null;
 }

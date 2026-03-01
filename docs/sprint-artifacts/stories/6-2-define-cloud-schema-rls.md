@@ -2,7 +2,7 @@
 
 **Epic:** 6 - User Authentication & Privacy
 **Type:** Enabling
-**Status:** Ready for Review
+**Status:** done
 
 ## Goal
 
