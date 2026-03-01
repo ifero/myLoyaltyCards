@@ -225,6 +225,11 @@ describe('cloudLoyaltyCardSchema', () => {
     expect(result.success).toBe(false);
   });
 
+  it('rejects card with non-integer usage_count', () => {
+    const result = cloudLoyaltyCardSchema.safeParse(validCloudCard({ usage_count: 1.5 }));
+    expect(result.success).toBe(false);
+  });
+
   it('rejects card with invalid created_at', () => {
     const result = cloudLoyaltyCardSchema.safeParse(validCloudCard({ created_at: '2026-03-01' }));
     expect(result.success).toBe(false);
@@ -274,6 +279,13 @@ describe('cloudUserSchema', () => {
       validCloudUser({ consent_status: false, consented_at: null })
     );
     expect(result.success).toBe(true);
+  });
+
+  it('rejects a user with consent_status true but consented_at null', () => {
+    const result = cloudUserSchema.safeParse(
+      validCloudUser({ consent_status: true, consented_at: null })
+    );
+    expect(result.success).toBe(false);
   });
 
   it('rejects invalid email', () => {

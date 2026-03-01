@@ -19,6 +19,8 @@
 
 import { z } from 'zod';
 
+import { barcodeFormatSchema, cardColorSchema } from '../../core/schemas/card';
+
 // ============================================================
 // Shared primitives
 // ============================================================
@@ -35,22 +37,15 @@ export const uuidSchema = z.string().uuid();
 
 /**
  * Supported barcode formats stored in the cloud.
- * Must stay in sync with core/schemas/card.ts barcodeFormatSchema.
+ * Re-exported from core/schemas/card.ts — single source of truth.
  */
-export const cloudBarcodeFormatSchema = z.enum([
-  'CODE128',
-  'EAN13',
-  'EAN8',
-  'QR',
-  'CODE39',
-  'UPCA'
-]);
+export const cloudBarcodeFormatSchema = barcodeFormatSchema;
 
 /**
  * Supported card colors stored in the cloud.
- * Must stay in sync with core/schemas/card.ts cardColorSchema.
+ * Re-exported from core/schemas/card.ts — single source of truth.
  */
-export const cloudCardColorSchema = z.enum(['blue', 'red', 'green', 'orange', 'grey']);
+export const cloudCardColorSchema = cardColorSchema;
 
 /**
  * Cloud loyalty card row — includes user_id for multi-tenant ownership.
@@ -96,6 +91,15 @@ export const cloudLoyaltyCardSchema = z.object({
 
 export type CloudLoyaltyCard = z.infer<typeof cloudLoyaltyCardSchema>;
 
+/**
+ * Insert shape for loyalty_cards.
+ * All fields including id, created_at, and updated_at are client-generated
+ * (project_context.md: "UUIDs: Client-generated on all platforms"), so the
+ * insert shape is identical to the full row shape. This alias makes the API
+ * surface symmetric with CloudUserInsert / CloudPrivacyLogInsert.
+ */
+export type CloudLoyaltyCardInsert = CloudLoyaltyCard;
+
 // ============================================================
 // users (public profile table)
 // ============================================================
@@ -115,11 +119,18 @@ export const privacyEventTypeSchema = z.enum([
 
 export type PrivacyEventType = z.infer<typeof privacyEventTypeSchema>;
 
-/**
- * Cloud users profile row.
- * One profile per auth.users row, created immediately after sign-up.
- */
-export const cloudUserSchema = z.object({
+/** Consent cross-field invariant: consented_at must be set when consent is true */
+const consentRefine = {
+  check: (u: { consent_status: boolean | null; consented_at: string | null }) =>
+    !(u.consent_status === true && u.consented_at === null),
+  params: {
+    message: 'consented_at must be set when consent_status is true',
+    path: ['consented_at'],
+  },
+} as const;
+
+/** Base object shape for the users table — shared by full row and insert schemas */
+const cloudUserBaseSchema = z.object({
   /** UUID — same as auth.users.id (PK + FK) */
   id: uuidSchema,
 
@@ -139,15 +150,29 @@ export const cloudUserSchema = z.object({
   consented_at: isoDatetimeSchema.nullable(),
 
   /** ISO 8601 — row creation time */
-  created_at: isoDatetimeSchema
+  created_at: isoDatetimeSchema,
 });
+
+/**
+ * Cloud users profile row.
+ * One profile per auth.users row, created immediately after sign-up.
+ *
+ * Invariant: when consent_status === true, consented_at must be non-null.
+ */
+export const cloudUserSchema = cloudUserBaseSchema.refine(
+  consentRefine.check,
+  consentRefine.params
+);
 
 export type CloudUser = z.infer<typeof cloudUserSchema>;
 
 /**
  * Shape of the object used to create a new user profile (omit auto-set fields).
+ * The consent invariant is also enforced at insert time.
  */
-export const cloudUserInsertSchema = cloudUserSchema.omit({ created_at: true });
+export const cloudUserInsertSchema = cloudUserBaseSchema
+  .omit({ created_at: true })
+  .refine(consentRefine.check, consentRefine.params);
 export type CloudUserInsert = z.infer<typeof cloudUserInsertSchema>;
 
 // ============================================================
