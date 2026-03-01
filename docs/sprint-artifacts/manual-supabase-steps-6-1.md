@@ -29,7 +29,7 @@ yarn supabase db push
 
 Alternatively, you can run the SQL manually in the Supabase dashboard:
 
-- Dashboard > SQL Editor > New query > Paste contents of `supabase/migrations/001_create_loyalty_cards.sql` > Run
+- Dashboard > SQL Editor > New query > Paste contents of `supabase/migrations/001_initial_schema.sql` > Run
 
 ### 2. Verify Row Level Security (RLS)
 

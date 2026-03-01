@@ -177,7 +177,7 @@ export const loyaltyCardSchema = z.object({
 
 **New files:**
 
-- `supabase/migrations/002_create_users_and_privacy_log.sql`
+- `supabase/migrations/001_initial_schema.sql` (consolidated; replaces 001 + 002)
 - `shared/supabase/schemas.ts`
 - `shared/supabase/schemas.test.ts`
 - `docs/schemas/README.md`

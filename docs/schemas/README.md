@@ -12,9 +12,9 @@ Row-Level Security (RLS) policies that enforce per-user data isolation.
 
 | Table           | Migration file                                             | Purpose                          |
 | --------------- | ---------------------------------------------------------- | -------------------------------- |
-| `loyalty_cards` | `supabase/migrations/001_create_loyalty_cards.sql`         | Cloud copy of user loyalty cards |
-| `users`         | `supabase/migrations/002_create_users_and_privacy_log.sql` | User profile + consent state     |
-| `privacy_log`   | `supabase/migrations/002_create_users_and_privacy_log.sql` | Immutable GDPR audit trail       |
+| `loyalty_cards` | `supabase/migrations/001_initial_schema.sql` | Cloud copy of user loyalty cards |
+| `users`         | `supabase/migrations/001_initial_schema.sql` | User profile + consent state     |
+| `privacy_log`   | `supabase/migrations/001_initial_schema.sql` | Immutable GDPR audit trail       |
 
 ---
 
