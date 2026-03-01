@@ -1,0 +1,27 @@
+app/_layout.tsx
+  93d35e4e71580cc1 13,18
+shared/supabase/client.ts
+  93d35e4e71580cc1 14-25,28-33,38-41,45-47,50-54,56
+shared/supabase/client.test.ts
+  93d35e4e71580cc1 7,10,15,18,42-43,46-47,53-54,64-66
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.1.7",
+  "base_commit_sha": "6e959a6dac48f18571f8f0b39458e8f82d9850eb",
+  "prompts": {
+    "93d35e4e71580cc1": {
+      "agent_id": {
+        "tool": "github-copilot",
+        "id": "698a6e09-35b1-46de-9508-31431cc22a0e",
+        "model": "copilot/auto"
+      },
+      "human_author": "Andrea Pacino",
+      "messages": [],
+      "total_additions": 108,
+      "total_deletions": 64,
+      "accepted_lines": 68,
+      "overriden_lines": 0
+    }
+  }
+}
