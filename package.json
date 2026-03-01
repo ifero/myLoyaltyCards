@@ -24,6 +24,7 @@
     "@hookform/resolvers": "^5.2.2",
     "@react-native-picker/picker": "2.11.1",
     "@shopify/flash-list": "2.0.2",
+    "@supabase/supabase-js": "^2.98.0",
     "burnt": "^0.13.0",
     "expo": "~54.0.31",
     "expo-brightness": "~14.0.8",
@@ -70,6 +71,7 @@
     "lint-staged": "^16.2.7",
     "prettier": "^3.2.5",
     "prettier-plugin-tailwindcss": "^0.5.11",
+    "supabase": "^2.76.15",
     "tailwindcss": "^3.4.0",
     "typescript": "~5.9.2"
   },
