@@ -125,8 +125,8 @@ const consentRefine = {
     !(u.consent_status === true && u.consented_at === null),
   params: {
     message: 'consented_at must be set when consent_status is true',
-    path: ['consented_at'] as string[],
-  },
+    path: ['consented_at'] as string[]
+  }
 };
 
 /** Base object shape for the users table — shared by full row and insert schemas */
@@ -150,7 +150,7 @@ const cloudUserBaseSchema = z.object({
   consented_at: isoDatetimeSchema.nullable(),
 
   /** ISO 8601 — row creation time */
-  created_at: isoDatetimeSchema,
+  created_at: isoDatetimeSchema
 });
 
 /**
