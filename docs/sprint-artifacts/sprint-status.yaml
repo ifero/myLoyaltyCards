@@ -122,7 +122,7 @@ development_status:
   epic-6: in-progress
   # Sprint 7 stories (in sprint)
   6-1-create-supabase-project-environments: done
-  6-2-define-cloud-schema-rls: ready-for-dev
+  6-2-define-cloud-schema-rls: review
   6-3-configure-app-client: ready-for-dev
   6-4-privacy-policy-consent-flow: ready-for-dev
   6-5-implement-guest-mode: ready-for-dev
