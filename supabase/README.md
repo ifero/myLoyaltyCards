@@ -118,7 +118,7 @@ RLS policies automatically enforce that:
 
 ### Policies Applied
 
-See [001_create_loyalty_cards.sql](./migrations/001_create_loyalty_cards.sql) for the full policy definitions.
+See [001_initial_schema.sql](./migrations/001_initial_schema.sql) for the full policy definitions.
 
 ## Migrations
 
@@ -148,7 +148,7 @@ Format: `{number}_{description}.sql`
 
 Examples:
 
-- `001_create_loyalty_cards.sql` - Initial table creation
+- `001_initial_schema.sql` - Initial schema (loyalty_cards, users, privacy_log)
 - `002_add_sharing_feature.sql` - Future feature addition
 
 ## Environment Variables
