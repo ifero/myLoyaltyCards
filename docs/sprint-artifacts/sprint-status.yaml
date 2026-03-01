@@ -44,19 +44,21 @@ story_location: docs/sprint-artifacts
 # CURRENT SPRINT
 # ============================================
 current_sprint:
-  number: 6
-  name: 'Sprint 6: CI/CD & Quality Gates'
-  goal: 'Set up CI/CD pipeline and enforce quality gates'
-  start_date: 2026-02-19
-  end_date: 2026-02-25
+  number: 7
+  name: 'Sprint 7: User Authentication & Privacy'
+  goal: 'Implement Epic 6: User Authentication & Privacy (Supabase, guest mode, email/SSO, privacy consent)'
+  start_date: 2026-02-27
+  end_date: 2026-03-05
   duration: 1 week
-  epic: 11
+  epic: 6
   stories:
-    - 11-1-block-pr-on-quality-gates
-    - 11-2-build-on-main-app-changes-only
-    - 11-3-notify-on-build-status
-    - 11-4-rollback-on-failed-deploy
-    - 11-5-document-cicd-pipeline
+    - 6-1-create-supabase-project-environments
+    - 6-2-define-cloud-schema-rls
+    - 6-3-configure-app-client
+    - 6-4-privacy-policy-consent-flow
+    - 6-5-implement-guest-mode
+    - 6-6-create-account-email
+    - 6-7-sign-in-email
 
 development_status:
   # ============================================
@@ -117,18 +119,23 @@ development_status:
   epic-5-retrospective: optional
 
   # Epic 6: User Authentication & Privacy
-  epic-6: backlog
-  6-1-set-up-supabase-backend: backlog
-  6-2-implement-guest-mode: backlog
-  6-3-create-account-with-email: backlog
-  6-4-sign-in-with-email: backlog
-  6-5-sign-in-with-apple: backlog
-  6-6-sign-in-with-google: backlog
-  6-7-upgrade-guest-to-account: backlog
+  epic-6: in-progress
+  # Sprint 7 stories (in sprint)
+  6-1-create-supabase-project-environments: done
+  6-2-define-cloud-schema-rls: ready-for-dev
+  6-3-configure-app-client: ready-for-dev
+  6-4-privacy-policy-consent-flow: ready-for-dev
+  6-5-implement-guest-mode: ready-for-dev
+  6-6-create-account-email: ready-for-dev
+  6-7-sign-in-email: ready-for-dev
+  # Out-of-sprint stories (still in epic, not planned for this sprint)
   6-8-password-reset: backlog
   6-9-logout: backlog
   6-10-delete-account: backlog
   6-11-privacy-consent: backlog
+  6-5-sign-in-with-apple: backlog
+  6-6-sign-in-with-google: backlog
+  6-7-upgrade-guest-to-account: backlog
   epic-6-retrospective: optional
 
   # Epic 7: Cloud Synchronization

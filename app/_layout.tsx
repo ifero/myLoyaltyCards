@@ -1,5 +1,6 @@
 import 'react-native-get-random-values'; // Must be imported before uuid
 import '../global.css';
+import '@/shared/supabase/client'; // Validates Supabase env vars at app startup
 import { Stack, useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import * as Updates from 'expo-updates';
