@@ -1,6 +1,5 @@
 import 'react-native-get-random-values'; // Must be imported before uuid
 import '../global.css';
-import '@/shared/supabase/client'; // Validates Supabase env vars at app startup
 import { Stack, useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import * as Updates from 'expo-updates';
@@ -11,9 +10,12 @@ import { initializeDatabase } from '@/core/database';
 import { getAllCards } from '@/core/database/card-repository';
 import { subscribeToWatchMessages, syncCardToWatch, WatchMessage } from '@/core/watch-connectivity';
 
+import { getSupabaseClient } from '@/shared/supabase/client';
 import { ThemeProvider, useTheme } from '@/shared/theme';
 
 import { isFirstLaunch } from '@/features/settings';
+
+getSupabaseClient(); // Validates Supabase env vars at app startup
 
 /**
  * Header Right component with Settings button

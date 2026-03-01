@@ -11,23 +11,48 @@ import { createClient } from '@supabase/supabase-js';
  * Note: EXPO_PUBLIC_ prefix is required for Expo to expose env vars to client code.
  */
 
-const SUPABASE_URL = process.env.EXPO_PUBLIC_SUPABASE_URL;
-const SUPABASE_KEY = process.env.EXPO_PUBLIC_SUPABASE_KEY;
+type SupabaseEnv = {
+  EXPO_PUBLIC_SUPABASE_URL?: string;
+  EXPO_PUBLIC_SUPABASE_KEY?: string;
+};
 
-if (!SUPABASE_URL) {
-  throw new Error(
-    'Missing EXPO_PUBLIC_SUPABASE_URL environment variable.\n' +
-      'Please copy .env.example to .env and add your Supabase project URL.\n' +
-      'See docs/sprint-artifacts/manual-supabase-steps-6-1.md for setup instructions.'
-  );
+export function getSupabaseCredentials(env: SupabaseEnv = process.env): {
+  url: string;
+  key: string;
+} {
+  const url = env.EXPO_PUBLIC_SUPABASE_URL;
+  const key = env.EXPO_PUBLIC_SUPABASE_KEY;
+
+  if (!url) {
+    throw new Error(
+      'Missing EXPO_PUBLIC_SUPABASE_URL environment variable.\n' +
+        'Please copy .env.example to .env and add your Supabase project URL.\n' +
+        'See docs/sprint-artifacts/manual-supabase-steps-6-1.md for setup instructions.'
+    );
+  }
+
+  if (!key) {
+    throw new Error(
+      'Missing EXPO_PUBLIC_SUPABASE_KEY environment variable.\n' +
+        'Please copy .env.example to .env and add your Supabase anon key.\n' +
+        'See docs/sprint-artifacts/manual-supabase-steps-6-1.md for setup instructions.'
+    );
+  }
+
+  return { url, key };
 }
 
-if (!SUPABASE_KEY) {
-  throw new Error(
-    'Missing EXPO_PUBLIC_SUPABASE_KEY environment variable.\n' +
-      'Please copy .env.example to .env and add your Supabase anon key.\n' +
-      'See docs/sprint-artifacts/manual-supabase-steps-6-1.md for setup instructions.'
-  );
+export function createSupabaseClient(env: SupabaseEnv = process.env) {
+  const { url, key } = getSupabaseCredentials(env);
+  return createClient(url, key);
 }
 
-export const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
+let supabaseInstance: ReturnType<typeof createSupabaseClient> | null = null;
+
+export function getSupabaseClient() {
+  if (!supabaseInstance) {
+    supabaseInstance = createSupabaseClient();
+  }
+
+  return supabaseInstance;
+}
