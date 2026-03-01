@@ -1,0 +1,23 @@
+shared/supabase/schemas.ts
+  6a8c69efd263fb35 128,130
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.1.7",
+  "base_commit_sha": "9091d4076fb2e8030af7f4a4f3c9b107e327abcd",
+  "prompts": {
+    "6a8c69efd263fb35": {
+      "agent_id": {
+        "tool": "github-copilot",
+        "id": "7df7724a-8dfe-4694-9a3e-f07a4582df50",
+        "model": "copilot/claude-sonnet-4.6"
+      },
+      "human_author": "Andrea Pacino",
+      "messages": [],
+      "total_additions": 2,
+      "total_deletions": 2,
+      "accepted_lines": 2,
+      "overriden_lines": 0
+    }
+  }
+}
