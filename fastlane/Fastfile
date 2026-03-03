@@ -26,11 +26,12 @@ platform :ios do
   desc "Build iOS AdHoc app"
   lane :adhoc do
     match(type: "adhoc")
-    # Usa short commit hash come build number
-    commit_hash = sh("git rev-parse --short HEAD").strip
+    # Use CI run number for a guaranteed-unique, ever-increasing build number.
+    # Falls back to Unix timestamp when running locally.
+    build_number = ENV['GITHUB_RUN_NUMBER'] || Time.now.to_i.to_s
     increment_build_number(
       xcodeproj: "ios/myLoyaltyCards.xcodeproj",
-      build_number: commit_hash
+      build_number: build_number
     )
     build_app(
       scheme: "myLoyaltyCards",
