@@ -26,14 +26,19 @@ platform :ios do
   desc "Build iOS AdHoc app"
   lane :adhoc do
     match(type: "adhoc")
-    # Usa short commit hash come build number
-    commit_hash = sh("git rev-parse --short HEAD").strip
+    # Use CI run number for a guaranteed-unique, ever-increasing build number.
+    # Falls back to Unix timestamp when running locally.
+    build_number = ENV['GITHUB_RUN_NUMBER'] || Time.now.to_i.to_s
     increment_build_number(
-      xcodeproj: "../ios/myLoyaltyCards.xcodeproj",
-      build_number: commit_hash
+      xcodeproj: "ios/myLoyaltyCards.xcodeproj",
+      build_number: build_number
     )
-    build_app(scheme: "myLoyaltyCards", export_method: "ad-hoc")
-    # Optionally: upload to a distribution service
+    build_app(
+      scheme: "myLoyaltyCards",
+      workspace: "ios/myLoyaltyCards.xcworkspace",
+      export_method: "ad-hoc",
+      output_directory: "output"
+    )
   end
 
   desc "Build and upload to TestFlight"
@@ -50,10 +55,15 @@ platform :ios do
         api_key: api_key
       )
       increment_build_number(
-        xcodeproj: "../ios/myLoyaltyCards.xcodeproj",
+        xcodeproj: "ios/myLoyaltyCards.xcodeproj",
         build_number: (last_build.to_i + 1).to_s
       )
-      build_app(scheme: "myLoyaltyCards")
+      build_app(
+        scheme: "myLoyaltyCards",
+        workspace: "ios/myLoyaltyCards.xcworkspace",
+        export_method: "app-store",
+        output_directory: "output"
+      )
       upload_to_testflight(
         api_key: api_key
       )
