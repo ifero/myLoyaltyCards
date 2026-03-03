@@ -1,5 +1,5 @@
 # iOS Release Build
-# Triggers only on main branch and only if app/core/features/shared/android/ios change
+# Triggers only on main branch and only if app/core/features/shared/ios change
 name: iOS Release Build
 
 on:
@@ -10,13 +10,12 @@ on:
       - 'core/**'
       - 'features/**'
       - 'shared/**'
-      - 'android/**'
       - 'ios/**'
 
 jobs:
   ios-release:
     name: iOS Release Build
-    runs-on: macos-14
+    runs-on: macos-15
     env:
       MATCH_PASSWORD: ${{ secrets.MATCH_PASSWORD }}
       MATCH_GIT_BASIC_AUTHORIZATION: ${{ secrets.MATCH_GIT_BASIC_AUTHORIZATION }}
@@ -25,6 +24,8 @@ jobs:
       APP_STORE_CONNECT_API_KEY_KEY_ID: ${{ secrets.APP_STORE_CONNECT_API_KEY_KEY_ID }}
       APP_STORE_CONNECT_API_KEY_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_API_KEY_ISSUER_ID }}
       APP_STORE_CONNECT_API_KEY_KEY: ${{ secrets.APP_STORE_CONNECT_API_KEY_KEY }}
+      FASTLANE_SKIP_UPDATE_CHECK: '1'
+      FASTLANE_DISABLE_COLORS: '1'
 
     steps:
       - name: Checkout
@@ -37,20 +38,17 @@ jobs:
       - name: Install dependencies
         run: yarn install --frozen-lockfile
       - name: Prebuild native projects
-        run: npx expo prebuild
+        run: npx expo prebuild --platform ios
       - name: Set up Ruby
         uses: ruby/setup-ruby@v1
         with:
           ruby-version: '3.2'
-      - name: Install Bundler dependencies
-        run: bundle install --path vendor/bundle
-      - name: Cache Bundler
-        uses: actions/cache@v3
-        with:
-          path: vendor/bundle
-          key: ${{ runner.os }}-bundler-${{ hashFiles('**/Gemfile.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-bundler-
+          bundler-cache: true
       - name: Run Fastlane (iOS AdHoc)
         run: bundle exec fastlane adhoc
-        working-directory: ios
+      - name: Upload IPA artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: myLoyaltyCards-adhoc-${{ github.run_id }}
+          path: output/*.ipa
+          if-no-files-found: error
