@@ -47,7 +47,7 @@ export type GuestSession = {
  * Maps a Supabase error or unknown thrown value to an `AuthError`.
  * No raw Supabase internals are leaked to callers.
  */
-function toAuthError(err: unknown): AuthError {
+const toAuthError = (err: unknown): AuthError => {
   if (err && typeof err === 'object') {
     // Handles both native Error instances and Supabase error objects { message, code, status }
     const maybeMessage = (err as { message?: unknown }).message;
@@ -60,7 +60,7 @@ function toAuthError(err: unknown): AuthError {
     return { message, code };
   }
   return { message: 'An unexpected error occurred. Please try again.' };
-}
+};
 
 // ---------------------------------------------------------------------------
 // Auth operations
@@ -71,10 +71,10 @@ function toAuthError(err: unknown): AuthError {
  *
  * @returns `AuthResult<AuthSession>` — success contains `user` and `session`.
  */
-export async function signInWithEmail(
+export const signInWithEmail = async (
   email: string,
   password: string
-): Promise<AuthResult<AuthSession>> {
+): Promise<AuthResult<AuthSession>> => {
   try {
     const supabase = getSupabaseClient();
     const { data, error } = await supabase.auth.signInWithPassword({ email, password });
@@ -94,7 +94,7 @@ export async function signInWithEmail(
   } catch (err) {
     return { success: false, error: toAuthError(err) };
   }
-}
+};
 
 /**
  * Register a new user with email and password.
@@ -105,10 +105,10 @@ export async function signInWithEmail(
  * @returns `AuthResult<{ user: User; session: Session | null }>` — session is
  *   `null` when email confirmation is still pending.
  */
-export async function signUp(
+export const signUp = async (
   email: string,
   password: string
-): Promise<AuthResult<{ user: User; session: Session | null }>> {
+): Promise<AuthResult<{ user: User; session: Session | null }>> => {
   try {
     const supabase = getSupabaseClient();
     const { data, error } = await supabase.auth.signUp({ email, password });
@@ -128,7 +128,7 @@ export async function signUp(
   } catch (err) {
     return { success: false, error: toAuthError(err) };
   }
-}
+};
 
 /**
  * Sign out the currently authenticated user from this device only.
@@ -137,7 +137,7 @@ export async function signUp(
  * for a mobile loyalty card app this is the expected UX. If global sign-out
  * is ever needed, pass `scope: 'global'` explicitly at the call site.
  */
-export async function signOut(): Promise<AuthResult<void>> {
+export const signOut = async (): Promise<AuthResult<void>> => {
   try {
     const supabase = getSupabaseClient();
     const { error } = await supabase.auth.signOut({ scope: 'local' });
@@ -150,14 +150,14 @@ export async function signOut(): Promise<AuthResult<void>> {
   } catch (err) {
     return { success: false, error: toAuthError(err) };
   }
-}
+};
 
 /**
  * Retrieve the current active session.
  *
  * Returns `null` session data when there is no authenticated user.
  */
-export async function getSession(): Promise<AuthResult<Session | null>> {
+export const getSession = async (): Promise<AuthResult<Session | null>> => {
   try {
     const supabase = getSupabaseClient();
     const { data, error } = await supabase.auth.getSession();
@@ -170,7 +170,7 @@ export async function getSession(): Promise<AuthResult<Session | null>> {
   } catch (err) {
     return { success: false, error: toAuthError(err) };
   }
-}
+};
 
 /**
  * Continue without creating an account (guest mode).
@@ -179,7 +179,7 @@ export async function getSession(): Promise<AuthResult<Session | null>> {
  * Guest data is stored locally only and cannot be synced to the cloud
  * until the user creates an account (upgrade path — future story).
  */
-export function continueAsGuest(): AuthResult<GuestSession> {
+export const continueAsGuest = (): AuthResult<GuestSession> => {
   // Math.random() is intentional here — guestId is ephemeral UI state only,
   // not used for security or persistence. Cryptographic randomness is not needed.
   const guestId = `guest-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
@@ -190,4 +190,4 @@ export function continueAsGuest(): AuthResult<GuestSession> {
       guestId
     }
   };
-}
+};

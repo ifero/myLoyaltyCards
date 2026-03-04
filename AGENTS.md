@@ -140,6 +140,7 @@ npx expo export -p web && npx eas-cli@latest deploy   # Deploy web to EAS Hostin
 ### Code Style & Standards
 
 - **TypeScript First**: Use TypeScript for all new code with strict type checking
+- **Arrow Functions**: Always use `const` arrow functions instead of `function` declarations for all functions, including exported and async ones (e.g. `export const foo = () => { ... };`)
 - **Naming Conventions**: Use meaningful, descriptive names for variables, functions, and components
 - **Self-Documenting Code**: Write clear, readable code that explains itself; only add comments for complex business logic or design decisions
 - **React 19 Patterns**: Follow modern React patterns including:

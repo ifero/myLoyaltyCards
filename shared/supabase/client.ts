@@ -20,14 +20,14 @@ import { createClient, SupportedStorage } from '@supabase/supabase-js';
  * Lazy-loaded SecureStore reference. Resolved at runtime to avoid import
  * errors in web/Jest where the native module is absent.
  */
-function getSecureStore(): typeof import('expo-secure-store') | null {
+const getSecureStore = (): typeof import('expo-secure-store') | null => {
   try {
     // eslint-disable-next-line @typescript-eslint/no-require-imports
     return require('expo-secure-store') as typeof import('expo-secure-store');
   } catch {
     return null;
   }
-}
+};
 
 /**
  * iOS Keychain (expo-secure-store) has a ~2KB per-key limit.
@@ -47,9 +47,9 @@ const SECURE_STORE_CHUNK_SIZE = 1800; // bytes – safely below the 2048 limit
  *
  * ⚠️ Token values are NEVER logged. Do not add logging to these methods.
  */
-export function createSecureStoreAdapter(
+export const createSecureStoreAdapter = (
   store: typeof import('expo-secure-store') | null
-): SupportedStorage {
+): SupportedStorage => {
   return {
     async getItem(key: string): Promise<string | null> {
       if (!store) return null;
@@ -125,7 +125,7 @@ export function createSecureStoreAdapter(
       }
     }
   };
-}
+};
 
 /**
  * Adapter implementing Supabase's `SupportedStorage` interface backed by
@@ -143,17 +143,19 @@ type SupabaseEnv = {
   EXPO_PUBLIC_SUPABASE_KEY?: string;
 };
 
-function getRuntimeSupabaseEnv(): SupabaseEnv {
+const getRuntimeSupabaseEnv = (): SupabaseEnv => {
   return {
     EXPO_PUBLIC_SUPABASE_URL: process.env.EXPO_PUBLIC_SUPABASE_URL,
     EXPO_PUBLIC_SUPABASE_KEY: process.env.EXPO_PUBLIC_SUPABASE_KEY
   };
-}
+};
 
-export function getSupabaseCredentials(env: SupabaseEnv = getRuntimeSupabaseEnv()): {
+export const getSupabaseCredentials = (
+  env: SupabaseEnv = getRuntimeSupabaseEnv()
+): {
   url: string;
   key: string;
-} {
+} => {
   const url = env.EXPO_PUBLIC_SUPABASE_URL;
   const key = env.EXPO_PUBLIC_SUPABASE_KEY;
 
@@ -181,16 +183,16 @@ export function getSupabaseCredentials(env: SupabaseEnv = getRuntimeSupabaseEnv(
   }
 
   return { url, key };
-}
+};
 
 // ---------------------------------------------------------------------------
 // Client factory
 // ---------------------------------------------------------------------------
 
-export function createSupabaseClient(
+export const createSupabaseClient = (
   env: SupabaseEnv = getRuntimeSupabaseEnv(),
   storage: SupportedStorage = SecureStoreAdapter
-) {
+) => {
   const { url, key } = getSupabaseCredentials(env);
   return createClient(url, key, {
     auth: {
@@ -200,7 +202,7 @@ export function createSupabaseClient(
       storage
     }
   });
-}
+};
 
 // ---------------------------------------------------------------------------
 // Singleton accessor (lazy-initialised)
@@ -208,15 +210,15 @@ export function createSupabaseClient(
 
 let supabaseInstance: ReturnType<typeof createSupabaseClient> | null = null;
 
-export function getSupabaseClient() {
+export const getSupabaseClient = () => {
   if (!supabaseInstance) {
     supabaseInstance = createSupabaseClient();
   }
 
   return supabaseInstance;
-}
+};
 
 /** Reset singleton — only for use in tests */
-export function resetSupabaseClientForTesting() {
+export const resetSupabaseClientForTesting = () => {
   supabaseInstance = null;
-}
+};
