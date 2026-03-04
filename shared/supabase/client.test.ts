@@ -198,6 +198,29 @@ describe('createSecureStoreAdapter — native platform (mock SecureStore present
     expect(mockDeleteItemAsync).toHaveBeenCalledWith('multi-key.chunks');
   });
 
+  it('getItem returns null when the chunks count key is corrupt (isNaN guard)', async () => {
+    mockGetItemAsync.mockImplementation(async (k: string) => {
+      if (k === 'bad-session.chunks') return 'not-a-number'; // corrupt key
+      return null;
+    });
+
+    const result = await adapter.getItem('bad-session');
+
+    expect(result).toBeNull();
+  });
+
+  it('removeItem degrades gracefully when the chunks count key is corrupt', async () => {
+    mockGetItemAsync.mockImplementation(async (k: string) => {
+      if (k === 'bad-key.chunks') return 'not-a-number';
+      return null;
+    });
+    mockDeleteItemAsync.mockResolvedValue(undefined);
+
+    await expect(adapter.removeItem('bad-key')).resolves.toBeUndefined();
+    // Should still attempt to delete the corrupt count key
+    expect(mockDeleteItemAsync).toHaveBeenCalledWith('bad-key.chunks');
+  });
+
   it('removeItem delegates to SecureStore.deleteItemAsync (non-chunked key)', async () => {
     // No chunks key → falls through to direct delete
     mockGetItemAsync.mockResolvedValue(null);

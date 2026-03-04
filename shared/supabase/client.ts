@@ -62,6 +62,8 @@ export function createSecureStoreAdapter(
       }
 
       const chunkCount = parseInt(chunkCountStr, 10);
+      // Guard against a corrupt `.chunks` key (e.g. Keychain data corruption)
+      if (isNaN(chunkCount)) return null;
       const chunks = await Promise.all(
         Array.from({ length: chunkCount }, (_, i) => store.getItemAsync(`${key}.chunk.${i}`))
       );
@@ -85,6 +87,8 @@ export function createSecureStoreAdapter(
       }
 
       // Large value — write chunks first, then the count key
+      // TODO: cleanup stale chunk keys when value shrinks (N→M or chunked→single).
+      //       In practice Supabase uses a fixed key set so orphan accumulation is bounded.
       const totalChunks = Math.ceil(value.length / SECURE_STORE_CHUNK_SIZE);
       const chunkWrites = Array.from({ length: totalChunks }, (_, i) =>
         store.setItemAsync(
@@ -103,6 +107,12 @@ export function createSecureStoreAdapter(
 
       if (chunkCountStr !== null) {
         const chunkCount = parseInt(chunkCountStr, 10);
+        if (isNaN(chunkCount)) {
+          // Corrupt count key — delete it and fall through to raw key delete
+          await store.deleteItemAsync(`${key}.chunks`).catch(() => undefined);
+          await store.deleteItemAsync(key).catch(() => undefined);
+          return;
+        }
         const deletions = Array.from({ length: chunkCount }, (_, i) =>
           store.deleteItemAsync(`${key}.chunk.${i}`).catch(() => undefined)
         );
