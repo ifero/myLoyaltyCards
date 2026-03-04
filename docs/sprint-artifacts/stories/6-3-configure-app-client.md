@@ -181,11 +181,11 @@ Configure the Expo/React Native app to connect to Supabase, using environment va
 | Task 1   | `expo-secure-store@15.0.8` installed (SDK 54 compatible)                                                                                                                                        |
 | Task 2   | Added `createSecureStoreAdapter(store)` factory; `SecureStoreAdapter` singleton; `createSupabaseClient` now accepts `storage` param. `getSupabaseClient()` singleton reset util added for tests |
 | Task 3   | `auth.ts` created with `signInWithEmail`, `signUp`, `signOut`, `getSession`, `continueAsGuest`. `toAuthError` handles both Error instances and plain Supabase error objects `{ message, code }` |
-| Task 5/6 | 23 auth tests + 18 client tests = 41 new tests. All 452 suite tests green                                                                                                                       |
+| Task 5/6 | 23 auth tests + 24 client tests = 47 new tests. SecureStore chunking adapter added (iOS Keychain ~2KB limit). All 458 suite tests green.                                                        |
 
 ### Completion Notes
 
-All tasks complete. `shared/supabase/client.ts` enhanced with `createSecureStoreAdapter` factory (native → SecureStore; web Jest → graceful noop). `shared/supabase/auth.ts` is the single auth API: typed `AuthResult<T>` discriminated union, no raw errors surfaced, no token logging. `.env.example` extended with session storage notes. Full test suite 452/452 pass.
+All tasks complete. `shared/supabase/client.ts` enhanced with `createSecureStoreAdapter` factory: handles iOS Keychain 2KB limit via transparent value chunking; native → SecureStore; web/Jest → graceful noop. `shared/supabase/auth.ts` is the single auth API: typed `AuthResult<T>` discriminated union, no raw errors surfaced, no token logging. `.env.example` extended with session storage notes. Full test suite 458/458 pass.
 
 ### File List
 

@@ -73,6 +73,17 @@ describe('Supabase Client Initialization', () => {
     expect(supabase).toHaveProperty('from');
   });
 
+  it('should throw clear error when EXPO_PUBLIC_SUPABASE_URL is not https', () => {
+    const env = {
+      EXPO_PUBLIC_SUPABASE_URL: 'http://test.supabase.co',
+      EXPO_PUBLIC_SUPABASE_KEY: 'test-key'
+    };
+
+    expect(() => getSupabaseCredentials(env)).toThrow(
+      'EXPO_PUBLIC_SUPABASE_URL must start with "https://"'
+    );
+  });
+
   it('should handle empty string env vars as missing', () => {
     const env = {
       EXPO_PUBLIC_SUPABASE_URL: '',
@@ -111,10 +122,16 @@ describe('createSecureStoreAdapter — native platform (mock SecureStore present
   });
 
   it('getItem delegates to SecureStore.getItemAsync', async () => {
-    mockGetItemAsync.mockResolvedValue('stored-value');
+    // When no chunks key exists, falls through to direct single-key read
+    mockGetItemAsync.mockImplementation(async (k: string) => {
+      if (k === 'test-key.chunks') return null; // no chunks — single key
+      if (k === 'test-key') return 'stored-value';
+      return null;
+    });
 
     const result = await adapter.getItem('test-key');
 
+    expect(mockGetItemAsync).toHaveBeenCalledWith('test-key.chunks');
     expect(mockGetItemAsync).toHaveBeenCalledWith('test-key');
     expect(result).toBe('stored-value');
   });
@@ -129,13 +146,61 @@ describe('createSecureStoreAdapter — native platform (mock SecureStore present
 
   it('setItem delegates to SecureStore.setItemAsync (never logs value)', async () => {
     mockSetItemAsync.mockResolvedValue(undefined);
+    mockDeleteItemAsync.mockResolvedValue(undefined);
 
     await adapter.setItem('supabase-session', 'token-value');
 
     expect(mockSetItemAsync).toHaveBeenCalledWith('supabase-session', 'token-value');
   });
 
-  it('removeItem delegates to SecureStore.deleteItemAsync', async () => {
+  it('setItem chunks large values (> 1800 bytes) across multiple keys', async () => {
+    mockSetItemAsync.mockResolvedValue(undefined);
+    const largeValue = 'x'.repeat(3600); // exactly 2 chunks of 1800 bytes each
+
+    await adapter.setItem('big-session', largeValue);
+
+    // Chunk keys should be written
+    expect(mockSetItemAsync).toHaveBeenCalledWith('big-session.chunk.0', expect.any(String));
+    expect(mockSetItemAsync).toHaveBeenCalledWith('big-session.chunk.1', expect.any(String));
+    // Count key written last
+    expect(mockSetItemAsync).toHaveBeenCalledWith('big-session.chunks', '2');
+    // Raw key must NOT be written for chunked values
+    expect(mockSetItemAsync).not.toHaveBeenCalledWith('big-session', largeValue);
+  });
+
+  it('getItem reassembles chunked value correctly', async () => {
+    const chunk0 = 'a'.repeat(1800);
+    const chunk1 = 'b'.repeat(200);
+
+    mockGetItemAsync.mockImplementation(async (k: string) => {
+      if (k === 'big-session.chunks') return '2';
+      if (k === 'big-session.chunk.0') return chunk0;
+      if (k === 'big-session.chunk.1') return chunk1;
+      return null;
+    });
+
+    const result = await adapter.getItem('big-session');
+
+    expect(result).toBe(chunk0 + chunk1);
+  });
+
+  it('removeItem deletes all chunk keys when chunks key is present', async () => {
+    mockGetItemAsync.mockImplementation(async (k: string) => {
+      if (k === 'multi-key.chunks') return '2';
+      return null;
+    });
+    mockDeleteItemAsync.mockResolvedValue(undefined);
+
+    await adapter.removeItem('multi-key');
+
+    expect(mockDeleteItemAsync).toHaveBeenCalledWith('multi-key.chunk.0');
+    expect(mockDeleteItemAsync).toHaveBeenCalledWith('multi-key.chunk.1');
+    expect(mockDeleteItemAsync).toHaveBeenCalledWith('multi-key.chunks');
+  });
+
+  it('removeItem delegates to SecureStore.deleteItemAsync (non-chunked key)', async () => {
+    // No chunks key → falls through to direct delete
+    mockGetItemAsync.mockResolvedValue(null);
     mockDeleteItemAsync.mockResolvedValue(undefined);
 
     await adapter.removeItem('supabase-session');
@@ -220,5 +285,44 @@ describe('createSupabaseClient — auth options', () => {
 describe('resetSupabaseClientForTesting', () => {
   it('is exported and callable without throwing', () => {
     expect(() => resetSupabaseClientForTesting()).not.toThrow();
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Singleton caching behaviour (Story 6-3)
+// ---------------------------------------------------------------------------
+
+import { getSupabaseClient } from './client';
+
+describe('getSupabaseClient — singleton caching', () => {
+  const validEnv = {
+    EXPO_PUBLIC_SUPABASE_URL: 'https://test.supabase.co',
+    EXPO_PUBLIC_SUPABASE_KEY: 'test-key'
+  };
+
+  beforeEach(() => {
+    resetSupabaseClientForTesting();
+    // Override env so createSupabaseClient succeeds inside getSupabaseClient
+    process.env.EXPO_PUBLIC_SUPABASE_URL = validEnv.EXPO_PUBLIC_SUPABASE_URL;
+    process.env.EXPO_PUBLIC_SUPABASE_KEY = validEnv.EXPO_PUBLIC_SUPABASE_KEY;
+  });
+
+  afterEach(() => {
+    resetSupabaseClientForTesting();
+    delete process.env.EXPO_PUBLIC_SUPABASE_URL;
+    delete process.env.EXPO_PUBLIC_SUPABASE_KEY;
+  });
+
+  it('returns the same instance on repeated calls', () => {
+    const a = getSupabaseClient();
+    const b = getSupabaseClient();
+    expect(a).toBe(b);
+  });
+
+  it('resetSupabaseClientForTesting causes a new instance to be created', () => {
+    const a = getSupabaseClient();
+    resetSupabaseClientForTesting();
+    const b = getSupabaseClient();
+    expect(a).not.toBe(b);
   });
 });

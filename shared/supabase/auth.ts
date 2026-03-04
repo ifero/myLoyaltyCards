@@ -131,12 +131,16 @@ export async function signUp(
 }
 
 /**
- * Sign out the currently authenticated user from all devices.
+ * Sign out the currently authenticated user from this device only.
+ *
+ * Uses `scope: 'local'` to avoid invalidating sessions on other devices —
+ * for a mobile loyalty card app this is the expected UX. If global sign-out
+ * is ever needed, pass `scope: 'global'` explicitly at the call site.
  */
 export async function signOut(): Promise<AuthResult<void>> {
   try {
     const supabase = getSupabaseClient();
-    const { error } = await supabase.auth.signOut();
+    const { error } = await supabase.auth.signOut({ scope: 'local' });
 
     if (error) {
       return { success: false, error: toAuthError(error) };
@@ -176,6 +180,8 @@ export async function getSession(): Promise<AuthResult<Session | null>> {
  * until the user creates an account (upgrade path — future story).
  */
 export function continueAsGuest(): AuthResult<GuestSession> {
+  // Math.random() is intentional here — guestId is ephemeral UI state only,
+  // not used for security or persistence. Cryptographic randomness is not needed.
   const guestId = `guest-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
   return {
     success: true,

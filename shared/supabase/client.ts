@@ -30,8 +30,20 @@ function getSecureStore(): typeof import('expo-secure-store') | null {
 }
 
 /**
+ * iOS Keychain (expo-secure-store) has a ~2KB per-key limit.
+ * Supabase session JSON (two JWTs + user metadata) can exceed this.
+ * We chunk large values into multiple keys and reassemble on read.
+ *
+ * Reference: https://docs.expo.dev/versions/latest/sdk/securestore/
+ */
+const SECURE_STORE_CHUNK_SIZE = 1800; // bytes – safely below the 2048 limit
+
+/**
  * Creates a `SupportedStorage` adapter from an optional SecureStore reference.
  * When `store` is null (web / Jest) all methods are no-ops that resolve to null.
+ *
+ * Session values that exceed SECURE_STORE_CHUNK_SIZE bytes are transparently
+ * split across multiple keyed chunks and reassembled on read.
  *
  * ⚠️ Token values are NEVER logged. Do not add logging to these methods.
  */
@@ -41,17 +53,66 @@ export function createSecureStoreAdapter(
   return {
     async getItem(key: string): Promise<string | null> {
       if (!store) return null;
-      return store.getItemAsync(key);
+
+      const chunkCountStr = await store.getItemAsync(`${key}.chunks`);
+
+      // Single-chunk (or legacy) value — direct read
+      if (chunkCountStr === null) {
+        return store.getItemAsync(key);
+      }
+
+      const chunkCount = parseInt(chunkCountStr, 10);
+      const chunks = await Promise.all(
+        Array.from({ length: chunkCount }, (_, i) => store.getItemAsync(`${key}.chunk.${i}`))
+      );
+
+      // If any chunk is missing the session is corrupt — treat as absent
+      if (chunks.some((c) => c === null)) return null;
+
+      return chunks.join('');
     },
 
     async setItem(key: string, value: string): Promise<void> {
       if (!store) return;
-      await store.setItemAsync(key, value);
+
+      if (value.length <= SECURE_STORE_CHUNK_SIZE) {
+        // Small value — single key, remove any stale chunks
+        await Promise.all([
+          store.setItemAsync(key, value),
+          store.deleteItemAsync(`${key}.chunks`).catch(() => undefined)
+        ]);
+        return;
+      }
+
+      // Large value — write chunks first, then the count key
+      const totalChunks = Math.ceil(value.length / SECURE_STORE_CHUNK_SIZE);
+      const chunkWrites = Array.from({ length: totalChunks }, (_, i) =>
+        store.setItemAsync(
+          `${key}.chunk.${i}`,
+          value.slice(i * SECURE_STORE_CHUNK_SIZE, (i + 1) * SECURE_STORE_CHUNK_SIZE)
+        )
+      );
+      await Promise.all(chunkWrites);
+      await store.setItemAsync(`${key}.chunks`, String(totalChunks));
     },
 
     async removeItem(key: string): Promise<void> {
       if (!store) return;
-      await store.deleteItemAsync(key);
+
+      const chunkCountStr = await store.getItemAsync(`${key}.chunks`);
+
+      if (chunkCountStr !== null) {
+        const chunkCount = parseInt(chunkCountStr, 10);
+        const deletions = Array.from({ length: chunkCount }, (_, i) =>
+          store.deleteItemAsync(`${key}.chunk.${i}`).catch(() => undefined)
+        );
+        await Promise.all([
+          ...deletions,
+          store.deleteItemAsync(`${key}.chunks`).catch(() => undefined)
+        ]);
+      } else {
+        await store.deleteItemAsync(key).catch(() => undefined);
+      }
     }
   };
 }
@@ -91,6 +152,13 @@ export function getSupabaseCredentials(env: SupabaseEnv = getRuntimeSupabaseEnv(
       'Missing EXPO_PUBLIC_SUPABASE_URL environment variable.\n' +
         'Please copy .env.example to .env and add your Supabase project URL.\n' +
         'See docs/sprint-artifacts/manual-supabase-steps-6-1.md for setup instructions.'
+    );
+  }
+
+  if (!url.startsWith('https://')) {
+    throw new Error(
+      'EXPO_PUBLIC_SUPABASE_URL must start with "https://" — check your .env file.\n' +
+        'Expected format: https://<project-id>.supabase.co'
     );
   }
 
