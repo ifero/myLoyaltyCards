@@ -1,0 +1,25 @@
+docs/sprint-artifacts/stories/6-4-privacy-policy-consent-flow.md
+  c1227cffcf150dd0 5,13-17,21-25,29-100,103-109,115-136
+docs/sprint-artifacts/sprint-status.yaml
+  c1227cffcf150dd0 127
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.1.8",
+  "base_commit_sha": "3fbff548220f3b2f6c896b322aea962297c28d60",
+  "prompts": {
+    "c1227cffcf150dd0": {
+      "agent_id": {
+        "tool": "github-copilot",
+        "id": "9c9ab806-be36-410b-be5c-2eb906ed60b2",
+        "model": "copilot/claude-opus-4.6"
+      },
+      "human_author": "Andrea Pacino <andrea.pacino87@gmail.com>",
+      "messages": [],
+      "total_additions": 113,
+      "total_deletions": 19,
+      "accepted_lines": 113,
+      "overriden_lines": 0
+    }
+  }
+}
