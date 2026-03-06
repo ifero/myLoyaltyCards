@@ -1,0 +1,42 @@
+AGENTS.md
+  1163d95839772b14 143
+shared/supabase/client.ts
+  8f6b7074feac1452 23,30-31,38,40,44,49,54,57,75,80,94-96,106,112,115,125,133,139,142,144
+shared/supabase/auth.ts
+  8f6b7074feac1452 50,63,74,77,97,108,111,131,134,136,139,149,156,169,178,187
+shared/supabase/client.test.ts
+  8f6b7074feac1452 114,136-140,223-224
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.1.8",
+  "base_commit_sha": "afb1d5f2c2ad7a871986476d9174a31c0f8b09ed",
+  "prompts": {
+    "1163d95839772b14": {
+      "agent_id": {
+        "tool": "github-copilot",
+        "id": "54b14a2f-d913-4144-bb58-d110dde5eb62",
+        "model": "copilot/claude-sonnet-4.6"
+      },
+      "human_author": "Andrea Pacino <andrea.pacino87@gmail.com>",
+      "messages": [],
+      "total_additions": 1,
+      "total_deletions": 0,
+      "accepted_lines": 1,
+      "overriden_lines": 0
+    },
+    "8f6b7074feac1452": {
+      "agent_id": {
+        "tool": "github-copilot",
+        "id": "042e77e1-1774-40c5-b59b-17dd1b1e0c9c",
+        "model": "copilot/claude-sonnet-4.6"
+      },
+      "human_author": "Andrea Pacino <andrea.pacino87@gmail.com>",
+      "messages": [],
+      "total_additions": 30,
+      "total_deletions": 30,
+      "accepted_lines": 46,
+      "overriden_lines": 0
+    }
+  }
+}
