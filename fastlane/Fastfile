@@ -25,7 +25,13 @@ platform :ios do
 
   desc "Build iOS AdHoc app"
   lane :adhoc do
-    match(type: "adhoc")
+    api_key = app_store_connect_api_key(
+      key_id: ENV['APP_STORE_CONNECT_API_KEY_KEY_ID'],
+      issuer_id: ENV['APP_STORE_CONNECT_API_KEY_ISSUER_ID'],
+      key: ENV['APP_STORE_CONNECT_API_KEY_KEY'],
+      in_house: false
+    )
+    match(type: "adhoc", readonly: true)
     # Use CI run number for a guaranteed-unique, ever-increasing build number.
     # Falls back to Unix timestamp when running locally.
     build_number = ENV['GITHUB_RUN_NUMBER'] || Time.now.to_i.to_s
@@ -43,12 +49,13 @@ platform :ios do
 
   desc "Build and upload to TestFlight"
   lane :beta do
-      api_key = {
+      api_key = app_store_connect_api_key(
         key_id: ENV['APP_STORE_CONNECT_API_KEY_KEY_ID'],
         issuer_id: ENV['APP_STORE_CONNECT_API_KEY_ISSUER_ID'],
-        key: ENV['APP_STORE_CONNECT_API_KEY_KEY']
-      }
-      match(type: "appstore")
+        key: ENV['APP_STORE_CONNECT_API_KEY_KEY'],
+        in_house: false
+      )
+      match(type: "appstore", readonly: true)
       # Recupera ultimo build number da TestFlight e incrementa
       last_build = latest_testflight_build_number(
         app_identifier: app_identifier,
