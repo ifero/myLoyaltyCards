@@ -43,6 +43,15 @@ platform :ios do
       in_house: false
     )
     match(type: "adhoc", readonly: is_ci)
+    # expo prebuild regenerates the Xcode project with empty signing settings.
+    # Patch the project with the correct team, profile, and identity from match.
+    update_code_signing_settings(
+      use_automatic_signing: false,
+      path: "ios/myLoyaltyCards.xcodeproj",
+      team_id: ENV['FASTLANE_TEAM_ID'],
+      profile_name: "match AdHoc #{app_identifier}",
+      code_sign_identity: "iPhone Distribution"
+    )
     # Use CI run number for a guaranteed-unique, ever-increasing build number.
     # Falls back to Unix timestamp when running locally.
     build_number = ENV['GITHUB_RUN_NUMBER'] || Time.now.to_i.to_s
@@ -68,6 +77,15 @@ platform :ios do
       in_house: false
     )
     match(type: "appstore", readonly: is_ci)
+    # expo prebuild regenerates the Xcode project with empty signing settings.
+    # Patch the project with the correct team, profile, and identity from match.
+    update_code_signing_settings(
+      use_automatic_signing: false,
+      path: "ios/myLoyaltyCards.xcodeproj",
+      team_id: ENV['FASTLANE_TEAM_ID'],
+      profile_name: "match AppStore #{app_identifier}",
+      code_sign_identity: "iPhone Distribution"
+    )
     # Retrieve last build number from TestFlight and increment
     last_build = latest_testflight_build_number(
       app_identifier: app_identifier,
@@ -98,6 +116,15 @@ platform :ios do
       in_house: false
     )
     match(type: "appstore", readonly: is_ci)
+    # expo prebuild regenerates the Xcode project with empty signing settings.
+    # Patch the project with the correct team, profile, and identity from match.
+    update_code_signing_settings(
+      use_automatic_signing: false,
+      path: "ios/myLoyaltyCards.xcodeproj",
+      team_id: ENV['FASTLANE_TEAM_ID'],
+      profile_name: "match AppStore #{app_identifier}",
+      code_sign_identity: "iPhone Distribution"
+    )
     build_number = ENV['GITHUB_RUN_NUMBER'] || Time.now.to_i.to_s
     increment_build_number(
       xcodeproj: "ios/myLoyaltyCards.xcodeproj",
