@@ -1,0 +1,85 @@
+fastlane/Fastfile
+  1484afae7549b3dd 6-11,27,38,41,62,65-66,81-110,118,123,126-131,137,142-155,157-170
+.github/workflows/beta-releases.yml
+  1484afae7549b3dd 11,34,39,41,46-48,51,63,68,70
+docs/cicd.md
+  1484afae7549b3dd 14-22,25,27,33-34,36,59,68,78,85,95,100-101,105,107,109,111-115,117,119-122,128-130,160-164,166-174,176-177
+.github/workflows/ios-release.yml
+  1484afae7549b3dd 1-4,15,18-19,50
+.github/workflows/android-release.yml
+  1484afae7549b3dd 1-4,15,18-19,21,24,36,41,43-49
+.github/workflows/store-upload.yml
+  1484afae7549b3dd 2-3,15,38,43,45,50-52,55,67,72,74
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.1.8",
+  "base_commit_sha": "cfffd76aead49dcd15b57327336059218a4338d5",
+  "prompts": {
+    "1484afae7549b3dd": {
+      "agent_id": {
+        "tool": "github-copilot",
+        "id": "73aed617-bac0-41e1-ac33-264e7190111a",
+        "model": "copilot/claude-opus-4.6"
+      },
+      "human_author": "Andrea Pacino <andrea.pacino87@gmail.com>",
+      "messages": [],
+      "total_additions": 228,
+      "total_deletions": 192,
+      "accepted_lines": 185,
+      "overriden_lines": 11
+    },
+    "5d13ab07da5386a1": {
+      "agent_id": {
+        "tool": "github-copilot",
+        "id": "a4e84fcf-db40-45cb-88ec-f057964aef77",
+        "model": "copilot/auto"
+      },
+      "human_author": "Andrea Pacino",
+      "messages": [],
+      "total_additions": 30,
+      "total_deletions": 10,
+      "accepted_lines": 24,
+      "overriden_lines": 1
+    },
+    "65d6c007e52f2325": {
+      "agent_id": {
+        "tool": "github-copilot",
+        "id": "c93e5fcb-420a-4da7-96d8-849bb31de0bd",
+        "model": "copilot/auto"
+      },
+      "human_author": "Andrea Pacino",
+      "messages": [],
+      "total_additions": 235,
+      "total_deletions": 3,
+      "accepted_lines": 220,
+      "overriden_lines": 4
+    },
+    "b33e716708bcfd56": {
+      "agent_id": {
+        "tool": "github-copilot",
+        "id": "a312f7af-9443-47d5-9b51-248a21dda880",
+        "model": "copilot/auto"
+      },
+      "human_author": "Andrea Pacino",
+      "messages": [],
+      "total_additions": 0,
+      "total_deletions": 0,
+      "accepted_lines": 165,
+      "overriden_lines": 0
+    },
+    "bdf8f53a6cecefe7": {
+      "agent_id": {
+        "tool": "github-copilot",
+        "id": "c5b10ee5-d4bc-4c47-aba4-510000cc6c23",
+        "model": "copilot/auto"
+      },
+      "human_author": "Andrea Pacino",
+      "messages": [],
+      "total_additions": 0,
+      "total_deletions": 0,
+      "accepted_lines": 1,
+      "overriden_lines": 0
+    }
+  }
+}
