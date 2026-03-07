@@ -1,0 +1,23 @@
+features/onboarding/WelcomeScreen.tsx
+  c1227cffcf150dd0 53-56
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.1.8",
+  "base_commit_sha": "682df60bbf47f4e6eb0cdce65278ae3c3c393647",
+  "prompts": {
+    "c1227cffcf150dd0": {
+      "agent_id": {
+        "tool": "github-copilot",
+        "id": "9c9ab806-be36-410b-be5c-2eb906ed60b2",
+        "model": "copilot/claude-opus-4.6"
+      },
+      "human_author": "Andrea Pacino <andrea.pacino87@gmail.com>",
+      "messages": [],
+      "total_additions": 4,
+      "total_deletions": 0,
+      "accepted_lines": 4,
+      "overriden_lines": 0
+    }
+  }
+}
