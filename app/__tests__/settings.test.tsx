@@ -48,3 +48,27 @@ describe('SettingsScreen — Story 4.3', () => {
     expect(mockPush).toHaveBeenCalledWith('/help');
   });
 });
+
+describe('SettingsScreen — Story 6-4: Privacy Policy link', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
+  it('renders the Privacy Policy link', () => {
+    const { getByTestId } = render(<SettingsScreen />);
+    expect(getByTestId('settings-privacy-policy')).toBeTruthy();
+  });
+
+  it('navigates to /privacy-policy when pressed', () => {
+    const { getByTestId } = render(<SettingsScreen />);
+
+    fireEvent.press(getByTestId('settings-privacy-policy'));
+
+    expect(mockPush).toHaveBeenCalledWith('/privacy-policy');
+  });
+
+  it('has proper accessibility attributes', () => {
+    const { getByLabelText } = render(<SettingsScreen />);
+    expect(getByLabelText('Privacy Policy')).toBeTruthy();
+  });
+});

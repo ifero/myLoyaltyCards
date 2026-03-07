@@ -48,6 +48,19 @@ const SettingsScreen = () => {
           Help & FAQ
         </Text>
       </Pressable>
+
+      <Pressable
+        testID="settings-privacy-policy"
+        onPress={() => router.push('/privacy-policy')}
+        accessibilityRole="button"
+        accessibilityLabel="Privacy Policy"
+        accessibilityHint="Opens the privacy policy"
+        className="mt-4 items-center"
+      >
+        <Text className="text-sm font-semibold" style={{ color: theme.primary }}>
+          Privacy Policy
+        </Text>
+      </Pressable>
     </View>
   );
 };
