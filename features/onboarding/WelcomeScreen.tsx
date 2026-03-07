@@ -50,6 +50,10 @@ const WelcomeScreen = () => {
     router.push('/help');
   };
 
+  const handlePrivacyPolicy = () => {
+    router.push('/privacy-policy');
+  };
+
   return (
     <View
       testID="welcome-screen"
@@ -99,6 +103,22 @@ const WelcomeScreen = () => {
       >
         <Text className="text-sm" style={{ color: theme.textSecondary }}>
           Help & FAQ
+        </Text>
+      </Pressable>
+
+      <Pressable
+        testID="welcome-privacy-policy"
+        onPress={handlePrivacyPolicy}
+        accessibilityRole="button"
+        accessibilityLabel="Privacy Policy"
+        accessibilityHint="Opens the privacy policy"
+        className="mb-4 h-11 items-center justify-center"
+        style={({ pressed }) => ({
+          opacity: pressed ? 0.6 : 1
+        })}
+      >
+        <Text className="text-sm" style={{ color: theme.textSecondary }}>
+          Privacy Policy
         </Text>
       </Pressable>
 

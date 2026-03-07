@@ -61,10 +61,10 @@ export default [
                 ['feature', { featureName: '${from.featureName}' }],
               ],
             },
-            // shared can import from core and catalogue
+            // shared can import from core, catalogue, and other shared modules
             {
               from: 'shared',
-              allow: ['core', 'catalogue'],
+              allow: ['core', 'catalogue', 'shared'],
             },
             // core can import from catalogue and other core modules
             {

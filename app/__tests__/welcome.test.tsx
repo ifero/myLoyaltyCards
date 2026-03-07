@@ -115,6 +115,13 @@ describe('WelcomeScreen — Story 4.1', () => {
 
       expect(mockPush).toHaveBeenCalledWith('/help');
     });
+
+    it('"Privacy Policy" navigates to privacy-policy screen', () => {
+      const { getByTestId } = render(<WelcomeScreen />);
+      fireEvent.press(getByTestId('welcome-privacy-policy'));
+
+      expect(mockPush).toHaveBeenCalledWith('/privacy-policy');
+    });
   });
 
   // ── Accessibility ──
