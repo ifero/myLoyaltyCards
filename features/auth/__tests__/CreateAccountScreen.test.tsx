@@ -39,7 +39,6 @@ jest.mock('@/shared/supabase/auth', () => ({
 }));
 
 // ConsentCheckbox mock — render a simple pressable toggle
-// ConsentCheckbox mock — render a simple pressable toggle
 jest.mock('@/shared/components/ConsentCheckbox', () => {
   // eslint-disable-next-line @typescript-eslint/no-require-imports
   const mockReact = require('react');
