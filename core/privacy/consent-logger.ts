@@ -11,7 +11,7 @@
  *
  * Behaviour:
  * - No-op when `userId` is null/empty (guest mode — nothing to log)
- * - Never throws — errors are silently swallowed (offline, RLS denial, etc.)
+ * - Never throws — errors are logged as warnings but never propagated.
  */
 
 // ---------------------------------------------------------------------------
@@ -48,12 +48,17 @@ export const logConsentEvent = async (
   if (!userId) return;
 
   try {
-    await insertFn({
+    const { error } = await insertFn({
       user_id: userId,
       event_type: eventType,
       event_time: new Date().toISOString()
     });
-  } catch {
-    // Swallow — offline / transient failures must not crash the consent flow
+
+    if (error) {
+      console.warn('[consent-logger] Failed to log event:', eventType, error);
+    }
+  } catch (err) {
+    // Offline / transient failures must not crash the consent flow
+    console.warn('[consent-logger] Network error logging event:', eventType, err);
   }
 };

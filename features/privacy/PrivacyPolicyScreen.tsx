@@ -7,6 +7,7 @@
  * `assets/legal/privacy-policy.ts`.
  */
 
+import { useMemo } from 'react';
 import { ScrollView, Text, View } from 'react-native';
 
 import { useTheme } from '@/shared/theme';
@@ -77,6 +78,11 @@ const renderPolicyContent = (content: string, textColor: string, headingColor: s
 const PrivacyPolicyScreen = () => {
   const { theme } = useTheme();
 
+  const policyBody = useMemo(
+    () => renderPolicyContent(PRIVACY_POLICY_CONTENT, theme.textPrimary, theme.textPrimary),
+    [theme.textPrimary]
+  );
+
   return (
     <ScrollView
       testID="privacy-policy-screen"
@@ -100,7 +106,7 @@ const PrivacyPolicyScreen = () => {
       </Text>
 
       {/* Policy body */}
-      {renderPolicyContent(PRIVACY_POLICY_CONTENT, theme.textPrimary, theme.textPrimary)}
+      {policyBody}
     </ScrollView>
   );
 };

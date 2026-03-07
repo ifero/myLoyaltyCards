@@ -24,13 +24,15 @@ export type ConsentCheckboxProps = {
   checked: boolean;
   /** Called with the new value when the user taps the checkbox area */
   onToggle: (value: boolean) => void;
+  /** Optional custom handler for "Privacy Policy" link press. Defaults to navigating to /privacy-policy. */
+  onPolicyPress?: () => void;
 };
 
 // ---------------------------------------------------------------------------
 // Component
 // ---------------------------------------------------------------------------
 
-const ConsentCheckbox = ({ checked, onToggle }: ConsentCheckboxProps) => {
+const ConsentCheckbox = ({ checked, onToggle, onPolicyPress }: ConsentCheckboxProps) => {
   const { theme } = useTheme();
   const router = useRouter();
 
@@ -39,7 +41,11 @@ const ConsentCheckbox = ({ checked, onToggle }: ConsentCheckboxProps) => {
   };
 
   const handlePolicyPress = () => {
-    router.push('/privacy-policy');
+    if (onPolicyPress) {
+      onPolicyPress();
+    } else {
+      router.push('/privacy-policy');
+    }
   };
 
   return (

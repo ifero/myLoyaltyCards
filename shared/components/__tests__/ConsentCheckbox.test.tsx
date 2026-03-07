@@ -86,6 +86,14 @@ describe('ConsentCheckbox', () => {
     expect(mockPush).toHaveBeenCalledWith('/privacy-policy');
   });
 
+  it('calls custom onPolicyPress instead of navigating when provided', () => {
+    const customHandler = jest.fn();
+    render(<ConsentCheckbox {...defaultProps} onPolicyPress={customHandler} />);
+    fireEvent.press(screen.getByTestId('consent-policy-link'));
+    expect(customHandler).toHaveBeenCalledTimes(1);
+    expect(mockPush).not.toHaveBeenCalled();
+  });
+
   it('has proper accessibility label', () => {
     render(<ConsentCheckbox {...defaultProps} />);
     expect(screen.getByLabelText('I agree to the Privacy Policy')).toBeTruthy();

@@ -12,6 +12,7 @@ describe('consent-logger', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
+    jest.spyOn(console, 'warn').mockImplementation(() => {});
     mockInsertFn = jest.fn().mockResolvedValue({ error: null });
   });
 
@@ -57,10 +58,36 @@ describe('consent-logger', () => {
     await expect(logConsentEvent('user-123', 'consent_given', mockInsertFn)).resolves.not.toThrow();
   });
 
+  it('logs a warning when insertFn returns an error', async () => {
+    const error = { message: 'RLS violation' };
+    mockInsertFn.mockResolvedValue({ error });
+
+    await logConsentEvent('user-123', 'consent_given', mockInsertFn);
+
+    expect(console.warn).toHaveBeenCalledWith(
+      '[consent-logger] Failed to log event:',
+      'consent_given',
+      error
+    );
+  });
+
   it('does not throw when insertFn rejects (network error)', async () => {
     mockInsertFn.mockRejectedValue(new Error('Network error'));
 
     await expect(logConsentEvent('user-123', 'consent_given', mockInsertFn)).resolves.not.toThrow();
+  });
+
+  it('logs a warning when insertFn rejects (network error)', async () => {
+    const err = new Error('Network error');
+    mockInsertFn.mockRejectedValue(err);
+
+    await logConsentEvent('user-123', 'consent_given', mockInsertFn);
+
+    expect(console.warn).toHaveBeenCalledWith(
+      '[consent-logger] Network error logging event:',
+      'consent_given',
+      err
+    );
   });
 
   // ── Guest / offline ────────────────────────────────────────────────
