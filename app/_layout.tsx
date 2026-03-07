@@ -175,8 +175,15 @@ const RootLayout = () => {
         // Initialize database after update check completes
         await initializeDatabase();
 
-        // Ensure a persistent guest session ID exists on this device
-        await getOrCreateGuestSessionId();
+        // Ensure a persistent guest session ID exists on this device (best-effort)
+        try {
+          await getOrCreateGuestSessionId();
+        } catch (error) {
+          console.warn(
+            'Guest session initialization failed (continuing without persistent guest ID):',
+            error
+          );
+        }
 
         setIsReady(true);
       } catch (error) {
