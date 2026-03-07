@@ -6,6 +6,7 @@ import * as Updates from 'expo-updates';
 import { useEffect, useState } from 'react';
 import { ActivityIndicator, Pressable, Text, View } from 'react-native';
 
+import { getOrCreateGuestSessionId } from '@/core/auth/guest-session-repository';
 import { initializeDatabase } from '@/core/database';
 import { getAllCards } from '@/core/database/card-repository';
 import { subscribeToWatchMessages, syncCardToWatch, WatchMessage } from '@/core/watch-connectivity';
@@ -137,6 +138,12 @@ const RootLayoutContent = () => {
             title: 'Edit Card'
           }}
         />
+        <Stack.Screen
+          name="create-account"
+          options={{
+            title: 'Create Account'
+          }}
+        />
       </Stack>
       <StatusBar style={isDark ? 'light' : 'dark'} />
     </>
@@ -167,6 +174,17 @@ const RootLayout = () => {
 
         // Initialize database after update check completes
         await initializeDatabase();
+
+        // Ensure a persistent guest session ID exists on this device (best-effort)
+        try {
+          await getOrCreateGuestSessionId();
+        } catch (error) {
+          console.warn(
+            'Guest session initialization failed (continuing without persistent guest ID):',
+            error
+          );
+        }
+
         setIsReady(true);
       } catch (error) {
         console.error('App initialization failed:', error);
