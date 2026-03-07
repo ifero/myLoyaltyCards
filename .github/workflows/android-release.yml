@@ -1,6 +1,7 @@
-# Android Release Build
-# Triggers only on main branch and only if app/core/features/shared/android/ios change
-name: Android Release Build
+# Android AdHoc Build
+# Triggers on main branch push (if app/core/features/shared/android change)
+# Also available as manual workflow_dispatch on any branch
+name: Android AdHoc Build
 
 on:
   push:
@@ -11,12 +12,16 @@ on:
       - 'features/**'
       - 'shared/**'
       - 'android/**'
-      - 'ios/**'
+  workflow_dispatch:
 
 jobs:
-  android-release:
-    name: Android Release Build
+  android-adhoc:
+    name: Android AdHoc Build
     runs-on: ubuntu-latest
+    env:
+      FASTLANE_SKIP_UPDATE_CHECK: '1'
+      FASTLANE_DISABLE_COLORS: '1'
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -28,22 +33,17 @@ jobs:
       - name: Install dependencies
         run: yarn install --frozen-lockfile
       - name: Prebuild native projects
-        run: npx expo prebuild
+        run: npx expo prebuild --platform android
       - name: Set up Ruby
         uses: ruby/setup-ruby@v1
         with:
           ruby-version: '3.2'
-      - name: Install Bundler dependencies
-        run: bundle install --path vendor/bundle
-      - name: Cache Bundler
-        uses: actions/cache@v3
-        with:
-          path: vendor/bundle
-          key: ${{ runner.os }}-bundler-${{ hashFiles('**/Gemfile.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-bundler-
+          bundler-cache: true
       - name: Run Fastlane (Android AdHoc)
-        run: bundle exec fastlane adhoc
-        working-directory: android
-        env:
-          MATCH_PASSWORD: ${{ secrets.MATCH_PASSWORD }}
+        run: bundle exec fastlane android adhoc
+      - name: Upload APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: myLoyaltyCards-android-adhoc-${{ github.run_id }}
+          path: android/app/build/outputs/apk/release/*.apk
+          if-no-files-found: error

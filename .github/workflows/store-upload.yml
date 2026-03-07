@@ -1,16 +1,18 @@
 # Store Upload (Final Release)
-# Uploads builds to App Store Connect and Play Console on v*.*.* tags
+# Uploads builds to App Store Connect and Play Console on final release tags.
+# Uses negative lookahead pattern to exclude RC tags (v1.2.3-rc.1).
 name: Store Upload (Final Release)
 
 on:
   push:
     tags:
       - 'v*.*.*'
+      - '!v*.*.*-*' # Exclude pre-release tags (e.g. v1.2.3-rc.1)
 
 jobs:
   upload-ios-release:
     name: Upload iOS Release Build
-    runs-on: macos-14
+    runs-on: macos-15
     env:
       MATCH_PASSWORD: ${{ secrets.MATCH_PASSWORD }}
       MATCH_GIT_BASIC_AUTHORIZATION: ${{ secrets.MATCH_GIT_BASIC_AUTHORIZATION }}
@@ -19,6 +21,8 @@ jobs:
       APP_STORE_CONNECT_API_KEY_KEY_ID: ${{ secrets.APP_STORE_CONNECT_API_KEY_KEY_ID }}
       APP_STORE_CONNECT_API_KEY_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_API_KEY_ISSUER_ID }}
       APP_STORE_CONNECT_API_KEY_KEY: ${{ secrets.APP_STORE_CONNECT_API_KEY_KEY }}
+      FASTLANE_SKIP_UPDATE_CHECK: '1'
+      FASTLANE_DISABLE_COLORS: '1'
 
     steps:
       - name: Checkout
@@ -31,30 +35,24 @@ jobs:
       - name: Install dependencies
         run: yarn install --frozen-lockfile
       - name: Prebuild native projects
-        run: npx expo prebuild
+        run: npx expo prebuild --platform ios
       - name: Set up Ruby
         uses: ruby/setup-ruby@v1
         with:
           ruby-version: '3.2'
-      - name: Install Bundler dependencies
-        run: bundle install --path vendor/bundle
-      - name: Cache Bundler
-        uses: actions/cache@v3
-        with:
-          path: vendor/bundle
-          key: ${{ runner.os }}-bundler-${{ hashFiles('**/Gemfile.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-bundler-
+          bundler-cache: true
       - name: Upload iOS Release Build
-        run: bundle exec fastlane upload_release
-        working-directory: ios
-        env:
-          MATCH_PASSWORD: ${{ secrets.MATCH_PASSWORD }}
-          APP_STORE_CONNECT_API_KEY: ${{ secrets.APP_STORE_CONNECT_API_KEY }}
+        run: bundle exec fastlane ios upload_release
 
   upload-android-release:
     name: Upload Android Release Build
     runs-on: ubuntu-latest
+    env:
+      ANDROID_PACKAGE_NAME: ${{ secrets.ANDROID_PACKAGE_NAME }}
+      PLAY_STORE_API_KEY: ${{ secrets.PLAY_STORE_API_KEY }}
+      FASTLANE_SKIP_UPDATE_CHECK: '1'
+      FASTLANE_DISABLE_COLORS: '1'
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -66,23 +64,11 @@ jobs:
       - name: Install dependencies
         run: yarn install --frozen-lockfile
       - name: Prebuild native projects
-        run: npx expo prebuild
+        run: npx expo prebuild --platform android
       - name: Set up Ruby
         uses: ruby/setup-ruby@v1
         with:
           ruby-version: '3.2'
-      - name: Install Bundler dependencies
-        run: bundle install --path vendor/bundle
-      - name: Cache Bundler
-        uses: actions/cache@v3
-        with:
-          path: vendor/bundle
-          key: ${{ runner.os }}-bundler-${{ hashFiles('**/Gemfile.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-bundler-
+          bundler-cache: true
       - name: Upload Android Release Build
-        run: bundle exec fastlane upload_release
-        working-directory: android
-        env:
-          MATCH_PASSWORD: ${{ secrets.MATCH_PASSWORD }}
-          PLAY_STORE_API_KEY: ${{ secrets.PLAY_STORE_API_KEY }}
+        run: bundle exec fastlane android upload_release

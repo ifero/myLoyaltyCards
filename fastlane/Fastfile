@@ -3,6 +3,12 @@ default_platform(:ios)
 app_identifier = CredentialsManager::AppfileConfig.try_fetch_value(:app_identifier)
 
 platform :ios do
+  before_all do
+    # Creates a temporary keychain for match on CI runners.
+    # No-op when running locally (unless force: true).
+    setup_ci if is_ci
+  end
+
   desc "Fetch certificates (appstore, adhoc, development)"
   lane :fetch_certificates do
     match(
@@ -18,6 +24,7 @@ platform :ios do
       app_identifier: app_identifier
     )
   end
+
   desc "Build iOS Dev app"
   lane :build_dev do
     build_app(scheme: "myLoyaltyCards", export_method: "development")
@@ -28,10 +35,10 @@ platform :ios do
     api_key = app_store_connect_api_key(
       key_id: ENV['APP_STORE_CONNECT_API_KEY_KEY_ID'],
       issuer_id: ENV['APP_STORE_CONNECT_API_KEY_ISSUER_ID'],
-      key: ENV['APP_STORE_CONNECT_API_KEY_KEY'],
+      key_content: ENV['APP_STORE_CONNECT_API_KEY_KEY'],
       in_house: false
     )
-    match(type: "adhoc", readonly: true)
+    match(type: "adhoc", readonly: is_ci)
     # Use CI run number for a guaranteed-unique, ever-increasing build number.
     # Falls back to Unix timestamp when running locally.
     build_number = ENV['GITHUB_RUN_NUMBER'] || Time.now.to_i.to_s
@@ -49,65 +56,118 @@ platform :ios do
 
   desc "Build and upload to TestFlight"
   lane :beta do
-      api_key = app_store_connect_api_key(
-        key_id: ENV['APP_STORE_CONNECT_API_KEY_KEY_ID'],
-        issuer_id: ENV['APP_STORE_CONNECT_API_KEY_ISSUER_ID'],
-        key: ENV['APP_STORE_CONNECT_API_KEY_KEY'],
-        in_house: false
-      )
-      match(type: "appstore", readonly: true)
-      # Recupera ultimo build number da TestFlight e incrementa
-      last_build = latest_testflight_build_number(
-        app_identifier: app_identifier,
-        api_key: api_key
-      )
-      increment_build_number(
-        xcodeproj: "ios/myLoyaltyCards.xcodeproj",
-        build_number: (last_build.to_i + 1).to_s
-      )
-      build_app(
-        scheme: "myLoyaltyCards",
-        workspace: "ios/myLoyaltyCards.xcworkspace",
-        export_method: "app-store",
-        output_directory: "output"
-      )
-      upload_to_testflight(
-        api_key: api_key
-      )
+    api_key = app_store_connect_api_key(
+      key_id: ENV['APP_STORE_CONNECT_API_KEY_KEY_ID'],
+      issuer_id: ENV['APP_STORE_CONNECT_API_KEY_ISSUER_ID'],
+      key_content: ENV['APP_STORE_CONNECT_API_KEY_KEY'],
+      in_house: false
+    )
+    match(type: "appstore", readonly: is_ci)
+    # Retrieve last build number from TestFlight and increment
+    last_build = latest_testflight_build_number(
+      app_identifier: app_identifier,
+      api_key: api_key
+    )
+    increment_build_number(
+      xcodeproj: "ios/myLoyaltyCards.xcodeproj",
+      build_number: (last_build.to_i + 1).to_s
+    )
+    build_app(
+      scheme: "myLoyaltyCards",
+      workspace: "ios/myLoyaltyCards.xcworkspace",
+      export_method: "app-store",
+      output_directory: "output"
+    )
+    upload_to_testflight(
+      api_key: api_key
+    )
+  end
+
+  desc "Build and upload to App Store Connect (release)"
+  lane :upload_release do
+    api_key = app_store_connect_api_key(
+      key_id: ENV['APP_STORE_CONNECT_API_KEY_KEY_ID'],
+      issuer_id: ENV['APP_STORE_CONNECT_API_KEY_ISSUER_ID'],
+      key_content: ENV['APP_STORE_CONNECT_API_KEY_KEY'],
+      in_house: false
+    )
+    match(type: "appstore", readonly: is_ci)
+    build_number = ENV['GITHUB_RUN_NUMBER'] || Time.now.to_i.to_s
+    increment_build_number(
+      xcodeproj: "ios/myLoyaltyCards.xcodeproj",
+      build_number: build_number
+    )
+    build_app(
+      scheme: "myLoyaltyCards",
+      workspace: "ios/myLoyaltyCards.xcworkspace",
+      export_method: "app-store",
+      output_directory: "output"
+    )
+    upload_to_app_store(
+      api_key: api_key,
+      skip_metadata: true,
+      skip_screenshots: true,
+      precheck_include_in_app_purchases: false
+    )
   end
 end
 
 platform :android do
   desc "Build Android Dev app"
   lane :build_dev do
-    gradle(task: "assembleDebug")
+    gradle(task: "assembleDebug", project_dir: "android")
   end
 
   desc "Build Android AdHoc app"
   lane :adhoc do
-    # Usa short commit hash come versionCode
+    # Use short commit hash as versionCode
     commit_hash = sh("git rev-parse --short HEAD").strip
     version_code = commit_hash.hex % 2147483647 # Android max int
-    increment_version_code(
-      gradle_file: "../android/app/build.gradle",
-      version_code: version_code
+    gradle(
+      task: "assembleRelease",
+      project_dir: "android",
+      properties: {
+        "android.injected.version.code" => version_code
+      }
     )
-    gradle(task: "assembleRelease")
-    # Optionally: upload to a distribution service
   end
 
   desc "Build and upload to Play Console (beta)"
   lane :beta do
-    # Recupera ultimo versionCode da Play Console e incrementa
+    # Retrieve last versionCode from Play Console and increment
     last_version_code = google_play_track_version_codes(
       package_name: ENV['ANDROID_PACKAGE_NAME'],
       track: 'beta'
     ).max || 1
-    increment_version_code(
-      gradle_file: "../android/app/build.gradle",
-      version_code: last_version_code + 1
+    gradle(
+      task: "assembleRelease",
+      project_dir: "android",
+      properties: {
+        "android.injected.version.code" => last_version_code + 1
+      }
     )
-    gradle(task: "assembleRelease")
-    # Optionally: upload to Play Console
+  end
+
+  desc "Build and upload to Play Store (release)"
+  lane :upload_release do
+    last_version_code = google_play_track_version_codes(
+      package_name: ENV['ANDROID_PACKAGE_NAME'],
+      track: 'production'
+    ).max || 1
+    gradle(
+      task: "bundleRelease",
+      project_dir: "android",
+      properties: {
+        "android.injected.version.code" => last_version_code + 1
+      }
+    )
+    upload_to_play_store(
+      track: "production",
+      aab: "android/app/build/outputs/bundle/release/app-release.aab",
+      skip_upload_metadata: true,
+      skip_upload_changelogs: true,
+      skip_upload_images: true,
+      skip_upload_screenshots: true
+    )
   end
 end
