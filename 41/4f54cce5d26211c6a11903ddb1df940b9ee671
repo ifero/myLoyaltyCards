@@ -1,0 +1,27 @@
+shared/components/__tests__/ConsentCheckbox.test.tsx
+  c1227cffcf150dd0 1-103
+shared/components/ConsentCheckbox.tsx
+  c1227cffcf150dd0 1-15,17-81
+eslint.config.mjs
+  c1227cffcf150dd0 64,67
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.1.8",
+  "base_commit_sha": "414f54cce5d26211c6a11903ddb1df940b9ee671",
+  "prompts": {
+    "c1227cffcf150dd0": {
+      "agent_id": {
+        "tool": "github-copilot",
+        "id": "9c9ab806-be36-410b-be5c-2eb906ed60b2",
+        "model": "copilot/claude-opus-4.6"
+      },
+      "human_author": "Andrea Pacino <andrea.pacino87@gmail.com>",
+      "messages": [],
+      "total_additions": 188,
+      "total_deletions": 2,
+      "accepted_lines": 187,
+      "overriden_lines": 1
+    }
+  }
+}
