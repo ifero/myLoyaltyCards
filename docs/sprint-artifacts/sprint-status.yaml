@@ -123,8 +123,8 @@ development_status:
   # Sprint 7 stories (in sprint)
   6-1-create-supabase-project-environments: done
   6-2-define-cloud-schema-rls: done
-  6-3-configure-app-client: review
-  6-4-privacy-policy-consent-flow: review
+  6-3-configure-app-client: done
+  6-4-privacy-policy-consent-flow: done
   6-5-implement-guest-mode: ready-for-dev
   6-6-create-account-email: ready-for-dev
   6-7-sign-in-email: ready-for-dev
