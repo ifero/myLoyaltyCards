@@ -8,7 +8,7 @@ on:
 jobs:
   ios-testflight-beta:
     name: Build iOS TestFlight (RC)
-    runs-on: macos-15
+    runs-on: macos-14
     env:
       MATCH_PASSWORD: ${{ secrets.MATCH_PASSWORD }}
       MATCH_GIT_BASIC_AUTHORIZATION: ${{ secrets.MATCH_GIT_BASIC_AUTHORIZATION }}
