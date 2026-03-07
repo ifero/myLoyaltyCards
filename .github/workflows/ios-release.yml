@@ -1,6 +1,7 @@
-# iOS Release Build
-# Triggers only on main branch and only if app/core/features/shared/ios change
-name: iOS Release Build
+# iOS AdHoc Build
+# Triggers on main branch push (if app/core/features/shared/ios change)
+# Also available as manual workflow_dispatch on any branch
+name: iOS AdHoc Build
 
 on:
   push:
@@ -11,10 +12,11 @@ on:
       - 'features/**'
       - 'shared/**'
       - 'ios/**'
+  workflow_dispatch:
 
 jobs:
-  ios-release:
-    name: iOS Release Build
+  ios-adhoc:
+    name: iOS AdHoc Build
     runs-on: macos-15
     env:
       MATCH_PASSWORD: ${{ secrets.MATCH_PASSWORD }}
@@ -45,7 +47,7 @@ jobs:
           ruby-version: '3.2'
           bundler-cache: true
       - name: Run Fastlane (iOS AdHoc)
-        run: bundle exec fastlane adhoc
+        run: bundle exec fastlane ios adhoc
       - name: Upload IPA artifact
         uses: actions/upload-artifact@v4
         with:

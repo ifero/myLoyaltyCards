@@ -11,29 +11,29 @@ This document describes the CI/CD pipeline, quality gates, and related workflows
 - Notifications: GitHub status checks, Slack (#ci-alerts), email (dev lead).
 - Visual regression: pipeline ready for future addition.
 
+## Project Structure
+
+**Important:** The Fastfile and Gemfile are at the **project root**, not inside `ios/` or `android/` subdirectories. All `bundle exec fastlane` commands must run from the project root.
+
+- `Gemfile` / `Gemfile.lock` — Ruby dependencies (Fastlane)
+- `fastlane/Fastfile` — Lane definitions for both iOS and Android
+- `fastlane/Appfile` — App identifier and Apple ID
+- `fastlane/Matchfile` — Certificate repository configuration
+
 ## Path Filters & Build Triggers
 
-### Main Branch Builds (AdHoc)
+### AdHoc Builds (main branch + manual)
 
-Build workflows on `main` are triggered **only if files change in these folders:**
+AdHoc build workflows trigger on push to `main` **only if files change in these folders:**
 
 - `app/`
 - `core/`
 - `features/`
 - `shared/`
-- `android/`
-- `ios/`
+- `android/` (Android workflow only)
+- `ios/` (iOS workflow only)
 
-**Excluded folders:**
-
-- `docs/`
-- `config/`
-- `test/`
-- `assets/`
-- `.github/`
-- `scripts/`
-
-Native changes (`android/`, `ios/`) always trigger builds.
+**Manual trigger:** Both iOS and Android adhoc build workflows support `workflow_dispatch`, allowing manual runs on **any branch** (feature branches, main, etc.) from the GitHub Actions UI.
 
 **Main branch builds use the `adhoc` Fastlane lane for both iOS and Android.**
 
@@ -55,17 +55,17 @@ on:
       - 'core/**'
       - 'features/**'
       - 'shared/**'
-      - 'android/**'
       - 'ios/**'
+  workflow_dispatch:
 ```
 
 If you need to add or remove folders, update the `paths` list in both workflow files and document the change here.
 
 ### Beta and Release Builds by Tag
 
-Beta builds (TestFlight/Android beta) are triggered by tags matching `v*.*.*-rc.*` (e.g., `v1.2.3-rc.1`). These builds are NOT uploaded to stores.
+Beta builds (TestFlight/Android beta) are triggered by tags matching `v*.*.*-rc.*` (e.g., `v1.2.3-rc.1`).
 
-Release builds (store upload) are triggered by tags matching `v*.*.*` (e.g., `v1.2.3`). These builds are uploaded to App Store Connect and Play Console (just create/update build, review is manual).
+Release builds (store upload) are triggered by tags matching `v*.*.*` **excluding** pre-release tags (the `!v*.*.*-*` exclusion pattern prevents RC tags from triggering store uploads).
 
 Workflow files:
 
@@ -75,15 +75,14 @@ Workflow files:
 Triggers:
 
 - On `v*.*.*-rc.*` tags: `beta-releases.yml` builds iOS TestFlight and Android beta (using `beta` lane)
-- On `v*.*.*` tags: `store-upload.yml` uploads iOS and Android release builds to stores (using `upload_release` lane)
+- On `v*.*.*` tags (excluding pre-release): `store-upload.yml` uploads iOS and Android release builds to stores (using `upload_release` lane)
 
 To change the trigger pattern, update the `tags:` section in the relevant workflow and document the change here.
 
 ## Bundler Setup (Ruby dependencies)
 
 - Version Gemfile and Gemfile.lock.
-- Use `bundle install --path vendor/bundle` for local and CI installs.
-- Cache `vendor/bundle` in GitHub Actions.
+- Use `ruby/setup-ruby@v1` with `bundler-cache: true` for automatic install and caching.
 - Always run `bundle install` before Fastlane or Ruby scripts.
 
 ### GitHub Actions Example
@@ -93,51 +92,42 @@ To change the trigger pattern, update the `tags:` section in the relevant workfl
   uses: ruby/setup-ruby@v1
   with:
     ruby-version: '3.2'
-- name: Install Bundler dependencies
-  run: bundle install --path vendor/bundle
-- name: Cache Bundler
-  uses: actions/cache@v3
-  with:
-    path: vendor/bundle
-    key: ${{ runner.os }}-bundler-${{ hashFiles('**/Gemfile.lock') }}
-    restore-keys: |
-      ${{ runner.os }}-bundler-
+    bundler-cache: true
 ```
 
 ## Fastlane Setup (Native build & deploy)
 
-- Place Fastfile and Matchfile in ios/ and android/.
-- Use lanes for build, test, beta, release.
+- The Fastfile is at `fastlane/Fastfile` (project root) — **not** inside `ios/` or `android/`.
+- Use lanes with explicit platform prefix: `bundle exec fastlane ios adhoc`, `bundle exec fastlane android adhoc`.
 - Store secrets in GitHub Actions (never in repo).
 - Use `fastlane match` for certificate management.
 - Always run `npx expo prebuild` before Fastlane for native sync.
+- iOS lanes use `setup_ci` automatically on CI to create a temporary keychain for `match`.
 
-### Fastfile Example (ios/)
+### Available Lanes
 
-```ruby
-default_platform(:ios)
+**iOS:**
 
-platform :ios do
-  desc "Build and upload to TestFlight"
-  lane :beta do
-    match(type: "appstore")
-    build_app(scheme: "myLoyaltyCards")
-    upload_to_testflight
-  end
-end
-```
+- `ios fetch_certificates` — Fetch dev, adhoc, and appstore certificates
+- `ios build_dev` — Build development app
+- `ios adhoc` — Build AdHoc distribution (used by main branch CI + manual dispatch)
+- `ios beta` — Build and upload to TestFlight (used by RC tag CI)
+- `ios upload_release` — Build and upload to App Store Connect (used by release tag CI)
+
+**Android:**
+
+- `android build_dev` — Build debug APK
+- `android adhoc` — Build release APK (used by main branch CI + manual dispatch)
+- `android beta` — Build and upload to Play Console beta track (used by RC tag CI)
+- `android upload_release` — Build AAB and upload to Play Store production (used by release tag CI)
 
 ### GitHub Actions Example
 
 ```yaml
 - name: Prebuild native projects
-  run: npx expo prebuild
-- name: Run Fastlane (iOS)
-  run: bundle exec fastlane beta
-  working-directory: ios
-  env:
-    MATCH_PASSWORD: ${{ secrets.MATCH_PASSWORD }}
-    APP_STORE_CONNECT_API_KEY: ${{ secrets.APP_STORE_CONNECT_API_KEY }}
+  run: npx expo prebuild --platform ios
+- name: Run Fastlane (iOS AdHoc)
+  run: bundle exec fastlane ios adhoc
 ```
 
 ## Quality Gates
@@ -167,6 +157,24 @@ end
 - Add new secrets in GitHub Actions settings.
 - If build fails, check logs for Bundler or Fastlane errors.
 - For path filter changes, update workflow triggers and document here.
+- **Common issue:** If Fastlane fails immediately (~1 second), check that all required secrets are configured in GitHub repository settings.
+
+## Required GitHub Secrets
+
+### iOS Builds
+
+- `MATCH_PASSWORD` — Password for decrypting match certificates
+- `MATCH_GIT_BASIC_AUTHORIZATION` — Base64-encoded credentials for the certificates git repo
+- `MATCH_USERNAME` — Apple ID username for match
+- `FASTLANE_TEAM_ID` — Apple Developer Team ID
+- `APP_STORE_CONNECT_API_KEY_KEY_ID` — App Store Connect API key ID
+- `APP_STORE_CONNECT_API_KEY_ISSUER_ID` — App Store Connect API issuer ID
+- `APP_STORE_CONNECT_API_KEY_KEY` — App Store Connect API private key content (p8)
+
+### Android Builds
+
+- `ANDROID_PACKAGE_NAME` — Android package name (e.g. com.iferoporefi.myloyaltycards)
+- `PLAY_STORE_API_KEY` — Google Play Store service account key (JSON)
 
 ## References
 

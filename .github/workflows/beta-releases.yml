@@ -8,7 +8,7 @@ on:
 jobs:
   ios-testflight-beta:
     name: Build iOS TestFlight (RC)
-    runs-on: macos-14
+    runs-on: macos-15
     env:
       MATCH_PASSWORD: ${{ secrets.MATCH_PASSWORD }}
       MATCH_GIT_BASIC_AUTHORIZATION: ${{ secrets.MATCH_GIT_BASIC_AUTHORIZATION }}
@@ -17,6 +17,8 @@ jobs:
       APP_STORE_CONNECT_API_KEY_KEY_ID: ${{ secrets.APP_STORE_CONNECT_API_KEY_KEY_ID }}
       APP_STORE_CONNECT_API_KEY_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_API_KEY_ISSUER_ID }}
       APP_STORE_CONNECT_API_KEY_KEY: ${{ secrets.APP_STORE_CONNECT_API_KEY_KEY }}
+      FASTLANE_SKIP_UPDATE_CHECK: '1'
+      FASTLANE_DISABLE_COLORS: '1'
 
     steps:
       - name: Checkout
@@ -29,30 +31,24 @@ jobs:
       - name: Install dependencies
         run: yarn install --frozen-lockfile
       - name: Prebuild native projects
-        run: npx expo prebuild
+        run: npx expo prebuild --platform ios
       - name: Set up Ruby
         uses: ruby/setup-ruby@v1
         with:
           ruby-version: '3.2'
-      - name: Install Bundler dependencies
-        run: bundle install --path vendor/bundle
-      - name: Cache Bundler
-        uses: actions/cache@v3
-        with:
-          path: vendor/bundle
-          key: ${{ runner.os }}-bundler-${{ hashFiles('**/Gemfile.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-bundler-
+          bundler-cache: true
       - name: Build iOS TestFlight (RC)
-        run: bundle exec fastlane beta
-        working-directory: ios
-        env:
-          MATCH_PASSWORD: ${{ secrets.MATCH_PASSWORD }}
-          APP_STORE_CONNECT_API_KEY: ${{ secrets.APP_STORE_CONNECT_API_KEY }}
+        run: bundle exec fastlane ios beta
 
   android-beta:
     name: Build Android Beta (RC)
     runs-on: ubuntu-latest
+    env:
+      ANDROID_PACKAGE_NAME: ${{ secrets.ANDROID_PACKAGE_NAME }}
+      PLAY_STORE_API_KEY: ${{ secrets.PLAY_STORE_API_KEY }}
+      FASTLANE_SKIP_UPDATE_CHECK: '1'
+      FASTLANE_DISABLE_COLORS: '1'
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -64,23 +60,11 @@ jobs:
       - name: Install dependencies
         run: yarn install --frozen-lockfile
       - name: Prebuild native projects
-        run: npx expo prebuild
+        run: npx expo prebuild --platform android
       - name: Set up Ruby
         uses: ruby/setup-ruby@v1
         with:
           ruby-version: '3.2'
-      - name: Install Bundler dependencies
-        run: bundle install --path vendor/bundle
-      - name: Cache Bundler
-        uses: actions/cache@v3
-        with:
-          path: vendor/bundle
-          key: ${{ runner.os }}-bundler-${{ hashFiles('**/Gemfile.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-bundler-
+          bundler-cache: true
       - name: Build Android Beta (RC)
-        run: bundle exec fastlane beta
-        working-directory: android
-        env:
-          MATCH_PASSWORD: ${{ secrets.MATCH_PASSWORD }}
-          PLAY_STORE_API_KEY: ${{ secrets.PLAY_STORE_API_KEY }}
+        run: bundle exec fastlane android beta
