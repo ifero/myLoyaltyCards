@@ -65,13 +65,6 @@ const CreateAccountScreen = () => {
   }>({});
 
   // ---------------------------------------------------------------------------
-  // Derived state
-  // ---------------------------------------------------------------------------
-
-  const formValid =
-    isValidEmail(email) && isValidPassword(password) && password === confirmPassword && consent;
-
-  // ---------------------------------------------------------------------------
   // Handlers
   // ---------------------------------------------------------------------------
 
@@ -120,9 +113,17 @@ const CreateAccountScreen = () => {
         return;
       }
 
-      // Successful registration — redirect to the home screen.
-      // The Supabase client adapter automatically persists the session in SecureStore.
-      router.replace('/');
+      // Only redirect when a session exists. When email confirmation is
+      // required, Supabase returns success with `session: null` — the user
+      // should not navigate into the app until they confirm their email.
+      if (result.data.session) {
+        // The Supabase client adapter automatically persists the session in SecureStore.
+        router.replace('/');
+      } else {
+        setError(
+          'Registration successful! Please check your email to confirm your account before signing in.'
+        );
+      }
     } catch {
       setError('An unexpected error occurred. Please try again.');
     } finally {
@@ -303,8 +304,7 @@ const CreateAccountScreen = () => {
             accessibilityState={{ disabled: loading }}
             className="h-[52px] items-center justify-center rounded-xl"
             style={({ pressed }) => ({
-              backgroundColor:
-                loading || !formValid ? theme.border : pressed ? theme.primaryDark : theme.primary,
+              backgroundColor: loading ? theme.border : pressed ? theme.primaryDark : theme.primary,
               opacity: loading ? 0.7 : 1,
               transform: [{ scale: pressed && !loading ? 0.98 : 1 }]
             })}

@@ -220,6 +220,23 @@ describe('CreateAccountScreen', () => {
     });
   });
 
+  it('shows confirmation message and does not redirect when session is null', async () => {
+    mockSignUp.mockResolvedValue({
+      success: true,
+      data: { user: { id: 'u1' }, session: null }
+    });
+
+    render(<CreateAccountScreen />);
+    fillForm();
+    fireEvent.press(screen.getByTestId('register-button'));
+
+    await waitFor(() => {
+      expect(mockSignUp).toHaveBeenCalledWith('test@example.com', 'Password1');
+      expect(mockReplace).not.toHaveBeenCalled();
+      expect(screen.getByText(/check your email to confirm/i)).toBeTruthy();
+    });
+  });
+
   it('does not call signUp when validation fails', () => {
     render(<CreateAccountScreen />);
     fireEvent.press(screen.getByTestId('register-button'));
