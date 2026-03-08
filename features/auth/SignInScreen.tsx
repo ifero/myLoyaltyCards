@@ -1,13 +1,13 @@
 /**
- * CreateAccountScreen
- * Story 6-6: Create Account with Email
+ * SignInScreen
+ * Story 6-7: Sign In with Email
  *
- * Registration form with email, password, and confirm password.
- * Validates input client-side, calls Supabase signUp, stores
- * session securely via expo-secure-store (handled by the Supabase
- * client adapter), and redirects to the home screen on success.
+ * Sign-in form with email and password.
+ * Validates input client-side, calls Supabase signInWithPassword, and
+ * redirects to the home screen on success. Session persistence is handled
+ * automatically by the SecureStore-backed Supabase client adapter.
  *
- * Uses the shared ConsentCheckbox (Story 6-4) for privacy consent.
+ * ⚠️ Never log user credentials or session tokens in this component.
  */
 
 import { useRouter } from 'expo-router';
@@ -23,8 +23,7 @@ import {
   View
 } from 'react-native';
 
-import ConsentCheckbox from '@/shared/components/ConsentCheckbox';
-import { signUp } from '@/shared/supabase/auth';
+import { signInWithEmail } from '@/shared/supabase/auth';
 import { useTheme } from '@/shared/theme';
 
 // ---------------------------------------------------------------------------
@@ -34,25 +33,17 @@ import { useTheme } from '@/shared/theme';
 /** Loose RFC-5322-ish check — covers the practical 99 % of valid addresses. */
 const isValidEmail = (email: string): boolean => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim());
 
-/**
- * Password must be at least 8 characters, contain at least one letter and
- * one digit. Matches the story acceptance criteria exactly.
- */
-const isValidPassword = (pw: string): boolean => /^(?=.*[A-Za-z])(?=.*\d).{8,}$/.test(pw);
-
 // ---------------------------------------------------------------------------
 // Component
 // ---------------------------------------------------------------------------
 
-const CreateAccountScreen = () => {
+const SignInScreen = () => {
   const { theme } = useTheme();
   const router = useRouter();
 
   // Form state
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
-  const [consent, setConsent] = useState(false);
 
   // UI state
   const [loading, setLoading] = useState(false);
@@ -60,8 +51,6 @@ const CreateAccountScreen = () => {
   const [fieldErrors, setFieldErrors] = useState<{
     email?: string;
     password?: string;
-    confirmPassword?: string;
-    consent?: string;
   }>({});
 
   // ---------------------------------------------------------------------------
@@ -80,25 +69,13 @@ const CreateAccountScreen = () => {
 
     if (!password) {
       errors.password = 'Password is required.';
-    } else if (!isValidPassword(password)) {
-      errors.password = 'Min 8 characters, at least one letter and one number.';
-    }
-
-    if (!confirmPassword) {
-      errors.confirmPassword = 'Please confirm your password.';
-    } else if (password !== confirmPassword) {
-      errors.confirmPassword = 'Passwords do not match.';
-    }
-
-    if (!consent) {
-      errors.consent = 'You must agree to the Privacy Policy.';
     }
 
     setFieldErrors(errors);
     return Object.keys(errors).length === 0;
-  }, [email, password, confirmPassword, consent]);
+  }, [email, password]);
 
-  const handleRegister = useCallback(async () => {
+  const handleSignIn = useCallback(async () => {
     setError(null);
 
     if (!validate()) return;
@@ -106,24 +83,15 @@ const CreateAccountScreen = () => {
     setLoading(true);
 
     try {
-      const result = await signUp(email.trim(), password);
+      const result = await signInWithEmail(email.trim(), password);
 
       if (!result.success) {
         setError(result.error.message);
         return;
       }
 
-      // Only redirect when a session exists. When email confirmation is
-      // required, Supabase returns success with `session: null` — the user
-      // should not navigate into the app until they confirm their email.
-      if (result.data.session) {
-        // The Supabase client adapter automatically persists the session in SecureStore.
-        router.replace('/');
-      } else {
-        setError(
-          'Registration successful! Please check your email to confirm your account before signing in.'
-        );
-      }
+      // Session is automatically persisted by the SecureStore adapter.
+      router.replace('/');
     } catch {
       setError('An unexpected error occurred. Please try again.');
     } finally {
@@ -137,7 +105,7 @@ const CreateAccountScreen = () => {
 
   return (
     <KeyboardAvoidingView
-      testID="create-account-screen"
+      testID="sign-in-screen"
       className="flex-1"
       style={{ backgroundColor: theme.background }}
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
@@ -149,15 +117,15 @@ const CreateAccountScreen = () => {
         <View className="flex-1 px-6 pt-8">
           {/* Title */}
           <Text
-            testID="create-account-title"
+            testID="sign-in-title"
             accessibilityRole="header"
             className="mb-2 text-2xl font-bold"
             style={{ color: theme.textPrimary }}
           >
-            Create Account
+            Sign In
           </Text>
           <Text className="mb-8 text-sm" style={{ color: theme.textSecondary }}>
-            Register with your email to sync your cards across devices.
+            Sign in to sync your loyalty cards across devices.
           </Text>
 
           {/* ---- Email ---- */}
@@ -205,12 +173,12 @@ const CreateAccountScreen = () => {
               if (fieldErrors.password)
                 setFieldErrors((prev) => ({ ...prev, password: undefined }));
             }}
-            placeholder="Min 8 chars, 1 letter, 1 number"
+            placeholder="Your password"
             placeholderTextColor={theme.textSecondary}
             secureTextEntry
-            autoComplete="new-password"
+            autoComplete="current-password"
             accessibilityLabel="Password"
-            accessibilityHint="Minimum 8 characters with at least one letter and one number"
+            accessibilityHint="Enter your password"
             className="mb-1 h-12 rounded-lg border px-4 text-base"
             style={{
               borderColor: fieldErrors.password ? '#EF4444' : theme.border,
@@ -224,61 +192,6 @@ const CreateAccountScreen = () => {
             </Text>
           )}
           {!fieldErrors.password && <View className="mb-3" />}
-
-          {/* ---- Confirm Password ---- */}
-          <Text className="mb-1 text-sm font-medium" style={{ color: theme.textPrimary }}>
-            Confirm Password
-          </Text>
-          <TextInput
-            testID="confirm-password-input"
-            value={confirmPassword}
-            onChangeText={(t) => {
-              setConfirmPassword(t);
-              if (fieldErrors.confirmPassword)
-                setFieldErrors((prev) => ({ ...prev, confirmPassword: undefined }));
-            }}
-            placeholder="Re-enter your password"
-            placeholderTextColor={theme.textSecondary}
-            secureTextEntry
-            autoComplete="new-password"
-            accessibilityLabel="Confirm password"
-            accessibilityHint="Re-enter your password to confirm"
-            className="mb-1 h-12 rounded-lg border px-4 text-base"
-            style={{
-              borderColor: fieldErrors.confirmPassword ? '#EF4444' : theme.border,
-              color: theme.textPrimary,
-              backgroundColor: theme.surface
-            }}
-          />
-          {fieldErrors.confirmPassword && (
-            <Text
-              testID="confirm-password-error"
-              className="mb-3 text-xs"
-              style={{ color: '#EF4444' }}
-            >
-              {fieldErrors.confirmPassword}
-            </Text>
-          )}
-          {!fieldErrors.confirmPassword && <View className="mb-3" />}
-
-          {/* ---- Password requirements hint ---- */}
-          <Text
-            testID="password-requirements"
-            className="mb-6 text-xs"
-            style={{ color: theme.textSecondary }}
-          >
-            Password must be at least 8 characters with at least one letter and one number.
-          </Text>
-
-          {/* ---- Consent ---- */}
-          <View className="mb-6">
-            <ConsentCheckbox checked={consent} onToggle={setConsent} />
-            {fieldErrors.consent && (
-              <Text testID="consent-error" className="mt-1 text-xs" style={{ color: '#EF4444' }}>
-                {fieldErrors.consent}
-              </Text>
-            )}
-          </View>
 
           {/* ---- Server error banner ---- */}
           {error && (
@@ -294,13 +207,13 @@ const CreateAccountScreen = () => {
             </View>
           )}
 
-          {/* ---- Register button ---- */}
+          {/* ---- Sign In button ---- */}
           <Pressable
-            testID="register-button"
-            onPress={handleRegister}
+            testID="sign-in-button"
+            onPress={handleSignIn}
             disabled={loading}
             accessibilityRole="button"
-            accessibilityLabel="Register"
+            accessibilityLabel="Sign In"
             accessibilityState={{ disabled: loading }}
             className="h-[52px] items-center justify-center rounded-xl"
             style={({ pressed }) => ({
@@ -312,23 +225,23 @@ const CreateAccountScreen = () => {
             {loading ? (
               <ActivityIndicator testID="loading-indicator" color="#FFFFFF" />
             ) : (
-              <Text className="text-base font-semibold text-white">Register</Text>
+              <Text className="text-base font-semibold text-white">Sign In</Text>
             )}
           </Pressable>
 
-          {/* ---- Link to Sign In ---- */}
+          {/* ---- Link to Create Account ---- */}
           <View className="mt-6 flex-row items-center justify-center">
             <Text className="text-sm" style={{ color: theme.textSecondary }}>
-              {'Already have an account? '}
+              {"Don't have an account? "}
             </Text>
             <Pressable
-              testID="sign-in-link"
-              onPress={() => router.push('/sign-in')}
+              testID="create-account-link"
+              onPress={() => router.push('/create-account')}
               accessibilityRole="link"
-              accessibilityLabel="Sign in"
+              accessibilityLabel="Create an account"
             >
               <Text className="text-sm font-semibold" style={{ color: theme.primary }}>
-                Sign In
+                Create Account
               </Text>
             </Pressable>
           </View>
@@ -338,4 +251,4 @@ const CreateAccountScreen = () => {
   );
 };
 
-export default CreateAccountScreen;
+export default SignInScreen;

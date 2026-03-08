@@ -3,6 +3,7 @@ import { Pressable, View, Text, ScrollView } from 'react-native';
 
 import { catalogueRepository } from '@/core/catalogue/catalogue-repository';
 
+import { signOut } from '@/shared/supabase/auth';
 import { useTheme } from '@/shared/theme';
 
 /**
@@ -15,6 +16,11 @@ const SettingsScreen = () => {
   const { theme } = useTheme();
   const router = useRouter();
   const catalogueVersion = catalogueRepository.getVersion();
+
+  const handleSignOut = async () => {
+    await signOut();
+    router.replace('/sign-in');
+  };
 
   return (
     <ScrollView
@@ -65,6 +71,58 @@ const SettingsScreen = () => {
           })}
         >
           <Text className="text-sm font-semibold text-white">Create Account</Text>
+        </Pressable>
+      </View>
+
+      {/* Sign In section */}
+      <View
+        testID="settings-sign-in-section"
+        className="mb-6 w-full rounded-xl p-4"
+        style={{ backgroundColor: theme.surface }}
+      >
+        <Text className="mb-2 text-base font-semibold" style={{ color: theme.textPrimary }}>
+          Already have an account?
+        </Text>
+        <Text className="mb-4 text-sm leading-5" style={{ color: theme.textSecondary }}>
+          Sign in to restore your backed-up cards and sync across devices.
+        </Text>
+        <Pressable
+          testID="settings-sign-in-button"
+          onPress={() => router.push('/sign-in')}
+          accessibilityRole="button"
+          accessibilityLabel="Sign In"
+          accessibilityHint="Sign in to your account"
+          className="w-full items-center justify-center rounded-xl"
+          style={({ pressed }) => ({
+            backgroundColor: pressed ? theme.primaryDark : theme.primary,
+            height: 48,
+            transform: [{ scale: pressed ? 0.98 : 1 }]
+          })}
+        >
+          <Text className="text-sm font-semibold text-white">Sign In</Text>
+        </Pressable>
+      </View>
+
+      {/* Sign Out section */}
+      <View
+        testID="settings-sign-out-section"
+        className="mb-6 w-full rounded-xl p-4"
+        style={{ backgroundColor: theme.surface }}
+      >
+        <Pressable
+          testID="settings-sign-out-button"
+          onPress={handleSignOut}
+          accessibilityRole="button"
+          accessibilityLabel="Sign Out"
+          accessibilityHint="Sign out of your account"
+          className="w-full items-center justify-center rounded-xl"
+          style={({ pressed }) => ({
+            backgroundColor: pressed ? '#dc2626' : '#ef4444',
+            height: 48,
+            transform: [{ scale: pressed ? 0.98 : 1 }]
+          })}
+        >
+          <Text className="text-sm font-semibold text-white">Sign Out</Text>
         </Pressable>
       </View>
 
