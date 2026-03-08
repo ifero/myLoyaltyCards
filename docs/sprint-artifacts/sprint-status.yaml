@@ -125,8 +125,8 @@ development_status:
   6-2-define-cloud-schema-rls: done
   6-3-configure-app-client: done
   6-4-privacy-policy-consent-flow: done
-  6-5-implement-guest-mode: review
-  6-6-create-account-email: in-progress
+  6-5-implement-guest-mode: done
+  6-6-create-account-email: done
   6-7-sign-in-email: ready-for-dev
   # Out-of-sprint stories (still in epic, not planned for this sprint)
   6-8-password-reset: backlog
