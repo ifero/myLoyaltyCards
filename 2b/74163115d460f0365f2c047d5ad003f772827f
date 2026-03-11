@@ -1,0 +1,37 @@
+docs/sprint-artifacts/stories/6-8-password-reset.md
+  9db04e67b3c1e798 1-123
+docs/sprint-artifacts/stories/6-9-logout.md
+  9db04e67b3c1e798 1-28,30-111
+docs/sprint-artifacts/stories/6-14-upgrade-guest-to-account.md
+  9db04e67b3c1e798 1-62,64-88,90,92-94,97,99-157
+docs/sprint-artifacts/stories/6-11-privacy-consent.md
+  9db04e67b3c1e798 1-6,9-73,75-118
+docs/sprint-artifacts/stories/6-10-delete-account.md
+  9db04e67b3c1e798 1-6,9-134
+docs/sprint-artifacts/stories/6-13-sign-in-with-google.md
+  9db04e67b3c1e798 1-4,6-82,85-111,113-137,203-227
+docs/sprint-artifacts/stories/6-12-sign-in-with-apple.md
+  9db04e67b3c1e798 1-4,6,9-51,53-64,67-90,92-145,207-210,212-226,228-233
+docs/sprint-artifacts/sprint-status.yaml
+  9db04e67b3c1e798 38,44,46,51-52,63-79,155-159,162
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.1.10",
+  "base_commit_sha": "2b74163115d460f0365f2c047d5ad003f772827f",
+  "prompts": {
+    "9db04e67b3c1e798": {
+      "agent_id": {
+        "tool": "github-copilot",
+        "id": "d147b281-5676-4d2a-94c5-c48d94c77e25",
+        "model": "copilot/claude-sonnet-4.6"
+      },
+      "human_author": "Andrea Pacino <andrea.pacino87@gmail.com>",
+      "messages": [],
+      "total_additions": 996,
+      "total_deletions": 13,
+      "accepted_lines": 981,
+      "overriden_lines": 17
+    }
+  }
+}
