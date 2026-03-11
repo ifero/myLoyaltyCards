@@ -28,12 +28,9 @@ export const useAuthState = (): { authState: AuthState; isAuthenticated: boolean
   useEffect(() => {
     const supabase = getSupabaseClient();
 
-    // Check current session on mount
-    supabase.auth.getSession().then(({ data }) => {
-      setAuthState(data.session ? 'authenticated' : 'guest');
-    });
-
-    // Subscribe to auth state changes
+    // Subscribe to auth state changes. Supabase fires INITIAL_SESSION
+    // synchronously during subscription, which sets the initial state
+    // without needing a separate getSession() call.
     const {
       data: { subscription }
     } = supabase.auth.onAuthStateChange((_event, session) => {

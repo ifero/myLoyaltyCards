@@ -3,6 +3,8 @@
  * Story 6.9: Logout
  *
  * Tests reactive auth state detection via Supabase's onAuthStateChange.
+ * The hook relies on onAuthStateChange firing INITIAL_SESSION synchronously
+ * during subscription — no separate getSession() call needed.
  */
 
 import { renderHook, act } from '@testing-library/react-native';
@@ -13,14 +15,12 @@ import { useAuthState } from './useAuthState';
 // Mock Supabase client
 // ---------------------------------------------------------------------------
 
-const mockGetSession = jest.fn();
 const mockOnAuthStateChange = jest.fn();
 const mockUnsubscribe = jest.fn();
 
 jest.mock('./client', () => ({
   getSupabaseClient: jest.fn(() => ({
     auth: {
-      getSession: mockGetSession,
       onAuthStateChange: mockOnAuthStateChange
     }
   }))
@@ -47,6 +47,7 @@ describe('useAuthState', () => {
   beforeEach(() => {
     jest.clearAllMocks();
 
+    // Default: callback is stored but NOT called synchronously (simulates no INITIAL_SESSION)
     mockOnAuthStateChange.mockImplementation(
       (callback: (event: string, session: unknown) => void) => {
         authChangeCallback = callback;
@@ -55,44 +56,55 @@ describe('useAuthState', () => {
     );
   });
 
-  it('starts in loading state', () => {
-    mockGetSession.mockReturnValue(new Promise(() => {})); // never resolves
-
+  it('starts in loading state when INITIAL_SESSION has not fired yet', () => {
     const { result } = renderHook(() => useAuthState());
 
     expect(result.current.authState).toBe('loading');
     expect(result.current.isAuthenticated).toBe(false);
   });
 
-  it('transitions to authenticated when session exists', async () => {
-    mockGetSession.mockResolvedValue({ data: { session: MOCK_SESSION } });
+  it('transitions to authenticated when INITIAL_SESSION fires with a session', () => {
+    // Simulate Supabase firing INITIAL_SESSION synchronously during subscription
+    mockOnAuthStateChange.mockImplementation(
+      (callback: (event: string, session: unknown) => void) => {
+        authChangeCallback = callback;
+        callback('INITIAL_SESSION', MOCK_SESSION);
+        return { data: { subscription: { unsubscribe: mockUnsubscribe } } };
+      }
+    );
 
     const { result } = renderHook(() => useAuthState());
-
-    // Wait for the async getSession to resolve
-    await act(async () => {});
 
     expect(result.current.authState).toBe('authenticated');
     expect(result.current.isAuthenticated).toBe(true);
   });
 
-  it('transitions to guest when no session exists', async () => {
-    mockGetSession.mockResolvedValue({ data: { session: null } });
+  it('transitions to guest when INITIAL_SESSION fires with null session', () => {
+    mockOnAuthStateChange.mockImplementation(
+      (callback: (event: string, session: unknown) => void) => {
+        authChangeCallback = callback;
+        callback('INITIAL_SESSION', null);
+        return { data: { subscription: { unsubscribe: mockUnsubscribe } } };
+      }
+    );
 
     const { result } = renderHook(() => useAuthState());
-
-    await act(async () => {});
 
     expect(result.current.authState).toBe('guest');
     expect(result.current.isAuthenticated).toBe(false);
   });
 
-  it('updates to guest when onAuthStateChange fires with null session', async () => {
-    mockGetSession.mockResolvedValue({ data: { session: MOCK_SESSION } });
+  it('updates to guest when onAuthStateChange fires SIGNED_OUT', () => {
+    // Start authenticated
+    mockOnAuthStateChange.mockImplementation(
+      (callback: (event: string, session: unknown) => void) => {
+        authChangeCallback = callback;
+        callback('INITIAL_SESSION', MOCK_SESSION);
+        return { data: { subscription: { unsubscribe: mockUnsubscribe } } };
+      }
+    );
 
     const { result } = renderHook(() => useAuthState());
-
-    await act(async () => {});
     expect(result.current.isAuthenticated).toBe(true);
 
     // Simulate sign-out event
@@ -104,12 +116,17 @@ describe('useAuthState', () => {
     expect(result.current.isAuthenticated).toBe(false);
   });
 
-  it('updates to authenticated when onAuthStateChange fires with a session', async () => {
-    mockGetSession.mockResolvedValue({ data: { session: null } });
+  it('updates to authenticated when onAuthStateChange fires SIGNED_IN', () => {
+    // Start as guest
+    mockOnAuthStateChange.mockImplementation(
+      (callback: (event: string, session: unknown) => void) => {
+        authChangeCallback = callback;
+        callback('INITIAL_SESSION', null);
+        return { data: { subscription: { unsubscribe: mockUnsubscribe } } };
+      }
+    );
 
     const { result } = renderHook(() => useAuthState());
-
-    await act(async () => {});
     expect(result.current.isAuthenticated).toBe(false);
 
     // Simulate sign-in event
@@ -121,12 +138,8 @@ describe('useAuthState', () => {
     expect(result.current.isAuthenticated).toBe(true);
   });
 
-  it('unsubscribes from auth changes on unmount', async () => {
-    mockGetSession.mockResolvedValue({ data: { session: null } });
-
+  it('unsubscribes from auth changes on unmount', () => {
     const { unmount } = renderHook(() => useAuthState());
-
-    await act(async () => {});
 
     unmount();
 
@@ -134,8 +147,6 @@ describe('useAuthState', () => {
   });
 
   it('subscribes to onAuthStateChange on mount', () => {
-    mockGetSession.mockResolvedValue({ data: { session: null } });
-
     renderHook(() => useAuthState());
 
     expect(mockOnAuthStateChange).toHaveBeenCalledTimes(1);
