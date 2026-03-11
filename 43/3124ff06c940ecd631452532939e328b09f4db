@@ -1,0 +1,31 @@
+shared/supabase/useAuthState.test.ts
+  892a1a7e91289345 1-142
+shared/supabase/useAuthState.ts
+  892a1a7e91289345 1-52
+docs/sprint-artifacts/stories/6-9-logout.md
+  892a1a7e91289345 5,97-105,108-135
+features/settings/SettingsScreen.tsx
+  892a1a7e91289345 3,8,16,22,26,33-34,37-45,53-56,131-132,134-135,139,141-144,147-148,151-152,154-163,167
+features/settings/SettingsScreen.test.tsx
+  892a1a7e91289345 1-269
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.1.10",
+  "base_commit_sha": "433124ff06c940ecd631452532939e328b09f4db",
+  "prompts": {
+    "892a1a7e91289345": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "57b391fc-0857-4a77-a67f-66f7faf4c763",
+        "model": "claude-opus-4-6"
+      },
+      "human_author": "Andrea Pacino <andrea.pacino87@gmail.com>",
+      "messages": [],
+      "total_additions": 840,
+      "total_deletions": 120,
+      "accepted_lines": 756,
+      "overriden_lines": 0
+    }
+  }
+}
