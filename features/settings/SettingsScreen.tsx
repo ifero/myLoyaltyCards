@@ -1,4 +1,5 @@
 import { useRouter } from 'expo-router';
+import { useState } from 'react';
 import { Pressable, View, Text, ScrollView } from 'react-native';
 
 import { catalogueRepository } from '@/core/catalogue/catalogue-repository';
@@ -17,8 +18,15 @@ const SettingsScreen = () => {
   const router = useRouter();
   const catalogueVersion = catalogueRepository.getVersion();
 
+  const [signOutError, setSignOutError] = useState<string | null>(null);
+
   const handleSignOut = async () => {
-    await signOut();
+    setSignOutError(null);
+    const result = await signOut();
+    if (!result.success) {
+      setSignOutError(result.error.message);
+      return;
+    }
     router.replace('/sign-in');
   };
 
@@ -124,6 +132,16 @@ const SettingsScreen = () => {
         >
           <Text className="text-sm font-semibold text-white">Sign Out</Text>
         </Pressable>
+        {signOutError && (
+          <Text
+            testID="sign-out-error"
+            className="mt-2 text-xs"
+            style={{ color: '#EF4444' }}
+            accessibilityRole="alert"
+          >
+            {signOutError}
+          </Text>
+        )}
       </View>
 
       {/* Catalogue version */}

@@ -3,9 +3,10 @@
  * Story 6-7: Sign In with Email
  *
  * Sign-in form with email and password.
- * Validates input client-side, calls Supabase signInWithPassword, and
+ * Validates input client-side, calls the signInWithEmail auth wrapper, and
  * redirects to the home screen on success. Session persistence is handled
- * automatically by the SecureStore-backed Supabase client adapter.
+ * automatically by the SecureStore-backed Supabase client adapter used by
+ * that wrapper.
  *
  * ⚠️ Never log user credentials or session tokens in this component.
  */
