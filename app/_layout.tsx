@@ -144,6 +144,12 @@ const RootLayoutContent = () => {
             title: 'Create Account'
           }}
         />
+        <Stack.Screen
+          name="sign-in"
+          options={{
+            title: 'Sign In'
+          }}
+        />
       </Stack>
       <StatusBar style={isDark ? 'light' : 'dark'} />
     </>
