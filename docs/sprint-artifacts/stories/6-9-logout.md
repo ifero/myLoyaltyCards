@@ -2,7 +2,7 @@
 
 **Epic:** 6 - User Authentication & Privacy
 **Type:** User-Facing
-**Status:** ready-for-dev
+**Status:** review
 
 ## Goal
 
@@ -94,16 +94,44 @@ Allow signed-in users to sign out of their account on this device, returning to 
 
 ## Acceptance Checklist
 
-- [ ] "Sign Out" visible in Settings only when authenticated
-- [ ] Confirmation dialog shown before sign-out
-- [ ] `signOut()` called from `shared/supabase/auth.ts`
-- [ ] Auth token cleared from SecureStore
-- [ ] Auth state updated to guest mode
-- [ ] Local SQLite cards unaffected
-- [ ] Settings screen reactively shows guest mode options post sign-out
-- [ ] Error handling for failed sign-out
-- [ ] Unit tests passing
+- [x] "Sign Out" visible in Settings only when authenticated
+- [x] Confirmation dialog shown before sign-out
+- [x] `signOut()` called from `shared/supabase/auth.ts`
+- [x] Auth token cleared from SecureStore
+- [x] Auth state updated to guest mode
+- [x] Local SQLite cards unaffected
+- [x] Settings screen reactively shows guest mode options post sign-out
+- [x] Error handling for failed sign-out
+- [x] Unit tests passing
 - [ ] Tested on iOS and Android
+
+## File List
+
+- `shared/supabase/useAuthState.ts` — New: reactive auth state hook using onAuthStateChange
+- `shared/supabase/useAuthState.test.ts` — New: 7 unit tests for useAuthState hook
+- `features/settings/SettingsScreen.tsx` — Modified: conditional rendering based on auth state, confirmation dialog, navigate to `/` on sign-out
+- `features/settings/SettingsScreen.test.tsx` — New (moved from app/**tests**): 18 tests covering guest/authenticated rendering, sign-out flow, loading state
+- `app/__tests__/settings.test.tsx` — Deleted: moved to co-located path
+- `docs/sprint-artifacts/stories/6-9-logout.md` — Modified: status and checklist updates
+
+## Dev Agent Record
+
+### Implementation Notes
+
+- Created `useAuthState` hook (`shared/supabase/useAuthState.ts`) that subscribes to Supabase's `onAuthStateChange` for reactive auth state detection
+- Updated `SettingsScreen` to conditionally render guest mode sections (badge, Sign In, Create Account) vs authenticated sections (Sign Out) based on `useAuthState`
+- Added `Alert.alert` confirmation dialog before sign-out with Cancel/Sign Out options
+- Changed post-sign-out navigation from `/sign-in` to `/` (home) so user returns to guest mode with local cards accessible
+- Moved settings tests from `app/__tests__/` to co-located `features/settings/SettingsScreen.test.tsx` per project convention
+- Loading state hides all auth-dependent sections until session check completes
+
+### Debug Log
+
+- Initial test run: 1 failure in "shows error message when sign-out fails" — async state update from `setSignOutError` needed `act()` wrapper. Fixed by wrapping alert onPress callback in `act(async () => {})`.
+
+## Change Log
+
+- 2026-03-11: Implemented Story 6.9 Logout — conditional settings rendering, confirmation dialog, useAuthState hook, 25 tests added
 
 ---
 
