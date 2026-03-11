@@ -35,21 +35,21 @@
 # - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
 
 generated: 2026-01-03
-updated: 2026-02-14
+updated: 2026-03-11
 project: myLoyaltyCards
 tracking_system: file-system
 story_location: docs/sprint-artifacts
 
 # ============================================
-# CURRENT SPRINT
+# LAST SPRINT (completed)
 # ============================================
-current_sprint:
+last_sprint:
   number: 7
   name: 'Sprint 7: User Authentication & Privacy'
   goal: 'Implement Epic 6: User Authentication & Privacy (Supabase, guest mode, email/SSO, privacy consent)'
   start_date: 2026-02-27
-  end_date: 2026-03-05
-  duration: 1 week
+  end_date: 2026-03-11
+  status: completed
   epic: 6
   stories:
     - 6-1-create-supabase-project-environments
@@ -59,6 +59,30 @@ current_sprint:
     - 6-5-implement-guest-mode
     - 6-6-create-account-email
     - 6-7-sign-in-email
+
+# ============================================
+# CURRENT SPRINT
+# ============================================
+current_sprint:
+  number: 8
+  name: 'Sprint 8: Auth Completion — SSO, Account Lifecycle & Privacy'
+  goal: 'Complete Epic 6: Sign in with Apple/Google, password reset, logout, delete account, upgrade guest, and privacy consent'
+  start_date: 2026-03-12
+  end_date: 2026-03-19
+  duration: 1 week
+  epic: 6
+  stories:
+    - 6-8-password-reset
+    - 6-9-logout
+    - 6-10-delete-account
+    - 6-11-privacy-consent
+    - 6-14-upgrade-guest-to-account
+  # Recommended pick-up order (dependency chain — Amelia):
+  #   Wave 1 (parallel, no deps):  6-9-logout, 6-11-privacy-consent
+  #   Wave 2 (parallel, no deps):  6-8-password-reset
+  #   Wave 3 (needs auth solid):   6-14-upgrade-guest-to-account
+  #   Wave 4 (needs Edge Fn infra): 6-10-delete-account  ← pick up LAST
+  #   6-12 (Apple) + 6-13 (Google): moved to post-MVP backlog
 
 development_status:
   # ============================================
@@ -127,15 +151,15 @@ development_status:
   6-4-privacy-policy-consent-flow: done
   6-5-implement-guest-mode: done
   6-6-create-account-email: done
-  6-7-sign-in-email: ready-for-dev
-  # Out-of-sprint stories (still in epic, not planned for this sprint)
-  6-8-password-reset: backlog
-  6-9-logout: backlog
-  6-10-delete-account: backlog
-  6-11-privacy-consent: backlog
-  6-5-sign-in-with-apple: backlog
-  6-6-sign-in-with-google: backlog
-  6-7-upgrade-guest-to-account: backlog
+  6-7-sign-in-email: done
+  # Sprint 8 stories
+  6-8-password-reset: ready-for-dev
+  6-9-logout: ready-for-dev
+  6-10-delete-account: ready-for-dev
+  6-11-privacy-consent: ready-for-dev
+  6-12-sign-in-with-apple: backlog
+  6-13-sign-in-with-google: backlog
+  6-14-upgrade-guest-to-account: ready-for-dev
   epic-6-retrospective: optional
 
   # Epic 7: Cloud Synchronization
