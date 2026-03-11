@@ -1,6 +1,7 @@
 /**
  * Consent Repository — Unit Tests
  * Story 6-4: Privacy Policy & Consent Flow
+ * Story 6-11: Privacy & Consent (version tracking)
  */
 
 jest.mock('expo-sqlite/kv-store', () => ({
@@ -19,8 +20,11 @@ import {
   setConsentGiven,
   revokeConsent,
   getConsentTimestamp,
+  getConsentVersion,
+  needsReConsent,
   resetConsent
 } from './consent-repository';
+import { PRIVACY_POLICY_VERSION } from './constants';
 
 describe('consent-repository', () => {
   beforeEach(() => {
@@ -68,6 +72,14 @@ describe('consent-repository', () => {
       expect(stored >= before).toBe(true);
       expect(stored <= after).toBe(true);
     });
+
+    it('stores the current PRIVACY_POLICY_VERSION', () => {
+      setConsentGiven();
+      expect(Storage.setItemSync).toHaveBeenCalledWith(
+        'privacy_consent_version',
+        PRIVACY_POLICY_VERSION
+      );
+    });
   });
 
   // ── revokeConsent ─────────────────────────────────────────────────
@@ -81,6 +93,11 @@ describe('consent-repository', () => {
     it('removes the consent timestamp', () => {
       revokeConsent();
       expect(Storage.removeItemSync).toHaveBeenCalledWith('privacy_consent_timestamp');
+    });
+
+    it('removes the consent version', () => {
+      revokeConsent();
+      expect(Storage.removeItemSync).toHaveBeenCalledWith('privacy_consent_version');
     });
   });
 
@@ -102,10 +119,60 @@ describe('consent-repository', () => {
   // ── resetConsent ──────────────────────────────────────────────────
 
   describe('resetConsent', () => {
-    it('removes both consent keys', () => {
+    it('removes all consent keys', () => {
       resetConsent();
       expect(Storage.removeItemSync).toHaveBeenCalledWith('privacy_consent_status');
       expect(Storage.removeItemSync).toHaveBeenCalledWith('privacy_consent_timestamp');
+      expect(Storage.removeItemSync).toHaveBeenCalledWith('privacy_consent_version');
+    });
+  });
+
+  // ── getConsentVersion ─────────────────────────────────────────────
+
+  describe('getConsentVersion', () => {
+    it('returns null when never set', () => {
+      (Storage.getItemSync as jest.Mock).mockReturnValueOnce(null);
+      expect(getConsentVersion()).toBeNull();
+    });
+
+    it('returns the stored version string', () => {
+      (Storage.getItemSync as jest.Mock).mockReturnValueOnce('1.0.0');
+      expect(getConsentVersion()).toBe('1.0.0');
+    });
+  });
+
+  // ── needsReConsent ────────────────────────────────────────────────
+
+  describe('needsReConsent', () => {
+    it('returns true when consent was never given', () => {
+      (Storage.getItemSync as jest.Mock).mockReturnValue(null);
+      expect(needsReConsent()).toBe(true);
+    });
+
+    it('returns true when consent status is false', () => {
+      (Storage.getItemSync as jest.Mock).mockImplementation((key: string) => {
+        if (key === 'privacy_consent_status') return 'false';
+        return null;
+      });
+      expect(needsReConsent()).toBe(true);
+    });
+
+    it('returns true when stored version differs from current', () => {
+      (Storage.getItemSync as jest.Mock).mockImplementation((key: string) => {
+        if (key === 'privacy_consent_status') return 'true';
+        if (key === 'privacy_consent_version') return '0.9.0';
+        return null;
+      });
+      expect(needsReConsent()).toBe(true);
+    });
+
+    it('returns false when consent given and version matches', () => {
+      (Storage.getItemSync as jest.Mock).mockImplementation((key: string) => {
+        if (key === 'privacy_consent_status') return 'true';
+        if (key === 'privacy_consent_version') return PRIVACY_POLICY_VERSION;
+        return null;
+      });
+      expect(needsReConsent()).toBe(false);
     });
   });
 });

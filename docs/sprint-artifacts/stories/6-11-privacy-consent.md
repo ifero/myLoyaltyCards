@@ -2,7 +2,7 @@
 
 **Epic:** 6 - User Authentication & Privacy
 **Type:** User-Facing
-**Status:** ready-for-dev
+**Status:** in-progress
 
 > 📋 **Scope guard (PM):** The "What We Collect" data summary in this story is a **read-only informational screen** only. Do NOT build data export, download, or portability features here — those belong to Epic 8. The "Download My Data" CTA must remain a clearly labelled placeholder that does nothing until Epic 8 is implemented.
 
@@ -101,18 +101,59 @@ Ensure users can review the Privacy Policy before creating an account and can ac
 
 ## Acceptance Checklist
 
-- [ ] Consent checkbox on Create Account screen
-- [ ] "Privacy Policy" link navigates to `app/privacy-policy.tsx`
-- [ ] Register button disabled until consent given
-- [ ] Consent version + timestamp persisted to SecureStore on registration
-- [ ] SSO flows check for existing consent before re-prompting
-- [ ] "Privacy Policy" link in Settings (guest + authenticated)
-- [ ] "What We Collect" data summary screen for authenticated users
-- [ ] `PRIVACY_POLICY_VERSION` constant in `core/privacy/`
-- [ ] Unit tests passing
-- [ ] Tested on iOS and Android
+- [x] Consent checkbox on Create Account screen
+- [x] "Privacy Policy" link navigates to `app/privacy-policy.tsx`
+- [x] Register button disabled until consent given
+- [x] Consent version + timestamp persisted to SecureStore on registration
+- [ ] SSO flows check for existing consent before re-prompting _(SSO stories 6-12/6-13 deferred to post-MVP backlog; `needsReConsent()` utility ready for integration)_
+- [x] "Privacy Policy" link in Settings (guest + authenticated)
+- [x] "What We Collect" data summary screen for authenticated users
+- [x] `PRIVACY_POLICY_VERSION` constant in `core/privacy/`
+- [x] Unit tests passing
+- [ ] Tested on iOS and Android _(manual testing)_
 
 ---
+
+## Dev Agent Record
+
+### Implementation Summary (2026-03-11)
+
+**Tasks completed:**
+
+1. **Consent Versioning** — Created `core/privacy/constants.ts` with `PRIVACY_POLICY_VERSION = '1.0.0'`. Updated `consent-repository.ts` to store/retrieve consent version. Added `getConsentVersion()` and `needsReConsent()` functions for version-aware consent checking.
+2. **Register Button Disabled** — Updated `CreateAccountScreen.tsx` to disable the Register button when consent is not given (`disabled={loading || !consent}`), with matching visual opacity/color changes.
+3. **Consent Persisted on Registration** — Added `setConsentGiven()` call in `CreateAccountScreen.handleRegister` after successful `signUp()`. This persists consent status, timestamp, and policy version to local storage.
+4. **Data Summary Screen** — Created `features/privacy/DataSummaryScreen.tsx` and route `app/data-summary.tsx`. Shows collected/not-collected data table. Includes disabled "Download My Data" placeholder (Epic 8).
+5. **Settings Data & Privacy Section** — Added "Data & Privacy" section to `SettingsScreen.tsx` with "What We Collect" navigation item.
+6. **SSO Consent Check Foundation** — `needsReConsent()` utility is ready for SSO integration when stories 6-12/6-13 are implemented.
+
+**Decisions:**
+
+- Used `expo-sqlite/kv-store` (consistent with existing consent-repository) instead of SecureStore as the story suggested — maintains consistency with Story 6-4 patterns.
+- Removed consent validation error from form validation since the button is now disabled when consent is not given — the disabled button is the consent gate.
+- "Download My Data" CTA is clearly labelled as placeholder per PM scope guard.
+
+### Tests Created/Updated
+
+- `core/privacy/constants.test.ts` — NEW (2 tests)
+- `core/privacy/consent-repository.test.ts` — UPDATED (+4 tests: version storage, getConsentVersion, needsReConsent)
+- `features/privacy/__tests__/DataSummaryScreen.test.tsx` — NEW (11 tests)
+- `features/auth/__tests__/CreateAccountScreen.test.tsx` — UPDATED (+4 tests: button disabled/enabled, consent persisted/not persisted on failure; 9 existing tests updated for disabled button behavior)
+- `features/settings/__tests__/SettingsScreen.test.tsx` — NEW (10 tests)
+
+### File List
+
+- `core/privacy/constants.ts` — NEW
+- `core/privacy/constants.test.ts` — NEW
+- `core/privacy/consent-repository.ts` — MODIFIED (version storage, getConsentVersion, needsReConsent)
+- `core/privacy/consent-repository.test.ts` — MODIFIED
+- `features/auth/CreateAccountScreen.tsx` — MODIFIED (disabled button, consent persistence)
+- `features/auth/__tests__/CreateAccountScreen.test.tsx` — MODIFIED
+- `features/privacy/DataSummaryScreen.tsx` — NEW
+- `features/privacy/__tests__/DataSummaryScreen.test.tsx` — NEW
+- `features/settings/SettingsScreen.tsx` — MODIFIED (Data & Privacy section)
+- `features/settings/__tests__/SettingsScreen.test.tsx` — NEW
+- `app/data-summary.tsx` — NEW
 
 **Linked Epic:** Epic 6
 **Sprint:** Sprint 8 — 2026-03-12

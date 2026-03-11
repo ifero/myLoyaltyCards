@@ -156,7 +156,7 @@ development_status:
   6-8-password-reset: ready-for-dev
   6-9-logout: ready-for-dev
   6-10-delete-account: ready-for-dev
-  6-11-privacy-consent: ready-for-dev
+  6-11-privacy-consent: in-progress
   6-12-sign-in-with-apple: backlog
   6-13-sign-in-with-google: backlog
   6-14-upgrade-guest-to-account: ready-for-dev

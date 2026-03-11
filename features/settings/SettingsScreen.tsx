@@ -166,6 +166,38 @@ const SettingsScreen = () => {
         </View>
       )}
 
+      {/* Data & Privacy section
+         TODO: Gate behind auth state — story says "Only shown to authenticated users"
+         Currently the entire SettingsScreen has no auth context; will be gated
+         when auth state management (e.g. AuthProvider) is added. */}
+      <View
+        testID="settings-data-privacy-section"
+        className="mb-6 w-full rounded-xl p-4"
+        style={{ backgroundColor: theme.surface }}
+      >
+        <Text className="mb-3 text-base font-semibold" style={{ color: theme.textPrimary }}>
+          Data & Privacy
+        </Text>
+        <Pressable
+          testID="settings-data-summary"
+          onPress={() => router.push('/data-summary')}
+          accessibilityRole="button"
+          accessibilityLabel="What We Collect"
+          accessibilityHint="View a summary of collected data"
+          className="mb-2 rounded-lg px-3 py-3"
+          style={({ pressed }) => ({
+            backgroundColor: pressed ? theme.border : 'transparent'
+          })}
+        >
+          <Text className="text-sm font-medium" style={{ color: theme.textPrimary }}>
+            What We Collect
+          </Text>
+          <Text className="mt-0.5 text-xs" style={{ color: theme.textSecondary }}>
+            View a summary of the data we collect
+          </Text>
+        </Pressable>
+      </View>
+
       {/* Catalogue version */}
       <View className="mb-6 items-center">
         <Text className="text-sm font-semibold" style={{ color: theme.textPrimary }}>

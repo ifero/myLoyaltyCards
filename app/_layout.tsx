@@ -150,6 +150,12 @@ const RootLayoutContent = () => {
             title: 'Sign In'
           }}
         />
+        <Stack.Screen
+          name="data-summary"
+          options={{
+            title: 'What We Collect'
+          }}
+        />
       </Stack>
       <StatusBar style={isDark ? 'light' : 'dark'} />
     </>
