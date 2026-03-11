@@ -1,0 +1,25 @@
+shared/supabase/useAuthState.ts
+  892a1a7e91289345 31-33
+shared/supabase/useAuthState.test.ts
+  892a1a7e91289345 6-7,50,59,66-72,82-87,97-103,119-125,141
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.1.10",
+  "base_commit_sha": "e3541ff724618ce69978b11a7112337eeeb629af",
+  "prompts": {
+    "892a1a7e91289345": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "57b391fc-0857-4a77-a67f-66f7faf4c763",
+        "model": "claude-opus-4-6"
+      },
+      "human_author": "Andrea Pacino <andrea.pacino87@gmail.com>",
+      "messages": [],
+      "total_additions": 43,
+      "total_deletions": 35,
+      "accepted_lines": 35,
+      "overriden_lines": 0
+    }
+  }
+}
