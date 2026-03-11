@@ -23,6 +23,8 @@ import {
   View
 } from 'react-native';
 
+import { setConsentGiven } from '@/core/privacy/consent-repository';
+
 import ConsentCheckbox from '@/shared/components/ConsentCheckbox';
 import { signUp } from '@/shared/supabase/auth';
 import { useTheme } from '@/shared/theme';
@@ -112,6 +114,9 @@ const CreateAccountScreen = () => {
         setError(result.error.message);
         return;
       }
+
+      // Persist consent record locally (version + timestamp)
+      setConsentGiven();
 
       // Only redirect when a session exists. When email confirmation is
       // required, Supabase returns success with `session: null` — the user
@@ -298,15 +303,16 @@ const CreateAccountScreen = () => {
           <Pressable
             testID="register-button"
             onPress={handleRegister}
-            disabled={loading}
+            disabled={loading || !consent}
             accessibilityRole="button"
             accessibilityLabel="Register"
-            accessibilityState={{ disabled: loading }}
+            accessibilityState={{ disabled: loading || !consent }}
             className="h-[52px] items-center justify-center rounded-xl"
             style={({ pressed }) => ({
-              backgroundColor: loading ? theme.border : pressed ? theme.primaryDark : theme.primary,
-              opacity: loading ? 0.7 : 1,
-              transform: [{ scale: pressed && !loading ? 0.98 : 1 }]
+              backgroundColor:
+                loading || !consent ? theme.border : pressed ? theme.primaryDark : theme.primary,
+              opacity: loading || !consent ? 0.7 : 1,
+              transform: [{ scale: pressed && !loading && consent ? 0.98 : 1 }]
             })}
           >
             {loading ? (
