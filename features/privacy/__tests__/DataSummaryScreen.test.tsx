@@ -28,11 +28,26 @@ jest.mock('@/shared/theme', () => ({
   })
 }));
 
+const mockReplace = jest.fn();
+jest.mock('expo-router', () => ({
+  useRouter: () => ({ replace: mockReplace })
+}));
+
+const mockUseAuthState = jest.fn();
+jest.mock('@/shared/supabase/useAuthState', () => ({
+  useAuthState: () => mockUseAuthState()
+}));
+
 // ---------------------------------------------------------------------------
-// Tests
+// Tests — Authenticated
 // ---------------------------------------------------------------------------
 
-describe('DataSummaryScreen', () => {
+describe('DataSummaryScreen — authenticated user', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    mockUseAuthState.mockReturnValue({ authState: 'authenticated', isAuthenticated: true });
+  });
+
   it('renders the screen container', () => {
     render(<DataSummaryScreen />);
     expect(screen.getByTestId('data-summary-screen')).toBeTruthy();
@@ -102,5 +117,45 @@ describe('DataSummaryScreen', () => {
   it('has proper accessibility on Download My Data placeholder', () => {
     render(<DataSummaryScreen />);
     expect(screen.getByLabelText('Download My Data')).toBeTruthy();
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Tests — Auth guard
+// ---------------------------------------------------------------------------
+
+describe('DataSummaryScreen — guest user (auth guard)', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    mockUseAuthState.mockReturnValue({ authState: 'guest', isAuthenticated: false });
+  });
+
+  it('shows loading indicator and does not render screen content', () => {
+    render(<DataSummaryScreen />);
+    expect(screen.getByTestId('data-summary-loading')).toBeTruthy();
+    expect(screen.queryByTestId('data-summary-screen')).toBeNull();
+  });
+
+  it('redirects to /sign-in', () => {
+    render(<DataSummaryScreen />);
+    expect(mockReplace).toHaveBeenCalledWith('/sign-in');
+  });
+});
+
+describe('DataSummaryScreen — loading state', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    mockUseAuthState.mockReturnValue({ authState: 'loading', isAuthenticated: false });
+  });
+
+  it('shows loading indicator while auth state is resolving', () => {
+    render(<DataSummaryScreen />);
+    expect(screen.getByTestId('data-summary-loading')).toBeTruthy();
+    expect(screen.queryByTestId('data-summary-screen')).toBeNull();
+  });
+
+  it('does not redirect while loading', () => {
+    render(<DataSummaryScreen />);
+    expect(mockReplace).not.toHaveBeenCalled();
   });
 });
