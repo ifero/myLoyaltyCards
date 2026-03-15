@@ -4,12 +4,16 @@
  *
  * Read-only informational screen showing what data the app collects.
  * Only accessible to authenticated users from Settings → Data & Privacy.
+ * Redirects unauthenticated visitors to /sign-in.
  *
  * ⚠️ "Download My Data" is a placeholder — actual export lives in Epic 8.
  */
 
-import { Pressable, ScrollView, Text, View } from 'react-native';
+import { useRouter } from 'expo-router';
+import { useEffect } from 'react';
+import { ActivityIndicator, Pressable, ScrollView, Text, View } from 'react-native';
 
+import { useAuthState } from '@/shared/supabase/useAuthState';
 import { useTheme } from '@/shared/theme';
 
 // ---------------------------------------------------------------------------
@@ -37,6 +41,30 @@ const DATA_ROWS: DataRow[] = [
 
 const DataSummaryScreen = () => {
   const { theme } = useTheme();
+  const { authState } = useAuthState();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (authState === 'guest') {
+      router.replace('/sign-in');
+    }
+  }, [authState, router]);
+
+  if (authState === 'loading' || authState === 'guest') {
+    return (
+      <View
+        testID="data-summary-loading"
+        style={{
+          flex: 1,
+          alignItems: 'center',
+          justifyContent: 'center',
+          backgroundColor: theme.background
+        }}
+      >
+        <ActivityIndicator size="large" color={theme.primary} />
+      </View>
+    );
+  }
 
   return (
     <ScrollView
