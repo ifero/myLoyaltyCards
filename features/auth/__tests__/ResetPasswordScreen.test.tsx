@@ -54,7 +54,7 @@ jest.mock('@/shared/supabase/client', () => ({
 // Mock getInitialURL for hash fragment fallback tests
 const mockGetInitialURL = jest.fn<Promise<string | null>, []>().mockResolvedValue(null);
 jest.mock('@/core/utils/get-initial-url', () => ({
-  getInitialURL: (...args: unknown[]) => mockGetInitialURL(...args)
+  getInitialURL: () => mockGetInitialURL()
 }));
 
 // ---------------------------------------------------------------------------
