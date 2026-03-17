@@ -3,6 +3,7 @@
  * Story 4.3: Help & FAQ Access
  * Story 6-4: Privacy Policy link
  * Story 6.9: Logout — conditional rendering and confirmation dialog
+ * Story 6-11: Privacy & Consent — Data & Privacy section gated by auth
  */
 
 import { render, fireEvent, act } from '@testing-library/react-native';
@@ -265,5 +266,67 @@ describe('SettingsScreen — Story 6.9: Loading state', () => {
   it('hides sign-out section while loading', () => {
     const { queryByTestId } = render(<SettingsScreen />);
     expect(queryByTestId('settings-sign-out-section')).toBeNull();
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Story 6-11: Data & Privacy section — auth-gated
+// ---------------------------------------------------------------------------
+
+describe('SettingsScreen — Story 6-11: Data & Privacy section (authenticated)', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    mockUseAuthState.mockReturnValue({ authState: 'authenticated', isAuthenticated: true });
+  });
+
+  it('renders the Data & Privacy section when authenticated', () => {
+    const { getByTestId } = render(<SettingsScreen />);
+    expect(getByTestId('settings-data-privacy-section')).toBeTruthy();
+  });
+
+  it('renders the What We Collect button when authenticated', () => {
+    const { getByTestId, getByText } = render(<SettingsScreen />);
+    expect(getByTestId('settings-data-summary')).toBeTruthy();
+    expect(getByText('What We Collect')).toBeTruthy();
+  });
+
+  it('navigates to /data-summary on What We Collect press', () => {
+    const { getByTestId } = render(<SettingsScreen />);
+    fireEvent.press(getByTestId('settings-data-summary'));
+    expect(mockPush).toHaveBeenCalledWith('/data-summary');
+  });
+
+  it('shows descriptive text under What We Collect', () => {
+    const { getByText } = render(<SettingsScreen />);
+    expect(getByText('View a summary of the data we collect')).toBeTruthy();
+  });
+});
+
+describe('SettingsScreen — Story 6-11: Data & Privacy section (guest)', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    mockUseAuthState.mockReturnValue({ authState: 'guest', isAuthenticated: false });
+  });
+
+  it('hides the Data & Privacy section in guest mode', () => {
+    const { queryByTestId } = render(<SettingsScreen />);
+    expect(queryByTestId('settings-data-privacy-section')).toBeNull();
+  });
+
+  it('hides the What We Collect button in guest mode', () => {
+    const { queryByTestId } = render(<SettingsScreen />);
+    expect(queryByTestId('settings-data-summary')).toBeNull();
+  });
+});
+
+describe('SettingsScreen — Story 6-11: Data & Privacy section (loading)', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    mockUseAuthState.mockReturnValue({ authState: 'loading', isAuthenticated: false });
+  });
+
+  it('hides the Data & Privacy section while loading', () => {
+    const { queryByTestId } = render(<SettingsScreen />);
+    expect(queryByTestId('settings-data-privacy-section')).toBeNull();
   });
 });

@@ -12,13 +12,16 @@
 
 import Storage from 'expo-sqlite/kv-store';
 
+import { PRIVACY_POLICY_VERSION } from './constants';
+
 // ---------------------------------------------------------------------------
 // Keys
 // ---------------------------------------------------------------------------
 
 const KEYS = {
   CONSENT_STATUS: 'privacy_consent_status',
-  CONSENT_TIMESTAMP: 'privacy_consent_timestamp'
+  CONSENT_TIMESTAMP: 'privacy_consent_timestamp',
+  CONSENT_VERSION: 'privacy_consent_version'
 } as const;
 
 // ---------------------------------------------------------------------------
@@ -36,20 +39,22 @@ export const getConsentStatus = (): boolean => {
 
 /**
  * Record that the user has given consent.
- * Stores `true` plus the current ISO 8601 timestamp.
+ * Stores `true`, the current ISO 8601 timestamp, and the policy version.
  */
 export const setConsentGiven = (): void => {
   Storage.setItemSync(KEYS.CONSENT_STATUS, 'true');
   Storage.setItemSync(KEYS.CONSENT_TIMESTAMP, new Date().toISOString());
+  Storage.setItemSync(KEYS.CONSENT_VERSION, PRIVACY_POLICY_VERSION);
 };
 
 /**
  * Revoke previously given consent (GDPR right to withdraw).
- * Stores `false` and removes the timestamp.
+ * Stores `false` and removes the timestamp and version.
  */
 export const revokeConsent = (): void => {
   Storage.setItemSync(KEYS.CONSENT_STATUS, 'false');
   Storage.removeItemSync(KEYS.CONSENT_TIMESTAMP);
+  Storage.removeItemSync(KEYS.CONSENT_VERSION);
 };
 
 /**
@@ -60,9 +65,28 @@ export const getConsentTimestamp = (): string | null => {
 };
 
 /**
+ * The policy version the user consented to, or `null` if never.
+ */
+export const getConsentVersion = (): string | null => {
+  return Storage.getItemSync(KEYS.CONSENT_VERSION);
+};
+
+/**
+ * Whether the user needs to re-consent because the policy version changed.
+ * Returns `true` when the stored version differs from `PRIVACY_POLICY_VERSION`
+ * or when no consent has been given yet.
+ */
+export const needsReConsent = (): boolean => {
+  if (!getConsentStatus()) return true;
+  const stored = getConsentVersion();
+  return stored !== PRIVACY_POLICY_VERSION;
+};
+
+/**
  * Remove all consent data (useful for testing / dev reset).
  */
 export const resetConsent = (): void => {
   Storage.removeItemSync(KEYS.CONSENT_STATUS);
   Storage.removeItemSync(KEYS.CONSENT_TIMESTAMP);
+  Storage.removeItemSync(KEYS.CONSENT_VERSION);
 };

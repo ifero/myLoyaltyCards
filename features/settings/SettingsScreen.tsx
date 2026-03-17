@@ -14,6 +14,7 @@ import { useTheme } from '@/shared/theme';
  * Story 1.5: Placeholder screen for app settings.
  * Story 6.5: Guest mode — shows guest mode badge and upgrade path to account creation.
  * Story 6.9: Logout — conditional rendering based on auth state, confirmation dialog.
+ * Story 6-11: Privacy & Consent — Data & Privacy section shown only to authenticated users.
  */
 const SettingsScreen = () => {
   const { theme } = useTheme();
@@ -163,6 +164,37 @@ const SettingsScreen = () => {
               {signOutError}
             </Text>
           )}
+        </View>
+      )}
+
+      {/* Data & Privacy section — visible only when authenticated */}
+      {isAuthenticated && (
+        <View
+          testID="settings-data-privacy-section"
+          className="mb-6 w-full rounded-xl p-4"
+          style={{ backgroundColor: theme.surface }}
+        >
+          <Text className="mb-3 text-base font-semibold" style={{ color: theme.textPrimary }}>
+            Data & Privacy
+          </Text>
+          <Pressable
+            testID="settings-data-summary"
+            onPress={() => router.push('/data-summary')}
+            accessibilityRole="button"
+            accessibilityLabel="What We Collect"
+            accessibilityHint="View a summary of collected data"
+            className="mb-2 rounded-lg px-3 py-3"
+            style={({ pressed }) => ({
+              backgroundColor: pressed ? theme.border : 'transparent'
+            })}
+          >
+            <Text className="text-sm font-medium" style={{ color: theme.textPrimary }}>
+              What We Collect
+            </Text>
+            <Text className="mt-0.5 text-xs" style={{ color: theme.textSecondary }}>
+              View a summary of the data we collect
+            </Text>
+          </Pressable>
         </View>
       )}
 
