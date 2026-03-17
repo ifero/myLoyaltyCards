@@ -10,7 +10,7 @@
  */
 
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   KeyboardAvoidingView,
@@ -22,19 +22,35 @@ import {
   View
 } from 'react-native';
 
+import { isValidPassword } from '@/core/auth/validation';
+import { getInitialURL } from '@/core/utils/get-initial-url';
+
 import { updatePassword } from '@/shared/supabase/auth';
 import { getSupabaseClient } from '@/shared/supabase/client';
 import { useTheme } from '@/shared/theme';
 
 // ---------------------------------------------------------------------------
-// Validation helpers
+// Helpers
 // ---------------------------------------------------------------------------
 
 /**
- * Password must be at least 8 characters, contain at least one letter and
- * one digit. Matches the registration rules exactly (Story 6-6).
+ * Parse tokens from a URL hash fragment.
+ * Supabase may deliver reset tokens as `#access_token=...&refresh_token=...`
+ * rather than query parameters. This utility handles both formats.
  */
-const isValidPassword = (pw: string): boolean => /^(?=.*[A-Za-z])(?=.*\d).{8,}$/.test(pw);
+const parseHashFragment = (url: string): Record<string, string> => {
+  const hashIndex = url.indexOf('#');
+  if (hashIndex === -1) return {};
+  const hash = url.substring(hashIndex + 1);
+  const result: Record<string, string> = {};
+  for (const pair of hash.split('&')) {
+    const [key, value] = pair.split('=');
+    if (key && value) {
+      result[decodeURIComponent(key)] = decodeURIComponent(value);
+    }
+  }
+  return result;
+};
 
 // ---------------------------------------------------------------------------
 // Component
@@ -49,6 +65,9 @@ const ResetPasswordScreen = () => {
     type?: string;
     error_description?: string;
   }>();
+
+  // Ref for cleanup of auto-redirect timer
+  const redirectTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Form state
   const [password, setPassword] = useState('');
@@ -77,8 +96,28 @@ const ResetPasswordScreen = () => {
         return;
       }
 
-      const accessToken = params.access_token;
-      const refreshToken = params.refresh_token;
+      let accessToken = params.access_token;
+      let refreshToken = params.refresh_token;
+
+      // Fallback: Supabase may deliver tokens as a URL hash fragment
+      // (#access_token=...&refresh_token=...) which Expo Router's
+      // useLocalSearchParams does not parse.
+      if (!accessToken || !refreshToken) {
+        try {
+          const initialUrl = await getInitialURL();
+          if (initialUrl) {
+            const hashParams = parseHashFragment(initialUrl);
+            if (hashParams.error_description) {
+              setSessionError(hashParams.error_description);
+              return;
+            }
+            accessToken = accessToken || hashParams.access_token;
+            refreshToken = refreshToken || hashParams.refresh_token;
+          }
+        } catch {
+          // getInitialURL() can reject on some platforms — ignore
+        }
+      }
 
       if (!accessToken || !refreshToken) {
         // No tokens — may have been opened manually (not from email link)
@@ -106,6 +145,15 @@ const ResetPasswordScreen = () => {
 
     establishSession();
   }, [params.access_token, params.refresh_token, params.error_description]);
+
+  // Cleanup redirect timer on unmount
+  useEffect(() => {
+    return () => {
+      if (redirectTimerRef.current) {
+        clearTimeout(redirectTimerRef.current);
+      }
+    };
+  }, []);
 
   // ---------------------------------------------------------------------------
   // Handlers
@@ -147,7 +195,7 @@ const ResetPasswordScreen = () => {
 
       setSuccess(true);
       // Auto-navigate home after a brief delay so user sees confirmation
-      setTimeout(() => {
+      redirectTimerRef.current = setTimeout(() => {
         router.replace('/');
       }, 1500);
     } catch {
@@ -169,6 +217,7 @@ const ResetPasswordScreen = () => {
         style={{ backgroundColor: theme.background }}
       >
         <Text
+          accessibilityRole="header"
           className="mb-4 text-center text-lg font-semibold"
           style={{ color: theme.textPrimary }}
         >

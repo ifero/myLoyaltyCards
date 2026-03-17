@@ -175,9 +175,9 @@ export const getSession = async (): Promise<AuthResult<Session | null>> => {
 /**
  * Request a password reset email for the given address.
  *
- * Always returns success regardless of whether the email is actually
- * registered — this prevents user enumeration attacks. Supabase handles
- * the actual email delivery.
+ * Supabase does not reveal whether the email is actually registered,
+ * which prevents user enumeration attacks. Transport-level errors
+ * (network, rate limit) are still surfaced as `AuthError`.
  *
  * @param email - The user's email address.
  * @param redirectTo - Deep link URL that the reset email should redirect to.

@@ -22,15 +22,10 @@ import {
   View
 } from 'react-native';
 
+import { isValidEmail } from '@/core/auth/validation';
+
 import { requestPasswordReset } from '@/shared/supabase/auth';
 import { useTheme } from '@/shared/theme';
-
-// ---------------------------------------------------------------------------
-// Validation helpers
-// ---------------------------------------------------------------------------
-
-/** Loose RFC-5322-ish check — covers the practical 99 % of valid addresses. */
-const isValidEmail = (email: string): boolean => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim());
 
 // ---------------------------------------------------------------------------
 // Component
@@ -120,17 +115,34 @@ const ForgotPasswordScreen = () => {
         </Text>
 
         <Pressable
-          testID="back-to-sign-in-button"
-          onPress={() => router.back()}
+          testID="try-again-button"
+          onPress={() => setSubmitted(false)}
           accessibilityRole="button"
-          accessibilityLabel="Back to Sign In"
-          className="h-[52px] items-center justify-center rounded-xl"
+          accessibilityLabel="Try Again"
+          className="mb-4 h-[52px] items-center justify-center rounded-xl"
           style={({ pressed }) => ({
             backgroundColor: pressed ? theme.primaryDark : theme.primary,
             transform: [{ scale: pressed ? 0.98 : 1 }]
           })}
         >
-          <Text className="text-base font-semibold text-white">Back to Sign In</Text>
+          <Text className="text-base font-semibold text-white">Try Again</Text>
+        </Pressable>
+
+        <Pressable
+          testID="back-to-sign-in-button"
+          onPress={() => router.back()}
+          accessibilityRole="button"
+          accessibilityLabel="Back to Sign In"
+          className="h-[52px] items-center justify-center rounded-xl border"
+          style={({ pressed }) => ({
+            borderColor: theme.primary,
+            backgroundColor: pressed ? theme.surface : 'transparent',
+            transform: [{ scale: pressed ? 0.98 : 1 }]
+          })}
+        >
+          <Text className="text-base font-semibold" style={{ color: theme.primary }}>
+            Back to Sign In
+          </Text>
         </Pressable>
       </View>
     );

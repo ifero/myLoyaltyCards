@@ -24,15 +24,10 @@ import {
   View
 } from 'react-native';
 
+import { isValidEmail } from '@/core/auth/validation';
+
 import { signInWithEmail } from '@/shared/supabase/auth';
 import { useTheme } from '@/shared/theme';
-
-// ---------------------------------------------------------------------------
-// Validation helpers
-// ---------------------------------------------------------------------------
-
-/** Loose RFC-5322-ish check — covers the practical 99 % of valid addresses. */
-const isValidEmail = (email: string): boolean => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim());
 
 // ---------------------------------------------------------------------------
 // Component

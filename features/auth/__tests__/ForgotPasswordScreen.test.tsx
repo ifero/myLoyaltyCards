@@ -149,6 +149,24 @@ describe('ForgotPasswordScreen', () => {
     expect(mockBack).toHaveBeenCalled();
   });
 
+  it('Try Again button resets to form view', async () => {
+    mockRequestPasswordReset.mockResolvedValue({ success: true, data: undefined });
+
+    render(<ForgotPasswordScreen />);
+    fireEvent.changeText(screen.getByTestId('email-input'), 'test@example.com');
+    fireEvent.press(screen.getByTestId('send-reset-button'));
+
+    await waitFor(() => {
+      expect(screen.getByTestId('try-again-button')).toBeTruthy();
+    });
+
+    fireEvent.press(screen.getByTestId('try-again-button'));
+
+    // Should be back at the form view
+    expect(screen.getByTestId('email-input')).toBeTruthy();
+    expect(screen.getByTestId('send-reset-button')).toBeTruthy();
+  });
+
   // ---- Error handling ----
 
   it('displays server error message on requestPasswordReset failure', async () => {
