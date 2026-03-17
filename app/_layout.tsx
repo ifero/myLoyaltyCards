@@ -151,6 +151,18 @@ const RootLayoutContent = () => {
           }}
         />
         <Stack.Screen
+          name="forgot-password"
+          options={{
+            title: 'Forgot Password'
+          }}
+        />
+        <Stack.Screen
+          name="reset-password"
+          options={{
+            title: 'Reset Password'
+          }}
+        />
+        <Stack.Screen
           name="data-summary"
           options={{
             title: 'What We Collect'

@@ -2,7 +2,7 @@
 
 **Epic:** 6 - User Authentication & Privacy
 **Type:** User-Facing
-**Status:** ready-for-dev
+**Status:** in-progress
 
 ## Goal
 
@@ -104,18 +104,58 @@ Allow users who have forgotten their password to reset it via email, so they can
 
 ## Acceptance Checklist
 
-- [ ] "Forgot Password?" link on Sign In screen
-- [ ] `app/forgot-password.tsx` screen with email input
-- [ ] `requestPasswordReset` wrapper added to `shared/supabase/auth.ts`
-- [ ] Confirmation message shown regardless of whether email exists
-- [ ] Deep link `myloyaltycards://reset-password` registered in `app.json`
-- [ ] `app/reset-password.tsx` screen with new password form
-- [ ] `updatePassword` wrapper added to `shared/supabase/auth.ts`
-- [ ] Password validation matches registration rules
-- [ ] Session stored in SecureStore after reset
-- [ ] Unit tests for all new auth functions
-- [ ] No user enumeration possible
+- [x] "Forgot Password?" link on Sign In screen
+- [x] `app/forgot-password.tsx` screen with email input
+- [x] `requestPasswordReset` wrapper added to `shared/supabase/auth.ts`
+- [x] Confirmation message shown regardless of whether email exists
+- [x] Deep link `myloyaltycards://reset-password` registered in `app.json`
+- [x] `app/reset-password.tsx` screen with new password form
+- [x] `updatePassword` wrapper added to `shared/supabase/auth.ts`
+- [x] Password validation matches registration rules
+- [x] Session stored in SecureStore after reset
+- [x] Unit tests for all new auth functions
+- [x] No user enumeration possible
 - [ ] Flow tested on iOS and Android
+
+---
+
+## Dev Agent Record
+
+### Implementation Notes
+
+- `requestPasswordReset` and `updatePassword` wrappers added to `shared/supabase/auth.ts`
+- `ForgotPasswordScreen` created at `features/auth/ForgotPasswordScreen.tsx` — email entry + confirmation view
+- `ResetPasswordScreen` created at `features/auth/ResetPasswordScreen.tsx` — deep-link session establishment + new password form
+- "Forgot Password?" link added to `SignInScreen` below password field
+- Route files: `app/forgot-password.tsx`, `app/reset-password.tsx`
+- Stack screens registered in `app/_layout.tsx`
+- Feature barrel updated in `features/auth/index.ts`
+- Deep link scheme `myloyaltycards://` already registered in `app.json`
+- All validation matches registration rules (min 8 chars, 1 letter, 1 number)
+- No user enumeration: always shows same confirmation regardless of email existence
+
+### Tests Created
+
+- `shared/supabase/auth.test.ts` — 7 new tests for `requestPasswordReset` and `updatePassword`
+- `features/auth/__tests__/ForgotPasswordScreen.test.tsx` — 16 tests
+- `features/auth/__tests__/ResetPasswordScreen.test.tsx` — 16 tests
+- `features/auth/__tests__/SignInScreen.test.tsx` — 1 new test for forgot password link
+- **Total: 720 tests passing across 58 suites (0 failures)**
+
+### File List
+
+- `shared/supabase/auth.ts` (modified — added requestPasswordReset, updatePassword)
+- `shared/supabase/auth.test.ts` (modified — added 7 tests)
+- `features/auth/ForgotPasswordScreen.tsx` (new)
+- `features/auth/ResetPasswordScreen.tsx` (new)
+- `features/auth/index.ts` (modified — barrel export)
+- `features/auth/__tests__/ForgotPasswordScreen.test.tsx` (new)
+- `features/auth/__tests__/ResetPasswordScreen.test.tsx` (new)
+- `features/auth/__tests__/SignInScreen.test.tsx` (modified — 1 new test)
+- `features/auth/SignInScreen.tsx` (modified — added Forgot Password link)
+- `app/forgot-password.tsx` (new — route)
+- `app/reset-password.tsx` (new — route)
+- `app/_layout.tsx` (modified — registered 2 new Stack screens)
 
 ---
 

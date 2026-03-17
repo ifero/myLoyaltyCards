@@ -6,7 +6,15 @@
  * Validates typed AuthResult returns, error mapping, and guest mode.
  */
 
-import { continueAsGuest, getSession, signInWithEmail, signOut, signUp } from './auth';
+import {
+  continueAsGuest,
+  getSession,
+  requestPasswordReset,
+  signInWithEmail,
+  signOut,
+  signUp,
+  updatePassword
+} from './auth';
 
 // ---------------------------------------------------------------------------
 // Mock Supabase client
@@ -16,12 +24,16 @@ const mockSignInWithPassword = jest.fn();
 const mockSignUp = jest.fn();
 const mockSignOut = jest.fn();
 const mockGetSession = jest.fn();
+const mockResetPasswordForEmail = jest.fn();
+const mockUpdateUser = jest.fn();
 
 const mockSupabaseAuth = {
   signInWithPassword: mockSignInWithPassword,
   signUp: mockSignUp,
   signOut: mockSignOut,
-  getSession: mockGetSession
+  getSession: mockGetSession,
+  resetPasswordForEmail: mockResetPasswordForEmail,
+  updateUser: mockUpdateUser
 };
 
 jest.mock('./client', () => ({
@@ -303,6 +315,106 @@ describe('getSession', () => {
     const result = await getSession();
 
     expect(result.success).toBe(false);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// requestPasswordReset
+// ---------------------------------------------------------------------------
+
+describe('requestPasswordReset', () => {
+  beforeEach(() => {
+    mockResetPasswordForEmail.mockReset();
+  });
+
+  it('returns success when Supabase sends the reset email', async () => {
+    mockResetPasswordForEmail.mockResolvedValue({ data: {}, error: null });
+
+    const result = await requestPasswordReset('test@example.com');
+
+    expect(result.success).toBe(true);
+    expect(mockResetPasswordForEmail).toHaveBeenCalledWith('test@example.com', {
+      redirectTo: 'myloyaltycards://reset-password'
+    });
+  });
+
+  it('accepts a custom redirectTo parameter', async () => {
+    mockResetPasswordForEmail.mockResolvedValue({ data: {}, error: null });
+
+    await requestPasswordReset('test@example.com', 'custom://url');
+
+    expect(mockResetPasswordForEmail).toHaveBeenCalledWith('test@example.com', {
+      redirectTo: 'custom://url'
+    });
+  });
+
+  it('returns failure when Supabase returns an error', async () => {
+    mockResetPasswordForEmail.mockResolvedValue({
+      data: {},
+      error: { message: 'Rate limit exceeded' }
+    });
+
+    const result = await requestPasswordReset('test@example.com');
+
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      expect(result.error.message).toBe('Rate limit exceeded');
+    }
+  });
+
+  it('returns failure when network throws', async () => {
+    mockResetPasswordForEmail.mockRejectedValue(new Error('Network error'));
+
+    const result = await requestPasswordReset('test@example.com');
+
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      expect(result.error.message).toBe('Network error');
+    }
+  });
+});
+
+// ---------------------------------------------------------------------------
+// updatePassword
+// ---------------------------------------------------------------------------
+
+describe('updatePassword', () => {
+  beforeEach(() => {
+    mockUpdateUser.mockReset();
+  });
+
+  it('returns success when password is updated', async () => {
+    mockUpdateUser.mockResolvedValue({ data: { user: {} }, error: null });
+
+    const result = await updatePassword('NewPassword1');
+
+    expect(result.success).toBe(true);
+    expect(mockUpdateUser).toHaveBeenCalledWith({ password: 'NewPassword1' });
+  });
+
+  it('returns failure when Supabase returns an error', async () => {
+    mockUpdateUser.mockResolvedValue({
+      data: { user: null },
+      error: { message: 'Password too weak' }
+    });
+
+    const result = await updatePassword('weak');
+
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      expect(result.error.message).toBe('Password too weak');
+    }
+  });
+
+  it('returns failure when network throws', async () => {
+    mockUpdateUser.mockRejectedValue(new Error('Timeout'));
+
+    const result = await updatePassword('NewPassword1');
+
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      expect(result.error.message).toBe('Timeout');
+    }
   });
 });
 
