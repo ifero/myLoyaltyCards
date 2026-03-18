@@ -309,8 +309,8 @@ describe('migrateGuestCardsToCloud — batching', () => {
 
     // Should be 2 batches: BATCH_SIZE + 10
     expect(mockUpsertFn).toHaveBeenCalledTimes(2);
-    expect(mockUpsertFn.mock.calls[0][0]).toHaveLength(_BATCH_SIZE);
-    expect(mockUpsertFn.mock.calls[1][0]).toHaveLength(10);
+    expect(mockUpsertFn.mock.calls[0]![0]).toHaveLength(_BATCH_SIZE);
+    expect(mockUpsertFn.mock.calls[1]![0]).toHaveLength(10);
   });
 
   it('uploads single batch when cards <= BATCH_SIZE', async () => {
@@ -319,7 +319,7 @@ describe('migrateGuestCardsToCloud — batching', () => {
     await migrateGuestCardsToCloud(USER_ID, mockUpsertFn);
 
     expect(mockUpsertFn).toHaveBeenCalledTimes(1);
-    expect(mockUpsertFn.mock.calls[0][0]).toHaveLength(3);
+    expect(mockUpsertFn.mock.calls[0]![0]).toHaveLength(3);
   });
 });
 
