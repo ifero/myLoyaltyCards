@@ -173,6 +173,57 @@ export const getSession = async (): Promise<AuthResult<Session | null>> => {
 };
 
 /**
+ * Request a password reset email for the given address.
+ *
+ * Supabase does not reveal whether the email is actually registered,
+ * which prevents user enumeration attacks. Transport-level errors
+ * (network, rate limit) are still surfaced as `AuthError`.
+ *
+ * @param email - The user's email address.
+ * @param redirectTo - Deep link URL that the reset email should redirect to.
+ */
+export const requestPasswordReset = async (
+  email: string,
+  redirectTo = 'myloyaltycards://reset-password'
+): Promise<AuthResult<void>> => {
+  try {
+    const supabase = getSupabaseClient();
+    const { error } = await supabase.auth.resetPasswordForEmail(email, { redirectTo });
+
+    if (error) {
+      return { success: false, error: toAuthError(error) };
+    }
+
+    return { success: true, data: undefined };
+  } catch (err) {
+    return { success: false, error: toAuthError(err) };
+  }
+};
+
+/**
+ * Update the current user's password.
+ *
+ * This is called after the user follows a reset link and a new session has
+ * been established (via `exchangeCodeForSession` or deep-link hash).
+ *
+ * @param newPassword - The new password to set.
+ */
+export const updatePassword = async (newPassword: string): Promise<AuthResult<void>> => {
+  try {
+    const supabase = getSupabaseClient();
+    const { error } = await supabase.auth.updateUser({ password: newPassword });
+
+    if (error) {
+      return { success: false, error: toAuthError(error) };
+    }
+
+    return { success: true, data: undefined };
+  } catch (err) {
+    return { success: false, error: toAuthError(err) };
+  }
+};
+
+/**
  * Continue without creating an account (guest mode).
  *
  * Returns a local-only guest session. No Supabase API call is made.

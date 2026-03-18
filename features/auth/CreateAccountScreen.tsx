@@ -23,24 +23,12 @@ import {
   View
 } from 'react-native';
 
+import { isValidEmail, isValidPassword } from '@/core/auth/validation';
 import { setConsentGiven } from '@/core/privacy/consent-repository';
 
 import ConsentCheckbox from '@/shared/components/ConsentCheckbox';
 import { signUp } from '@/shared/supabase/auth';
 import { useTheme } from '@/shared/theme';
-
-// ---------------------------------------------------------------------------
-// Validation helpers
-// ---------------------------------------------------------------------------
-
-/** Loose RFC-5322-ish check — covers the practical 99 % of valid addresses. */
-const isValidEmail = (email: string): boolean => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim());
-
-/**
- * Password must be at least 8 characters, contain at least one letter and
- * one digit. Matches the story acceptance criteria exactly.
- */
-const isValidPassword = (pw: string): boolean => /^(?=.*[A-Za-z])(?=.*\d).{8,}$/.test(pw);
 
 // ---------------------------------------------------------------------------
 // Component

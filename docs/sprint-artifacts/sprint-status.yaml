@@ -1,5 +1,5 @@
 # generated: 2026-01-03
-# updated: 2026-02-19
+# updated: 2026-03-17
 # project: myLoyaltyCards
 # tracking_system: file-system
 # story_location: docs/sprint-artifacts
@@ -35,7 +35,7 @@
 # - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
 
 generated: 2026-01-03
-updated: 2026-03-11
+updated: 2026-03-17
 project: myLoyaltyCards
 tracking_system: file-system
 story_location: docs/sprint-artifacts
@@ -148,18 +148,33 @@ development_status:
   6-1-create-supabase-project-environments: done
   6-2-define-cloud-schema-rls: done
   6-3-configure-app-client: done
+<<<<<<< Updated upstream
   6-4-privacy-policy-consent-flow: done
   6-5-implement-guest-mode: done
   6-6-create-account-email: done
   6-7-sign-in-email: done
   # Sprint 8 stories
-  6-8-password-reset: ready-for-dev
-  6-9-logout: ready-for-dev
+  6-8-password-reset: in-progress
+  6-9-logout: done
   6-10-delete-account: ready-for-dev
-  6-11-privacy-consent: in-progress
+  6-11-privacy-consent: done
   6-12-sign-in-with-apple: backlog
   6-13-sign-in-with-google: backlog
   6-14-upgrade-guest-to-account: ready-for-dev
+=======
+  6-4-privacy-policy-consent-flow: ready-for-dev
+  6-5-implement-guest-mode: ready-for-dev
+  6-6-create-account-email: ready-for-dev
+  6-7-sign-in-email: ready-for-dev
+  # Out-of-sprint stories (still in epic, not planned for this sprint)
+  6-8-password-reset: backlog
+  6-9-logout: backlog
+  6-10-delete-account: backlog
+  6-11-privacy-consent: backlog
+  6-5-sign-in-with-apple: backlog
+  6-6-sign-in-with-google: backlog
+  6-7-upgrade-guest-to-account: backlog
+>>>>>>> Stashed changes
   epic-6-retrospective: optional
 
   # Epic 7: Cloud Synchronization

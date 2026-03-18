@@ -227,6 +227,13 @@ describe('SignInScreen', () => {
     expect(mockPush).toHaveBeenCalledWith('/create-account');
   });
 
+  it('navigates to forgot-password screen when forgot password link is pressed', () => {
+    render(<SignInScreen />);
+    expect(screen.getByTestId('forgot-password-link')).toBeTruthy();
+    fireEvent.press(screen.getByTestId('forgot-password-link'));
+    expect(mockPush).toHaveBeenCalledWith('/forgot-password');
+  });
+
   // ---- Loading state ----
 
   it('shows loading indicator while submitting', async () => {
