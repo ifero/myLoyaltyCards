@@ -9,6 +9,8 @@ import { useCameraPermissions } from 'expo-camera';
 import { useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
 
+import MigrationBanner from '@/features/auth/MigrationBanner';
+import { useGuestMigration } from '@/features/auth/useGuestMigration';
 import { CardList, useCards } from '@/features/cards';
 import { OnboardingOverlay } from '@/features/onboarding';
 import { isOnboardingCompleted, completeOnboarding } from '@/features/settings';
@@ -18,6 +20,7 @@ const HomeScreen = () => {
   const [visible, setVisible] = useState(false);
   const router = useRouter();
   const [, requestPermission] = useCameraPermissions();
+  const { status, message, retry, dismiss } = useGuestMigration();
 
   useEffect(() => {
     if (!isLoading) {
@@ -46,6 +49,7 @@ const HomeScreen = () => {
 
   return (
     <>
+      <MigrationBanner status={status} message={message} onRetry={retry} onDismiss={dismiss} />
       <CardList />
       <OnboardingOverlay
         visible={visible}

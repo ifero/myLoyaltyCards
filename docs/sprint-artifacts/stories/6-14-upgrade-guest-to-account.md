@@ -2,7 +2,7 @@
 
 **Epic:** 6 - User Authentication & Privacy
 **Type:** User-Facing
-**Status:** ready-for-dev
+**Status:** in-progress
 
 ## Goal
 
@@ -138,20 +138,74 @@ When a guest user creates an account (via any method: email, Apple, or Google), 
 
 ## Acceptance Checklist
 
-- [ ] `core/auth/guest-migration.ts` created with `migrateGuestCardsToCloud()`
-- [ ] Migration triggered once after first successful authentication (email, Apple, Google)
-- [ ] `guestMigrationCompleted` flag checked before running migration
-- [ ] Cards uploaded in batches of 50 via Supabase upsert
-- [ ] Upsert uses `ON CONFLICT (id)` — idempotent
-- [ ] Inline migration banner shown (non-blocking)
-- [ ] Success confirmation shown after completion
-- [ ] Partial failure recorded and retry available
-- [ ] `guestMigrationCompleted` flag set after successful migration
-- [ ] Local cards unaffected regardless of migration outcome
-- [ ] Unit tests passing (success, partial failure, skip if already migrated)
+- [x] `core/auth/guest-migration.ts` created with `migrateGuestCardsToCloud()`
+- [x] Migration triggered once after first successful authentication (email, Apple, Google)
+- [x] `guestMigrationCompleted` flag checked before running migration
+- [x] Cards uploaded in batches of 50 via Supabase upsert
+- [x] Upsert uses `ON CONFLICT (id)` — idempotent
+- [x] Inline migration banner shown (non-blocking)
+- [x] Success confirmation shown after completion
+- [x] Partial failure recorded and retry available
+- [x] `guestMigrationCompleted` flag set after successful migration
+- [x] Local cards unaffected regardless of migration outcome
+- [x] Unit tests passing (success, partial failure, skip if already migrated)
 - [ ] Tested on iOS and Android
 
 ---
 
 **Linked Epic:** Epic 6
 **Sprint:** Sprint 8 — 2026-03-12
+
+---
+
+## Dev Agent Record
+
+### Implementation Summary
+
+**Migration Service** (`core/auth/guest-migration.ts`):
+
+- `migrateGuestCardsToCloud(userId)` — reads all local SQLite cards, upserts to Supabase in batches of 50
+- `isMigrationCompleted()` — checks SecureStore flag before running
+- `setMigrationFlag()` — persists `guestMigrationCompleted` with timestamp and userId
+- `toCloudRow()` — maps `LoyaltyCard` (camelCase) → cloud row (snake_case + `user_id`)
+- SecureStore lazy loader with in-memory fallback (same pattern as `guest-session-repository.ts`)
+- Full error handling: invalid userId, DB read failure, partial batch failure
+
+**Hook** (`features/auth/useGuestMigration.ts`):
+
+- `useGuestMigration()` — manages migration lifecycle (idle → migrating → success/error)
+- Auto-triggers on mount by checking `getSession()` for authenticated user
+- Manual `trigger(userId)` and `retry()` callbacks
+- Auto-dismiss success banner after 3 seconds
+- Cleanup timer on unmount
+
+**Banner UI** (`features/auth/MigrationBanner.tsx`):
+
+- Non-blocking inline banner with spinner (migrating), success message, or error + retry
+- Accessibility: `accessibilityRole="alert"`, `accessibilityLiveRegion="polite"`
+- Theme-aware colors via `useTheme()`
+
+**Integration** (`app/index.tsx`):
+
+- `MigrationBanner` rendered above `CardList` on HomeScreen
+- Hook auto-detects auth state, runs migration if needed
+
+### Tests Created
+
+- `core/auth/guest-migration.test.ts` — 22 tests (service layer)
+- `features/auth/__tests__/useGuestMigration.test.ts` — 12 tests (hook)
+- `features/auth/__tests__/MigrationBanner.test.tsx` — 9 tests (component)
+- **Total: 43 new tests, all passing**
+
+### File List
+
+- `core/auth/guest-migration.ts` (new)
+- `core/auth/guest-migration.test.ts` (new)
+- `features/auth/useGuestMigration.ts` (new)
+- `features/auth/MigrationBanner.tsx` (new)
+- `features/auth/index.ts` (modified — exports)
+- `features/auth/__tests__/useGuestMigration.test.ts` (new)
+- `features/auth/__tests__/MigrationBanner.test.tsx` (new)
+- `app/index.tsx` (modified — banner integration)
+- `docs/sprint-artifacts/stories/6-14-upgrade-guest-to-account.md` (updated)
+- `docs/sprint-artifacts/sprint-status.yaml` (updated)
