@@ -1,0 +1,38 @@
+docs/sprint-artifacts/sprint-status.yaml
+  1f876c5fa8ef15d9 164
+docs/sprint-artifacts/stories/6-15-migration-banner-polish.md
+  1f876c5fa8ef15d9 1-74
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.1.15",
+  "base_commit_sha": "d5bb300fea415b122f46dbcf7e9a6efaf9d2ad6c",
+  "prompts": {
+    "1f876c5fa8ef15d9": {
+      "agent_id": {
+        "tool": "github-copilot",
+        "id": "5624746a-8ae6-4f3f-96ac-ed16df05c726",
+        "model": "copilot/claude-opus-4.6"
+      },
+      "human_author": "Andrea Pacino <andrea.pacino87@gmail.com>",
+      "messages": [],
+      "total_additions": 75,
+      "total_deletions": 0,
+      "accepted_lines": 75,
+      "overriden_lines": 0
+    },
+    "27f621f798b69469": {
+      "agent_id": {
+        "tool": "github-copilot",
+        "id": "3ba7fa17-7048-4d38-821a-c7f02818e5c4",
+        "model": "copilot/claude-opus-4.6"
+      },
+      "human_author": "Andrea Pacino <andrea.pacino87@gmail.com>",
+      "messages": [],
+      "total_additions": 0,
+      "total_deletions": 0,
+      "accepted_lines": 12,
+      "overriden_lines": 0
+    }
+  }
+}
