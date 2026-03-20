@@ -1,0 +1,52 @@
+docs/sprint-artifacts/stories/7-6-resolve-sync-conflicts.md
+  fbc060f4496611a0 6-271
+docs/sprint-artifacts/stories/6-10-delete-account.md
+  fbc060f4496611a0 6-7,9,11,13-15,17,21-249,251-256,260-353,356-367,369
+docs/sprint-artifacts/stories/7-3-sync-card-changes.md
+  fbc060f4496611a0 1-289
+docs/sprint-artifacts/stories/7-2-download-cards-from-cloud.md
+  fbc060f4496611a0 1-274
+docs/sprint-artifacts/stories/7-1-upload-cards-to-cloud.md
+  fbc060f4496611a0 1-282
+docs/sprint-artifacts/stories/7-4-implement-delta-sync.md
+  fbc060f4496611a0 1-295
+docs/sprint-artifacts/stories/7-5-handle-offline-queue.md
+  fbc060f4496611a0 1-314
+docs/sprint-artifacts/stories/7-7-display-sync-status.md
+  fbc060f4496611a0 1-331
+docs/sprint-artifacts/sprint-status.yaml
+  fbc060f4496611a0 38,47-51,55-63,69-76,79-91,93-100,178,183,185-190
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.1.15",
+  "base_commit_sha": "0eb84c7a50fd048ea36324d0a303119e9dccf28b",
+  "prompts": {
+    "27f621f798b69469": {
+      "agent_id": {
+        "tool": "github-copilot",
+        "id": "3ba7fa17-7048-4d38-821a-c7f02818e5c4",
+        "model": "copilot/claude-opus-4.6"
+      },
+      "human_author": "Andrea Pacino <andrea.pacino87@gmail.com>",
+      "messages": [],
+      "total_additions": 0,
+      "total_deletions": 0,
+      "accepted_lines": 12,
+      "overriden_lines": 0
+    },
+    "fbc060f4496611a0": {
+      "agent_id": {
+        "tool": "github-copilot",
+        "id": "ee724c48-4d06-4d3e-925e-3f4bc4349439",
+        "model": "copilot/claude-opus-4.6"
+      },
+      "human_author": "Andrea Pacino <andrea.pacino87@gmail.com>",
+      "messages": [],
+      "total_additions": 2726,
+      "total_deletions": 159,
+      "accepted_lines": 2458,
+      "overriden_lines": 0
+    }
+  }
+}
