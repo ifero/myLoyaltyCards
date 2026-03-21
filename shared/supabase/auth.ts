@@ -242,8 +242,13 @@ export const deleteAccount = async (): Promise<AuthResult<void>> => {
   try {
     const supabase = getSupabaseClient();
     const {
-      data: { session }
+      data: { session },
+      error: sessionError
     } = await supabase.auth.getSession();
+
+    if (sessionError) {
+      return { success: false, error: toAuthError(sessionError) };
+    }
 
     if (!session) {
       return { success: false, error: { message: 'Not authenticated' } };
@@ -258,7 +263,11 @@ export const deleteAccount = async (): Promise<AuthResult<void>> => {
     }
 
     // Clear local session after successful server-side deletion
-    await supabase.auth.signOut();
+    const { error: signOutError } = await supabase.auth.signOut({ scope: 'local' });
+    if (signOutError) {
+      return { success: false, error: toAuthError(signOutError) };
+    }
+
     return { success: true, data: undefined };
   } catch (err) {
     return { success: false, error: toAuthError(err) };

@@ -35,7 +35,7 @@
 # - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
 
 generated: 2026-01-03
-updated: 2026-03-20
+updated: 2026-03-21
 project: myLoyaltyCards
 tracking_system: file-system
 story_location: docs/sprint-artifacts
@@ -171,7 +171,7 @@ development_status:
   # Sprint 8 stories
   6-8-password-reset: done
   6-9-logout: done
-  6-10-delete-account: review
+  6-10-delete-account: done
   6-11-privacy-consent: done
   6-12-sign-in-with-apple: backlog
   6-13-sign-in-with-google: backlog

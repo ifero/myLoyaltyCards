@@ -6,6 +6,8 @@
  * Validates typed AuthResult returns, error mapping, and guest mode.
  */
 
+import { getCardCount } from '@/core/database/card-repository';
+
 import {
   continueAsGuest,
   deleteAccount,
@@ -28,6 +30,8 @@ const mockGetSession = jest.fn();
 const mockResetPasswordForEmail = jest.fn();
 const mockUpdateUser = jest.fn();
 const mockFunctionsInvoke = jest.fn();
+const mockGetCardCount = jest.fn();
+const mockDeleteAllCards = jest.fn();
 
 const mockSupabaseAuth = {
   signInWithPassword: mockSignInWithPassword,
@@ -43,6 +47,11 @@ jest.mock('./client', () => ({
     auth: mockSupabaseAuth,
     functions: { invoke: mockFunctionsInvoke }
   }))
+}));
+
+jest.mock('@/core/database/card-repository', () => ({
+  getCardCount: (...args: unknown[]) => mockGetCardCount(...args),
+  deleteAllCards: (...args: unknown[]) => mockDeleteAllCards(...args)
 }));
 
 // ---------------------------------------------------------------------------
@@ -488,6 +497,8 @@ describe('deleteAccount', () => {
     mockGetSession.mockReset();
     mockFunctionsInvoke.mockReset();
     mockSignOut.mockReset();
+    mockGetCardCount.mockReset();
+    mockDeleteAllCards.mockReset();
   });
 
   it('calls Edge Function with access token and signs out on success', async () => {
@@ -570,5 +581,56 @@ describe('deleteAccount', () => {
       expect(result.error.message).toBe('Session fetch failed');
     }
     expect(mockFunctionsInvoke).not.toHaveBeenCalled();
+  });
+
+  it('returns failure when getSession returns an auth error', async () => {
+    mockGetSession.mockResolvedValue({
+      data: { session: null },
+      error: { message: 'Session lookup failed' }
+    });
+
+    const result = await deleteAccount();
+
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      expect(result.error.message).toBe('Session lookup failed');
+    }
+    expect(mockFunctionsInvoke).not.toHaveBeenCalled();
+    expect(mockSignOut).not.toHaveBeenCalled();
+  });
+
+  it('returns failure when local signOut fails after cloud deletion', async () => {
+    mockGetSession.mockResolvedValue({
+      data: { session: MOCK_SESSION },
+      error: null
+    });
+    mockFunctionsInvoke.mockResolvedValue({ data: { success: true }, error: null });
+    mockSignOut.mockResolvedValue({ error: { message: 'Sign-out failed' } });
+
+    const result = await deleteAccount();
+
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      expect(result.error.message).toBe('Sign-out failed');
+    }
+  });
+
+  it('keeps local SQLite cards unchanged after successful account deletion flow', async () => {
+    mockGetSession.mockResolvedValue({
+      data: { session: MOCK_SESSION },
+      error: null
+    });
+    mockFunctionsInvoke.mockResolvedValue({ data: { success: true }, error: null });
+    mockSignOut.mockResolvedValue({ error: null });
+    mockGetCardCount.mockResolvedValue(3);
+
+    const beforeCount = await getCardCount();
+    const result = await deleteAccount();
+    const afterCount = await getCardCount();
+
+    expect(result.success).toBe(true);
+    expect(beforeCount).toBe(3);
+    expect(afterCount).toBe(3);
+    expect(mockDeleteAllCards).not.toHaveBeenCalled();
   });
 });

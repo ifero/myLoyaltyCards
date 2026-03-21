@@ -1,5 +1,5 @@
 import { useRouter } from 'expo-router';
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
@@ -40,6 +40,15 @@ const SettingsScreen = () => {
   const [isDeleting, setIsDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
   const [deleteSuccess, setDeleteSuccess] = useState(false);
+  const deleteSuccessTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (deleteSuccessTimeoutRef.current) {
+        clearTimeout(deleteSuccessTimeoutRef.current);
+      }
+    };
+  }, []);
 
   const confirmSignOut = async () => {
     setSignOutError(null);
@@ -95,7 +104,11 @@ const SettingsScreen = () => {
     setDeleteSuccess(true);
 
     // Brief delay so user sees the success banner before navigating
-    setTimeout(() => {
+    if (deleteSuccessTimeoutRef.current) {
+      clearTimeout(deleteSuccessTimeoutRef.current);
+    }
+
+    deleteSuccessTimeoutRef.current = setTimeout(() => {
       setDeleteSuccess(false);
       router.replace('/');
     }, 2000);

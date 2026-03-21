@@ -2,7 +2,7 @@
 
 **Epic:** 6 - User Authentication & Privacy
 **Type:** User-Facing
-**Status:** review
+**Status:** done
 **Sprint:** 9
 **FRs Covered:** FR64, FR65
 
@@ -379,18 +379,36 @@ No issues encountered. All tests pass on first run.
 - **Task 5**: Added `deleteAccount()` to `shared/supabase/auth.ts` following existing `AuthResult<T>` pattern. Calls Edge Function with session access token, signs out on success only. 5 unit tests added (success, error, no session, network throw, getSession throw).
 - **Task 6**: Built multi-step Delete Account UI in SettingsScreen — Step 1 Alert dialog explaining consequences, Step 2 Modal with TextInput requiring "DELETE" confirmation, disabled button until exact match, loading spinner via ActivityIndicator, success banner, error display with retry. 14 unit tests added covering visibility, confirmation flow, execution.
 - **Task 7**: Auth state transition handled by existing `onAuthStateChange` listener (signOut triggers `SIGNED_OUT` event → guest state). Navigation to card list via `router.replace('/')`. Local SQLite cards are untouched — no SQLite operations in delete flow.
+- **Code Review Fixes (2026-03-21)**: Hardened Edge Function with POST-only guard (405 for unsupported methods), improved `deleteAccount()` error handling for `getSession` and `signOut`, and added timeout cleanup in Settings screen to avoid stale async navigation updates.
+- **Task 7.5 evidence**: Added test `keeps local SQLite cards unchanged after successful account deletion flow` in `shared/supabase/auth.test.ts`.
 
 ### Change Log
 
 - 2026-03-21: Story 6.10 implemented — all 7 tasks complete. 19 new tests (5 auth + 14 UI). Full suite: 62 suites, 795 passed, 0 failed.
+- 2026-03-21: Code review remediation applied — fixed 3 HIGH + 3 MEDIUM findings. Added 3 auth tests (session error path, signOut error path, local SQLite count unchanged).
 
 ### File List
 
 - `supabase/functions/_shared/cors.ts` — NEW: Shared CORS headers for Edge Functions
 - `supabase/functions/delete-account/index.ts` — NEW: Deno Edge Function for account deletion
 - `shared/supabase/auth.ts` — MODIFIED: Added `deleteAccount()` function
-- `shared/supabase/auth.test.ts` — MODIFIED: Added 5 `deleteAccount` unit tests + `functions.invoke` mock
-- `features/settings/SettingsScreen.tsx` — MODIFIED: Added Delete Account button, multi-step confirmation modal, success banner
+- `shared/supabase/auth.test.ts` — MODIFIED: Added 8 `deleteAccount` tests (including session/signOut error paths + SQLite count unchanged) + `functions.invoke` mock
+- `features/settings/SettingsScreen.tsx` — MODIFIED: Added Delete Account button, multi-step confirmation modal, success banner, and timeout cleanup on unmount
 - `features/settings/SettingsScreen.test.tsx` — MODIFIED: Added 14 Story 6.10 tests (visibility, confirmation, execution)
 - `docs/sprint-artifacts/sprint-status.yaml` — MODIFIED: 6-10 status → in-progress → review
 - `docs/sprint-artifacts/stories/6-10-delete-account.md` — MODIFIED: All tasks marked [x], Dev Agent Record filled
+
+### Senior Developer Review (AI)
+
+**Reviewer:** Amelia (Dev Agent)
+**Date:** 2026-03-21
+**Outcome:** Approved after fixes
+
+Resolved findings:
+
+- HIGH: Missing method guard in Edge Function → fixed (`POST` required, `405` otherwise)
+- HIGH: `deleteAccount()` returned success even if local sign-out failed → fixed (explicit signOut error handling)
+- HIGH: Task 7.5 evidence gap → fixed (added SQLite card count unchanged test)
+- MEDIUM: Session error fidelity in `deleteAccount()` → fixed (now maps `getSession` error via `toAuthError`)
+- MEDIUM: Timeout cleanup risk in settings deletion flow → fixed (`useRef` + cleanup in `useEffect`)
+- MEDIUM: Git/story traceability discrepancy during review runtime → documented; branch currently clean
