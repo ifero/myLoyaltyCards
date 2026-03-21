@@ -224,6 +224,57 @@ export const updatePassword = async (newPassword: string): Promise<AuthResult<vo
 };
 
 /**
+ * Permanently delete the authenticated user's cloud account and all
+ * associated data (GDPR right to erasure).
+ *
+ * Calls the `delete-account` Supabase Edge Function which uses the
+ * service-role key to invoke `auth.admin.deleteUser()`. ON DELETE CASCADE
+ * in the DB schema handles removal of loyalty_cards, users profile, and
+ * privacy_log rows.
+ *
+ * On success the local Supabase session is cleared via `signOut()`.
+ * Local SQLite cards are intentionally preserved — the user continues
+ * in guest mode.
+ *
+ * @returns `AuthResult<void>` — success means the account was fully erased.
+ */
+export const deleteAccount = async (): Promise<AuthResult<void>> => {
+  try {
+    const supabase = getSupabaseClient();
+    const {
+      data: { session },
+      error: sessionError
+    } = await supabase.auth.getSession();
+
+    if (sessionError) {
+      return { success: false, error: toAuthError(sessionError) };
+    }
+
+    if (!session) {
+      return { success: false, error: { message: 'Not authenticated' } };
+    }
+
+    const { error } = await supabase.functions.invoke('delete-account', {
+      headers: { Authorization: `Bearer ${session.access_token}` }
+    });
+
+    if (error) {
+      return { success: false, error: toAuthError(error) };
+    }
+
+    // Clear local session after successful server-side deletion
+    const { error: signOutError } = await supabase.auth.signOut({ scope: 'local' });
+    if (signOutError) {
+      return { success: false, error: toAuthError(signOutError) };
+    }
+
+    return { success: true, data: undefined };
+  } catch (err) {
+    return { success: false, error: toAuthError(err) };
+  }
+};
+
+/**
  * Continue without creating an account (guest mode).
  *
  * Returns a local-only guest session. No Supabase API call is made.

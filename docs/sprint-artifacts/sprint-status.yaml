@@ -35,7 +35,7 @@
 # - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
 
 generated: 2026-01-03
-updated: 2026-03-18
+updated: 2026-03-21
 project: myLoyaltyCards
 tracking_system: file-system
 story_location: docs/sprint-artifacts
@@ -44,45 +44,60 @@ story_location: docs/sprint-artifacts
 # LAST SPRINT (completed)
 # ============================================
 last_sprint:
-  number: 7
-  name: 'Sprint 7: User Authentication & Privacy'
-  goal: 'Implement Epic 6: User Authentication & Privacy (Supabase, guest mode, email/SSO, privacy consent)'
-  start_date: 2026-02-27
-  end_date: 2026-03-11
+  number: 8
+  name: 'Sprint 8: Auth Completion — Account Lifecycle & Privacy'
+  goal: 'Complete Epic 6: Password reset, logout, delete account, upgrade guest, and privacy consent'
+  start_date: 2026-03-12
+  end_date: 2026-03-19
   status: completed
   epic: 6
   stories:
-    - 6-1-create-supabase-project-environments
-    - 6-2-define-cloud-schema-rls
-    - 6-3-configure-app-client
-    - 6-4-privacy-policy-consent-flow
-    - 6-5-implement-guest-mode
-    - 6-6-create-account-email
-    - 6-7-sign-in-email
+    - 6-8-password-reset
+    - 6-9-logout
+    - 6-11-privacy-consent
+    - 6-14-upgrade-guest-to-account
+  carryover:
+    - 6-10-delete-account # Not started — Edge Function infra prerequisite
+  notes: |
+    4/5 stories completed. 6.10 intentionally last in wave order (needs Edge Function)
+    and was not picked up. Carried over to Sprint 9.
 
 # ============================================
 # CURRENT SPRINT
 # ============================================
 current_sprint:
-  number: 8
-  name: 'Sprint 8: Auth Completion — SSO, Account Lifecycle & Privacy'
-  goal: 'Complete Epic 6: Sign in with Apple/Google, password reset, logout, delete account, upgrade guest, and privacy consent'
-  start_date: 2026-03-12
-  end_date: 2026-03-19
-  duration: 1 week
-  epic: 6
+  number: 9
+  name: 'Sprint 9: Cloud Sync & Epic 6 Completion'
+  goal: 'Complete Epic 6 (Delete Account) and deliver full Epic 7 (Cloud Synchronization)'
+  status: in-progress
+  start_date: 2026-03-20
+  end_date: 2026-04-02
+  duration: 2 weeks
+  epics: [6, 7]
   stories:
-    - 6-8-password-reset
-    - 6-9-logout
     - 6-10-delete-account
-    - 6-11-privacy-consent
-    - 6-14-upgrade-guest-to-account
+    - 7-1-upload-cards-to-cloud
+    - 7-2-download-cards-from-cloud
+    - 7-3-sync-card-changes
+    - 7-4-implement-delta-sync
+    - 7-5-handle-offline-queue
+    - 7-6-resolve-sync-conflicts
+    - 7-7-display-sync-status
+  filler: # Nice-to-have, not mandatory
+    - 6-15-migration-banner-polish
+    - 1-6-extend-semantic-error-colors
+  deferred_post_mvp:
+    - 6-12-sign-in-with-apple
+    - 6-13-sign-in-with-google
   # Recommended pick-up order (dependency chain — Amelia):
-  #   Wave 1 (parallel, no deps):  6-9-logout, 6-11-privacy-consent
-  #   Wave 2 (parallel, no deps):  6-8-password-reset
-  #   Wave 3 (needs auth solid):   6-14-upgrade-guest-to-account
-  #   Wave 4 (needs Edge Fn infra): 6-10-delete-account  ← pick up LAST
-  #   6-12 (Apple) + 6-13 (Google): moved to post-MVP backlog
+  #   Week 1:
+  #     Wave 1 (parallel): 6-10 (Delete Account) + 7-1 (Upload) + 7-2 (Download)
+  #     Wave 2:            7-3 (Sync Card Changes)
+  #   Week 2:
+  #     Wave 3 (parallel): 7-4 (Delta Sync) + 7-5 (Offline Queue)
+  #     Wave 4 (parallel): 7-6 (Conflict Resolution) + 7-7 (Sync Status UI)
+  #     Filler (if time):  6-15 + 1-6
+  #   Note: 6.10 requires Edge Function scaffold as first task in Wave 1
 
 development_status:
   # ============================================
@@ -156,23 +171,23 @@ development_status:
   # Sprint 8 stories
   6-8-password-reset: done
   6-9-logout: done
-  6-10-delete-account: ready-for-dev
+  6-10-delete-account: done
   6-11-privacy-consent: done
   6-12-sign-in-with-apple: backlog
   6-13-sign-in-with-google: backlog
-  6-14-upgrade-guest-to-account: in-progress
+  6-14-upgrade-guest-to-account: done
   6-15-migration-banner-polish: drafted # follow-up from 6.14 review — L1/L2/L3
   epic-6-retrospective: optional
 
   # Epic 7: Cloud Synchronization
-  epic-7: backlog
-  7-1-upload-cards-to-cloud: backlog
-  7-2-download-cards-from-cloud: backlog
-  7-3-sync-card-changes: backlog
-  7-4-implement-delta-sync: backlog
-  7-5-handle-offline-queue: backlog
-  7-6-resolve-sync-conflicts: backlog
-  7-7-display-sync-status: backlog
+  epic-7: in-progress
+  7-1-upload-cards-to-cloud: ready-for-dev
+  7-2-download-cards-from-cloud: ready-for-dev
+  7-3-sync-card-changes: ready-for-dev
+  7-4-implement-delta-sync: ready-for-dev
+  7-5-handle-offline-queue: ready-for-dev
+  7-6-resolve-sync-conflicts: ready-for-dev
+  7-7-display-sync-status: ready-for-dev
   epic-7-retrospective: optional
 
   # Epic 8: Settings & Preferences

@@ -47,8 +47,10 @@ jest.mock('@/core/catalogue/catalogue-repository', () => ({
 }));
 
 const mockSignOut = jest.fn();
+const mockDeleteAccount = jest.fn();
 jest.mock('@/shared/supabase/auth', () => ({
-  signOut: (...args: unknown[]) => mockSignOut(...args)
+  signOut: (...args: unknown[]) => mockSignOut(...args),
+  deleteAccount: (...args: unknown[]) => mockDeleteAccount(...args)
 }));
 
 const mockUseAuthState = jest.fn();
@@ -328,5 +330,230 @@ describe('SettingsScreen — Story 6-11: Data & Privacy section (loading)', () =
   it('hides the Data & Privacy section while loading', () => {
     const { queryByTestId } = render(<SettingsScreen />);
     expect(queryByTestId('settings-data-privacy-section')).toBeNull();
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Story 6.10: Delete Account — Visibility
+// ---------------------------------------------------------------------------
+
+describe('SettingsScreen — Story 6.10: Delete Account visibility', () => {
+  it('shows Delete Account button when authenticated', () => {
+    mockUseAuthState.mockReturnValue({ authState: 'authenticated', isAuthenticated: true });
+    const { getByTestId } = render(<SettingsScreen />);
+    expect(getByTestId('settings-delete-account-button')).toBeTruthy();
+  });
+
+  it('hides Delete Account button in guest mode', () => {
+    mockUseAuthState.mockReturnValue({ authState: 'guest', isAuthenticated: false });
+    const { queryByTestId } = render(<SettingsScreen />);
+    expect(queryByTestId('settings-delete-account-section')).toBeNull();
+  });
+
+  it('hides Delete Account button while loading', () => {
+    mockUseAuthState.mockReturnValue({ authState: 'loading', isAuthenticated: false });
+    const { queryByTestId } = render(<SettingsScreen />);
+    expect(queryByTestId('settings-delete-account-section')).toBeNull();
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Story 6.10: Delete Account — Multi-step confirmation
+// ---------------------------------------------------------------------------
+
+describe('SettingsScreen — Story 6.10: Multi-step confirmation', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    mockUseAuthState.mockReturnValue({ authState: 'authenticated', isAuthenticated: true });
+  });
+
+  it('shows Step 1 alert when Delete Account is pressed', () => {
+    const { getByTestId } = render(<SettingsScreen />);
+
+    fireEvent.press(getByTestId('settings-delete-account-button'));
+
+    expect(Alert.alert).toHaveBeenCalledWith(
+      'Delete Account?',
+      expect.stringContaining('permanently delete'),
+      expect.arrayContaining([
+        expect.objectContaining({ text: 'Cancel', style: 'cancel' }),
+        expect.objectContaining({
+          text: 'Continue',
+          style: 'destructive',
+          onPress: expect.any(Function)
+        })
+      ])
+    );
+  });
+
+  it('opens confirmation modal on Step 1 Continue', () => {
+    const { getByTestId } = render(<SettingsScreen />);
+
+    fireEvent.press(getByTestId('settings-delete-account-button'));
+
+    const alertCall = (Alert.alert as jest.Mock).mock.calls[0];
+    const continueBtn = alertCall[2].find((btn: { text: string }) => btn.text === 'Continue');
+
+    act(() => {
+      continueBtn.onPress();
+    });
+
+    expect(getByTestId('delete-account-modal')).toBeTruthy();
+    expect(getByTestId('delete-confirm-input')).toBeTruthy();
+  });
+
+  it('has delete button disabled when confirm text is empty', () => {
+    const { getByTestId } = render(<SettingsScreen />);
+
+    fireEvent.press(getByTestId('settings-delete-account-button'));
+    const alertCall = (Alert.alert as jest.Mock).mock.calls[0];
+    const continueBtn = alertCall[2].find((btn: { text: string }) => btn.text === 'Continue');
+    act(() => {
+      continueBtn.onPress();
+    });
+
+    const deleteBtn = getByTestId('delete-confirm-button');
+    expect(deleteBtn.props.accessibilityState?.disabled ?? deleteBtn.props.disabled).toBeTruthy();
+  });
+
+  it('has delete button disabled when confirm text is wrong', () => {
+    const { getByTestId } = render(<SettingsScreen />);
+
+    fireEvent.press(getByTestId('settings-delete-account-button'));
+    const alertCall = (Alert.alert as jest.Mock).mock.calls[0];
+    const continueBtn = alertCall[2].find((btn: { text: string }) => btn.text === 'Continue');
+    act(() => {
+      continueBtn.onPress();
+    });
+
+    fireEvent.changeText(getByTestId('delete-confirm-input'), 'WRONG');
+
+    const deleteBtn = getByTestId('delete-confirm-button');
+    expect(deleteBtn.props.accessibilityState?.disabled ?? deleteBtn.props.disabled).toBeTruthy();
+  });
+
+  it('enables delete button when confirm text is "DELETE"', () => {
+    const { getByTestId } = render(<SettingsScreen />);
+
+    fireEvent.press(getByTestId('settings-delete-account-button'));
+    const alertCall = (Alert.alert as jest.Mock).mock.calls[0];
+    const continueBtn = alertCall[2].find((btn: { text: string }) => btn.text === 'Continue');
+    act(() => {
+      continueBtn.onPress();
+    });
+
+    fireEvent.changeText(getByTestId('delete-confirm-input'), 'DELETE');
+
+    const deleteBtn = getByTestId('delete-confirm-button');
+    // When enabled: disabled prop is either false or undefined
+    const isDisabled = deleteBtn.props.accessibilityState?.disabled ?? deleteBtn.props.disabled;
+    expect(isDisabled).toBeFalsy();
+  });
+
+  it('closes modal when Cancel is pressed in confirmation step', () => {
+    const { getByTestId, queryByTestId } = render(<SettingsScreen />);
+
+    fireEvent.press(getByTestId('settings-delete-account-button'));
+    const alertCall = (Alert.alert as jest.Mock).mock.calls[0];
+    const continueBtn = alertCall[2].find((btn: { text: string }) => btn.text === 'Continue');
+    act(() => {
+      continueBtn.onPress();
+    });
+
+    fireEvent.press(getByTestId('delete-cancel-button'));
+
+    expect(queryByTestId('delete-account-modal')?.props.visible ?? false).toBe(false);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Story 6.10: Delete Account — Execution flow
+// ---------------------------------------------------------------------------
+
+describe('SettingsScreen — Story 6.10: Deletion execution', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    jest.useFakeTimers();
+    mockUseAuthState.mockReturnValue({ authState: 'authenticated', isAuthenticated: true });
+  });
+
+  afterEach(() => {
+    jest.useRealTimers();
+  });
+
+  const openConfirmModal = (getByTestId: ReturnType<typeof render>['getByTestId']) => {
+    fireEvent.press(getByTestId('settings-delete-account-button'));
+    const alertCall = (Alert.alert as jest.Mock).mock.calls[0];
+    const continueBtn = alertCall[2].find((btn: { text: string }) => btn.text === 'Continue');
+    act(() => {
+      continueBtn.onPress();
+    });
+    fireEvent.changeText(getByTestId('delete-confirm-input'), 'DELETE');
+  };
+
+  it('shows loading indicator during deletion', async () => {
+    // Never resolving promise to keep loading state
+    mockDeleteAccount.mockReturnValue(new Promise(() => {}));
+
+    const { getByTestId } = render(<SettingsScreen />);
+    openConfirmModal(getByTestId);
+
+    await act(async () => {
+      fireEvent.press(getByTestId('delete-confirm-button'));
+    });
+
+    expect(getByTestId('delete-loading-indicator')).toBeTruthy();
+  });
+
+  it('shows success banner and navigates on successful deletion', async () => {
+    mockDeleteAccount.mockResolvedValue({ success: true, data: undefined });
+
+    const { getByTestId } = render(<SettingsScreen />);
+    openConfirmModal(getByTestId);
+
+    await act(async () => {
+      fireEvent.press(getByTestId('delete-confirm-button'));
+    });
+
+    expect(getByTestId('delete-account-success')).toBeTruthy();
+
+    act(() => {
+      jest.advanceTimersByTime(2000);
+    });
+
+    expect(mockReplace).toHaveBeenCalledWith('/');
+  });
+
+  it('shows error message when deletion fails', async () => {
+    mockDeleteAccount.mockResolvedValue({
+      success: false,
+      error: { message: 'Something went wrong. Please try again.' }
+    });
+
+    const { getByTestId } = render(<SettingsScreen />);
+    openConfirmModal(getByTestId);
+
+    await act(async () => {
+      fireEvent.press(getByTestId('delete-confirm-button'));
+    });
+
+    expect(getByTestId('delete-account-error')).toBeTruthy();
+    expect(mockReplace).not.toHaveBeenCalled();
+  });
+
+  it('does not navigate when deletion fails', async () => {
+    mockDeleteAccount.mockResolvedValue({
+      success: false,
+      error: { message: 'Network error' }
+    });
+
+    const { getByTestId } = render(<SettingsScreen />);
+    openConfirmModal(getByTestId);
+
+    await act(async () => {
+      fireEvent.press(getByTestId('delete-confirm-button'));
+    });
+
+    expect(mockReplace).not.toHaveBeenCalled();
   });
 });

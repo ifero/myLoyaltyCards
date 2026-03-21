@@ -2,7 +2,7 @@
 
 **Epic:** 6 - User Authentication & Privacy
 **Type:** User-Facing
-**Status:** in-progress
+**Status:** done
 
 ## Goal
 

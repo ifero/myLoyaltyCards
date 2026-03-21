@@ -136,6 +136,7 @@ export default [
       'babel.config.js',
       'babel.config.test.js',
       'jest.setup.js',
+      'supabase/functions/**',
     ],
   },
 ];
