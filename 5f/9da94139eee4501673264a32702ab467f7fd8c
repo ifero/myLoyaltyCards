@@ -1,0 +1,33 @@
+shared/supabase/auth.ts
+  3b4f95451d7316dc 245-246,249-252,266-270
+shared/supabase/auth.test.ts
+  3b4f95451d7316dc 33,52-55,500,585-595,598-633
+features/settings/SettingsScreen.tsx
+  3b4f95451d7316dc 2,43-51,107-111
+supabase/functions/delete-account/index.ts
+  3b4f95451d7316dc 27-33
+docs/sprint-artifacts/stories/6-10-delete-account.md
+  3b4f95451d7316dc 5,382-383,388,395-396,400-414
+docs/sprint-artifacts/sprint-status.yaml
+  3b4f95451d7316dc 38,174
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.1.15",
+  "base_commit_sha": "5f9da94139eee4501673264a32702ab467f7fd8c",
+  "prompts": {
+    "3b4f95451d7316dc": {
+      "agent_id": {
+        "tool": "github-copilot",
+        "id": "9a484224-46d1-4ea6-938d-cbb22fab5e6d",
+        "model": "copilot/claude-opus-4.6"
+      },
+      "human_author": "Andrea Pacino <andrea.pacino87@gmail.com>",
+      "messages": [],
+      "total_additions": 117,
+      "total_deletions": 9,
+      "accepted_lines": 117,
+      "overriden_lines": 0
+    }
+  }
+}
