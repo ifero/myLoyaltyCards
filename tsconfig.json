@@ -16,5 +16,5 @@
     }
   },
   "include": ["**/*.ts", "**/*.tsx", ".expo/types/**/*.ts", "expo-env.d.ts", "nativewind-env.d.ts"],
-  "exclude": ["node_modules", "android", "ios", ".expo", "dist", "web-build"]
+  "exclude": ["node_modules", "android", "ios", ".expo", "dist", "web-build", "supabase/functions"]
 }

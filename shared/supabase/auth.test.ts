@@ -8,6 +8,7 @@
 
 import {
   continueAsGuest,
+  deleteAccount,
   getSession,
   requestPasswordReset,
   signInWithEmail,
@@ -26,6 +27,7 @@ const mockSignOut = jest.fn();
 const mockGetSession = jest.fn();
 const mockResetPasswordForEmail = jest.fn();
 const mockUpdateUser = jest.fn();
+const mockFunctionsInvoke = jest.fn();
 
 const mockSupabaseAuth = {
   signInWithPassword: mockSignInWithPassword,
@@ -38,7 +40,8 @@ const mockSupabaseAuth = {
 
 jest.mock('./client', () => ({
   getSupabaseClient: jest.fn(() => ({
-    auth: mockSupabaseAuth
+    auth: mockSupabaseAuth,
+    functions: { invoke: mockFunctionsInvoke }
   }))
 }));
 
@@ -473,5 +476,99 @@ describe('continueAsGuest', () => {
 
     // If it were a Promise, result.success would be undefined
     expect(typeof result.success).toBe('boolean');
+  });
+});
+
+// ---------------------------------------------------------------------------
+// deleteAccount
+// ---------------------------------------------------------------------------
+
+describe('deleteAccount', () => {
+  beforeEach(() => {
+    mockGetSession.mockReset();
+    mockFunctionsInvoke.mockReset();
+    mockSignOut.mockReset();
+  });
+
+  it('calls Edge Function with access token and signs out on success', async () => {
+    mockGetSession.mockResolvedValue({
+      data: { session: MOCK_SESSION },
+      error: null
+    });
+    mockFunctionsInvoke.mockResolvedValue({ data: { success: true }, error: null });
+    mockSignOut.mockResolvedValue({ error: null });
+
+    const result = await deleteAccount();
+
+    expect(result.success).toBe(true);
+    expect(mockFunctionsInvoke).toHaveBeenCalledWith('delete-account', {
+      headers: { Authorization: `Bearer ${MOCK_SESSION.access_token}` }
+    });
+    expect(mockSignOut).toHaveBeenCalled();
+  });
+
+  it('returns failure when Edge Function returns an error', async () => {
+    mockGetSession.mockResolvedValue({
+      data: { session: MOCK_SESSION },
+      error: null
+    });
+    mockFunctionsInvoke.mockResolvedValue({
+      data: null,
+      error: { message: 'Failed to delete account' }
+    });
+
+    const result = await deleteAccount();
+
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      expect(result.error.message).toBe('Failed to delete account');
+    }
+    // signOut should NOT be called on failure
+    expect(mockSignOut).not.toHaveBeenCalled();
+  });
+
+  it('returns auth error when no session exists', async () => {
+    mockGetSession.mockResolvedValue({
+      data: { session: null },
+      error: null
+    });
+
+    const result = await deleteAccount();
+
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      expect(result.error.message).toBe('Not authenticated');
+    }
+    // Should NOT invoke Edge Function without a session
+    expect(mockFunctionsInvoke).not.toHaveBeenCalled();
+    expect(mockSignOut).not.toHaveBeenCalled();
+  });
+
+  it('returns failure when network throws', async () => {
+    mockGetSession.mockResolvedValue({
+      data: { session: MOCK_SESSION },
+      error: null
+    });
+    mockFunctionsInvoke.mockRejectedValue(new Error('Network error'));
+
+    const result = await deleteAccount();
+
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      expect(result.error.message).toBe('Network error');
+    }
+    expect(mockSignOut).not.toHaveBeenCalled();
+  });
+
+  it('returns failure when getSession throws', async () => {
+    mockGetSession.mockRejectedValue(new Error('Session fetch failed'));
+
+    const result = await deleteAccount();
+
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      expect(result.error.message).toBe('Session fetch failed');
+    }
+    expect(mockFunctionsInvoke).not.toHaveBeenCalled();
   });
 });

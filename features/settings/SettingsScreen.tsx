@@ -1,10 +1,19 @@
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
-import { Alert, Pressable, View, Text, ScrollView } from 'react-native';
+import {
+  ActivityIndicator,
+  Alert,
+  Modal,
+  Pressable,
+  View,
+  Text,
+  ScrollView,
+  TextInput
+} from 'react-native';
 
 import { catalogueRepository } from '@/core/catalogue/catalogue-repository';
 
-import { signOut } from '@/shared/supabase/auth';
+import { deleteAccount, signOut } from '@/shared/supabase/auth';
 import { useAuthState } from '@/shared/supabase/useAuthState';
 import { useTheme } from '@/shared/theme';
 
@@ -15,6 +24,7 @@ import { useTheme } from '@/shared/theme';
  * Story 6.5: Guest mode — shows guest mode badge and upgrade path to account creation.
  * Story 6.9: Logout — conditional rendering based on auth state, confirmation dialog.
  * Story 6-11: Privacy & Consent — Data & Privacy section shown only to authenticated users.
+ * Story 6.10: Delete Account — multi-step confirmation, GDPR erasure.
  */
 const SettingsScreen = () => {
   const { theme } = useTheme();
@@ -23,6 +33,13 @@ const SettingsScreen = () => {
   const { isAuthenticated, authState } = useAuthState();
 
   const [signOutError, setSignOutError] = useState<string | null>(null);
+
+  // Delete Account state (Story 6.10)
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [deleteConfirmText, setDeleteConfirmText] = useState('');
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
+  const [deleteSuccess, setDeleteSuccess] = useState(false);
 
   const confirmSignOut = async () => {
     setSignOutError(null);
@@ -44,6 +61,50 @@ const SettingsScreen = () => {
         { text: 'Sign Out', style: 'destructive', onPress: confirmSignOut }
       ]
     );
+  };
+
+  // ── Delete Account handlers (Story 6.10) ──
+
+  const handleDeleteAccountPress = () => {
+    Alert.alert(
+      'Delete Account?',
+      'This will permanently delete your cloud account and all synced data. Your local cards will remain on this device. This action cannot be undone.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        { text: 'Continue', style: 'destructive', onPress: () => setShowDeleteConfirm(true) }
+      ]
+    );
+  };
+
+  const handleDeleteConfirm = async () => {
+    setIsDeleting(true);
+    setDeleteError(null);
+
+    const result = await deleteAccount();
+
+    setIsDeleting(false);
+
+    if (!result.success) {
+      setDeleteError(result.error.message);
+      return;
+    }
+
+    // Close modal, show success, navigate
+    setShowDeleteConfirm(false);
+    setDeleteConfirmText('');
+    setDeleteSuccess(true);
+
+    // Brief delay so user sees the success banner before navigating
+    setTimeout(() => {
+      setDeleteSuccess(false);
+      router.replace('/');
+    }, 2000);
+  };
+
+  const handleDeleteCancel = () => {
+    setShowDeleteConfirm(false);
+    setDeleteConfirmText('');
+    setDeleteError(null);
   };
 
   return (
@@ -198,6 +259,45 @@ const SettingsScreen = () => {
         </View>
       )}
 
+      {/* Delete Account section — visible only when authenticated (Story 6.10) */}
+      {isAuthenticated && (
+        <View
+          testID="settings-delete-account-section"
+          className="mb-6 w-full rounded-xl p-4"
+          style={{ backgroundColor: theme.surface }}
+        >
+          <Pressable
+            testID="settings-delete-account-button"
+            onPress={handleDeleteAccountPress}
+            accessibilityRole="button"
+            accessibilityLabel="Delete Account"
+            accessibilityHint="Permanently delete your cloud account and all associated data"
+            className="w-full items-center justify-center rounded-xl"
+            style={({ pressed }) => ({
+              backgroundColor: pressed ? '#991b1b' : '#b91c1c',
+              height: 48,
+              transform: [{ scale: pressed ? 0.98 : 1 }]
+            })}
+          >
+            <Text className="text-sm font-semibold text-white">Delete Account</Text>
+          </Pressable>
+        </View>
+      )}
+
+      {/* Success banner (Story 6.10 AC#7) */}
+      {deleteSuccess && (
+        <View
+          testID="delete-account-success"
+          className="mb-6 w-full rounded-xl p-4"
+          style={{ backgroundColor: '#065f46' }}
+          accessibilityRole="alert"
+        >
+          <Text className="text-center text-sm font-semibold text-white">
+            Account deleted. You are now in guest mode.
+          </Text>
+        </View>
+      )}
+
       {/* Catalogue version */}
       <View className="mb-6 items-center">
         <Text className="text-sm font-semibold" style={{ color: theme.textPrimary }}>
@@ -233,6 +333,96 @@ const SettingsScreen = () => {
           Privacy Policy
         </Text>
       </Pressable>
+
+      {/* Delete Account Confirmation Modal (Story 6.10 — Step 2) */}
+      <Modal
+        visible={showDeleteConfirm}
+        transparent
+        animationType="fade"
+        onRequestClose={handleDeleteCancel}
+        testID="delete-account-modal"
+      >
+        <View
+          className="flex-1 items-center justify-center"
+          style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}
+        >
+          <View
+            className="mx-6 w-full max-w-sm rounded-2xl p-6"
+            style={{ backgroundColor: theme.surface }}
+          >
+            <Text className="mb-2 text-lg font-bold" style={{ color: theme.textPrimary }}>
+              Confirm Account Deletion
+            </Text>
+            <Text className="mb-4 text-sm leading-5" style={{ color: theme.textSecondary }}>
+              {
+                'Type "DELETE" below to permanently delete your account and all cloud data. This cannot be undone.'
+              }
+            </Text>
+
+            <TextInput
+              testID="delete-confirm-input"
+              value={deleteConfirmText}
+              onChangeText={setDeleteConfirmText}
+              placeholder='Type "DELETE" to confirm'
+              autoCapitalize="characters"
+              editable={!isDeleting}
+              className="mb-4 rounded-lg border px-4 py-3"
+              style={{
+                borderColor: theme.border,
+                color: theme.textPrimary,
+                backgroundColor: theme.background
+              }}
+            />
+
+            {deleteError && (
+              <Text
+                testID="delete-account-error"
+                className="mb-3 text-xs"
+                style={{ color: '#EF4444' }}
+                accessibilityRole="alert"
+              >
+                {deleteError}
+              </Text>
+            )}
+
+            <View className="flex-row justify-end gap-3">
+              <Pressable
+                testID="delete-cancel-button"
+                onPress={handleDeleteCancel}
+                disabled={isDeleting}
+                accessibilityRole="button"
+                accessibilityLabel="Cancel"
+                className="rounded-xl px-5 py-3"
+                style={{ backgroundColor: theme.border }}
+              >
+                <Text className="text-sm font-medium" style={{ color: theme.textPrimary }}>
+                  Cancel
+                </Text>
+              </Pressable>
+
+              <Pressable
+                testID="delete-confirm-button"
+                onPress={handleDeleteConfirm}
+                disabled={deleteConfirmText !== 'DELETE' || isDeleting}
+                accessibilityRole="button"
+                accessibilityLabel="Permanently Delete My Account"
+                className="rounded-xl px-5 py-3"
+                style={{
+                  backgroundColor:
+                    deleteConfirmText === 'DELETE' && !isDeleting ? '#b91c1c' : '#d1d5db',
+                  opacity: deleteConfirmText === 'DELETE' && !isDeleting ? 1 : 0.5
+                }}
+              >
+                {isDeleting ? (
+                  <ActivityIndicator testID="delete-loading-indicator" size="small" color="#fff" />
+                ) : (
+                  <Text className="text-sm font-semibold text-white">Delete</Text>
+                )}
+              </Pressable>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </ScrollView>
   );
 };
