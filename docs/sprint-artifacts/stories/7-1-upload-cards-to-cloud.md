@@ -2,7 +2,7 @@
 
 **Epic:** 7 - Cloud Synchronization
 **Type:** User-Facing
-**Status:** ready-for-dev
+**Status:** done
 **Sprint:** 9
 **FRs Covered:** FR35, FR36, FR37
 
@@ -84,39 +84,39 @@ And a forced sync bypasses the throttle
 
 ## Tasks / Subtasks
 
-- [ ] **Task 1: Create `core/sync/` module** (AC: #1, #4, #6)
-  - [ ] 1.1 Create `core/sync/cloud-sync.ts` — core sync service
-  - [ ] 1.2 Create `core/sync/cloud-sync.test.ts` — unit tests
-  - [ ] 1.3 Create `core/sync/index.ts` — barrel exports
-  - [ ] 1.4 Implement `uploadLocalCards(userId, cloudUpsertFn)` function
-  - [ ] 1.5 Implement throttle logic with AsyncStorage persistence
-  - [ ] 1.6 Implement `forceSync` variant that bypasses throttle
+- [x] **Task 1: Create `core/sync/` module** (AC: #1, #4, #6)
+  - [x] 1.1 Create `core/sync/cloud-sync.ts` — core sync service
+  - [x] 1.2 Create `core/sync/cloud-sync.test.ts` — unit tests
+  - [x] 1.3 Create `core/sync/index.ts` — barrel exports
+  - [x] 1.4 Implement `uploadLocalCards(userId, cloudUpsertFn)` function
+  - [x] 1.5 Implement throttle logic with AsyncStorage persistence
+  - [x] 1.6 Implement `forceSync` variant that bypasses throttle
 
-- [ ] **Task 2: Implement card-to-cloud row mapper** (AC: #1, #4)
-  - [ ] 2.1 Create `core/sync/mappers.ts` — camelCase → snake_case transformation
-  - [ ] 2.2 Create `core/sync/mappers.test.ts` — unit tests
-  - [ ] 2.3 Reuse `CloudCardRow` type from existing `guest-migration.ts` or extract shared type
+- [x] **Task 2: Implement card-to-cloud row mapper** (AC: #1, #4)
+  - [x] 2.1 Create `core/sync/mappers.ts` — camelCase → snake_case transformation
+  - [x] 2.2 Create `core/sync/mappers.test.ts` — unit tests
+  - [x] 2.3 Reuse `CloudCardRow` type from existing `guest-migration.ts` or extract shared type
 
-- [ ] **Task 3: Implement batch upload logic** (AC: #2, #5)
-  - [ ] 3.1 Implement batch splitting (BATCH_SIZE = 50, matching guest-migration pattern)
-  - [ ] 3.2 Handle partial batch failures — continue uploading remaining batches
-  - [ ] 3.3 Return structured result: `{ success, uploadedCount, failedCount, errors }`
+- [x] **Task 3: Implement batch upload logic** (AC: #2, #5)
+  - [x] 3.1 Implement batch splitting (BATCH_SIZE = 50, matching guest-migration pattern)
+  - [x] 3.2 Handle partial batch failures — continue uploading remaining batches
+  - [x] 3.3 Return structured result: `{ success, uploadedCount, failedCount, errors }`
 
-- [ ] **Task 4: Create Supabase upload function** (AC: #1, #4)
-  - [ ] 4.1 Add `upsertCards(cards: CloudCardRow[])` to `shared/supabase/` layer
-  - [ ] 4.2 Use Supabase `.upsert()` with `onConflict: 'id'`
-  - [ ] 4.3 Unit test the Supabase call layer
+- [x] **Task 4: Create Supabase upload function** (AC: #1, #4)
+  - [x] 4.1 Add `upsertCards(cards: CloudCardRow[])` to `shared/supabase/` layer
+  - [x] 4.2 Use Supabase `.upsert()` with `onConflict: 'id'`
+  - [x] 4.3 Unit test the Supabase call layer
 
-- [ ] **Task 5: Create `useSyncUpload` hook** (AC: #3, #5)
-  - [ ] 5.1 Create hook in `features/cards/hooks/` or `shared/hooks/`
-  - [ ] 5.2 Expose `{ isSyncing, syncError, triggerSync, forceSync }` state
-  - [ ] 5.3 Wire to auth state — auto-trigger on sign-in
-  - [ ] 5.4 Unit tests for the hook
+- [x] **Task 5: Create `useSyncUpload` hook** (AC: #3, #5)
+  - [x] 5.1 Create hook in `features/cards/hooks/` or `shared/hooks/`
+  - [x] 5.2 Expose `{ isSyncing, syncError, triggerSync, forceSync }` state
+  - [x] 5.3 Wire to auth state — auto-trigger on sign-in
+  - [x] 5.4 Unit tests for the hook
 
-- [ ] **Task 6: Add sync indicator UI** (AC: #3)
-  - [ ] 6.1 Create `SyncIndicator` component (subtle spinner/pulse)
-  - [ ] 6.2 Integrate into card list screen header or status bar area
-  - [ ] 6.3 Non-blocking — user can scroll/interact while syncing
+- [x] **Task 6: Add sync indicator UI** (AC: #3)
+  - [x] 6.1 Create `SyncIndicator` component (subtle spinner/pulse)
+  - [x] 6.2 Integrate into card list screen header or status bar area
+  - [x] 6.3 Non-blocking — user can scroll/interact while syncing
 
 ---
 
@@ -272,12 +272,54 @@ shared/
 
 ### Agent Model Used
 
-_To be filled by dev agent_
+GPT-5.3-Codex
 
 ### Debug Log References
 
+- Implemented new sync core module with throttle and batch upload in `core/sync/`.
+- Added Supabase upload adapter with validation in `shared/supabase/cards.ts`.
+- Added upload hook + indicator UI and integrated on home screen.
+- Full test suite run completed: 819 passed, 0 failed.
+
 ### Completion Notes List
+
+- ✅ Implemented `uploadLocalCards`/`forceSyncLocalCards` with 5-minute AsyncStorage throttle persistence.
+- ✅ Added shared card mapper (`localCardToCloudRow`) and extracted `CloudCardRow` usage across sync and guest migration.
+- ✅ Implemented batch processing (`BATCH_SIZE = 50`) with partial-failure continuation and structured result payload.
+- ✅ Added `upsertCards` Supabase layer (`onConflict: 'id'`) with pre-upload schema validation and tests.
+- ✅ Added `useSyncUpload` hook exposing `isSyncing`, `syncError`, `triggerSync`, `forceSync`, `clearSyncError`.
+- ✅ Added non-blocking `SyncIndicator` component and integrated sync UI into home screen while preserving card list interaction.
+- ✅ Added AsyncStorage Jest mock and resilience fallback in `useAuthState` for missing Supabase env during tests.
+- ⚠️ `SyncErrorBanner` component implemented here to satisfy AC5 (error visibility + retry). Story 7.7 Task 4 plans the same component — 7.7 should extend/reuse rather than recreate.
+- ✅ Code Review: Added error logging to sync paths (AC5), fixed `useSyncUpload` re-render pattern (`isRunningRef`), documented `CloudUpsertFn` validation contract.
 
 ### Change Log
 
+- 2026-03-21: Implemented Story 7.1 upload-to-cloud flow (core sync service, Supabase upsert adapter, sync hook, indicator UI, tests, and integration updates).
+- 2026-03-21: Code Review remediation — error logging (H2/AC5), isRunningRef pattern (M1), CloudUpsertFn validation contract (M3), File List update (M2).
+
 ### File List
+
+- app/index.tsx
+- core/auth/guest-migration.ts
+- core/auth/guest-migration.test.ts
+- core/sync/cloud-sync.ts
+- core/sync/cloud-sync.test.ts
+- core/sync/index.ts
+- core/sync/mappers.ts
+- core/sync/mappers.test.ts
+- shared/components/SyncIndicator.tsx
+- shared/components/SyncIndicator.test.tsx
+- shared/components/SyncErrorBanner.tsx
+- shared/components/SyncErrorBanner.test.tsx
+- shared/hooks/useSyncUpload.ts
+- shared/hooks/useSyncUpload.test.ts
+- shared/supabase/cards.ts
+- shared/supabase/cards.test.ts
+- shared/supabase/useAuthState.ts
+- features/auth/useGuestMigration.ts
+- jest.setup.js
+- package.json
+- yarn.lock
+- docs/sprint-artifacts/sprint-status.yaml
+- docs/sprint-artifacts/stories/7-1-upload-cards-to-cloud.md

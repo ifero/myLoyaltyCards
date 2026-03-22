@@ -49,7 +49,7 @@ import {
 // Fixtures
 // ---------------------------------------------------------------------------
 
-const USER_ID = 'user-abc-123';
+const USER_ID = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa';
 
 const makeCard = (id: string, name: string): LoyaltyCard => ({
   id,
@@ -65,9 +65,9 @@ const makeCard = (id: string, name: string): LoyaltyCard => ({
   updatedAt: '2026-01-01T00:00:00Z'
 });
 
-const CARD_A = makeCard('card-a', 'Store A');
-const CARD_B = makeCard('card-b', 'Store B');
-const CARD_C = makeCard('card-c', 'Store C');
+const CARD_A = makeCard('11111111-1111-4111-8111-111111111111', 'Store A');
+const CARD_B = makeCard('22222222-2222-4222-8222-222222222222', 'Store B');
+const CARD_C = makeCard('33333333-3333-4333-8333-333333333333', 'Store C');
 
 // ---------------------------------------------------------------------------
 // Mock upsert function
@@ -112,10 +112,10 @@ describe('migrateGuestCardsToCloud — success path', () => {
 
     expect(mockUpsertFn).toHaveBeenCalledWith([
       {
-        id: 'card-a',
+        id: '11111111-1111-4111-8111-111111111111',
         user_id: USER_ID,
         name: 'Store A',
-        barcode: 'barcode-card-a',
+        barcode: 'barcode-11111111-1111-4111-8111-111111111111',
         barcode_format: 'EAN13',
         brand_id: null,
         color: 'blue',
@@ -188,7 +188,7 @@ describe('migrateGuestCardsToCloud — partial failure', () => {
   it('returns failure with migratedCount when batch 2 fails', async () => {
     // Create enough cards for 2 batches (BATCH_SIZE + 1)
     const cards = Array.from({ length: _BATCH_SIZE + 1 }, (_, i) =>
-      makeCard(`card-${i}`, `Store ${i}`)
+      makeCard(`00000000-0000-4000-8000-${String(i + 1).padStart(12, '0')}`, `Store ${i}`)
     );
     mockGetAllCards.mockResolvedValue(cards);
 
@@ -301,7 +301,7 @@ describe('migrateGuestCardsToCloud — invalid input', () => {
 describe('migrateGuestCardsToCloud — batching', () => {
   it('uploads cards in batches of BATCH_SIZE', async () => {
     const cards = Array.from({ length: _BATCH_SIZE + 10 }, (_, i) =>
-      makeCard(`card-${i}`, `Store ${i}`)
+      makeCard(`00000000-0000-4000-8000-${String(i + 1).padStart(12, '0')}`, `Store ${i}`)
     );
     mockGetAllCards.mockResolvedValue(cards);
 

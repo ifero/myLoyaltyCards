@@ -181,7 +181,7 @@ development_status:
 
   # Epic 7: Cloud Synchronization
   epic-7: in-progress
-  7-1-upload-cards-to-cloud: ready-for-dev
+  7-1-upload-cards-to-cloud: done
   7-2-download-cards-from-cloud: ready-for-dev
   7-3-sync-card-changes: ready-for-dev
   7-4-implement-delta-sync: ready-for-dev

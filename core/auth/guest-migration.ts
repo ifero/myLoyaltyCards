@@ -14,6 +14,7 @@
 
 import { getAllCards } from '@/core/database/card-repository';
 import { LoyaltyCard } from '@/core/schemas';
+import { CloudCardRow, localCardToCloudRow } from '@/core/sync/mappers';
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -29,24 +30,6 @@ const BATCH_SIZE = 50;
 export type MigrationResult =
   | { success: true; migratedCount: number }
   | { success: false; error: string; migratedCount: number };
-
-/**
- * Cloud row shape for loyalty_cards (snake_case + user_id).
- */
-export type CloudCardRow = {
-  id: string;
-  user_id: string;
-  name: string;
-  barcode: string;
-  barcode_format: string;
-  brand_id: string | null;
-  color: string;
-  is_favorite: boolean;
-  last_used_at: string | null;
-  usage_count: number;
-  created_at: string;
-  updated_at: string;
-};
 
 /**
  * Injected cloud upsert function signature.
@@ -122,24 +105,6 @@ const setMigrationFlag = async (userId: string): Promise<void> => {
 // Card → Cloud row mapper
 // ---------------------------------------------------------------------------
 
-/**
- * Map a local LoyaltyCard to the cloud row shape (snake_case + user_id).
- */
-const toCloudRow = (card: LoyaltyCard, userId: string) => ({
-  id: card.id,
-  user_id: userId,
-  name: card.name,
-  barcode: card.barcode,
-  barcode_format: card.barcodeFormat,
-  brand_id: card.brandId,
-  color: card.color,
-  is_favorite: card.isFavorite,
-  last_used_at: card.lastUsedAt,
-  usage_count: card.usageCount,
-  created_at: card.createdAt,
-  updated_at: card.updatedAt
-});
-
 // ---------------------------------------------------------------------------
 // Core migration function
 // ---------------------------------------------------------------------------
@@ -185,7 +150,7 @@ export const migrateGuestCardsToCloud = async (
   // Upload in batches
   for (let i = 0; i < localCards.length; i += BATCH_SIZE) {
     const batch = localCards.slice(i, i + BATCH_SIZE);
-    const cloudRows = batch.map((card) => toCloudRow(card, userId));
+    const cloudRows = batch.map((card) => localCardToCloudRow(card, userId));
 
     const { error } = await upsertFn(cloudRows);
 

@@ -9,6 +9,10 @@ import { useCameraPermissions } from 'expo-camera';
 import { useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
 
+import { SyncErrorBanner } from '@/shared/components/SyncErrorBanner';
+import { SyncIndicator } from '@/shared/components/SyncIndicator';
+import { useSyncUpload } from '@/shared/hooks/useSyncUpload';
+
 import MigrationBanner from '@/features/auth/MigrationBanner';
 import { useGuestMigration } from '@/features/auth/useGuestMigration';
 import { CardList, useCards } from '@/features/cards';
@@ -21,6 +25,7 @@ const HomeScreen = () => {
   const router = useRouter();
   const [, requestPermission] = useCameraPermissions();
   const { status, message, retry, dismiss } = useGuestMigration();
+  const { isSyncing, syncError, forceSync, clearSyncError } = useSyncUpload();
 
   useEffect(() => {
     if (!isLoading) {
@@ -50,6 +55,8 @@ const HomeScreen = () => {
   return (
     <>
       <MigrationBanner status={status} message={message} onRetry={retry} onDismiss={dismiss} />
+      <SyncIndicator isSyncing={isSyncing} />
+      <SyncErrorBanner message={syncError} onRetry={forceSync} onDismiss={clearSyncError} />
       <CardList />
       <OnboardingOverlay
         visible={visible}

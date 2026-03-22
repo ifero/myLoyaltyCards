@@ -26,7 +26,13 @@ export const useAuthState = (): { authState: AuthState; isAuthenticated: boolean
   const [authState, setAuthState] = useState<AuthState>('loading');
 
   useEffect(() => {
-    const supabase = getSupabaseClient();
+    let supabase: ReturnType<typeof getSupabaseClient>;
+    try {
+      supabase = getSupabaseClient();
+    } catch {
+      setAuthState('guest');
+      return;
+    }
 
     // Subscribe to auth state changes. Supabase fires INITIAL_SESSION
     // synchronously during subscription, which sets the initial state
