@@ -11,12 +11,9 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 
-import {
-  CloudCardRow,
-  isMigrationCompleted,
-  migrateGuestCardsToCloud
-} from '@/core/auth/guest-migration';
+import { isMigrationCompleted, migrateGuestCardsToCloud } from '@/core/auth/guest-migration';
 import type { MigrationResult } from '@/core/auth/guest-migration';
+import { CloudCardRow } from '@/core/sync';
 
 import { getSession } from '@/shared/supabase/auth';
 import { getSupabaseClient } from '@/shared/supabase/client';

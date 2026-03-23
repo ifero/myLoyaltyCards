@@ -67,6 +67,29 @@ jest.mock('expo-sqlite/kv-store', () => ({
 // Expose kvStoreData for tests to inspect/reset
 global.__kvStoreData = kvStoreData;
 
+// Mock AsyncStorage
+jest.mock('@react-native-async-storage/async-storage', () => {
+  const storage = {};
+  return {
+    __esModule: true,
+    default: {
+      getItem: jest.fn((key) => Promise.resolve(storage[key] ?? null)),
+      setItem: jest.fn((key, value) => {
+        storage[key] = value;
+        return Promise.resolve();
+      }),
+      removeItem: jest.fn((key) => {
+        delete storage[key];
+        return Promise.resolve();
+      }),
+      clear: jest.fn(() => {
+        Object.keys(storage).forEach((k) => delete storage[k]);
+        return Promise.resolve();
+      })
+    }
+  };
+});
+
 // Mock expo-haptics
 jest.mock('expo-haptics', () => ({
   notificationAsync: jest.fn(),
