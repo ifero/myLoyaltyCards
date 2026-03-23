@@ -18,3 +18,16 @@ export const upsertCards = async (cards: CloudCardRow[]): Promise<{ error: strin
 
   return { error: error?.message ?? null };
 };
+
+export const fetchCards = async (
+  userId: string
+): Promise<{ data: CloudCardRow[]; error: string | null }> => {
+  const supabase = getSupabaseClient();
+  const { data, error } = await supabase.from('loyalty_cards').select('*').eq('user_id', userId);
+
+  if (error) {
+    return { data: [], error: error.message };
+  }
+
+  return { data: (data ?? []) as CloudCardRow[], error: null };
+};

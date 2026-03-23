@@ -6,12 +6,7 @@
  */
 
 // Database initialization and access
-export {
-  initializeDatabase,
-  getDatabase,
-  closeDatabase,
-  resetDatabaseSingleton,
-} from './database';
+export { initializeDatabase, getDatabase, closeDatabase, resetDatabaseSingleton } from './database';
 
 // Migration utilities
 export { DB_VERSION, DB_NAME, getDbVersion, setDbVersion } from './migrations';
@@ -24,6 +19,7 @@ export {
   updateCard,
   deleteCard,
   upsertCard,
+  batchUpsertCards,
   deleteAllCards,
-  getCardCount,
+  getCardCount
 } from './card-repository';

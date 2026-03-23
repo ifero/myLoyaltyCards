@@ -43,7 +43,7 @@ function rowToCard(row: CardRow): LoyaltyCard {
     lastUsedAt: row.last_used_at,
     usageCount: row.usage_count,
     createdAt: row.created_at,
-    updatedAt: row.updated_at,
+    updatedAt: row.updated_at
   };
 }
 
@@ -93,7 +93,7 @@ export async function insertCard(
         card.lastUsedAt,
         card.usageCount,
         card.createdAt,
-        card.updatedAt,
+        card.updatedAt
       ]
     );
   });
@@ -130,7 +130,7 @@ export async function updateCard(
         card.lastUsedAt,
         card.usageCount,
         card.updatedAt,
-        card.id,
+        card.id
       ]
     );
   });
@@ -171,7 +171,7 @@ export async function upsertCard(
         card.lastUsedAt,
         card.usageCount,
         card.createdAt,
-        card.updatedAt,
+        card.updatedAt
       ]
     );
   });
@@ -185,6 +185,43 @@ export async function upsertCard(
 export async function deleteAllCards(db: SQLiteDatabase = getDatabase()): Promise<void> {
   await db.withTransactionAsync(async () => {
     await db.runAsync('DELETE FROM loyalty_cards');
+  });
+}
+
+/**
+ * Batch upsert multiple cards in a single transaction
+ * Story 7.2: Download Cards from Cloud — atomic merge persistence
+ */
+export async function batchUpsertCards(
+  cards: LoyaltyCard[],
+  db: SQLiteDatabase = getDatabase()
+): Promise<void> {
+  if (cards.length === 0) {
+    return;
+  }
+
+  await db.withTransactionAsync(async () => {
+    for (const card of cards) {
+      await db.runAsync(
+        `INSERT OR REPLACE INTO loyalty_cards (
+          id, name, barcode, barcode_format, brand_id, color,
+          is_favorite, last_used_at, usage_count, created_at, updated_at
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        [
+          card.id,
+          card.name,
+          card.barcode,
+          card.barcodeFormat,
+          card.brandId,
+          card.color,
+          card.isFavorite ? 1 : 0,
+          card.lastUsedAt,
+          card.usageCount,
+          card.createdAt,
+          card.updatedAt
+        ]
+      );
+    }
   });
 }
 

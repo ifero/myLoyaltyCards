@@ -35,7 +35,7 @@
 # - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
 
 generated: 2026-01-03
-updated: 2026-03-21
+updated: 2026-03-23
 project: myLoyaltyCards
 tracking_system: file-system
 story_location: docs/sprint-artifacts
@@ -182,7 +182,7 @@ development_status:
   # Epic 7: Cloud Synchronization
   epic-7: in-progress
   7-1-upload-cards-to-cloud: done
-  7-2-download-cards-from-cloud: ready-for-dev
+  7-2-download-cards-from-cloud: in-review
   7-3-sync-card-changes: ready-for-dev
   7-4-implement-delta-sync: ready-for-dev
   7-5-handle-offline-queue: ready-for-dev

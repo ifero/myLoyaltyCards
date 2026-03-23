@@ -2,7 +2,7 @@
 
 **Epic:** 7 - Cloud Synchronization
 **Type:** User-Facing
-**Status:** ready-for-dev
+**Status:** in-review
 **Sprint:** 9
 **FRs Covered:** FR38, FR39
 
@@ -94,48 +94,48 @@ And the sync indicator completes normally
 
 ## Tasks / Subtasks
 
-- [ ] **Task 1: Add download function to `core/sync/cloud-sync.ts`** (AC: #1, #4)
-  - [ ] 1.1 Implement `downloadCloudCards(userId, cloudFetchFn)` — core download service
-  - [ ] 1.2 Accept injected `CloudFetchFn` (dependency injection — same pattern as upload)
-  - [ ] 1.3 Return `{ success, downloadedCount, cards }` or error result
-  - [ ] 1.4 Respect sync throttle (reuse throttle from 7.1)
-  - [ ] 1.5 Unit tests for download logic
+- [x] **Task 1: Add download function to `core/sync/cloud-sync.ts`** (AC: #1, #4)
+  - [x] 1.1 Implement `downloadCloudCards(userId, cloudFetchFn)` — core download service
+  - [x] 1.2 Accept injected `CloudFetchFn` (dependency injection — same pattern as upload)
+  - [x] 1.3 Return `{ success, downloadedCount, mergeResult }` or error result
+  - [x] 1.4 Respect sync throttle (reuse throttle from 7.1)
+  - [x] 1.5 Unit tests for download logic (8 tests)
 
-- [ ] **Task 2: Implement cloud-to-local mapper** (AC: #3)
-  - [ ] 2.1 Add `cloudRowToLocalCard(row: CloudCardRow): LoyaltyCard` to `core/sync/mappers.ts`
-  - [ ] 2.2 Strip `user_id` field during mapping
-  - [ ] 2.3 Map snake_case → camelCase for all 12 fields
-  - [ ] 2.4 Validate each mapped card against `loyaltyCardSchema` using `parseWithLogging`
-  - [ ] 2.5 Skip invalid cards (log + continue, don't crash on a single bad row)
-  - [ ] 2.6 Unit tests for reverse mapping
+- [x] **Task 2: Implement cloud-to-local mapper** (AC: #3)
+  - [x] 2.1 Add `cloudRowToLocalCard(row: CloudCardRow): LoyaltyCard | null` to `core/sync/mappers.ts`
+  - [x] 2.2 Strip `user_id` field during mapping
+  - [x] 2.3 Map snake_case → camelCase for all 12 fields
+  - [x] 2.4 Validate each mapped card against `loyaltyCardSchema` using `parseWithLogging`
+  - [x] 2.5 Skip invalid cards (log + continue, don't crash on a single bad row)
+  - [x] 2.6 Unit tests for reverse mapping (8 tests)
 
-- [ ] **Task 3: Implement merge logic** (AC: #2)
-  - [ ] 3.1 Create `mergeCards(localCards, cloudCards): MergeResult` in `core/sync/cloud-sync.ts`
-  - [ ] 3.2 Match cards by `id` (UUID)
-  - [ ] 3.3 For duplicates: keep the card with the latest `updatedAt` (last-write-wins — per architecture)
-  - [ ] 3.4 For cloud-only cards: insert into local DB
-  - [ ] 3.5 For local-only cards: keep as-is (upload handles pushing them to cloud)
-  - [ ] 3.6 Return `{ merged: LoyaltyCard[], added: number, updated: number, unchanged: number }`
-  - [ ] 3.7 Unit tests for merge: no overlap, partial overlap, full overlap, cloud-newer wins, local-newer wins
+- [x] **Task 3: Implement merge logic** (AC: #2)
+  - [x] 3.1 Create `mergeCards(localCards, cloudCards): MergeResult` in `core/sync/cloud-sync.ts`
+  - [x] 3.2 Match cards by `id` (UUID)
+  - [x] 3.3 For duplicates: keep the card with the latest `updatedAt` (last-write-wins — per architecture)
+  - [x] 3.4 For cloud-only cards: insert into local DB
+  - [x] 3.5 For local-only cards: keep as-is (upload handles pushing them to cloud)
+  - [x] 3.6 Return `{ merged: LoyaltyCard[], added: number, updated: number, unchanged: number, skipped: number }`
+  - [x] 3.7 Unit tests for merge: no overlap, partial overlap, full overlap, cloud-newer wins, local-newer wins, mixed (8 tests)
 
-- [ ] **Task 4: Add Supabase fetch function** (AC: #1, #4)
-  - [ ] 4.1 Add `fetchCards(userId): CloudCardRow[]` to `shared/supabase/cards.ts` (same module from 7.1)
-  - [ ] 4.2 Use `supabase.from('loyalty_cards').select('*').eq('user_id', userId)`
-  - [ ] 4.3 Handle empty result gracefully (return empty array, not error)
-  - [ ] 4.4 Unit test with mocked Supabase client
+- [x] **Task 4: Add Supabase fetch function** (AC: #1, #4)
+  - [x] 4.1 Add `fetchCards(userId): { data: CloudCardRow[], error: string | null }` to `shared/supabase/cards.ts`
+  - [x] 4.2 Use `supabase.from('loyalty_cards').select('*').eq('user_id', userId)`
+  - [x] 4.3 Handle empty result gracefully (return empty array, not error)
+  - [x] 4.4 Unit test with mocked Supabase client (4 tests)
 
-- [ ] **Task 5: Persist merged cards to local DB** (AC: #1, #2)
-  - [ ] 5.1 Use `upsertCard()` from `core/database/card-repository.ts` for each merged card
-  - [ ] 5.2 Wrap in transaction for atomicity
-  - [ ] 5.3 Handle large sets efficiently (batch upserts)
-  - [ ] 5.4 Trigger card list refresh after write (invalidate TanStack Query cache or Zustand update)
+- [x] **Task 5: Persist merged cards to local DB** (AC: #1, #2)
+  - [x] 5.1 Add `batchUpsertCards()` to `core/database/card-repository.ts`
+  - [x] 5.2 Wrap in single transaction for atomicity
+  - [x] 5.3 Handle large sets efficiently (batch upserts in one transaction)
+  - [x] 5.4 Card list auto-refreshes via `useCloudSync` → state triggers re-render
 
-- [ ] **Task 6: Create `useSyncDownload` hook (or extend `useSyncUpload` → `useCloudSync`)** (AC: #5, #6, #7)
-  - [ ] 6.1 Expose `{ isSyncing, syncError, downloadedCount }` state
-  - [ ] 6.2 Wire to auth state — auto-trigger download on sign-in
-  - [ ] 6.3 Coordinate with upload: download first, then upload local-only cards
-  - [ ] 6.4 Reuse `SyncIndicator` from Story 7.1
-  - [ ] 6.5 Unit tests for hook
+- [x] **Task 6: Create `useCloudSync` hook (extends `useSyncUpload`)** (AC: #5, #6, #7)
+  - [x] 6.1 Expose `{ isSyncing, syncError, downloadedCount }` state
+  - [x] 6.2 Wire to auth state — auto-trigger download on sign-in
+  - [x] 6.3 Coordinate with upload: download first, then upload local-only cards
+  - [x] 6.4 Reuse `SyncIndicator` from Story 7.1 (updated text to bidirectional)
+  - [x] 6.5 Unit tests for hook (12 tests)
 
 ---
 
@@ -263,12 +263,48 @@ shared/
 
 ### Agent Model Used
 
-_To be filled by dev agent_
+Claude Opus 4.6 (GitHub Copilot)
 
 ### Debug Log References
 
+None — clean implementation, no debug issues.
+
 ### Completion Notes List
+
+- Implemented `cloudRowToLocalCard()` reverse mapper with Zod validation via `parseWithLogging`
+- Implemented `mergeCards()` with last-write-wins (ISO 8601 lexicographic comparison), cloud wins on tie
+- Implemented `downloadCloudCards()` with DI pattern (`CloudFetchFn`), throttle reuse, invalid-row skipping
+- Added `fetchCards()` to Supabase cards module — returns `{ data, error }` shape
+- Added `batchUpsertCards()` to card-repository for atomic transaction persistence of merged cards
+- Created `useCloudSync` hook — unified download-first → upload flow, auto-trigger on sign-in
+- Updated `app/index.tsx` to use `useCloudSync` replacing `useSyncUpload`
+- Updated `SyncIndicator` text from "to cloud" to bidirectional "Syncing cards…"
+- MergeResult includes `skipped` field for invalid cloud rows that failed Zod validation
 
 ### Change Log
 
+- T2: `cloudRowToLocalCard()` + 8 reverse mapper tests
+- T1+T3: `downloadCloudCards()` + `mergeCards()` + 16 tests (8 merge + 8 download)
+- T4: `fetchCards()` + 4 Supabase fetch tests
+- T5: `batchUpsertCards()` + 3 batch upsert tests
+- T6: `useCloudSync` hook + 12 hook tests
+- Integration: Updated `app/index.tsx`, `SyncIndicator`, barrel exports
+
 ### File List
+
+- `core/sync/mappers.ts` — Added `cloudRowToLocalCard()`
+- `core/sync/mappers.test.ts` — Added 8 reverse mapper tests
+- `core/sync/cloud-sync.ts` — Added `downloadCloudCards()`, `mergeCards()`, `CloudFetchFn`, `MergeResult`, `DownloadCloudCardsResult`
+- `core/sync/cloud-sync.test.ts` — Added 16 tests (8 merge + 8 download)
+- `core/sync/index.ts` — Updated barrel exports
+- `shared/supabase/cards.ts` — Added `fetchCards()`
+- `shared/supabase/cards.test.ts` — Added 4 fetch tests
+- `core/database/card-repository.ts` — Added `batchUpsertCards()`
+- `core/database/card-repository.test.ts` — Added 3 batch-upsert tests
+- `core/database/index.ts` — Updated barrel export
+- `shared/hooks/useCloudSync.ts` — NEW: Unified sync hook (download → persist → upload)
+- `shared/hooks/useCloudSync.test.ts` — NEW: 12 hook tests
+- `app/index.tsx` — Switched from `useSyncUpload` to `useCloudSync`
+- `shared/components/SyncIndicator.tsx` — Updated label text
+- `shared/components/SyncIndicator.test.tsx` — Updated label assertion
+- `docs/sprint-artifacts/stories/7-2-download-cards-from-cloud.md` — Updated status + tasks + record

@@ -11,7 +11,7 @@ import { useEffect, useState } from 'react';
 
 import { SyncErrorBanner } from '@/shared/components/SyncErrorBanner';
 import { SyncIndicator } from '@/shared/components/SyncIndicator';
-import { useSyncUpload } from '@/shared/hooks/useSyncUpload';
+import { useCloudSync } from '@/shared/hooks/useCloudSync';
 
 import MigrationBanner from '@/features/auth/MigrationBanner';
 import { useGuestMigration } from '@/features/auth/useGuestMigration';
@@ -25,7 +25,7 @@ const HomeScreen = () => {
   const router = useRouter();
   const [, requestPermission] = useCameraPermissions();
   const { status, message, retry, dismiss } = useGuestMigration();
-  const { isSyncing, syncError, forceSync, clearSyncError } = useSyncUpload();
+  const { isSyncing, syncError, forceSync, clearSyncError } = useCloudSync();
 
   useEffect(() => {
     if (!isLoading) {
