@@ -184,7 +184,7 @@ development_status:
   7-1-upload-cards-to-cloud: done
   7-2-download-cards-from-cloud: done
   7-3-sync-card-changes: done
-  7-4-implement-delta-sync: ready-for-dev
+  7-4-implement-delta-sync: review
   7-5-handle-offline-queue: ready-for-dev
   7-6-resolve-sync-conflicts: ready-for-dev
   7-7-display-sync-status: ready-for-dev
