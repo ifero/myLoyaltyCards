@@ -1,12 +1,13 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { AppState, AppStateStatus } from 'react-native';
 
+import { batchUpsertCards } from '@/core/database/card-repository';
 import { isDirty, processPendingSync, type CloudDeleteFn } from '@/core/sync';
-import { type CloudUpsertFn } from '@/core/sync';
+import { type CloudUpsertFn, type CloudFetchSinceFn } from '@/core/sync';
 import { getPendingDeletions, clearPendingDeletions } from '@/core/sync';
 
 import { getSession } from '@/shared/supabase/auth';
-import { upsertCards, deleteCardFromCloud } from '@/shared/supabase/cards';
+import { upsertCards, fetchCardsSince, deleteCardFromCloud } from '@/shared/supabase/cards';
 import { useAuthState } from '@/shared/supabase/useAuthState';
 
 const SYNC_CHECK_INTERVAL_MS = 5 * 60 * 1000; // 5 minutes
@@ -26,7 +27,8 @@ export type UseAutoSyncResult = {
  */
 export const useAutoSync = (
   cloudUpsertFn: CloudUpsertFn = upsertCards,
-  cloudDeleteFn: CloudDeleteFn = deleteCardFromCloud
+  cloudDeleteFn: CloudDeleteFn = deleteCardFromCloud,
+  cloudFetchSinceFn: CloudFetchSinceFn = fetchCardsSince
 ): UseAutoSyncResult => {
   const [isSyncing, setIsSyncing] = useState(false);
   const [syncError, setSyncError] = useState<string | null>(null);
@@ -61,6 +63,8 @@ export const useAutoSync = (
         userId,
         cloudUpsertFn,
         cloudDeleteFn,
+        cloudFetchSinceFn,
+        batchUpsertCards,
         getPendingDeletions,
         clearPendingDeletions
       );
@@ -77,7 +81,7 @@ export const useAutoSync = (
       isRunningRef.current = false;
       setIsSyncing(false);
     }
-  }, [isAuthenticated, cloudUpsertFn, cloudDeleteFn]);
+  }, [isAuthenticated, cloudUpsertFn, cloudDeleteFn, cloudFetchSinceFn]);
 
   // Periodic interval check
   useEffect(() => {

@@ -1,15 +1,21 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-import { syncChangedCards } from './cloud-sync';
-import { type CloudCardRow } from './mappers';
+import { getAllCards } from '@/core/database/card-repository';
+import { LoyaltyCard } from '@/core/schemas';
+
+import { mergeCards, syncChangedCards, type CloudFetchSinceFn } from './cloud-sync';
+import { type CloudCardRow, cloudRowToLocalCard } from './mappers';
+import { getLastSyncAt, setLastSyncAt } from './sync-timestamp';
 
 const SYNC_DIRTY_KEY = 'syncDirty';
 
 export type CloudUpsertFn = (rows: CloudCardRow[]) => Promise<{ error: string | null }>;
 export type CloudDeleteFn = (cardId: string, userId: string) => Promise<{ error: string | null }>;
+export type PersistMergedCardsFn = (cards: LoyaltyCard[]) => Promise<void>;
 
 type ProcessPendingSyncResult = {
   success: boolean;
+  downloadedCount: number;
   upsertedCount: number;
   deletedCount: number;
   errors: string[];
@@ -39,31 +45,72 @@ export const clearDirty = async (): Promise<void> => {
 };
 
 /**
- * Flush pending changes to the cloud.
+ * Flush pending changes to the cloud using delta sync.
  *
- * 1. Reads all local cards and upserts them (full sync — delta is Story 7.4).
- * 2. Sends delete requests for any tracked pending deletions.
- * 3. Clears the dirty flag and deletion queue on success.
+ * Pipeline (Story 7.4):
+ *   1. Read lastSyncAt
+ *   2. Delta download (fetch cloud changes since lastSyncAt)
+ *   3. Merge with local cards (last-write-wins)
+ *   4. Persist merged cards locally
+ *   5. Delta upload (push local changes since lastSyncAt)
+ *   6. Process pending deletions (by ID, no timestamp filter)
+ *   7. Update lastSyncAt to current timestamp (only on full success)
+ *   8. Clear dirty flag and deletion queue
  *
- * @param userId             Authenticated user's ID
- * @param cloudUpsertFn      Dependency-injected upsert function
- * @param cloudDeleteFn      Dependency-injected delete function
- * @param getPendingDeletions Function to retrieve pending deletion IDs
- * @param clearPendingDeletions Function to clear the deletion queue
+ * First sync (null lastSyncAt): full sync → set lastSyncAt.
+ *
+ * @param userId               Authenticated user's ID
+ * @param cloudUpsertFn        Dependency-injected upsert function
+ * @param cloudDeleteFn        Dependency-injected delete function
+ * @param cloudFetchSinceFn    Dependency-injected delta fetch function
+ * @param persistMergedCardsFn Dependency-injected batch persist function
+ * @param getPendingDeletions  Function to retrieve pending deletion IDs
+ * @param clearPendingDeletionsFn Function to clear the deletion queue
  */
 export const processPendingSync = async (
   userId: string,
   cloudUpsertFn: CloudUpsertFn,
   cloudDeleteFn: CloudDeleteFn,
+  cloudFetchSinceFn: CloudFetchSinceFn,
+  persistMergedCardsFn: PersistMergedCardsFn,
   getPendingDeletions: () => Promise<string[]>,
-  clearPendingDeletions: () => Promise<void>
+  clearPendingDeletionsFn: () => Promise<void>
 ): Promise<ProcessPendingSyncResult> => {
   const errors: string[] = [];
+  let downloadedCount = 0;
   let upsertedCount = 0;
   let deletedCount = 0;
 
-  // 1. Upsert all local cards via syncChangedCards (Story 7.3 / Task 2)
-  const upsertResult = await syncChangedCards(userId, cloudUpsertFn);
+  // 1. Read lastSyncAt (null on first sync → full sync)
+  const lastSyncAt = await getLastSyncAt();
+
+  // 2. Delta download
+  const { data: cloudRows, error: fetchError } = await cloudFetchSinceFn(userId, lastSyncAt);
+  if (fetchError) {
+    errors.push(`Download failed: ${fetchError}`);
+    return { success: false, downloadedCount, upsertedCount, deletedCount, errors };
+  }
+
+  // 3. Map + merge with local cards
+  const cloudCards: LoyaltyCard[] = [];
+  for (const row of cloudRows) {
+    const card = cloudRowToLocalCard(row);
+    if (card) {
+      cloudCards.push(card);
+    }
+  }
+  downloadedCount = cloudCards.length;
+
+  if (cloudCards.length > 0) {
+    const localCards = await getAllCards();
+    const { merged } = mergeCards(localCards, cloudCards);
+
+    // 4. Persist merged cards locally
+    await persistMergedCardsFn(merged);
+  }
+
+  // 5. Delta upload
+  const upsertResult = await syncChangedCards(userId, cloudUpsertFn, lastSyncAt);
   if (!upsertResult.success) {
     for (const e of upsertResult.errors) {
       errors.push(`Upsert failed: ${e.message}`);
@@ -72,7 +119,7 @@ export const processPendingSync = async (
     upsertedCount = upsertResult.upsertedCount;
   }
 
-  // 2. Process pending deletions
+  // 6. Process pending deletions (by ID, no timestamp filter — AC7)
   const pendingIds = await getPendingDeletions();
   for (const cardId of pendingIds) {
     const { error } = await cloudDeleteFn(cardId, userId);
@@ -83,14 +130,20 @@ export const processPendingSync = async (
     }
   }
 
-  // 3. Clear dirty flag + deletion queue on full success
+  // 7 + 8. Update lastSyncAt + clear dirty/deletions ONLY on full success (atomicity)
   if (errors.length === 0) {
+    await setLastSyncAt(new Date().toISOString());
     await clearDirty();
-    await clearPendingDeletions();
+    await clearPendingDeletionsFn();
   }
+
+  console.log(
+    `[sync] Delta sync: downloaded ${downloadedCount}, uploaded ${upsertedCount}, deleted ${deletedCount}`
+  );
 
   return {
     success: errors.length === 0,
+    downloadedCount,
     upsertedCount,
     deletedCount,
     errors

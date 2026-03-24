@@ -9,6 +9,8 @@ const mockGetSession = jest.fn();
 const mockUseAuthState = jest.fn();
 const mockUpsertCards = jest.fn();
 const mockDeleteCardFromCloud = jest.fn();
+const mockFetchCardsSince = jest.fn();
+const mockBatchUpsertCards = jest.fn();
 
 jest.mock('@/core/sync', () => ({
   isDirty: (...args: unknown[]) => mockIsDirty(...args),
@@ -27,7 +29,12 @@ jest.mock('@/shared/supabase/useAuthState', () => ({
 
 jest.mock('@/shared/supabase/cards', () => ({
   upsertCards: (...args: unknown[]) => mockUpsertCards(...args),
-  deleteCardFromCloud: (...args: unknown[]) => mockDeleteCardFromCloud(...args)
+  deleteCardFromCloud: (...args: unknown[]) => mockDeleteCardFromCloud(...args),
+  fetchCardsSince: (...args: unknown[]) => mockFetchCardsSince(...args)
+}));
+
+jest.mock('@/core/database/card-repository', () => ({
+  batchUpsertCards: (...args: unknown[]) => mockBatchUpsertCards(...args)
 }));
 
 import { useAutoSync, _SYNC_CHECK_INTERVAL_MS } from './useAutoSync';
@@ -88,6 +95,8 @@ describe('useAutoSync', () => {
     expect(mockIsDirty).toHaveBeenCalled();
     expect(mockProcessPendingSync).toHaveBeenCalledWith(
       'user-123',
+      expect.any(Function),
+      expect.any(Function),
       expect.any(Function),
       expect.any(Function),
       expect.any(Function),
