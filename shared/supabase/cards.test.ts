@@ -8,7 +8,7 @@ jest.mock('./client', () => ({
 
 import { CloudCardRow } from '@/core/sync';
 
-import { upsertCards, fetchCards, deleteCardFromCloud } from './cards';
+import { upsertCards, fetchCards, fetchCardsSince, deleteCardFromCloud } from './cards';
 
 const makeCloudRow = (id: string): CloudCardRow => ({
   id,
@@ -160,6 +160,88 @@ describe('deleteCardFromCloud', () => {
 
     const result = await deleteCardFromCloud(cardId, userId);
 
+    expect(result.error).toBeNull();
+  });
+});
+
+// ─── fetchCardsSince (Story 7.4 — delta download) ─────────────
+
+describe('fetchCardsSince', () => {
+  const userId = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa';
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
+  it('applies gt(updated_at, since) filter when since is provided', async () => {
+    const gt = jest.fn().mockResolvedValue({
+      data: [makeCloudRow('11111111-1111-4111-8111-111111111111')],
+      error: null
+    });
+    const eq = jest.fn().mockReturnValue({ gt });
+    const select = jest.fn().mockReturnValue({ eq });
+    mockFrom.mockReturnValue({ select });
+
+    const result = await fetchCardsSince(userId, '2026-03-20T00:00:00.000Z');
+
+    expect(mockFrom).toHaveBeenCalledWith('loyalty_cards');
+    expect(select).toHaveBeenCalledWith('*');
+    expect(eq).toHaveBeenCalledWith('user_id', userId);
+    expect(gt).toHaveBeenCalledWith('updated_at', '2026-03-20T00:00:00.000Z');
+    expect(result.data).toHaveLength(1);
+    expect(result.error).toBeNull();
+  });
+
+  it('returns empty array when no cards changed since timestamp', async () => {
+    const gt = jest.fn().mockResolvedValue({ data: [], error: null });
+    const eq = jest.fn().mockReturnValue({ gt });
+    const select = jest.fn().mockReturnValue({ eq });
+    mockFrom.mockReturnValue({ select });
+
+    const result = await fetchCardsSince(userId, '2026-03-25T00:00:00.000Z');
+
+    expect(result.data).toEqual([]);
+    expect(result.error).toBeNull();
+  });
+
+  it('returns error when Supabase fails', async () => {
+    const gt = jest.fn().mockResolvedValue({ data: null, error: { message: 'timeout' } });
+    const eq = jest.fn().mockReturnValue({ gt });
+    const select = jest.fn().mockReturnValue({ eq });
+    mockFrom.mockReturnValue({ select });
+
+    const result = await fetchCardsSince(userId, '2026-03-20T00:00:00.000Z');
+
+    expect(result.data).toEqual([]);
+    expect(result.error).toBe('timeout');
+  });
+
+  it('falls back to full fetch when since is null', async () => {
+    const eq = jest.fn().mockResolvedValue({
+      data: [makeCloudRow('11111111-1111-4111-8111-111111111111')],
+      error: null
+    });
+    const select = jest.fn().mockReturnValue({ eq });
+    mockFrom.mockReturnValue({ select });
+
+    const result = await fetchCardsSince(userId, null);
+
+    // Should use fetchCards path (no gt filter)
+    expect(select).toHaveBeenCalledWith('*');
+    expect(eq).toHaveBeenCalledWith('user_id', userId);
+    expect(result.data).toHaveLength(1);
+    expect(result.error).toBeNull();
+  });
+
+  it('returns empty array when data is null', async () => {
+    const gt = jest.fn().mockResolvedValue({ data: null, error: null });
+    const eq = jest.fn().mockReturnValue({ gt });
+    const select = jest.fn().mockReturnValue({ eq });
+    mockFrom.mockReturnValue({ select });
+
+    const result = await fetchCardsSince(userId, '2026-03-20T00:00:00.000Z');
+
+    expect(result.data).toEqual([]);
     expect(result.error).toBeNull();
   });
 });

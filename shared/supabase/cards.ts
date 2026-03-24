@@ -40,6 +40,35 @@ export const fetchCards = async (
 };
 
 /**
+ * Fetch cards modified after a given ISO 8601 timestamp (delta download).
+ * When `since` is null, falls back to fetching ALL cards (full download).
+ *
+ * Uses `gt('updated_at', since)` to leverage the `updated_at` column index.
+ * Rows are validated downstream by `cloudRowToLocalCard()`.
+ */
+export const fetchCardsSince = async (
+  userId: string,
+  since: string | null
+): Promise<{ data: CloudCardRow[]; error: string | null }> => {
+  if (since === null) {
+    return fetchCards(userId);
+  }
+
+  const supabase = getSupabaseClient();
+  const { data, error } = await supabase
+    .from('loyalty_cards')
+    .select('*')
+    .eq('user_id', userId)
+    .gt('updated_at', since);
+
+  if (error) {
+    return { data: [], error: error.message };
+  }
+
+  return { data: (data ?? []) as CloudCardRow[], error: null };
+};
+
+/**
  * Delete a single card from the Supabase loyalty_cards table.
  * Scoped to the user_id to respect RLS.
  */
