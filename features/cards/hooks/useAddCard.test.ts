@@ -10,12 +10,24 @@ import { router } from 'expo-router';
 import { v4 as uuidv4 } from 'uuid';
 
 import * as cardRepository from '@/core/database';
+import * as syncModule from '@/core/sync';
 
 import { useAddCard, AddCardInput } from './useAddCard';
 
 // Mock card repository
 jest.mock('@/core/database', () => ({
   insertCard: jest.fn()
+}));
+
+// Mock sync module
+jest.mock('@/core/sync', () => ({
+  markDirty: jest.fn().mockResolvedValue(undefined)
+}));
+
+// Mock auth state
+const mockUseAuthState = jest.fn().mockReturnValue({ authState: 'guest', isAuthenticated: false });
+jest.mock('@/shared/supabase/useAuthState', () => ({
+  useAuthState: (...args: unknown[]) => mockUseAuthState(...args)
 }));
 
 // UUID is mocked in jest.setup.js
@@ -241,6 +253,32 @@ describe('useAddCard', () => {
       });
 
       expect(result.current.error).toBe('Failed to add card');
+    });
+  });
+
+  describe('Sync Trigger (Story 7.3)', () => {
+    it('calls markDirty after insert when authenticated', async () => {
+      mockUseAuthState.mockReturnValue({ authState: 'authenticated', isAuthenticated: true });
+
+      const { result } = renderHook(() => useAddCard());
+
+      await act(async () => {
+        await result.current.addCard(mockCardInput);
+      });
+
+      expect(syncModule.markDirty).toHaveBeenCalledTimes(1);
+    });
+
+    it('does NOT call markDirty in guest mode', async () => {
+      mockUseAuthState.mockReturnValue({ authState: 'guest', isAuthenticated: false });
+
+      const { result } = renderHook(() => useAddCard());
+
+      await act(async () => {
+        await result.current.addCard(mockCardInput);
+      });
+
+      expect(syncModule.markDirty).not.toHaveBeenCalled();
     });
   });
 });

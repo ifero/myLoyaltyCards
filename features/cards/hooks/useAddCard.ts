@@ -13,6 +13,9 @@ import { v4 as uuidv4 } from 'uuid';
 
 import { insertCard } from '@/core/database';
 import { LoyaltyCard, BarcodeFormat, CardColor } from '@/core/schemas';
+import { markDirty } from '@/core/sync';
+
+import { useAuthState } from '@/shared/supabase/useAuthState';
 
 /**
  * Input type for adding a card (subset of LoyaltyCard)
@@ -45,56 +48,65 @@ interface UseAddCardReturn {
 export function useAddCard(): UseAddCardReturn {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const { isAuthenticated } = useAuthState();
 
-  const addCard = useCallback(async (input: AddCardInput) => {
-    setIsLoading(true);
-    setError(null);
+  const addCard = useCallback(
+    async (input: AddCardInput) => {
+      setIsLoading(true);
+      setError(null);
 
-    try {
-      const now = new Date().toISOString();
+      try {
+        const now = new Date().toISOString();
 
-      const card: LoyaltyCard = {
-        id: uuidv4(),
-        name: input.name.trim(),
-        barcode: input.barcode.trim(),
-        barcodeFormat: input.barcodeFormat,
-        brandId: input.brandId ?? null, // Use provided brandId or null for custom cards
-        color: input.color,
-        isFavorite: false,
-        lastUsedAt: null,
-        usageCount: 0,
-        createdAt: now,
-        updatedAt: now
-      };
+        const card: LoyaltyCard = {
+          id: uuidv4(),
+          name: input.name.trim(),
+          barcode: input.barcode.trim(),
+          barcodeFormat: input.barcodeFormat,
+          brandId: input.brandId ?? null, // Use provided brandId or null for custom cards
+          color: input.color,
+          isFavorite: false,
+          lastUsedAt: null,
+          usageCount: 0,
+          createdAt: now,
+          updatedAt: now
+        };
 
-      await insertCard(card);
+        await insertCard(card);
 
-      // Success feedback per AC7
-      await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-      Burnt.toast({
-        title: 'Card added',
-        preset: 'done'
-      });
+        // Sync trigger: mark dirty so background sync picks up the new card
+        if (isAuthenticated) {
+          await markDirty();
+        }
 
-      // Navigate to main cards list page (Story 3.3: from catalogue)
-      router.replace('/');
-    } catch (err) {
-      const message = err instanceof Error ? err.message : 'Failed to add card';
-      setError(message);
+        // Success feedback per AC7
+        await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+        Burnt.toast({
+          title: 'Card added',
+          preset: 'done'
+        });
 
-      console.error(message);
+        // Navigate to main cards list page (Story 3.3: from catalogue)
+        router.replace('/');
+      } catch (err) {
+        const message = err instanceof Error ? err.message : 'Failed to add card';
+        setError(message);
 
-      // Error feedback
-      await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
-      Burnt.toast({
-        title: 'Error',
-        message,
-        preset: 'error'
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
+        console.error(message);
+
+        // Error feedback
+        await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+        Burnt.toast({
+          title: 'Error',
+          message,
+          preset: 'error'
+        });
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    [isAuthenticated]
+  );
 
   return { addCard, isLoading, error };
 }

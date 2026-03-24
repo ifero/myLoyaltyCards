@@ -17,6 +17,9 @@ import { router } from 'expo-router';
 import { useCallback, useState } from 'react';
 
 import { deleteCard as deleteCardFromDb } from '@/core/database';
+import { addPendingDeletion, markDirty } from '@/core/sync';
+
+import { useAuthState } from '@/shared/supabase/useAuthState';
 
 export interface UseDeleteCardReturn {
   /** Async function to delete the card */
@@ -45,6 +48,7 @@ export interface UseDeleteCardReturn {
 export function useDeleteCard(cardId: string): UseDeleteCardReturn {
   const [isDeleting, setIsDeleting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const { isAuthenticated } = useAuthState();
 
   const deleteCard = useCallback(async (): Promise<boolean> => {
     if (!cardId) {
@@ -56,8 +60,18 @@ export function useDeleteCard(cardId: string): UseDeleteCardReturn {
     setError(null);
 
     try {
+      // Track deletion for cloud sync BEFORE local delete
+      if (isAuthenticated) {
+        await addPendingDeletion(cardId);
+      }
+
       // Delete from local database
       await deleteCardFromDb(cardId);
+
+      // Mark dirty so background sync picks up the deletion
+      if (isAuthenticated) {
+        await markDirty();
+      }
 
       // Success feedback - haptic
       await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
@@ -90,7 +104,7 @@ export function useDeleteCard(cardId: string): UseDeleteCardReturn {
       setIsDeleting(false); // Only reset loading state on failure (success unmounts)
       return false;
     }
-  }, [cardId]);
+  }, [cardId, isAuthenticated]);
 
   return {
     deleteCard,

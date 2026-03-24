@@ -29,7 +29,17 @@ jest.mock('@/core/database', () => ({
   updateCard: jest.fn(() => Promise.resolve())
 }));
 
+jest.mock('@/core/sync', () => ({
+  markDirty: jest.fn().mockResolvedValue(undefined)
+}));
+
+const mockUseAuthState = jest.fn().mockReturnValue({ authState: 'guest', isAuthenticated: false });
+jest.mock('@/shared/supabase/useAuthState', () => ({
+  useAuthState: (...args: unknown[]) => mockUseAuthState(...args)
+}));
+
 import { getCardById, updateCard as updateCardInDb } from '@/core/database';
+import * as syncModule from '@/core/sync';
 
 import { useEditCard } from './useEditCard';
 
@@ -82,5 +92,41 @@ describe('useEditCard', () => {
     expect(result.current.error).toBeDefined();
     expect(Burnt.toast).toHaveBeenCalled();
     expect(Haptics.notificationAsync).toHaveBeenCalled();
+  });
+
+  describe('Sync Trigger (Story 7.3)', () => {
+    it('calls markDirty after update when authenticated', async () => {
+      mockUseAuthState.mockReturnValue({ authState: 'authenticated', isAuthenticated: true });
+
+      const { result } = renderHook(() => useEditCard());
+
+      await act(async () => {
+        await result.current.editCard('1', {
+          name: 'Updated',
+          barcode: '111',
+          barcodeFormat: 'EAN13',
+          color: 'blue'
+        });
+      });
+
+      expect(syncModule.markDirty).toHaveBeenCalledTimes(1);
+    });
+
+    it('does NOT call markDirty in guest mode', async () => {
+      mockUseAuthState.mockReturnValue({ authState: 'guest', isAuthenticated: false });
+
+      const { result } = renderHook(() => useEditCard());
+
+      await act(async () => {
+        await result.current.editCard('1', {
+          name: 'Updated',
+          barcode: '111',
+          barcodeFormat: 'EAN13',
+          color: 'blue'
+        });
+      });
+
+      expect(syncModule.markDirty).not.toHaveBeenCalled();
+    });
   });
 });
