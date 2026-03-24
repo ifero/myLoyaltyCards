@@ -8,7 +8,7 @@ jest.mock('./client', () => ({
 
 import { CloudCardRow } from '@/core/sync';
 
-import { upsertCards, fetchCards } from './cards';
+import { upsertCards, fetchCards, deleteCardFromCloud } from './cards';
 
 const makeCloudRow = (id: string): CloudCardRow => ({
   id,
@@ -115,5 +115,51 @@ describe('fetchCards', () => {
 
     expect(result.data).toEqual([]);
     expect(result.error).toBe('DB down');
+  });
+});
+
+describe('deleteCardFromCloud', () => {
+  const userId = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa';
+  const cardId = '11111111-1111-4111-8111-111111111111';
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
+  it('calls Supabase delete with correct id + user_id', async () => {
+    const eqUserId = jest.fn().mockResolvedValue({ error: null });
+    const eqId = jest.fn().mockReturnValue({ eq: eqUserId });
+    const deleteFn = jest.fn().mockReturnValue({ eq: eqId });
+    mockFrom.mockReturnValue({ delete: deleteFn });
+
+    const result = await deleteCardFromCloud(cardId, userId);
+
+    expect(mockFrom).toHaveBeenCalledWith('loyalty_cards');
+    expect(deleteFn).toHaveBeenCalled();
+    expect(eqId).toHaveBeenCalledWith('id', cardId);
+    expect(eqUserId).toHaveBeenCalledWith('user_id', userId);
+    expect(result).toEqual({ error: null });
+  });
+
+  it('returns normalized error message when Supabase delete fails', async () => {
+    const eqUserId = jest.fn().mockResolvedValue({ error: { message: 'RLS denied' } });
+    const eqId = jest.fn().mockReturnValue({ eq: eqUserId });
+    const deleteFn = jest.fn().mockReturnValue({ eq: eqId });
+    mockFrom.mockReturnValue({ delete: deleteFn });
+
+    const result = await deleteCardFromCloud(cardId, userId);
+
+    expect(result).toEqual({ error: 'RLS denied' });
+  });
+
+  it('returns null error when no Supabase error is present', async () => {
+    const eqUserId = jest.fn().mockResolvedValue({ error: null });
+    const eqId = jest.fn().mockReturnValue({ eq: eqUserId });
+    const deleteFn = jest.fn().mockReturnValue({ eq: eqId });
+    mockFrom.mockReturnValue({ delete: deleteFn });
+
+    const result = await deleteCardFromCloud(cardId, userId);
+
+    expect(result.error).toBeNull();
   });
 });

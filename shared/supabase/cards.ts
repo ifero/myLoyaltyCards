@@ -38,3 +38,21 @@ export const fetchCards = async (
 
   return { data: (data ?? []) as CloudCardRow[], error: null };
 };
+
+/**
+ * Delete a single card from the Supabase loyalty_cards table.
+ * Scoped to the user_id to respect RLS.
+ */
+export const deleteCardFromCloud = async (
+  cardId: string,
+  userId: string
+): Promise<{ error: string | null }> => {
+  const supabase = getSupabaseClient();
+  const { error } = await supabase
+    .from('loyalty_cards')
+    .delete()
+    .eq('id', cardId)
+    .eq('user_id', userId);
+
+  return { error: error?.message ?? null };
+};

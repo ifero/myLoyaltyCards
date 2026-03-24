@@ -159,6 +159,58 @@ export const _BATCH_SIZE = BATCH_SIZE;
 export const _CLOUD_SYNC_COOLDOWN_MS = CLOUD_SYNC_COOLDOWN_MS;
 
 // ===================================================================
+// Change-Aware Upload (Story 7.3)
+// ===================================================================
+
+export type SyncChangedCardsResult = {
+  success: boolean;
+  upsertedCount: number;
+  errors: AppError[];
+};
+
+/**
+ * Read ALL local cards and upsert them to cloud (full sync).
+ * This function does NOT check the cooldown — the caller is responsible
+ * for respecting throttle semantics (e.g., sync-trigger).
+ *
+ * Note: Delta sync (only changed cards) is Story 7.4. This story
+ * intentionally performs a full upsert.
+ */
+export const syncChangedCards = async (
+  userId: string,
+  cloudUpsertFn: CloudUpsertFn
+): Promise<SyncChangedCardsResult> => {
+  if (!userId) {
+    return {
+      success: false,
+      upsertedCount: 0,
+      errors: [toAppError('SYNC_INVALID_USER', 'Invalid user id.')]
+    };
+  }
+
+  const localCards = await getAllCards();
+  if (localCards.length === 0) {
+    return { success: true, upsertedCount: 0, errors: [] };
+  }
+
+  const cloudRows = mapLocalCardsToCloudRows(localCards, userId);
+  const errors: AppError[] = [];
+  let upsertedCount = 0;
+
+  const batches = splitIntoBatches(cloudRows, BATCH_SIZE);
+  for (const batch of batches) {
+    const { error } = await cloudUpsertFn(batch);
+    if (error) {
+      errors.push(toAppError('SYNC_UPLOAD_BATCH_FAILED', error));
+      continue;
+    }
+    upsertedCount += batch.length;
+  }
+
+  return { success: errors.length === 0, upsertedCount, errors };
+};
+
+// ===================================================================
 // Download & Merge (Story 7.2)
 // ===================================================================
 
