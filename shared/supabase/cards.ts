@@ -18,3 +18,23 @@ export const upsertCards = async (cards: CloudCardRow[]): Promise<{ error: strin
 
   return { error: error?.message ?? null };
 };
+
+/**
+ * Fetch all cards for a user from Supabase.
+ * Returns raw CloudCardRow[] cast without Zod validation at this layer — rows
+ * are validated downstream by `cloudRowToLocalCard()` in `core/sync/mappers.ts`,
+ * which applies `parseWithLogging` against `loyaltyCardSchema`. Invalid rows
+ * are safely skipped during merge (see `downloadCloudCards`).
+ */
+export const fetchCards = async (
+  userId: string
+): Promise<{ data: CloudCardRow[]; error: string | null }> => {
+  const supabase = getSupabaseClient();
+  const { data, error } = await supabase.from('loyalty_cards').select('*').eq('user_id', userId);
+
+  if (error) {
+    return { data: [], error: error.message };
+  }
+
+  return { data: (data ?? []) as CloudCardRow[], error: null };
+};

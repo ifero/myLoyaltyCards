@@ -1,4 +1,10 @@
-import { LoyaltyCard } from '@/core/schemas';
+import {
+  type BarcodeFormat,
+  type CardColor,
+  type LoyaltyCard,
+  loyaltyCardSchema,
+  parseWithLogging
+} from '@/core/schemas';
 
 export type CloudCardRow = {
   id: string;
@@ -30,4 +36,26 @@ export const localCardToCloudRow = (card: LoyaltyCard, userId: string): CloudCar
     created_at: card.createdAt,
     updated_at: card.updatedAt
   };
+};
+
+/**
+ * Map a cloud row (snake_case) to a local LoyaltyCard (camelCase).
+ * Strips user_id. Returns null if Zod validation fails.
+ */
+export const cloudRowToLocalCard = (row: CloudCardRow): LoyaltyCard | null => {
+  const mapped = {
+    id: row.id,
+    name: row.name,
+    barcode: row.barcode,
+    barcodeFormat: row.barcode_format as BarcodeFormat,
+    brandId: row.brand_id,
+    color: row.color as CardColor,
+    isFavorite: row.is_favorite,
+    lastUsedAt: row.last_used_at,
+    usageCount: row.usage_count,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at
+  };
+
+  return parseWithLogging(loyaltyCardSchema, mapped, 'sync:cloudRowToLocalCard');
 };

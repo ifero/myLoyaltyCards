@@ -22,7 +22,7 @@ export const SyncIndicator = ({ isSyncing }: SyncIndicatorProps) => {
     >
       <ActivityIndicator testID="sync-indicator-spinner" size="small" color={theme.primary} />
       <Text className="ml-2 text-xs" style={{ color: theme.textSecondary }}>
-        Syncing cards to cloud…
+        Syncing cards…
       </Text>
     </View>
   );

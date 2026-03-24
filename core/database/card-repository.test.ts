@@ -7,6 +7,7 @@ import {
   updateCard,
   deleteCard,
   upsertCard,
+  batchUpsertCards,
   deleteAllCards,
   getCardCount
 } from './card-repository';
@@ -177,5 +178,58 @@ describe('card-repository', () => {
     const count = await getCardCount();
     expect(db.getFirstAsync).toHaveBeenCalled();
     expect(count).toBe(7);
+  });
+
+  test('batchUpsertCards runs all inserts in a single transaction', async () => {
+    const db = makeDb();
+    const cards: LoyaltyCard[] = [
+      { ...sampleCard, id: '1' },
+      { ...sampleCard, id: '2' }
+    ];
+
+    await batchUpsertCards(cards, db);
+
+    expect(db.withTransactionAsync).toHaveBeenCalledTimes(1);
+    expect(db.runAsync).toHaveBeenCalledTimes(2);
+  });
+
+  test('batchUpsertCards is a no-op for empty array', async () => {
+    const db = makeDb();
+    await batchUpsertCards([], db);
+
+    expect(db.withTransactionAsync).not.toHaveBeenCalled();
+    expect(db.runAsync).not.toHaveBeenCalled();
+  });
+
+  test('batchUpsertCards uses default getDatabase when no db supplied', async () => {
+    const db = makeDb();
+    const spy = jest.spyOn(databaseModule, 'getDatabase').mockReturnValue(db);
+
+    await batchUpsertCards([sampleCard]);
+
+    expect(spy).toHaveBeenCalled();
+    expect(db.withTransactionAsync).toHaveBeenCalled();
+    expect(db.runAsync).toHaveBeenCalledTimes(1);
+  });
+
+  test('batchUpsertCards passes correct SQL parameters including boolean mapping', async () => {
+    const db = makeDb();
+    const card: LoyaltyCard = { ...sampleCard, id: 'batch-1', isFavorite: true, usageCount: 5 };
+
+    await batchUpsertCards([card], db);
+
+    expect(db.runAsync).toHaveBeenCalledWith(expect.stringContaining('INSERT OR REPLACE'), [
+      'batch-1',
+      card.name,
+      card.barcode,
+      card.barcodeFormat,
+      card.brandId,
+      card.color,
+      1,
+      card.lastUsedAt,
+      5,
+      card.createdAt,
+      card.updatedAt
+    ]);
   });
 });

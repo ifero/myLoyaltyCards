@@ -23,6 +23,6 @@ describe('SyncIndicator', () => {
 
     expect(screen.getByTestId('sync-indicator')).toBeTruthy();
     expect(screen.getByTestId('sync-indicator-spinner')).toBeTruthy();
-    expect(screen.getByText('Syncing cards to cloud…')).toBeTruthy();
+    expect(screen.getByText('Syncing cards…')).toBeTruthy();
   });
 });
