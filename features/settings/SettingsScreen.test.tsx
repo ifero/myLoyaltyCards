@@ -58,6 +58,11 @@ jest.mock('@/shared/supabase/useAuthState', () => ({
   useAuthState: () => mockUseAuthState()
 }));
 
+const mockClearLastSyncAt = jest.fn();
+jest.mock('@/core/sync/sync-timestamp', () => ({
+  clearLastSyncAt: (...args: unknown[]) => mockClearLastSyncAt(...args)
+}));
+
 jest.spyOn(Alert, 'alert');
 
 // ---------------------------------------------------------------------------
@@ -211,6 +216,7 @@ describe('SettingsScreen — Story 6.9: Sign-out flow', () => {
     });
 
     expect(mockSignOut).toHaveBeenCalled();
+    expect(mockClearLastSyncAt).toHaveBeenCalled();
     expect(mockReplace).toHaveBeenCalledWith('/');
   });
 
@@ -516,6 +522,7 @@ describe('SettingsScreen — Story 6.10: Deletion execution', () => {
     });
 
     expect(getByTestId('delete-account-success')).toBeTruthy();
+    expect(mockClearLastSyncAt).toHaveBeenCalled();
 
     act(() => {
       jest.advanceTimersByTime(2000);
