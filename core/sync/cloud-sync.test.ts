@@ -15,6 +15,7 @@ import {
   downloadCloudCards,
   forceSyncLocalCards,
   mergeCards,
+  syncChangedCards,
   uploadLocalCards,
   type CloudFetchFn,
   type CloudUpsertFn
@@ -446,5 +447,62 @@ describe('downloadCloudCards', () => {
     });
 
     expect(AsyncStorage.setItem).toHaveBeenCalledWith(_LAST_CLOUD_SYNC_KEY, '5678');
+  });
+});
+
+// ─── syncChangedCards (Story 7.3) ──────────────────────────────
+
+describe('syncChangedCards', () => {
+  let upsertFn: jest.MockedFunction<CloudUpsertFn>;
+  const userId = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa';
+
+  beforeEach(() => {
+    upsertFn = jest.fn().mockResolvedValue({ error: null });
+  });
+
+  it('returns error for empty userId', async () => {
+    const result = await syncChangedCards('', upsertFn);
+    expect(result.success).toBe(false);
+    expect(result.errors[0]?.code).toBe('SYNC_INVALID_USER');
+  });
+
+  it('returns success with 0 upserted when no local cards', async () => {
+    mockGetAllCards.mockResolvedValue([]);
+    const result = await syncChangedCards(userId, upsertFn);
+    expect(result.success).toBe(true);
+    expect(result.upsertedCount).toBe(0);
+    expect(upsertFn).not.toHaveBeenCalled();
+  });
+
+  it('upserts all local cards to cloud', async () => {
+    mockGetAllCards.mockResolvedValue([makeCard(0), makeCard(1)]);
+    const result = await syncChangedCards(userId, upsertFn);
+    expect(result.success).toBe(true);
+    expect(result.upsertedCount).toBe(2);
+    expect(upsertFn).toHaveBeenCalledTimes(1);
+  });
+
+  it('batches cards when exceeding BATCH_SIZE', async () => {
+    const cards = Array.from({ length: _BATCH_SIZE + 10 }, (_, i) => makeCard(i));
+    mockGetAllCards.mockResolvedValue(cards);
+    const result = await syncChangedCards(userId, upsertFn);
+    expect(upsertFn).toHaveBeenCalledTimes(2);
+    expect(result.upsertedCount).toBe(_BATCH_SIZE + 10);
+  });
+
+  it('reports errors on upsert failure', async () => {
+    mockGetAllCards.mockResolvedValue([makeCard(0)]);
+    upsertFn.mockResolvedValue({ error: 'Cloud unavailable' });
+    const result = await syncChangedCards(userId, upsertFn);
+    expect(result.success).toBe(false);
+    expect(result.errors).toHaveLength(1);
+    expect(result.errors[0]?.message).toBe('Cloud unavailable');
+  });
+
+  it('does NOT update cooldown timestamp', async () => {
+    mockGetAllCards.mockResolvedValue([makeCard(0)]);
+    await syncChangedCards(userId, upsertFn);
+    // syncChangedCards is throttle-free; it must NOT touch lastCloudSync
+    expect(AsyncStorage.setItem).not.toHaveBeenCalledWith(_LAST_CLOUD_SYNC_KEY, expect.anything());
   });
 });

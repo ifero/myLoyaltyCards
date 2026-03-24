@@ -15,12 +15,25 @@ import * as Haptics from 'expo-haptics';
 import { router } from 'expo-router';
 
 import * as cardRepository from '@/core/database';
+import * as syncModule from '@/core/sync';
 
 import { useDeleteCard } from './useDeleteCard';
 
 // Mock card repository
 jest.mock('@/core/database', () => ({
   deleteCard: jest.fn()
+}));
+
+// Mock sync module
+jest.mock('@/core/sync', () => ({
+  addPendingDeletion: jest.fn().mockResolvedValue(undefined),
+  markDirty: jest.fn().mockResolvedValue(undefined)
+}));
+
+// Mock auth state
+const mockUseAuthState = jest.fn().mockReturnValue({ authState: 'guest', isAuthenticated: false });
+jest.mock('@/shared/supabase/useAuthState', () => ({
+  useAuthState: (...args: unknown[]) => mockUseAuthState(...args)
 }));
 
 describe('useDeleteCard', () => {
@@ -242,6 +255,55 @@ describe('useDeleteCard', () => {
       expect(success).toBe(false);
       expect(result.current.error).toBe('Invalid card ID');
       expect(cardRepository.deleteCard).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('Sync Trigger (Story 7.3)', () => {
+    it('calls addPendingDeletion + markDirty when authenticated', async () => {
+      mockUseAuthState.mockReturnValue({ authState: 'authenticated', isAuthenticated: true });
+
+      const { result } = renderHook(() => useDeleteCard(mockCardId));
+
+      await act(async () => {
+        await result.current.deleteCard();
+      });
+
+      expect(syncModule.addPendingDeletion).toHaveBeenCalledWith(mockCardId);
+      expect(syncModule.markDirty).toHaveBeenCalledTimes(1);
+    });
+
+    it('does NOT call sync triggers in guest mode', async () => {
+      mockUseAuthState.mockReturnValue({ authState: 'guest', isAuthenticated: false });
+
+      const { result } = renderHook(() => useDeleteCard(mockCardId));
+
+      await act(async () => {
+        await result.current.deleteCard();
+      });
+
+      expect(syncModule.addPendingDeletion).not.toHaveBeenCalled();
+      expect(syncModule.markDirty).not.toHaveBeenCalled();
+    });
+
+    it('calls addPendingDeletion BEFORE deleteCard', async () => {
+      mockUseAuthState.mockReturnValue({ authState: 'authenticated', isAuthenticated: true });
+      const callOrder: string[] = [];
+
+      (syncModule.addPendingDeletion as jest.Mock).mockImplementation(async () => {
+        callOrder.push('addPendingDeletion');
+      });
+      (cardRepository.deleteCard as jest.Mock).mockImplementation(async () => {
+        callOrder.push('deleteCardFromDb');
+      });
+
+      const { result } = renderHook(() => useDeleteCard(mockCardId));
+
+      await act(async () => {
+        await result.current.deleteCard();
+      });
+
+      expect(callOrder[0]).toBe('addPendingDeletion');
+      expect(callOrder[1]).toBe('deleteCardFromDb');
     });
   });
 });

@@ -11,6 +11,7 @@ import { useEffect, useState } from 'react';
 
 import { SyncErrorBanner } from '@/shared/components/SyncErrorBanner';
 import { SyncIndicator } from '@/shared/components/SyncIndicator';
+import { useAutoSync } from '@/shared/hooks/useAutoSync';
 import { useCloudSync } from '@/shared/hooks/useCloudSync';
 
 import MigrationBanner from '@/features/auth/MigrationBanner';
@@ -26,6 +27,12 @@ const HomeScreen = () => {
   const [, requestPermission] = useCameraPermissions();
   const { status, message, retry, dismiss } = useGuestMigration();
   const { isSyncing, syncError, forceSync, clearSyncError } = useCloudSync();
+  const {
+    isSyncing: isAutoSyncing,
+    syncError: autoSyncError,
+    clearSyncError: clearAutoSyncError
+  } = useAutoSync();
+  const hasSyncError = Boolean(syncError ?? autoSyncError);
 
   useEffect(() => {
     if (!isLoading) {
@@ -55,8 +62,15 @@ const HomeScreen = () => {
   return (
     <>
       <MigrationBanner status={status} message={message} onRetry={retry} onDismiss={dismiss} />
-      <SyncIndicator isSyncing={isSyncing} />
-      <SyncErrorBanner message={syncError} onRetry={forceSync} onDismiss={clearSyncError} />
+      <SyncIndicator isSyncing={isSyncing || isAutoSyncing} hasError={hasSyncError} />
+      <SyncErrorBanner
+        message={syncError ?? autoSyncError}
+        onRetry={forceSync}
+        onDismiss={() => {
+          clearSyncError();
+          clearAutoSyncError();
+        }}
+      />
       <CardList />
       <OnboardingOverlay
         visible={visible}
