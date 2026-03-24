@@ -43,6 +43,14 @@ const SettingsScreen = () => {
   const [deleteSuccess, setDeleteSuccess] = useState(false);
   const deleteSuccessTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  const clearLastSyncAtSafely = async (): Promise<void> => {
+    try {
+      await clearLastSyncAt();
+    } catch (error) {
+      console.error('[SettingsScreen] Failed to clear lastSyncAt', error);
+    }
+  };
+
   useEffect(() => {
     return () => {
       if (deleteSuccessTimeoutRef.current) {
@@ -59,7 +67,7 @@ const SettingsScreen = () => {
       return;
     }
     // Clear sync timestamp so next sign-in triggers a full sync (Story 7.4)
-    await clearLastSyncAt();
+    await clearLastSyncAtSafely();
     // Return to home screen in guest mode — local cards remain accessible
     router.replace('/');
   };
@@ -102,7 +110,7 @@ const SettingsScreen = () => {
     }
 
     // Clear sync timestamp so next sign-in triggers a full sync (Story 7.4)
-    await clearLastSyncAt();
+    await clearLastSyncAtSafely();
 
     // Close modal, show success, navigate
     setShowDeleteConfirm(false);

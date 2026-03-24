@@ -2,7 +2,7 @@
 
 **Epic:** 7 - Cloud Synchronization
 **Type:** User-Facing
-**Status:** review
+**Status:** done
 **Sprint:** 9
 **FRs Covered:** FR35, FR36
 
@@ -305,14 +305,15 @@ Claude Opus 4.6 (GitHub Copilot)
 
 ### Change Log
 
-| Date       | Change                                                                     |
-| ---------- | -------------------------------------------------------------------------- |
-| 2025-07-14 | Created sync-timestamp.ts with getLastSyncAt/setLastSyncAt/clearLastSyncAt |
-| 2025-07-14 | Refactored syncChangedCards() for delta upload with lastSyncAt param       |
-| 2025-07-14 | Added fetchCardsSince() to shared/supabase/cards.ts                        |
-| 2025-07-14 | Refactored processPendingSync() to full delta pipeline (7 params)          |
-| 2025-07-14 | Updated useAutoSync hook to pass delta functions                           |
-| 2025-07-14 | Added clearLastSyncAt to SettingsScreen sign-out and delete-account flows  |
+| Date       | Change                                                                           |
+| ---------- | -------------------------------------------------------------------------------- |
+| 2025-07-14 | Created sync-timestamp.ts with getLastSyncAt/setLastSyncAt/clearLastSyncAt       |
+| 2025-07-14 | Refactored syncChangedCards() for delta upload with lastSyncAt param             |
+| 2025-07-14 | Added fetchCardsSince() to shared/supabase/cards.ts                              |
+| 2025-07-14 | Refactored processPendingSync() to full delta pipeline (7 params)                |
+| 2025-07-14 | Updated useAutoSync hook to pass delta functions                                 |
+| 2025-07-14 | Added clearLastSyncAt to SettingsScreen sign-out and delete-account flows        |
+| 2026-03-24 | CR fixes: resilient timestamp clear, userId guard, accurate partial upload count |
 
 ### File List
 
@@ -331,3 +332,16 @@ Claude Opus 4.6 (GitHub Copilot)
 | shared/hooks/useAutoSync.test.ts          | MODIFIED | Updated mocks for 7-param call                    |
 | features/settings/SettingsScreen.tsx      | MODIFIED | clearLastSyncAt on sign-out and delete-account    |
 | features/settings/SettingsScreen.test.tsx | MODIFIED | Assertions for clearLastSyncAt in sign-out/delete |
+| docs/sprint-artifacts/sprint-status.yaml  | MODIFIED | Story 7.4 status synced to done                   |
+
+### Senior Developer Review (AI)
+
+- **Date:** 2026-03-24
+- **Reviewer:** Amelia (Developer Agent)
+- **Outcome:** Approved after fixes
+- **Fixes Applied:**
+  - Added `userId` validation guard in `processPendingSync`.
+  - Preserved partial `upsertedCount` on mixed success/failure batch uploads.
+  - Made `clearLastSyncAt` non-blocking in sign-out/delete-account flows.
+  - Updated story file list to include sprint tracking file.
+- **Validation:** Targeted tests for sync + settings pass (all green).

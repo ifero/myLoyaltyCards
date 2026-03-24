@@ -123,6 +123,24 @@ describe('processPendingSync', () => {
       mockClearPendingDeletions
     );
 
+  it('returns error when userId is invalid and skips cloud operations', async () => {
+    const result = await processPendingSync(
+      '',
+      mockUpsertFn,
+      mockDeleteFn,
+      mockFetchSinceFn,
+      mockPersistMergedCardsFn,
+      mockGetPendingDeletions,
+      mockClearPendingDeletions
+    );
+
+    expect(result.success).toBe(false);
+    expect(result.errors).toContain('Invalid user id.');
+    expect(mockFetchSinceFn).not.toHaveBeenCalled();
+    expect(mockUpsertFn).not.toHaveBeenCalled();
+    expect(mockDeleteFn).not.toHaveBeenCalled();
+  });
+
   // ─── First sync (null lastSyncAt → full sync) ──────────
 
   it('performs full sync when lastSyncAt is null (first sync)', async () => {
@@ -259,6 +277,25 @@ describe('processPendingSync', () => {
     expect(result.success).toBe(false);
     expect(result.errors).toContain('Upsert failed: Network error');
     expect(mockClearPendingDeletions).not.toHaveBeenCalled();
+  });
+
+  it('reports successful upsert count even when one upload batch fails', async () => {
+    const cards = Array.from({ length: 51 }, (_, index) =>
+      makeCard({
+        id: `card-${index + 1}`,
+        updatedAt: '2026-03-22T10:00:00.000Z'
+      })
+    );
+    mockGetAllCards.mockResolvedValue(cards);
+    mockUpsertFn
+      .mockResolvedValueOnce({ error: null })
+      .mockResolvedValueOnce({ error: 'batch fail' });
+
+    const result = await callProcess();
+
+    expect(result.success).toBe(false);
+    expect(result.upsertedCount).toBe(50);
+    expect(result.errors).toContain('Upsert failed: batch fail');
   });
 
   it('does not clear dirty/deletions on delete failure', async () => {

@@ -81,6 +81,11 @@ export const processPendingSync = async (
   let upsertedCount = 0;
   let deletedCount = 0;
 
+  if (!userId) {
+    errors.push('Invalid user id.');
+    return { success: false, downloadedCount, upsertedCount, deletedCount, errors };
+  }
+
   // 1. Read lastSyncAt (null on first sync → full sync)
   const lastSyncAt = await getLastSyncAt();
 
@@ -111,12 +116,11 @@ export const processPendingSync = async (
 
   // 5. Delta upload
   const upsertResult = await syncChangedCards(userId, cloudUpsertFn, lastSyncAt);
+  upsertedCount = upsertResult.upsertedCount;
   if (!upsertResult.success) {
     for (const e of upsertResult.errors) {
       errors.push(`Upsert failed: ${e.message}`);
     }
-  } else {
-    upsertedCount = upsertResult.upsertedCount;
   }
 
   // 6. Process pending deletions (by ID, no timestamp filter — AC7)
