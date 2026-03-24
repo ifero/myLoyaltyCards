@@ -1,0 +1,63 @@
+core/database/card-repository.test.ts
+  eec12ef92ab89c37 214-234
+shared/hooks/useCloudSync.ts
+  eec12ef92ab89c37 64-69
+docs/sprint-artifacts/stories/7-2-download-cards-from-cloud.md
+  eec12ef92ab89c37 5,284-290
+shared/supabase/cards.ts
+  eec12ef92ab89c37 22-28
+shared/hooks/useCloudSync.test.ts
+  eec12ef92ab89c37 169,190
+core/sync/cloud-sync.test.ts
+  eec12ef92ab89c37 438-449
+docs/sprint-artifacts/sprint-status.yaml
+  eec12ef92ab89c37 185
+core/sync/cloud-sync.ts
+  eec12ef92ab89c37 229-230,316-317
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.1.17",
+  "base_commit_sha": "e1a1643a7f63667d418c1c9088d486c0f7494625",
+  "prompts": {
+    "27f621f798b69469": {
+      "agent_id": {
+        "tool": "github-copilot",
+        "id": "3ba7fa17-7048-4d38-821a-c7f02818e5c4",
+        "model": "copilot/claude-opus-4.6"
+      },
+      "human_author": "Andrea Pacino <andrea.pacino87@gmail.com>",
+      "messages": [],
+      "total_additions": 0,
+      "total_deletions": 0,
+      "accepted_lines": 12,
+      "overriden_lines": 0
+    },
+    "63bd21b3281d0eb5": {
+      "agent_id": {
+        "tool": "github-copilot",
+        "id": "023dd7f2-549e-4565-ada7-9e96655d47b7",
+        "model": "copilot/claude-opus-4.6"
+      },
+      "human_author": "Andrea Pacino <andrea.pacino87@gmail.com>",
+      "messages": [],
+      "total_additions": 3,
+      "total_deletions": 1,
+      "accepted_lines": 3,
+      "overriden_lines": 0
+    },
+    "eec12ef92ab89c37": {
+      "agent_id": {
+        "tool": "github-copilot",
+        "id": "98934bc1-eaaa-47a7-8d27-2b03740f6fef",
+        "model": "copilot/claude-opus-4.6"
+      },
+      "human_author": "Andrea Pacino <andrea.pacino87@gmail.com>",
+      "messages": [],
+      "total_additions": 73,
+      "total_deletions": 9,
+      "accepted_lines": 63,
+      "overriden_lines": 0
+    }
+  }
+}
