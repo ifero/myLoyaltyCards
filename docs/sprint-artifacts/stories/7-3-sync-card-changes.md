@@ -2,7 +2,7 @@
 
 **Epic:** 7 - Cloud Synchronization
 **Type:** User-Facing
-**Status:** ready-for-dev
+**Status:** done
 **Sprint:** 9
 **FRs Covered:** FR34, FR40, FR41
 
@@ -89,51 +89,51 @@ Then pending changes are synced within the throttle window
 
 ## Tasks / Subtasks
 
-- [ ] **Task 1: Create sync trigger service** (AC: #1, #2, #3, #4)
-  - [ ] 1.1 Create `core/sync/sync-trigger.ts` — change tracking and debounced sync dispatch
-  - [ ] 1.2 Create `core/sync/sync-trigger.test.ts` — unit tests
-  - [ ] 1.3 Implement `markDirty()` function — signals that local data has changed
-  - [ ] 1.4 Implement `processPendingSync(userId, cloudUpsertFn, cloudDeleteFn)` — flushes pending changes
-  - [ ] 1.5 Integrate with existing throttle from `cloud-sync.ts` (Story 7.1)
+- [x] **Task 1: Create sync trigger service** (AC: #1, #2, #3, #4)
+  - [x] 1.1 Create `core/sync/sync-trigger.ts` — change tracking and debounced sync dispatch
+  - [x] 1.2 Create `core/sync/sync-trigger.test.ts` — unit tests (14 pass)
+  - [x] 1.3 Implement `markDirty()` function — signals that local data has changed
+  - [x] 1.4 Implement `processPendingSync(userId, cloudUpsertFn, cloudDeleteFn)` — flushes pending changes
+  - [x] 1.5 Integrate with existing throttle from `cloud-sync.ts` (Story 7.1)
 
-- [ ] **Task 2: Implement change-aware upload** (AC: #1, #2, #4)
-  - [ ] 2.1 Extend `core/sync/cloud-sync.ts` with `syncChangedCards(userId, cloudUpsertFn)`
-  - [ ] 2.2 Read all local cards and upsert to cloud (full sync within throttle window)
-  - [ ] 2.3 Note: Delta sync optimization (only changed cards) is Story 7.4 — this story does full upsert
-  - [ ] 2.4 Unit tests
+- [x] **Task 2: Implement change-aware upload** (AC: #1, #2, #4)
+  - [x] 2.1 Extend `core/sync/cloud-sync.ts` with `syncChangedCards(userId, cloudUpsertFn)`
+  - [x] 2.2 Read all local cards and upsert to cloud (full sync within throttle window)
+  - [x] 2.3 Note: Delta sync optimization (only changed cards) is Story 7.4 — this story does full upsert
+  - [x] 2.4 Unit tests (6 new tests, 46 total pass)
 
-- [ ] **Task 3: Implement cloud delete** (AC: #3)
-  - [ ] 3.1 Add `deleteCardFromCloud(cardId, userId)` to `shared/supabase/cards.ts`
-  - [ ] 3.2 Use `supabase.from('loyalty_cards').delete().eq('id', cardId).eq('user_id', userId)`
-  - [ ] 3.3 Define `CloudDeleteFn` type for dependency injection into `core/sync/`
-  - [ ] 3.4 Track deleted card IDs locally for batch delete sync
-  - [ ] 3.5 Unit tests for delete operation
+- [x] **Task 3: Implement cloud delete** (AC: #3)
+  - [x] 3.1 Add `deleteCardFromCloud(cardId, userId)` to `shared/supabase/cards.ts`
+  - [x] 3.2 Use `supabase.from('loyalty_cards').delete().eq('id', cardId).eq('user_id', userId)`
+  - [x] 3.3 Define `CloudDeleteFn` type for dependency injection into `core/sync/`
+  - [x] 3.4 Track deleted card IDs locally for batch delete sync
+  - [x] 3.5 Unit tests for delete operation (3 new tests, 10 total pass)
 
-- [ ] **Task 4: Create deletion tracking** (AC: #3, #4)
-  - [ ] 4.1 Create `core/sync/deletion-tracker.ts` — tracks card IDs deleted since last sync
-  - [ ] 4.2 Store pending deletions in AsyncStorage (survives app restart)
-  - [ ] 4.3 Clear tracked deletions after successful sync
-  - [ ] 4.4 `addPendingDeletion(cardId)` / `getPendingDeletions()` / `clearPendingDeletions()`
-  - [ ] 4.5 Unit tests
+- [x] **Task 4: Create deletion tracking** (AC: #3, #4)
+  - [x] 4.1 Create `core/sync/deletion-tracker.ts` — tracks card IDs deleted since last sync
+  - [x] 4.2 Store pending deletions in AsyncStorage (survives app restart)
+  - [x] 4.3 Clear tracked deletions after successful sync
+  - [x] 4.4 `addPendingDeletion(cardId)` / `getPendingDeletions()` / `clearPendingDeletions()`
+  - [x] 4.5 Unit tests (8 pass)
 
-- [ ] **Task 5: Wire sync triggers into card CRUD operations** (AC: #1, #2, #3, #5)
-  - [ ] 5.1 Identify where card add/edit/delete currently happen in the codebase
-  - [ ] 5.2 After each local DB write, call `markDirty()` if user is authenticated
-  - [ ] 5.3 For deletes, call `addPendingDeletion(cardId)` before local delete
-  - [ ] 5.4 Guard: skip sync trigger when `authState !== 'authenticated'` (guest mode)
-  - [ ] 5.5 Integration approach: hook into Zustand store actions or card repository layer
+- [x] **Task 5: Wire sync triggers into card CRUD operations** (AC: #1, #2, #3, #5)
+  - [x] 5.1 Identify where card add/edit/delete currently happen in the codebase
+  - [x] 5.2 After each local DB write, call `markDirty()` if user is authenticated
+  - [x] 5.3 For deletes, call `addPendingDeletion(cardId)` before local delete
+  - [x] 5.4 Guard: skip sync trigger when `authState !== 'authenticated'` (guest mode)
+  - [x] 5.5 Integration approach: wired into useAddCard, useEditCard, useDeleteCard hooks (37 tests pass)
 
-- [ ] **Task 6: Implement background sync scheduler** (AC: #4, #7)
-  - [ ] 6.1 Create `shared/hooks/useAutoSync.ts` — hook that watches for dirty state + throttle expiry
-  - [ ] 6.2 Use `AppState` listener to trigger sync when app returns to foreground
-  - [ ] 6.3 Use interval (or throttle callback) to process pending sync
-  - [ ] 6.4 Coordinate with `useCloudSync` hook from 7.1/7.2
-  - [ ] 6.5 Unit tests for the auto-sync scheduling logic
+- [x] **Task 6: Implement background sync scheduler** (AC: #4, #7)
+  - [x] 6.1 Create `shared/hooks/useAutoSync.ts` — hook that watches for dirty state + throttle expiry
+  - [x] 6.2 Use `AppState` listener to trigger sync when app returns to foreground
+  - [x] 6.3 Use interval (or throttle callback) to process pending sync
+  - [x] 6.4 Coordinate with `useCloudSync` hook from 7.1/7.2
+  - [x] 6.5 Unit tests for the auto-sync scheduling logic (15 pass)
 
-- [ ] **Task 7: Update sync indicator for ongoing sync** (AC: #6)
-  - [ ] 7.1 Reuse `SyncIndicator` from 7.1 — already supports `isSyncing` state
-  - [ ] 7.2 Show error state briefly on sync failure (subtle, non-blocking)
-  - [ ] 7.3 Ensure indicator reflects background sync, not just initial sign-in sync
+- [x] **Task 7: Update sync indicator for ongoing sync** (AC: #6)
+  - [x] 7.1 Reuse `SyncIndicator` from 7.1 — already supports `isSyncing` state
+  - [x] 7.2 Show error state briefly on sync failure (subtle, non-blocking)
+  - [x] 7.3 Ensure indicator reflects background sync, not just initial sign-in sync (4 tests pass)
 
 ---
 
@@ -282,12 +282,67 @@ shared/
 
 ### Agent Model Used
 
-_To be filled by dev agent_
+Claude Opus 4.6 (GitHub Copilot)
 
 ### Debug Log References
 
+- Fake timer conflict with `@testing-library/react-native` `waitFor` in `useAutoSync.test.ts` — resolved by removing fake timers and testing via AppState listener triggers
+- `SEMANTIC_COLORS.light.error` TypeScript error — `SEMANTIC_COLORS` is a flat object, fixed to `SEMANTIC_COLORS.error`
+- Unused `AppError` import in `sync-trigger.ts` after refactoring `processPendingSync` to delegate to `syncChangedCards` — removed
+
 ### Completion Notes List
+
+- All 7 tasks implemented with TDD approach
+- 72 test suites, 923 tests pass, 0 failures
+- Lint: 0 errors (4 pre-existing warnings)
+- TypeScript: 0 errors
+- Sync triggers wired at hook level (useAddCard, useEditCard, useDeleteCard) rather than repository level — cleaner separation and easier to guard with `isAuthenticated`
+- Deletion tracking uses AsyncStorage for persistence across app restarts
+- Background sync uses 5-minute interval + AppState foreground listener
+- Guest mode guard prevents any sync triggers when not authenticated
 
 ### Change Log
 
+- Created `core/sync/sync-trigger.ts` — markDirty, isDirty, clearDirty, processPendingSync
+- Created `core/sync/sync-trigger.test.ts` — 14 tests
+- Extended `core/sync/cloud-sync.ts` — added syncChangedCards()
+- Extended `core/sync/cloud-sync.test.ts` — 6 new tests
+- Created `core/sync/deletion-tracker.ts` — addPendingDeletion, getPendingDeletions, clearPendingDeletions
+- Created `core/sync/deletion-tracker.test.ts` — 8 tests
+- Extended `core/sync/index.ts` — new exports
+- Extended `shared/supabase/cards.ts` — added deleteCardFromCloud()
+- Extended `shared/supabase/cards.test.ts` — 3 new tests
+- Modified `features/cards/hooks/useAddCard.ts` — markDirty on authenticated add
+- Modified `features/cards/hooks/useEditCard.ts` — markDirty on authenticated edit
+- Modified `features/cards/hooks/useDeleteCard.ts` — addPendingDeletion + markDirty on authenticated delete
+- Updated hook tests: useAddCard.test.ts, useEditCard.test.ts, useDeleteCard.test.ts
+- Created `shared/hooks/useAutoSync.ts` — background sync scheduler
+- Created `shared/hooks/useAutoSync.test.ts` — 15 tests
+- Modified `shared/components/SyncIndicator.tsx` — added hasError prop and error state
+- Modified `shared/components/SyncIndicator.test.tsx` — 2 new tests
+- Modified `app/index.tsx` — wired useAutoSync into home screen
+
 ### File List
+
+- `core/sync/sync-trigger.ts` (NEW)
+- `core/sync/sync-trigger.test.ts` (NEW)
+- `core/sync/cloud-sync.ts` (MODIFIED)
+- `core/sync/cloud-sync.test.ts` (MODIFIED)
+- `core/sync/deletion-tracker.ts` (NEW)
+- `core/sync/deletion-tracker.test.ts` (NEW)
+- `core/sync/index.ts` (MODIFIED)
+- `shared/supabase/cards.ts` (MODIFIED)
+- `shared/supabase/cards.test.ts` (MODIFIED)
+- `features/cards/hooks/useAddCard.ts` (MODIFIED)
+- `features/cards/hooks/useAddCard.test.ts` (MODIFIED)
+- `features/cards/hooks/useEditCard.ts` (MODIFIED)
+- `features/cards/hooks/useEditCard.test.ts` (MODIFIED)
+- `features/cards/hooks/useDeleteCard.ts` (MODIFIED)
+- `features/cards/hooks/useDeleteCard.test.ts` (MODIFIED)
+- `shared/hooks/useAutoSync.ts` (NEW)
+- `shared/hooks/useAutoSync.test.ts` (NEW)
+- `shared/components/SyncIndicator.tsx` (MODIFIED)
+- `shared/components/SyncIndicator.test.tsx` (MODIFIED)
+- `app/index.tsx` (MODIFIED)
+- `docs/sprint-artifacts/sprint-status.yaml` (MODIFIED)
+- `docs/sprint-artifacts/stories/7-3-sync-card-changes.md` (MODIFIED)
