@@ -450,7 +450,7 @@ describe('downloadCloudCards', () => {
   });
 });
 
-// ─── syncChangedCards (Story 7.3) ──────────────────────────────
+// ─── syncChangedCards (Story 7.3 + 7.4 delta) ─────────────────
 
 describe('syncChangedCards', () => {
   let upsertFn: jest.MockedFunction<CloudUpsertFn>;
@@ -471,14 +471,16 @@ describe('syncChangedCards', () => {
     const result = await syncChangedCards(userId, upsertFn);
     expect(result.success).toBe(true);
     expect(result.upsertedCount).toBe(0);
+    expect(result.skippedCount).toBe(0);
     expect(upsertFn).not.toHaveBeenCalled();
   });
 
-  it('upserts all local cards to cloud', async () => {
+  it('upserts all local cards to cloud (null lastSyncAt = full sync)', async () => {
     mockGetAllCards.mockResolvedValue([makeCard(0), makeCard(1)]);
     const result = await syncChangedCards(userId, upsertFn);
     expect(result.success).toBe(true);
     expect(result.upsertedCount).toBe(2);
+    expect(result.skippedCount).toBe(0);
     expect(upsertFn).toHaveBeenCalledTimes(1);
   });
 
@@ -504,5 +506,71 @@ describe('syncChangedCards', () => {
     await syncChangedCards(userId, upsertFn);
     // syncChangedCards is throttle-free; it must NOT touch lastCloudSync
     expect(AsyncStorage.setItem).not.toHaveBeenCalledWith(_LAST_CLOUD_SYNC_KEY, expect.anything());
+  });
+
+  // ─── Delta upload tests (Story 7.4 — AC1, AC5) ───────────────
+
+  it('uploads only cards changed after lastSyncAt', async () => {
+    const unchanged = { ...makeCard(0), updatedAt: '2026-03-20T10:00:00.000Z' };
+    const changed1 = { ...makeCard(1), updatedAt: '2026-03-22T10:00:00.000Z' };
+    const changed2 = { ...makeCard(2), updatedAt: '2026-03-23T08:00:00.000Z' };
+    mockGetAllCards.mockResolvedValue([unchanged, changed1, changed2]);
+
+    const result = await syncChangedCards(userId, upsertFn, '2026-03-21T00:00:00.000Z');
+
+    expect(result.success).toBe(true);
+    expect(result.upsertedCount).toBe(2);
+    expect(result.skippedCount).toBe(1);
+    expect(upsertFn).toHaveBeenCalledTimes(1);
+  });
+
+  it('uploads 0 cards when none changed since lastSyncAt', async () => {
+    const cards = Array.from({ length: 100 }, (_, i) => ({
+      ...makeCard(i),
+      updatedAt: '2026-03-19T10:00:00.000Z'
+    }));
+    mockGetAllCards.mockResolvedValue(cards);
+
+    const result = await syncChangedCards(userId, upsertFn, '2026-03-20T00:00:00.000Z');
+
+    expect(result.success).toBe(true);
+    expect(result.upsertedCount).toBe(0);
+    expect(result.skippedCount).toBe(100);
+    expect(upsertFn).not.toHaveBeenCalled();
+  });
+
+  it('uploads all cards when all changed since lastSyncAt', async () => {
+    const cards = Array.from({ length: 3 }, (_, i) => ({
+      ...makeCard(i),
+      updatedAt: '2026-03-25T10:00:00.000Z'
+    }));
+    mockGetAllCards.mockResolvedValue(cards);
+
+    const result = await syncChangedCards(userId, upsertFn, '2026-03-20T00:00:00.000Z');
+
+    expect(result.success).toBe(true);
+    expect(result.upsertedCount).toBe(3);
+    expect(result.skippedCount).toBe(0);
+  });
+
+  it('does NOT upload card when updatedAt === lastSyncAt (strict >)', async () => {
+    const exactMatch = { ...makeCard(0), updatedAt: '2026-03-20T10:00:00.000Z' };
+    mockGetAllCards.mockResolvedValue([exactMatch]);
+
+    const result = await syncChangedCards(userId, upsertFn, '2026-03-20T10:00:00.000Z');
+
+    expect(result.upsertedCount).toBe(0);
+    expect(result.skippedCount).toBe(1);
+    expect(upsertFn).not.toHaveBeenCalled();
+  });
+
+  it('falls back to full upload when lastSyncAt is null', async () => {
+    const cards = Array.from({ length: 5 }, (_, i) => makeCard(i));
+    mockGetAllCards.mockResolvedValue(cards);
+
+    const result = await syncChangedCards(userId, upsertFn, null);
+
+    expect(result.upsertedCount).toBe(5);
+    expect(result.skippedCount).toBe(0);
   });
 });
