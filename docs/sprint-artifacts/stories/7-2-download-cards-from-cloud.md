@@ -2,7 +2,7 @@
 
 **Epic:** 7 - Cloud Synchronization
 **Type:** User-Facing
-**Status:** in-review
+**Status:** done
 **Sprint:** 9
 **FRs Covered:** FR38, FR39
 
@@ -281,6 +281,14 @@ None — clean implementation, no debug issues.
 - Updated `SyncIndicator` text from "to cloud" to bidirectional "Syncing cards…"
 - MergeResult includes `skipped` field for invalid cloud rows that failed Zod validation
 
+### Code Review Fixes Applied
+
+- **[H1]** `downloadCloudCards()` now calls `setLastCloudSyncAt(now())` after successful download+merge so the shared throttle key is updated
+- **[M1]** Added clarifying comment in `mergeCards()` that local-newer counts as "unchanged" because local DB is not modified
+- **[M2]** `useCloudSync` now returns early when download is throttled, skipping upload too (shared cooldown window)
+- **[M3]** Added `batchUpsertCards` SQL parameter correctness test (verifies boolean→int mapping and all 11 fields)
+- **[M4]** Added JSDoc to `fetchCards()` documenting the deliberate cast and downstream Zod validation in `cloudRowToLocalCard()`
+
 ### Change Log
 
 - T2: `cloudRowToLocalCard()` + 8 reverse mapper tests
@@ -289,6 +297,7 @@ None — clean implementation, no debug issues.
 - T5: `batchUpsertCards()` + 3 batch upsert tests
 - T6: `useCloudSync` hook + 12 hook tests
 - Integration: Updated `app/index.tsx`, `SyncIndicator`, barrel exports
+- CR: Fixed H1 (throttle timestamp), M1 (comment), M2 (throttle early return), M3 (+1 test), M4 (JSDoc) — 68 tests pass
 
 ### File List
 

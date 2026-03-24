@@ -61,7 +61,12 @@ export const useCloudSync = (): UseCloudSyncResult => {
           return;
         }
 
-        if (!downloadResult.throttled && downloadResult.mergeResult) {
+        if (downloadResult.throttled) {
+          // Download and upload share the same cooldown window — skip both
+          return;
+        }
+
+        if (downloadResult.mergeResult) {
           setDownloadedCount(downloadResult.mergeResult.added + downloadResult.mergeResult.updated);
 
           // 2. Persist merged cards to local DB

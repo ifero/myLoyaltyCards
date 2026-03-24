@@ -166,7 +166,7 @@ describe('useCloudSync', () => {
     });
   });
 
-  it('skips DB persist when throttled', async () => {
+  it('skips DB persist and upload when throttled', async () => {
     mockUseAuthState.mockReturnValue({
       authState: 'authenticated',
       isAuthenticated: true
@@ -187,6 +187,7 @@ describe('useCloudSync', () => {
     });
 
     expect(mockBatchUpsertCards).not.toHaveBeenCalled();
+    expect(mockUploadLocalCards).not.toHaveBeenCalled();
   });
 
   it('forceSync calls forced download and upload paths', async () => {

@@ -211,4 +211,25 @@ describe('card-repository', () => {
     expect(db.withTransactionAsync).toHaveBeenCalled();
     expect(db.runAsync).toHaveBeenCalledTimes(1);
   });
+
+  test('batchUpsertCards passes correct SQL parameters including boolean mapping', async () => {
+    const db = makeDb();
+    const card: LoyaltyCard = { ...sampleCard, id: 'batch-1', isFavorite: true, usageCount: 5 };
+
+    await batchUpsertCards([card], db);
+
+    expect(db.runAsync).toHaveBeenCalledWith(expect.stringContaining('INSERT OR REPLACE'), [
+      'batch-1',
+      card.name,
+      card.barcode,
+      card.barcodeFormat,
+      card.brandId,
+      card.color,
+      1,
+      card.lastUsedAt,
+      5,
+      card.createdAt,
+      card.updatedAt
+    ]);
+  });
 });

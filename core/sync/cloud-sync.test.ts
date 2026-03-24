@@ -435,4 +435,16 @@ describe('downloadCloudCards', () => {
     expect(result.mergeResult?.merged[0]?.name).toBe('Cloud Name');
     expect(result.mergeResult?.updated).toBe(1);
   });
+
+  it('persists last sync timestamp on successful download', async () => {
+    fetchFn.mockResolvedValue({ data: [makeCloudRow(1)], error: null });
+    mockGetAllCards.mockResolvedValue([]);
+
+    await downloadCloudCards('aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa', fetchFn, {
+      forceSync: true,
+      now: () => 5678
+    });
+
+    expect(AsyncStorage.setItem).toHaveBeenCalledWith(_LAST_CLOUD_SYNC_KEY, '5678');
+  });
 });

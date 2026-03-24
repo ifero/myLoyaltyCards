@@ -226,7 +226,8 @@ export const mergeCards = (localCards: LoyaltyCard[], cloudCards: LoyaltyCard[])
       updated += cloudCard.updatedAt === localCard.updatedAt ? 0 : 1;
       unchanged += cloudCard.updatedAt === localCard.updatedAt ? 1 : 0;
     } else {
-      // Local wins (newer)
+      // Local wins (newer) — counted as "unchanged" because local DB is not modified.
+      // Upload (Story 7.1) handles pushing the newer local version to cloud.
       merged.push(localCard);
       unchanged++;
     }
@@ -311,6 +312,9 @@ export const downloadCloudCards = async (
   // 4. Merge
   const mergeResult = mergeCards(localCards, cloudCards);
   mergeResult.skipped = skipped;
+
+  // 5. Persist throttle timestamp so both download & upload share the cooldown
+  await setLastCloudSyncAt(now());
 
   return {
     success: true,
