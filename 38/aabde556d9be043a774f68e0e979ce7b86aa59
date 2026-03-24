@@ -1,0 +1,46 @@
+docs/sprint-artifacts/sprint-status.yaml
+  348e8137c5609f8d 38,187
+core/sync/sync-trigger.ts
+  3a7fe492c337c0c8 84-88,119
+core/sync/sync-trigger.test.ts
+  3a7fe492c337c0c8 126-143,282-296
+features/settings/SettingsScreen.test.tsx
+  3a7fe492c337c0c8 223-242,547-566
+docs/sprint-artifacts/stories/7-4-implement-delta-sync.md
+  3a7fe492c337c0c8 5,316,335-347
+features/settings/SettingsScreen.tsx
+  3a7fe492c337c0c8 46-53,70,113
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.1.17",
+  "base_commit_sha": "38aabde556d9be043a774f68e0e979ce7b86aa59",
+  "prompts": {
+    "348e8137c5609f8d": {
+      "agent_id": {
+        "tool": "github-copilot",
+        "id": "b9d31687-fd5c-41bf-804c-7d8b1f82994e",
+        "model": "copilot/claude-opus-4.6"
+      },
+      "human_author": "Andrea Pacino <andrea.pacino87@gmail.com>",
+      "messages": [],
+      "total_additions": 2,
+      "total_deletions": 2,
+      "accepted_lines": 2,
+      "overriden_lines": 0
+    },
+    "3a7fe492c337c0c8": {
+      "agent_id": {
+        "tool": "github-copilot",
+        "id": "1c83832b-b7b7-43d5-a912-12aa90a1a20b",
+        "model": "copilot/gpt-5.3-codex"
+      },
+      "human_author": "Andrea Pacino <andrea.pacino87@gmail.com>",
+      "messages": [],
+      "total_additions": 107,
+      "total_deletions": 5,
+      "accepted_lines": 107,
+      "overriden_lines": 0
+    }
+  }
+}
