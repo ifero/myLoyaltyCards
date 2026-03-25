@@ -13,6 +13,7 @@ export {
   type MergeResult,
   type CloudUpsertFn,
   type CloudFetchFn,
+  type CloudFetchSinceFn,
   type AppError
 } from './cloud-sync';
 
@@ -24,7 +25,8 @@ export {
   clearDirty,
   processPendingSync,
   _SYNC_DIRTY_KEY,
-  type CloudDeleteFn
+  type CloudDeleteFn,
+  type PersistMergedCardsFn
 } from './sync-trigger';
 
 export {
@@ -33,3 +35,10 @@ export {
   clearPendingDeletions,
   _PENDING_DELETIONS_KEY
 } from './deletion-tracker';
+
+export {
+  getLastSyncAt,
+  setLastSyncAt,
+  clearLastSyncAt,
+  _CLOUD_SYNC_LAST_SYNC_AT_KEY
+} from './sync-timestamp';

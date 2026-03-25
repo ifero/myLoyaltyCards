@@ -165,35 +165,49 @@ export const _CLOUD_SYNC_COOLDOWN_MS = CLOUD_SYNC_COOLDOWN_MS;
 export type SyncChangedCardsResult = {
   success: boolean;
   upsertedCount: number;
+  skippedCount: number;
   errors: AppError[];
 };
 
 /**
- * Read ALL local cards and upsert them to cloud (full sync).
+ * Upload local cards to cloud. When `lastSyncAt` is provided, only cards with
+ * `updatedAt > lastSyncAt` are uploaded (delta sync). When `lastSyncAt` is null,
+ * all local cards are uploaded (full sync fallback — Story 7.1 behaviour).
+ *
  * This function does NOT check the cooldown — the caller is responsible
  * for respecting throttle semantics (e.g., sync-trigger).
- *
- * Note: Delta sync (only changed cards) is Story 7.4. This story
- * intentionally performs a full upsert.
  */
 export const syncChangedCards = async (
   userId: string,
-  cloudUpsertFn: CloudUpsertFn
+  cloudUpsertFn: CloudUpsertFn,
+  lastSyncAt: string | null = null
 ): Promise<SyncChangedCardsResult> => {
   if (!userId) {
     return {
       success: false,
       upsertedCount: 0,
+      skippedCount: 0,
       errors: [toAppError('SYNC_INVALID_USER', 'Invalid user id.')]
     };
   }
 
   const localCards = await getAllCards();
   if (localCards.length === 0) {
-    return { success: true, upsertedCount: 0, errors: [] };
+    return { success: true, upsertedCount: 0, skippedCount: 0, errors: [] };
   }
 
-  const cloudRows = mapLocalCardsToCloudRows(localCards, userId);
+  // Delta filter: only cards changed after lastSyncAt (strict >)
+  const cardsToUpload = lastSyncAt
+    ? localCards.filter((card) => card.updatedAt > lastSyncAt)
+    : localCards;
+
+  const skippedCount = localCards.length - cardsToUpload.length;
+
+  if (cardsToUpload.length === 0) {
+    return { success: true, upsertedCount: 0, skippedCount, errors: [] };
+  }
+
+  const cloudRows = mapLocalCardsToCloudRows(cardsToUpload, userId);
   const errors: AppError[] = [];
   let upsertedCount = 0;
 
@@ -207,7 +221,7 @@ export const syncChangedCards = async (
     upsertedCount += batch.length;
   }
 
-  return { success: errors.length === 0, upsertedCount, errors };
+  return { success: errors.length === 0, upsertedCount, skippedCount, errors };
 };
 
 // ===================================================================
@@ -220,6 +234,15 @@ export const syncChangedCards = async (
  */
 export type CloudFetchFn = (
   userId: string
+) => Promise<{ data: CloudCardRow[]; error: string | null }>;
+
+/**
+ * Cloud fetch-since function signature (delta download).
+ * When `since` is null, implementations must fall back to fetching ALL cards.
+ */
+export type CloudFetchSinceFn = (
+  userId: string,
+  since: string | null
 ) => Promise<{ data: CloudCardRow[]; error: string | null }>;
 
 export type MergeResult = {

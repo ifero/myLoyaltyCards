@@ -58,6 +58,11 @@ jest.mock('@/shared/supabase/useAuthState', () => ({
   useAuthState: () => mockUseAuthState()
 }));
 
+const mockClearLastSyncAt = jest.fn();
+jest.mock('@/core/sync/sync-timestamp', () => ({
+  clearLastSyncAt: (...args: unknown[]) => mockClearLastSyncAt(...args)
+}));
+
 jest.spyOn(Alert, 'alert');
 
 // ---------------------------------------------------------------------------
@@ -211,6 +216,27 @@ describe('SettingsScreen — Story 6.9: Sign-out flow', () => {
     });
 
     expect(mockSignOut).toHaveBeenCalled();
+    expect(mockClearLastSyncAt).toHaveBeenCalled();
+    expect(mockReplace).toHaveBeenCalledWith('/');
+  });
+
+  it('still navigates when sign-out succeeds but clearing timestamp fails', async () => {
+    mockSignOut.mockResolvedValue({ success: true, data: undefined });
+    mockClearLastSyncAt.mockRejectedValue(new Error('storage unavailable'));
+
+    const { getByTestId } = render(<SettingsScreen />);
+
+    fireEvent.press(getByTestId('settings-sign-out-button'));
+
+    const alertCall = (Alert.alert as jest.Mock).mock.calls[0];
+    const signOutButton = alertCall[2].find((btn: { text: string }) => btn.text === 'Sign Out');
+
+    await act(async () => {
+      await signOutButton.onPress();
+    });
+
+    expect(mockSignOut).toHaveBeenCalled();
+    expect(mockClearLastSyncAt).toHaveBeenCalled();
     expect(mockReplace).toHaveBeenCalledWith('/');
   });
 
@@ -516,6 +542,28 @@ describe('SettingsScreen — Story 6.10: Deletion execution', () => {
     });
 
     expect(getByTestId('delete-account-success')).toBeTruthy();
+    expect(mockClearLastSyncAt).toHaveBeenCalled();
+
+    act(() => {
+      jest.advanceTimersByTime(2000);
+    });
+
+    expect(mockReplace).toHaveBeenCalledWith('/');
+  });
+
+  it('still shows success and navigates when deletion succeeds but clearing timestamp fails', async () => {
+    mockDeleteAccount.mockResolvedValue({ success: true, data: undefined });
+    mockClearLastSyncAt.mockRejectedValue(new Error('storage unavailable'));
+
+    const { getByTestId } = render(<SettingsScreen />);
+    openConfirmModal(getByTestId);
+
+    await act(async () => {
+      fireEvent.press(getByTestId('delete-confirm-button'));
+    });
+
+    expect(getByTestId('delete-account-success')).toBeTruthy();
+    expect(mockReplace).not.toHaveBeenCalled();
 
     act(() => {
       jest.advanceTimersByTime(2000);

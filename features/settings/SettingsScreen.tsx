@@ -12,6 +12,7 @@ import {
 } from 'react-native';
 
 import { catalogueRepository } from '@/core/catalogue/catalogue-repository';
+import { clearLastSyncAt } from '@/core/sync/sync-timestamp';
 
 import { deleteAccount, signOut } from '@/shared/supabase/auth';
 import { useAuthState } from '@/shared/supabase/useAuthState';
@@ -42,6 +43,14 @@ const SettingsScreen = () => {
   const [deleteSuccess, setDeleteSuccess] = useState(false);
   const deleteSuccessTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  const clearLastSyncAtSafely = async (): Promise<void> => {
+    try {
+      await clearLastSyncAt();
+    } catch (error) {
+      console.error('[SettingsScreen] Failed to clear lastSyncAt', error);
+    }
+  };
+
   useEffect(() => {
     return () => {
       if (deleteSuccessTimeoutRef.current) {
@@ -57,6 +66,8 @@ const SettingsScreen = () => {
       setSignOutError(result.error.message);
       return;
     }
+    // Clear sync timestamp so next sign-in triggers a full sync (Story 7.4)
+    await clearLastSyncAtSafely();
     // Return to home screen in guest mode — local cards remain accessible
     router.replace('/');
   };
@@ -97,6 +108,9 @@ const SettingsScreen = () => {
       setDeleteError(result.error.message);
       return;
     }
+
+    // Clear sync timestamp so next sign-in triggers a full sync (Story 7.4)
+    await clearLastSyncAtSafely();
 
     // Close modal, show success, navigate
     setShowDeleteConfirm(false);

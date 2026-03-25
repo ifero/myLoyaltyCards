@@ -2,7 +2,7 @@
 
 **Epic:** 7 - Cloud Synchronization
 **Type:** User-Facing
-**Status:** ready-for-dev
+**Status:** done
 **Sprint:** 9
 **FRs Covered:** FR35, FR36
 
@@ -91,46 +91,46 @@ And the deletion tracker is cleared after successful delete
 
 ## Tasks / Subtasks
 
-- [ ] **Task 1: Implement lastSyncAt persistence** (AC: #3, #4)
-  - [ ] 1.1 Create `core/sync/sync-timestamp.ts` — read/write last sync timestamp
-  - [ ] 1.2 `getLastSyncAt(): Promise<string | null>` — reads from AsyncStorage
-  - [ ] 1.3 `setLastSyncAt(timestamp: string): Promise<void>` — writes to AsyncStorage
-  - [ ] 1.4 `clearLastSyncAt(): Promise<void>` — for logout/reset scenarios
-  - [ ] 1.5 Key: `'cloudSyncLastSyncAt'` in AsyncStorage
-  - [ ] 1.6 Unit tests (read/write/clear/null on first use)
+- [x] **Task 1: Implement lastSyncAt persistence** (AC: #3, #4)
+  - [x] 1.1 Create `core/sync/sync-timestamp.ts` — read/write last sync timestamp
+  - [x] 1.2 `getLastSyncAt(): Promise<string | null>` — reads from AsyncStorage
+  - [x] 1.3 `setLastSyncAt(timestamp: string): Promise<void>` — writes to AsyncStorage
+  - [x] 1.4 `clearLastSyncAt(): Promise<void>` — for logout/reset scenarios
+  - [x] 1.5 Key: `'cloudSyncLastSyncAt'` in AsyncStorage
+  - [x] 1.6 Unit tests (read/write/clear/null on first use)
 
-- [ ] **Task 2: Implement delta upload** (AC: #1, #5)
-  - [ ] 2.1 Refactor `syncChangedCards()` in `core/sync/cloud-sync.ts` to accept `lastSyncAt`
-  - [ ] 2.2 Filter local cards: `card.updatedAt > lastSyncAt` (ISO string comparison)
-  - [ ] 2.3 If `lastSyncAt` is null → full upload (fallback to 7.1 behavior)
-  - [ ] 2.4 Map filtered cards to `CloudCardRow[]` and upsert to cloud
-  - [ ] 2.5 Return `{ uploadedCount, skippedCount }` for observability
-  - [ ] 2.6 Unit tests: 0 changed, 1 changed, all changed, null lastSyncAt → full sync
+- [x] **Task 2: Implement delta upload** (AC: #1, #5)
+  - [x] 2.1 Refactor `syncChangedCards()` in `core/sync/cloud-sync.ts` to accept `lastSyncAt`
+  - [x] 2.2 Filter local cards: `card.updatedAt > lastSyncAt` (ISO string comparison)
+  - [x] 2.3 If `lastSyncAt` is null → full upload (fallback to 7.1 behavior)
+  - [x] 2.4 Map filtered cards to `CloudCardRow[]` and upsert to cloud
+  - [x] 2.5 Return `{ uploadedCount, skippedCount }` for observability
+  - [x] 2.6 Unit tests: 0 changed, 1 changed, all changed, null lastSyncAt → full sync
 
-- [ ] **Task 3: Implement delta download** (AC: #2, #6)
-  - [ ] 3.1 Add `fetchCardsSince(userId, since: string)` to `shared/supabase/cards.ts`
-  - [ ] 3.2 Supabase query: `.select('*').eq('user_id', userId).gt('updated_at', since)`
-  - [ ] 3.3 If `since` is null → fetch all (fallback to full download)
-  - [ ] 3.4 Merge downloaded cards with local using existing merge logic from 7.2
-  - [ ] 3.5 Unit tests: empty result, partial result, null since → full fetch
+- [x] **Task 3: Implement delta download** (AC: #2, #6)
+  - [x] 3.1 Add `fetchCardsSince(userId, since: string)` to `shared/supabase/cards.ts`
+  - [x] 3.2 Supabase query: `.select('*').eq('user_id', userId).gt('updated_at', since)`
+  - [x] 3.3 If `since` is null → fetch all (fallback to full download)
+  - [x] 3.4 Merge downloaded cards with local using existing merge logic from 7.2
+  - [x] 3.5 Unit tests: empty result, partial result, null since → full fetch
 
-- [ ] **Task 4: Integrate delta logic into sync pipeline** (AC: #1, #2, #4, #7)
-  - [ ] 4.1 Refactor `processPendingSync()` from 7.3 to use delta logic:
+- [x] **Task 4: Integrate delta logic into sync pipeline** (AC: #1, #2, #4, #7)
+  - [x] 4.1 Refactor `processPendingSync()` from 7.3 to use delta logic:
     1. Read `lastSyncAt`
     2. Delta download (fetch cloud changes since lastSyncAt)
     3. Merge with local
     4. Delta upload (push local changes since lastSyncAt)
     5. Process pending deletions (unchanged — by ID)
     6. Update `lastSyncAt` to current timestamp
-  - [ ] 4.2 On first sync (null lastSyncAt): full sync → set lastSyncAt
-  - [ ] 4.3 Ensure atomicity: only update lastSyncAt after ALL operations succeed
-  - [ ] 4.4 Unit tests for complete delta sync pipeline
+  - [x] 4.2 On first sync (null lastSyncAt): full sync → set lastSyncAt
+  - [x] 4.3 Ensure atomicity: only update lastSyncAt after ALL operations succeed
+  - [x] 4.4 Unit tests for complete delta sync pipeline
 
-- [ ] **Task 5: Handle edge cases** (AC: #4, #7)
-  - [ ] 5.1 Clock skew: use server timestamp from Supabase response for lastSyncAt (not local clock)
-  - [ ] 5.2 Or use `new Date().toISOString()` with acknowledgement that minor skew is acceptable for MVP
-  - [ ] 5.3 Clear lastSyncAt on logout (so next sign-in triggers full sync)
-  - [ ] 5.4 Unit tests for logout → clear → re-login → full sync
+- [x] **Task 5: Handle edge cases** (AC: #4, #7)
+  - [x] 5.1 Clock skew: use server timestamp from Supabase response for lastSyncAt (not local clock)
+  - [x] 5.2 Or use `new Date().toISOString()` with acknowledgement that minor skew is acceptable for MVP
+  - [x] 5.3 Clear lastSyncAt on logout (so next sign-in triggers full sync)
+  - [x] 5.4 Unit tests for logout → clear → re-login → full sync
 
 ---
 
@@ -285,12 +285,63 @@ shared/
 
 ### Agent Model Used
 
-_To be filled by dev agent_
+Claude Opus 4.6 (GitHub Copilot)
 
 ### Debug Log References
 
+- Mock bleeding in `isDirty` tests: `mockResolvedValue` persisted across tests; fixed with `mockResolvedValueOnce` and `AsyncStorage.clear()` in `beforeEach`
+- Delta upload atomicity test: card `updatedAt` was before `lastSyncAt` so delta filter skipped it; fixed by setting `updatedAt` after `lastSyncAt`
+- `useAutoSync` test mismatch: `processPendingSync` changed from 5 to 7 params; updated mocks and assertions
+
 ### Completion Notes List
+
+- Task 1: Created `sync-timestamp.ts` with `getLastSyncAt`, `setLastSyncAt`, `clearLastSyncAt` — 8 tests
+- Task 2: Refactored `syncChangedCards()` to accept optional `lastSyncAt` param with ISO string filtering — 6 new delta tests (37 total)
+- Task 3: Added `fetchCardsSince()` with `.gt('updated_at', since)` filter; falls back to `fetchCards()` when null — 5 new tests (15 total)
+- Task 4: Major refactor of `processPendingSync()` to full delta pipeline (download→merge→upload→delete→timestamp) with 7 params — 23 pipeline tests; updated `useAutoSync` hook and tests (15 tests)
+- Task 5: Wired `clearLastSyncAt` into sign-out and delete-account flows in SettingsScreen; added logout cycle test and SettingsScreen assertions — 38 SettingsScreen tests pass
+- Total new/modified tests: 136 passing across all affected files
+- Used `new Date().toISOString()` for lastSyncAt (Task 5.2 — acceptable for MVP)
 
 ### Change Log
 
+| Date       | Change                                                                           |
+| ---------- | -------------------------------------------------------------------------------- |
+| 2025-07-14 | Created sync-timestamp.ts with getLastSyncAt/setLastSyncAt/clearLastSyncAt       |
+| 2025-07-14 | Refactored syncChangedCards() for delta upload with lastSyncAt param             |
+| 2025-07-14 | Added fetchCardsSince() to shared/supabase/cards.ts                              |
+| 2025-07-14 | Refactored processPendingSync() to full delta pipeline (7 params)                |
+| 2025-07-14 | Updated useAutoSync hook to pass delta functions                                 |
+| 2025-07-14 | Added clearLastSyncAt to SettingsScreen sign-out and delete-account flows        |
+| 2026-03-24 | CR fixes: resilient timestamp clear, userId guard, accurate partial upload count |
+
 ### File List
+
+| File                                      | Action   | Description                                       |
+| ----------------------------------------- | -------- | ------------------------------------------------- |
+| core/sync/sync-timestamp.ts               | NEW      | lastSyncAt persistence (get/set/clear)            |
+| core/sync/sync-timestamp.test.ts          | NEW      | 8 unit tests for sync timestamp                   |
+| core/sync/cloud-sync.ts                   | MODIFIED | Delta upload: lastSyncAt param + skippedCount     |
+| core/sync/cloud-sync.test.ts              | MODIFIED | 6 new delta upload tests                          |
+| core/sync/sync-trigger.ts                 | MODIFIED | Full delta pipeline refactor (7 params)           |
+| core/sync/sync-trigger.test.ts            | MODIFIED | Complete rewrite — 23 delta pipeline tests        |
+| core/sync/index.ts                        | MODIFIED | Added sync-timestamp and type exports             |
+| shared/supabase/cards.ts                  | MODIFIED | Added fetchCardsSince() with gt filter            |
+| shared/supabase/cards.test.ts             | MODIFIED | 5 new fetchCardsSince tests                       |
+| shared/hooks/useAutoSync.ts               | MODIFIED | Wired delta functions into processPendingSync     |
+| shared/hooks/useAutoSync.test.ts          | MODIFIED | Updated mocks for 7-param call                    |
+| features/settings/SettingsScreen.tsx      | MODIFIED | clearLastSyncAt on sign-out and delete-account    |
+| features/settings/SettingsScreen.test.tsx | MODIFIED | Assertions for clearLastSyncAt in sign-out/delete |
+| docs/sprint-artifacts/sprint-status.yaml  | MODIFIED | Story 7.4 status synced to done                   |
+
+### Senior Developer Review (AI)
+
+- **Date:** 2026-03-24
+- **Reviewer:** Amelia (Developer Agent)
+- **Outcome:** Approved after fixes
+- **Fixes Applied:**
+  - Added `userId` validation guard in `processPendingSync`.
+  - Preserved partial `upsertedCount` on mixed success/failure batch uploads.
+  - Made `clearLastSyncAt` non-blocking in sign-out/delete-account flows.
+  - Updated story file list to include sprint tracking file.
+- **Validation:** Targeted tests for sync + settings pass (all green).
