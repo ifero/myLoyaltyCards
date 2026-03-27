@@ -1,0 +1,51 @@
+jest.setup.js
+  22507949d140f95a 220-223
+core/sync/index.ts
+  22507949d140f95a 45-46
+shared/hooks/useAutoSync.ts
+  22507949d140f95a 5,9,15-16,22,40,43-45,47,49,53-55,68,79-101,103-109,156,167-178,180-188,192-195,206
+app/index.tsx
+  22507949d140f95a 33-34,69-72
+docs/sprint-artifacts/sprint-status.yaml
+  22507949d140f95a 188
+core/sync/retry.ts
+  22507949d140f95a 1-34
+app/_layout.tsx
+  096868a34003925d 14
+shared/components/OfflineIndicator.test.tsx
+  22507949d140f95a 1-41
+package.json
+  22507949d140f95a 32
+shared/hooks/useNetworkStatus.ts
+  22507949d140f95a 1-42
+shared/hooks/useNetworkStatus.test.ts
+  22507949d140f95a 1-75
+core/sync/retry.test.ts
+  22507949d140f95a 1-71
+docs/sprint-artifacts/stories/7-5-handle-offline-queue.md
+  22507949d140f95a 5
+shared/components/OfflineIndicator.tsx
+  22507949d140f95a 1-33
+shared/hooks/useAutoSync.test.ts
+  22507949d140f95a 6,11,20,25-28,62,74,153,161,179,188,192,200,257-283
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.1.20",
+  "base_commit_sha": "df3c9211499739a4eb29499cb8b2a6b12e9a88a6",
+  "prompts": {
+    "22507949d140f95a": {
+      "agent_id": {
+        "tool": "github-copilot",
+        "id": "53f6275a-3991-4823-b89d-e92d03052cf6",
+        "model": "copilot/claude-opus-4.6"
+      },
+      "human_author": "Andrea Pacino <andrea.pacino87@gmail.com>",
+      "messages": [],
+      "total_additions": 1648,
+      "total_deletions": 47,
+      "accepted_lines": 446,
+      "overriden_lines": 0
+    }
+  }
+}
