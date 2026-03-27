@@ -1,0 +1,29 @@
+app/_layout.tsx
+  3ef3d9038783d553 20-30
+.github/workflows/store-upload.yml
+  3ef3d9038783d553 24-25,55-56
+.github/workflows/android-release.yml
+  3ef3d9038783d553 22-23
+app.json
+  3ef3d9038783d553 19-24,38-52
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.1.20",
+  "base_commit_sha": "e59f92edcdd6ee54a742373372bcdf69740d5a98",
+  "prompts": {
+    "3ef3d9038783d553": {
+      "agent_id": {
+        "tool": "github-copilot",
+        "id": "b5bf59f6-e250-420c-a1bc-c9222cde6de1",
+        "model": "copilot/claude-opus-4.6"
+      },
+      "human_author": "Andrea Pacino <andrea.pacino87@gmail.com>",
+      "messages": [],
+      "total_additions": 0,
+      "total_deletions": 0,
+      "accepted_lines": 38,
+      "overriden_lines": 0
+    }
+  }
+}
