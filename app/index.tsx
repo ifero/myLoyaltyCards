@@ -30,7 +30,8 @@ const HomeScreen = () => {
   const {
     isSyncing: isAutoSyncing,
     syncError: autoSyncError,
-    clearSyncError: clearAutoSyncError
+    clearSyncError: clearAutoSyncError,
+    retrySync
   } = useAutoSync();
   const hasSyncError = Boolean(syncError ?? autoSyncError);
 
@@ -65,7 +66,10 @@ const HomeScreen = () => {
       <SyncIndicator isSyncing={isSyncing || isAutoSyncing} hasError={hasSyncError} />
       <SyncErrorBanner
         message={syncError ?? autoSyncError}
-        onRetry={forceSync}
+        onRetry={async () => {
+          await forceSync();
+          await retrySync();
+        }}
         onDismiss={() => {
           clearSyncError();
           clearAutoSyncError();

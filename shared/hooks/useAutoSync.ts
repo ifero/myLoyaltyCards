@@ -2,20 +2,24 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { AppState, AppStateStatus } from 'react-native';
 
 import { batchUpsertCards } from '@/core/database/card-repository';
-import { isDirty, processPendingSync, type CloudDeleteFn } from '@/core/sync';
+import { isDirty, processPendingSync, retryWithBackoff, type CloudDeleteFn } from '@/core/sync';
 import { type CloudUpsertFn, type CloudFetchSinceFn } from '@/core/sync';
 import { getPendingDeletions, clearPendingDeletions } from '@/core/sync';
 
+import { useNetworkStatus } from '@/shared/hooks/useNetworkStatus';
 import { getSession } from '@/shared/supabase/auth';
 import { upsertCards, fetchCardsSince, deleteCardFromCloud } from '@/shared/supabase/cards';
 import { useAuthState } from '@/shared/supabase/useAuthState';
 
 const SYNC_CHECK_INTERVAL_MS = 5 * 60 * 1000; // 5 minutes
+const RECONNECT_DEBOUNCE_MS = 1000;
+const MAX_RETRIES_EXCEEDED_MESSAGE = 'Sync failed. Changes saved locally.';
 
 export type UseAutoSyncResult = {
   isSyncing: boolean;
   syncError: string | null;
   clearSyncError: () => void;
+  retrySync: () => Promise<void>;
 };
 
 /**
@@ -33,55 +37,91 @@ export const useAutoSync = (
   const [isSyncing, setIsSyncing] = useState(false);
   const [syncError, setSyncError] = useState<string | null>(null);
   const { isAuthenticated } = useAuthState();
+  const { isConnected, isInternetReachable } = useNetworkStatus();
   const isRunningRef = useRef(false);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const reconnectTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const previousConnectedRef = useRef<boolean | null>(null);
+  const lastSyncStartedAtRef = useRef(0);
 
-  const runSync = useCallback(async () => {
-    if (isRunningRef.current || !isAuthenticated) {
-      return;
-    }
-
-    try {
-      // Only sync if there are dirty changes
-      const dirty = await isDirty();
-      if (!dirty) {
+  const runSync = useCallback(
+    async (force = false) => {
+      if (isRunningRef.current || !isAuthenticated) {
         return;
       }
 
-      isRunningRef.current = true;
-      setIsSyncing(true);
-      setSyncError(null);
-
-      const sessionResult = await getSession();
-      if (!sessionResult.success || !sessionResult.data) {
-        setSyncError('Session expired. Changes will sync after sign-in.');
+      if (!isConnected || !isInternetReachable) {
         return;
       }
 
-      const userId = sessionResult.data.user.id;
-      const result = await processPendingSync(
-        userId,
-        cloudUpsertFn,
-        cloudDeleteFn,
-        cloudFetchSinceFn,
-        batchUpsertCards,
-        getPendingDeletions,
-        clearPendingDeletions
-      );
-
-      if (!result.success) {
-        const firstError = result.errors[0] ?? 'Sync failed';
-        console.error(`[useAutoSync] Sync failed: ${firstError}`);
-        setSyncError(String(firstError));
+      if (!force && Date.now() - lastSyncStartedAtRef.current < SYNC_CHECK_INTERVAL_MS) {
+        return;
       }
-    } catch {
-      console.error('[useAutoSync] Unexpected sync error');
-      setSyncError('Sync failed unexpectedly. Will retry.');
-    } finally {
-      isRunningRef.current = false;
-      setIsSyncing(false);
-    }
-  }, [isAuthenticated, cloudUpsertFn, cloudDeleteFn, cloudFetchSinceFn]);
+
+      try {
+        // Only sync if there are dirty changes
+        const dirty = await isDirty();
+        if (!dirty) {
+          return;
+        }
+
+        isRunningRef.current = true;
+        lastSyncStartedAtRef.current = Date.now();
+        setIsSyncing(true);
+        setSyncError(null);
+
+        const sessionResult = await getSession();
+        if (!sessionResult.success || !sessionResult.data) {
+          setSyncError('Session expired. Changes will sync after sign-in.');
+          return;
+        }
+
+        const userId = sessionResult.data.user.id;
+        await retryWithBackoff(
+          async () => {
+            const result = await processPendingSync(
+              userId,
+              cloudUpsertFn,
+              cloudDeleteFn,
+              cloudFetchSinceFn,
+              batchUpsertCards,
+              getPendingDeletions,
+              clearPendingDeletions
+            );
+
+            if (!result.success) {
+              throw new Error(result.errors[0] ?? 'Sync failed');
+            }
+          },
+          {
+            maxRetries: 3,
+            baseDelay: 1000,
+            onRetry: (attempt, delayMs, error) => {
+              console.log(`[useAutoSync] Retry ${attempt}/3 in ${delayMs}ms`, error);
+            }
+          }
+        );
+      } catch (error) {
+        const message =
+          error instanceof Error && error.message.includes('Sync failed')
+            ? MAX_RETRIES_EXCEEDED_MESSAGE
+            : 'An unexpected error occurred. Changes saved locally.';
+        console.error('[useAutoSync] Sync error:', error);
+        setSyncError(message);
+      } finally {
+        isRunningRef.current = false;
+        setIsSyncing(false);
+      }
+    },
+    [
+      isAuthenticated,
+      isConnected,
+      isInternetReachable,
+      cloudUpsertFn,
+      cloudDeleteFn,
+      cloudFetchSinceFn
+    ]
+  );
 
   // Periodic interval check
   useEffect(() => {
@@ -94,7 +134,7 @@ export const useAutoSync = (
     }
 
     intervalRef.current = setInterval(() => {
-      runSync();
+      runSync(false);
     }, SYNC_CHECK_INTERVAL_MS);
 
     return () => {
@@ -113,7 +153,7 @@ export const useAutoSync = (
 
     const handleAppStateChange = (nextAppState: AppStateStatus) => {
       if (nextAppState === 'active') {
-        runSync();
+        runSync(false);
       }
     };
 
@@ -124,15 +164,53 @@ export const useAutoSync = (
     };
   }, [isAuthenticated, runSync]);
 
+  // Reconnect trigger — sync when transitioning from offline → online
+  useEffect(() => {
+    if (!isAuthenticated) {
+      previousConnectedRef.current = null;
+      return;
+    }
+
+    const previousConnected = previousConnectedRef.current;
+    const currentlyConnected = isConnected && isInternetReachable;
+
+    if (previousConnected === false && currentlyConnected) {
+      if (reconnectTimeoutRef.current) {
+        clearTimeout(reconnectTimeoutRef.current);
+      }
+
+      reconnectTimeoutRef.current = setTimeout(() => {
+        runSync(false);
+      }, RECONNECT_DEBOUNCE_MS);
+    }
+
+    previousConnectedRef.current = currentlyConnected;
+  }, [isAuthenticated, isConnected, isInternetReachable, runSync]);
+
+  // Cleanup reconnect timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (reconnectTimeoutRef.current) {
+        clearTimeout(reconnectTimeoutRef.current);
+      }
+    };
+  }, []);
+
   const clearSyncError = useCallback(() => {
     setSyncError(null);
   }, []);
 
+  const retrySync = useCallback(async () => {
+    await runSync(true);
+  }, [runSync]);
+
   return {
     isSyncing,
     syncError,
-    clearSyncError
+    clearSyncError,
+    retrySync
   };
 };
 
 export const _SYNC_CHECK_INTERVAL_MS = SYNC_CHECK_INTERVAL_MS;
+export const _RECONNECT_DEBOUNCE_MS = RECONNECT_DEBOUNCE_MS;
