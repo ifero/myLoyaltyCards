@@ -20,12 +20,12 @@ import { catalogueRepository } from '../repositories/catalogue-repository';
 
 /**
  * Breakpoint for responsive columns
- * < 400dp: 3 columns
- * >= 400dp: 4 columns (tablet)
+ * < 600dp: 2 columns (phones)
+ * >= 600dp: 3 columns (tablet)
  */
-const COLUMN_BREAKPOINT = 400;
-const MIN_COLUMNS = 3;
-const MAX_COLUMNS = 4;
+const COLUMN_BREAKPOINT = 600;
+const MIN_COLUMNS = 2;
+const MAX_COLUMNS = 3;
 
 /**
  * BrandCard - Individual brand item component
@@ -72,7 +72,7 @@ const BrandCard: React.FC<{
 
         {/* Brand Name */}
         <Text
-          className="text-center text-xs font-medium"
+          className="text-center text-sm font-medium"
           style={{ color: theme.textPrimary }}
           numberOfLines={2}
         >

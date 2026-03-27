@@ -45,10 +45,7 @@
           "recordAudioAndroid": false
         }
       ],
-      "expo-sqlite",
-      "expo-brightness",
-      "expo-clipboard",
-      "expo-haptics"
+      "expo-sqlite"
     ],
     "experiments": {
       "typedRoutes": true
