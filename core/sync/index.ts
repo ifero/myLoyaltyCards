@@ -42,3 +42,5 @@ export {
   clearLastSyncAt,
   _CLOUD_SYNC_LAST_SYNC_AT_KEY
 } from './sync-timestamp';
+
+export { retryWithBackoff } from './retry';

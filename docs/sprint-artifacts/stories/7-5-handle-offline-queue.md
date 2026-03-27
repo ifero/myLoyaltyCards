@@ -2,7 +2,7 @@
 
 **Epic:** 7 - Cloud Synchronization
 **Type:** User-Facing
-**Status:** ready-for-dev
+**Status:** done
 **Sprint:** 9
 **FRs Covered:** FR48, FR49, FR50, FR51
 

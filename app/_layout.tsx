@@ -11,6 +11,7 @@ import { initializeDatabase } from '@/core/database';
 import { getAllCards } from '@/core/database/card-repository';
 import { subscribeToWatchMessages, syncCardToWatch, WatchMessage } from '@/core/watch-connectivity';
 
+import { OfflineIndicator } from '@/shared/components/OfflineIndicator';
 import { getSupabaseClient } from '@/shared/supabase/client';
 import { ThemeProvider, useTheme } from '@/shared/theme';
 
@@ -69,6 +70,7 @@ const RootLayoutContent = () => {
 
   return (
     <>
+      <OfflineIndicator />
       <Stack
         screenOptions={{
           headerStyle: {

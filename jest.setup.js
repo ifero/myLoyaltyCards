@@ -205,9 +205,22 @@ jest.mock('react-native-reanimated', () => {
     FlatList: mockRN.FlatList
   };
 
+  const createAnimationMock = () => ({
+    duration: () => createAnimationMock(),
+    delay: () => createAnimationMock(),
+    easing: () => createAnimationMock(),
+    springify: () => createAnimationMock(),
+    damping: () => createAnimationMock(),
+    stiffness: () => createAnimationMock()
+  });
+
   return {
     __esModule: true,
     default: Animated,
+    FadeIn: createAnimationMock(),
+    FadeOut: createAnimationMock(),
+    SlideInUp: createAnimationMock(),
+    SlideOutUp: createAnimationMock(),
     useSharedValue: (initial) => ({ value: initial }),
     useAnimatedStyle: () => ({}),
     withTiming: (value, _config, callback) => {
@@ -241,6 +254,20 @@ jest.mock('react-native-gesture-handler', () => {
     }
   };
 });
+
+// Mock NetInfo native module
+jest.mock('@react-native-community/netinfo', () => ({
+  __esModule: true,
+  default: {
+    fetch: jest.fn().mockResolvedValue({
+      type: 'wifi',
+      isConnected: true,
+      isInternetReachable: true,
+      details: null
+    }),
+    addEventListener: jest.fn(() => jest.fn())
+  }
+}));
 
 // Mock NativeWind/CSS interop to prevent issues in tests
 jest.mock('nativewind', () => ({

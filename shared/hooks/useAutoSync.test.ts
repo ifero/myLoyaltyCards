@@ -3,10 +3,12 @@ import { AppState, AppStateStatus } from 'react-native';
 
 const mockIsDirty = jest.fn();
 const mockProcessPendingSync = jest.fn();
+const mockRetryWithBackoff = jest.fn();
 const mockGetPendingDeletions = jest.fn();
 const mockClearPendingDeletions = jest.fn();
 const mockGetSession = jest.fn();
 const mockUseAuthState = jest.fn();
+const mockUseNetworkStatus = jest.fn();
 const mockUpsertCards = jest.fn();
 const mockDeleteCardFromCloud = jest.fn();
 const mockFetchCardsSince = jest.fn();
@@ -15,8 +17,13 @@ const mockBatchUpsertCards = jest.fn();
 jest.mock('@/core/sync', () => ({
   isDirty: (...args: unknown[]) => mockIsDirty(...args),
   processPendingSync: (...args: unknown[]) => mockProcessPendingSync(...args),
+  retryWithBackoff: (...args: unknown[]) => mockRetryWithBackoff(...args),
   getPendingDeletions: (...args: unknown[]) => mockGetPendingDeletions(...args),
   clearPendingDeletions: (...args: unknown[]) => mockClearPendingDeletions(...args)
+}));
+
+jest.mock('@/shared/hooks/useNetworkStatus', () => ({
+  useNetworkStatus: (...args: unknown[]) => mockUseNetworkStatus(...args)
 }));
 
 jest.mock('@/shared/supabase/auth', () => ({
@@ -52,6 +59,7 @@ beforeEach(() => {
   });
 
   mockUseAuthState.mockReturnValue({ authState: 'authenticated', isAuthenticated: true });
+  mockUseNetworkStatus.mockReturnValue({ isConnected: true, isInternetReachable: true });
   mockIsDirty.mockResolvedValue(true);
   mockGetSession.mockResolvedValue({
     success: true,
@@ -63,6 +71,7 @@ beforeEach(() => {
     deletedCount: 0,
     errors: []
   });
+  mockRetryWithBackoff.mockImplementation(async (fn: () => Promise<unknown>) => fn());
 
   jest.spyOn(console, 'error').mockImplementation(() => {});
 });
@@ -141,12 +150,7 @@ describe('useAutoSync', () => {
   });
 
   it('sets syncError on sync failure', async () => {
-    mockProcessPendingSync.mockResolvedValue({
-      success: false,
-      upsertedCount: 0,
-      deletedCount: 0,
-      errors: ['Network error']
-    });
+    mockRetryWithBackoff.mockRejectedValue(new Error('Sync failed'));
 
     const { result } = renderHook(() => useAutoSync());
 
@@ -154,7 +158,7 @@ describe('useAutoSync', () => {
       appStateListeners.forEach((l) => l('active'));
     });
 
-    expect(result.current.syncError).toBe('Network error');
+    expect(result.current.syncError).toBe('Sync failed. Changes saved locally.');
   });
 
   it('sets syncError on session failure', async () => {
@@ -172,7 +176,7 @@ describe('useAutoSync', () => {
     expect(result.current.syncError).toBe('Session expired. Changes will sync after sign-in.');
   });
 
-  it('sets syncError on unexpected exception', async () => {
+  it('sets generic syncError on unexpected exception', async () => {
     mockIsDirty.mockRejectedValue(new Error('boom'));
 
     const { result } = renderHook(() => useAutoSync());
@@ -181,14 +185,11 @@ describe('useAutoSync', () => {
       appStateListeners.forEach((l) => l('active'));
     });
 
-    expect(result.current.syncError).toBe('Sync failed unexpectedly. Will retry.');
+    expect(result.current.syncError).toBe('An unexpected error occurred. Changes saved locally.');
   });
 
   it('clearSyncError clears the error', async () => {
-    mockProcessPendingSync.mockResolvedValue({
-      success: false,
-      errors: ['fail']
-    });
+    mockRetryWithBackoff.mockRejectedValue(new Error('Sync failed'));
 
     const { result } = renderHook(() => useAutoSync());
 
@@ -196,7 +197,7 @@ describe('useAutoSync', () => {
       appStateListeners.forEach((l) => l('active'));
     });
 
-    expect(result.current.syncError).toBe('fail');
+    expect(result.current.syncError).toBe('Sync failed. Changes saved locally.');
 
     act(() => {
       result.current.clearSyncError();
@@ -252,5 +253,33 @@ describe('useAutoSync', () => {
     });
 
     expect(result.current.isSyncing).toBe(false);
+  });
+
+  it('exposes retrySync for manual retry action', async () => {
+    const { result } = renderHook(() => useAutoSync());
+
+    await act(async () => {
+      await result.current.retrySync();
+    });
+
+    expect(mockProcessPendingSync).toHaveBeenCalledTimes(1);
+  });
+
+  it('triggers sync on reconnect transition after debounce', async () => {
+    jest.useFakeTimers();
+
+    mockUseNetworkStatus
+      .mockReturnValueOnce({ isConnected: false, isInternetReachable: false })
+      .mockReturnValueOnce({ isConnected: true, isInternetReachable: true });
+
+    const { rerender } = renderHook(() => useAutoSync());
+    rerender({});
+
+    await act(async () => {
+      await jest.advanceTimersByTimeAsync(1000);
+    });
+
+    expect(mockProcessPendingSync).toHaveBeenCalledTimes(1);
+    jest.useRealTimers();
   });
 });
