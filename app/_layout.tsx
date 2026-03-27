@@ -17,7 +17,17 @@ import { ThemeProvider, useTheme } from '@/shared/theme';
 
 import { isFirstLaunch } from '@/features/settings';
 
-getSupabaseClient(); // Validates Supabase env vars at app startup
+// Eagerly validate Supabase env vars so misconfigurations surface early.
+// Wrapped in try/catch to prevent a fatal crash when env vars are absent
+// (e.g. CI build missing EXPO_PUBLIC_SUPABASE_* secrets).
+try {
+  getSupabaseClient();
+} catch (error) {
+  console.error(
+    'Supabase client initialisation failed — check EXPO_PUBLIC_SUPABASE_* env vars:',
+    error
+  );
+}
 
 /**
  * Header Right component with Settings button

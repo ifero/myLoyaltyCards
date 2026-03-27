@@ -16,7 +16,12 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.iferoporefi.myloyaltycards",
-      "minimumOsVersion": "18.0"
+      "minimumOsVersion": "18.0",
+      "appleTeamId": "7KU8K25XK5",
+      "infoPlist": {
+        "NSCameraUsageDescription": "Allow $(PRODUCT_NAME) to access your camera to scan loyalty card barcodes",
+        "ITSAppUsesNonExemptEncryption": false
+      }
     },
     "android": {
       "adaptiveIcon": {
@@ -30,7 +35,18 @@
       "output": "static",
       "favicon": "./assets/favicon.png"
     },
-    "plugins": ["expo-router", "expo-secure-store"],
+    "plugins": [
+      "expo-router",
+      "expo-secure-store",
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "Allow $(PRODUCT_NAME) to access your camera to scan loyalty card barcodes",
+          "recordAudioAndroid": false
+        }
+      ],
+      "expo-sqlite"
+    ],
     "experiments": {
       "typedRoutes": true
     },
