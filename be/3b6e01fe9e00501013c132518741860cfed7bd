@@ -1,0 +1,23 @@
+docs/sprint-artifacts/sprint-status.yaml
+  40cb23b83e3e9fa4 189
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.1.20",
+  "base_commit_sha": "be3b6e01fe9e00501013c132518741860cfed7bd",
+  "prompts": {
+    "40cb23b83e3e9fa4": {
+      "agent_id": {
+        "tool": "github-copilot",
+        "id": "f72e7cb2-c91d-4422-aece-50e33ab199ba",
+        "model": "copilot/claude-opus-4.6"
+      },
+      "human_author": "Andrea Pacino <andrea.pacino87@gmail.com>",
+      "messages": [],
+      "total_additions": 1,
+      "total_deletions": 1,
+      "accepted_lines": 1,
+      "overriden_lines": 0
+    }
+  }
+}
