@@ -1,0 +1,61 @@
+assets/images/brands/douglas.svg
+  c37cc028d1aa4518 1-9
+assets/images/brands/zara.svg
+  c37cc028d1aa4518 1-28
+assets/images/brands/coop.svg
+  c37cc028d1aa4518 1-6
+assets/images/brands/mediaworld.svg
+  c37cc028d1aa4518 1-8
+assets/images/brands/coin.svg
+  c37cc028d1aa4518 1-6
+assets/images/brands/tigota.svg
+  c37cc028d1aa4518 1-14
+assets/images/brands/carrefour.svg
+  c37cc028d1aa4518 1-10
+assets/images/brands/hm.svg
+  c37cc028d1aa4518 1-33
+assets/images/brands/decathlon.svg
+  c37cc028d1aa4518 1-8
+assets/images/brands/ikea.svg
+  c37cc028d1aa4518 1-8
+assets/images/brands/ovs.svg
+  c37cc028d1aa4518 1-4
+assets/images/brands/esselunga.svg
+  c37cc028d1aa4518 1-8
+assets/images/brands/unieuro.svg
+  c37cc028d1aa4518 1-8
+assets/images/brands/conad.svg
+  c37cc028d1aa4518 1-21
+assets/images/brands/lidl.svg
+  c37cc028d1aa4518 1-17
+assets/images/brands/despar.svg
+  c37cc028d1aa4518 1-17
+assets/images/brands/pam.svg
+  c37cc028d1aa4518 1-8
+assets/images/brands/sephora.svg
+  c37cc028d1aa4518 1-8
+assets/images/brands/bennet.svg
+  c37cc028d1aa4518 1-7
+assets/images/brands/eurospin.svg
+  c37cc028d1aa4518 1-12
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.1.22",
+  "base_commit_sha": "5e5239352db36f21963c45bc9301cec67e43785c",
+  "prompts": {
+    "c37cc028d1aa4518": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "f103462a-e820-4223-a782-60331e643bc8",
+        "model": "claude-opus-4-6"
+      },
+      "human_author": "Andrea Pacino <andrea.pacino87@gmail.com>",
+      "messages": [],
+      "total_additions": 240,
+      "total_deletions": 80,
+      "accepted_lines": 240,
+      "overriden_lines": 0
+    }
+  }
+}
