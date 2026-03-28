@@ -1,0 +1,23 @@
+docs/sprint-artifacts/stories/12-2-home-screen-card-list.md
+  3edd8438750e4524 5,117-186
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.1.22",
+  "base_commit_sha": "6ca37f6404fbc8603983512973778fe800a20af9",
+  "prompts": {
+    "3edd8438750e4524": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "4acea1f7-8f27-4485-baa7-ca2c8990bb59",
+        "model": "claude-opus-4-6"
+      },
+      "human_author": "Andrea Pacino <andrea.pacino87@gmail.com>",
+      "messages": [],
+      "total_additions": 75,
+      "total_deletions": 5,
+      "accepted_lines": 71,
+      "overriden_lines": 0
+    }
+  }
+}
