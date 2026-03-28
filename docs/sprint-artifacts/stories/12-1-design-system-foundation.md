@@ -152,7 +152,7 @@ And defines safe area handling for notch/Dynamic Island
 - [x] AC1: Color Palette — Light mode (13 tokens), Dark mode (13 tokens), Brand catalogue (20 colors)
 - [x] AC2: Typography Scale — 11 levels from Large Title (34pt) to Caption 2 (11pt), all with line-height + letter-spacing
 - [x] AC3: Button System — 4 types (Primary/Secondary/Tertiary/Destructive) × 3 states (Default/Pressed/Disabled)
-- [x] AC4: Card Component System — 10 catalogue cards, 5 custom cards, dark surface demo, detail hero
+- [x] AC4: Card Component System — 20 catalogue cards (placeholder logos), 5 custom cards, dark surface demo, detail hero
 - [x] AC5: Icon Set & Navigation — 10 nav icons (FontAwesome via @expo/vector-icons), Klarna-style action rows, 5 status icons
 - [x] AC6: Form Input Components — 5 text field states, toggle ON/OFF, color picker (5-color palette)
 - [x] AC7: Spacing & Layout Tokens — 7-step scale (4–48pt), 11 layout specifications
