@@ -8,11 +8,12 @@
 
 import { FlashList } from '@shopify/flash-list';
 import { useFocusEffect } from 'expo-router';
-import React, { useCallback } from 'react';
+import React, { useCallback, useState } from 'react';
 import { View, Text, useWindowDimensions, ActivityIndicator, StyleSheet } from 'react-native';
 
 import { LoyaltyCard } from '@/core/schemas';
 
+import { useCloudSync } from '@/shared/hooks/useCloudSync';
 import { useTheme } from '@/shared/theme';
 import { SPACING } from '@/shared/theme/spacing';
 
@@ -42,6 +43,18 @@ export const CardList: React.FC = () => {
   const { theme } = useTheme();
   const { width } = useWindowDimensions();
   const { cards, isLoading, error, refetch } = useCards();
+  const { forceSync } = useCloudSync();
+  const [isRefreshing, setIsRefreshing] = useState(false);
+
+  const handleRefresh = useCallback(async () => {
+    setIsRefreshing(true);
+    try {
+      await forceSync();
+      await refetch();
+    } finally {
+      setIsRefreshing(false);
+    }
+  }, [forceSync, refetch]);
 
   // Refresh cards when screen comes into focus (e.g., returning from add-card)
   useFocusEffect(
@@ -77,6 +90,7 @@ export const CardList: React.FC = () => {
   return (
     <View style={[styles.container, { backgroundColor: theme.background }]}>
       <FlashList
+        testID="card-list-flashlist"
         data={cards}
         renderItem={renderItem}
         numColumns={numColumns}
@@ -84,6 +98,8 @@ export const CardList: React.FC = () => {
         contentContainerStyle={styles.listContent}
         showsVerticalScrollIndicator={false}
         ListEmptyComponent={EmptyState}
+        refreshing={isRefreshing}
+        onRefresh={handleRefresh}
       />
     </View>
   );
@@ -91,15 +107,15 @@ export const CardList: React.FC = () => {
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
+    flex: 1
   },
   centered: {
     flex: 1,
     alignItems: 'center',
-    justifyContent: 'center',
+    justifyContent: 'center'
   },
   listContent: {
     paddingHorizontal: SPACING.md - SPACING.sm / 2, // 16px - 4px margin = 12px
-    paddingVertical: SPACING.sm,
-  },
+    paddingVertical: SPACING.sm
+  }
 });

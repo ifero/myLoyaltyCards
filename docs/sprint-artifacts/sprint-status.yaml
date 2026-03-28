@@ -187,7 +187,7 @@ development_status:
   7-4-implement-delta-sync: done
   7-5-handle-offline-queue: done
   7-6-resolve-sync-conflicts: review
-  7-7-display-sync-status: ready-for-dev
+  7-7-display-sync-status: done
   epic-7-retrospective: optional
 
   # Epic 8: Settings & Preferences

@@ -59,8 +59,10 @@ jest.mock('@/shared/supabase/useAuthState', () => ({
 }));
 
 const mockClearLastSyncAt = jest.fn();
+const mockGetLastSyncAt = jest.fn().mockResolvedValue(null);
 jest.mock('@/core/sync/sync-timestamp', () => ({
-  clearLastSyncAt: (...args: unknown[]) => mockClearLastSyncAt(...args)
+  clearLastSyncAt: (...args: unknown[]) => mockClearLastSyncAt(...args),
+  getLastSyncAt: (...args: unknown[]) => mockGetLastSyncAt(...args)
 }));
 
 jest.spyOn(Alert, 'alert');
@@ -168,6 +170,18 @@ describe('SettingsScreen — Story 6.9: Authenticated mode rendering', () => {
   it('hides Sign In section when authenticated', () => {
     const { queryByTestId } = render(<SettingsScreen />);
     expect(queryByTestId('settings-sign-in-section')).toBeNull();
+  });
+
+  it('shows last sync label in authenticated mode', async () => {
+    mockGetLastSyncAt.mockResolvedValue(new Date(Date.now() - 60 * 1000).toISOString());
+
+    const { findByTestId } = render(<SettingsScreen />);
+
+    const lastSync = await findByTestId('settings-last-sync');
+    expect(lastSync).toBeTruthy();
+    expect(lastSync.props.children).toEqual(
+      expect.arrayContaining(['Last synced: ', expect.any(String)])
+    );
   });
 });
 

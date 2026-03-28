@@ -10,6 +10,7 @@ import { LoyaltyCard } from '@/core/schemas';
 
 import { CardList } from './CardList';
 import { useCards } from '../hooks/useCards';
+// ...existing code...
 
 // Extend global type for test mocks
 declare global {
@@ -19,6 +20,19 @@ declare global {
 // Mock useCards hook
 jest.mock('../hooks/useCards');
 const mockUseCards = useCards as jest.MockedFunction<typeof useCards>;
+
+// Mock useCloudSync
+const mockForceSync = jest.fn().mockResolvedValue(undefined);
+jest.mock('@/shared/hooks/useCloudSync', () => ({
+  useCloudSync: () => ({
+    isSyncing: false,
+    syncError: null,
+    downloadedCount: 0,
+    triggerSync: jest.fn(),
+    forceSync: mockForceSync,
+    clearSyncError: jest.fn()
+  })
+}));
 
 // Mock useFocusEffect
 jest.mock('expo-router', () => ({
