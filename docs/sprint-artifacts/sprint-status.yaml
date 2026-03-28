@@ -35,7 +35,7 @@
 # - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
 
 generated: 2026-01-03
-updated: 2026-03-24
+updated: 2026-03-28
 project: myLoyaltyCards
 tracking_system: file-system
 story_location: docs/sprint-artifacts
@@ -44,35 +44,12 @@ story_location: docs/sprint-artifacts
 # LAST SPRINT (completed)
 # ============================================
 last_sprint:
-  number: 8
-  name: 'Sprint 8: Auth Completion — Account Lifecycle & Privacy'
-  goal: 'Complete Epic 6: Password reset, logout, delete account, upgrade guest, and privacy consent'
-  start_date: 2026-03-12
-  end_date: 2026-03-19
-  status: completed
-  epic: 6
-  stories:
-    - 6-8-password-reset
-    - 6-9-logout
-    - 6-11-privacy-consent
-    - 6-14-upgrade-guest-to-account
-  carryover:
-    - 6-10-delete-account # Not started — Edge Function infra prerequisite
-  notes: |
-    4/5 stories completed. 6.10 intentionally last in wave order (needs Edge Function)
-    and was not picked up. Carried over to Sprint 9.
-
-# ============================================
-# CURRENT SPRINT
-# ============================================
-current_sprint:
   number: 9
   name: 'Sprint 9: Cloud Sync & Epic 6 Completion'
   goal: 'Complete Epic 6 (Delete Account) and deliver full Epic 7 (Cloud Synchronization)'
-  status: in-progress
   start_date: 2026-03-20
-  end_date: 2026-04-02
-  duration: 2 weeks
+  end_date: 2026-03-28
+  status: completed
   epics: [6, 7]
   stories:
     - 6-10-delete-account
@@ -83,21 +60,77 @@ current_sprint:
     - 7-5-handle-offline-queue
     - 7-6-resolve-sync-conflicts
     - 7-7-display-sync-status
-  filler: # Nice-to-have, not mandatory
+  filler_not_picked_up:
     - 6-15-migration-banner-polish
     - 1-6-extend-semantic-error-colors
   deferred_post_mvp:
     - 6-12-sign-in-with-apple
     - 6-13-sign-in-with-google
-  # Recommended pick-up order (dependency chain — Amelia):
-  #   Week 1:
-  #     Wave 1 (parallel): 6-10 (Delete Account) + 7-1 (Upload) + 7-2 (Download)
-  #     Wave 2:            7-3 (Sync Card Changes)
-  #   Week 2:
-  #     Wave 3 (parallel): 7-4 (Delta Sync) + 7-5 (Offline Queue)
-  #     Wave 4 (parallel): 7-6 (Conflict Resolution) + 7-7 (Sync Status UI)
-  #     Filler (if time):  6-15 + 1-6
-  #   Note: 6.10 requires Edge Function scaffold as first task in Wave 1
+  notes: |
+    All 8 stories completed. Epic 6 and Epic 7 both closed.
+    Filler items (6-15, 1-6) not picked up — available for future sprints.
+    Full cloud sync stack (auth + sync + conflict resolution) now complete.
+
+# ============================================
+# CURRENT SPRINT
+# ============================================
+current_sprint:
+  number: 10
+  name: 'Sprint 10: App-Wide Design Overhaul'
+  goal: 'Deliver complete Figma designs for all app screens (Epic 12) — design-only sprint, no implementation'
+  status: in-progress
+  start_date: 2026-03-28
+  end_date: 2026-04-11
+  duration: 2 weeks
+  epics: [12]
+  stories:
+    - 12-1-design-system-foundation
+    - 12-2-home-screen-card-list
+    - 12-3-card-detail
+    - 12-4-add-card-flow
+    - 12-5-auth-screens
+    - 12-6-settings-screen
+    - 12-7-onboarding
+    - 12-8-sync-status-indicators
+    - 12-9-apple-watch
+  # Wave order (dependency chain — Sally + creative team):
+  #   Wave 1:            12-1 (Design System Foundation — everything depends on this)
+  #   Wave 2 (parallel): 12-2 + 12-3 + 12-4 (core card experience)
+  #   Wave 3 (parallel): 12-5 + 12-6 + 12-7 (supporting screens)
+  #   Wave 4 (parallel): 12-8 + 12-9 (peripheral)
+  notes: |
+    Pure design sprint — all deliverables are Figma pages.
+    Figma file: https://www.figma.com/design/4PSsX8SyTUU0GCUdBAAEED/Test
+    Reference apps: SuperCards, Klarna wallet.
+    Key design decisions:
+      - Light mode primary, dark mode fully supported
+      - Brand colors from catalogue used as card backgrounds (data already exists in italy.json)
+      - Real brand logos (SVGs already in assets/images/brands/) replace letter avatars
+      - Proper CTA hierarchy: primary (filled), secondary (outlined), destructive (red)
+    Epic 8 (Settings) absorbed into future Epic 13 (UI Implementation).
+    Epic 13 stories will be created after Epic 12 designs are approved by ifero.
+    Epic 13 maps 1:1 to Epic 12: each approved design → matching implementation story.
+
+  decisions:
+    - id: DEC-S10-001
+      date: 2026-03-28
+      title: 'Create Epic 13 (UI Implementation) as separate epic from Epic 12 (Design)'
+      context: |
+        The full app UI/UX overhaul requires two distinct phases:
+        1. Design phase (Figma deliverables) — creative team
+        2. Implementation phase (code changes) — dev team
+        Mixing design and implementation in one epic would blur accountability and sprint tracking.
+      decision: |
+        Epic 12 = Design deliverables in Figma (Sprint 10, design-only).
+        Epic 13 = Code implementation of approved designs (Sprint 11+).
+        Epic 13 stories are PLACEHOLDERS — full detail written only after ifero approves Epic 12 Figma designs.
+        Review gate between epics: designs must be approved before any implementation begins.
+      consequences: |
+        - Epic 8 (Settings & Preferences) is absorbed into Epic 13 (story 13-6 covers settings implementation).
+        - Epic 8 stories (8-1 through 8-5) will NOT be implemented separately.
+        - Epic 13 story specs will reference specific Figma frames for pixel-accurate implementation.
+        - Sprint 11 planning is blocked until Epic 12 review is complete.
+      status: approved
 
 development_status:
   # ============================================
@@ -159,7 +192,8 @@ development_status:
   epic-5-retrospective: optional
 
   # Epic 6: User Authentication & Privacy
-  epic-6: in-progress
+  epic-6: done
+  epic-6-completed: 2026-03-28
   # Sprint 7 stories (in sprint)
   6-1-create-supabase-project-environments: done
   6-2-define-cloud-schema-rls: done
@@ -180,23 +214,26 @@ development_status:
   epic-6-retrospective: optional
 
   # Epic 7: Cloud Synchronization
-  epic-7: in-progress
+  epic-7: done
+  epic-7-completed: 2026-03-28
   7-1-upload-cards-to-cloud: done
   7-2-download-cards-from-cloud: done
   7-3-sync-card-changes: done
   7-4-implement-delta-sync: done
   7-5-handle-offline-queue: done
-  7-6-resolve-sync-conflicts: review
+  7-6-resolve-sync-conflicts: done
   7-7-display-sync-status: done
   epic-7-retrospective: optional
 
-  # Epic 8: Settings & Preferences
-  epic-8: backlog
-  8-1-create-settings-screen: backlog
-  8-2-toggle-theme-light-dark: backlog
-  8-3-select-language: backlog
-  8-4-export-data-as-json: backlog
-  8-5-display-app-info: backlog
+  # Epic 8: Settings & Preferences — ABSORBED into Epic 13 (DEC-S10-001)
+  # Stories 8-1 through 8-5 will NOT be implemented separately.
+  # Settings implementation is covered by Epic 13, Story 13-6.
+  epic-8: absorbed-into-epic-13
+  8-1-create-settings-screen: absorbed # → 13-6
+  8-2-toggle-theme-light-dark: absorbed # → 13-6
+  8-3-select-language: absorbed # → 13-6
+  8-4-export-data-as-json: absorbed # → 13-6
+  8-5-display-app-info: absorbed # → 13-6
   epic-8-retrospective: optional
 
   # ============================================
@@ -228,3 +265,30 @@ development_status:
   11-3-notify-on-build-status: drafted
   11-4-rollback-on-failed-deploy: drafted
   11-5-document-cicd-pipeline: drafted
+
+  # Epic 12: App-Wide Design Overhaul (Figma)
+  epic-12: in-progress
+  12-1-design-system-foundation: ready-for-design
+  12-2-home-screen-card-list: ready-for-design
+  12-3-card-detail: ready-for-design
+  12-4-add-card-flow: ready-for-design
+  12-5-auth-screens: ready-for-design
+  12-6-settings-screen: ready-for-design
+  12-7-onboarding: ready-for-design
+  12-8-sync-status-indicators: ready-for-design
+  12-9-apple-watch: ready-for-design
+  epic-12-retrospective: optional
+
+  # Epic 13: UI Implementation (Placeholder — stories created after Epic 12 design approval)
+  # Absorbs Epic 8 (Settings) — 8-X stories will NOT be implemented separately
+  epic-13: backlog
+  13-1-implement-design-system-tokens: backlog # maps to 12-1
+  13-2-restyle-home-screen: backlog # maps to 12-2
+  13-3-restyle-card-detail: backlog # maps to 12-3
+  13-4-restyle-add-card-flow: backlog # maps to 12-4
+  13-5-restyle-auth-screens: backlog # maps to 12-5
+  13-6-implement-settings-screen: backlog # maps to 12-6 (absorbs Epic 8)
+  13-7-restyle-onboarding: backlog # maps to 12-7
+  13-8-restyle-sync-indicators: backlog # maps to 12-8
+  13-9-update-apple-watch-ui: backlog # maps to 12-9
+  epic-13-retrospective: optional

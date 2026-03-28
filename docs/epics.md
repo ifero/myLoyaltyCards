@@ -11,12 +11,14 @@ completedDate: '2025-01-03'
 project_name: 'myLoyaltyCards'
 user_name: 'Ifero'
 date: '2025-01-03'
-totalEpics: 10
-totalStories: 65
+totalEpics: 13
+totalStories: 83
 phase1Epics: 8
 phase1Stories: 55
 phase2Epics: 2
 phase2Stories: 10
+phase3Epics: 3
+phase3Stories: 18
 frsConvered: 72
 ---
 
@@ -2019,6 +2021,93 @@ _Example brands: Esselunga, Conad, Coop, Carrefour, Lidl, Eurospin, Pam, Despar,
 **When** sync occurs via Wearable Data Layer API
 **Then** the card appears on my Wear OS watch
 **And** edits and deletes also sync
+
+---
+
+## Epic 12: App-Wide Design Overhaul (Figma)
+
+**Goal:** Deliver complete Figma designs for every screen in the app, establishing a cohesive design system and premium visual identity before any implementation work begins.
+
+**Phase:** 3 (Design Sprint)
+
+**Epic Type:** Design
+
+**Dependencies:** None (design-only, references existing screens for context)
+
+**Figma File:** https://www.figma.com/design/4PSsX8SyTUU0GCUdBAAEED/Test
+
+**Reference Apps:** Klarna wallet, SuperCards (https://supercardsapp.com/)
+
+**Scope:**
+
+- Complete design system foundation (colors, typography, buttons, cards, icons, spacing)
+- Redesign all app screens: Home, Card Detail, Add Card flow, Auth, Settings, Onboarding
+- Sync & status indicator designs
+- Apple Watch screen designs
+- Light mode primary + dark mode fully supported
+- Brand colors and real logos from catalogue replace letter avatars
+- Proper CTA hierarchy: primary (filled), secondary (outlined), destructive (red)
+
+**Design Principles:**
+
+- **Brand recognition first:** Cards use actual brand colors + SVG logos from the catalogue
+- **CTA visibility:** No more invisible ghost buttons — primary actions are bold and unmissable
+- **Visual hierarchy:** Every screen has a clear focal point and action priority
+- **Premium feel:** Inspired by Klarna's dark mode polish and SuperCards' clean minimalism
+- **Accessibility:** WCAG 2.1 AA contrast ratios for all text and interactive elements
+
+**Stories:**
+
+| Story | Title                    | Deliverable                                                             |
+| ----- | ------------------------ | ----------------------------------------------------------------------- |
+| 12-1  | Design System Foundation | Color palette, typography, buttons, cards, icons, forms, spacing tokens |
+| 12-2  | Home Screen (Card List)  | Empty state, single card, multi-card grid, search, header               |
+| 12-3  | Card Detail              | Brand hero, barcode display, info section, manage actions               |
+| 12-4  | Add Card Flow            | Catalogue picker, scanner, manual form, success state                   |
+| 12-5  | Auth Screens             | Sign up, sign in, password reset, guest banner                          |
+| 12-6  | Settings Screen          | Account, preferences, data, about sections                              |
+| 12-7  | Onboarding               | Welcome screen, feature highlights, first card guidance                 |
+| 12-8  | Sync & Status Indicators | Sync active, success, error, offline, conflict UI                       |
+| 12-9  | Apple Watch              | Card list, barcode display, complications                               |
+
+---
+
+## Epic 13: UI Implementation (Placeholder)
+
+**Goal:** Implement the approved Figma designs from Epic 12 across the entire app codebase.
+
+**Phase:** 3 (Implementation)
+
+**Epic Type:** User-Facing
+
+**Dependencies:** Epic 12 (designs must be approved by ifero before implementation begins)
+
+**Status:** Placeholder — stories will be created after Epic 12 designs are reviewed and approved.
+
+**Scope:**
+
+- Implement the design system as reusable components (NativeWind tokens, shared components)
+- Restyle all existing screens to match approved Figma designs
+- Absorbs Epic 8 (Settings) — settings implementation becomes one story within Epic 13
+- Dark mode implementation across all screens
+- Brand color/logo integration for catalogue cards
+- Apple Watch UI updates
+
+**Planned Stories (titles only — detail TBD after design approval):**
+
+| Story | Title                                       | Maps to Design |
+| ----- | ------------------------------------------- | -------------- |
+| 13-1  | Implement Design System Tokens & Components | 12-1           |
+| 13-2  | Restyle Home Screen (Card List)             | 12-2           |
+| 13-3  | Restyle Card Detail Screen                  | 12-3           |
+| 13-4  | Restyle Add Card Flow                       | 12-4           |
+| 13-5  | Restyle Auth Screens                        | 12-5           |
+| 13-6  | Implement Settings Screen (absorbs Epic 8)  | 12-6           |
+| 13-7  | Restyle Onboarding Flow                     | 12-7           |
+| 13-8  | Restyle Sync & Status Indicators            | 12-8           |
+| 13-9  | Update Apple Watch UI                       | 12-9           |
+
+**Note:** Epic 8 (Settings & Preferences) is absorbed into this epic. Story 13-6 will cover the full settings screen implementation including theme toggle, language picker, export, and app info — all designed in Story 12-6.
 
 ---
 
