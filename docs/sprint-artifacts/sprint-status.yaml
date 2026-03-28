@@ -271,7 +271,7 @@ development_status:
   12-1-design-system-foundation: done
   12-1a-source-real-brand-logos: backlog # follow-up: replace placeholder SVGs with real brand logos
   12-2-home-screen-card-list: done
-  12-3-card-detail: design-complete
+  12-3-card-detail: done
   12-4-add-card-flow: ready-for-design
   12-5-auth-screens: ready-for-design
   12-6-settings-screen: ready-for-design
