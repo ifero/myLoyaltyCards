@@ -2,7 +2,7 @@
 
 **Epic:** 12 - App-Wide Design Overhaul
 **Type:** Design
-**Status:** in-review
+**Status:** done
 **Sprint:** 10
 **Depends On:** None (foundation for all other stories)
 **Figma File:** https://www.figma.com/design/4PSsX8SyTUU0GCUdBAAEED/Test
@@ -156,7 +156,7 @@ And defines safe area handling for notch/Dynamic Island
 - [x] AC5: Icon Set & Navigation — 10 nav icons (FontAwesome via @expo/vector-icons), Klarna-style action rows, 5 status icons
 - [x] AC6: Form Input Components — 5 text field states, toggle ON/OFF, color picker (5-color palette)
 - [x] AC7: Spacing & Layout Tokens — 7-step scale (4–48pt), 11 layout specifications
-- [ ] **Owner review** — ifero to review Figma file and approve or request changes
+- [x] **Owner review** — approved by ifero (2026-03-28). Follow-up: 12-1a for real brand logos.
 
 ---
 
