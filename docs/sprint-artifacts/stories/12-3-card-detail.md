@@ -124,3 +124,13 @@ And navigation is consistent with the app-wide pattern
 - At checkout, users need: open app → tap card → show barcode. Speed matters.
 - Klarna's brand header approach makes the card feel premium and instantly recognizable
 - Delete should require confirmation (implementation detail, but design the confirmation dialog too)
+
+## Design Decisions (Review Feedback)
+
+- **White background** for light mode screens (not grey)
+- **Barcode centered** within its container for visual balance
+- **Format row removed** — implementation detail, not user-relevant
+- **Color row** shown only for custom cards (catalogue cards already show brand color in hero)
+- **Font Awesome 6 Free** used for all icons (fa-arrow-left, fa-pen, fa-trash, fa-copy, fa-chevron-right, fa-xmark, fa-sun)
+- **Screen brightness maximized** hint shown on detail screen (not just fullscreen) since barcode is visible
+- **Padding bottom** added to info section after last row
