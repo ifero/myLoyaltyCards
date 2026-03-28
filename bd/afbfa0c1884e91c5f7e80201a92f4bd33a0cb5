@@ -1,0 +1,54 @@
+core/sync/conflict-resolution.test.ts
+  40cb23b83e3e9fa4 1-611
+core/utils/logger.ts
+  7d2cbcdffde0ee88 1-11
+docs/sprint-artifacts/stories/7-6-resolve-sync-conflicts.md
+  40cb23b83e3e9fa4 5,95-100,102-107,112-117,119-123,125-129,263,267-268,271-276,280-281,283-289
+core/sync/cloud-sync.ts
+  40cb23b83e3e9fa4 6,270-298,302-309,311-315,329,341-426,444-520
+core/sync/conflict-logger.test.ts
+  40cb23b83e3e9fa4 1-94
+docs/sprint-artifacts/sprint-status.yaml
+  40cb23b83e3e9fa4 189
+core/sync/conflict-logger.ts
+  40cb23b83e3e9fa4 1-43
+core/utils/index.ts
+  7d2cbcdffde0ee88 7
+core/sync/retry.ts
+  7d2cbcdffde0ee88 28-29
+core/sync/index.ts
+  40cb23b83e3e9fa4 6-7,16,50-56
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.1.20",
+  "base_commit_sha": "bdafbfa0c1884e91c5f7e80201a92f4bd33a0cb5",
+  "prompts": {
+    "40cb23b83e3e9fa4": {
+      "agent_id": {
+        "tool": "github-copilot",
+        "id": "f72e7cb2-c91d-4422-aece-50e33ab199ba",
+        "model": "copilot/claude-opus-4.6"
+      },
+      "human_author": "Andrea Pacino <andrea.pacino87@gmail.com>",
+      "messages": [],
+      "total_additions": 1026,
+      "total_deletions": 44,
+      "accepted_lines": 1026,
+      "overriden_lines": 0
+    },
+    "7d2cbcdffde0ee88": {
+      "agent_id": {
+        "tool": "github-copilot",
+        "id": "0d1baddd-3875-49a4-83a2-660579200b4c",
+        "model": "copilot/oswe-vscode-prime"
+      },
+      "human_author": "Andrea Pacino <andrea.pacino87@gmail.com>",
+      "messages": [],
+      "total_additions": 21,
+      "total_deletions": 3,
+      "accepted_lines": 20,
+      "overriden_lines": 0
+    }
+  }
+}
