@@ -2,7 +2,7 @@
 
 **Epic:** 12 - App-Wide Design Overhaul
 **Type:** Design
-**Status:** ready-for-design
+**Status:** done
 **Sprint:** 10
 **Depends On:** 12-1 (Design System Foundation)
 **Figma File:** https://www.figma.com/design/4PSsX8SyTUU0GCUdBAAEED/Test
@@ -41,7 +41,7 @@
 
 ## Acceptance Criteria
 
-### AC1: Brand Hero Section
+### AC1: Brand Hero Section ✅
 
 ```
 Given I open a catalogue card's detail
@@ -50,7 +50,9 @@ And the brand name is displayed prominently below the header
 And for custom cards, the user-selected color is used with first-letter avatar
 ```
 
-### AC2: Barcode Display
+**Design:** Frames "Catalogue Card Detail" (Conad red hero + logo) and "Custom Card Detail" (teal + letter avatar G). Light + Dark.
+
+### AC2: Barcode Display ✅
 
 ```
 Given I am viewing a card detail
@@ -60,7 +62,9 @@ And there is a "Tap to enlarge" hint or the barcode area is tappable for fullscr
 And the barcode area has sufficient padding and contrast for scanner readability
 ```
 
-### AC3: Card Info Section
+**Design:** White card with barcode at max width, spaced number below, "Tap to enlarge" hint. Fullscreen overlay with max brightness hint. Barcode stays on white even in dark mode for scanner readability.
+
+### AC3: Card Info Section ✅
 
 ```
 Given I am viewing a card detail
@@ -72,7 +76,9 @@ Then card metadata is displayed in clean rows:
 And the info section is visually secondary to the barcode
 ```
 
-### AC4: Manage Actions
+**Design:** Separate card below barcode with label/value rows, copy icon (⧉) on barcode number row. Visually secondary with smaller type and muted labels.
+
+### AC4: Manage Actions ✅
 
 ```
 Given I am viewing a card detail
@@ -84,7 +90,9 @@ And "Edit" is clearly the primary management action (not "Delete")
 And there is intentional visual separation between non-destructive and destructive actions
 ```
 
-### AC5: Navigation
+**Design:** "MANAGE" section header, Edit card row (✎ icon + label + chevron), separator line, Delete card row (🗑 + red text, no chevron — quiet destructive). Edit is primary, Delete is de-emphasized.
+
+### AC5: Navigation ✅
 
 ```
 Given I am viewing a card detail
@@ -92,6 +100,8 @@ Then the header shows a back arrow (left) and card name (center)
 And optionally an info (i) icon on the right
 And navigation is consistent with the app-wide pattern
 ```
+
+**Design:** Brand-colored nav header with back arrow (‹) left, card name centered. Consistent with Home Screen header pattern. Condensed on scroll.
 
 ---
 
@@ -101,10 +111,10 @@ And navigation is consistent with the app-wide pattern
 
 **Frames (light + dark for each):**
 
-1. Catalogue card detail (e.g., Conad — red branded)
-2. Custom card detail (user-picked color, letter avatar)
-3. Barcode enlarged/fullscreen state
-4. Scrolled state showing Manage section
+1. ✅ Catalogue card detail (Conad — red branded) — Light + Dark
+2. ✅ Custom card detail (Gym Pass — teal, letter avatar) — Light + Dark
+3. ✅ Barcode enlarged/fullscreen state — Light + Dark
+4. ✅ Scrolled state showing Manage section — Light + Dark
 
 ---
 
@@ -114,3 +124,13 @@ And navigation is consistent with the app-wide pattern
 - At checkout, users need: open app → tap card → show barcode. Speed matters.
 - Klarna's brand header approach makes the card feel premium and instantly recognizable
 - Delete should require confirmation (implementation detail, but design the confirmation dialog too)
+
+## Design Decisions (Review Feedback)
+
+- **White background** for light mode screens (not grey)
+- **Barcode centered** within its container for visual balance
+- **Format row removed** — implementation detail, not user-relevant
+- **Color row** shown only for custom cards (catalogue cards already show brand color in hero)
+- **Font Awesome 6 Free** used for all icons (fa-arrow-left, fa-pen, fa-trash, fa-copy, fa-chevron-right, fa-xmark, fa-sun)
+- **Screen brightness maximized** hint shown on detail screen (not just fullscreen) since barcode is visible
+- **Padding bottom** added to info section after last row
