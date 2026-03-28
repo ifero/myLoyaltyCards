@@ -4,3 +4,4 @@
 
 export { inferBarcodeFormat, getBarcodeFormatDescription } from './inferBarcodeFormat';
 export { mapHexToCardColor } from './mapHexToCardColor';
+export { logger } from './logger';

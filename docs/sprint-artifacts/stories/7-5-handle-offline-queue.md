@@ -92,56 +92,56 @@ And all card features remain fully functional while offline
 
 ## Tasks / Subtasks
 
-- [ ] **Task 1: Add network connectivity detection** (AC: #6)
-  - [ ] 1.1 Install `@react-native-community/netinfo` (via `npx expo install`)
-  - [ ] 1.2 Create `shared/hooks/useNetworkStatus.ts` — reactive connectivity hook
-  - [ ] 1.3 Expose `{ isConnected, isInternetReachable }` state
-  - [ ] 1.4 Subscribe to NetInfo events for real-time updates
-  - [ ] 1.5 Unit tests (mock NetInfo)
+- [x] **Task 1: Add network connectivity detection** (AC: #6)
+  - [x] 1.1 Install `@react-native-community/netinfo` (via `npx expo install`)
+  - [x] 1.2 Create `shared/hooks/useNetworkStatus.ts` — reactive connectivity hook
+  - [x] 1.3 Expose `{ isConnected, isInternetReachable }` state
+  - [x] 1.4 Subscribe to NetInfo events for real-time updates
+  - [x] 1.5 Unit tests (mock NetInfo)
 
-- [ ] **Task 2: Create offline-aware sync coordinator** (AC: #1, #2, #3)
-  - [ ] 2.1 Extend `core/sync/sync-trigger.ts` with offline awareness
-  - [ ] 2.2 When `markDirty()` is called and offline → set persistent dirty flag only (no sync attempt)
-  - [ ] 2.3 When connectivity restored → check dirty flag → trigger delta sync
-  - [ ] 2.4 Dirty flag uses AsyncStorage: key `'cloudSyncDirtyFlag'` = `'true' | null`
-  - [ ] 2.5 Clear dirty flag only after successful sync
-  - [ ] 2.6 Unit tests for offline → dirty → reconnect → sync flow
+- [x] **Task 2: Create offline-aware sync coordinator** (AC: #1, #2, #3)
+  - [x] 2.1 Extend `core/sync/sync-trigger.ts` with offline awareness
+  - [x] 2.2 When `markDirty()` is called and offline → set persistent dirty flag only (no sync attempt)
+  - [x] 2.3 When connectivity restored → check dirty flag → trigger delta sync
+  - [x] 2.4 Dirty flag uses AsyncStorage: key `'cloudSyncDirtyFlag'` = `'true' | null`
+  - [x] 2.5 Clear dirty flag only after successful sync
+  - [x] 2.6 Unit tests for offline → dirty → reconnect → sync flow
 
-- [ ] **Task 3: Implement retry with exponential backoff** (AC: #4, #5)
-  - [ ] 3.1 Create `core/sync/retry.ts` — generic retry utility
-  - [ ] 3.2 `retryWithBackoff(fn, { maxRetries: 3, baseDelay: 1000 })`
-  - [ ] 3.3 Delays: 1s, 2s, 4s (exponential: `baseDelay * 2^attempt`)
-  - [ ] 3.4 Log each retry attempt via logger
-  - [ ] 3.5 Return result or final error after max retries
-  - [ ] 3.6 Unit tests: success on 1st try, success on retry, all retries fail
+- [x] **Task 3: Implement retry with exponential backoff** (AC: #4, #5)
+  - [x] 3.1 Create `core/sync/retry.ts` — generic retry utility
+  - [x] 3.2 `retryWithBackoff(fn, { maxRetries: 3, baseDelay: 1000 })`
+  - [x] 3.3 Delays: 1s, 2s, 4s (exponential: `baseDelay * 2^attempt`)
+  - [x] 3.4 Log each retry attempt via logger
+  - [x] 3.5 Return result or final error after max retries
+  - [x] 3.6 Unit tests: success on 1st try, success on retry, all retries fail
 
-- [ ] **Task 4: Integrate retry into sync pipeline** (AC: #4, #5)
-  - [ ] 4.1 Wrap `processPendingSync()` (from 7.3/7.4) with `retryWithBackoff`
-  - [ ] 4.2 On final failure: expose error state for UI, keep dirty flag set
-  - [ ] 4.3 On success: clear dirty flag, update lastSyncAt
-  - [ ] 4.4 Unit tests for retry integration
+- [x] **Task 4: Integrate retry into sync pipeline** (AC: #4, #5)
+  - [x] 4.1 Wrap `processPendingSync()` (from 7.3/7.4) with `retryWithBackoff`
+  - [x] 4.2 On final failure: expose error state for UI, keep dirty flag set
+  - [x] 4.3 On success: clear dirty flag, update lastSyncAt
+  - [x] 4.4 Unit tests for retry integration
 
-- [ ] **Task 5: Wire reconnect trigger** (AC: #2, #6)
-  - [ ] 5.1 Extend `shared/hooks/useAutoSync.ts` (from 7.3) with NetInfo listener
-  - [ ] 5.2 On `isConnected` transition: `false → true` AND dirty flag set → trigger sync
-  - [ ] 5.3 Debounce reconnect triggers (avoid rapid on/off/on spurious syncs)
-  - [ ] 5.4 Coordinate with existing throttle (reconnect sync respects cooldown unless force)
-  - [ ] 5.5 Unit tests for reconnect flow
+- [x] **Task 5: Wire reconnect trigger** (AC: #2, #6)
+  - [x] 5.1 Extend `shared/hooks/useAutoSync.ts` (from 7.3) with NetInfo listener
+  - [x] 5.2 On `isConnected` transition: `false → true` AND dirty flag set → trigger sync
+  - [x] 5.3 Debounce reconnect triggers (avoid rapid on/off/on spurious syncs)
+  - [x] 5.4 Coordinate with existing throttle (reconnect sync respects cooldown unless force)
+  - [x] 5.5 Unit tests for reconnect flow
 
-- [ ] **Task 6: Create offline indicator component** (AC: #7)
-  - [ ] 6.1 Create `shared/components/OfflineIndicator.tsx`
-  - [ ] 6.2 Small banner at top of screen: "You're offline. Changes saved locally."
-  - [ ] 6.3 Uses `useNetworkStatus` hook for reactivity
-  - [ ] 6.4 Appears with subtle animation, disappears on reconnect
-  - [ ] 6.5 Non-blocking — does not cover content
-  - [ ] 6.6 Integrate into root layout (`app/_layout.tsx`)
-  - [ ] 6.7 Unit tests (renders when offline, hidden when online)
+- [x] **Task 6: Create offline indicator component** (AC: #7)
+  - [x] 6.1 Create `shared/components/OfflineIndicator.tsx`
+  - [x] 6.2 Small banner at top of screen: "You're offline. Changes saved locally."
+  - [x] 6.3 Uses `useNetworkStatus` hook for reactivity
+  - [x] 6.4 Appears with subtle animation, disappears on reconnect
+  - [x] 6.5 Non-blocking — does not cover content
+  - [x] 6.6 Integrate into root layout (`app/_layout.tsx`)
+  - [x] 6.7 Unit tests (renders when offline, hidden when online)
 
-- [ ] **Task 7: Manual retry action** (AC: #5)
-  - [ ] 7.1 When max retries exceeded, expose `retrySync()` function from hook
-  - [ ] 7.2 Sync error state includes a "Retry" button in error UI
-  - [ ] 7.3 Manual retry resets retry counter and attempts sync again
-  - [ ] 7.4 Unit test for manual retry flow
+- [x] **Task 7: Manual retry action** (AC: #5)
+  - [x] 7.1 When max retries exceeded, expose `retrySync()` function from hook
+  - [x] 7.2 Sync error state includes a "Retry" button in error UI
+  - [x] 7.3 Manual retry resets retry counter and attempts sync again
+  - [x] 7.4 Unit test for manual retry flow
 
 ---
 
@@ -306,12 +306,45 @@ app/
 
 ### Agent Model Used
 
-_To be filled by dev agent_
+GPT-4.1 (GitHub Copilot)
 
 ### Debug Log References
 
+- All tests run: core/sync/retry.test.ts, shared/hooks/useNetworkStatus.test.ts, shared/components/OfflineIndicator.test.tsx, shared/hooks/useAutoSync.test.ts, core/sync/sync-trigger.test.ts
+
 ### Completion Notes List
+
+- All tasks and subtasks implemented and tested
+- All acceptance criteria verified in code and tests
+- All files below changed in PR #74 (commits df3c921, 6019df1)
 
 ### Change Log
 
+- Implemented offline queue, dirty flag, reconnect trigger, retry with backoff, error banner, and offline indicator
+- Added/updated tests for all new logic
+- Fixed reconnect throttle bug (force sync on reconnect)
+- Made onRetry optional in retryWithBackoff
+- Added AppError for max retries
+- Used logger for retry logging
+- Added missing tests for reconnect debounce and manual retry after max retries
+
 ### File List
+
+- app/\_layout.tsx
+- app/index.tsx
+- core/sync/index.ts
+- core/sync/retry.test.ts
+- core/sync/retry.ts
+- core/sync/sync-trigger.test.ts
+- core/sync/sync-trigger.ts
+- docs/sprint-artifacts/sprint-status.yaml
+- docs/sprint-artifacts/stories/7-5-handle-offline-queue.md
+- jest.setup.js
+- package.json
+- shared/components/OfflineIndicator.test.tsx
+- shared/components/OfflineIndicator.tsx
+- shared/hooks/useAutoSync.test.ts
+- shared/hooks/useAutoSync.ts
+- shared/hooks/useNetworkStatus.test.ts
+- shared/hooks/useNetworkStatus.ts
+- yarn.lock

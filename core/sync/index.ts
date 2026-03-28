@@ -3,6 +3,8 @@ export {
   forceSyncLocalCards,
   downloadCloudCards,
   mergeCards,
+  mergeWithDeletions,
+  normalizeTimestamp,
   syncChangedCards,
   _LAST_CLOUD_SYNC_KEY,
   _BATCH_SIZE,
@@ -11,6 +13,7 @@ export {
   type DownloadCloudCardsResult,
   type SyncChangedCardsResult,
   type MergeResult,
+  type MergeWithDeletionsResult,
   type CloudUpsertFn,
   type CloudFetchFn,
   type CloudFetchSinceFn,
@@ -44,3 +47,10 @@ export {
 } from './sync-timestamp';
 
 export { retryWithBackoff } from './retry';
+
+export {
+  logConflictResolution,
+  type ConflictLogEntry,
+  type ConflictWinner,
+  type ConflictReason
+} from './conflict-logger';

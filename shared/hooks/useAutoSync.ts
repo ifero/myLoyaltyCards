@@ -180,7 +180,7 @@ export const useAutoSync = (
       }
 
       reconnectTimeoutRef.current = setTimeout(() => {
-        runSync(false);
+        runSync(true); // force sync on reconnect, bypass throttle
       }, RECONNECT_DEBOUNCE_MS);
     }
 
