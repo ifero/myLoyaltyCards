@@ -1,0 +1,25 @@
+docs/sprint-artifacts/sprint-status.yaml
+  c37cc028d1aa4518 271
+docs/sprint-artifacts/stories/12-1-design-system-foundation.md
+  c37cc028d1aa4518 5,146-218
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.1.22",
+  "base_commit_sha": "11f65a23aac95b5f03448b56a6702269cc0206eb",
+  "prompts": {
+    "c37cc028d1aa4518": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "f103462a-e820-4223-a782-60331e643bc8",
+        "model": "claude-opus-4-6"
+      },
+      "human_author": "Andrea Pacino <andrea.pacino87@gmail.com>",
+      "messages": [],
+      "total_additions": 75,
+      "total_deletions": 2,
+      "accepted_lines": 75,
+      "overriden_lines": 0
+    }
+  }
+}
