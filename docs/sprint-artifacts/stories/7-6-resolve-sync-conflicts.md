@@ -2,7 +2,7 @@
 
 **Epic:** 7 - Cloud Synchronization
 **Type:** User-Facing
-**Status:** ready-for-dev
+**Status:** review
 **Sprint:** 9
 **FRs Covered:** FR52
 
@@ -92,47 +92,47 @@ And no log is shown to the user
 
 ## Tasks / Subtasks
 
-- [ ] **Task 1: Formalize merge algorithm in download module** (AC: #1, #2, #4)
-  - [ ] 1.1 Review existing merge logic in `core/sync/download.ts` (from 7.2)
-  - [ ] 1.2 Ensure `mergeCards()` implements strict last-write-wins using ISO string comparison
-  - [ ] 1.3 Implement tie-break rule: when `local.updatedAt === cloud.updatedAt` → cloud wins
-  - [ ] 1.4 Document the merge precedence in code comments
-  - [ ] 1.5 Unit tests: local newer → local wins; cloud newer → cloud wins; tie → cloud wins
+- [x] **Task 1: Formalize merge algorithm in download module** (AC: #1, #2, #4)
+  - [x] 1.1 Review existing merge logic in `core/sync/cloud-sync.ts` (from 7.2) — logic was correct, `>=` handles tie-break
+  - [x] 1.2 Ensure `mergeCards()` implements strict last-write-wins using ISO string comparison
+  - [x] 1.3 Implement tie-break rule: when `local.updatedAt === cloud.updatedAt` → cloud wins
+  - [x] 1.4 Document the merge precedence in code comments (Merge Decision Matrix in JSDoc)
+  - [x] 1.5 Unit tests: local newer → local wins; cloud newer → cloud wins; tie → cloud wins
 
-- [ ] **Task 2: Handle deletion vs edit conflicts** (AC: #6)
-  - [ ] 2.1 Review deletion tracking from `core/sync/deletion-tracker.ts` (from 7.3)
-  - [ ] 2.2 During merge: if card is in local deletion queue AND exists in cloud → send delete to cloud
-  - [ ] 2.3 During merge: if card deleted in cloud (missing from cloud response) but edited locally → card is deleted locally
-  - [ ] 2.4 Clarify: deletions always win over edits in both directions
-  - [ ] 2.5 Unit tests for all deletion conflict scenarios:
+- [x] **Task 2: Handle deletion vs edit conflicts** (AC: #6)
+  - [x] 2.1 Review deletion tracking from `core/sync/deletion-tracker.ts` (from 7.3)
+  - [x] 2.2 During merge: if card is in local deletion queue AND exists in cloud → send delete to cloud
+  - [x] 2.3 During merge: if card deleted in cloud (missing from cloud response) but edited locally → card is deleted locally
+  - [x] 2.4 Clarify: deletions always win over edits in both directions
+  - [x] 2.5 Unit tests for all deletion conflict scenarios:
     - Local delete + cloud edit → delete wins
     - Cloud delete + local edit → delete wins
     - Both delete → no-op (already gone)
 
-- [ ] **Task 3: Implement conflict logging** (AC: #7)
-  - [ ] 3.1 Create `logConflictResolution()` helper in `core/sync/conflict-logger.ts`
-  - [ ] 3.2 Log: `{ cardId, localUpdatedAt, cloudUpdatedAt, winner: 'local' | 'cloud', reason }`
-  - [ ] 3.3 Use `logger.log()` (dev-only) — no production telemetry for MVP
-  - [ ] 3.4 Call from merge algorithm when local and cloud versions differ
-  - [ ] 3.5 Unit tests: verify log output format
+- [x] **Task 3: Implement conflict logging** (AC: #7)
+  - [x] 3.1 Create `logConflictResolution()` helper in `core/sync/conflict-logger.ts`
+  - [x] 3.2 Log: `{ cardId, localUpdatedAt, cloudUpdatedAt, winner: 'local' | 'cloud', reason }`
+  - [x] 3.3 Use `console.log()` guarded by `__DEV__` — no production telemetry for MVP
+  - [x] 3.4 Call from merge algorithm when local and cloud versions differ
+  - [x] 3.5 Unit tests: verify log output format (6 tests)
 
-- [ ] **Task 4: Offline conflict scenarios** (AC: #5)
-  - [ ] 4.1 Verify delta sync (7.4) + reconnect flow (7.5) handles timestamps correctly
-  - [ ] 4.2 Offline changes have correct `updatedAt` from time of local edit (not sync time)
-  - [ ] 4.3 Integration test: offline edit at T1 → cloud edit at T2 > T1 → reconnect → cloud wins
-  - [ ] 4.4 Integration test: offline edit at T2 → cloud edit at T1 < T2 → reconnect → local wins
+- [x] **Task 4: Offline conflict scenarios** (AC: #5)
+  - [x] 4.1 Verify delta sync (7.4) + reconnect flow (7.5) handles timestamps correctly — confirmed via code review
+  - [x] 4.2 Offline changes have correct `updatedAt` from time of local edit (not sync time) — confirmed
+  - [x] 4.3 Integration test: offline edit at T1 → cloud edit at T2 > T1 → reconnect → cloud wins
+  - [x] 4.4 Integration test: offline edit at T2 → cloud edit at T1 < T2 → reconnect → local wins
 
-- [ ] **Task 5: Convergence verification** (AC: #3)
-  - [ ] 5.1 After merge + upload cycle completes, both local and cloud have identical data
-  - [ ] 5.2 Integration test: two-device simulation (local A + local B both sync to same cloud)
-  - [ ] 5.3 Verify `updatedAt` is consistent after conflict resolution
-  - [ ] 5.4 Verify card count matches on both sides after full sync cycle
+- [x] **Task 5: Convergence verification** (AC: #3)
+  - [x] 5.1 After merge + upload cycle completes, both local and cloud have identical data
+  - [x] 5.2 Integration test: two-device simulation (local A + local B both sync to same cloud)
+  - [x] 5.3 Verify `updatedAt` is consistent after conflict resolution
+  - [x] 5.4 Verify card count matches on both sides after full sync cycle
 
-- [ ] **Task 6: Edge case hardening**
-  - [ ] 6.1 Handle malformed `updatedAt` values (null, empty, invalid date) → treat as epoch (oldest)
-  - [ ] 6.2 Handle card with `updatedAt` in the future (clock skew) → still use comparison, log warning
-  - [ ] 6.3 Handle concurrent sync attempts (guard with mutex / in-progress flag)
-  - [ ] 6.4 Unit tests for all edge cases
+- [x] **Task 6: Edge case hardening**
+  - [x] 6.1 Handle malformed `updatedAt` values (null, empty, invalid date) → treat as epoch (oldest) via `normalizeTimestamp()`
+  - [x] 6.2 Handle card with `updatedAt` in the future (clock skew) → still use comparison, log warning
+  - [x] 6.3 Handle concurrent sync attempts — already guarded by `isRunningRef` in `useAutoSync` hook
+  - [x] 6.4 Unit tests for all edge cases
 
 ---
 
@@ -260,12 +260,30 @@ This story carries the **highest integration risk** in Epic 7. Testing must be e
 
 ### Agent Model Used
 
-_To be filled by dev agent_
+Claude Opus 4.6 (GitHub Copilot)
 
 ### Debug Log References
 
+No issues encountered during implementation.
+
 ### Completion Notes List
+
+- **Task 3** (implemented first as dependency): Created `conflict-logger.ts` with typed `logConflictResolution()` helper. Uses `__DEV__` guard — no production telemetry. 6 unit tests.
+- **Task 1**: Extended `mergeCards()` with `normalizeTimestamp()` for malformed timestamp handling, conflict logging integration, and comprehensive JSDoc with Merge Decision Matrix. Existing LWW logic was already correct — added safety via normalised comparison. 15+ unit tests covering all AC scenarios.
+- **Task 2**: Created `mergeWithDeletions()` that integrates pending deletion queue with merge. Filters deleted cards from both sets before LWW merge. Returns `cloudDeletions` array for caller to process. 7 unit tests.
+- **Task 4**: Verified delta sync (7.4) + reconnect (7.5) handle timestamps correctly. Added 3 integration-style tests simulating offline edit scenarios.
+- **Task 5**: Added convergence tests simulating two-device sync. Verified both perspectives produce identical merged data, consistent `updatedAt`, and matching card counts. 3 tests.
+- **Task 6**: `normalizeTimestamp()` handles null/undefined/empty/invalid → epoch. Future timestamps still compared (logged as warning). Concurrent sync guard already present in `useAutoSync` via `isRunningRef`. 7 unit tests for normalizeTimestamp + 5 edge case merge tests.
 
 ### Change Log
 
+- 2026-03-28: Implemented Story 7.6 — all 6 tasks complete, 47 new tests (conflict-logger: 6, conflict-resolution: 41)
+
 ### File List
+
+- `core/sync/conflict-logger.ts` — NEW: logConflictResolution() helper with typed entries
+- `core/sync/conflict-logger.test.ts` — NEW: 6 unit tests for conflict logger
+- `core/sync/conflict-resolution.test.ts` — NEW: 41 comprehensive tests covering Tasks 1-6
+- `core/sync/cloud-sync.ts` — MODIFIED: Extended mergeCards() with normalizeTimestamp(), conflict logging, edge-case handling; added mergeWithDeletions()
+- `core/sync/index.ts` — MODIFIED: Added exports for mergeWithDeletions, normalizeTimestamp, conflict-logger types
+- `docs/sprint-artifacts/sprint-status.yaml` — MODIFIED: 7-6 status → in-progress

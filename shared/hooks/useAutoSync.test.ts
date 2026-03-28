@@ -265,7 +265,7 @@ describe('useAutoSync', () => {
     expect(mockProcessPendingSync).toHaveBeenCalledTimes(1);
   });
 
-  it('triggers sync on reconnect transition after debounce', async () => {
+  it('triggers sync on reconnect transition after debounce (force bypasses throttle)', async () => {
     jest.useFakeTimers();
 
     mockUseNetworkStatus
@@ -281,5 +281,46 @@ describe('useAutoSync', () => {
 
     expect(mockProcessPendingSync).toHaveBeenCalledTimes(1);
     jest.useRealTimers();
+  });
+
+  it('debounces multiple rapid reconnects (only one sync fires)', async () => {
+    jest.useFakeTimers();
+
+    mockUseNetworkStatus
+      .mockReturnValueOnce({ isConnected: false, isInternetReachable: false })
+      .mockReturnValueOnce({ isConnected: true, isInternetReachable: true })
+      .mockReturnValueOnce({ isConnected: false, isInternetReachable: false })
+      .mockReturnValueOnce({ isConnected: true, isInternetReachable: true });
+
+    const { rerender } = renderHook(() => useAutoSync());
+    rerender({}); // offline → online
+    rerender({}); // online → offline
+    rerender({}); // offline → online again
+
+    await act(async () => {
+      await jest.advanceTimersByTimeAsync(1000);
+    });
+
+    expect(mockProcessPendingSync).toHaveBeenCalledTimes(1);
+    jest.useRealTimers();
+  });
+
+  it('manual retry after max retries error triggers sync again', async () => {
+    mockRetryWithBackoff.mockRejectedValueOnce(new Error('Sync failed'));
+    mockRetryWithBackoff.mockResolvedValueOnce(undefined);
+
+    const { result } = renderHook(() => useAutoSync());
+
+    await act(async () => {
+      await result.current.retrySync(); // first call fails
+    });
+
+    expect(result.current.syncError).toBe('Sync failed. Changes saved locally.');
+
+    await act(async () => {
+      await result.current.retrySync(); // second call succeeds
+    });
+
+    expect(result.current.syncError).toBeNull();
   });
 });
