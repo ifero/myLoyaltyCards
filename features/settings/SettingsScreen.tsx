@@ -12,7 +12,8 @@ import {
 } from 'react-native';
 
 import { catalogueRepository } from '@/core/catalogue/catalogue-repository';
-import { clearLastSyncAt } from '@/core/sync/sync-timestamp';
+import { clearLastSyncAt, getLastSyncAt } from '@/core/sync/sync-timestamp';
+import { formatRelativeTime } from '@/core/utils/relative-time';
 
 import { deleteAccount, signOut } from '@/shared/supabase/auth';
 import { useAuthState } from '@/shared/supabase/useAuthState';
@@ -34,6 +35,8 @@ const SettingsScreen = () => {
   const { isAuthenticated, authState } = useAuthState();
 
   const [signOutError, setSignOutError] = useState<string | null>(null);
+  const [lastSyncAt, setLastSyncAt] = useState<string | null>(null);
+  const [syncLabel, setSyncLabel] = useState('Never');
 
   // Delete Account state (Story 6.10)
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
@@ -46,10 +49,36 @@ const SettingsScreen = () => {
   const clearLastSyncAtSafely = async (): Promise<void> => {
     try {
       await clearLastSyncAt();
+      setLastSyncAt(null);
+      setSyncLabel('Never');
     } catch (error) {
       console.error('[SettingsScreen] Failed to clear lastSyncAt', error);
     }
   };
+
+  useEffect(() => {
+    const loadAsync = async () => {
+      try {
+        const timestamp = await getLastSyncAt();
+        setLastSyncAt(timestamp);
+        setSyncLabel(formatRelativeTime(timestamp));
+      } catch (error) {
+        console.error('[SettingsScreen] Failed to load last sync timestamp', error);
+      }
+    };
+
+    loadAsync();
+  }, []);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setSyncLabel(formatRelativeTime(lastSyncAt));
+    }, 30000);
+
+    return () => {
+      clearInterval(interval);
+    };
+  }, [lastSyncAt]);
 
   useEffect(() => {
     return () => {
@@ -252,6 +281,26 @@ const SettingsScreen = () => {
               {signOutError}
             </Text>
           )}
+        </View>
+      )}
+
+      {/* Sync status section — visible only when authenticated (Story 7.7) */}
+      {isAuthenticated && (
+        <View
+          testID="settings-sync-status-section"
+          className="mb-6 w-full rounded-xl p-4"
+          style={{ backgroundColor: theme.surface }}
+        >
+          <Text className="mb-3 text-base font-semibold" style={{ color: theme.textPrimary }}>
+            Sync Status
+          </Text>
+          <Text
+            testID="settings-last-sync"
+            className="text-sm"
+            style={{ color: theme.textSecondary }}
+          >
+            Last synced: {syncLabel}
+          </Text>
         </View>
       )}
 
