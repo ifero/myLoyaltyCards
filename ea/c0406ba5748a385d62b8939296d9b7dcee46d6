@@ -1,0 +1,25 @@
+docs/sprint-artifacts/stories/12-3-card-detail.md
+  cc030a4229944671 5,44,53,55,65,67,79,81,93,95,104,114-117
+docs/sprint-artifacts/sprint-status.yaml
+  cc030a4229944671 273-274
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.1.22",
+  "base_commit_sha": "eac0406ba5748a385d62b8939296d9b7dcee46d6",
+  "prompts": {
+    "cc030a4229944671": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "949c840f-d4ed-4505-b515-c8d63dbda482",
+        "model": "claude-opus-4-6"
+      },
+      "human_author": "Andrea Pacino <andrea.pacino87@gmail.com>",
+      "messages": [],
+      "total_additions": 22,
+      "total_deletions": 12,
+      "accepted_lines": 22,
+      "overriden_lines": 0
+    }
+  }
+}
