@@ -1,5 +1,18 @@
-<svg width="200" height="200" xmlns="http://www.w3.org/2000/svg">
-  <rect width="100%" height="100%" fill="#0050AA"/>
-  <text x="50%" y="50%" font-family="Arial, sans-serif" font-size="24" fill="#ffffff" text-anchor="middle" dy=".3em">Lidl</text>
-  <text x="50%" y="80%" font-family="Arial, sans-serif" font-size="12" fill="#ffffff" text-anchor="middle" dy=".3em">PLACEHOLDER</text>
+<svg width="200" height="200" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+  <!-- Lidl: circle with blue border, red accent, yellow band, text -->
+  <defs>
+    <clipPath id="lidl-clip">
+      <circle cx="100" cy="95" r="52"/>
+    </clipPath>
+  </defs>
+  <!-- Outer blue circle -->
+  <circle cx="100" cy="95" r="65" fill="#0050AA"/>
+  <!-- Red inner ring -->
+  <circle cx="100" cy="95" r="58" fill="none" stroke="#E60A14" stroke-width="6"/>
+  <!-- Inner white fill -->
+  <circle cx="100" cy="95" r="52" fill="#FFFFFF"/>
+  <!-- Yellow horizontal band -->
+  <rect x="48" y="78" width="104" height="34" fill="#FFF000" clip-path="url(#lidl-clip)"/>
+  <!-- Lidl text -->
+  <text x="100" y="103" font-family="Arial, Helvetica, sans-serif" font-size="34" font-weight="900" fill="#0050AA" text-anchor="middle" letter-spacing="1">Lidl</text>
 </svg>

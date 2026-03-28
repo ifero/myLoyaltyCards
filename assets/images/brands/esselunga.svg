@@ -1,5 +1,9 @@
-<svg width="200" height="200" xmlns="http://www.w3.org/2000/svg">
-  <rect width="100%" height="100%" fill="#FFCC00"/>
-  <text x="50%" y="50%" font-family="Arial, sans-serif" font-size="24" fill="#000000" text-anchor="middle" dy=".3em">Esselunga</text>
-  <text x="50%" y="80%" font-family="Arial, sans-serif" font-size="12" fill="#000000" text-anchor="middle" dy=".3em">PLACEHOLDER</text>
+<svg width="200" height="200" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+  <!-- Esselunga: dark logo, stylized S worm + italic serif text -->
+  <!-- Stylized S/worm shape -->
+  <path d="M85 35 C65 35, 50 50, 50 65 C50 80, 65 90, 80 90 C95 90, 110 80, 110 65 C110 50, 120 40, 130 40 C140 40, 148 48, 148 58 C148 68, 140 75, 130 75" stroke="#CC0000" stroke-width="12" fill="none" stroke-linecap="round"/>
+  <!-- "esselunga" in italic serif -->
+  <text x="100" y="125" font-family="Georgia, 'Times New Roman', serif" font-size="22" font-style="italic" font-weight="bold" fill="#1C1C1E" text-anchor="middle" letter-spacing="-0.5">esselunga</text>
+  <!-- Thin underline accent -->
+  <line x1="32" y1="135" x2="168" y2="135" stroke="#CC0000" stroke-width="1.5"/>
 </svg>

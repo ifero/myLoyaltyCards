@@ -1,5 +1,9 @@
-<svg width="200" height="200" xmlns="http://www.w3.org/2000/svg">
-  <rect width="100%" height="100%" fill="#E30613"/>
-  <text x="50%" y="50%" font-family="Arial, sans-serif" font-size="24" fill="#ffffff" text-anchor="middle" dy=".3em">Pam</text>
-  <text x="50%" y="80%" font-family="Arial, sans-serif" font-size="12" fill="#ffffff" text-anchor="middle" dy=".3em">PLACEHOLDER</text>
+<svg width="200" height="200" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+  <!-- PAM: large bold capitals with "panorama" below -->
+  <!-- PAM main text -->
+  <text x="100" y="105" font-family="Arial, Helvetica, sans-serif" font-size="64" font-weight="900" fill="#FFFFFF" text-anchor="middle" letter-spacing="6">PAM</text>
+  <!-- panorama subtitle -->
+  <text x="100" y="130" font-family="Arial, Helvetica, sans-serif" font-size="14" font-weight="400" fill="#FFFFFF" text-anchor="middle" letter-spacing="4">panorama</text>
+  <!-- Horizontal line separator -->
+  <line x1="45" y1="115" x2="155" y2="115" stroke="#FFFFFF" stroke-width="1.5"/>
 </svg>

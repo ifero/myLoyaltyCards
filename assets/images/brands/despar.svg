@@ -1,5 +1,18 @@
-<svg width="200" height="200" xmlns="http://www.w3.org/2000/svg">
-  <rect width="100%" height="100%" fill="#007A33"/>
-  <text x="50%" y="50%" font-family="Arial, sans-serif" font-size="24" fill="#ffffff" text-anchor="middle" dy=".3em">Despar</text>
-  <text x="50%" y="80%" font-family="Arial, sans-serif" font-size="12" fill="#ffffff" text-anchor="middle" dy=".3em">PLACEHOLDER</text>
+<svg width="200" height="200" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+  <!-- Despar: distinctive fir tree made of triangular segments + text -->
+  <!-- Fir tree made of stacked triangles -->
+  <g transform="translate(100, 20)">
+    <!-- Top small triangle -->
+    <polygon points="0,0 -12,18 12,18" fill="#FFFFFF"/>
+    <!-- Middle triangle -->
+    <polygon points="0,10 -20,32 20,32" fill="#FFFFFF"/>
+    <!-- Lower triangle -->
+    <polygon points="0,22 -28,48 28,48" fill="#FFFFFF"/>
+    <!-- Bottom largest triangle -->
+    <polygon points="0,36 -36,65 36,65" fill="#FFFFFF"/>
+    <!-- Trunk -->
+    <rect x="-6" y="65" width="12" height="14" fill="#FFFFFF"/>
+  </g>
+  <!-- DESPAR text -->
+  <text x="100" y="135" font-family="Arial, Helvetica, sans-serif" font-size="28" font-weight="900" fill="#FFFFFF" text-anchor="middle" letter-spacing="4">DESPAR</text>
 </svg>

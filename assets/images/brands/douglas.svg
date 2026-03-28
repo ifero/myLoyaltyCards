@@ -1,5 +1,10 @@
-<svg width="200" height="200" xmlns="http://www.w3.org/2000/svg">
-  <rect width="100%" height="100%" fill="#7BB4AE"/>
-  <text x="50%" y="50%" font-family="Arial, sans-serif" font-size="24" fill="#ffffff" text-anchor="middle" dy=".3em">Douglas</text>
-  <text x="50%" y="80%" font-family="Arial, sans-serif" font-size="12" fill="#ffffff" text-anchor="middle" dy=".3em">PLACEHOLDER</text>
+<svg width="200" height="200" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+  <!-- Douglas: elegant dark serif text (light teal bg, so dark logo) -->
+  <!-- DOUGLAS in elegant serif -->
+  <text x="100" y="105" font-family="'Didot', 'Bodoni MT', Georgia, serif" font-size="30" font-weight="400" fill="#1C1C1E" text-anchor="middle" letter-spacing="6">DOUGLAS</text>
+  <!-- Thin elegant lines above and below -->
+  <line x1="35" y1="75" x2="165" y2="75" stroke="#1C1C1E" stroke-width="0.8"/>
+  <line x1="55" y1="115" x2="145" y2="115" stroke="#1C1C1E" stroke-width="0.8"/>
+  <!-- Small decorative diamond -->
+  <polygon points="100,68 104,72 100,76 96,72" fill="#1C1C1E"/>
 </svg>
