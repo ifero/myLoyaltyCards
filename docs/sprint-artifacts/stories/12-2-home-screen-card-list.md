@@ -2,7 +2,7 @@
 
 **Epic:** 12 - App-Wide Design Overhaul
 **Type:** Design
-**Status:** ready-for-design
+**Status:** done
 **Sprint:** 10
 **Depends On:** 12-1 (Design System Foundation)
 **Figma File:** https://www.figma.com/design/4PSsX8SyTUU0GCUdBAAEED/Test
@@ -111,6 +111,76 @@ And optionally a sort control (e.g., "Frequently used", "Recently added", "A-Z")
 3. Multiple cards state (6+ cards, scrollable)
 4. Search active state
 5. Header detail (icon sizing, spacing)
+
+---
+
+## Task Checklist
+
+- [x] AC1: Card Grid Layout — 2-column grid, 171x140pt Klarna-style tiles, brand color backgrounds, logo placeholders, card names below, light + dark
+- [x] AC2: Header & Navigation — Centered app title (17pt Bold), + add button (left, 28pt, 44pt touch target), settings gear (right, 26pt, 44pt touch target), #1A73E8 light / #4DA3FF dark
+- [x] AC3: Search Bar — "Search loyalty cards" placeholder, 40pt height, 12pt radius, #EFEFF1 light / #2C2C2E dark bg, active state with blue border + cursor + clear X button (no Cancel text)
+- [x] AC4: Empty State — Playful wallet illustration (dashed outline + sparkles), "No cards yet" title, encouraging subtitle, primary CTA "Add Your First Card" with glow shadow, light + dark
+- [x] AC5: Single Card State — Larger centered card (220x180pt, 20pt radius), encouraging tip "Tap + to add more cards", balanced layout, light + dark
+- [x] AC6: Sort/Filter Indicator — Card count ("8 loyalty cards"), sort dropdown ("Frequently used") in primary blue, light + dark
+- [x] All Figma frames delivered (5 states x 2 modes = 10 frames)
+- [x] **Owner review** — approved by ifero (2026-03-28)
+
+---
+
+## Figma Links
+
+- **Home Screen page:** https://www.figma.com/design/4PSsX8SyTUU0GCUdBAAEED/Test (page: "Home Screen")
+- **Frames delivered:**
+  - Light: Multiple Cards, Empty State, Single Card, Search Active, Header Detail
+  - Dark: Multiple Cards, Empty State, Single Card, Search Active, Header Detail
+
+---
+
+## Creative Team Notes
+
+### Sally (UX Designer — Lead)
+
+**Design decisions:**
+
+- Klarna-style rectangular tiles (171x140pt, ~1.2:1 ratio) — wider than tall for "wallet card" feel
+- Single card state uses enlarged tile (220x180pt) centered to feel intentional, not lonely
+- Empty state uses playful illustration + encouraging copy to make first impression warm
+- Search bar hidden in empty/single card states (not useful with 0-1 cards)
+- Header icons use 44pt touch targets (Apple HIG) with 28pt icon size for visibility
+
+**Key UX calls:**
+
+- Sort/filter only shown when 2+ cards — no cognitive overhead for new users
+- "Tap + to add more cards" tip in single-card state guides without nagging
+- Search filters in real-time (shown via "Ess" → 1 result in search active frame)
+
+### Caravaggio (Visual Design)
+
+**Visual architecture:**
+
+- 16pt grid margins and gutters throughout — consistent with design system spacing scale
+- Card tiles have subtle drop shadows (0,2 blur 8 @ 8% opacity) for "physical card" depth
+- Dark mode uses true black #000000 for OLED efficiency + premium Klarna feel
+- **Card border rule (established in 12.1, confirmed in 12.2):** Any card whose background color is identical or near-identical to the surface color gets a 1pt border to prevent vanishing. Dark mode: #40404A border on black-branded cards (Sephora, Zara, Coin, OVS — all #000000). Light mode: #E0E0E0 border if any future brand is white/near-white. This rule applies during implementation.
+- CTA button has colored glow shadow matching its fill — draws the eye on empty state
+
+### Maya (Design Thinking)
+
+**Empathy-driven choices:**
+
+- Empty state: not sad/broken — warm, inviting, "the app is happy to meet you"
+- Single card: encouraging, not condescending — subtle tip, not a modal
+- Multiple cards: scannable by color at checkout speed — brand colors are heroes
+- Search: immediate filtering shown (not just placeholder) — proves it works
+
+### Carson (Brainstorming)
+
+**Creative direction:**
+
+- "Premium wallet" metaphor carried through: neutral canvas, brand colors as jewelry
+- Empty state sparkle dots add whimsy without being childish
+- Dark mode elevated surfaces (#1C1C1E) create depth layers — not flat, not loud
+- Tab bar with 3 items: Cards (primary), Offers (future), More (settings/about)
 
 ---
 
