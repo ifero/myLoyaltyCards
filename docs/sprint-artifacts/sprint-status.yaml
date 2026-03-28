@@ -268,7 +268,7 @@ development_status:
 
   # Epic 12: App-Wide Design Overhaul (Figma)
   epic-12: in-progress
-  12-1-design-system-foundation: ready-for-design
+  12-1-design-system-foundation: in-review
   12-2-home-screen-card-list: ready-for-design
   12-3-card-detail: ready-for-design
   12-4-add-card-flow: ready-for-design

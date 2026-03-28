@@ -2,7 +2,7 @@
 
 **Epic:** 12 - App-Wide Design Overhaul
 **Type:** Design
-**Status:** ready-for-design
+**Status:** in-review
 **Sprint:** 10
 **Depends On:** None (foundation for all other stories)
 **Figma File:** https://www.figma.com/design/4PSsX8SyTUU0GCUdBAAEED/Test
@@ -140,6 +140,85 @@ And defines safe area handling for notch/Dynamic Island
 - Icon library
 - Form input components (all states)
 - Spacing/layout reference
+
+---
+
+## Task Checklist
+
+- [x] AC1: Color Palette — Light mode (13 tokens), Dark mode (13 tokens), Brand catalogue (20 colors)
+- [x] AC2: Typography Scale — 11 levels from Large Title (34pt) to Caption 2 (11pt), all with line-height + letter-spacing
+- [x] AC3: Button System — 4 types (Primary/Secondary/Tertiary/Destructive) × 3 states (Default/Pressed/Disabled)
+- [x] AC4: Card Component System — 10 catalogue cards, 5 custom cards, dark surface demo, detail hero
+- [x] AC5: Icon Set & Navigation — 8 nav icons with SF Symbol names, Klarna-style action rows, 5 status icons
+- [x] AC6: Form Input Components — 5 text field states, toggle ON/OFF, color picker (5-color palette)
+- [x] AC7: Spacing & Layout Tokens — 7-step scale (4–48pt), 11 layout specifications
+- [ ] **Owner review** — ifero to review Figma file and approve or request changes
+
+---
+
+## Figma Links
+
+- **Design System page:** https://www.figma.com/design/4PSsX8SyTUU0GCUdBAAEED/Test (page: "Design System")
+- **Sections in page:**
+  - AC1 — Color Palette (Light Mode / Dark Mode / Brand Catalogue Colors)
+  - AC2 — Typography Scale
+  - AC3 — Button System
+  - AC4 — Card Component System
+  - AC5 — Icon Set & Navigation Elements
+  - AC6 — Form Input Components
+  - AC7 — Spacing & Layout Tokens
+
+---
+
+## Creative Team Notes
+
+### Sally (UX Designer — Lead)
+
+**Design philosophy:** The design system serves two emotional modes:
+
+1. **Browsing mode** (home grid) — relaxed, clean neutral surfaces, brand colors as heroes
+2. **Action mode** (checkout, barcode) — high urgency, bold primary CTAs, maximum contrast
+
+**Key decisions:**
+
+- Primary color `#1A73E8` chosen for strong contrast on both light and dark surfaces (not the old sage green)
+- Dark mode uses true black `#000000` for OLED efficiency + Klarna-like premium feel
+- Dark mode primary brightened to `#4DA3FF` to maintain 5.2:1 contrast on dark backgrounds
+- Card component keeps brand hex as background — the brand IS the card identity
+- Action rows follow Klarna's "Manage" pattern: icon + label + chevron → replaces invisible text links
+- Button hierarchy is absolute: Primary (filled blue) > Secondary (outlined) > Tertiary (text) > Destructive (red, positioned last)
+
+### Caravaggio (Visual Design)
+
+**Color theory notes:**
+
+- The 20 brand colors from `italy.json` have natural visual groupings: warm reds (Conad, Coop, Pam, H&M), deep blues (Carrefour, Lidl, IKEA), and neutrals (Sephora, Coin, OVS, Zara are all `#000000`)
+- Black-branded cards need a subtle 1pt border on dark surfaces to avoid disappearing
+- Esselunga's yellow `#FFCC00` requires dark text (contrast issue with white)
+- Douglas's teal `#7BB4AE` is the lightest brand — also needs dark text
+
+**Typography:**
+
+- SF Pro's weight distribution maps well to the 11-level scale
+- Large Title at 34pt Bold creates immediate hierarchy — the "you know where you are" moment
+- Headline (17pt Semi Bold) vs Body (17pt Regular) — same size, weight creates distinction
+
+### Maya (Design Thinking)
+
+**User empathy lens:**
+
+- Stressed parent at checkout: every token must answer "can I find this in 0.5 seconds?"
+- Color-blind users: semantic colors (success/warning/error) should work with icons, not color alone
+- The 44pt minimum touch target isn't just HIG compliance — it's "gloved fingers in winter" accessibility
+- Toggle states must be distinguishable by shape/position, not just green vs grey
+
+### Carson (Creative Direction)
+
+**Brand identity:**
+
+- The app identity color `#1A73E8` sits between Klarna's confidence and Apple's clarity
+- Card grid should feel like a "wallet you're proud of" — brand colors as jewelry on a neutral canvas
+- Dark mode should feel premium, not just inverted — true black + elevated surfaces create depth layers
 
 ---
 
