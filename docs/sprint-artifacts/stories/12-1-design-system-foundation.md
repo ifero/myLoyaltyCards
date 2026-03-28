@@ -95,12 +95,16 @@ And the component works in both light and dark mode
 
 ```
 Given the design system page in Figma
-Then it defines:
-  - App navigation icons: add (+), settings (gear), back arrow, close (X)
-  - Action row pattern: icon + label + chevron (Klarna's "Manage" pattern)
-  - Status icons: sync indicator, offline badge, error badge
+Then it defines icons using FontAwesome (via @expo/vector-icons, bundled with Expo):
+  - App navigation icons: plus, cog, chevron-left, times, search, camera
+  - Action row pattern: icon + label + chevron-right (Klarna's "Manage" pattern)
+  - Status icons: sync-alt, check-circle, exclamation-triangle, wifi (slash overlay for offline)
+  - Card icons: barcode, qrcode, credit-card, id-card
+  - Misc: user, lock, envelope, eye, eye-slash, moon, sun
 And icons are sized for visibility (minimum 24pt, header icons 28pt+)
 And icons have sufficient contrast against their backgrounds
+And import pattern is: import FontAwesome from '@expo/vector-icons/FontAwesome'
+And full icon directory available at icons.expo.fyi
 ```
 
 ### AC6: Form Input Components
@@ -149,7 +153,7 @@ And defines safe area handling for notch/Dynamic Island
 - [x] AC2: Typography Scale — 11 levels from Large Title (34pt) to Caption 2 (11pt), all with line-height + letter-spacing
 - [x] AC3: Button System — 4 types (Primary/Secondary/Tertiary/Destructive) × 3 states (Default/Pressed/Disabled)
 - [x] AC4: Card Component System — 10 catalogue cards, 5 custom cards, dark surface demo, detail hero
-- [x] AC5: Icon Set & Navigation — 8 nav icons with SF Symbol names, Klarna-style action rows, 5 status icons
+- [x] AC5: Icon Set & Navigation — 10 nav icons (FontAwesome via @expo/vector-icons), Klarna-style action rows, 5 status icons
 - [x] AC6: Form Input Components — 5 text field states, toggle ON/OFF, color picker (5-color palette)
 - [x] AC7: Spacing & Layout Tokens — 7-step scale (4–48pt), 11 layout specifications
 - [ ] **Owner review** — ifero to review Figma file and approve or request changes
@@ -164,7 +168,7 @@ And defines safe area handling for notch/Dynamic Island
   - AC2 — Typography Scale
   - AC3 — Button System
   - AC4 — Card Component System
-  - AC5 — Icon Set & Navigation Elements
+  - AC5 — Icon Set & Navigation (FontAwesome via @expo/vector-icons)
   - AC6 — Form Input Components
   - AC7 — Spacing & Layout Tokens
 
