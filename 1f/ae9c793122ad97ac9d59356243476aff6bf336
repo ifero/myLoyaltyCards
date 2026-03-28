@@ -1,0 +1,65 @@
+docs/sprint-artifacts/stories/7-7-display-sync-status.md
+  10e1c3a53e5d2990 96-102,104-110,112-114,119-122,124-133,135-139,141,143-148,150-155,191-203
+core/utils/relative-time.test.ts
+  10e1c3a53e5d2990 1-27
+features/settings/SettingsScreen.tsx
+  10e1c3a53e5d2990 15-16,38-39,52-53,59-81,287-302
+core/utils/index.ts
+  7d2cbcdffde0ee88 8
+features/settings/SettingsScreen.test.tsx
+  10e1c3a53e5d2990 62,64-65,174-181,183
+core/utils/relative-time.ts
+  10e1c3a53e5d2990 1-31
+features/cards/components/CardList.test.tsx
+  10e1c3a53e5d2990 13,24,26-31,33-36
+features/cards/components/CardList.tsx
+  10e1c3a53e5d2990 11,46-57,101-102
+docs/sprint-artifacts/sprint-status.yaml
+  afc36a2514898205 190
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.1.20",
+  "base_commit_sha": "1fae9c793122ad97ac9d59356243476aff6bf336",
+  "prompts": {
+    "10e1c3a53e5d2990": {
+      "agent_id": {
+        "tool": "github-copilot",
+        "id": "4644fa81-5d0f-44b7-bf36-9f9ecb9ff2b6",
+        "model": "copilot/oswe-vscode-prime"
+      },
+      "human_author": "Andrea Pacino <andrea.pacino87@gmail.com>",
+      "messages": [],
+      "total_additions": 231,
+      "total_deletions": 72,
+      "accepted_lines": 208,
+      "overriden_lines": 2
+    },
+    "7d2cbcdffde0ee88": {
+      "agent_id": {
+        "tool": "github-copilot",
+        "id": "0d1baddd-3875-49a4-83a2-660579200b4c",
+        "model": "copilot/oswe-vscode-prime"
+      },
+      "human_author": "Andrea Pacino <andrea.pacino87@gmail.com>",
+      "messages": [],
+      "total_additions": 1,
+      "total_deletions": 0,
+      "accepted_lines": 1,
+      "overriden_lines": 0
+    },
+    "afc36a2514898205": {
+      "agent_id": {
+        "tool": "github-copilot",
+        "id": "1eddcfab-fc17-4f05-9a37-70bfa282bea3",
+        "model": "copilot/oswe-vscode-prime"
+      },
+      "human_author": "Andrea Pacino <andrea.pacino87@gmail.com>",
+      "messages": [],
+      "total_additions": 1,
+      "total_deletions": 1,
+      "accepted_lines": 1,
+      "overriden_lines": 0
+    }
+  }
+}
