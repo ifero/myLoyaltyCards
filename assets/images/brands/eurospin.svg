@@ -1,5 +1,13 @@
-<svg width="200" height="200" xmlns="http://www.w3.org/2000/svg">
-  <rect width="100%" height="100%" fill="#005596"/>
-  <text x="50%" y="50%" font-family="Arial, sans-serif" font-size="24" fill="#ffffff" text-anchor="middle" dy=".3em">Eurospin</text>
-  <text x="50%" y="80%" font-family="Arial, sans-serif" font-size="12" fill="#ffffff" text-anchor="middle" dy=".3em">PLACEHOLDER</text>
+<svg width="200" height="200" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+  <!-- Eurospin: bold uppercase with star/spark accent -->
+  <!-- Star/spark element -->
+  <g transform="translate(100, 60)">
+    <polygon points="0,-18 4,-6 18,-6 7,3 11,16 0,8 -11,16 -7,3 -18,-6 -4,-6" fill="#FFFFFF"/>
+  </g>
+  <!-- Euro symbol arc -->
+  <path d="M55 55 Q100 30 145 55" stroke="#FFFFFF" stroke-width="3" fill="none" stroke-linecap="round"/>
+  <!-- EUROSPIN text -->
+  <text x="100" y="120" font-family="Arial, Helvetica, sans-serif" font-size="26" font-weight="900" fill="#FFFFFF" text-anchor="middle" letter-spacing="2">EUROSPIN</text>
+  <!-- Underline -->
+  <line x1="30" y1="132" x2="170" y2="132" stroke="#FFFFFF" stroke-width="2"/>
 </svg>

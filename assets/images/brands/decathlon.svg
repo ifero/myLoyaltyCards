@@ -1,5 +1,9 @@
-<svg width="200" height="200" xmlns="http://www.w3.org/2000/svg">
-  <rect width="100%" height="100%" fill="#0082C3"/>
-  <text x="50%" y="50%" font-family="Arial, sans-serif" font-size="24" fill="#ffffff" text-anchor="middle" dy=".3em">Decathlon</text>
-  <text x="50%" y="80%" font-family="Arial, sans-serif" font-size="12" fill="#ffffff" text-anchor="middle" dy=".3em">PLACEHOLDER</text>
+<svg width="200" height="200" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+  <!-- Decathlon: uppercase text with orbit/swoosh arc above -->
+  <!-- Orbital swoosh arc -->
+  <path d="M35 85 Q70 40 165 70" stroke="#FFFFFF" stroke-width="4" fill="none" stroke-linecap="round"/>
+  <!-- Small circle at end of swoosh (like a planet/ball) -->
+  <circle cx="165" cy="70" r="6" fill="#FFFFFF"/>
+  <!-- DECATHLON text -->
+  <text x="100" y="125" font-family="Arial, Helvetica, sans-serif" font-size="22" font-weight="900" fill="#FFFFFF" text-anchor="middle" letter-spacing="3">DECATHLON</text>
 </svg>

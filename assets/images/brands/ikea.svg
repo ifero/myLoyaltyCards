@@ -1,5 +1,9 @@
-<svg width="200" height="200" xmlns="http://www.w3.org/2000/svg">
-  <rect width="100%" height="100%" fill="#0051BA"/>
-  <text x="50%" y="50%" font-family="Arial, sans-serif" font-size="24" fill="#ffffff" text-anchor="middle" dy=".3em">IKEA</text>
-  <text x="50%" y="80%" font-family="Arial, sans-serif" font-size="12" fill="#ffffff" text-anchor="middle" dy=".3em">PLACEHOLDER</text>
+<svg width="200" height="200" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+  <!-- IKEA: yellow text on blue oval shape, for blue bg -->
+  <!-- Blue oval/rectangle -->
+  <rect x="30" y="55" width="140" height="90" rx="8" ry="8" fill="#003399"/>
+  <!-- Yellow inner border -->
+  <rect x="36" y="61" width="128" height="78" rx="5" ry="5" fill="none" stroke="#FFCC00" stroke-width="3"/>
+  <!-- IKEA text in yellow -->
+  <text x="100" y="112" font-family="'Futura', Arial, Helvetica, sans-serif" font-size="44" font-weight="900" fill="#FFCC00" text-anchor="middle" letter-spacing="3">IKEA</text>
 </svg>
