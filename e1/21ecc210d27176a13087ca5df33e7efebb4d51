@@ -1,0 +1,43 @@
+docs/sprint-artifacts/stories/12-6-settings-screen.md
+  00fd507ba9027e5f 1-118
+docs/sprint-artifacts/stories/12-1-design-system-foundation.md
+  00fd507ba9027e5f 1-157
+docs/sprint-artifacts/stories/12-3-card-detail.md
+  00fd507ba9027e5f 1-113
+docs/sprint-artifacts/sprint-status.yaml
+  00fd507ba9027e5f 38,51-52,63,69-112,114-133,195-196,217-218,224,228-236,268-294
+docs/sprint-artifacts/stories/12-2-home-screen-card-list.md
+  00fd507ba9027e5f 1-119
+docs/sprint-artifacts/stories/12-4-add-card-flow.md
+  00fd507ba9027e5f 1-129
+docs/sprint-artifacts/stories/12-9-apple-watch.md
+  00fd507ba9027e5f 1-99
+docs/epics.md
+  00fd507ba9027e5f 14-15,20-21,2027-2113
+docs/sprint-artifacts/stories/12-8-sync-status-indicators.md
+  00fd507ba9027e5f 1-105
+docs/sprint-artifacts/stories/12-5-auth-screens.md
+  00fd507ba9027e5f 1-117
+docs/sprint-artifacts/stories/12-7-onboarding.md
+  00fd507ba9027e5f 1-83
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.1.20",
+  "base_commit_sha": "e121ecc210d27176a13087ca5df33e7efebb4d51",
+  "prompts": {
+    "00fd507ba9027e5f": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "9c0c5688-2c42-4120-ac83-1db8d7ccbc93",
+        "model": "claude-opus-4-6"
+      },
+      "human_author": "Andrea Pacino <andrea.pacino87@gmail.com>",
+      "messages": [],
+      "total_additions": 1285,
+      "total_deletions": 92,
+      "accepted_lines": 1241,
+      "overriden_lines": 0
+    }
+  }
+}
