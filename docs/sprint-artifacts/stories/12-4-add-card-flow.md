@@ -120,10 +120,9 @@ And there is NO dedicated success screen — the home IS the success
 1. Card Type Selection (full-screen push, search + brand list)
 2. Card Type Selection — search active with filtered results
 3. Camera Scanner with brand context header
-4. Camera Scanner — barcode detected (auto-add transition)
-5. Card Setup — catalogue brand (number pre-filled, no barcode format)
-6. Card Setup — custom card (number pre-filled, store name, color picker, no barcode format)
-7. Home Screen with toast notification ("Card added")
+4. Card Setup — catalogue brand (number pre-filled, no barcode format)
+5. Card Setup — custom card (store name, scan icon CTA, card number, color picker, no barcode format)
+6. Home Screen with toast notification ("Card added")
 
 ---
 
@@ -132,7 +131,7 @@ And there is NO dedicated success screen — the home IS the success
 - [x] AC1: Entry Point & Card Type Selection — Full-screen push (not modal), back arrow, search bar, "Popular cards" (5 brands), "Other card", "All cards" alphabetical
 - [x] AC2: Catalogue Brand Selection — Brand → scanner auto-opens; brand-colored header; barcode format auto-detected (never shown to user)
 - [x] AC3: Camera Scanner — Full-bleed camera, white viewfinder corners, brand header ("Conad"), bottom sheet "Enter card number manually". Works for BOTH catalogue and custom cards
-- [x] AC4: Card Setup — Catalogue: card number pre-filled from scan, no barcode format. Custom: store name + card number pre-filled + color picker, no barcode format. Scanner is primary for both paths
+- [x] AC4: Card Setup — Catalogue: card number pre-filled from scan, no barcode format. Custom: store name + scan icon CTA (barcode viewfinder button) + card number field + color picker, no barcode format. Scanner accessible via icon CTA inline with card number field
 - [x] AC5: Confirmation — Home screen with toast "✓ Conad card added", newly added card highlighted with green border. No dedicated success screen
 - [ ] **Owner review** — awaiting ifero review of Figma page
 
@@ -145,10 +144,9 @@ And there is NO dedicated success screen — the home IS the success
   - Frame 1 — Card Type Selection (Light + Dark)
   - Frame 2 — Search Active (Light + Dark)
   - Frame 3 — Camera Scanner (Light + Dark)
-  - Frame 4 — Barcode Detected / Auto-Add (Light + Dark)
-  - Frame 5 — Card Setup Catalogue (Light + Dark)
-  - Frame 6 — Card Setup Custom (Light + Dark)
-  - Frame 7 — Home with Toast (Light + Dark)
+  - Frame 4 — Card Setup Catalogue (Light + Dark)
+  - Frame 5 — Card Setup Custom (Light + Dark)
+  - Frame 6 — Home with Toast (Light + Dark)
 
 ---
 
