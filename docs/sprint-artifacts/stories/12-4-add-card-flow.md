@@ -54,13 +54,13 @@
 
 ```
 Given I tap "+" to add a card
-Then a modal/sheet presents the catalogue as a searchable list:
+Then a full-screen navigation push presents the catalogue as a searchable list:
   - Search bar: "Search by name"
   - Section: "Popular cards" with most common brands (real logos + names)
   - Section: "All cards" alphabetical list
   - Option: "Other card" / "Custom card" for manual entry
 And the list uses real brand logos from the catalogue
-And the sheet can be dismissed with X or swipe
+And I can navigate back with the back arrow
 ```
 
 ### AC2: Catalogue Brand Selection
@@ -71,7 +71,7 @@ Then I'm taken to the barcode input step:
   - Primary action: camera scanner (default, auto-opens or prominent CTA)
   - Secondary action: "Enter card number manually"
 And the brand name/logo is shown in the header for context
-And the barcode format is pre-selected from catalogue defaults
+And the barcode format is auto-detected (never shown to user)
 ```
 
 ### AC3: Camera Scanner
@@ -86,25 +86,27 @@ And below the camera, alternative actions are shown as icon + label + chevron ro
 And the scanner auto-detects the barcode format
 ```
 
-### AC4: Manual Entry Form
+### AC4: Card Setup (post-scan)
 
 ```
-Given I choose to enter a card manually
-Then the form is minimal and focused:
-  - Card number (required) — clear label + subtitle: "Enter the card number printed on your card"
-  - Store name (for custom cards only — pre-filled if catalogue brand selected)
-  - Barcode format (auto-detected or picker if needed)
-  - Card color (for custom cards — color picker)
-And the primary "Add" button is bold, filled, and clearly actionable
-And the form does NOT show unnecessary fields (reduce from current 5-field layout)
+Given a barcode has been scanned (or number entered manually)
+Then the card is auto-added and I see a setup screen:
+  - Card number (pre-filled from scan, editable)
+  - Store name (for custom cards only — required)
+  - Card color (for custom cards — color picker with preview)
+  - NO barcode format field (auto-detected, user doesn't know/care)
+And a "Done" button confirms and returns to home
+And for custom cards, the scanner is the primary entry method (not manual typing)
 ```
 
-### AC5: Success State
+### AC5: Confirmation (Toast on Home)
 
 ```
-Given I successfully add a card
-Then I see brief confirmation feedback
-And I'm returned to the home screen with the new card visible in the grid
+Given I successfully add a card and tap "Done"
+Then I'm returned to the home screen with the new card visible in the grid
+And a toast notification shows "✓ [Brand] card added" at the bottom
+And the newly added card is subtly highlighted (green border, fades)
+And there is NO dedicated success screen — the home IS the success
 ```
 
 ---
@@ -115,23 +117,23 @@ And I'm returned to the home screen with the new card visible in the grid
 
 **Frames (light + dark for each):**
 
-1. Catalogue picker (modal sheet with search + brand list)
-2. Catalogue picker — search active with results
-3. Camera scanner with brand context header
-4. Camera scanner — barcode detected state
-5. Manual entry form (catalogue brand — minimal fields)
-6. Manual entry form (custom card — full fields with color picker)
-7. Success/confirmation state
+1. Card Type Selection (full-screen push, search + brand list)
+2. Card Type Selection — search active with filtered results
+3. Camera Scanner with brand context header
+4. Camera Scanner — barcode detected (auto-add transition)
+5. Card Setup — catalogue brand (number pre-filled, no barcode format)
+6. Card Setup — custom card (number pre-filled, store name, color picker, no barcode format)
+7. Home Screen with toast notification ("Card added")
 
 ---
 
 ## Task Checklist
 
-- [x] AC1: Entry Point & Card Type Selection — Catalogue picker modal with X dismiss, search bar, "Popular cards" (5 brands with logos), "Other card" option, "All cards" alphabetical list
-- [x] AC2: Catalogue Brand Selection — Selecting a brand goes straight to camera scanner; brand header shows name + context; barcode format pre-selected
-- [x] AC3: Camera Scanner — Full-bleed camera with white viewfinder corners, brand-colored header ("Conad — Scan Barcode"), bottom sheet with "Enter card number manually" action row
-- [x] AC4: Manual Entry Form — Catalogue brand form: 2 fields (card number + format read-only). Custom card form: 4 fields (store name, card number, format picker, color picker with preview)
-- [x] AC5: Success State — Green checkmark, "Card Added!" text, card summary (brand color + name + number), "Go to Home" primary CTA + "Add another card" secondary link
+- [x] AC1: Entry Point & Card Type Selection — Full-screen push (not modal), back arrow, search bar, "Popular cards" (5 brands), "Other card", "All cards" alphabetical
+- [x] AC2: Catalogue Brand Selection — Brand → scanner auto-opens; brand-colored header; barcode format auto-detected (never shown to user)
+- [x] AC3: Camera Scanner — Full-bleed camera, white viewfinder corners, brand header ("Conad"), bottom sheet "Enter card number manually". Works for BOTH catalogue and custom cards
+- [x] AC4: Card Setup — Catalogue: card number pre-filled from scan, no barcode format. Custom: store name + card number pre-filled + color picker, no barcode format. Scanner is primary for both paths
+- [x] AC5: Confirmation — Home screen with toast "✓ Conad card added", newly added card highlighted with green border. No dedicated success screen
 - [ ] **Owner review** — awaiting ifero review of Figma page
 
 ---
@@ -140,13 +142,13 @@ And I'm returned to the home screen with the new card visible in the grid
 
 - **Add Card Flow page:** https://www.figma.com/design/4PSsX8SyTUU0GCUdBAAEED/Test (page: "Add Card Flow")
 - **Frames in page:**
-  - Frame 1 — Catalogue Picker (Light + Dark)
-  - Frame 2 — Catalogue Picker Search Active (Light + Dark)
+  - Frame 1 — Card Type Selection (Light + Dark)
+  - Frame 2 — Search Active (Light + Dark)
   - Frame 3 — Camera Scanner (Light + Dark)
-  - Frame 4 — Scanner Barcode Detected (Light + Dark)
-  - Frame 5 — Manual Entry Catalogue Brand (Light + Dark)
-  - Frame 6 — Manual Entry Custom Card (Light + Dark)
-  - Frame 7 — Success State (Light + Dark)
+  - Frame 4 — Barcode Detected / Auto-Add (Light + Dark)
+  - Frame 5 — Card Setup Catalogue (Light + Dark)
+  - Frame 6 — Card Setup Custom (Light + Dark)
+  - Frame 7 — Home with Toast (Light + Dark)
 
 ---
 
@@ -154,17 +156,17 @@ And I'm returned to the home screen with the new card visible in the grid
 
 ### Sally (UX Designer — Lead)
 
-**Flow architecture decision:** Catalogue → Scanner (camera-first) → Success. The scanner is the default action because most users will scan rather than type. Manual entry is always available as a secondary path via bottom sheet action row.
+**Flow architecture decision:** Catalogue → Scanner (camera-first) → Auto-add → Card Setup (pre-filled) → Home + toast. Scanner is primary for ALL paths including custom cards. Manual entry is a fallback, never the default.
 
-**Key decisions:**
+**Key decisions (revised after ifero review):**
 
-- Catalogue picker is a modal sheet with X dismiss (matches Klarna pattern)
-- Search bar at top for express-lane users who know their brand
-- "Popular cards" section with top 5 Italian brands (Esselunga, Conad, Coop, Carrefour, Lidl)
-- "Other card" option clearly positioned between Popular and All sections
-- Brand-colored header on scanner maintains context throughout flow
-- Catalogue brand form reduced from 5 fields to 2 (card number + auto-detected format)
-- Custom card form has 4 fields (store name, card number, format picker, color picker)
+- Card type selection is a full-screen push (NOT a modal sheet) — consistent navigation throughout the flow
+- Scanner is the primary entry for both catalogue AND custom cards
+- Card is auto-added on barcode detection — setup screen shows pre-filled number
+- Barcode format is NEVER shown to the user — auto-detected silently
+- No dedicated success screen — home + toast is the confirmation
+- Catalogue brand setup: just card number (pre-filled, editable)
+- Custom card setup: store name + card number (pre-filled) + color picker
 
 ### Caravaggio (Visual Design)
 
@@ -191,15 +193,16 @@ And I'm returned to the home screen with the new card visible in the grid
 
 ### Carson (Creative Direction)
 
-**Flow metaphor:** Opening a wallet drawer. The catalogue picker rises from below like a physical drawer revealing all your card options. The scanner is immersive — full camera with brand context. Success is celebratory but brief — the green checkmark says "done!" without blocking.
+**Flow metaphor:** Opening your wallet. The card type selection is a full screen you navigate into. The scanner is immersive — full camera with brand context. Home + toast is the confirmation — no ceremony, just done.
 
 ---
 
-## Design Notes
+## Design Decisions (Review Feedback)
 
-- The catalogue picker feels like Klarna's "Choose card" — elevated modal sheet with brand logos as colored circles
-- Scanner is camera-first — most users will scan rather than type
-- Manual form is simpler than current: 2 fields for catalogue brands (down from 5), 4 fields for custom cards
-- Catalogue selection → scanner is a single flow: pick brand, camera opens immediately
-- Brand pre-selection eliminates the need for name/format fields in catalogue brand path
+- **Full-screen navigation**, not modal sheet — the entire add-card flow uses consistent push navigation with back arrows
+- **Barcode format hidden** — users don't know their barcode format; it's auto-detected from scan or catalogue defaults
+- **Auto-add on scan** — card is created immediately when barcode is detected; setup screen lets user verify/edit
+- **Scanner-first for custom cards too** — "Other card" → scanner, not a form. Manual entry is a fallback in the bottom sheet
+- **No success screen** — home + toast ("✓ Conad card added") replaces the dedicated success screen. The home screen IS the success
+- **Card number pre-filled** — both catalogue and custom setup screens show the scanned number, editable if needed
 - Font Awesome 6 Free icons used throughout (consistent with 12-3)
