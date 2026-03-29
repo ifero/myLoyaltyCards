@@ -1,0 +1,25 @@
+docs/sprint-artifacts/stories/12-5-auth-screens.md
+  404164ac87c49dda 5,35,40-46,49,51,56-62,65,67,72-76,79,81,86-90,93,95,99-101,104,128-160
+docs/sprint-artifacts/sprint-status.yaml
+  404164ac87c49dda 276
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.1.22",
+  "base_commit_sha": "7f74072e3ce8ee43b75a1c4d048961ca0d822bb5",
+  "prompts": {
+    "404164ac87c49dda": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "4e70097d-c56e-4ce1-ad10-e73a3ce5745c",
+        "model": "claude-opus-4-6"
+      },
+      "human_author": "Andrea Pacino <andrea.pacino87@gmail.com>",
+      "messages": [],
+      "total_additions": 78,
+      "total_deletions": 37,
+      "accepted_lines": 77,
+      "overriden_lines": 0
+    }
+  }
+}
