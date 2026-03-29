@@ -1,0 +1,23 @@
+docs/sprint-artifacts/stories/12-4-add-card-flow.md
+  c74f003d5339f841 123-125,134,147-149
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.1.22",
+  "base_commit_sha": "4c394e36f3377fb53f5d8bd62adbbdc52d0fb6a7",
+  "prompts": {
+    "c74f003d5339f841": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "8bd501bb-c4ea-4101-8465-d2b35bd264f1",
+        "model": "claude-opus-4-6"
+      },
+      "human_author": "Andrea Pacino <andrea.pacino87@gmail.com>",
+      "messages": [],
+      "total_additions": 7,
+      "total_deletions": 9,
+      "accepted_lines": 7,
+      "overriden_lines": 0
+    }
+  }
+}
