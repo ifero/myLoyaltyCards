@@ -164,7 +164,9 @@ And there is NO dedicated success screen — the home IS the success
 - Barcode format is NEVER shown to the user — auto-detected silently
 - No dedicated success screen — home + toast is the confirmation
 - Catalogue brand setup: just card number (pre-filled, editable)
-- Custom card setup: store name + card number (pre-filled) + color picker
+- Custom card setup: store name + scan icon CTA (inline barcode button) + card number + color picker
+- No "Card added" badge on setup screen — pre-filled number proves scan worked; toast on Home is the only confirmation
+- Scanner uses floating back button + brand pill over full-bleed camera — no full nav header bar
 
 ### Caravaggio (Visual Design)
 
@@ -175,7 +177,8 @@ And there is NO dedicated success screen — the home IS the success
 - True black (#000000) in dark mode with #1C1C1E elevated surfaces
 - Primary buttons: filled #1A73E8 (light) / #4DA3FF (dark), 52pt height, 14pt corner radius
 - Input fields: #F5F5F5 (light) / #2C2C2E (dark), 52pt height, 12pt corner radius
-- Scanner viewfinder: white corners (scanning) → green corners (detected)
+- Scanner: full-bleed camera, floating back button (dark circle + arrow), brand pill (brand-colored rounded pill)
+- Scanner viewfinder: white corners with blue scan line — immersive, minimal chrome
 - Brand circles: 40pt diameter with first-letter avatar, consistent with catalogue picker rows
 
 ### Maya (Design Thinking)
@@ -203,4 +206,7 @@ And there is NO dedicated success screen — the home IS the success
 - **Scanner-first for custom cards too** — "Other card" → scanner, not a form. Manual entry is a fallback in the bottom sheet
 - **No success screen** — home + toast ("✓ Conad card added") replaces the dedicated success screen. The home screen IS the success
 - **Card number pre-filled** — both catalogue and custom setup screens show the scanned number, editable if needed
+- **No "Card added" badge** on setup screen — pre-filled number is sufficient proof of scan success; toast on Home is the single confirmation moment
+- **Immersive scanner** — floating back button + brand pill over full-bleed camera replaces the full brand-colored nav header bar
+- **Scan icon CTA** on custom card setup — compact barcode viewfinder button inline with card number field, not a large primary button
 - Font Awesome 6 Free icons used throughout (consistent with 12-3)
