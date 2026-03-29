@@ -2,7 +2,7 @@
 
 **Epic:** 12 - App-Wide Design Overhaul
 **Type:** Design
-**Status:** ready-for-design
+**Status:** review
 **Sprint:** 10
 **Depends On:** 12-1 (Design System Foundation)
 **Figma File:** https://www.figma.com/design/4PSsX8SyTUU0GCUdBAAEED/Test
@@ -69,9 +69,11 @@ And toggles/pickers follow the design system components
 ```
 Given I am on the settings screen
 Then a "Data" section shows:
-  - "Export Data as JSON" with file/export icon
-  - Sync status (if signed in): last synced timestamp, manual sync trigger
+  - "Export Data as JSON" with file/export icon (MI: file-download)
+  - "Import Data from JSON" with file/import icon (MI: file-upload)
+  - Sync status (if signed in): last synced timestamp, manual sync trigger (MCI: cloud-sync-outline)
 And actions are clearly labeled with appropriate icons
+And each row uses the icon + label + chevron pattern
 ```
 
 ### AC4: About Section
@@ -103,12 +105,21 @@ And the design works in both light and dark mode
 
 **Page name:** `Settings`
 
-**Frames (light + dark for each):**
+**Frames (light + dark for each = 26 total):**
 
 1. Settings — signed in user
 2. Settings — guest mode
-3. Theme picker expanded
-4. Language picker expanded
+3. Theme picker (bottom sheet)
+4. Language picker (bottom sheet)
+5. Help & FAQ — collapsed
+6. Help & FAQ — expanded (one answer visible)
+7. Privacy Policy (formatted content)
+8. Export Data confirmation (bottom sheet)
+9. Export Data — no cards empty state (bottom sheet)
+10. Import Data preview (bottom sheet)
+11. Import Data — invalid file error state (bottom sheet)
+12. Sign Out confirmation (bottom sheet)
+13. Delete Account confirmation (destructive dialog)
 
 ---
 
@@ -118,4 +129,8 @@ And the design works in both light and dark mode
 - Use grouped list rows (iOS Settings pattern) with icons for each item
 - Account section at top (most important), About at bottom (least accessed)
 - Destructive actions (sign out, delete account) should be clearly marked but not prominent
-- Consider using SF Symbols for setting icons to stay native
+- Icon system: MaterialIcons (MI) + MaterialCommunityIcons (MCI) via @expo/vector-icons — NOT SF Symbols
+- Every sub-screen navigable from Settings must be fully designed (FAQ, Privacy, confirmations)
+- All error states and edge cases must have dedicated frames (empty states, invalid inputs)
+- Confirmation bottom sheets have emotional hierarchy: Export/Import = neutral blue, Sign Out = cautionary muted, Delete Account = destructive red with inverted CTA order
+- Import Data was added during design session — pairs with Export for round-trip data portability
