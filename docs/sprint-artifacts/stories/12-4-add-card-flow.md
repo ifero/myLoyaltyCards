@@ -2,7 +2,7 @@
 
 **Epic:** 12 - App-Wide Design Overhaul
 **Type:** Design
-**Status:** in-review
+**Status:** done
 **Sprint:** 10
 **Depends On:** 12-1 (Design System Foundation)
 **Figma File:** https://www.figma.com/design/4PSsX8SyTUU0GCUdBAAEED/Test
@@ -133,7 +133,7 @@ And there is NO dedicated success screen — the home IS the success
 - [x] AC3: Camera Scanner — Full-bleed camera, white viewfinder corners, brand header ("Conad"), bottom sheet "Enter card number manually". Works for BOTH catalogue and custom cards
 - [x] AC4: Card Setup — Catalogue: card number pre-filled from scan, no barcode format. Custom: store name + scan icon CTA (barcode viewfinder button) + card number field + color picker, no barcode format. Scanner accessible via icon CTA inline with card number field
 - [x] AC5: Confirmation — Home screen with toast "✓ Conad card added", newly added card highlighted with green border. No dedicated success screen
-- [ ] **Owner review** — awaiting ifero review of Figma page
+- [x] **Owner review** — approved by ifero
 
 ---
 
