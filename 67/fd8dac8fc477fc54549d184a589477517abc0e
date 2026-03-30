@@ -1,0 +1,25 @@
+docs/sprint-artifacts/sprint-status.yaml
+  5c4f7216ac07818e 38,279
+docs/sprint-artifacts/stories/12-8-sync-status-indicators.md
+  5c4f7216ac07818e 5,35,39-43,46,50-52,55,59-64,67,71-73,76,80-83,94-98,100,110-141
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.1.22",
+  "base_commit_sha": "67fd8dac8fc477fc54549d184a589477517abc0e",
+  "prompts": {
+    "5c4f7216ac07818e": {
+      "agent_id": {
+        "tool": "cursor",
+        "id": "3dab1d8e-726e-4d41-a7ab-3d2d8a11d94c",
+        "model": "gpt-5.3-codex-high"
+      },
+      "human_author": "Andrea Pacino <andrea.pacino87@gmail.com>",
+      "messages": [],
+      "total_additions": 83,
+      "total_deletions": 49,
+      "accepted_lines": 68,
+      "overriden_lines": 0
+    }
+  }
+}
