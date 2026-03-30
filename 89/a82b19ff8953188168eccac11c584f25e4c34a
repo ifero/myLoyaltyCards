@@ -1,0 +1,25 @@
+docs/sprint-artifacts/sprint-status.yaml
+  163d8db5c4e9dab6 278
+docs/sprint-artifacts/stories/12-7-onboarding.md
+  163d8db5c4e9dab6 5,33,38-43,46,48,53-56,59,61,65-67,78-85,87,97-138
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.1.22",
+  "base_commit_sha": "89a82b19ff8953188168eccac11c584f25e4c34a",
+  "prompts": {
+    "163d8db5c4e9dab6": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "5cf82b9b-68a5-4c5c-9846-de5f85911205",
+        "model": "claude-opus-4-6"
+      },
+      "human_author": "Andrea Pacino <andrea.pacino87@gmail.com>",
+      "messages": [],
+      "total_additions": 74,
+      "total_deletions": 21,
+      "accepted_lines": 74,
+      "overriden_lines": 0
+    }
+  }
+}
