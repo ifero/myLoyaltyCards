@@ -1,0 +1,23 @@
+docs/sprint-artifacts/stories/12-6-settings-screen.md
+  bfc8c09b5a7efffb 5
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.1.22",
+  "base_commit_sha": "d1c08c7285734e350f194d54c5bb2e27af824533",
+  "prompts": {
+    "bfc8c09b5a7efffb": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "83ff9d72-b387-46e2-9e3f-9d536bdd33d4",
+        "model": "claude-opus-4-6"
+      },
+      "human_author": "Andrea Pacino <andrea.pacino87@gmail.com>",
+      "messages": [],
+      "total_additions": 1,
+      "total_deletions": 1,
+      "accepted_lines": 1,
+      "overriden_lines": 0
+    }
+  }
+}
