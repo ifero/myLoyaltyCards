@@ -273,8 +273,8 @@ development_status:
   12-2-home-screen-card-list: done
   12-3-card-detail: done
   12-4-add-card-flow: done
-  12-5-auth-screens: review
-  12-6-settings-screen: ready-for-design
+  12-5-auth-screens: done
+  12-6-settings-screen: review
   12-7-onboarding: ready-for-design
   12-8-sync-status-indicators: ready-for-design
   12-9-apple-watch: ready-for-design
@@ -291,5 +291,6 @@ development_status:
   13-6-implement-settings-screen: backlog # maps to 12-6 (absorbs Epic 8)
   13-7-restyle-onboarding: backlog # maps to 12-7
   13-8-restyle-sync-indicators: backlog # maps to 12-8
+  13-7a-import-data-from-json: drafted # new feature discovered during 12-6 design — pairs with Export
   13-9-update-apple-watch-ui: backlog # maps to 12-9
   epic-13-retrospective: optional
