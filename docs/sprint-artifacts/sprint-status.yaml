@@ -35,7 +35,7 @@
 # - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
 
 generated: 2026-01-03
-updated: 2026-03-28
+updated: 2026-03-30
 project: myLoyaltyCards
 tracking_system: file-system
 story_location: docs/sprint-artifacts
@@ -276,7 +276,7 @@ development_status:
   12-5-auth-screens: done
   12-6-settings-screen: done
   12-7-onboarding: done
-  12-8-sync-status-indicators: ready-for-design
+  12-8-sync-status-indicators: done
   12-9-apple-watch: ready-for-design
   epic-12-retrospective: optional
 
