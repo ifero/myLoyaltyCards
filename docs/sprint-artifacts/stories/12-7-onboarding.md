@@ -81,10 +81,9 @@ And the experience feels polished, not template-generic ✅ → custom illustrat
 4. Feature highlight 2 — "Scan or add manually" ✅
 5. Feature highlight 3 — "Your data, your rules" ✅
 6. First card guidance — empty home with prompt ✅
-7. Returning user — sign in prompt (addresses DEC-12.5-002) ✅
-8. Mode Selection — info tooltip edge case ✅
+7. Mode Selection — info tooltip edge case ✅
 
-**Total: 16 frames (8 concepts × light + dark)**
+**Total: 14 frames (7 concepts × light + dark)**
 
 ---
 
@@ -121,15 +120,24 @@ And the experience feels polished, not template-generic ✅ → custom illustrat
 - **Rationale:** Trust signal that reduces account-creation anxiety and differentiates from competitor apps.
 - **Status:** Approved by creative team
 
-### DEC-12.7-004: Returning User Flow (DEC-12.5-002 Resolution)
+### DEC-12.7-004: No Device Detection — Direct Sign-In Link (DEC-12.5-002 Resolution)
 
-- **Context:** DEC-12.5-002 flagged that returning users on a new device land in local mode with no sign-in prompt. They must manually navigate to Settings.
-- **Decision:** Welcome screen includes "I already have an account" secondary CTA. Tapping it leads to a dedicated "Welcome back!" screen with three options:
-  1. "Sign In to My Account" (primary) → transitions to Sign In screen from 12-5
-  2. "Create a New Account" (outlined) → transitions to Sign Up screen from 12-5
-  3. "Start fresh on this device" (text link) → proceeds to local mode with note about importing backups
-- **Rationale:** Covers all returning-user scenarios without cluttering the main onboarding path.
-- **Status:** Approved — resolves DEC-12.5-002
+- **Context:** DEC-12.5-002 flagged that returning users on a new device land in local mode with no sign-in prompt. Initial proposal was a "Welcome back!" screen that detected returning users.
+- **Decision:** Detecting returning users requires storing/reading device information, which directly contradicts the privacy-first "your data, your choice" philosophy. Instead, the Welcome screen simply includes "I already have an account" as a secondary CTA that navigates directly to the Sign In screen (12-5). No detection, no separate screen — just a clear path for anyone who already has an account.
+- **Rationale:** Privacy-consistent. The user tells us who they are — we don't try to figure it out.
+- **Status:** Approved — resolves DEC-12.5-002 without device fingerprinting
+
+### DEC-12.7-006: Info Tooltip Trigger — "What's the difference?" Link
+
+- **Context:** The Mode Selection info tooltip modal was designed but had no visible trigger on the Mode Selection screen.
+- **Decision:** Added underlined "What's the difference?" link below the data ownership footer text on Mode Selection. Tapping it opens the info tooltip modal explaining both storage options.
+- **Status:** Applied
+
+### DEC-12.7-007: Highlight CTAs Pinned to Bottom
+
+- **Context:** Original layout had CTAs in the middle of the screen, wasting space for illustrations.
+- **Decision:** "Next" / "Let's go!" buttons and pagination dots are pinned to the bottom of highlight screens, freeing the middle area for larger, more impactful illustrations.
+- **Status:** Applied
 
 ### DEC-12.7-005: Skip Affordance on Highlights
 
