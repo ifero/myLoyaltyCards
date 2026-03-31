@@ -1,0 +1,23 @@
+docs/sprint-artifacts/stories/12-9-apple-watch.md
+  2f433f2688a16e02 5
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.1.23",
+  "base_commit_sha": "b97c730c523adb2b780db8e25b28da321ff8da06",
+  "prompts": {
+    "2f433f2688a16e02": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "7b6681f6-faa6-44f1-b090-999a0db62878",
+        "model": "<synthetic>"
+      },
+      "human_author": "Andrea Pacino <andrea.pacino87@gmail.com>",
+      "messages": [],
+      "total_additions": 1,
+      "total_deletions": 1,
+      "accepted_lines": 1,
+      "overriden_lines": 0
+    }
+  }
+}
