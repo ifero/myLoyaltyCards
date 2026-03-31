@@ -2,7 +2,7 @@
 
 **Epic:** 12 - App-Wide Design Overhaul
 **Type:** Design
-**Status:** ready-for-design
+**Status:** review
 **Sprint:** 10
 **Depends On:** 12-1 (Design System Foundation)
 **Figma File:** https://www.figma.com/design/4PSsX8SyTUU0GCUdBAAEED/Test
