@@ -1,0 +1,63 @@
+docs/sprint-artifacts/stories/13-7-restyle-onboarding.md
+  0c1c9c914c9cde50 1-342,344-354,356-392,394-415,417-435,437-444
+docs/sprint-artifacts/stories/13-6-implement-settings-screen.md
+  0c1c9c914c9cde50 1-17,19-25,27-618,620-643,645-656
+docs/sprint-artifacts/stories/13-2-restyle-home-screen.md
+  0c1c9c914c9cde50 1-241,243-255,257-279,281-294,296-307,309-342
+docs/sprint-artifacts/epic-12-retro-2026-03-31.md
+  b29f4298faf12c8a 1-13,15-25,27-65,67-106,108-114,116-131,133-146,148-167
+docs/sprint-artifacts/stories/13-3-restyle-card-detail.md
+  0c1c9c914c9cde50 1-219,221-233,235-336
+docs/sprint-artifacts/stories/13-5-restyle-auth-screens.md
+  0c1c9c914c9cde50 1-357,359-377,379-388,390-406,408-415
+docs/sprint-artifacts/sprint-status.yaml
+  0c1c9c914c9cde50 38,51-52,65,68-72,74-121,142-167,304-306,308,317-318,321,323-333
+  b29f4298faf12c8a 319
+docs/sprint-artifacts/stories/13-4-restyle-add-card-flow.md
+  0c1c9c914c9cde50 1-336,338-353,355-362
+docs/sprint-artifacts/stories/12-icon-doc-cleanup.md
+  0c1c9c914c9cde50 1-35,37-43,45-55,57-85
+docs/sprint-artifacts/stories/13-7a-import-data-from-json.md
+  0c1c9c914c9cde50 3,7-9,11,13,15-17,23-26,30-33,37-41,45-49,53-111,113-121,123-142,145-164,166-178,180-181,183,185,187,189,191
+docs/sprint-artifacts/stories/12-figma-icon-update.md
+  0c1c9c914c9cde50 1-48,50-54,56-59,61-80
+docs/sprint-artifacts/stories/13-9-update-apple-watch-ui.md
+  0c1c9c914c9cde50 1-210,212-220,222-231,233-298,300-334
+docs/sprint-artifacts/stories/13-8-restyle-sync-indicators.md
+  0c1c9c914c9cde50 1-275,277-286,288-325,327-335,337-351,353-368,370-379
+docs/sprint-artifacts/stories/13-1-implement-design-system-tokens.md
+  0c1c9c914c9cde50 1-164,166-174,176-188,190-198,200-207,209-216,218-252,254-288
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.1.23",
+  "base_commit_sha": "c697fef6be475f8aa90b25b5649833fb62fcd542",
+  "prompts": {
+    "0c1c9c914c9cde50": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "fd27d534-0376-4939-a48f-da0e8e0cf827",
+        "model": "claude-opus-4-6"
+      },
+      "human_author": "Andrea Pacino <andrea.pacino87@gmail.com>",
+      "messages": [],
+      "total_additions": 3975,
+      "total_deletions": 136,
+      "accepted_lines": 3934,
+      "overriden_lines": 37
+    },
+    "b29f4298faf12c8a": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "374f5593-8dca-48c4-8111-89097573209d",
+        "model": "claude-opus-4-6"
+      },
+      "human_author": "Andrea Pacino <andrea.pacino87@gmail.com>",
+      "messages": [],
+      "total_additions": 168,
+      "total_deletions": 1,
+      "accepted_lines": 161,
+      "overriden_lines": 7
+    }
+  }
+}
