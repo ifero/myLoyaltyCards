@@ -150,7 +150,7 @@ And error messages are human-readable, not technical ✅ → "Incorrect email or
 
 ### DEC-12.5-004: Icon System — MaterialIcons + MaterialCommunityIcons
 
-- **Context:** Story 12-1 originally specified FontAwesome via @expo/vector-icons. After reviewing the full expo/vector-icons library, MaterialIcons offers better coverage and cleaner glyphs for our use cases.
+- **Context:** Story 12-1 originally specified a legacy icon family via @expo/vector-icons. After reviewing the full expo/vector-icons library, MaterialIcons offers better coverage and cleaner glyphs for our use cases.
 - **Decision:** Auth screens use **MaterialIcons** (MI) as primary icon family and **MaterialCommunityIcons** (MCI) for specialty icons. All icons in Figma are vector shapes with `MI:` or `MCI:` prefix labels matching expo/vector-icons names. Icon mapping:
   - `MI: chevron-left` — back navigation
   - `MI: visibility` / `MI: visibility-off` — password show/hide toggle

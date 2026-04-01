@@ -314,14 +314,14 @@ development_status:
   12-7-onboarding: done
   12-8-sync-status-indicators: done
   12-9-apple-watch: done
-  12-icon-doc-cleanup: ready-for-dev # Sprint 11 blocker: update FA → MI/MCI refs in stories 12-1 to 12-4
-  12-figma-icon-update: ready-for-dev # Sprint 11 blocker: update Figma design system page icon section
+  12-icon-doc-cleanup: done # Sprint 11 blocker resolved
+  12-figma-icon-update: done # Sprint 11 blocker resolved: MI/MCI icon migration completed in docs + Figma
   epic-12-retrospective: done # completed 2026-03-31
 
   # Epic 13: UI Implementation (Sprint 11 — all stories need refinement via Create Story)
   # Absorbs Epic 8 (Settings) — 8-X stories will NOT be implemented separately
   epic-13: in-progress
-  13-1-implement-design-system-tokens: ready-for-dev # maps to 12-1 — blocked by icon cleanup
+  13-1-implement-design-system-tokens: ready-for-dev # maps to 12-1 — icon cleanup blockers resolved
   13-2-restyle-home-screen: ready-for-dev # maps to 12-2
   13-3-restyle-card-detail: ready-for-dev # maps to 12-3
   13-4-restyle-add-card-flow: ready-for-dev # maps to 12-4
