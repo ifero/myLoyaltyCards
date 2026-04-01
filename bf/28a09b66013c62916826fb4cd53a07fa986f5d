@@ -1,0 +1,59 @@
+features/privacy/__tests__/DataSummaryScreen.test.tsx
+  7e5dddf93f995e7e 22
+features/auth/__tests__/CreateAccountScreen.test.tsx
+  7e5dddf93f995e7e 23
+features/auth/__tests__/ForgotPasswordScreen.test.tsx
+  7e5dddf93f995e7e 22
+shared/components/SyncIndicator.test.tsx
+  7e5dddf93f995e7e 8
+app/__tests__/help.test.tsx
+  7e5dddf93f995e7e 20
+features/cards/components/CardDetails.test.tsx
+  7e5dddf93f995e7e 52
+app/__tests__/welcome.test.tsx
+  7e5dddf93f995e7e 34
+features/settings/SettingsScreen.test.tsx
+  7e5dddf93f995e7e 35
+features/cards/components/EmptyState.test.tsx
+  7e5dddf93f995e7e 25
+docs/sprint-artifacts/sprint-status.yaml
+  7e5dddf93f995e7e 324
+features/cards/components/CardTile.test.tsx
+  7e5dddf93f995e7e 28
+features/auth/__tests__/MigrationBanner.test.tsx
+  7e5dddf93f995e7e 20
+features/cards/components/BarcodeScanner.test.tsx
+  7e5dddf93f995e7e 49
+features/auth/__tests__/ResetPasswordScreen.test.tsx
+  7e5dddf93f995e7e 22
+features/auth/__tests__/SignInScreen.test.tsx
+  7e5dddf93f995e7e 22
+docs/sprint-artifacts/stories/13-1-implement-design-system-tokens.md
+  7e5dddf93f995e7e 3,23-28,32-36,40-44,48-53,57-61,65-70,74-78,82-86,90-93,97-99,103-158,284-285,288-291,295-303,305-324,326-330,339-344,346
+features/cards/components/CardList.test.tsx
+  7e5dddf93f995e7e 53
+features/cards/components/CardForm.test.tsx
+  7e5dddf93f995e7e 18
+app/__tests__/onboarding.integration.test.tsx
+  7e5dddf93f995e7e 36
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.2.3",
+  "base_commit_sha": "bf28a09b66013c62916826fb4cd53a07fa986f5d",
+  "prompts": {
+    "7e5dddf93f995e7e": {
+      "agent_id": {
+        "tool": "github-copilot",
+        "id": "9854ccf1-82b7-4865-b93f-edfce1ab8a7a",
+        "model": "copilot/gpt-5.3-codex"
+      },
+      "human_author": "Andrea Pacino",
+      "messages": [],
+      "total_additions": 0,
+      "total_deletions": 0,
+      "accepted_lines": 173,
+      "overriden_lines": 0
+    }
+  }
+}
