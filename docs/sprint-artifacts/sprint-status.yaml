@@ -35,7 +35,7 @@
 # - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
 
 generated: 2026-01-03
-updated: 2026-03-30
+updated: 2026-04-01
 project: myLoyaltyCards
 tracking_system: file-system
 story_location: docs/sprint-artifacts
@@ -44,44 +44,12 @@ story_location: docs/sprint-artifacts
 # LAST SPRINT (completed)
 # ============================================
 last_sprint:
-  number: 9
-  name: 'Sprint 9: Cloud Sync & Epic 6 Completion'
-  goal: 'Complete Epic 6 (Delete Account) and deliver full Epic 7 (Cloud Synchronization)'
-  start_date: 2026-03-20
-  end_date: 2026-03-28
-  status: completed
-  epics: [6, 7]
-  stories:
-    - 6-10-delete-account
-    - 7-1-upload-cards-to-cloud
-    - 7-2-download-cards-from-cloud
-    - 7-3-sync-card-changes
-    - 7-4-implement-delta-sync
-    - 7-5-handle-offline-queue
-    - 7-6-resolve-sync-conflicts
-    - 7-7-display-sync-status
-  filler_not_picked_up:
-    - 6-15-migration-banner-polish
-    - 1-6-extend-semantic-error-colors
-  deferred_post_mvp:
-    - 6-12-sign-in-with-apple
-    - 6-13-sign-in-with-google
-  notes: |
-    All 8 stories completed. Epic 6 and Epic 7 both closed.
-    Filler items (6-15, 1-6) not picked up — available for future sprints.
-    Full cloud sync stack (auth + sync + conflict resolution) now complete.
-
-# ============================================
-# CURRENT SPRINT
-# ============================================
-current_sprint:
   number: 10
   name: 'Sprint 10: App-Wide Design Overhaul'
   goal: 'Deliver complete Figma designs for all app screens (Epic 12) — design-only sprint, no implementation'
-  status: in-progress
   start_date: 2026-03-28
-  end_date: 2026-04-11
-  duration: 2 weeks
+  end_date: 2026-04-01
+  status: completed
   epics: [12]
   stories:
     - 12-1-design-system-foundation
@@ -93,24 +61,64 @@ current_sprint:
     - 12-7-onboarding
     - 12-8-sync-status-indicators
     - 12-9-apple-watch
-  # Wave order (dependency chain — Sally + creative team):
-  #   Wave 1:            12-1 (Design System Foundation — everything depends on this)
-  #   Wave 2 (parallel): 12-2 + 12-3 + 12-4 (core card experience)
-  #   Wave 3 (parallel): 12-5 + 12-6 + 12-7 (supporting screens)
-  #   Wave 4 (parallel): 12-8 + 12-9 (peripheral)
   notes: |
+    All 9 stories completed. Epic 12 closed.
     Pure design sprint — all deliverables are Figma pages.
     Figma file: https://www.figma.com/design/4PSsX8SyTUU0GCUdBAAEED/Test
-    Reference apps: SuperCards, Klarna wallet.
-    Key design decisions:
-      - Light mode primary, dark mode fully supported
-      - Brand colors from catalogue used as card backgrounds (data already exists in italy.json)
-      - Real brand logos (SVGs already in assets/images/brands/) replace letter avatars
-      - Proper CTA hierarchy: primary (filled), secondary (outlined), destructive (red)
-    Epic 8 (Settings) absorbed into future Epic 13 (UI Implementation).
-    Epic 13 stories will be created after Epic 12 designs are approved by ifero.
-    Epic 13 maps 1:1 to Epic 12: each approved design → matching implementation story.
+    Retrospective completed 2026-03-31. Key insights:
+      - Design-only sprints are cheap places to discover scope
+      - Icon system pivot (FontAwesome → MI/MCI) identified as cleanup before Epic 13
+      - Collaborative party mode sessions produced higher-quality design decisions
+    Follow-up items: 12-1a (brand logos, ifero), icon doc cleanup, Figma icon update.
 
+# ============================================
+# CURRENT SPRINT
+# ============================================
+current_sprint:
+  number: 11
+  name: 'Sprint 11: UI Implementation (Epic 13)'
+  goal: 'Implement approved Figma designs across all app screens — full Epic 13 delivery'
+  status: in-progress
+  start_date: 2026-04-01
+  end_date: 2026-04-15
+  duration: 2 weeks
+  epics: [13]
+  stories:
+    # Wave 1: Blockers + Foundation (sequential)
+    - 12-icon-doc-cleanup # blocker: update FA → MI/MCI refs in stories 12-1 to 12-4
+    - 12-figma-icon-update # blocker: update Figma design system page icon section
+    - 13-1-implement-design-system-tokens # foundation — everything depends on this
+    # Wave 2: Core card screens (parallel)
+    - 13-2-restyle-home-screen
+    - 13-3-restyle-card-detail
+    - 13-4-restyle-add-card-flow
+    # Wave 3: Supporting screens (parallel)
+    - 13-5-restyle-auth-screens
+    - 13-6-implement-settings-screen
+    - 13-7-restyle-onboarding
+    # Wave 3b: After 13-6 completes
+    - 13-7a-import-data-from-json
+    # Wave 4: Peripheral (parallel)
+    - 13-8-restyle-sync-indicators
+    - 13-9-update-apple-watch-ui
+  parallel_track:
+    - 12-1a-source-real-brand-logos # ifero — non-blocking
+  # Wave order (dependency chain):
+  #   Wave 1 (sequential): 12-icon-doc-cleanup → 12-figma-icon-update → 13-1 (foundation)
+  #   Wave 2 (parallel):   13-2 + 13-3 + 13-4 (core card experience)
+  #   Wave 3 (parallel):   13-5 + 13-6 + 13-7 (supporting screens)
+  #   Wave 3b:             13-7a (after 13-6 completes — import needs settings scaffold)
+  #   Wave 4 (parallel):   13-8 + 13-9 (peripheral)
+  notes: |
+    Implementation of all approved Epic 12 Figma designs.
+    Figma file: https://www.figma.com/design/4PSsX8SyTUU0GCUdBAAEED/Test
+    Each story must reference exact Figma frame names for dev and QA traceability.
+    Stories are PLACEHOLDERS — must be refined via Create Story workflow before dev picks up.
+    Key constraints:
+      - 13-1 blocked on icon doc cleanup (2 small tickets)
+      - 13-7a depends on 13-6 (import needs settings screen scaffold)
+      - 12-1a (brand logos) runs parallel, non-blocking — ifero owns
+      - Epic 8 absorbed — 13-6 covers full settings implementation
   decisions:
     - id: DEC-S10-001
       date: 2026-03-28
@@ -130,6 +138,33 @@ current_sprint:
         - Epic 8 stories (8-1 through 8-5) will NOT be implemented separately.
         - Epic 13 story specs will reference specific Figma frames for pixel-accurate implementation.
         - Sprint 11 planning is blocked until Epic 12 review is complete.
+      status: approved
+    - id: DEC-S11-001
+      date: 2026-04-01
+      title: 'Include icon cleanup blockers as Sprint 11 Wave 1 items'
+      context: |
+        Epic 12 retro identified that stories 12-1 through 12-4 and the Figma design system page
+        still reference FontAwesome instead of MI/MCI. Story 13-1 implements from these specs.
+      decision: |
+        Add two blocker tickets (12-icon-doc-cleanup, 12-figma-icon-update) as Sprint 11 items
+        in Wave 1, blocking 13-1. Keeps all work visible in one sprint backlog.
+      consequences: |
+        - Wave 1 is sequential: cleanup → cleanup → 13-1
+        - No "pre-sprint" invisible work
+        - Sprint velocity reflects all actual effort
+      status: approved
+    - id: DEC-S11-002
+      date: 2026-04-01
+      title: 'Story 13-7a depends on 13-6 (not parallel in Wave 3)'
+      context: |
+        Import Data from JSON (13-7a) needs the settings screen scaffold from 13-6.
+        Running them in parallel would create integration conflicts.
+      decision: |
+        13-7a moves to Wave 3b, starting only after 13-6 completes.
+        Wave 3 runs 13-5, 13-6, 13-7 in parallel. 13-7a follows.
+      consequences: |
+        - Slight serialization in Wave 3 area
+        - Cleaner integration, no rework
       status: approved
 
 development_status:
@@ -266,10 +301,11 @@ development_status:
   11-4-rollback-on-failed-deploy: drafted
   11-5-document-cicd-pipeline: drafted
 
-  # Epic 12: App-Wide Design Overhaul (Figma)
-  epic-12: in-progress
+  # Epic 12: App-Wide Design Overhaul (Figma) ✅ COMPLETE
+  epic-12: done
+  epic-12-completed: 2026-04-01
   12-1-design-system-foundation: done
-  12-1a-source-real-brand-logos: backlog # follow-up: replace placeholder SVGs with real brand logos
+  12-1a-source-real-brand-logos: backlog # parallel track — ifero owns, non-blocking
   12-2-home-screen-card-list: done
   12-3-card-detail: done
   12-4-add-card-flow: done
@@ -278,19 +314,21 @@ development_status:
   12-7-onboarding: done
   12-8-sync-status-indicators: done
   12-9-apple-watch: done
-  epic-12-retrospective: optional
+  12-icon-doc-cleanup: ready-for-dev # Sprint 11 blocker: update FA → MI/MCI refs in stories 12-1 to 12-4
+  12-figma-icon-update: ready-for-dev # Sprint 11 blocker: update Figma design system page icon section
+  epic-12-retrospective: done # completed 2026-03-31
 
-  # Epic 13: UI Implementation (Placeholder — stories created after Epic 12 design approval)
+  # Epic 13: UI Implementation (Sprint 11 — all stories need refinement via Create Story)
   # Absorbs Epic 8 (Settings) — 8-X stories will NOT be implemented separately
-  epic-13: backlog
-  13-1-implement-design-system-tokens: backlog # maps to 12-1
-  13-2-restyle-home-screen: backlog # maps to 12-2
-  13-3-restyle-card-detail: backlog # maps to 12-3
-  13-4-restyle-add-card-flow: backlog # maps to 12-4
-  13-5-restyle-auth-screens: backlog # maps to 12-5
-  13-6-implement-settings-screen: backlog # maps to 12-6 (absorbs Epic 8)
-  13-7-restyle-onboarding: backlog # maps to 12-7
-  13-8-restyle-sync-indicators: backlog # maps to 12-8
-  13-7a-import-data-from-json: drafted # new feature discovered during 12-6 design — pairs with Export
-  13-9-update-apple-watch-ui: backlog # maps to 12-9
+  epic-13: in-progress
+  13-1-implement-design-system-tokens: ready-for-dev # maps to 12-1 — blocked by icon cleanup
+  13-2-restyle-home-screen: ready-for-dev # maps to 12-2
+  13-3-restyle-card-detail: ready-for-dev # maps to 12-3
+  13-4-restyle-add-card-flow: ready-for-dev # maps to 12-4
+  13-5-restyle-auth-screens: ready-for-dev # maps to 12-5
+  13-6-implement-settings-screen: ready-for-dev # maps to 12-6 (absorbs Epic 8)
+  13-7-restyle-onboarding: ready-for-dev # maps to 12-7
+  13-7a-import-data-from-json: ready-for-dev # depends on 13-6 — Wave 3b
+  13-8-restyle-sync-indicators: ready-for-dev # maps to 12-8
+  13-9-update-apple-watch-ui: ready-for-dev # maps to 12-9
   epic-13-retrospective: optional
