@@ -1,0 +1,45 @@
+app/card/[id]/edit.tsx
+  7e5dddf93f995e7e 21,134
+shared/theme/spacing.ts
+  7e5dddf93f995e7e 16,23-28,61
+shared/theme/ThemeProvider.tsx
+  7e5dddf93f995e7e 5,15-18,48-51
+features/cards/components/CardDetails.tsx
+  7e5dddf93f995e7e 26,245
+shared/theme/index.ts
+  7e5dddf93f995e7e 8,10-12,22
+app/card/[id].tsx
+  7e5dddf93f995e7e 22,101
+tailwind.config.js
+  7e5dddf93f995e7e 2,4-5,11,28-29,36
+features/cards/components/CardForm.tsx
+  7e5dddf93f995e7e 256
+app/_layout.tsx
+  7e5dddf93f995e7e 16,270
+shared/theme/typography.ts
+  7e5dddf93f995e7e 1-31,33-40,43-48,51-56,59-64,67-72,75-80,83-88,91-96,99-104,107-112,115-120,124
+shared/theme/colors.ts
+  7e5dddf93f995e7e 3,7,14-23,32-35,39-40,42-48,52-57,59,65-80,88-103,116-118,137,148,165-166,169-174
+shared/theme/colors.contrast.test.ts
+  7e5dddf93f995e7e 1-64
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.2.3",
+  "base_commit_sha": "9d5b8e596bf5b85eff0fc68489148b722c6a4748",
+  "prompts": {
+    "7e5dddf93f995e7e": {
+      "agent_id": {
+        "tool": "github-copilot",
+        "id": "9854ccf1-82b7-4865-b93f-edfce1ab8a7a",
+        "model": "copilot/gpt-5.3-codex"
+      },
+      "human_author": "Andrea Pacino",
+      "messages": [],
+      "total_additions": 1493,
+      "total_deletions": 267,
+      "accepted_lines": 1240,
+      "overriden_lines": 87
+    }
+  }
+}
