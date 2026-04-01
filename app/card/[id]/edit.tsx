@@ -18,7 +18,7 @@ import { View, Text, ActivityIndicator, Alert, BackHandler } from 'react-native'
 import { getCardById } from '@/core/database';
 import { LoyaltyCard } from '@/core/schemas';
 
-import { useTheme, SAGE_COLORS } from '@/shared/theme';
+import { useTheme } from '@/shared/theme';
 import { SPACING } from '@/shared/theme/spacing';
 
 import { CardForm, CardFormInput } from '@/features/cards';
@@ -131,7 +131,7 @@ const EditCardScreen = () => {
             backgroundColor: theme.background
           }}
         >
-          <ActivityIndicator size="large" color={SAGE_COLORS[500]} />
+          <ActivityIndicator size="large" color={theme.primary} />
         </View>
       </>
     );

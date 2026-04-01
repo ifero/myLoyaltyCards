@@ -13,10 +13,20 @@
 export const SPACING = {
   xs: 4, // 0.5 grid units
   sm: 8, // 1 grid unit
+  smMd: 12,
   md: 16, // 2 grid units
   lg: 24, // 3 grid units
   xl: 32, // 4 grid units
-  xxl: 48, // 6 grid units
+  xxl: 48 // 6 grid units
+} as const;
+
+export const LAYOUT = {
+  screenHorizontalMargin: 24,
+  contentPadding: 24,
+  gridGutter: 12,
+  cardAspectRatio: 4 / 3,
+  safeAreaTopInsetMin: 16,
+  safeAreaBottomInsetMin: 16
 } as const;
 
 /**
@@ -24,7 +34,7 @@ export const SPACING = {
  */
 export const TOUCH_TARGET = {
   min: 44,
-  watch: 32, // Smaller minimum for watch screens
+  watch: 32 // Smaller minimum for watch screens
 } as const;
 
 /**
@@ -48,6 +58,8 @@ export const TAILWIND_SPACING = {
   '8': '64px',
   '9': '72px',
   '10': '80px',
+  'screen-margin': `${LAYOUT.screenHorizontalMargin}px`,
+  'content-padding': `${LAYOUT.contentPadding}px`
 } as const;
 
 /**
@@ -55,5 +67,5 @@ export const TAILWIND_SPACING = {
  * Used in tailwind.config.js to avoid duplication
  */
 export const TAILWIND_TOUCH_TARGET = {
-  touch: `${TOUCH_TARGET.min}px`,
+  touch: `${TOUCH_TARGET.min}px`
 } as const;

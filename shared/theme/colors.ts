@@ -1,12 +1,9 @@
 /**
  * Color Constants
- * Story 1.2: Implement Design System Foundation
- *
- * This file contains the color tokens for the myLoyaltyCards app.
- * - Accessible Sage color palette
- * - 5-color card palette
- * - Light/dark mode semantic colors
+ * Story 13.1: Implement Design System Tokens & Components
  */
+
+import catalogueData from '../../catalogue/italy.json';
 
 /**
  * Card color type - matches core/schemas/card.ts CardColor
@@ -14,20 +11,17 @@
  */
 type CardColor = 'blue' | 'red' | 'green' | 'orange' | 'grey';
 
-/**
- * Primary Sage Green color palette
- */
-export const SAGE_COLORS = {
-  50: '#f4f9f4',
-  100: '#e8f3e8',
-  200: '#c5dfc5',
-  300: '#a2cba2',
-  400: '#8cbf8c',
-  500: '#73A973', // Primary Sage Green
-  600: '#5c9a5c',
-  700: '#4a7d4a',
-  800: '#3a623a',
-  900: '#2d4d2d',
+export const PRIMARY_COLORS = {
+  50: '#E8F1FE',
+  100: '#D2E3FC',
+  200: '#AECBFA',
+  300: '#8AB4F8',
+  400: '#669DF6',
+  500: '#1A73E8',
+  600: '#1967D2',
+  700: '#185ABC',
+  800: '#174EA6',
+  900: '#163A7A'
 } as const;
 
 /**
@@ -35,56 +29,79 @@ export const SAGE_COLORS = {
  * Used when cards don't have official logos
  */
 export const CARD_COLORS: Record<CardColor, string> = {
-  blue: '#3B82F6',
-  red: '#EF4444',
-  green: '#22C55E',
-  orange: '#F97316',
-  grey: '#6B7280',
+  blue: '#1A73E8',
+  red: '#E2231A',
+  green: '#16A34A',
+  orange: '#F59E0B',
+  grey: '#64748B'
 } as const;
 
-/**
- * OLED Black for dark mode backgrounds
- */
-export const OLED_COLORS = {
+export const NEUTRAL_COLORS = {
+  white: '#FFFFFF',
   black: '#000000',
+  slate50: '#F8FAFC',
+  slate100: '#F1F5F9',
+  slate200: '#E2E8F0',
+  slate300: '#CBD5E1',
+  slate400: '#94A3B8',
+  slate600: '#475569',
+  slate700: '#334155',
+  slate900: '#0F172A'
 } as const;
 
-/**
- * Off-white for light mode backgrounds
- */
-export const OFFWHITE_COLORS = {
-  DEFAULT: '#FAFAFA',
-  50: '#FFFFFF',
-  100: '#FAFAFA',
-  200: '#F5F5F5',
-} as const;
+export const BRAND_COLORS = Object.freeze(
+  catalogueData.brands.reduce<Record<string, string>>((accumulator, brand) => {
+    accumulator[brand.id] = brand.color;
+    return accumulator;
+  }, {})
+);
+
+export const getBrandColor = (brandId: string): string | undefined => BRAND_COLORS[brandId];
 
 /**
  * Light theme colors
  */
 export const LIGHT_THEME = {
-  background: OFFWHITE_COLORS.DEFAULT,
-  surface: OFFWHITE_COLORS[50],
-  textPrimary: '#1F2937',
-  textSecondary: '#6B7280',
-  primary: SAGE_COLORS[500],
-  primaryDark: SAGE_COLORS[600],
-  border: '#E5E7EB',
-  statusBar: 'dark' as const,
+  primary: '#1A73E8',
+  primaryDark: '#1967D2',
+  background: '#F8FAFC',
+  backgroundSubtle: '#F1F5F9',
+  surface: '#FFFFFF',
+  surfaceElevated: '#F1F5F9',
+  textPrimary: '#0F172A',
+  textSecondary: '#475569',
+  textTertiary: '#94A3B8',
+  border: '#D6DEE8',
+  borderStrong: '#94A3B8',
+  success: '#16A34A',
+  warning: '#D97706',
+  error: '#DC2626',
+  info: '#1A73E8',
+  link: '#1A73E8',
+  statusBar: 'dark' as const
 } as const;
 
 /**
  * Dark theme colors (OLED optimized)
  */
 export const DARK_THEME = {
-  background: OLED_COLORS.black,
-  surface: '#1A1A1A',
-  textPrimary: '#FFFFFF',
-  textSecondary: '#9CA3AF',
-  primary: SAGE_COLORS[500],
-  primaryDark: SAGE_COLORS[400],
-  border: '#374151',
-  statusBar: 'light' as const,
+  primary: '#4DA3FF',
+  primaryDark: '#1A73E8',
+  background: '#000000',
+  backgroundSubtle: '#05070A',
+  surface: '#111418',
+  surfaceElevated: '#1A1F26',
+  textPrimary: '#F8FAFC',
+  textSecondary: '#CBD5E1',
+  textTertiary: '#94A3B8',
+  border: '#2A3441',
+  borderStrong: '#475569',
+  success: '#22C55E',
+  warning: '#F59E0B',
+  error: '#F87171',
+  info: '#4DA3FF',
+  link: '#4DA3FF',
+  statusBar: 'light' as const
 } as const;
 
 /**
@@ -96,10 +113,10 @@ export type Theme = typeof LIGHT_THEME | typeof DARK_THEME;
  * Common semantic colors (same in both themes)
  */
 export const SEMANTIC_COLORS = {
-  success: '#22C55E',
-  error: '#EF4444',
-  warning: '#F97316',
-  info: '#3B82F6',
+  success: LIGHT_THEME.success,
+  error: LIGHT_THEME.error,
+  warning: LIGHT_THEME.warning,
+  info: LIGHT_THEME.info
 } as const;
 
 /**
@@ -107,7 +124,7 @@ export const SEMANTIC_COLORS = {
  */
 export const BARCODE_FLASH = {
   background: '#FFFFFF',
-  foreground: '#000000',
+  foreground: '#000000'
 } as const;
 
 /**
@@ -117,6 +134,8 @@ export const BARCODE_FLASH = {
 export const TAILWIND_BACKGROUND_COLORS = {
   light: LIGHT_THEME.background,
   dark: DARK_THEME.background,
+  subtleLight: LIGHT_THEME.backgroundSubtle,
+  subtleDark: DARK_THEME.backgroundSubtle
 } as const;
 
 /**
@@ -126,6 +145,8 @@ export const TAILWIND_BACKGROUND_COLORS = {
 export const TAILWIND_SURFACE_COLORS = {
   light: LIGHT_THEME.surface,
   dark: DARK_THEME.surface,
+  elevatedLight: LIGHT_THEME.surfaceElevated,
+  elevatedDark: DARK_THEME.surfaceElevated
 } as const;
 
 /**
@@ -135,10 +156,21 @@ export const TAILWIND_SURFACE_COLORS = {
 export const TAILWIND_TEXT_COLORS = {
   primary: {
     light: LIGHT_THEME.textPrimary,
-    dark: DARK_THEME.textPrimary,
+    dark: DARK_THEME.textPrimary
   },
   secondary: {
     light: LIGHT_THEME.textSecondary,
-    dark: DARK_THEME.textSecondary,
+    dark: DARK_THEME.textSecondary
   },
+  tertiary: {
+    light: LIGHT_THEME.textTertiary,
+    dark: DARK_THEME.textTertiary
+  }
+} as const;
+
+export const TAILWIND_BORDER_COLORS = {
+  light: LIGHT_THEME.border,
+  dark: DARK_THEME.border,
+  strongLight: LIGHT_THEME.borderStrong,
+  strongDark: DARK_THEME.borderStrong
 } as const;
