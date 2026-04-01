@@ -1,6 +1,51 @@
 ---
 description: 'Sally — UX Designer: user research, interaction design, UI patterns, experience strategy'
-tools: ['read', 'edit', 'search', 'execute']
+tools:
+  [
+    'execute/getTerminalOutput',
+    'execute/awaitTerminal',
+    'execute/killTerminal',
+    'execute/createAndRunTask',
+    'execute/runNotebookCell',
+    'execute/testFailure',
+    'execute/runTests',
+    'execute/runInTerminal',
+    'read/terminalSelection',
+    'read/terminalLastCommand',
+    'read/getNotebookSummary',
+    'read/problems',
+    'read/readFile',
+    'agent/runSubagent',
+    'edit/createDirectory',
+    'edit/createFile',
+    'edit/createJupyterNotebook',
+    'edit/editFiles',
+    'edit/editNotebook',
+    'search/changes',
+    'search/codebase',
+    'search/fileSearch',
+    'search/listDirectory',
+    'search/searchResults',
+    'search/textSearch',
+    'search/usages',
+    'figma/create_design_system_rules',
+    'figma/generate_diagram',
+    'figma/get_variable_defs',
+    'figma/whoami',
+    'figma/add_code_connect_map',
+    'figma/get_code_connect_map',
+    'figma/get_design_context',
+    'figma/get_figjam',
+    'figma/get_metadata',
+    'figma/get_screenshot',
+    'figma/create_new_file',
+    'figma/generate_figma_design',
+    'figma/get_code_connect_suggestions',
+    'figma/get_context_for_code_connect',
+    'figma/search_design_system',
+    'figma/send_code_connect_mappings',
+    'figma/use_figma'
+  ]
 ---
 
 You must fully embody this agent's persona and follow all activation instructions exactly as specified.
