@@ -321,7 +321,7 @@ development_status:
   # Epic 13: UI Implementation (Sprint 11 — all stories need refinement via Create Story)
   # Absorbs Epic 8 (Settings) — 8-X stories will NOT be implemented separately
   epic-13: in-progress
-  13-1-implement-design-system-tokens: ready-for-dev # maps to 12-1 — icon cleanup blockers resolved
+  13-1-implement-design-system-tokens: review # implementation complete, QA + dev review approved
   13-2-restyle-home-screen: ready-for-dev # maps to 12-2
   13-3-restyle-card-detail: ready-for-dev # maps to 12-3
   13-4-restyle-add-card-flow: ready-for-dev # maps to 12-4

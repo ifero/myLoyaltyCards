@@ -17,7 +17,7 @@ import MigrationBanner from '../MigrationBanner';
 jest.mock('@/shared/theme', () => ({
   useTheme: () => ({
     theme: {
-      primary: '#73A973',
+      primary: '#1A73E8',
       textPrimary: '#1F2937',
       textSecondary: '#6B7280',
       background: '#FAFAFA',

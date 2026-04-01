@@ -33,7 +33,7 @@ jest.mock('@/shared/theme', () => ({
       surface: '#FFFFFF',
       textPrimary: '#1F2937',
       textSecondary: '#6B7280',
-      primary: '#73A973',
+      primary: '#1A73E8',
       border: '#E5E7EB'
     },
     isDark: false
