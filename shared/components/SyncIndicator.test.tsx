@@ -5,7 +5,7 @@ import { SyncIndicator } from './SyncIndicator';
 jest.mock('@/shared/theme', () => ({
   useTheme: () => ({
     theme: {
-      primary: '#73A973',
+      primary: '#1A73E8',
       textSecondary: '#6B7280'
     }
   }),

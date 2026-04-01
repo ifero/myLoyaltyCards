@@ -2,6 +2,8 @@ import React, { createContext, useContext, useMemo, type ReactNode } from 'react
 import { useColorScheme } from 'react-native';
 
 import { LIGHT_THEME, DARK_THEME, type Theme } from './colors';
+import { SPACING, LAYOUT, TOUCH_TARGET } from './spacing';
+import { TYPOGRAPHY } from './typography';
 
 /**
  * Theme context type
@@ -10,6 +12,10 @@ interface ThemeContextType {
   theme: Theme;
   isDark: boolean;
   colorScheme: 'light' | 'dark';
+  typography: typeof TYPOGRAPHY;
+  spacing: typeof SPACING;
+  layout: typeof LAYOUT;
+  touchTarget: typeof TOUCH_TARGET;
 }
 
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
@@ -39,12 +45,14 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
       theme: isDark ? DARK_THEME : LIGHT_THEME,
       isDark,
       colorScheme: isDark ? 'dark' : 'light',
+      typography: TYPOGRAPHY,
+      spacing: SPACING,
+      layout: LAYOUT,
+      touchTarget: TOUCH_TARGET
     };
   }, [systemColorScheme]);
 
-  return (
-    <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>
-  );
+  return <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>;
 };
 
 /**

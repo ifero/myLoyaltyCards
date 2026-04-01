@@ -19,7 +19,7 @@ import { View, Text, ActivityIndicator } from 'react-native';
 import { getCardById } from '@/core/database';
 import { LoyaltyCard } from '@/core/schemas';
 
-import { useTheme, SAGE_COLORS } from '@/shared/theme';
+import { useTheme } from '@/shared/theme';
 import { SPACING } from '@/shared/theme/spacing';
 
 import { CardDetails, useDeleteCard } from '@/features/cards';
@@ -98,7 +98,7 @@ const CardDetailsScreen = () => {
             backgroundColor: theme.background
           }}
         >
-          <ActivityIndicator size="large" color={SAGE_COLORS[500]} />
+          <ActivityIndicator size="large" color={theme.primary} />
         </View>
       </>
     );

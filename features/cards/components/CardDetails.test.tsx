@@ -49,7 +49,7 @@ jest.mock('@/shared/theme', () => ({
       surface: '#FFFFFF',
       textPrimary: '#1F2937',
       textSecondary: '#6B7280',
-      primary: '#73A973',
+      primary: '#1A73E8',
       border: '#E5E7EB'
     }
   }),
@@ -59,9 +59,6 @@ jest.mock('@/shared/theme', () => ({
     green: '#22C55E',
     orange: '#F97316',
     grey: '#6B7280'
-  },
-  SAGE_COLORS: {
-    500: '#73A973'
   }
 }));
 

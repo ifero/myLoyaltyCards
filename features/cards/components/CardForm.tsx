@@ -253,7 +253,7 @@ export const CardForm = ({
           accessibilityState={{ disabled: !isValid || isLoading }}
           className="h-12 w-full items-center justify-center rounded-lg"
           style={{
-            backgroundColor: '#73A973', // Sage Green
+            backgroundColor: theme.primary,
             opacity: !isValid || isLoading ? 0.5 : 1
           }}
         >

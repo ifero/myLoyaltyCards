@@ -1,6 +1,6 @@
 # Story 13.1: Implement Design System Tokens & Components
 
-Status: ready-for-dev
+Status: review
 
 ## Story
 
@@ -20,142 +20,142 @@ This is the **foundation story** for Epic 13. Every subsequent restyle story (13
 
 ### AC1: Color Token Replacement
 
-- [ ] Light mode palette: 13 semantic tokens updated (primary → `#1A73E8`, backgrounds, surfaces, text hierarchy, semantic colors)
-- [ ] Dark mode palette: 13 semantic tokens updated (primary → `#4DA3FF`, true black `#000000` background, elevated surfaces)
-- [ ] Brand catalogue colors: 20 brand hex values available as a lookup (from `catalogue/data/italy.json` `brandColor` field)
-- [ ] WCAG 2.1 AA contrast compliance maintained (4.5:1 text, 3:1 large text/UI)
-- [ ] Old sage-green palette (`#73A973`) fully replaced — zero references remain
-- [ ] Tailwind config updated: all color tokens available as Tailwind classes
+- [x] Light mode palette: 13 semantic tokens updated (primary → `#1A73E8`, backgrounds, surfaces, text hierarchy, semantic colors)
+- [x] Dark mode palette: 13 semantic tokens updated (primary → `#4DA3FF`, true black `#000000` background, elevated surfaces)
+- [x] Brand catalogue colors: 20 brand hex values available as a lookup (from `catalogue/data/italy.json` `brandColor` field)
+- [x] WCAG 2.1 AA contrast compliance maintained (4.5:1 text, 3:1 large text/UI)
+- [x] Old sage-green palette (`#73A973`) fully replaced — zero references remain
+- [x] Tailwind config updated: all color tokens available as Tailwind classes
 
 ### AC2: Typography Scale
 
-- [ ] 11-level type scale implemented matching Figma specs (Large Title 34pt → Caption 2 11pt)
-- [ ] Font weights mapped: Regular, Medium, Semibold, Bold
-- [ ] Line-height and letter-spacing values match Figma specs
-- [ ] Typography tokens exported for Tailwind and inline style usage
-- [ ] iOS uses SF Pro (system default), watchOS uses SF Compact (system default) — no custom font imports needed
+- [x] 11-level type scale implemented matching Figma specs (Large Title 34pt → Caption 2 11pt)
+- [x] Font weights mapped: Regular, Medium, Semibold, Bold
+- [x] Line-height and letter-spacing values match Figma specs
+- [x] Typography tokens exported for Tailwind and inline style usage
+- [x] iOS uses SF Pro (system default), watchOS uses SF Compact (system default) — no custom font imports needed
 
 ### AC3: Spacing & Layout Tokens
 
-- [ ] 7-step spacing scale: 4, 8, 12, 16, 24, 32, 48 (already exists — verify alignment with Figma)
-- [ ] Layout constants: screen margins (24px horizontal), content padding, grid specs
-- [ ] Card aspect ratio token defined
-- [ ] Safe area handling tokens for notch/Dynamic Island
-- [ ] Tailwind spacing scale updated if any values changed
+- [x] 7-step spacing scale: 4, 8, 12, 16, 24, 32, 48 (already exists — verify alignment with Figma)
+- [x] Layout constants: screen margins (24px horizontal), content padding, grid specs
+- [x] Card aspect ratio token defined
+- [x] Safe area handling tokens for notch/Dynamic Island
+- [x] Tailwind spacing scale updated if any values changed
 
 ### AC4: Button Component System
 
-- [ ] 4 button types: Primary (filled `#1A73E8`), Secondary (outlined), Tertiary (text-only), Destructive (red)
-- [ ] 4 states each: Default, Pressed, Disabled, Loading
-- [ ] 44pt minimum touch target on all buttons
-- [ ] Shared `Button` component in `shared/components/ui/` with `variant` prop
-- [ ] Dark mode variants for all button types
-- [ ] Unit tests for all variants and states
+- [x] 4 button types: Primary (filled `#1A73E8`), Secondary (outlined), Tertiary (text-only), Destructive (red)
+- [x] 4 states each: Default, Pressed, Disabled, Loading
+- [x] 44pt minimum touch target on all buttons
+- [x] Shared `Button` component in `shared/components/ui/` with `variant` prop
+- [x] Dark mode variants for all button types
+- [x] Unit tests for all variants and states
 
 ### AC5: Card Shell Component
 
-- [ ] Catalogue card variant: brand hex background + centered logo slot
-- [ ] Custom card variant: user-selected color + first-letter avatar fallback
-- [ ] Grid thumbnail size and detail hero size variants
-- [ ] Dark mode: 1pt border for black-branded cards (`#000000`) to avoid disappearing on dark surfaces
-- [ ] Unit tests for both variants, both sizes, light/dark
+- [x] Catalogue card variant: brand hex background + centered logo slot
+- [x] Custom card variant: user-selected color + first-letter avatar fallback
+- [x] Grid thumbnail size and detail hero size variants
+- [x] Dark mode: 1pt border for black-branded cards (`#000000`) to avoid disappearing on dark surfaces
+- [x] Unit tests for both variants, both sizes, light/dark
 
 ### AC6: Form Input Components
 
-- [ ] Text field with 5 states: Default, Focused, Filled, Error, Disabled
-- [ ] Toggle switch: ON/OFF states (distinguishable by shape/position, not just color)
-- [ ] Color picker: 5-color palette for custom card color selection
-- [ ] Error message placement and styling matching Figma
-- [ ] Dark mode variants for all form components
-- [ ] Unit tests for all states
+- [x] Text field with 5 states: Default, Focused, Filled, Error, Disabled
+- [x] Toggle switch: ON/OFF states (distinguishable by shape/position, not just color)
+- [x] Color picker: 5-color palette for custom card color selection
+- [x] Error message placement and styling matching Figma
+- [x] Dark mode variants for all form components
+- [x] Unit tests for all states
 
 ### AC7: Action Row Component
 
-- [ ] Klarna-style pattern: icon + label + chevron-right
-- [ ] Tappable with 44pt minimum touch target
-- [ ] Supports MI/MCI icon on the left
-- [ ] Dark mode variant
-- [ ] Unit tests
+- [x] Klarna-style pattern: icon + label + chevron-right
+- [x] Tappable with 44pt minimum touch target
+- [x] Supports MI/MCI icon on the left
+- [x] Dark mode variant
+- [x] Unit tests
 
 ### AC8: Icon System Integration
 
-- [ ] MI (MaterialIcons) and MCI (MaterialCommunityIcons) import pattern established
-- [ ] `import { MaterialIcons, MaterialCommunityIcons } from '@expo/vector-icons'`
-- [ ] Minimum icon size: 24pt standard, 28pt+ for headers
-- [ ] Icon color follows semantic text color tokens
-- [ ] No FontAwesome imports remain in the codebase after this story
+- [x] MI (MaterialIcons) and MCI (MaterialCommunityIcons) import pattern established
+- [x] `import { MaterialIcons, MaterialCommunityIcons } from '@expo/vector-icons'`
+- [x] Minimum icon size: 24pt standard, 28pt+ for headers
+- [x] Icon color follows semantic text color tokens
+- [x] No FontAwesome imports remain in the codebase after this story
 
 ### AC9: ThemeProvider Update
 
-- [ ] `useTheme()` hook returns updated token values
-- [ ] System color scheme detection still works
-- [ ] All existing consumers of `useTheme()` receive new values without breaking
-- [ ] Backward-compatible: screens not yet restyled (13-2+) should still render (may look mixed but not crash)
+- [x] `useTheme()` hook returns updated token values
+- [x] System color scheme detection still works
+- [x] All existing consumers of `useTheme()` receive new values without breaking
+- [x] Backward-compatible: screens not yet restyled (13-2+) should still render (may look mixed but not crash)
 
 ### AC10: All Tests Pass
 
-- [ ] All new component tests pass
-- [ ] All existing tests pass (no regressions)
-- [ ] Coverage threshold maintained (80% branches/functions/lines/statements)
+- [x] All new component tests pass
+- [x] All existing tests pass (no regressions)
+- [x] Coverage threshold maintained (80% branches/functions/lines/statements)
 
 ## Tasks / Subtasks
 
-- [ ] **Task 1: Update color tokens** (AC: 1)
-  - [ ] Replace `SAGE_COLORS` with new primary blue palette in `shared/theme/colors.ts`
-  - [ ] Update `LIGHT_THEME` and `DARK_THEME` objects with all 13 semantic tokens each
-  - [ ] Add brand color lookup utility that reads from `catalogue/data/italy.json`
-  - [ ] Update `CARD_COLORS` if the 5-color custom card palette changed
-  - [ ] Remove all sage-green references
-  - [ ] Update `tailwind.config.js` color extensions
+- [x] **Task 1: Update color tokens** (AC: 1)
+  - [x] Replace `SAGE_COLORS` with new primary blue palette in `shared/theme/colors.ts`
+  - [x] Update `LIGHT_THEME` and `DARK_THEME` objects with all 13 semantic tokens each
+  - [x] Add brand color lookup utility that reads from `catalogue/data/italy.json`
+  - [x] Update `CARD_COLORS` if the 5-color custom card palette changed
+  - [x] Remove all sage-green references
+  - [x] Update `tailwind.config.js` color extensions
 
-- [ ] **Task 2: Add typography tokens** (AC: 2)
-  - [ ] Create `shared/theme/typography.ts` with 11-level scale
-  - [ ] Export as both raw values and Tailwind-compatible config
-  - [ ] Add to barrel export in `shared/theme/index.ts`
-  - [ ] Update `tailwind.config.js` fontSize extensions
+- [x] **Task 2: Add typography tokens** (AC: 2)
+  - [x] Create `shared/theme/typography.ts` with 11-level scale
+  - [x] Export as both raw values and Tailwind-compatible config
+  - [x] Add to barrel export in `shared/theme/index.ts`
+  - [x] Update `tailwind.config.js` fontSize extensions
 
-- [ ] **Task 3: Verify spacing tokens** (AC: 3)
-  - [ ] Audit `shared/theme/spacing.ts` against Figma specs
-  - [ ] Add any missing layout constants (screen margins, card aspect ratio)
-  - [ ] Update Tailwind config if values changed
+- [x] **Task 3: Verify spacing tokens** (AC: 3)
+  - [x] Audit `shared/theme/spacing.ts` against Figma specs
+  - [x] Add any missing layout constants (screen margins, card aspect ratio)
+  - [x] Update Tailwind config if values changed
 
-- [ ] **Task 4: Create Button component** (AC: 4)
-  - [ ] Create `shared/components/ui/Button.tsx`
-  - [ ] Props: `variant: 'primary' | 'secondary' | 'tertiary' | 'destructive'`, `loading?: boolean`, `disabled?: boolean`
-  - [ ] Use NativeWind classes + theme tokens for styling
-  - [ ] Create `shared/components/ui/Button.test.tsx`
+- [x] **Task 4: Create Button component** (AC: 4)
+  - [x] Create `shared/components/ui/Button.tsx`
+  - [x] Props: `variant: 'primary' | 'secondary' | 'tertiary' | 'destructive'`, `loading?: boolean`, `disabled?: boolean`
+  - [x] Use NativeWind classes + theme tokens for styling
+  - [x] Create `shared/components/ui/Button.test.tsx`
 
-- [ ] **Task 5: Create CardShell component** (AC: 5)
-  - [ ] Create `shared/components/ui/CardShell.tsx`
-  - [ ] Props: `type: 'catalogue' | 'custom'`, `brandColor?: string`, `size: 'grid' | 'hero'`
-  - [ ] Handle dark mode 1pt border for black brands
-  - [ ] Create `shared/components/ui/CardShell.test.tsx`
+- [x] **Task 5: Create CardShell component** (AC: 5)
+  - [x] Create `shared/components/ui/CardShell.tsx`
+  - [x] Props: `type: 'catalogue' | 'custom'`, `brandColor?: string`, `size: 'grid' | 'hero'`
+  - [x] Handle dark mode 1pt border for black brands
+  - [x] Create `shared/components/ui/CardShell.test.tsx`
 
-- [ ] **Task 6: Create form input components** (AC: 6)
-  - [ ] Create `shared/components/ui/TextField.tsx` (5 states)
-  - [ ] Create `shared/components/ui/ToggleSwitch.tsx`
-  - [ ] Create `shared/components/ui/ColorPicker.tsx`
-  - [ ] Create tests for each
+- [x] **Task 6: Create form input components** (AC: 6)
+  - [x] Create `shared/components/ui/TextField.tsx` (5 states)
+  - [x] Create `shared/components/ui/ToggleSwitch.tsx`
+  - [x] Create `shared/components/ui/ColorPicker.tsx`
+  - [x] Create tests for each
 
-- [ ] **Task 7: Create ActionRow component** (AC: 7)
-  - [ ] Create `shared/components/ui/ActionRow.tsx`
-  - [ ] Props: `icon: string`, `iconFamily: 'MI' | 'MCI'`, `label: string`, `onPress: () => void`
-  - [ ] Create `shared/components/ui/ActionRow.test.tsx`
+- [x] **Task 7: Create ActionRow component** (AC: 7)
+  - [x] Create `shared/components/ui/ActionRow.tsx`
+  - [x] Props: `icon: string`, `iconFamily: 'MI' | 'MCI'`, `label: string`, `onPress: () => void`
+  - [x] Create `shared/components/ui/ActionRow.test.tsx`
 
-- [ ] **Task 8: Establish icon import pattern** (AC: 8)
-  - [ ] Verify `@expo/vector-icons` already installed (it should be — bundled with Expo)
-  - [ ] Remove any FontAwesome imports if they exist in code
-  - [ ] Create icon usage example in shared components
+- [x] **Task 8: Establish icon import pattern** (AC: 8)
+  - [x] Verify `@expo/vector-icons` already installed (it should be — bundled with Expo)
+  - [x] Remove any FontAwesome imports if they exist in code
+  - [x] Create icon usage example in shared components
 
-- [ ] **Task 9: Update ThemeProvider** (AC: 9)
-  - [ ] Update `shared/theme/ThemeProvider.tsx` to expose new token structure
-  - [ ] Ensure `useTheme()` hook API is backward-compatible or update all consumers
-  - [ ] Test that existing screens render without crashes
+- [x] **Task 9: Update ThemeProvider** (AC: 9)
+  - [x] Update `shared/theme/ThemeProvider.tsx` to expose new token structure
+  - [x] Ensure `useTheme()` hook API is backward-compatible or update all consumers
+  - [x] Test that existing screens render without crashes
 
-- [ ] **Task 10: Run full test suite** (AC: 10)
-  - [ ] Run `npm test` — all tests must pass
-  - [ ] Verify coverage thresholds met
-  - [ ] Fix any regressions
+- [x] **Task 10: Run full test suite** (AC: 10)
+  - [x] Run `npm test` — all tests must pass
+  - [x] Verify coverage thresholds met
+  - [x] Fix any regressions
 
 ## Dev Notes
 
@@ -281,8 +281,66 @@ This story changes the design system foundation but does NOT restyle individual 
 
 ### Agent Model Used
 
+GPT-5.3-Codex
+
 ### Debug Log References
+
+- Context7 docs check: `/facebook/react-native-website` and `/oblador/react-native-vector-icons`
+- Unit tests (new UI components): 16 passed, 0 failed
+- Full suite: 1037 passed, 0 failed
+- Coverage run: 1037 passed, 0 failed
 
 ### Completion Notes List
 
+- Replaced legacy sage token system with blue-first semantic themes and dark true-black foundation.
+- Added brand color lookup sourced from `catalogue/italy.json` via `BRAND_COLORS` and `getBrandColor`.
+- Added typography token scale + Tailwind `fontSize` mappings.
+- Added spacing/layout constants (margins, card ratio, safe-area minima).
+- Built reusable UI kit in `shared/components/ui/` with tests: `Button`, `CardShell`, `TextField`, `ToggleSwitch`, `ColorPicker`, `ActionRow`.
+- Established MI/MCI icon pattern in shared component implementation (`ActionRow`).
+- Updated `ThemeProvider` to expose typography/spacing/layout/touch-target while preserving existing `theme` API.
+- Removed all runtime/test references to `#73A973` and `SAGE_COLORS` in source files.
+
 ### File List
+
+- shared/theme/colors.ts
+- shared/theme/typography.ts
+- shared/theme/spacing.ts
+- shared/theme/index.ts
+- shared/theme/ThemeProvider.tsx
+- tailwind.config.js
+- shared/components/ui/Button.tsx
+- shared/components/ui/Button.test.tsx
+- shared/components/ui/CardShell.tsx
+- shared/components/ui/CardShell.test.tsx
+- shared/components/ui/TextField.tsx
+- shared/components/ui/TextField.test.tsx
+- shared/components/ui/ToggleSwitch.tsx
+- shared/components/ui/ToggleSwitch.test.tsx
+- shared/components/ui/ColorPicker.tsx
+- shared/components/ui/ColorPicker.test.tsx
+- shared/components/ui/ActionRow.tsx
+- shared/components/ui/ActionRow.test.tsx
+- shared/components/ui/index.ts
+- app/\_layout.tsx
+- app/card/[id].tsx
+- app/card/[id]/edit.tsx
+- features/cards/components/CardDetails.tsx
+- features/cards/components/CardForm.tsx
+- shared/components/SyncIndicator.test.tsx
+- app/**tests**/help.test.tsx
+- app/**tests**/onboarding.integration.test.tsx
+- app/**tests**/welcome.test.tsx
+- features/auth/**tests**/CreateAccountScreen.test.tsx
+- features/auth/**tests**/ForgotPasswordScreen.test.tsx
+- features/auth/**tests**/MigrationBanner.test.tsx
+- features/auth/**tests**/ResetPasswordScreen.test.tsx
+- features/auth/**tests**/SignInScreen.test.tsx
+- features/cards/components/BarcodeScanner.test.tsx
+- features/cards/components/CardDetails.test.tsx
+- features/cards/components/CardForm.test.tsx
+- features/cards/components/CardList.test.tsx
+- features/cards/components/CardTile.test.tsx
+- features/cards/components/EmptyState.test.tsx
+- features/privacy/**tests**/DataSummaryScreen.test.tsx
+- features/settings/SettingsScreen.test.tsx

@@ -23,7 +23,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { LoyaltyCard, BarcodeFormat } from '@/core/schemas';
 
-import { useTheme, CARD_COLORS, SAGE_COLORS } from '@/shared/theme';
+import { useTheme, CARD_COLORS } from '@/shared/theme';
 import { SPACING, TOUCH_TARGET } from '@/shared/theme/spacing';
 
 import { BarcodeRenderer } from './BarcodeRenderer';
@@ -242,7 +242,7 @@ export const CardDetails: React.FC<CardDetailsProps> = ({
           disabled={isDeleting}
           style={({ pressed }) => [
             styles.editButton,
-            { backgroundColor: SAGE_COLORS[500] },
+            { backgroundColor: theme.primary },
             pressed && styles.pressed,
             isDeleting && styles.disabled
           ]}

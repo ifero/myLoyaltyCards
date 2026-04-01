@@ -13,7 +13,7 @@ import { subscribeToWatchMessages, syncCardToWatch, WatchMessage } from '@/core/
 
 import { OfflineIndicator } from '@/shared/components/OfflineIndicator';
 import { getSupabaseClient } from '@/shared/supabase/client';
-import { ThemeProvider, useTheme } from '@/shared/theme';
+import { LIGHT_THEME, ThemeProvider, useTheme } from '@/shared/theme';
 
 import { isFirstLaunch } from '@/features/settings';
 
@@ -267,7 +267,7 @@ const RootLayout = () => {
   if (!isReady) {
     return (
       <View className="flex-1 items-center justify-center bg-neutral-900">
-        <ActivityIndicator size="large" color="#73A973" />
+        <ActivityIndicator size="large" color={LIGHT_THEME.primary} />
       </View>
     );
   }
