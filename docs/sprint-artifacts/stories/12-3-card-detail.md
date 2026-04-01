@@ -131,6 +131,6 @@ And navigation is consistent with the app-wide pattern
 - **Barcode centered** within its container for visual balance
 - **Format row removed** — implementation detail, not user-relevant
 - **Color row** shown only for custom cards (catalogue cards already show brand color in hero)
-- **Font Awesome 6 Free** used for all icons (fa-arrow-left, fa-pen, fa-trash, fa-copy, fa-chevron-right, fa-xmark, fa-sun)
+- **MI/MCI icons** used for all icons (`MI: chevron-left`, `MI: edit`, `MI: delete`, `MI: content-copy`, `MI: chevron-right`, `MI: close`, `MI: light-mode`)
 - **Screen brightness maximized** hint shown on detail screen (not just fullscreen) since barcode is visible
 - **Padding bottom** added to info section after last row

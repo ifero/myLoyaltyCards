@@ -209,4 +209,4 @@ And there is NO dedicated success screen — the home IS the success
 - **No "Card added" badge** on setup screen — pre-filled number is sufficient proof of scan success; toast on Home is the single confirmation moment
 - **Immersive scanner** — floating back button + brand pill over full-bleed camera replaces the full brand-colored nav header bar
 - **Scan icon CTA** on custom card setup — compact barcode viewfinder button inline with card number field, not a large primary button
-- Font Awesome 6 Free icons used throughout (consistent with 12-3)
+- MI/MCI icons used throughout (consistent with 12-3)

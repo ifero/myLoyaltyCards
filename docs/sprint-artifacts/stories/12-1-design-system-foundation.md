@@ -95,15 +95,16 @@ And the component works in both light and dark mode
 
 ```
 Given the design system page in Figma
-Then it defines icons using FontAwesome (via @expo/vector-icons, bundled with Expo):
-  - App navigation icons: plus, cog, chevron-left, times, search, camera
+Then it defines icons using MaterialIcons (MI) + MaterialCommunityIcons (MCI) via @expo/vector-icons:
+  - App navigation icons: MI: add, MI: settings, MI: chevron-left, MI: close, MI: search, MI: camera-alt
   - Action row pattern: icon + label + chevron-right (Klarna's "Manage" pattern)
-  - Status icons: sync-alt, check-circle, exclamation-triangle, wifi (slash overlay for offline)
-  - Card icons: barcode, qrcode, credit-card, id-card
-  - Misc: user, lock, envelope, eye, eye-slash, moon, sun
+  - Status icons: MI: sync, MI: check-circle, MI: error-outline, MI: wifi, MI: wifi-off, MI: star
+  - Card icons: MCI: barcode, MCI: qrcode, MI: credit-card, MI: badge
+  - Misc: MI: person, MI: lock-outline, MI: mail-outline, MI: visibility, MI: visibility-off, MI: dark-mode, MI: light-mode
 And icons are sized for visibility (minimum 24pt, header icons 28pt+)
 And icons have sufficient contrast against their backgrounds
-And import pattern is: import FontAwesome from '@expo/vector-icons/FontAwesome'
+And MI: star and MI: error-outline are explicitly shown in BOTH light and dark mode with semantic colors and AA-compliant contrast
+And import pattern is: import { MaterialIcons } from '@expo/vector-icons' and import { MaterialCommunityIcons } from '@expo/vector-icons'
 And full icon directory available at icons.expo.fyi
 ```
 
@@ -153,7 +154,7 @@ And defines safe area handling for notch/Dynamic Island
 - [x] AC2: Typography Scale — 11 levels from Large Title (34pt) to Caption 2 (11pt), all with line-height + letter-spacing
 - [x] AC3: Button System — 4 types (Primary/Secondary/Tertiary/Destructive) × 3 states (Default/Pressed/Disabled)
 - [x] AC4: Card Component System — 20 catalogue cards (placeholder logos), 5 custom cards, dark surface demo, detail hero
-- [x] AC5: Icon Set & Navigation — 10 nav icons (FontAwesome via @expo/vector-icons), Klarna-style action rows, 5 status icons
+- [x] AC5: Icon Set & Navigation — 10 nav icons (MI/MCI via @expo/vector-icons), Klarna-style action rows, 5 status icons
 - [x] AC6: Form Input Components — 5 text field states, toggle ON/OFF, color picker (5-color palette)
 - [x] AC7: Spacing & Layout Tokens — 7-step scale (4–48pt), 11 layout specifications
 - [x] **Owner review** — approved by ifero (2026-03-28). Follow-up: 12-1a for real brand logos.
@@ -168,7 +169,7 @@ And defines safe area handling for notch/Dynamic Island
   - AC2 — Typography Scale
   - AC3 — Button System
   - AC4 — Card Component System
-  - AC5 — Icon Set & Navigation (FontAwesome via @expo/vector-icons)
+  - AC5 — Icon Set & Navigation (MI/MCI via @expo/vector-icons)
   - AC6 — Form Input Components
   - AC7 — Spacing & Layout Tokens
 
