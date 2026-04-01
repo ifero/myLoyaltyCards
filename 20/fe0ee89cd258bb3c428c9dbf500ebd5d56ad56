@@ -1,0 +1,47 @@
+shared/components/ui/ActionRow.tsx
+  7e5dddf93f995e7e 1-55
+shared/components/ui/Button.test.tsx
+  7e5dddf93f995e7e 5-6,8,10-121
+shared/components/ui/TextField.test.tsx
+  7e5dddf93f995e7e 9,13-18,31,36-57,88-89
+shared/components/ui/ActionRow.test.tsx
+  7e5dddf93f995e7e 1-84,88-89
+shared/components/ui/Button.tsx
+  7e5dddf93f995e7e 1-100
+shared/components/ui/ColorPicker.tsx
+  7e5dddf93f995e7e 1-55
+shared/components/ui/CardShell.test.tsx
+  7e5dddf93f995e7e 9,15-16,21-44,72-73
+shared/components/ui/TextField.tsx
+  7e5dddf93f995e7e 1-73
+shared/components/ui/ToggleSwitch.tsx
+  7e5dddf93f995e7e 1-65
+shared/components/ui/CardShell.tsx
+  7e5dddf93f995e7e 1-76
+shared/components/ui/index.ts
+  7e5dddf93f995e7e 1-6
+shared/components/ui/ColorPicker.test.tsx
+  7e5dddf93f995e7e 1-59
+shared/components/ui/ToggleSwitch.test.tsx
+  7e5dddf93f995e7e 4-70
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.2.3",
+  "base_commit_sha": "20fe0ee89cd258bb3c428c9dbf500ebd5d56ad56",
+  "prompts": {
+    "7e5dddf93f995e7e": {
+      "agent_id": {
+        "tool": "github-copilot",
+        "id": "9854ccf1-82b7-4865-b93f-edfce1ab8a7a",
+        "model": "copilot/gpt-5.3-codex"
+      },
+      "human_author": "Andrea Pacino",
+      "messages": [],
+      "total_additions": 0,
+      "total_deletions": 0,
+      "accepted_lines": 991,
+      "overriden_lines": 1
+    }
+  }
+}
