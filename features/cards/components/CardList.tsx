@@ -74,7 +74,33 @@ export const CardList: React.FC = () => {
     }, [refetch])
   );
 
-  // Loading state
+  // Derive data unconditionally (hooks must run on every render)
+  const filtered = filterCards(cards);
+  const sorted = sortCards(filtered);
+  const totalCount = cards.length;
+  const showControls = totalCount >= 2;
+
+  const noResultsElement = useMemo(
+    () => (
+      <View style={styles.noResults}>
+        <Text style={[styles.noResultsText, { color: theme.textSecondary }]}>
+          No cards matching &quot;{searchQuery}&quot;
+        </Text>
+      </View>
+    ),
+    [searchQuery, theme.textSecondary]
+  );
+
+  const renderItem = useCallback(
+    ({ item }: { item: LoyaltyCard }) => (
+      <View style={styles.tileWrapper}>
+        <CardTile card={item} />
+      </View>
+    ),
+    []
+  );
+
+  // ---- Loading state ----
   if (isLoading) {
     return (
       <View style={[styles.centered, { backgroundColor: theme.background }]}>
@@ -83,7 +109,7 @@ export const CardList: React.FC = () => {
     );
   }
 
-  // Error state
+  // ---- Error state ----
   if (error) {
     return (
       <View style={[styles.centered, { backgroundColor: theme.background }]}>
@@ -91,12 +117,6 @@ export const CardList: React.FC = () => {
       </View>
     );
   }
-
-  // Apply search then sort
-  const filtered = filterCards(cards);
-  const sorted = sortCards(filtered);
-  const totalCount = cards.length;
-  const showControls = totalCount >= 2;
 
   // ---- Single-card state ----
   if (totalCount === 1) {
@@ -121,12 +141,6 @@ export const CardList: React.FC = () => {
   }
 
   // ---- Multi-card / Empty state ----
-  const renderItem = ({ item }: { item: LoyaltyCard }) => (
-    <View style={styles.tileWrapper}>
-      <CardTile card={item} />
-    </View>
-  );
-
   const ListHeader = showControls ? (
     <View style={styles.headerContainer}>
       <SearchBar value={searchQuery} onChangeText={setSearchQuery} onClear={clearSearch} />
@@ -140,20 +154,9 @@ export const CardList: React.FC = () => {
     </View>
   ) : null;
 
-  const NoResultsElement = useMemo(
-    () => (
-      <View style={styles.noResults}>
-        <Text style={[styles.noResultsText, { color: theme.textSecondary }]}>
-          No cards matching &quot;{searchQuery}&quot;
-        </Text>
-      </View>
-    ),
-    [searchQuery, theme.textSecondary]
-  );
-
   const EmptyComponent =
     showControls && searchQuery.trim().length > 0 && sorted.length === 0
-      ? NoResultsElement
+      ? noResultsElement
       : EmptyState;
 
   return (
