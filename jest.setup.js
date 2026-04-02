@@ -186,7 +186,9 @@ jest.mock('@shopify/flash-list', () => {
       global.mockFlashListState.numColumns = numColumns;
 
       if (data.length === 0 && ListEmptyComponent) {
-        return mockReact.createElement(ListEmptyComponent);
+        return typeof ListEmptyComponent === 'function'
+          ? mockReact.createElement(ListEmptyComponent)
+          : ListEmptyComponent;
       }
 
       const children = data.map((item, index) =>

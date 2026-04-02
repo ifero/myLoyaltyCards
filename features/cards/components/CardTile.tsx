@@ -20,6 +20,19 @@ import { TYPOGRAPHY } from '@/shared/theme/typography';
 
 import { useBrandLogo } from '../hooks/useBrandLogo';
 
+/**
+ * Returns true if a hex color is perceptually dark (relative luminance < 0.2).
+ * Uses simplified sRGB → luminance formula per WCAG 2.0.
+ */
+const isDarkBrandColor = (hex: string): boolean => {
+  const c = hex.replace('#', '');
+  const r = parseInt(c.substring(0, 2), 16) / 255;
+  const g = parseInt(c.substring(2, 4), 16) / 255;
+  const b = parseInt(c.substring(4, 6), 16) / 255;
+  const luminance = 0.2126 * r + 0.7152 * g + 0.0722 * b;
+  return luminance < 0.2;
+};
+
 /** Standard grid tile dimensions (pt) */
 export const TILE_WIDTH = 171;
 export const TILE_HEIGHT = 140;
@@ -62,10 +75,7 @@ export const CardTile: React.FC<CardTileProps> = ({ card, enlarged = false }) =>
 
   // Resolve background color: brand hex for catalogue, card palette color for custom
   const backgroundColor = brand ? brand.color : (CARD_COLORS[card.color] ?? CARD_COLORS.grey);
-  const isBlackBrand = backgroundColor.toUpperCase() === '#000000';
-
-  // Truncate card name to 20 characters
-  const displayName = card.name.length > 20 ? `${card.name.slice(0, 20)}…` : card.name;
+  const isBlackBrand = isDarkBrandColor(backgroundColor);
 
   // Determine foreground color for avatar text
   const foregroundColor = isBlackBrand ? '#FFFFFF' : '#0F172A';
@@ -115,7 +125,7 @@ export const CardTile: React.FC<CardTileProps> = ({ card, enlarged = false }) =>
         numberOfLines={1}
         ellipsizeMode="tail"
       >
-        {displayName}
+        {card.name}
       </Text>
     </Pressable>
   );

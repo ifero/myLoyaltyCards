@@ -134,13 +134,15 @@ describe('CardTile', () => {
   });
 
   describe('Name Truncation', () => {
-    it('truncates card name longer than 20 characters', () => {
+    it('renders full card name and relies on native ellipsis for truncation', () => {
       const longNameCard: LoyaltyCard = {
         ...mockCard,
         name: 'This is a very long card name that exceeds twenty characters'
       };
       render(<CardTile card={longNameCard} />);
-      expect(screen.getByText(/This is a very long …/)).toBeTruthy();
+      expect(
+        screen.getByText('This is a very long card name that exceeds twenty characters')
+      ).toBeTruthy();
     });
 
     it('does not truncate card name 20 characters or less', () => {

@@ -8,8 +8,15 @@
 
 import { FlashList } from '@shopify/flash-list';
 import { useFocusEffect } from 'expo-router';
-import React, { useCallback, useState } from 'react';
-import { View, Text, ActivityIndicator, StyleSheet } from 'react-native';
+import React, { useCallback, useMemo, useState } from 'react';
+import {
+  View,
+  Text,
+  ActivityIndicator,
+  StyleSheet,
+  ScrollView,
+  RefreshControl
+} from 'react-native';
 
 import { LoyaltyCard } from '@/core/schemas';
 
@@ -94,14 +101,22 @@ export const CardList: React.FC = () => {
   // ---- Single-card state ----
   if (totalCount === 1) {
     return (
-      <View style={[styles.container, { backgroundColor: theme.background }]}>
-        <View style={styles.singleCardContainer}>
-          <CardTile card={cards[0]} enlarged />
-          <Text style={[styles.singleCardTip, { color: theme.textSecondary }]}>
-            Tap + to add more cards
-          </Text>
-        </View>
-      </View>
+      <ScrollView
+        style={[styles.container, { backgroundColor: theme.background }]}
+        contentContainerStyle={styles.singleCardContainer}
+        refreshControl={
+          <RefreshControl
+            refreshing={isRefreshing}
+            onRefresh={handleRefresh}
+            tintColor={theme.primary}
+          />
+        }
+      >
+        <CardTile card={cards[0]} enlarged />
+        <Text style={[styles.singleCardTip, { color: theme.textSecondary }]}>
+          Tap + to add more cards
+        </Text>
+      </ScrollView>
     );
   }
 
@@ -125,7 +140,7 @@ export const CardList: React.FC = () => {
     </View>
   ) : null;
 
-  const NoResultsComponent = useCallback(
+  const NoResultsElement = useMemo(
     () => (
       <View style={styles.noResults}>
         <Text style={[styles.noResultsText, { color: theme.textSecondary }]}>
@@ -138,7 +153,7 @@ export const CardList: React.FC = () => {
 
   const EmptyComponent =
     showControls && searchQuery.trim().length > 0 && sorted.length === 0
-      ? NoResultsComponent
+      ? NoResultsElement
       : EmptyState;
 
   return (
@@ -184,7 +199,7 @@ const styles = StyleSheet.create({
     marginBottom: GUTTER
   },
   singleCardContainer: {
-    flex: 1,
+    flexGrow: 1,
     alignItems: 'center',
     justifyContent: 'center'
   },

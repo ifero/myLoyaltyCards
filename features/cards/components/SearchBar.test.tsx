@@ -109,12 +109,13 @@ describe('SearchBar', () => {
       expect(flatStyle.borderColor).toBe('#1A73E8');
     });
 
-    it('has no border when value is empty', () => {
+    it('has transparent border when value is empty', () => {
       render(<SearchBar {...defaultProps} />);
 
       const container = screen.getByTestId('search-bar');
       const flatStyle = Object.assign({}, ...container.props.style);
-      expect(flatStyle.borderWidth).toBe(0);
+      expect(flatStyle.borderWidth).toBe(1);
+      expect(flatStyle.borderColor).toBe('transparent');
     });
   });
 });

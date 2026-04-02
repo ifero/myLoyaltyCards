@@ -89,7 +89,7 @@ export const SortFilterRow: React.FC<SortFilterRowProps> = ({
               styles.menu,
               {
                 backgroundColor: isDark ? '#2C2C2E' : '#FFFFFF',
-                shadowColor: isDark ? '#000' : '#000'
+                shadowColor: '#000'
               }
             ]}
           >
