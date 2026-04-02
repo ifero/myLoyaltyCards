@@ -1,0 +1,50 @@
+features/cards/hooks/useCardSearch.test.ts
+  807f5d583a8670e3 1-113
+features/cards/hooks/useCardSort.test.ts
+  807f5d583a8670e3 1-199
+features/cards/components/SortFilterRow.tsx
+  807f5d583a8670e3 1-178
+features/cards/components/SearchBar.test.tsx
+  807f5d583a8670e3 1-120
+features/cards/components/SortFilterRow.test.tsx
+  807f5d583a8670e3 1-114
+features/cards/hooks/useCardSearch.ts
+  807f5d583a8670e3 1-48
+features/cards/hooks/useCardSort.ts
+  807f5d583a8670e3 1-112
+features/cards/components/SearchBar.tsx
+  807f5d583a8670e3 1-122
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.2.5",
+  "base_commit_sha": "6279f48b61b67f869a737e393c4cb0131188cb0e",
+  "prompts": {
+    "7e5dddf93f995e7e": {
+      "agent_id": {
+        "tool": "github-copilot",
+        "id": "9854ccf1-82b7-4865-b93f-edfce1ab8a7a",
+        "model": "copilot/gpt-5.3-codex"
+      },
+      "human_author": "Andrea Pacino",
+      "messages": [],
+      "total_additions": 321,
+      "total_deletions": 512,
+      "accepted_lines": 321,
+      "overriden_lines": 0
+    },
+    "807f5d583a8670e3": {
+      "agent_id": {
+        "tool": "github-copilot",
+        "id": "cfa652de-8bec-4209-8ca8-ab3b46b88ae9",
+        "model": "copilot/claude-opus-4.6"
+      },
+      "human_author": "Andrea Pacino",
+      "messages": [],
+      "total_additions": 1590,
+      "total_deletions": 329,
+      "accepted_lines": 1597,
+      "overriden_lines": 3
+    }
+  }
+}
