@@ -1,5 +1,6 @@
 import 'react-native-get-random-values'; // Must be imported before uuid
 import '../global.css';
+import { MaterialIcons } from '@expo/vector-icons';
 import { Stack, useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import * as Updates from 'expo-updates';
@@ -31,9 +32,11 @@ try {
 
 /**
  * Header Right component with Settings button
+ * Story 13.2: MI "settings" icon (26pt), primary color, 44pt touch target
  */
 const HeaderRight = () => {
   const router = useRouter();
+  const { theme } = useTheme();
 
   return (
     <Pressable
@@ -42,13 +45,14 @@ const HeaderRight = () => {
       accessibilityRole="button"
       className="h-11 w-11 items-center justify-center"
     >
-      <Text className="text-xl">⚙️</Text>
+      <MaterialIcons name="settings" size={26} color={theme.primary} />
     </Pressable>
   );
 };
 
 /**
  * Header Left component with Add Card button
+ * Story 13.2: MI "add" icon (28pt), primary color, 44pt touch target
  */
 const HeaderLeft = () => {
   const router = useRouter();
@@ -61,9 +65,7 @@ const HeaderLeft = () => {
       accessibilityRole="button"
       className="h-11 w-11 items-center justify-center"
     >
-      <Text className="text-2xl font-semibold" style={{ color: theme.primary }}>
-        +
-      </Text>
+      <MaterialIcons name="add" size={28} color={theme.primary} />
     </Pressable>
   );
 };

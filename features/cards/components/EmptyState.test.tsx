@@ -1,6 +1,6 @@
 /**
  * EmptyState Component Tests
- * Story 2.1: Display Card List - AC1
+ * Story 13.2: Restyle Home Screen — AC4, AC7, AC9
  */
 
 import { render, screen, fireEvent } from '@testing-library/react-native';
@@ -14,16 +14,33 @@ jest.mock('expo-router', () => ({
   useRouter: jest.fn()
 }));
 
+jest.mock('@expo/vector-icons', () => {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const React = require('react');
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const { Text } = require('react-native');
+  return {
+    MaterialIcons: ({
+      name,
+      accessibilityLabel,
+      testID
+    }: {
+      name: string;
+      accessibilityLabel?: string;
+      testID?: string;
+    }) => React.createElement(Text, { testID: testID ?? `icon-${name}`, accessibilityLabel }, name)
+  };
+});
+
 // Mock ThemeProvider
 jest.mock('@/shared/theme', () => ({
   useTheme: () => ({
     theme: {
-      background: '#FAFAFA',
-      surface: '#FFFFFF',
-      textPrimary: '#1F2937',
-      textSecondary: '#6B7280',
       primary: '#1A73E8',
-      border: '#E5E7EB'
+      textPrimary: '#0F172A',
+      textSecondary: '#475569',
+      textTertiary: '#94A3B8',
+      border: '#D6DEE8'
     },
     isDark: false
   })
@@ -32,93 +49,63 @@ jest.mock('@/shared/theme', () => ({
 describe('EmptyState', () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    (useRouter as jest.Mock).mockReturnValue({
-      push: mockPush
+    (useRouter as jest.Mock).mockReturnValue({ push: mockPush });
+  });
+
+  describe('Rendering — AC4', () => {
+    it('renders wallet vector icon (no emoji)', () => {
+      render(<EmptyState />);
+      expect(screen.getByText('account-balance-wallet')).toBeTruthy();
+    });
+
+    it('renders sparkle accent', () => {
+      render(<EmptyState />);
+      expect(screen.getByText('auto-awesome')).toBeTruthy();
+    });
+
+    it('renders title "No cards yet"', () => {
+      render(<EmptyState />);
+      const title = screen.getByText('No cards yet');
+      expect(title).toBeTruthy();
+      expect(title.props.accessibilityRole).toBe('header');
+    });
+
+    it('renders encouraging subtitle', () => {
+      render(<EmptyState />);
+      expect(screen.getByText('Add your first loyalty card to get started')).toBeTruthy();
+    });
+
+    it('renders CTA button "Add Your First Card"', () => {
+      render(<EmptyState />);
+      expect(screen.getByText('Add Your First Card')).toBeTruthy();
+    });
+
+    it('does not render any emoji', () => {
+      const { toJSON } = render(<EmptyState />);
+      const json = JSON.stringify(toJSON());
+      expect(json).not.toContain('💳');
     });
   });
 
-  describe('Rendering - AC1', () => {
-    it('renders the card icon emoji', () => {
+  describe('Navigation — AC4', () => {
+    it('navigates to add-card screen when CTA is pressed', () => {
       render(<EmptyState />);
-
-      const icon = screen.getByLabelText('Credit card icon');
-      expect(icon).toBeTruthy();
-      expect(icon.props.children).toBe('💳');
-    });
-
-    it('renders the primary welcome message', () => {
-      render(<EmptyState />);
-
-      const primaryText = screen.getByText('No cards yet');
-      expect(primaryText).toBeTruthy();
-      expect(primaryText.props.accessibilityRole).toBe('header');
-    });
-
-    it('renders the encouraging subtext', () => {
-      render(<EmptyState />);
-
-      const subtext = screen.getByText('Add your first loyalty card to get started');
-      expect(subtext).toBeTruthy();
-    });
-
-    it('renders the Add Card button', () => {
-      render(<EmptyState />);
-
-      const button = screen.getByLabelText('Add Card');
-      expect(button).toBeTruthy();
-      expect(button.props.accessibilityRole).toBe('button');
-      expect(button.props.accessibilityHint).toBe('Opens the add card screen');
-    });
-
-    it('renders button with correct text', () => {
-      render(<EmptyState />);
-
-      const buttonText = screen.getByText('Add Card');
-      expect(buttonText).toBeTruthy();
-    });
-  });
-
-  describe('Layout - AC1', () => {
-    it('renders a layout container for the empty state', () => {
-      render(<EmptyState />);
-
-      const container = screen.getByLabelText('Credit card icon').parent;
-      expect(container).toBeTruthy();
-    });
-  });
-
-  describe('Navigation - AC1', () => {
-    it('navigates to add-card screen when button is pressed', () => {
-      render(<EmptyState />);
-
-      const button = screen.getByLabelText('Add Card');
-      fireEvent.press(button);
-
-      expect(mockPush).toHaveBeenCalledTimes(1);
+      const cta = screen.getByTestId('empty-state-cta');
+      fireEvent.press(cta);
       expect(mockPush).toHaveBeenCalledWith('/add-card');
     });
   });
 
-  describe('Accessibility - AC1', () => {
-    it('has proper accessibility labels', () => {
+  describe('Accessibility — AC9', () => {
+    it('has wallet illustration accessibility label', () => {
       render(<EmptyState />);
-
-      const icon = screen.getByLabelText('Credit card icon');
-      expect(icon).toBeTruthy();
-
-      const button = screen.getByLabelText('Add Card');
-      expect(button).toBeTruthy();
-      expect(button.props.accessibilityHint).toBe('Opens the add card screen');
+      expect(screen.getByLabelText('Wallet illustration')).toBeTruthy();
     });
 
-    it('has proper accessibility roles', () => {
+    it('title has header accessibility role', () => {
       render(<EmptyState />);
-
-      const primaryText = screen.getByText('No cards yet');
-      expect(primaryText.props.accessibilityRole).toBe('header');
-
-      const button = screen.getByLabelText('Add Card');
-      expect(button.props.accessibilityRole).toBe('button');
+      const title = screen.getByText('No cards yet');
+      expect(title.props.accessibilityRole).toBe('header');
     });
   });
 });

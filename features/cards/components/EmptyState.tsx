@@ -1,28 +1,31 @@
 /**
  * EmptyState Component
- * Story 2.1: Display Card List (AC1)
+ * Story 13.2: Restyle Home Screen — AC4 (Empty State)
  *
- * Displays friendly empty state when user has no cards saved.
- * Shows welcoming message, encouraging subtext, and Add Card CTA.
+ * Displays wallet illustration, "No cards yet" title, encouraging subtitle,
+ * and primary CTA button with glow shadow. Dark mode compatible.
  */
 
+import { MaterialIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import React from 'react';
-import { View, Text, Pressable } from 'react-native';
+import { View, Text, StyleSheet, Platform } from 'react-native';
 
+import { Button } from '@/shared/components/ui/Button';
 import { useTheme } from '@/shared/theme';
+import { TYPOGRAPHY } from '@/shared/theme/typography';
 
 /**
  * EmptyState Component
  *
- * Centered layout with:
- * - Card emoji icon (💳)
- * - Primary text: "No cards yet"
- * - Secondary text: "Add your first loyalty card to get started"
- * - CTA button: "Add Card" with Sage Green background
+ * Vertically centered layout with:
+ * - Wallet vector icon with dashed outline + sparkle accent (MI icons)
+ * - Title: "No cards yet" (22pt Bold, Title 2)
+ * - Subtitle: encouraging copy
+ * - CTA: "Add Your First Card" (shared Button, variant="primary") with glow
  */
 export const EmptyState: React.FC = () => {
-  const { theme } = useTheme();
+  const { theme, isDark } = useTheme();
   const router = useRouter();
 
   const handleAddCard = () => {
@@ -30,49 +33,96 @@ export const EmptyState: React.FC = () => {
   };
 
   return (
-    <View
-      className="flex-1 items-center justify-center px-4"
-      accessibilityRole="none"
-    >
-      {/* Icon */}
-      <Text
-        className="text-6xl mb-4"
-        accessibilityLabel="Credit card icon"
+    <View style={styles.container} accessibilityRole="none">
+      {/* Wallet illustration with dashed outline */}
+      <View
+        style={[
+          styles.illustrationContainer,
+          {
+            borderColor: isDark ? theme.textTertiary : theme.border
+          }
+        ]}
+        accessibilityLabel="Wallet illustration"
       >
-        💳
-      </Text>
+        <MaterialIcons name="account-balance-wallet" size={48} color={theme.primary} />
+        {/* Sparkle accent */}
+        <View style={styles.sparkle}>
+          <MaterialIcons name="auto-awesome" size={16} color={theme.primary} />
+        </View>
+      </View>
 
-      {/* Primary text */}
-      <Text
-        className="text-xl font-bold mb-2 text-center"
-        style={{ color: theme.textPrimary }}
-        accessibilityRole="header"
-      >
+      {/* Title */}
+      <Text style={[styles.title, { color: theme.textPrimary }]} accessibilityRole="header">
         No cards yet
       </Text>
 
-      {/* Secondary text */}
-      <Text
-        className="text-sm text-center mb-6"
-        style={{ color: theme.textSecondary }}
-      >
+      {/* Subtitle */}
+      <Text style={[styles.subtitle, { color: theme.textSecondary }]}>
         Add your first loyalty card to get started
       </Text>
 
-      {/* CTA Button */}
-      <Pressable
-        onPress={handleAddCard}
-        className="px-6 py-3 rounded-lg"
-        style={{ backgroundColor: theme.primary }}
-        accessibilityRole="button"
-        accessibilityLabel="Add Card"
-        accessibilityHint="Opens the add card screen"
+      {/* CTA Button with glow */}
+      <View
+        style={[
+          styles.ctaWrapper,
+          !isDark && {
+            ...Platform.select({
+              ios: {
+                shadowColor: theme.primary,
+                shadowOffset: { width: 0, height: 4 },
+                shadowOpacity: 0.3,
+                shadowRadius: 12
+              },
+              android: { elevation: 6 }
+            })
+          }
+        ]}
       >
-        <Text className="text-white font-semibold text-base">
-          Add Card
-        </Text>
-      </Pressable>
+        <Button variant="primary" onPress={handleAddCard} testID="empty-state-cta">
+          Add Your First Card
+        </Button>
+      </View>
     </View>
   );
 };
 
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 32
+  },
+  illustrationContainer: {
+    width: 96,
+    height: 96,
+    borderRadius: 24,
+    borderWidth: 2,
+    borderStyle: 'dashed',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 24
+  },
+  sparkle: {
+    position: 'absolute',
+    top: -4,
+    right: -4
+  },
+  title: {
+    fontSize: TYPOGRAPHY.title2.fontSize,
+    lineHeight: TYPOGRAPHY.title2.lineHeight,
+    fontWeight: TYPOGRAPHY.title2.fontWeight,
+    textAlign: 'center',
+    marginBottom: 8
+  },
+  subtitle: {
+    fontSize: TYPOGRAPHY.subheadline.fontSize,
+    lineHeight: TYPOGRAPHY.subheadline.lineHeight,
+    textAlign: 'center',
+    marginBottom: 32
+  },
+  ctaWrapper: {
+    width: '100%',
+    maxWidth: 280
+  }
+});
