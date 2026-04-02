@@ -1,0 +1,29 @@
+features/cards/components/SearchBar.tsx
+  807f5d583a8670e3 60-61
+features/cards/components/CardTile.tsx
+  807f5d583a8670e3 23-35,78,128
+features/cards/components/SortFilterRow.tsx
+  807f5d583a8670e3 92
+features/cards/components/CardList.tsx
+  807f5d583a8670e3 11-19,104,106-113,119,143,156,202
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.2.5",
+  "base_commit_sha": "77231aa9cb65c400b26ab9b8e6bbffbe5b7b9922",
+  "prompts": {
+    "807f5d583a8670e3": {
+      "agent_id": {
+        "tool": "github-copilot",
+        "id": "cfa652de-8bec-4209-8ca8-ab3b46b88ae9",
+        "model": "copilot/claude-opus-4.6"
+      },
+      "human_author": "Andrea Pacino",
+      "messages": [],
+      "total_additions": 39,
+      "total_deletions": 21,
+      "accepted_lines": 40,
+      "overriden_lines": 0
+    }
+  }
+}
