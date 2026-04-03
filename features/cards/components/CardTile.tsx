@@ -19,6 +19,7 @@ import { CARD_COLORS } from '@/shared/theme/colors';
 import { TYPOGRAPHY } from '@/shared/theme/typography';
 
 import { useBrandLogo } from '../hooks/useBrandLogo';
+import { getBrandLogoComponent } from '../utils/brandLogos';
 
 /**
  * Returns true if a hex color is perceptually dark (relative luminance < 0.2).
@@ -78,8 +79,15 @@ export const CardTile: React.FC<CardTileProps> = ({ card, enlarged = false }) =>
   const isBlackBrand = isDarkBrandColor(backgroundColor);
 
   // Determine foreground color for avatar text
-  const foregroundColor = isBlackBrand ? '#FFFFFF' : '#0F172A';
+  const foregroundColor = isBlackBrand ? '#FFFFFF' : '#1F1F24';
   const firstLetter = card.name.trim().charAt(0).toUpperCase() || 'C';
+
+  // Get SVG logo component if available
+  const LogoComponent = brand ? getBrandLogoComponent(brand.logo) : undefined;
+
+  // Logo sizing: fill most of the tile, letting SVG preserve its own aspect ratio
+  const logoWidth = Math.round(tileWidth * 0.85);
+  const logoHeight = Math.round(tileHeight * 0.65);
 
   return (
     <Pressable
@@ -104,8 +112,11 @@ export const CardTile: React.FC<CardTileProps> = ({ card, enlarged = false }) =>
           !isDark && styles.shadow
         ]}
       >
-        {brand ? (
-          /* Catalogue card: brand name abbreviation (logo slot) */
+        {LogoComponent ? (
+          /* Catalogue card with SVG logo */
+          <LogoComponent width={logoWidth} height={logoHeight} color={foregroundColor} />
+        ) : brand ? (
+          /* Catalogue card without SVG: brand name abbreviation fallback */
           <View style={styles.logoSlot}>
             <Text style={[styles.brandAbbreviation, { color: foregroundColor }]}>
               {brand.name.substring(0, 2).toUpperCase()}

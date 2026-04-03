@@ -56,18 +56,13 @@ export const SearchBar: React.FC<SearchBarProps> = ({
       style={[
         styles.container,
         {
-          backgroundColor: isDark ? DARK_BG : LIGHT_BG,
-          borderWidth: 1,
+          backgroundColor: hasValue && !isDark ? '#FFFFFF' : isDark ? DARK_BG : LIGHT_BG,
+          borderWidth: 2,
           borderColor: hasValue ? theme.primary : 'transparent'
         }
       ]}
     >
-      <MaterialIcons
-        name="search"
-        size={20}
-        color={theme.textSecondary}
-        style={styles.searchIcon}
-      />
+      <MaterialIcons name="search" size={16} color={theme.textTertiary} style={styles.searchIcon} />
       <TextInput
         ref={inputRef}
         testID={`${testID}-input`}
@@ -117,6 +112,7 @@ const styles = StyleSheet.create({
     minWidth: TOUCH_TARGET.min,
     minHeight: TOUCH_TARGET.min,
     alignItems: 'center',
-    justifyContent: 'center'
+    justifyContent: 'center',
+    marginRight: -4
   }
 });

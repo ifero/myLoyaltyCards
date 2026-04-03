@@ -33,7 +33,11 @@ import { useCards } from '../hooks/useCards';
 import { useCardSearch } from '../hooks/useCardSearch';
 import { useCardSort } from '../hooks/useCardSort';
 
-/** Fixed 2-column layout */
+/**
+ * Fixed 2-column layout.
+ * Values derived from Figma (file 4PSsX8SyTUU0GCUdBAAEED, node 52:64).
+ * Differs from shared/theme/spacing LAYOUT tokens which apply to other screens.
+ */
 const NUM_COLUMNS = 2;
 const SCREEN_MARGIN = 16;
 const GUTTER = 16;
@@ -133,8 +137,8 @@ export const CardList: React.FC = () => {
         }
       >
         <CardTile card={cards[0]} enlarged />
-        <Text style={[styles.singleCardTip, { color: theme.textSecondary }]}>
-          Tap + to add more cards
+        <Text style={[styles.singleCardTip, { color: theme.textTertiary }]}>
+          Tap + to add more cards to your wallet
         </Text>
       </ScrollView>
     );
@@ -204,7 +208,7 @@ const styles = StyleSheet.create({
   singleCardContainer: {
     flexGrow: 1,
     alignItems: 'center',
-    justifyContent: 'center'
+    paddingTop: 32
   },
   singleCardTip: {
     fontSize: TYPOGRAPHY.subheadline.fontSize,

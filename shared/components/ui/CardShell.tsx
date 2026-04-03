@@ -30,7 +30,7 @@ export const CardShell = ({ type, brandColor, size, cardName, logo, testID }: Ca
   };
 
   const fallbackText = cardName?.trim().charAt(0).toUpperCase() ?? 'C';
-  const foregroundColor = isBlackBrand ? '#FFFFFF' : '#0F172A';
+  const foregroundColor = isBlackBrand ? '#FFFFFF' : '#1F1F24';
 
   return (
     <View testID={testID} style={containerStyle}>

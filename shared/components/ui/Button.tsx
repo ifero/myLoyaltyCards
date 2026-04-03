@@ -1,5 +1,5 @@
-import React from 'react';
-import { ActivityIndicator, Pressable, Text } from 'react-native';
+import React, { useState } from 'react';
+import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { useTheme } from '@/shared/theme';
 import { TOUCH_TARGET } from '@/shared/theme/spacing';
@@ -19,31 +19,35 @@ const getVariantColors = (variant: ButtonVariant, theme: ReturnType<typeof useTh
   if (variant === 'primary') {
     return {
       backgroundColor: theme.primary,
+      pressedColor: theme.primaryDark,
       borderColor: theme.primary,
-      textColor: '#FFFFFF'
+      textColor: '#FFFFFF',
     };
   }
 
   if (variant === 'secondary') {
     return {
       backgroundColor: 'transparent',
+      pressedColor: theme.primary + '14',
       borderColor: theme.primary,
-      textColor: theme.primary
+      textColor: theme.primary,
     };
   }
 
   if (variant === 'tertiary') {
     return {
       backgroundColor: 'transparent',
+      pressedColor: theme.primary + '14',
       borderColor: 'transparent',
-      textColor: theme.primary
+      textColor: theme.primary,
     };
   }
 
   return {
     backgroundColor: theme.error,
+    pressedColor: '#B91C1C',
     borderColor: theme.error,
-    textColor: '#FFFFFF'
+    textColor: '#FFFFFF',
   };
 };
 
@@ -53,48 +57,67 @@ export const Button = ({
   loading = false,
   disabled = false,
   children,
-  testID
+  testID,
 }: ButtonProps) => {
   const { theme } = useTheme();
+  const [pressed, setPressed] = useState(false);
   const isDisabled = disabled || loading;
   const colors = getVariantColors(variant, theme);
+
+  const bgColor = isDisabled
+    ? theme.border
+    : pressed
+      ? colors.pressedColor
+      : colors.backgroundColor;
 
   return (
     <Pressable
       testID={testID}
       onPress={onPress}
+      onPressIn={() => setPressed(true)}
+      onPressOut={() => setPressed(false)}
       disabled={isDisabled}
       accessibilityRole="button"
       accessibilityState={{ disabled: isDisabled, busy: loading }}
-      style={({ pressed }) => ({
-        minHeight: TOUCH_TARGET.min,
-        borderRadius: 14,
-        borderWidth: variant === 'tertiary' ? 0 : 1,
-        borderColor: colors.borderColor,
-        backgroundColor: isDisabled
-          ? theme.border
-          : pressed
-            ? theme.primaryDark
-            : colors.backgroundColor,
-        alignItems: 'center',
-        justifyContent: 'center',
-        paddingHorizontal: 16
-      })}
-      className="w-full"
+      style={styles.pressable}
     >
-      {loading ? (
-        <ActivityIndicator testID={`${testID}-spinner`} color={colors.textColor} />
-      ) : (
-        <Text
-          style={{
-            color: isDisabled ? theme.textTertiary : colors.textColor,
-            fontSize: 16,
-            fontWeight: '600'
-          }}
-        >
-          {children}
-        </Text>
-      )}
+      <View
+        style={[
+          styles.container,
+          {
+            borderWidth: variant === 'tertiary' ? 0 : 1,
+            borderColor: colors.borderColor,
+            backgroundColor: bgColor,
+          },
+        ]}
+      >
+        {loading ? (
+          <ActivityIndicator testID={`${testID}-spinner`} color={colors.textColor} />
+        ) : (
+          <Text
+            style={{
+              color: isDisabled ? theme.textTertiary : colors.textColor,
+              fontSize: 16,
+              fontWeight: '600',
+            }}
+          >
+            {children}
+          </Text>
+        )}
+      </View>
     </Pressable>
   );
 };
+
+const styles = StyleSheet.create({
+  pressable: {
+    width: '100%',
+  },
+  container: {
+    minHeight: TOUCH_TARGET.min,
+    borderRadius: 14,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 16,
+  },
+});

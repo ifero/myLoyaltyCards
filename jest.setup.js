@@ -180,7 +180,16 @@ jest.mock('@shopify/flash-list', () => {
 
   return {
     FlashList: (props) => {
-      const { data, renderItem, ListEmptyComponent, ListHeaderComponent, testID, numColumns, onRefresh, refreshing } = props;
+      const {
+        data,
+        renderItem,
+        ListEmptyComponent,
+        ListHeaderComponent,
+        testID,
+        numColumns,
+        onRefresh,
+        refreshing
+      } = props;
 
       // Store numColumns in global state for test assertions
       global.mockFlashListState.numColumns = numColumns;
@@ -199,7 +208,9 @@ jest.mock('@shopify/flash-list', () => {
         mockRN.View,
         { testID, onRefresh, refreshing },
         ListHeaderComponent
-          ? mockReact.createElement(mockRN.View, { key: '__header' },
+          ? mockReact.createElement(
+              mockRN.View,
+              { key: '__header' },
               typeof ListHeaderComponent === 'function'
                 ? mockReact.createElement(ListHeaderComponent)
                 : ListHeaderComponent
