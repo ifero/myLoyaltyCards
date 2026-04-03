@@ -1,0 +1,27 @@
+features/cards/components/CardList.test.tsx
+  807f5d583a8670e3 279
+features/cards/hooks/useCardSearch.test.ts
+  807f5d583a8670e3 77
+features/cards/components/CardList.tsx
+  807f5d583a8670e3 28,139
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.2.5",
+  "base_commit_sha": "30c4bd260e720c307386b88fe23f70030716578b",
+  "prompts": {
+    "807f5d583a8670e3": {
+      "agent_id": {
+        "tool": "github-copilot",
+        "id": "cfa652de-8bec-4209-8ca8-ab3b46b88ae9",
+        "model": "copilot/claude-opus-4.6"
+      },
+      "human_author": "Andrea Pacino",
+      "messages": [],
+      "total_additions": 4,
+      "total_deletions": 5,
+      "accepted_lines": 4,
+      "overriden_lines": 0
+    }
+  }
+}
