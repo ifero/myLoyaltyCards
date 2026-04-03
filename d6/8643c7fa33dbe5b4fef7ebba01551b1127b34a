@@ -1,0 +1,60 @@
+features/cards/components/CardList.tsx
+  807f5d583a8670e3 36-40,140-141,211
+__mocks__/svgMock.js
+  807f5d583a8670e3 1-15
+features/cards/components/EmptyState.tsx
+  807f5d583a8670e3 5-7,13,20-48,53-56,68-70,79-80,101,113-114,117-118,130,135-136
+features/cards/utils/brandLogos.ts
+  807f5d583a8670e3 1-62
+svg.d.ts
+  807f5d583a8670e3 1-10
+features/cards/components/CardTile.tsx
+  807f5d583a8670e3 22,82,85-91,115-119
+assets/images/brands/esselunga.svg
+  807f5d583a8670e3 2
+shared/components/ui/Button.tsx
+  807f5d583a8670e3 1-2,22,31,40,48,63,67-72,77-78,82,84-107,111-123
+shared/theme/colors.ts
+  7e5dddf93f995e7e 62,67-68,70-75,85,91-98
+assets/images/brands/eurospin.svg
+  807f5d583a8670e3 1
+features/cards/components/SearchBar.tsx
+  807f5d583a8670e3 59-60,65,115-116
+jest.config.js
+  807f5d583a8670e3 14-15
+metro.config.js
+  807f5d583a8670e3 6-16
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.2.5",
+  "base_commit_sha": "d68643c7fa33dbe5b4fef7ebba01551b1127b34a",
+  "prompts": {
+    "7e5dddf93f995e7e": {
+      "agent_id": {
+        "tool": "github-copilot",
+        "id": "9854ccf1-82b7-4865-b93f-edfce1ab8a7a",
+        "model": "copilot/gpt-5.3-codex"
+      },
+      "human_author": "Andrea Pacino",
+      "messages": [],
+      "total_additions": 27,
+      "total_deletions": 27,
+      "accepted_lines": 22,
+      "overriden_lines": 0
+    },
+    "807f5d583a8670e3": {
+      "agent_id": {
+        "tool": "github-copilot",
+        "id": "cfa652de-8bec-4209-8ca8-ab3b46b88ae9",
+        "model": "copilot/claude-opus-4.6"
+      },
+      "human_author": "Andrea Pacino",
+      "messages": [],
+      "total_additions": 303,
+      "total_deletions": 138,
+      "accepted_lines": 283,
+      "overriden_lines": 0
+    }
+  }
+}
