@@ -74,7 +74,7 @@ describe('useCardSearch', () => {
 
     const filtered = result.current.filterCards(cards);
     expect(filtered).toHaveLength(1);
-    expect(filtered[0].name).toBe('IKEA');
+    expect(filtered[0]!.name).toBe('IKEA');
   });
 
   it('clearSearch resets query to empty string', () => {

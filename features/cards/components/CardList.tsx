@@ -25,7 +25,7 @@ import { useTheme } from '@/shared/theme';
 import { SPACING } from '@/shared/theme/spacing';
 import { TYPOGRAPHY } from '@/shared/theme/typography';
 
-import { CardTile, TILE_WIDTH } from './CardTile';
+import { CardTile } from './CardTile';
 import { EmptyState } from './EmptyState';
 import { SearchBar } from './SearchBar';
 import { SortFilterRow } from './SortFilterRow';
@@ -136,7 +136,7 @@ export const CardList: React.FC = () => {
           />
         }
       >
-        <CardTile card={cards[0]} enlarged />
+        <CardTile card={cards[0]!} enlarged />
         <Text style={[styles.singleCardTip, { color: theme.textTertiary }]}>
           Tap + to add more cards to your wallet
         </Text>
@@ -171,7 +171,6 @@ export const CardList: React.FC = () => {
         renderItem={renderItem}
         numColumns={NUM_COLUMNS}
         keyExtractor={(item) => item.id}
-        estimatedItemSize={TILE_WIDTH + 30}
         contentContainerStyle={styles.listContent}
         showsVerticalScrollIndicator={false}
         ListHeaderComponent={ListHeader}

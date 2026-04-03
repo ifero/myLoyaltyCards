@@ -276,7 +276,7 @@ describe('CardList', () => {
     });
 
     it('filters cards via useCardSearch.filterCards', () => {
-      const filterFn = jest.fn((cards: LoyaltyCard[]) => [cards[0]]);
+      const filterFn = jest.fn((cards: LoyaltyCard[]) => [cards[0]!]);
       setupCards(twoCards);
       setupSearch({ searchQuery: 'apple', filterCards: filterFn });
       render(<CardList />);
