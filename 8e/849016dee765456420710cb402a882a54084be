@@ -1,0 +1,52 @@
+docs/sprint-artifacts/sprint-status.yaml
+  807f5d583a8670e3 325
+features/cards/components/CardTile.test.tsx
+  807f5d583a8670e3 53-65,129,131
+features/cards/components/CardList.test.tsx
+  807f5d583a8670e3 244
+docs/sprint-artifacts/stories/13-2-restyle-home-screen.md
+  807f5d583a8670e3 123,326,347
+features/cards/components/SearchBar.test.tsx
+  807f5d583a8670e3 103,108,110,118
+shared/components/ui/TextField.test.tsx
+  7e5dddf93f995e7e 23
+features/cards/components/EmptyState.test.tsx
+  807f5d583a8670e3 17-18,22-29,31-36,61,63,73,76,80,82
+shared/components/ui/Button.test.tsx
+  7e5dddf93f995e7e 23
+shared/components/ui/ToggleSwitch.test.tsx
+  7e5dddf93f995e7e 22,24
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.2.5",
+  "base_commit_sha": "8e849016dee765456420710cb402a882a54084be",
+  "prompts": {
+    "7e5dddf93f995e7e": {
+      "agent_id": {
+        "tool": "github-copilot",
+        "id": "9854ccf1-82b7-4865-b93f-edfce1ab8a7a",
+        "model": "copilot/gpt-5.3-codex"
+      },
+      "human_author": "Andrea Pacino",
+      "messages": [],
+      "total_additions": 0,
+      "total_deletions": 0,
+      "accepted_lines": 4,
+      "overriden_lines": 0
+    },
+    "807f5d583a8670e3": {
+      "agent_id": {
+        "tool": "github-copilot",
+        "id": "cfa652de-8bec-4209-8ca8-ab3b46b88ae9",
+        "model": "copilot/claude-opus-4.6"
+      },
+      "human_author": "Andrea Pacino",
+      "messages": [],
+      "total_additions": 0,
+      "total_deletions": 0,
+      "accepted_lines": 46,
+      "overriden_lines": 0
+    }
+  }
+}
