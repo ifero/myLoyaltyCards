@@ -11,16 +11,16 @@ jest.mock('@/shared/theme', () => ({
 const lightTheme = {
   primary: '#1A73E8',
   primaryDark: '#1967D2',
-  border: '#D6DEE8',
-  textTertiary: '#94A3B8',
+  border: '#E5E5EB',
+  textTertiary: '#8F8F94',
   error: '#DC2626'
 };
 
 const darkTheme = {
   primary: '#4DA3FF',
   primaryDark: '#1A73E8',
-  border: '#2A3441',
-  textTertiary: '#94A3B8',
+  border: '#38383A',
+  textTertiary: '#99999E',
   error: '#F87171'
 };
 

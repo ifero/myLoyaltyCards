@@ -14,21 +14,26 @@ jest.mock('expo-router', () => ({
   useRouter: jest.fn()
 }));
 
-jest.mock('@expo/vector-icons', () => {
+// Mock react-native-svg (used for wallet illustration)
+jest.mock('react-native-svg', () => {
   // eslint-disable-next-line @typescript-eslint/no-require-imports
   const React = require('react');
   // eslint-disable-next-line @typescript-eslint/no-require-imports
-  const { Text } = require('react-native');
+  const { View } = require('react-native');
+  const MockSvg = (props: Record<string, unknown>) =>
+    React.createElement(View, { ...props, testID: 'svg-root' });
+  const MockRect = (props: Record<string, unknown>) =>
+    React.createElement(View, { ...props, testID: 'svg-rect' });
+  const MockCircle = (props: Record<string, unknown>) =>
+    React.createElement(View, { ...props, testID: 'svg-circle' });
+  const MockG = (props: Record<string, unknown>) => React.createElement(View, props);
   return {
-    MaterialIcons: ({
-      name,
-      accessibilityLabel,
-      testID
-    }: {
-      name: string;
-      accessibilityLabel?: string;
-      testID?: string;
-    }) => React.createElement(Text, { testID: testID ?? `icon-${name}`, accessibilityLabel }, name)
+    __esModule: true,
+    default: MockSvg,
+    Svg: MockSvg,
+    Rect: MockRect,
+    Circle: MockCircle,
+    G: MockG
   };
 });
 
@@ -37,10 +42,10 @@ jest.mock('@/shared/theme', () => ({
   useTheme: () => ({
     theme: {
       primary: '#1A73E8',
-      textPrimary: '#0F172A',
-      textSecondary: '#475569',
-      textTertiary: '#94A3B8',
-      border: '#D6DEE8'
+      textPrimary: '#1F1F24',
+      textSecondary: '#66666B',
+      textTertiary: '#8F8F94',
+      border: '#E5E5EB'
     },
     isDark: false
   })
@@ -53,14 +58,9 @@ describe('EmptyState', () => {
   });
 
   describe('Rendering — AC4', () => {
-    it('renders wallet vector icon (no emoji)', () => {
+    it('renders SVG wallet illustration', () => {
       render(<EmptyState />);
-      expect(screen.getByText('account-balance-wallet')).toBeTruthy();
-    });
-
-    it('renders sparkle accent', () => {
-      render(<EmptyState />);
-      expect(screen.getByText('auto-awesome')).toBeTruthy();
+      expect(screen.getByTestId('svg-root')).toBeTruthy();
     });
 
     it('renders title "No cards yet"', () => {
@@ -70,14 +70,16 @@ describe('EmptyState', () => {
       expect(title.props.accessibilityRole).toBe('header');
     });
 
-    it('renders encouraging subtitle', () => {
+    it('renders encouraging subtitle with rewards copy', () => {
       render(<EmptyState />);
-      expect(screen.getByText('Add your first loyalty card to get started')).toBeTruthy();
+      expect(
+        screen.getByText('Add your first loyalty card and\nnever miss rewards at checkout')
+      ).toBeTruthy();
     });
 
-    it('renders CTA button "Add Your First Card"', () => {
+    it('renders CTA button with "+" prefix', () => {
       render(<EmptyState />);
-      expect(screen.getByText('Add Your First Card')).toBeTruthy();
+      expect(screen.getByText(/\+\s+Add Your First Card/)).toBeTruthy();
     });
 
     it('does not render any emoji', () => {

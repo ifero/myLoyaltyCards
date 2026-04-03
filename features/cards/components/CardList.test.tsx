@@ -241,7 +241,7 @@ describe('CardList', () => {
     it('shows tip text when only one card', () => {
       setupCards([makeCard()]);
       render(<CardList />);
-      expect(screen.getByText('Tap + to add more cards')).toBeTruthy();
+      expect(screen.getByText('Tap + to add more cards to your wallet')).toBeTruthy();
     });
 
     it('does not show search or sort controls for single card', () => {

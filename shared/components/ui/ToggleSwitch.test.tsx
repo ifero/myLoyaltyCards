@@ -9,19 +9,19 @@ jest.mock('@/shared/theme', () => ({
 }));
 
 const lightTheme = {
-  textPrimary: '#0F172A',
+  textPrimary: '#1F1F24',
   primary: '#1A73E8',
-  borderStrong: '#475569',
-  surfaceElevated: '#1A1F26',
-  textTertiary: '#94A3B8'
+  borderStrong: '#66666B',
+  surfaceElevated: '#2C2C2E',
+  textTertiary: '#8F8F94'
 };
 
 const darkTheme = {
-  textPrimary: '#F8FAFC',
+  textPrimary: '#F5F5F7',
   primary: '#4DA3FF',
-  borderStrong: '#64748B',
-  surfaceElevated: '#111418',
-  textTertiary: '#94A3B8'
+  borderStrong: '#636366',
+  surfaceElevated: '#1C1C1E',
+  textTertiary: '#99999E'
 };
 
 describe('ToggleSwitch', () => {

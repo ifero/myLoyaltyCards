@@ -9,9 +9,9 @@ import { SearchBar } from './SearchBar';
 
 const mockTheme = {
   primary: '#1A73E8',
-  textPrimary: '#0F172A',
-  textSecondary: '#475569',
-  textTertiary: '#94A3B8'
+  textPrimary: '#1F1F24',
+  textSecondary: '#66666B',
+  textTertiary: '#8F8F94'
 };
 
 jest.mock('@/shared/theme', () => ({
@@ -100,13 +100,14 @@ describe('SearchBar', () => {
   });
 
   describe('active state styling', () => {
-    it('has border when value is non-empty (active state)', () => {
+    it('has 2px border and white bg when value is non-empty (active state)', () => {
       render(<SearchBar {...defaultProps} value="test" />);
 
       const container = screen.getByTestId('search-bar');
       const flatStyle = Object.assign({}, ...container.props.style);
-      expect(flatStyle.borderWidth).toBe(1);
+      expect(flatStyle.borderWidth).toBe(2);
       expect(flatStyle.borderColor).toBe('#1A73E8');
+      expect(flatStyle.backgroundColor).toBe('#FFFFFF');
     });
 
     it('has transparent border when value is empty', () => {
@@ -114,7 +115,7 @@ describe('SearchBar', () => {
 
       const container = screen.getByTestId('search-bar');
       const flatStyle = Object.assign({}, ...container.props.style);
-      expect(flatStyle.borderWidth).toBe(1);
+      expect(flatStyle.borderWidth).toBe(2);
       expect(flatStyle.borderColor).toBe('transparent');
     });
   });

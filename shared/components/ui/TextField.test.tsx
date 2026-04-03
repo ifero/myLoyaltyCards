@@ -9,23 +9,23 @@ jest.mock('@/shared/theme', () => ({
 }));
 
 const lightTheme = {
-  textPrimary: '#0F172A',
-  textTertiary: '#94A3B8',
+  textPrimary: '#1F1F24',
+  textTertiary: '#8F8F94',
   error: '#DC2626',
   primary: '#1A73E8',
-  border: '#D6DEE8',
-  backgroundSubtle: '#F1F5F9',
+  border: '#E5E5EB',
+  backgroundSubtle: '#F5F5F5',
   surface: '#FFFFFF'
 };
 
 const darkTheme = {
-  textPrimary: '#F8FAFC',
-  textTertiary: '#94A3B8',
+  textPrimary: '#F5F5F7',
+  textTertiary: '#99999E',
   error: '#F87171',
   primary: '#4DA3FF',
-  border: '#2A3441',
+  border: '#38383A',
   backgroundSubtle: '#05070A',
-  surface: '#111418'
+  surface: '#1C1C1E'
 };
 
 describe('TextField', () => {

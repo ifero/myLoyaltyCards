@@ -11,8 +11,8 @@ jest.mock('@/shared/theme', () => ({
   useTheme: () => ({
     theme: {
       primary: '#1A73E8',
-      textPrimary: '#0F172A',
-      textSecondary: '#475569'
+      textPrimary: '#1F1F24',
+      textSecondary: '#66666B'
     },
     isDark: false
   })

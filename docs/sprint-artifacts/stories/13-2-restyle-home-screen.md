@@ -120,7 +120,7 @@ This story implements the approved Figma design from Story 12-2 (Home Screen pag
 
 - [x] Rewrite `features/cards/components/CardTile.tsx` to match Figma tile spec
 - [x] Change aspect ratio from 4:3 to ~1.2:1 (171x140pt)
-- [x] Use `CardShell` component from `@/shared/components/ui/CardShell` for tile container
+- [x] ~~Use `CardShell` component~~ → CardTile uses its own View container for Figma-specific 171x140 / 220x180 dimensions (CardShell's aspectRatio API doesn't fit fixed-pixel tile specs)
 - [x] Catalogue cards: render brand logo SVG centered on `brandColor` hex background
 - [x] Custom cards: render first-letter avatar on user-selected color (using `VirtualLogo` or new approach matching Figma)
 - [x] Add drop shadow: `shadowOffset: {width: 0, height: 2}`, `shadowRadius: 8`, `shadowOpacity: 0.08`
@@ -323,7 +323,7 @@ Claude Opus 4.6
 ### Debug Log References
 
 - AC8 (Tab Bar) and Task 9 removed — not present in approved Figma deliverables from story 12-2. Stakeholder (Ifero) confirmed removal 2026-04-02.
-- CardShell from shared/components/ui used as tile container base
+- CardTile uses its own View container (not CardShell) — CardShell's aspectRatio API doesn't match Figma's fixed 171x140 / 220x180 tile specs
 - FlashList global mock updated to support ListHeaderComponent rendering
 
 ### Completion Notes List
@@ -344,7 +344,7 @@ Claude Opus 4.6
 
 **Modified:**
 
-- `features/cards/components/CardTile.tsx` — Full restyle: 171x140pt, CardShell, dark border, drop shadow
+- `features/cards/components/CardTile.tsx` — Full restyle: 171x140pt, own View container, dark border, drop shadow
 - `features/cards/components/CardTile.test.tsx` — 15 tests for new tile behavior
 - `features/cards/components/CardList.tsx` — 2-column grid, search/sort, single-card state
 - `features/cards/components/CardList.test.tsx` — 16 tests for all list states

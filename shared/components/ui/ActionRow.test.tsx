@@ -14,19 +14,19 @@ jest.mock('@/shared/theme', () => ({
 }));
 
 const lightTheme = {
-  border: '#D6DEE8',
-  surfaceElevated: '#F1F5F9',
+  border: '#E5E5EB',
+  surfaceElevated: '#F5F5F5',
   surface: '#FFFFFF',
-  textPrimary: '#0F172A',
-  textSecondary: '#475569'
+  textPrimary: '#1F1F24',
+  textSecondary: '#66666B'
 };
 
 const darkTheme = {
-  border: '#2A3441',
-  surfaceElevated: '#1A1F26',
-  surface: '#111418',
-  textPrimary: '#F8FAFC',
-  textSecondary: '#CBD5E1'
+  border: '#38383A',
+  surfaceElevated: '#2C2C2E',
+  surface: '#1C1C1E',
+  textPrimary: '#F5F5F7',
+  textSecondary: '#D9D9DE'
 };
 
 describe('ActionRow', () => {

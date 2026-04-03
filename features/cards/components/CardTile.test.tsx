@@ -50,6 +50,19 @@ jest.mock('../hooks/useBrandLogo', () => ({
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const { useBrandLogo } = require('../hooks/useBrandLogo');
 
+// Mock getBrandLogoComponent to return a simple component for known brands
+jest.mock('../utils/brandLogos', () => {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const React = require('react');
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const { View } = require('react-native');
+  const MockLogo = (props: Record<string, unknown>) =>
+    React.createElement(View, { ...props, testID: 'brand-logo-svg' });
+  return {
+    getBrandLogoComponent: jest.fn(() => MockLogo)
+  };
+});
+
 describe('CardTile', () => {
   const mockCard: LoyaltyCard = {
     id: '1',
@@ -72,11 +85,11 @@ describe('CardTile', () => {
       theme: {
         primary: '#1A73E8',
         surface: '#FFFFFF',
-        textPrimary: '#0F172A',
-        textSecondary: '#475569',
-        border: '#D6DEE8',
-        borderStrong: '#94A3B8',
-        surfaceElevated: '#F1F5F9'
+        textPrimary: '#1F1F24',
+        textSecondary: '#66666B',
+        border: '#E5E5EB',
+        borderStrong: '#8F8F94',
+        surfaceElevated: '#F5F5F5'
       },
       isDark: false
     });
@@ -113,9 +126,9 @@ describe('CardTile', () => {
       });
     });
 
-    it('renders brand abbreviation for catalogue cards', () => {
+    it('renders SVG logo for catalogue cards with brand logo', () => {
       render(<CardTile card={brandCard} />);
-      expect(screen.getByText('ES')).toBeTruthy();
+      expect(screen.getByTestId('brand-logo-svg')).toBeTruthy();
     });
   });
 
@@ -157,12 +170,12 @@ describe('CardTile', () => {
       (useTheme as jest.Mock).mockReturnValue({
         theme: {
           primary: '#4DA3FF',
-          surface: '#111418',
-          textPrimary: '#F8FAFC',
-          textSecondary: '#CBD5E1',
-          border: '#2A3441',
-          borderStrong: '#475569',
-          surfaceElevated: '#1A1F26'
+          surface: '#1C1C1E',
+          textPrimary: '#F5F5F7',
+          textSecondary: '#D9D9DE',
+          border: '#38383A',
+          borderStrong: '#66666B',
+          surfaceElevated: '#2C2C2E'
         },
         isDark: true
       });
