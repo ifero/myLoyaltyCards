@@ -39,6 +39,12 @@ const CardDetailsScreen = () => {
   // Resolve brand data — MUST be called before any early returns (Rules of Hooks)
   const brand = useBrandLogo(card?.brandId ?? null);
 
+  // Scroll-aware condensing state (AC5) — hooks MUST be before early returns
+  const [isHeaderCondensed, setIsHeaderCondensed] = useState(false);
+  const handleScrollPastHero = useCallback((isPast: boolean) => {
+    setIsHeaderCondensed(isPast);
+  }, []);
+
   /**
    * Fetch card data from database
    * Uses useFocusEffect to refresh data when returning from edit screen
@@ -153,12 +159,6 @@ const CardDetailsScreen = () => {
   // Resolve header color: brand color for catalogue, primary for custom
   const headerBg = brand ? brand.color : theme.primary;
   const headerTextColor = getContrastForeground(headerBg);
-
-  // Scroll-aware condensing state (AC5)
-  const [isHeaderCondensed, setIsHeaderCondensed] = useState(false);
-  const handleScrollPastHero = useCallback((isPast: boolean) => {
-    setIsHeaderCondensed(isPast);
-  }, []);
 
   // Success state - render card details
   return (

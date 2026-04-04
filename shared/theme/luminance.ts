@@ -8,7 +8,8 @@
  */
 
 /**
- * Calculate relative luminance of a hex color (WCAG formula).
+ * Calculate relative luminance of a hex color (simplified linear approximation).
+ * Sufficient for binary white/black foreground decisions.
  * @param hex - Hex color string (e.g., "#1A73E8" or "1A73E8")
  * @returns Luminance value between 0 (black) and 1 (white)
  */
