@@ -1,20 +1,19 @@
 /**
  * Card Details Screen
- * Story 2.6: View Card Details
- * Story 2.8: Delete Card
+ * Story 13.3: Restyle Card Detail Screen (AC5)
  *
- * Displays full details of a loyalty card with ability to:
- * - View all card information
- * - Copy barcode number to clipboard
- * - Open full-screen barcode (Barcode Flash)
- * - Navigate to Edit Card (Story 2.7)
- * - Delete card with confirmation (Story 2.8)
+ * Displays full details of a loyalty card with:
+ * - Brand-colored navigation header
+ * - BrandHero section
+ * - Large barcode with fullscreen overlay
+ * - Info section and Manage actions
  */
 
+import { MaterialIcons } from '@expo/vector-icons';
 import burnt from 'burnt';
-import { useLocalSearchParams, Stack, useFocusEffect } from 'expo-router';
+import { useLocalSearchParams, Stack, useFocusEffect, useRouter } from 'expo-router';
 import React, { useState, useCallback } from 'react';
-import { View, Text, ActivityIndicator } from 'react-native';
+import { View, Text, ActivityIndicator, Pressable } from 'react-native';
 
 import { getCardById } from '@/core/database';
 import { LoyaltyCard } from '@/core/schemas';
@@ -22,17 +21,18 @@ import { LoyaltyCard } from '@/core/schemas';
 import { useTheme } from '@/shared/theme';
 import { SPACING } from '@/shared/theme/spacing';
 
-import { CardDetails, useDeleteCard } from '@/features/cards';
+import { CardDetails, useDeleteCard, useBrandLogo } from '@/features/cards';
 
 const CardDetailsScreen = () => {
   const { theme } = useTheme();
+  const router = useRouter();
   const { id } = useLocalSearchParams<{ id: string }>();
 
   const [card, setCard] = useState<LoyaltyCard | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Delete card hook (Story 2.8)
+  // Delete card hook
   const { deleteCard, isDeleting } = useDeleteCard(id ?? '');
 
   /**
@@ -146,12 +146,37 @@ const CardDetailsScreen = () => {
     );
   }
 
+  // Resolve header color: brand color for catalogue, primary for custom
+  const brand = useBrandLogo(card.brandId);
+  const headerBg = brand ? brand.color : theme.primary;
+  // White text for dark headers, dark for light headers
+  const headerC = headerBg.replace('#', '');
+  const headerR = parseInt(headerC.substring(0, 2), 16) / 255;
+  const headerG = parseInt(headerC.substring(2, 4), 16) / 255;
+  const headerB = parseInt(headerC.substring(4, 6), 16) / 255;
+  const headerLuminance = 0.2126 * headerR + 0.7152 * headerG + 0.0722 * headerB;
+  const headerTextColor = headerLuminance < 0.5 ? '#FFFFFF' : '#1F1F24';
+
   // Success state - render card details
   return (
     <>
       <Stack.Screen
         options={{
-          title: card.name
+          title: card.name,
+          headerStyle: { backgroundColor: headerBg },
+          headerTintColor: headerTextColor,
+          headerTitleStyle: { color: headerTextColor, fontWeight: '600' },
+          headerShadowVisible: false,
+          headerLeft: () => (
+            <Pressable
+              onPress={() => router.back()}
+              accessibilityRole="button"
+              accessibilityLabel="Go back"
+              hitSlop={8}
+            >
+              <MaterialIcons name="chevron-left" size={28} color={headerTextColor} />
+            </Pressable>
+          )
         }}
       />
       <CardDetails card={card} onCopy={handleCopy} onDelete={deleteCard} isDeleting={isDeleting} />

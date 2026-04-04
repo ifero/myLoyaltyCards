@@ -1,34 +1,34 @@
 /**
  * CardDetails Component
- * Story 2.6: View Card Details
- * Story 2.8: Delete Card
+ * Story 13.3: Restyle Card Detail Screen
  *
- * Displays full details of a loyalty card including:
- * - Virtual Logo
- * - Card name
- * - Barcode preview (tappable to open Barcode Flash)
- * - Barcode number (copyable)
- * - Barcode format
- * - Card color indicator
- * - Date added
- * - Action buttons (Edit, Delete)
+ * Displays full details of a loyalty card with Figma-aligned design:
+ * - BrandHero section (catalogue logo or custom avatar)
+ * - Barcode on white card with tap-to-enlarge
+ * - Info section (number, color for custom, date added)
+ * - Manage section with ActionRow pattern (Edit, Delete)
+ * - Fullscreen barcode modal overlay
  */
 
+import { MaterialIcons } from '@expo/vector-icons';
 import * as Clipboard from 'expo-clipboard';
 import * as Haptics from 'expo-haptics';
 import { useRouter } from 'expo-router';
-import React, { useCallback } from 'react';
-import { View, Text, ScrollView, Pressable, StyleSheet, Alert } from 'react-native';
+import React, { useCallback, useState } from 'react';
+import { View, Text, ScrollView, Pressable, StyleSheet, Alert, Platform } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { LoyaltyCard, BarcodeFormat } from '@/core/schemas';
+import { LoyaltyCard } from '@/core/schemas';
 
+import { ActionRow } from '@/shared/components/ui/ActionRow';
 import { useTheme, CARD_COLORS } from '@/shared/theme';
-import { SPACING, TOUCH_TARGET } from '@/shared/theme/spacing';
+import { SPACING, LAYOUT, TOUCH_TARGET } from '@/shared/theme/spacing';
+import { TYPOGRAPHY } from '@/shared/theme/typography';
 
 import { BarcodeRenderer } from './BarcodeRenderer';
+import { BrandHero } from './BrandHero';
 import { DetailRow } from './DetailRow';
-import { VirtualLogo } from './VirtualLogo';
+import { FullscreenBarcode } from './FullscreenBarcode';
 
 interface CardDetailsProps {
   /** The loyalty card to display */
@@ -40,18 +40,6 @@ interface CardDetailsProps {
   /** Whether delete operation is in progress */
   isDeleting?: boolean;
 }
-
-/**
- * Human-readable barcode format names
- */
-const BARCODE_FORMAT_LABELS: Record<BarcodeFormat, string> = {
-  CODE128: 'Code 128',
-  EAN13: 'EAN-13',
-  EAN8: 'EAN-8',
-  QR: 'QR Code',
-  CODE39: 'Code 39',
-  UPCA: 'UPC-A'
-};
 
 /**
  * Human-readable color names
@@ -67,25 +55,23 @@ const COLOR_LABELS: Record<string, string> = {
 /**
  * Format date for display (e.g., "Jan 7, 2026")
  */
-function formatDate(isoString: string): string {
+const formatDate = (isoString: string): string => {
   const date = new Date(isoString);
   return date.toLocaleDateString('en-US', {
     month: 'short',
     day: 'numeric',
     year: 'numeric'
   });
-}
+};
 
 /**
- * CardDetails Component
- *
- * Full card details view with:
- * - Large Virtual Logo at top (120px)
- * - Card name prominently displayed
- * - Tappable barcode preview that opens Barcode Flash
- * - Copyable barcode number
- * - Detail rows for format, color, and date
- * - Action buttons at bottom
+ * Format barcode number with spaces for readability
+ * e.g. "1234567890123" → "1234 5678 9012 3"
+ */
+const formatBarcodeNumber = (barcode: string): string => barcode.replace(/(.{4})/g, '$1 ').trim();
+
+/**
+ * CardDetails Component — Figma-aligned Card Detail screen
  */
 export const CardDetails: React.FC<CardDetailsProps> = ({
   card,
@@ -96,6 +82,7 @@ export const CardDetails: React.FC<CardDetailsProps> = ({
   const { theme } = useTheme();
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const [fullscreenVisible, setFullscreenVisible] = useState(false);
 
   /**
    * Copy barcode number to clipboard with haptic feedback
@@ -112,25 +99,28 @@ export const CardDetails: React.FC<CardDetailsProps> = ({
   }, [card.barcode, onCopy]);
 
   /**
-   * Open Barcode Flash (full-screen barcode view)
+   * Open fullscreen barcode overlay
    */
-  const handleOpenBarcodeFlash = useCallback(() => {
-    router.push(`/barcode/${card.id}`);
-  }, [router, card.id]);
+  const handleOpenFullscreen = useCallback(() => {
+    setFullscreenVisible(true);
+  }, []);
 
   /**
-   * Navigate to Edit Card screen (Story 2.7)
+   * Close fullscreen barcode overlay
+   */
+  const handleCloseFullscreen = useCallback(() => {
+    setFullscreenVisible(false);
+  }, []);
+
+  /**
+   * Navigate to Edit Card screen
    */
   const handleEditCard = useCallback(() => {
     router.push(`/card/${card.id}/edit`);
   }, [router, card.id]);
 
   /**
-   * Show delete confirmation dialog (Story 2.8)
-   * Uses native Alert.alert for platform-consistent UI
-   * AC2: Confirmation dialog with Cancel and Delete buttons
-   * AC4: Cancel closes dialog without deleting
-   * AC7: Hardware back button closes dialog (native behavior)
+   * Show delete confirmation dialog
    */
   const handleDeleteCard = useCallback(() => {
     Alert.alert(
@@ -146,130 +136,153 @@ export const CardDetails: React.FC<CardDetailsProps> = ({
           }
         }
       ],
-      { cancelable: true } // Allows backdrop tap and hardware back to dismiss
+      { cancelable: true }
     );
   }, [card.name, onDelete]);
 
   return (
-    <ScrollView
-      style={[styles.container, { backgroundColor: theme.background }]}
-      contentContainerStyle={[
-        styles.contentContainer,
-        { paddingBottom: insets.bottom + SPACING.lg }
-      ]}
-      showsVerticalScrollIndicator={false}
-    >
-      {/* Card Visual - Virtual Logo */}
-      <View style={styles.visualSection}>
-        <VirtualLogo name={card.name} color={card.color} size={120} testID="card-details-logo" />
-      </View>
+    <>
+      <ScrollView
+        style={[styles.container, { backgroundColor: theme.background }]}
+        contentContainerStyle={[
+          styles.contentContainer,
+          { paddingBottom: insets.bottom + SPACING.xl }
+        ]}
+        showsVerticalScrollIndicator={false}
+        testID="card-details-scroll"
+      >
+        {/* Brand Hero Section (AC1) */}
+        <BrandHero card={card} testID="card-details-hero" />
 
-      {/* Card Name */}
-      <Text style={[styles.cardName, { color: theme.textPrimary }]} testID="card-details-name">
-        {card.name}
-      </Text>
-
-      {/* Barcode Preview Section */}
-      <View style={styles.barcodeSection}>
-        <Pressable
-          onPress={handleOpenBarcodeFlash}
-          style={({ pressed }) => [
-            styles.barcodePreview,
-            { backgroundColor: '#FFFFFF' },
-            pressed && styles.pressed
-          ]}
-          accessibilityRole="button"
-          accessibilityLabel="View full screen barcode"
-          accessibilityHint="Opens the barcode in full screen for scanning"
-          testID="card-details-barcode-preview"
-        >
-          <BarcodeRenderer
-            value={card.barcode}
-            format={card.barcodeFormat}
-            width={card.barcodeFormat === 'QR' ? 150 : 240}
-            height={100}
-          />
-        </Pressable>
-        <Text style={[styles.barcodeHint, { color: theme.textSecondary }]}>Tap to enlarge</Text>
-      </View>
-
-      {/* Details Section */}
-      <View style={[styles.detailsSection, { backgroundColor: theme.surface }]}>
-        {/* Barcode Number - Copyable */}
-        <DetailRow
-          label="Number"
-          value={card.barcode}
-          onPress={handleCopyBarcode}
-          accessibilityHint="Double tap to copy barcode number"
-          rightElement={<Text style={{ color: theme.primary, fontSize: 16 }}>📋</Text>}
-          testID="card-details-barcode-number"
-        />
-
-        {/* Barcode Format */}
-        <DetailRow
-          label="Format"
-          value={BARCODE_FORMAT_LABELS[card.barcodeFormat]}
-          testID="card-details-format"
-        />
-
-        {/* Card Color */}
-        <DetailRow
-          label="Color"
-          value={COLOR_LABELS[card.color] || card.color}
-          rightElement={
-            <View
-              style={[styles.colorDot, { backgroundColor: CARD_COLORS[card.color] }]}
-              accessibilityLabel={`${COLOR_LABELS[card.color]} color`}
+        {/* Barcode Display Area (AC2) */}
+        <View style={styles.barcodeSection}>
+          <Pressable
+            onPress={handleOpenFullscreen}
+            style={({ pressed }) => [styles.barcodeCard, pressed && styles.pressed]}
+            accessibilityRole="button"
+            accessibilityLabel="View full screen barcode"
+            accessibilityHint="Opens the barcode in full screen for scanning"
+            testID="card-details-barcode-preview"
+          >
+            <BarcodeRenderer
+              value={card.barcode}
+              format={card.barcodeFormat}
+              width={card.barcodeFormat === 'QR' ? 180 : 280}
+              height={card.barcodeFormat === 'QR' ? 180 : 120}
             />
-          }
-          testID="card-details-color"
-        />
+          </Pressable>
 
-        {/* Date Added */}
-        <DetailRow
-          label="Added"
-          value={formatDate(card.createdAt)}
-          style={{ borderBottomWidth: 0 }}
-          testID="card-details-date"
-        />
-      </View>
+          {/* Barcode Number (spaced) */}
+          <Text
+            style={[styles.barcodeNumber, { color: theme.textPrimary }]}
+            testID="card-details-barcode-number-display"
+          >
+            {formatBarcodeNumber(card.barcode)}
+          </Text>
 
-      {/* Action Buttons */}
-      <View style={styles.actionsSection}>
-        {/* Edit Button */}
-        <Pressable
-          onPress={handleEditCard}
-          disabled={isDeleting}
-          style={({ pressed }) => [
-            styles.editButton,
-            { backgroundColor: theme.primary },
-            pressed && styles.pressed,
-            isDeleting && styles.disabled
-          ]}
-          accessibilityRole="button"
-          accessibilityLabel="Edit card"
-          testID="card-details-edit-button"
+          {/* Tap to enlarge hint */}
+          <Text style={[styles.barcodeHint, { color: theme.textTertiary }]}>Tap to enlarge</Text>
+
+          {/* Brightness hint (AC7) */}
+          <View style={styles.brightnessHint} testID="card-details-brightness-hint">
+            <MaterialIcons name="light-mode" size={20} color={theme.textSecondary} />
+            <Text style={[styles.brightnessText, { color: theme.textSecondary }]}>
+              Increase brightness for scanning
+            </Text>
+          </View>
+        </View>
+
+        {/* Card Info Section (AC3) */}
+        <View
+          style={[styles.infoSection, { backgroundColor: theme.surface }]}
+          testID="card-details-info-section"
         >
-          <Text style={styles.editButtonText}>Edit Card</Text>
-        </Pressable>
+          {/* Barcode Number - Copyable */}
+          <DetailRow
+            label="Number"
+            value={card.barcode}
+            onPress={handleCopyBarcode}
+            accessibilityHint="Double tap to copy barcode number"
+            rightElement={<MaterialIcons name="content-copy" size={20} color={theme.primary} />}
+            testID="card-details-barcode-number"
+          />
 
-        {/* Delete Button */}
-        <Pressable
-          onPress={handleDeleteCard}
-          disabled={isDeleting}
-          style={({ pressed }) => [
-            styles.deleteButton,
-            pressed && styles.pressed,
-            isDeleting && styles.disabled
-          ]}
-          accessibilityRole="button"
-          accessibilityLabel={isDeleting ? 'Deleting card' : 'Delete card'}
-          testID="card-details-delete-button"
-        >
-          <Text style={styles.deleteButtonText}>{isDeleting ? 'Deleting...' : 'Delete Card'}</Text>
-        </Pressable>
-      </View>
-    </ScrollView>
+          {/* Color — ONLY for custom cards (AC3) */}
+          {card.brandId === null && (
+            <DetailRow
+              label="Color"
+              value={COLOR_LABELS[card.color] || card.color}
+              rightElement={
+                <View
+                  style={[styles.colorDot, { backgroundColor: CARD_COLORS[card.color] }]}
+                  accessibilityLabel={`${COLOR_LABELS[card.color]} color`}
+                />
+              }
+              testID="card-details-color"
+            />
+          )}
+
+          {/* Date Added */}
+          <DetailRow
+            label="Added"
+            value={formatDate(card.createdAt)}
+            style={{ borderBottomWidth: 0 }}
+            testID="card-details-date"
+          />
+        </View>
+
+        {/* Manage Actions Section (AC4) */}
+        <View style={styles.manageSection} testID="card-details-manage-section">
+          <Text style={[styles.sectionHeader, { color: theme.textSecondary }]}>Manage</Text>
+
+          {/* Edit Card Row */}
+          <ActionRow
+            icon="edit"
+            iconFamily="MI"
+            label="Edit card"
+            onPress={handleEditCard}
+            disabled={isDeleting}
+            testID="card-details-edit-row"
+          />
+
+          {/* Separator */}
+          <View style={[styles.separator, { backgroundColor: theme.border }]} />
+
+          {/* Delete Card Row — destructive, no chevron */}
+          <Pressable
+            onPress={handleDeleteCard}
+            disabled={isDeleting}
+            accessibilityRole="button"
+            accessibilityLabel={isDeleting ? 'Deleting card' : 'Delete card'}
+            accessibilityState={{ disabled: isDeleting }}
+            testID="card-details-delete-row"
+            style={({ pressed }) => [
+              styles.deleteRow,
+              {
+                backgroundColor: pressed ? theme.surfaceElevated : theme.surface,
+                borderColor: theme.border,
+                opacity: isDeleting ? 0.6 : 1
+              }
+            ]}
+          >
+            <View style={styles.deleteRowContent}>
+              <MaterialIcons name="delete" size={24} color={theme.error} />
+              <Text style={[styles.deleteText, { color: theme.error }]}>
+                {isDeleting ? 'Deleting...' : 'Delete card'}
+              </Text>
+            </View>
+          </Pressable>
+        </View>
+      </ScrollView>
+
+      {/* Fullscreen Barcode Overlay (AC6) */}
+      <FullscreenBarcode
+        card={card}
+        visible={fullscreenVisible}
+        onClose={handleCloseFullscreen}
+        onCopy={onCopy}
+      />
+    </>
   );
 };
 
@@ -278,44 +291,57 @@ const styles = StyleSheet.create({
     flex: 1
   },
   contentContainer: {
-    paddingHorizontal: SPACING.md
+    // No horizontal padding — hero is full-width
   },
-  visualSection: {
-    alignItems: 'center',
-    marginTop: SPACING.lg,
-    marginBottom: SPACING.md
-  },
-  cardName: {
-    fontSize: 24,
-    fontWeight: '700',
-    textAlign: 'center',
-    marginBottom: SPACING.lg
-  },
+  // Barcode Section (AC2)
   barcodeSection: {
     alignItems: 'center',
-    marginBottom: SPACING.lg
+    paddingHorizontal: LAYOUT.screenHorizontalMargin,
+    paddingTop: SPACING.lg,
+    paddingBottom: SPACING.md
   },
-  barcodePreview: {
+  barcodeCard: {
     padding: SPACING.md,
-    borderRadius: SPACING.sm,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 12,
     alignItems: 'center',
     justifyContent: 'center',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 2
+    shadowOpacity: 0.08,
+    shadowRadius: 8,
+    elevation: 3,
+    width: '100%'
+  },
+  barcodeNumber: {
+    fontSize: 16,
+    fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace',
+    textAlign: 'center',
+    marginTop: SPACING.sm,
+    letterSpacing: 2
   },
   barcodeHint: {
-    fontSize: 12,
+    ...TYPOGRAPHY.caption1,
     marginTop: SPACING.xs
+  },
+  brightnessHint: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginTop: SPACING.md
+  },
+  brightnessText: {
+    ...TYPOGRAPHY.footnote
   },
   pressed: {
     opacity: 0.7
   },
-  detailsSection: {
-    borderRadius: SPACING.sm,
+  // Info Section (AC3)
+  infoSection: {
+    borderRadius: 12,
     paddingHorizontal: SPACING.md,
+    marginHorizontal: LAYOUT.screenHorizontalMargin,
+    marginTop: SPACING.md,
     marginBottom: SPACING.lg
   },
   colorDot: {
@@ -323,33 +349,37 @@ const styles = StyleSheet.create({
     height: 16,
     borderRadius: 8
   },
-  actionsSection: {
-    gap: SPACING.md
+  // Manage Section (AC4)
+  manageSection: {
+    paddingHorizontal: LAYOUT.screenHorizontalMargin,
+    gap: SPACING.sm
   },
-  editButton: {
-    height: TOUCH_TARGET.min + 4, // 48px
-    borderRadius: SPACING.sm,
+  sectionHeader: {
+    ...TYPOGRAPHY.footnote,
+    fontWeight: '600',
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+    marginBottom: SPACING.xs
+  },
+  separator: {
+    height: StyleSheet.hairlineWidth,
+    marginHorizontal: SPACING.md
+  },
+  deleteRow: {
+    minHeight: TOUCH_TARGET.min,
+    borderRadius: 14,
+    borderWidth: 1,
+    paddingHorizontal: 12,
+    flexDirection: 'row',
+    alignItems: 'center'
+  },
+  deleteRowContent: {
+    flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center'
+    gap: 12
   },
-  editButtonText: {
-    color: '#FFFFFF',
+  deleteText: {
     fontSize: 16,
-    fontWeight: '600'
-  },
-  deleteButton: {
-    height: TOUCH_TARGET.min + 4, // 48px
-    borderRadius: SPACING.sm,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: 'transparent'
-  },
-  deleteButtonText: {
-    color: '#EF4444',
-    fontSize: 16,
-    fontWeight: '600'
-  },
-  disabled: {
-    opacity: 0.5
+    fontWeight: '500'
   }
 });
