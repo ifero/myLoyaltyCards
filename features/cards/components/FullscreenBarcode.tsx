@@ -15,14 +15,14 @@ import * as Clipboard from 'expo-clipboard';
 import * as Haptics from 'expo-haptics';
 import React, { useCallback, useEffect } from 'react';
 import {
-  Dimensions,
   Modal,
   Platform,
   Pressable,
   StatusBar,
   StyleSheet,
   Text,
-  View
+  View,
+  useWindowDimensions
 } from 'react-native';
 
 import type { LoyaltyCard } from '@/core/schemas';
@@ -31,6 +31,7 @@ import { TOUCH_TARGET } from '@/shared/theme/spacing';
 
 import { BarcodeRenderer } from './BarcodeRenderer';
 import { useBrightness } from '../hooks/useBrightness';
+import { formatBarcodeNumber } from '../utils/formatBarcode';
 
 interface FullscreenBarcodeProps {
   card: LoyaltyCard;
@@ -39,20 +40,13 @@ interface FullscreenBarcodeProps {
   onCopy?: () => void;
 }
 
-const { width: SCREEN_WIDTH } = Dimensions.get('window');
-
-/**
- * Format barcode number with spaces for readability
- * e.g. "1234567890123" → "1234 5678 9012 3"
- */
-const formatBarcodeNumber = (barcode: string): string => barcode.replace(/(.{4})/g, '$1 ').trim();
-
 export const FullscreenBarcode: React.FC<FullscreenBarcodeProps> = ({
   card,
   visible,
   onClose,
   onCopy
 }) => {
+  const { width: screenWidth } = useWindowDimensions();
   const { maximize, restore } = useBrightness();
 
   useEffect(() => {
@@ -77,7 +71,7 @@ export const FullscreenBarcode: React.FC<FullscreenBarcodeProps> = ({
   }, [card.barcode, onCopy]);
 
   const isQR = card.barcodeFormat === 'QR';
-  const barcodeWidth = isQR ? 240 : Math.min(SCREEN_WIDTH - 48, 360);
+  const barcodeWidth = isQR ? 240 : Math.min(screenWidth - 48, 360);
   const barcodeHeight = isQR ? 240 : 140;
 
   return (
@@ -123,6 +117,7 @@ export const FullscreenBarcode: React.FC<FullscreenBarcodeProps> = ({
           {/* Barcode Number */}
           <Pressable
             onPress={handleCopyBarcode}
+            accessibilityRole="button"
             accessibilityLabel={`Barcode: ${card.barcode}. Tap to copy.`}
             accessibilityHint="Tap to copy barcode to clipboard"
             testID="fullscreen-barcode-number"

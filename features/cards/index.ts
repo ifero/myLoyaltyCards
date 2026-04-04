@@ -11,6 +11,7 @@
  * Story 3.2: Browse Catalogue Grid
  * Story 3.4: Cache Catalogue for Offline
  * Story 13.2: Restyle Home Screen
+ * Story 13.3: Restyle Card Detail Screen
  *
  * Exports card-related components, hooks, and repositories.
  */

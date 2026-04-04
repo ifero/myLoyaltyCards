@@ -39,6 +39,7 @@ import { BarcodeRenderer } from './BarcodeRenderer';
 import { BrandHero } from './BrandHero';
 import { DetailRow } from './DetailRow';
 import { FullscreenBarcode } from './FullscreenBarcode';
+import { formatBarcodeNumber } from '../utils/formatBarcode';
 
 interface CardDetailsProps {
   /** The loyalty card to display */
@@ -76,11 +77,8 @@ const formatDate = (isoString: string): string => {
   });
 };
 
-/**
- * Format barcode number with spaces for readability
- * e.g. "1234567890123" → "1234 5678 9012 3"
- */
-const formatBarcodeNumber = (barcode: string): string => barcode.replace(/(.{4})/g, '$1 ').trim();
+/** Scroll threshold — ~60% of BrandHero height */
+const HERO_SCROLL_THRESHOLD = 120;
 
 /**
  * CardDetails Component — Figma-aligned Card Detail screen
@@ -97,9 +95,6 @@ export const CardDetails: React.FC<CardDetailsProps> = ({
   const insets = useSafeAreaInsets();
   const [fullscreenVisible, setFullscreenVisible] = useState(false);
   const isPastHeroRef = useRef(false);
-
-  /** Scroll threshold — ~60% of BrandHero height */
-  const HERO_SCROLL_THRESHOLD = 120;
 
   /**
    * Track scroll position for header condensing (AC5)

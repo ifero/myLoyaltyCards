@@ -43,7 +43,9 @@ export const BrandHero: React.FC<BrandHeroProps> = ({ card, testID }) => {
 
   const { backgroundColor, foregroundColor, displayName, firstLetter } = useMemo(() => {
     const isCatalogue = card.brandId !== null && brand !== undefined;
-    const bgColor = isCatalogue ? brand!.color : (CARD_COLORS[card.color] ?? CARD_COLORS.grey);
+    const bgColor = isCatalogue
+      ? (brand?.color ?? CARD_COLORS.grey)
+      : (CARD_COLORS[card.color] ?? CARD_COLORS.grey);
 
     // Determine foreground color based on luminance
     const fgColor = getContrastForeground(bgColor);
@@ -51,7 +53,7 @@ export const BrandHero: React.FC<BrandHeroProps> = ({ card, testID }) => {
     return {
       backgroundColor: bgColor,
       foregroundColor: fgColor,
-      displayName: isCatalogue ? brand!.name : card.name,
+      displayName: isCatalogue ? (brand?.name ?? card.name) : card.name,
       firstLetter: card.name.trim().charAt(0).toUpperCase() || 'C'
     };
   }, [card.brandId, card.color, card.name, brand]);
