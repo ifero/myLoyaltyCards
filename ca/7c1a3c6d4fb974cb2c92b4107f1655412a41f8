@@ -1,0 +1,38 @@
+docs/sprint-artifacts/stories/13-3-restyle-card-detail.md
+  0cb5fa81342d534d 3,27-33,37-43,47,51-54,58-66,70-76,80-87,91-93,97-103,107-110,114-117
+docs/sprint-artifacts/sprint-status.yaml
+  807f5d583a8670e3 326
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.2.5",
+  "base_commit_sha": "ca7c1a3c6d4fb974cb2c92b4107f1655412a41f8",
+  "prompts": {
+    "0cb5fa81342d534d": {
+      "agent_id": {
+        "tool": "github-copilot",
+        "id": "1e355598-91dc-45e6-b866-26cdbf62ae8e",
+        "model": "copilot/claude-opus-4.6"
+      },
+      "human_author": "Andrea Pacino",
+      "messages": [],
+      "total_additions": 62,
+      "total_deletions": 62,
+      "accepted_lines": 62,
+      "overriden_lines": 0
+    },
+    "807f5d583a8670e3": {
+      "agent_id": {
+        "tool": "github-copilot",
+        "id": "cfa652de-8bec-4209-8ca8-ab3b46b88ae9",
+        "model": "copilot/claude-opus-4.6"
+      },
+      "human_author": "Andrea Pacino",
+      "messages": [],
+      "total_additions": 1,
+      "total_deletions": 1,
+      "accepted_lines": 1,
+      "overriden_lines": 0
+    }
+  }
+}
