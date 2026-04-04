@@ -13,6 +13,7 @@ import { View, Text, StyleSheet } from 'react-native';
 import type { LoyaltyCard } from '@/core/schemas';
 
 import { CARD_COLORS } from '@/shared/theme/colors';
+import { getContrastForeground } from '@/shared/theme/luminance';
 import { LAYOUT } from '@/shared/theme/spacing';
 import { TYPOGRAPHY } from '@/shared/theme/typography';
 
@@ -45,12 +46,7 @@ export const BrandHero: React.FC<BrandHeroProps> = ({ card, testID }) => {
     const bgColor = isCatalogue ? brand!.color : (CARD_COLORS[card.color] ?? CARD_COLORS.grey);
 
     // Determine foreground color based on luminance
-    const c = bgColor.replace('#', '');
-    const r = parseInt(c.substring(0, 2), 16) / 255;
-    const g = parseInt(c.substring(2, 4), 16) / 255;
-    const b = parseInt(c.substring(4, 6), 16) / 255;
-    const luminance = 0.2126 * r + 0.7152 * g + 0.0722 * b;
-    const fgColor = luminance < 0.5 ? '#FFFFFF' : '#1F1F24';
+    const fgColor = getContrastForeground(bgColor);
 
     return {
       backgroundColor: bgColor,

@@ -14,8 +14,18 @@ import { MaterialIcons } from '@expo/vector-icons';
 import * as Clipboard from 'expo-clipboard';
 import * as Haptics from 'expo-haptics';
 import { useRouter } from 'expo-router';
-import React, { useCallback, useState } from 'react';
-import { View, Text, ScrollView, Pressable, StyleSheet, Alert, Platform } from 'react-native';
+import React, { useCallback, useRef, useState } from 'react';
+import {
+  View,
+  Text,
+  ScrollView,
+  Pressable,
+  StyleSheet,
+  Alert,
+  Platform,
+  NativeScrollEvent,
+  NativeSyntheticEvent
+} from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { LoyaltyCard } from '@/core/schemas';
@@ -39,6 +49,8 @@ interface CardDetailsProps {
   onDelete?: () => void;
   /** Whether delete operation is in progress */
   isDeleting?: boolean;
+  /** Callback when scroll position passes the hero section threshold (AC5 condensing header) */
+  onScrollPastHero?: (isPast: boolean) => void;
 }
 
 /**
@@ -77,12 +89,32 @@ export const CardDetails: React.FC<CardDetailsProps> = ({
   card,
   onCopy,
   onDelete,
-  isDeleting = false
+  isDeleting = false,
+  onScrollPastHero
 }) => {
   const { theme } = useTheme();
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const [fullscreenVisible, setFullscreenVisible] = useState(false);
+  const isPastHeroRef = useRef(false);
+
+  /** Scroll threshold — ~60% of BrandHero height */
+  const HERO_SCROLL_THRESHOLD = 120;
+
+  /**
+   * Track scroll position for header condensing (AC5)
+   */
+  const handleScroll = useCallback(
+    (event: NativeSyntheticEvent<NativeScrollEvent>) => {
+      const y = event.nativeEvent.contentOffset.y;
+      const isPast = y > HERO_SCROLL_THRESHOLD;
+      if (isPast !== isPastHeroRef.current) {
+        isPastHeroRef.current = isPast;
+        onScrollPastHero?.(isPast);
+      }
+    },
+    [onScrollPastHero]
+  );
 
   /**
    * Copy barcode number to clipboard with haptic feedback
@@ -149,6 +181,8 @@ export const CardDetails: React.FC<CardDetailsProps> = ({
           { paddingBottom: insets.bottom + SPACING.xl }
         ]}
         showsVerticalScrollIndicator={false}
+        onScroll={handleScroll}
+        scrollEventThrottle={16}
         testID="card-details-scroll"
       >
         {/* Brand Hero Section (AC1) */}

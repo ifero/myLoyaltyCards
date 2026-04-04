@@ -19,6 +19,7 @@ import { getCardById } from '@/core/database';
 import { LoyaltyCard } from '@/core/schemas';
 
 import { useTheme } from '@/shared/theme';
+import { getContrastForeground } from '@/shared/theme/luminance';
 import { SPACING } from '@/shared/theme/spacing';
 
 import { CardDetails, useDeleteCard, useBrandLogo } from '@/features/cards';
@@ -34,6 +35,9 @@ const CardDetailsScreen = () => {
 
   // Delete card hook
   const { deleteCard, isDeleting } = useDeleteCard(id ?? '');
+
+  // Resolve brand data — MUST be called before any early returns (Rules of Hooks)
+  const brand = useBrandLogo(card?.brandId ?? null);
 
   /**
    * Fetch card data from database
@@ -147,26 +151,29 @@ const CardDetailsScreen = () => {
   }
 
   // Resolve header color: brand color for catalogue, primary for custom
-  const brand = useBrandLogo(card.brandId);
   const headerBg = brand ? brand.color : theme.primary;
-  // White text for dark headers, dark for light headers
-  const headerC = headerBg.replace('#', '');
-  const headerR = parseInt(headerC.substring(0, 2), 16) / 255;
-  const headerG = parseInt(headerC.substring(2, 4), 16) / 255;
-  const headerB = parseInt(headerC.substring(4, 6), 16) / 255;
-  const headerLuminance = 0.2126 * headerR + 0.7152 * headerG + 0.0722 * headerB;
-  const headerTextColor = headerLuminance < 0.5 ? '#FFFFFF' : '#1F1F24';
+  const headerTextColor = getContrastForeground(headerBg);
+
+  // Scroll-aware condensing state (AC5)
+  const [isHeaderCondensed, setIsHeaderCondensed] = useState(false);
+  const handleScrollPastHero = useCallback((isPast: boolean) => {
+    setIsHeaderCondensed(isPast);
+  }, []);
 
   // Success state - render card details
   return (
     <>
       <Stack.Screen
         options={{
-          title: card.name,
+          title: isHeaderCondensed ? card.name : '',
           headerStyle: { backgroundColor: headerBg },
           headerTintColor: headerTextColor,
-          headerTitleStyle: { color: headerTextColor, fontWeight: '600' },
-          headerShadowVisible: false,
+          headerTitleStyle: {
+            color: headerTextColor,
+            fontWeight: '600',
+            fontSize: isHeaderCondensed ? 17 : 0
+          },
+          headerShadowVisible: isHeaderCondensed,
           headerLeft: () => (
             <Pressable
               onPress={() => router.back()}
@@ -179,7 +186,13 @@ const CardDetailsScreen = () => {
           )
         }}
       />
-      <CardDetails card={card} onCopy={handleCopy} onDelete={deleteCard} isDeleting={isDeleting} />
+      <CardDetails
+        card={card}
+        onCopy={handleCopy}
+        onDelete={deleteCard}
+        isDeleting={isDeleting}
+        onScrollPastHero={handleScrollPastHero}
+      />
     </>
   );
 };

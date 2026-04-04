@@ -410,6 +410,124 @@ describe('CardDetails', () => {
     });
   });
 
+  describe('Scroll condensing — AC5', () => {
+    it('calls onScrollPastHero(true) when scroll exceeds hero threshold', () => {
+      const mockScrollCallback = jest.fn();
+      const { getByTestId } = render(
+        <CardDetails card={mockCustomCard} onScrollPastHero={mockScrollCallback} />
+      );
+
+      const scrollView = getByTestId('card-details-scroll');
+      fireEvent.scroll(scrollView, {
+        nativeEvent: { contentOffset: { y: 150 } }
+      });
+
+      expect(mockScrollCallback).toHaveBeenCalledWith(true);
+    });
+
+    it('calls onScrollPastHero(false) when scroll returns below threshold', () => {
+      const mockScrollCallback = jest.fn();
+      const { getByTestId } = render(
+        <CardDetails card={mockCustomCard} onScrollPastHero={mockScrollCallback} />
+      );
+
+      const scrollView = getByTestId('card-details-scroll');
+
+      // Scroll past
+      fireEvent.scroll(scrollView, {
+        nativeEvent: { contentOffset: { y: 150 } }
+      });
+
+      // Scroll back
+      fireEvent.scroll(scrollView, {
+        nativeEvent: { contentOffset: { y: 50 } }
+      });
+
+      expect(mockScrollCallback).toHaveBeenCalledWith(false);
+    });
+
+    it('does not call onScrollPastHero when scroll stays below threshold', () => {
+      const mockScrollCallback = jest.fn();
+      const { getByTestId } = render(
+        <CardDetails card={mockCustomCard} onScrollPastHero={mockScrollCallback} />
+      );
+
+      const scrollView = getByTestId('card-details-scroll');
+      fireEvent.scroll(scrollView, {
+        nativeEvent: { contentOffset: { y: 50 } }
+      });
+
+      expect(mockScrollCallback).not.toHaveBeenCalled();
+    });
+
+    it('does not crash when onScrollPastHero is not provided', () => {
+      const { getByTestId } = render(<CardDetails card={mockCustomCard} />);
+
+      const scrollView = getByTestId('card-details-scroll');
+      expect(() => {
+        fireEvent.scroll(scrollView, {
+          nativeEvent: { contentOffset: { y: 150 } }
+        });
+      }).not.toThrow();
+    });
+  });
+
+  describe('Copy error handling', () => {
+    it('shows error alert when clipboard copy fails', async () => {
+      (Clipboard.setStringAsync as jest.Mock).mockRejectedValueOnce(new Error('Clipboard error'));
+
+      const { getByTestId } = render(<CardDetails card={mockCustomCard} />);
+
+      fireEvent.press(getByTestId('card-details-barcode-number'));
+
+      await waitFor(() => {
+        expect(Alert.alert).toHaveBeenCalledWith('Error', 'Failed to copy barcode to clipboard');
+      });
+    });
+
+    it('does not trigger haptic or callback when copy fails', async () => {
+      (Clipboard.setStringAsync as jest.Mock).mockRejectedValueOnce(new Error('fail'));
+
+      const mockOnCopy = jest.fn();
+      const { getByTestId } = render(<CardDetails card={mockCustomCard} onCopy={mockOnCopy} />);
+
+      fireEvent.press(getByTestId('card-details-barcode-number'));
+
+      await waitFor(() => {
+        expect(Alert.alert).toHaveBeenCalled();
+      });
+      expect(Haptics.notificationAsync).not.toHaveBeenCalled();
+      expect(mockOnCopy).not.toHaveBeenCalled();
+    });
+
+    it('copies barcode without onCopy callback', async () => {
+      const { getByTestId } = render(<CardDetails card={mockCustomCard} />);
+
+      fireEvent.press(getByTestId('card-details-barcode-number'));
+
+      await waitFor(() => {
+        expect(Clipboard.setStringAsync).toHaveBeenCalledWith('1234567890128');
+        expect(Haptics.notificationAsync).toHaveBeenCalled();
+      });
+    });
+  });
+
+  describe('Color display fallback', () => {
+    it('falls back to raw color value when not in COLOR_LABELS', () => {
+      const unknownColorCard = { ...mockCustomCard, color: 'purple' as LoyaltyCard['color'] };
+      const { getByText } = render(<CardDetails card={unknownColorCard} />);
+      expect(getByText('purple')).toBeTruthy();
+    });
+  });
+
+  describe('QR barcode format', () => {
+    it('renders with QR dimensions', () => {
+      const qrCard = { ...mockCustomCard, barcodeFormat: 'QR' as LoyaltyCard['barcodeFormat'] };
+      const { getByTestId } = render(<CardDetails card={qrCard} />);
+      expect(getByTestId('card-details-barcode-preview')).toBeTruthy();
+    });
+  });
+
   describe('Accessibility', () => {
     it('barcode preview has correct accessibility attributes', () => {
       const { getByTestId } = render(<CardDetails card={mockCustomCard} />);

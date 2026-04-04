@@ -182,6 +182,62 @@ describe('FullscreenBarcode', () => {
     });
   });
 
+  describe('Copy error handling', () => {
+    it('handles clipboard error gracefully', async () => {
+      const consoleWarnSpy = jest.spyOn(console, 'warn').mockImplementation();
+      (Clipboard.setStringAsync as jest.Mock).mockRejectedValueOnce(new Error('fail'));
+
+      const { getByTestId } = render(
+        <FullscreenBarcode card={mockCard} visible={true} onClose={jest.fn()} />
+      );
+
+      fireEvent.press(getByTestId('fullscreen-barcode-number'));
+
+      await waitFor(() => {
+        expect(consoleWarnSpy).toHaveBeenCalledWith('Failed to copy barcode:', expect.any(Error));
+      });
+      consoleWarnSpy.mockRestore();
+    });
+
+    it('copies barcode without onCopy callback', async () => {
+      const { getByTestId } = render(
+        <FullscreenBarcode card={mockCard} visible={true} onClose={jest.fn()} />
+      );
+
+      fireEvent.press(getByTestId('fullscreen-barcode-number'));
+
+      await waitFor(() => {
+        expect(Clipboard.setStringAsync).toHaveBeenCalledWith('1234567890123');
+        expect(Haptics.notificationAsync).toHaveBeenCalled();
+      });
+    });
+  });
+
+  describe('Visibility states', () => {
+    it('does not maximize brightness when not visible', () => {
+      render(<FullscreenBarcode card={mockCard} visible={false} onClose={jest.fn()} />);
+      expect(mockMaximize).not.toHaveBeenCalled();
+    });
+
+    it('does not restore brightness on unmount when not visible', () => {
+      const { unmount } = render(
+        <FullscreenBarcode card={mockCard} visible={false} onClose={jest.fn()} />
+      );
+      unmount();
+      expect(mockRestore).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('QR barcode format', () => {
+    it('renders with QR dimensions', () => {
+      const qrCard = { ...mockCard, barcodeFormat: 'QR' as const };
+      const { getByTestId } = render(
+        <FullscreenBarcode card={qrCard} visible={true} onClose={jest.fn()} />
+      );
+      expect(getByTestId('fullscreen-barcode-modal')).toBeTruthy();
+    });
+  });
+
   describe('Accessibility', () => {
     it('close button has correct accessibility label', () => {
       const { getByTestId } = render(
