@@ -411,6 +411,22 @@ describe('CardDetails', () => {
   });
 
   describe('Scroll condensing — AC5', () => {
+    it('sets a minimum content height to preserve full scroll range', () => {
+      const { getByTestId } = render(<CardDetails card={mockCustomCard} />);
+
+      const scrollView = getByTestId('card-details-scroll');
+      const contentStyles = Array.isArray(scrollView.props.contentContainerStyle)
+        ? scrollView.props.contentContainerStyle
+        : [scrollView.props.contentContainerStyle];
+
+      const minHeightStyle = contentStyles.find(
+        (style: { minHeight?: number } | undefined) => style && typeof style.minHeight === 'number'
+      );
+
+      expect(minHeightStyle).toBeDefined();
+      expect(minHeightStyle.minHeight).toBeGreaterThan(0);
+    });
+
     it('calls onScrollPastHero(true) when scroll exceeds hero threshold', () => {
       const mockScrollCallback = jest.fn();
       const { getByTestId } = render(

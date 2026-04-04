@@ -23,8 +23,10 @@ import {
   StyleSheet,
   Alert,
   Platform,
+  LayoutChangeEvent,
   NativeScrollEvent,
-  NativeSyntheticEvent
+  NativeSyntheticEvent,
+  useWindowDimensions
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -93,7 +95,9 @@ export const CardDetails: React.FC<CardDetailsProps> = ({
   const { theme } = useTheme();
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const { height: viewportHeight } = useWindowDimensions();
   const [fullscreenVisible, setFullscreenVisible] = useState(false);
+  const [heroHeight, setHeroHeight] = useState(200);
   const isPastHeroRef = useRef(false);
 
   /**
@@ -102,14 +106,25 @@ export const CardDetails: React.FC<CardDetailsProps> = ({
   const handleScroll = useCallback(
     (event: NativeSyntheticEvent<NativeScrollEvent>) => {
       const y = event.nativeEvent.contentOffset.y;
-      const isPast = y > HERO_SCROLL_THRESHOLD;
+      const isPast = y > Math.max(HERO_SCROLL_THRESHOLD, heroHeight * 0.6);
       if (isPast !== isPastHeroRef.current) {
         isPastHeroRef.current = isPast;
         onScrollPastHero?.(isPast);
       }
     },
-    [onScrollPastHero]
+    [heroHeight, onScrollPastHero]
   );
+
+  /**
+   * Measure hero height so ScrollView can always scroll enough
+   * for barcode section to reach the top under the header.
+   */
+  const handleHeroLayout = useCallback((event: LayoutChangeEvent) => {
+    const nextHeight = Math.round(event.nativeEvent.layout.height);
+    if (nextHeight > 0) {
+      setHeroHeight(nextHeight);
+    }
+  }, []);
 
   /**
    * Copy barcode number to clipboard with haptic feedback
@@ -173,7 +188,8 @@ export const CardDetails: React.FC<CardDetailsProps> = ({
         style={[styles.container, { backgroundColor: theme.background }]}
         contentContainerStyle={[
           styles.contentContainer,
-          { paddingBottom: insets.bottom + SPACING.xl }
+          { paddingBottom: insets.bottom + SPACING.xl },
+          { minHeight: viewportHeight + heroHeight }
         ]}
         showsVerticalScrollIndicator={false}
         onScroll={handleScroll}
@@ -181,7 +197,9 @@ export const CardDetails: React.FC<CardDetailsProps> = ({
         testID="card-details-scroll"
       >
         {/* Brand Hero Section (AC1) */}
-        <BrandHero card={card} testID="card-details-hero" />
+        <View onLayout={handleHeroLayout}>
+          <BrandHero card={card} testID="card-details-hero" />
+        </View>
 
         {/* Barcode Display Area (AC2) */}
         <View style={styles.barcodeSection}>
