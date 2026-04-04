@@ -1,0 +1,31 @@
+features/cards/components/FullscreenBarcode.tsx
+  0cb5fa81342d534d 24-25,34,49,74,120
+features/cards/components/BrandHero.tsx
+  0cb5fa81342d534d 46-48,56
+features/cards/utils/formatBarcode.ts
+  0cb5fa81342d534d 1-13
+features/cards/utils/index.ts
+  0cb5fa81342d534d 4,10
+features/cards/components/CardDetails.tsx
+  0cb5fa81342d534d 42,80-81
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.2.5",
+  "base_commit_sha": "5b76302e84b1e4a8df1b72edc232ed190e525139",
+  "prompts": {
+    "0cb5fa81342d534d": {
+      "agent_id": {
+        "tool": "github-copilot",
+        "id": "1e355598-91dc-45e6-b866-26cdbf62ae8e",
+        "model": "copilot/claude-opus-4.6"
+      },
+      "human_author": "Andrea Pacino",
+      "messages": [],
+      "total_additions": 29,
+      "total_deletions": 21,
+      "accepted_lines": 28,
+      "overriden_lines": 0
+    }
+  }
+}
