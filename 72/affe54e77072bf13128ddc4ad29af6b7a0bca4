@@ -1,0 +1,25 @@
+app/card/[id].tsx
+  0cb5fa81342d534d 42-47
+shared/theme/luminance.ts
+  0cb5fa81342d534d 11-12
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.2.5",
+  "base_commit_sha": "72affe54e77072bf13128ddc4ad29af6b7a0bca4",
+  "prompts": {
+    "0cb5fa81342d534d": {
+      "agent_id": {
+        "tool": "github-copilot",
+        "id": "1e355598-91dc-45e6-b866-26cdbf62ae8e",
+        "model": "copilot/claude-opus-4.6"
+      },
+      "human_author": "Andrea Pacino",
+      "messages": [],
+      "total_additions": 8,
+      "total_deletions": 7,
+      "accepted_lines": 8,
+      "overriden_lines": 0
+    }
+  }
+}
