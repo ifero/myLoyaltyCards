@@ -81,6 +81,7 @@ const formatDate = (isoString: string): string => {
 
 /** Scroll threshold — ~60% of BrandHero height */
 const HERO_SCROLL_THRESHOLD = 120;
+const HERO_CONDENSING_RATIO = 0.6;
 
 /**
  * CardDetails Component — Figma-aligned Card Detail screen
@@ -106,7 +107,7 @@ export const CardDetails: React.FC<CardDetailsProps> = ({
   const handleScroll = useCallback(
     (event: NativeSyntheticEvent<NativeScrollEvent>) => {
       const y = event.nativeEvent.contentOffset.y;
-      const isPast = y > Math.max(HERO_SCROLL_THRESHOLD, heroHeight * 0.6);
+      const isPast = y > Math.max(HERO_SCROLL_THRESHOLD, heroHeight * HERO_CONDENSING_RATIO);
       if (isPast !== isPastHeroRef.current) {
         isPastHeroRef.current = isPast;
         onScrollPastHero?.(isPast);
