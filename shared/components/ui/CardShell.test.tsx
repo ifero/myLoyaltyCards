@@ -9,8 +9,8 @@ jest.mock('@/shared/theme', () => ({
 }));
 
 const baseTheme = {
-  surfaceElevated: '#1A1F26',
-  borderStrong: '#475569'
+  surfaceElevated: '#2C2C2E',
+  borderStrong: '#66666B'
 };
 
 describe('CardShell', () => {

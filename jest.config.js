@@ -11,7 +11,8 @@ module.exports = {
   ],
   moduleNameMapper: {
     '^@/(.*)$': '<rootDir>/$1',
-    '^@bwip-js/react-native$': '<rootDir>/__mocks__/@bwip-js/react-native.js'
+    '^@bwip-js/react-native$': '<rootDir>/__mocks__/@bwip-js/react-native.js',
+    '\\.svg$': '<rootDir>/__mocks__/svgMock.js'
   },
   testMatch: ['**/*.test.[jt]s?(x)'],
   testPathIgnorePatterns: ['/node_modules/', 'babel.config.test.js', 'watch-ios/'],

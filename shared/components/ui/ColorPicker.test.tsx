@@ -15,8 +15,8 @@ jest.mock('@/shared/theme', () => ({
   useTheme: () => mockUseTheme()
 }));
 
-const lightTheme = { primary: '#1A73E8', border: '#D6DEE8' };
-const darkTheme = { primary: '#4DA3FF', border: '#2A3441' };
+const lightTheme = { primary: '#1A73E8', border: '#E5E5EB' };
+const darkTheme = { primary: '#4DA3FF', border: '#38383A' };
 
 describe('ColorPicker', () => {
   beforeEach(() => {

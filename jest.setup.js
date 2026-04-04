@@ -153,6 +153,24 @@ jest.mock('@react-native-picker/picker', () => {
   };
 });
 
+// Mock @expo/vector-icons (avoid expo-modules-core EventEmitter errors)
+jest.mock('@expo/vector-icons', () => {
+  const mockReact = require('react');
+  const { Text } = require('react-native');
+  const createMockIcon = (displayName) => {
+    const Icon = ({ name, testID, ...rest }) =>
+      mockReact.createElement(Text, { testID: testID || `icon-${name}`, ...rest }, name);
+    Icon.displayName = displayName;
+    return Icon;
+  };
+  return {
+    MaterialIcons: createMockIcon('MaterialIcons'),
+    MaterialCommunityIcons: createMockIcon('MaterialCommunityIcons'),
+    Ionicons: createMockIcon('Ionicons'),
+    FontAwesome: createMockIcon('FontAwesome')
+  };
+});
+
 // Mock @shopify/flash-list
 // Export state object to allow tests to capture props
 global.mockFlashListState = { numColumns: undefined };
@@ -162,21 +180,43 @@ jest.mock('@shopify/flash-list', () => {
 
   return {
     FlashList: (props) => {
-      const { data, renderItem, ListEmptyComponent, testID, numColumns } = props;
+      const {
+        data,
+        renderItem,
+        ListEmptyComponent,
+        ListHeaderComponent,
+        testID,
+        numColumns,
+        onRefresh,
+        refreshing
+      } = props;
 
       // Store numColumns in global state for test assertions
       global.mockFlashListState.numColumns = numColumns;
 
       if (data.length === 0 && ListEmptyComponent) {
-        return mockReact.createElement(ListEmptyComponent);
+        return typeof ListEmptyComponent === 'function'
+          ? mockReact.createElement(ListEmptyComponent)
+          : ListEmptyComponent;
       }
+
+      const children = data.map((item, index) =>
+        mockReact.createElement(mockRN.View, { key: item.id || index }, renderItem({ item }))
+      );
 
       return mockReact.createElement(
         mockRN.View,
-        { testID },
-        data.map((item, index) =>
-          mockReact.createElement(mockRN.View, { key: item.id || index }, renderItem({ item }))
-        )
+        { testID, onRefresh, refreshing },
+        ListHeaderComponent
+          ? mockReact.createElement(
+              mockRN.View,
+              { key: '__header' },
+              typeof ListHeaderComponent === 'function'
+                ? mockReact.createElement(ListHeaderComponent)
+                : ListHeaderComponent
+            )
+          : null,
+        ...children
       );
     }
   };

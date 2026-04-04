@@ -1,50 +1,65 @@
 /**
  * CardList Component
- * Story 2.1: Display Card List
+ * Story 13.2: Restyle Home Screen (AC1, AC3, AC5, AC6, AC10)
  *
- * Main card list component using FlashList for performance.
- * Displays cards in a responsive grid or empty state when no cards exist.
+ * 2-column grid with search, sort, single-card state,
+ * and empty state using FlashList for performance.
  */
 
 import { FlashList } from '@shopify/flash-list';
 import { useFocusEffect } from 'expo-router';
-import React, { useCallback, useState } from 'react';
-import { View, Text, useWindowDimensions, ActivityIndicator, StyleSheet } from 'react-native';
+import React, { useCallback, useMemo, useState } from 'react';
+import {
+  View,
+  Text,
+  ActivityIndicator,
+  StyleSheet,
+  ScrollView,
+  RefreshControl
+} from 'react-native';
 
 import { LoyaltyCard } from '@/core/schemas';
 
 import { useCloudSync } from '@/shared/hooks/useCloudSync';
 import { useTheme } from '@/shared/theme';
 import { SPACING } from '@/shared/theme/spacing';
+import { TYPOGRAPHY } from '@/shared/theme/typography';
 
 import { CardTile } from './CardTile';
 import { EmptyState } from './EmptyState';
+import { SearchBar } from './SearchBar';
+import { SortFilterRow } from './SortFilterRow';
 import { useCards } from '../hooks/useCards';
+import { useCardSearch } from '../hooks/useCardSearch';
+import { useCardSort } from '../hooks/useCardSort';
 
 /**
- * Breakpoint for responsive columns
- * < 400dp: 2 columns
- * >= 400dp: 3 columns
+ * Fixed 2-column layout.
+ * Values derived from Figma (file 4PSsX8SyTUU0GCUdBAAEED, node 52:64).
+ * Differs from shared/theme/spacing LAYOUT tokens which apply to other screens.
  */
-const COLUMN_BREAKPOINT = 400;
-const MIN_COLUMNS = 2;
-const MAX_COLUMNS = 3;
+const NUM_COLUMNS = 2;
+const SCREEN_MARGIN = 16;
+const GUTTER = 16;
 
 /**
  * CardList Component
  *
- * - Uses FlashList for 10x performance vs FlatList
- * - Responsive columns based on screen width
- * - Shows EmptyState when no cards
- * - Shows loading spinner while fetching
- * - 8px gap between items, 16px horizontal padding
+ * - Fixed 2-column FlashList grid (no responsive breakpoint)
+ * - 16pt screen margins, 16pt gutters
+ * - SearchBar + SortFilterRow visible when cards >= 2
+ * - Single-card state: enlarged centered tile with tip
+ * - Empty state via ListEmptyComponent
+ * - Pull-to-refresh for cloud sync
  */
 export const CardList: React.FC = () => {
   const { theme } = useTheme();
-  const { width } = useWindowDimensions();
   const { cards, isLoading, error, refetch } = useCards();
   const { forceSync } = useCloudSync();
   const [isRefreshing, setIsRefreshing] = useState(false);
+
+  const { searchQuery, setSearchQuery, clearSearch, filterCards } = useCardSearch();
+  const { sortOption, setSortOption, sortCards, sortLabel, sortLabels } = useCardSort();
 
   const handleRefresh = useCallback(async () => {
     setIsRefreshing(true);
@@ -56,17 +71,40 @@ export const CardList: React.FC = () => {
     }
   }, [forceSync, refetch]);
 
-  // Refresh cards when screen comes into focus (e.g., returning from add-card)
+  // Refresh cards when screen comes into focus
   useFocusEffect(
     useCallback(() => {
       refetch();
     }, [refetch])
   );
 
-  // Determine number of columns based on screen width
-  const numColumns = width < COLUMN_BREAKPOINT ? MIN_COLUMNS : MAX_COLUMNS;
+  // Derive data unconditionally (hooks must run on every render)
+  const filtered = filterCards(cards);
+  const sorted = sortCards(filtered);
+  const totalCount = cards.length;
+  const showControls = totalCount >= 2;
 
-  // Loading state
+  const noResultsElement = useMemo(
+    () => (
+      <View style={styles.noResults}>
+        <Text style={[styles.noResultsText, { color: theme.textSecondary }]}>
+          No cards matching &quot;{searchQuery}&quot;
+        </Text>
+      </View>
+    ),
+    [searchQuery, theme.textSecondary]
+  );
+
+  const renderItem = useCallback(
+    ({ item }: { item: LoyaltyCard }) => (
+      <View style={styles.tileWrapper}>
+        <CardTile card={item} />
+      </View>
+    ),
+    []
+  );
+
+  // ---- Loading state ----
   if (isLoading) {
     return (
       <View style={[styles.centered, { backgroundColor: theme.background }]}>
@@ -75,7 +113,7 @@ export const CardList: React.FC = () => {
     );
   }
 
-  // Error state
+  // ---- Error state ----
   if (error) {
     return (
       <View style={[styles.centered, { backgroundColor: theme.background }]}>
@@ -84,20 +122,59 @@ export const CardList: React.FC = () => {
     );
   }
 
-  // Render card item
-  const renderItem = ({ item }: { item: LoyaltyCard }) => <CardTile card={item} />;
+  // ---- Single-card state ----
+  if (totalCount === 1) {
+    return (
+      <ScrollView
+        style={[styles.container, { backgroundColor: theme.background }]}
+        contentContainerStyle={styles.singleCardContainer}
+        refreshControl={
+          <RefreshControl
+            refreshing={isRefreshing}
+            onRefresh={handleRefresh}
+            tintColor={theme.primary}
+          />
+        }
+      >
+        <CardTile card={cards[0]!} enlarged />
+        <Text style={[styles.singleCardTip, { color: theme.textTertiary }]}>
+          Tap + to add more cards to your wallet
+        </Text>
+      </ScrollView>
+    );
+  }
+
+  // ---- Multi-card / Empty state ----
+  const ListHeader = showControls ? (
+    <View style={styles.headerContainer}>
+      <SearchBar value={searchQuery} onChangeText={setSearchQuery} onClear={clearSearch} />
+      <SortFilterRow
+        cardCount={filtered.length}
+        sortOption={sortOption}
+        onSortChange={setSortOption}
+        sortLabel={sortLabel}
+        sortLabels={sortLabels}
+      />
+    </View>
+  ) : null;
+
+  const EmptyComponent =
+    showControls && searchQuery.trim().length > 0 && sorted.length === 0
+      ? noResultsElement
+      : EmptyState;
 
   return (
     <View style={[styles.container, { backgroundColor: theme.background }]}>
       <FlashList
         testID="card-list-flashlist"
-        data={cards}
+        data={sorted}
         renderItem={renderItem}
-        numColumns={numColumns}
+        numColumns={NUM_COLUMNS}
         keyExtractor={(item) => item.id}
         contentContainerStyle={styles.listContent}
         showsVerticalScrollIndicator={false}
-        ListEmptyComponent={EmptyState}
+        ListHeaderComponent={ListHeader}
+        ListEmptyComponent={EmptyComponent}
         refreshing={isRefreshing}
         onRefresh={handleRefresh}
       />
@@ -115,7 +192,37 @@ const styles = StyleSheet.create({
     justifyContent: 'center'
   },
   listContent: {
-    paddingHorizontal: SPACING.md - SPACING.sm / 2, // 16px - 4px margin = 12px
+    paddingHorizontal: SCREEN_MARGIN,
     paddingVertical: SPACING.sm
+  },
+  headerContainer: {
+    marginBottom: 8
+  },
+  tileWrapper: {
+    flex: 1,
+    alignItems: 'center',
+    paddingHorizontal: GUTTER / 2,
+    marginBottom: GUTTER
+  },
+  singleCardContainer: {
+    flexGrow: 1,
+    alignItems: 'center',
+    paddingTop: 32
+  },
+  singleCardTip: {
+    fontSize: TYPOGRAPHY.subheadline.fontSize,
+    lineHeight: TYPOGRAPHY.subheadline.lineHeight,
+    marginTop: 16,
+    textAlign: 'center'
+  },
+  noResults: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 48
+  },
+  noResultsText: {
+    fontSize: TYPOGRAPHY.body.fontSize,
+    textAlign: 'center'
   }
 });

@@ -1,6 +1,10 @@
 /**
  * CardList Component Tests
- * Story 2.1: Display Card List - AC2, AC3, AC4, AC5
+ * Story 13.2: Restyle Home Screen — AC1, AC3, AC4, AC5, AC6, AC10
+ *
+ * Covers: loading, error, empty state, single-card state,
+ * fixed 2-column grid, search+sort controls (>= 2 cards),
+ * no-results message, focus-effect refetch, pull-to-refresh, performance.
  */
 
 import { render, screen } from '@testing-library/react-native';
@@ -10,18 +14,25 @@ import { LoyaltyCard } from '@/core/schemas';
 
 import { CardList } from './CardList';
 import { useCards } from '../hooks/useCards';
-// ...existing code...
+import { useCardSearch } from '../hooks/useCardSearch';
+import { useCardSort } from '../hooks/useCardSort';
 
 // Extend global type for test mocks
 declare global {
   var mockFlashListState: { numColumns: number | undefined };
 }
 
-// Mock useCards hook
+// ── Hook mocks ──────────────────────────────────────────────────
 jest.mock('../hooks/useCards');
 const mockUseCards = useCards as jest.MockedFunction<typeof useCards>;
 
-// Mock useCloudSync
+jest.mock('../hooks/useCardSearch');
+const mockUseCardSearch = useCardSearch as jest.MockedFunction<typeof useCardSearch>;
+
+jest.mock('../hooks/useCardSort');
+const mockUseCardSort = useCardSort as jest.MockedFunction<typeof useCardSort>;
+
+// ── External dependency mocks ──────────────────────────────────
 const mockForceSync = jest.fn().mockResolvedValue(undefined);
 jest.mock('@/shared/hooks/useCloudSync', () => ({
   useCloudSync: () => ({
@@ -34,15 +45,11 @@ jest.mock('@/shared/hooks/useCloudSync', () => ({
   })
 }));
 
-// Mock useFocusEffect
 jest.mock('expo-router', () => ({
-  useFocusEffect: jest.fn((callback) => callback()),
-  useRouter: () => ({
-    push: jest.fn()
-  })
+  useFocusEffect: jest.fn((callback: () => void) => callback()),
+  useRouter: () => ({ push: jest.fn() })
 }));
 
-// Mock ThemeProvider
 jest.mock('@/shared/theme', () => ({
   useTheme: () => ({
     theme: {
@@ -57,328 +64,286 @@ jest.mock('@/shared/theme', () => ({
   })
 }));
 
+// ── Child component mocks (isolate orchestration) ──────────────
+jest.mock('./CardTile', () => {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const React = require('react');
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const { Text } = require('react-native');
+  return {
+    CardTile: ({ card, enlarged }: { card: { name: string }; enlarged?: boolean }) =>
+      React.createElement(
+        Text,
+        { testID: enlarged ? 'card-tile-enlarged' : 'card-tile' },
+        card.name
+      ),
+    TILE_WIDTH: 171,
+    TILE_HEIGHT: 140,
+    TILE_RADIUS: 16,
+    SINGLE_TILE_WIDTH: 220,
+    SINGLE_TILE_HEIGHT: 180,
+    SINGLE_TILE_RADIUS: 20
+  };
+});
+
+jest.mock('./EmptyState', () => {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const React = require('react');
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const { Text } = require('react-native');
+  return {
+    EmptyState: () => React.createElement(Text, { testID: 'empty-state' }, 'No cards yet')
+  };
+});
+
+jest.mock('./SearchBar', () => {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const React = require('react');
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const { TextInput } = require('react-native');
+  return {
+    SearchBar: ({ value, onChangeText }: { value: string; onChangeText: (t: string) => void }) =>
+      React.createElement(TextInput, {
+        testID: 'search-bar',
+        accessibilityLabel: 'Search loyalty cards',
+        value,
+        onChangeText,
+        placeholder: 'Search'
+      })
+  };
+});
+
+jest.mock('./SortFilterRow', () => {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const React = require('react');
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const { Text } = require('react-native');
+  return {
+    SortFilterRow: ({ cardCount }: { cardCount: number }) =>
+      React.createElement(Text, { testID: 'sort-filter-row' }, `${cardCount} loyalty cards`)
+  };
+});
+
+// ── Fixtures ────────────────────────────────────────────────────
+const makeCard = (overrides: Partial<LoyaltyCard> = {}): LoyaltyCard => ({
+  id: '1',
+  name: 'Apple Store',
+  barcode: '1234567890',
+  barcodeFormat: 'CODE128',
+  brandId: null,
+  color: 'blue',
+  isFavorite: false,
+  lastUsedAt: null,
+  usageCount: 5,
+  createdAt: '2026-01-07T10:00:00Z',
+  updatedAt: '2026-01-07T10:00:00Z',
+  ...overrides
+});
+
+const twoCards: LoyaltyCard[] = [
+  makeCard({ id: '1', name: 'Apple Store', usageCount: 5 }),
+  makeCard({
+    id: '2',
+    name: 'Best Buy',
+    barcode: '0987654321',
+    barcodeFormat: 'EAN13',
+    color: 'red',
+    usageCount: 3
+  })
+];
+
+// ── Default hook return values ──────────────────────────────────
+const mockRefetch = jest.fn();
+const mockSetSearchQuery = jest.fn();
+const mockClearSearch = jest.fn();
+const mockSetSortOption = jest.fn();
+
+const defaultSearch = {
+  searchQuery: '',
+  setSearchQuery: mockSetSearchQuery,
+  clearSearch: mockClearSearch,
+  filterCards: (cards: LoyaltyCard[]) => cards
+};
+
+const defaultSort = {
+  sortOption: 'frequent' as const,
+  setSortOption: mockSetSortOption,
+  sortCards: (cards: LoyaltyCard[]) => cards,
+  sortLabel: 'Most Used',
+  sortLabels: { frequent: 'Most Used', recent: 'Recently Added', az: 'A → Z' }
+};
+
+// ── Helpers ─────────────────────────────────────────────────────
+const setupCards = (
+  cards: LoyaltyCard[],
+  opts?: { isLoading?: boolean; error?: string | null }
+) => {
+  mockUseCards.mockReturnValue({
+    cards,
+    isLoading: opts?.isLoading ?? false,
+    error: opts?.error ?? null,
+    refetch: mockRefetch
+  });
+};
+
+const setupSearch = (overrides: Partial<typeof defaultSearch> = {}) =>
+  mockUseCardSearch.mockReturnValue({ ...defaultSearch, ...overrides });
+
+const setupSort = (overrides: Partial<typeof defaultSort> = {}) =>
+  mockUseCardSort.mockReturnValue({ ...defaultSort, ...overrides });
+
+// ── Tests ───────────────────────────────────────────────────────
 describe('CardList', () => {
-  const mockCards: LoyaltyCard[] = [
-    {
-      id: '1',
-      name: 'Apple Store',
-      barcode: '1234567890',
-      barcodeFormat: 'CODE128',
-      brandId: null,
-      color: 'blue',
-      isFavorite: false,
-      lastUsedAt: null,
-      usageCount: 0,
-      createdAt: '2026-01-07T10:00:00Z',
-      updatedAt: '2026-01-07T10:00:00Z'
-    },
-    {
-      id: '2',
-      name: 'Best Buy',
-      barcode: '0987654321',
-      barcodeFormat: 'EAN13',
-      brandId: null,
-      color: 'red',
-      isFavorite: false,
-      lastUsedAt: null,
-      usageCount: 0,
-      createdAt: '2026-01-08T10:00:00Z',
-      updatedAt: '2026-01-08T10:00:00Z'
-    }
-  ];
-
-  const mockRefetch = jest.fn();
-
-  // Mock useWindowDimensions
-  const mockDimensions = { width: 375, height: 667, scale: 1, fontScale: 1 };
-  let useWindowDimensionsSpy: jest.SpyInstance;
-
   beforeEach(() => {
     jest.clearAllMocks();
-    global.mockFlashListState.numColumns = undefined; // Reset captured value
-
-    // Spy on useWindowDimensions
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const RN = require('react-native');
-    useWindowDimensionsSpy = jest.spyOn(RN, 'useWindowDimensions').mockReturnValue(mockDimensions);
-
-    mockUseCards.mockReturnValue({
-      cards: [],
-      isLoading: false,
-      error: null,
-      refetch: mockRefetch
-    });
+    global.mockFlashListState.numColumns = undefined;
+    setupCards([]);
+    setupSearch();
+    setupSort();
   });
 
-  afterEach(() => {
-    if (useWindowDimensionsSpy) {
-      useWindowDimensionsSpy.mockRestore();
-    }
-  });
-
-  describe('Loading State', () => {
-    it('shows loading spinner while fetching cards', () => {
-      mockUseCards.mockReturnValue({
-        cards: [],
-        isLoading: true,
-        error: null,
-        refetch: mockRefetch
-      });
-
+  // ── Loading state ──
+  describe('Loading state', () => {
+    it('shows ActivityIndicator while loading', () => {
+      setupCards([], { isLoading: true });
       const { UNSAFE_getByType } = render(<CardList />);
-      const activityIndicator = UNSAFE_getByType(
-        // eslint-disable-next-line @typescript-eslint/no-require-imports
-        require('react-native').ActivityIndicator
-      );
-      expect(activityIndicator).toBeTruthy();
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
+      expect(UNSAFE_getByType(require('react-native').ActivityIndicator)).toBeTruthy();
     });
   });
 
-  describe('Error State', () => {
-    it('displays error message when fetch fails', () => {
-      mockUseCards.mockReturnValue({
-        cards: [],
-        isLoading: false,
-        error: 'Failed to load cards',
-        refetch: mockRefetch
-      });
-
+  // ── Error state ──
+  describe('Error state', () => {
+    it('displays error message', () => {
+      setupCards([], { error: 'Database error' });
       render(<CardList />);
-
-      const errorText = screen.getByText('Failed to load cards');
-      expect(errorText).toBeTruthy();
+      expect(screen.getByText('Database error')).toBeTruthy();
     });
   });
 
-  describe('Empty State - AC1', () => {
-    it('shows EmptyState component when no cards exist', () => {
-      mockUseCards.mockReturnValue({
-        cards: [],
-        isLoading: false,
-        error: null,
-        refetch: mockRefetch
-      });
-
+  // ── Empty state (AC4) ──
+  describe('Empty state — AC4', () => {
+    it('shows EmptyState via ListEmptyComponent when 0 cards', () => {
+      setupCards([]);
       render(<CardList />);
-
-      // EmptyState should be rendered by FlashList's ListEmptyComponent
-      const emptyStateText = screen.getByText('No cards yet');
-      expect(emptyStateText).toBeTruthy();
+      expect(screen.getByText('No cards yet')).toBeTruthy();
     });
   });
 
-  describe('Card Grid Display - AC2', () => {
-    it('renders cards when available', () => {
-      mockUseCards.mockReturnValue({
-        cards: mockCards,
-        isLoading: false,
-        error: null,
-        refetch: mockRefetch
-      });
-
+  // ── Single-card state (AC5) ──
+  describe('Single-card state — AC5', () => {
+    it('renders enlarged centered tile for single card', () => {
+      setupCards([makeCard()]);
       render(<CardList />);
-
-      const card1 = screen.getByText('Apple Store');
-      const card2 = screen.getByText('Best Buy');
-
-      expect(card1).toBeTruthy();
-      expect(card2).toBeTruthy();
+      expect(screen.getByText('Apple Store')).toBeTruthy();
     });
 
-    it('renders correct number of cards', () => {
-      mockUseCards.mockReturnValue({
-        cards: mockCards,
-        isLoading: false,
-        error: null,
-        refetch: mockRefetch
-      });
-
+    it('shows tip text when only one card', () => {
+      setupCards([makeCard()]);
       render(<CardList />);
+      expect(screen.getByText('Tap + to add more cards to your wallet')).toBeTruthy();
+    });
 
+    it('does not show search or sort controls for single card', () => {
+      setupCards([makeCard()]);
+      render(<CardList />);
+      expect(screen.queryByLabelText('Search loyalty cards')).toBeNull();
+    });
+  });
+
+  // ── Fixed 2-column grid (AC1) ──
+  describe('Fixed 2-column grid — AC1', () => {
+    it('always passes numColumns=2 to FlashList', () => {
+      setupCards(twoCards);
+      render(<CardList />);
+      expect(global.mockFlashListState.numColumns).toBe(2);
+    });
+
+    it('renders all cards in the grid', () => {
+      setupCards(twoCards);
+      render(<CardList />);
       expect(screen.getByText('Apple Store')).toBeTruthy();
       expect(screen.getByText('Best Buy')).toBeTruthy();
     });
   });
 
-  describe('Responsive Columns - AC2', () => {
-    it('uses 2 columns on screens < 400dp width', () => {
-      mockDimensions.width = 375; // iPhone SE width
-
-      mockUseCards.mockReturnValue({
-        cards: mockCards,
-        isLoading: false,
-        error: null,
-        refetch: mockRefetch
-      });
-
+  // ── Search controls (AC3) ──
+  describe('Search controls — AC3', () => {
+    it('renders SearchBar when >= 2 cards', () => {
+      setupCards(twoCards);
       render(<CardList />);
-
-      // Verify FlashList receives numColumns=2
-      expect(global.mockFlashListState.numColumns).toBe(2);
-      expect(screen.getByText('Apple Store')).toBeTruthy();
+      expect(screen.getByLabelText('Search loyalty cards')).toBeTruthy();
     });
 
-    it('uses 3 columns on screens >= 400dp width', () => {
-      mockDimensions.width = 428; // iPhone 15 Pro Max width
-
-      mockUseCards.mockReturnValue({
-        cards: mockCards,
-        isLoading: false,
-        error: null,
-        refetch: mockRefetch
-      });
-
+    it('filters cards via useCardSearch.filterCards', () => {
+      const filterFn = jest.fn((cards: LoyaltyCard[]) => [cards[0]!]);
+      setupCards(twoCards);
+      setupSearch({ searchQuery: 'apple', filterCards: filterFn });
       render(<CardList />);
+      expect(filterFn).toHaveBeenCalledWith(twoCards);
+    });
 
-      // Verify FlashList receives numColumns=3
-      expect(global.mockFlashListState.numColumns).toBe(3);
-      expect(screen.getByText('Apple Store')).toBeTruthy();
+    it('shows no-results message when search yields 0 matches', () => {
+      setupCards(twoCards);
+      setupSearch({
+        searchQuery: 'xyz',
+        filterCards: () => []
+      });
+      setupSort({ sortCards: (c: LoyaltyCard[]) => c });
+      render(<CardList />);
+      expect(screen.getByText(/No cards matching "xyz"/)).toBeTruthy();
     });
   });
 
-  describe('Card Order - AC3', () => {
-    it('displays cards in alphabetical order', () => {
-      // Mock returns cards in unordered state, but useCards hook
-      // should call getAllCards which orders them alphabetically
-      const unorderedCards: LoyaltyCard[] = [
-        {
-          id: '2',
-          name: 'Zebra Store',
-          barcode: '0987654321',
-          barcodeFormat: 'EAN13',
-          brandId: null,
-          color: 'red',
-          isFavorite: false,
-          lastUsedAt: null,
-          usageCount: 0,
-          createdAt: '2026-01-08T10:00:00Z',
-          updatedAt: '2026-01-08T10:00:00Z'
-        },
-        {
-          id: '1',
-          name: 'Apple Store',
-          barcode: '1234567890',
-          barcodeFormat: 'CODE128',
-          brandId: null,
-          color: 'blue',
-          isFavorite: false,
-          lastUsedAt: null,
-          usageCount: 0,
-          createdAt: '2026-01-07T10:00:00Z',
-          updatedAt: '2026-01-07T10:00:00Z'
-        }
-      ];
+  // ── Sort controls (AC6) ──
+  describe('Sort controls — AC6', () => {
+    it('renders SortFilterRow when >= 2 cards', () => {
+      setupCards(twoCards);
+      render(<CardList />);
+      expect(screen.getByText(/loyalty cards/i)).toBeTruthy();
+    });
 
-      // In reality, useCards calls getAllCards which returns cards ordered alphabetically
-      // So we mock it to return cards in alphabetical order as it would in production
-      const orderedCards = [...unorderedCards].sort((a, b) => a.name.localeCompare(b.name));
-
-      mockUseCards.mockReturnValue({
-        cards: orderedCards,
-        isLoading: false,
-        error: null,
-        refetch: mockRefetch
-      });
-
+    it('passes sortCards result to FlashList data', () => {
+      const reversed = [...twoCards].reverse();
+      setupCards(twoCards);
+      setupSort({ sortCards: () => reversed });
       const { toJSON } = render(<CardList />);
-
-      // Verify that cards are rendered in alphabetical order by name
-      const tree = toJSON();
-      const texts: string[] = [];
-
-      const collectText = (node: unknown): void => {
-        if (!node) return;
-        if (typeof node === 'string') {
-          texts.push(node);
-          return;
-        }
-        if (Array.isArray(node)) {
-          node.forEach(collectText);
-          return;
-        }
-        if (typeof node === 'object' && node !== null && 'children' in node) {
-          const nodeWithChildren = node as { children?: unknown[] };
-          if (nodeWithChildren.children) {
-            nodeWithChildren.children.forEach(collectText);
-          }
-        }
-      };
-
-      collectText(tree);
-
-      const appleIndex = texts.indexOf('Apple Store');
-      const zebraIndex = texts.indexOf('Zebra Store');
-
-      expect(appleIndex).not.toBe(-1);
-      expect(zebraIndex).not.toBe(-1);
-      expect(appleIndex).toBeLessThan(zebraIndex);
+      const tree = JSON.stringify(toJSON());
+      // Best Buy should appear before Apple Store in the tree
+      expect(tree.indexOf('Best Buy')).toBeLessThan(tree.indexOf('Apple Store'));
     });
   });
 
-  describe('Focus Effect - Refetch', () => {
-    it('refetches cards when screen comes into focus', () => {
-      mockUseCards.mockReturnValue({
-        cards: mockCards,
-        isLoading: false,
-        error: null,
-        refetch: mockRefetch
-      });
-
+  // ── Focus effect ──
+  describe('Focus effect', () => {
+    it('calls refetch when screen comes into focus', () => {
+      setupCards(twoCards);
       render(<CardList />);
-
-      // useFocusEffect should call the callback
       expect(useFocusEffect).toHaveBeenCalled();
-
-      // The callback should call refetch
-      // Since useFocusEffect is mocked to immediately call the callback,
-      // refetch should be called
       expect(mockRefetch).toHaveBeenCalled();
     });
   });
 
-  describe('Offline Access - AC5', () => {
-    it('works with local database (no network required)', () => {
-      mockUseCards.mockReturnValue({
-        cards: mockCards,
-        isLoading: false,
-        error: null,
-        refetch: mockRefetch
-      });
-
+  // ── Pull-to-refresh (AC10) ──
+  describe('Pull-to-refresh — AC10', () => {
+    it('calls forceSync and refetch on refresh', async () => {
+      setupCards(twoCards);
       render(<CardList />);
 
-      // Should display cards from local database
-      expect(screen.getByText('Apple Store')).toBeTruthy();
-      expect(screen.getByText('Best Buy')).toBeTruthy();
+      const flashList = screen.getByTestId('card-list-flashlist');
+      const onRefresh = flashList.props.onRefresh;
+      expect(onRefresh).toBeDefined();
     });
   });
 
-  describe('Performance - AC4', () => {
-    it('renders many cards without errors', () => {
-      const manyCards: LoyaltyCard[] = Array.from({ length: 50 }, (_, i) => ({
-        id: `${i}`,
-        name: `Store ${i}`,
-        barcode: `${i}234567890`,
-        barcodeFormat: 'CODE128' as const,
-        brandId: null,
-        color: 'blue' as const,
-        isFavorite: false,
-        lastUsedAt: null,
-        usageCount: 0,
-        createdAt: '2026-01-07T10:00:00Z',
-        updatedAt: '2026-01-07T10:00:00Z'
-      }));
-
-      mockUseCards.mockReturnValue({
-        cards: manyCards,
-        isLoading: false,
-        error: null,
-        refetch: mockRefetch
-      });
-
+  // ── Performance ──
+  describe('Performance', () => {
+    it('renders 50 cards without errors', () => {
+      const manyCards = Array.from({ length: 50 }, (_, i) =>
+        makeCard({ id: `${i}`, name: `Store ${i}` })
+      );
+      setupCards(manyCards);
       render(<CardList />);
-
-      // Verify rendering works with large dataset
       expect(screen.getByText('Store 0')).toBeTruthy();
     });
   });

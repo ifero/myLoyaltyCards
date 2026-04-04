@@ -59,20 +59,20 @@ export const BRAND_COLORS = Object.freeze(
 export const getBrandColor = (brandId: string): string | undefined => BRAND_COLORS[brandId];
 
 /**
- * Light theme colors
+ * Light theme colors — aligned with Figma (Story 12-2)
  */
 export const LIGHT_THEME = {
   primary: '#1A73E8',
   primaryDark: '#1967D2',
-  background: '#F8FAFC',
-  backgroundSubtle: '#F1F5F9',
+  background: '#FFFFFF',
+  backgroundSubtle: '#F5F5F5',
   surface: '#FFFFFF',
-  surfaceElevated: '#F1F5F9',
-  textPrimary: '#0F172A',
-  textSecondary: '#475569',
-  textTertiary: '#94A3B8',
-  border: '#D6DEE8',
-  borderStrong: '#94A3B8',
+  surfaceElevated: '#F5F5F5',
+  textPrimary: '#1F1F24',
+  textSecondary: '#66666B',
+  textTertiary: '#8F8F94',
+  border: '#E5E5EB',
+  borderStrong: '#8F8F94',
   success: '#16A34A',
   warning: '#D97706',
   error: '#DC2626',
@@ -82,20 +82,20 @@ export const LIGHT_THEME = {
 } as const;
 
 /**
- * Dark theme colors (OLED optimized)
+ * Dark theme colors (OLED optimized) — aligned with Figma (Story 12-2)
  */
 export const DARK_THEME = {
   primary: '#4DA3FF',
   primaryDark: '#1A73E8',
   background: '#000000',
-  backgroundSubtle: '#05070A',
-  surface: '#111418',
-  surfaceElevated: '#1A1F26',
-  textPrimary: '#F8FAFC',
-  textSecondary: '#CBD5E1',
-  textTertiary: '#94A3B8',
-  border: '#2A3441',
-  borderStrong: '#475569',
+  backgroundSubtle: '#0A0A0A',
+  surface: '#1C1C1E',
+  surfaceElevated: '#2C2C2E',
+  textPrimary: '#F5F5F7',
+  textSecondary: '#D9D9DE',
+  textTertiary: '#99999E',
+  border: '#38383A',
+  borderStrong: '#636366',
   success: '#22C55E',
   warning: '#F59E0B',
   error: '#F87171',

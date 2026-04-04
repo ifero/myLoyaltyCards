@@ -1,127 +1,198 @@
 /**
  * CardTile Component
- * Story 2.1: Display Card List (AC2, AC6)
- * Story 2.4: Display Virtual Logo
- * Story 3.3: Display official brand logo when brandId present
+ * Story 13.2: Restyle Home Screen (AC1, AC7, AC9)
  *
- * Individual card tile for the grid layout.
- * Shows card name and brand logo (or Virtual Logo for custom cards).
+ * Brand-colored tile for the 2-column grid.
+ * Catalogue cards show brand logo on brand hex bg.
+ * Custom cards show first-letter avatar on user-selected color.
+ * Card name displayed below tile.
  */
 
 import { useRouter } from 'expo-router';
 import React from 'react';
-import { View, Text, Pressable, StyleSheet } from 'react-native';
+import { View, Text, Pressable, StyleSheet, Platform } from 'react-native';
 
 import { LoyaltyCard } from '@/core/schemas';
 
 import { useTheme } from '@/shared/theme';
-import { SPACING } from '@/shared/theme/spacing';
+import { CARD_COLORS } from '@/shared/theme/colors';
+import { TYPOGRAPHY } from '@/shared/theme/typography';
 
-import { VirtualLogo } from './VirtualLogo';
 import { useBrandLogo } from '../hooks/useBrandLogo';
+import { getBrandLogoComponent } from '../utils/brandLogos';
+
+/**
+ * Returns true if a hex color is perceptually dark (relative luminance < 0.2).
+ * Uses simplified sRGB → luminance formula per WCAG 2.0.
+ */
+const isDarkBrandColor = (hex: string): boolean => {
+  const c = hex.replace('#', '');
+  const r = parseInt(c.substring(0, 2), 16) / 255;
+  const g = parseInt(c.substring(2, 4), 16) / 255;
+  const b = parseInt(c.substring(4, 6), 16) / 255;
+  const luminance = 0.2126 * r + 0.7152 * g + 0.0722 * b;
+  return luminance < 0.2;
+};
+
+/** Standard grid tile dimensions (pt) */
+export const TILE_WIDTH = 171;
+export const TILE_HEIGHT = 140;
+export const TILE_RADIUS = 16;
+
+/** Single-card enlarged tile dimensions */
+export const SINGLE_TILE_WIDTH = 220;
+export const SINGLE_TILE_HEIGHT = 180;
+export const SINGLE_TILE_RADIUS = 20;
 
 interface CardTileProps {
   /** The loyalty card to display */
   card: LoyaltyCard;
+  /** Enlarged single-card mode */
+  enlarged?: boolean;
 }
 
 /**
  * CardTile Component
  *
- * - Fixed 4:3 aspect ratio
- * - Card name at bottom (truncated > 20 chars with ellipsis)
- * - Official brand logo if brandId present (Story 3.3)
- * - Virtual Logo fallback for custom cards (colored square with initials)
- * - Pressable with opacity feedback
- * - Accessible with proper roles and labels
+ * - Grid mode: 171x140pt with 16pt radius
+ * - Enlarged (single-card) mode: 220x180pt with 20pt radius
+ * - Brand hex background + centered logo / first-letter avatar
+ * - Card name below tile (not inside the shell)
+ * - Drop shadow: offset 0/2, blur 8, 8% opacity
+ * - Dark mode: #40404A 1pt border on black-branded cards
  */
-export const CardTile: React.FC<CardTileProps> = ({ card }) => {
-  const { theme } = useTheme();
+export const CardTile: React.FC<CardTileProps> = ({ card, enlarged = false }) => {
+  const { theme, isDark } = useTheme();
   const router = useRouter();
   const brand = useBrandLogo(card.brandId);
 
   const handlePress = () => {
-    // Navigate to card details (Story 2.6)
     router.push(`/card/${card.id}`);
   };
 
-  // Truncate card name to 20 characters
-  const displayName = card.name.length > 20 ? `${card.name.slice(0, 20)}…` : card.name;
+  const tileWidth = enlarged ? SINGLE_TILE_WIDTH : TILE_WIDTH;
+  const tileHeight = enlarged ? SINGLE_TILE_HEIGHT : TILE_HEIGHT;
+  const tileRadius = enlarged ? SINGLE_TILE_RADIUS : TILE_RADIUS;
+
+  // Resolve background color: brand hex for catalogue, card palette color for custom
+  const backgroundColor = brand ? brand.color : (CARD_COLORS[card.color] ?? CARD_COLORS.grey);
+  const isBlackBrand = isDarkBrandColor(backgroundColor);
+
+  // Determine foreground color for avatar text
+  const foregroundColor = isBlackBrand ? '#FFFFFF' : '#1F1F24';
+  const firstLetter = card.name.trim().charAt(0).toUpperCase() || 'C';
+
+  // Get SVG logo component if available
+  const LogoComponent = brand ? getBrandLogoComponent(brand.logo) : undefined;
+
+  // Logo sizing: fill most of the tile, letting SVG preserve its own aspect ratio
+  const logoWidth = Math.round(tileWidth * 0.85);
+  const logoHeight = Math.round(tileHeight * 0.65);
 
   return (
     <Pressable
       onPress={handlePress}
-      style={({ pressed }) => [
-        styles.container,
-        { backgroundColor: theme.surface },
-        pressed && styles.pressed
-      ]}
+      style={({ pressed }) => [pressed && styles.pressed]}
       accessibilityRole="button"
       accessibilityLabel={card.name}
       accessibilityHint="Opens card details"
     >
-      {/* Brand Logo or Virtual Logo */}
-      <View style={styles.visualContainer}>
-        {brand ? (
-          /* Story 3.3: Show official brand logo placeholder */
-          <View
-            style={{
-              width: 60,
-              height: 60,
-              backgroundColor: brand.color + '30',
-              borderRadius: 8,
-              justifyContent: 'center',
-              alignItems: 'center'
-            }}
-          >
-            <Text style={{ color: brand.color, fontWeight: 'bold', fontSize: 16 }}>
+      {/* Tile */}
+      <View
+        style={[
+          styles.tileContainer,
+          {
+            width: tileWidth,
+            height: tileHeight,
+            borderRadius: tileRadius,
+            backgroundColor,
+            borderWidth: isDark && isBlackBrand ? 1 : 0,
+            borderColor: isDark && isBlackBrand ? '#40404A' : 'transparent'
+          },
+          !isDark && styles.shadow
+        ]}
+      >
+        {LogoComponent ? (
+          /* Catalogue card with SVG logo */
+          <LogoComponent width={logoWidth} height={logoHeight} color={foregroundColor} />
+        ) : brand ? (
+          /* Catalogue card without SVG: brand name abbreviation fallback */
+          <View style={styles.logoSlot}>
+            <Text style={[styles.brandAbbreviation, { color: foregroundColor }]}>
               {brand.name.substring(0, 2).toUpperCase()}
             </Text>
           </View>
         ) : (
-          /* Fallback: Virtual Logo for custom cards */
-          <VirtualLogo name={card.name} color={card.color} size={60} />
+          /* Custom card: first-letter circular avatar */
+          <View style={styles.avatarCircle}>
+            <Text style={[styles.avatarText, { color: foregroundColor }]}>{firstLetter}</Text>
+          </View>
         )}
       </View>
 
-      {/* Card name */}
-      <View style={styles.nameContainer}>
-        <Text
-          style={[styles.cardName, { color: theme.textPrimary }]}
-          numberOfLines={1}
-          ellipsizeMode="tail"
-        >
-          {displayName}
-        </Text>
-      </View>
+      {/* Card name below tile */}
+      <Text
+        style={[styles.cardName, { color: theme.textPrimary }]}
+        numberOfLines={1}
+        ellipsizeMode="tail"
+      >
+        {card.name}
+      </Text>
     </Pressable>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    aspectRatio: 4 / 3,
-    borderRadius: SPACING.sm, // 8px
-    overflow: 'hidden',
-    margin: SPACING.sm / 2 // 4px for 8px total gap between items
-  },
   pressed: {
     opacity: 0.7
   },
-  visualContainer: {
-    flex: 1,
-    alignItems: 'center',
+  tileContainer: {
     justifyContent: 'center',
-    padding: SPACING.sm
+    alignItems: 'center',
+    overflow: 'hidden'
   },
-  nameContainer: {
-    paddingHorizontal: SPACING.sm,
-    paddingBottom: SPACING.sm
+  shadow: {
+    ...Platform.select({
+      ios: {
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.08,
+        shadowRadius: 8
+      },
+      android: {
+        elevation: 3
+      }
+    })
+  },
+  logoSlot: {
+    width: 64,
+    height: 64,
+    borderRadius: 12,
+    backgroundColor: 'rgba(255,255,255,0.16)',
+    justifyContent: 'center',
+    alignItems: 'center'
+  },
+  brandAbbreviation: {
+    fontWeight: '700',
+    fontSize: 18
+  },
+  avatarCircle: {
+    width: 48,
+    height: 48,
+    borderRadius: 999,
+    backgroundColor: 'rgba(255,255,255,0.28)',
+    alignItems: 'center',
+    justifyContent: 'center'
+  },
+  avatarText: {
+    fontSize: 18,
+    fontWeight: '700'
   },
   cardName: {
-    fontSize: 14,
+    fontSize: TYPOGRAPHY.footnote.fontSize,
     fontWeight: '600',
-    textAlign: 'center'
+    textAlign: 'center',
+    marginTop: 6,
+    paddingHorizontal: 2
   }
 });

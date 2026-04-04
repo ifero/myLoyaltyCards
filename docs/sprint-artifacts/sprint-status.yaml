@@ -322,7 +322,7 @@ development_status:
   # Absorbs Epic 8 (Settings) — 8-X stories will NOT be implemented separately
   epic-13: in-progress
   13-1-implement-design-system-tokens: done # implementation complete, QA + dev review approved
-  13-2-restyle-home-screen: ready-for-dev # maps to 12-2
+  13-2-restyle-home-screen: done # QA + dev review approved 2026-04-03
   13-3-restyle-card-detail: ready-for-dev # maps to 12-3
   13-4-restyle-add-card-flow: ready-for-dev # maps to 12-4
   13-5-restyle-auth-screens: ready-for-dev # maps to 12-5

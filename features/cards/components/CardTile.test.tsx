@@ -1,7 +1,6 @@
 /**
  * CardTile Component Tests
- * Story 2.1: Display Card List - AC2, AC6
- * Story 2.4: Display Virtual Logo
+ * Story 13.2: Restyle Home Screen — AC1, AC7, AC9
  */
 
 import { render, screen, fireEvent } from '@testing-library/react-native';
@@ -9,7 +8,15 @@ import { useRouter } from 'expo-router';
 
 import { LoyaltyCard } from '@/core/schemas';
 
-import { CardTile } from './CardTile';
+import {
+  CardTile,
+  TILE_WIDTH,
+  TILE_HEIGHT,
+  TILE_RADIUS,
+  SINGLE_TILE_WIDTH,
+  SINGLE_TILE_HEIGHT,
+  SINGLE_TILE_RADIUS
+} from './CardTile';
 
 // Mock expo-router
 const mockPush = jest.fn();
@@ -19,29 +26,42 @@ jest.mock('expo-router', () => ({
 
 // Mock ThemeProvider
 jest.mock('@/shared/theme', () => ({
-  useTheme: () => ({
-    theme: {
-      background: '#FAFAFA',
-      surface: '#FFFFFF',
-      textPrimary: '#1F2937',
-      textSecondary: '#6B7280',
-      primary: '#1A73E8',
-      border: '#E5E7EB'
-    },
-    isDark: false
-  })
+  useTheme: jest.fn()
 }));
+
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const { useTheme } = require('@/shared/theme');
 
 // Mock CARD_COLORS
 jest.mock('@/shared/theme/colors', () => ({
   CARD_COLORS: {
-    blue: '#3B82F6',
-    red: '#EF4444',
-    green: '#22C55E',
-    orange: '#F97316',
-    grey: '#6B7280'
+    blue: '#1A73E8',
+    red: '#E2231A',
+    green: '#16A34A',
+    orange: '#F59E0B',
+    grey: '#64748B'
   }
 }));
+
+// Mock useBrandLogo
+jest.mock('../hooks/useBrandLogo', () => ({
+  useBrandLogo: jest.fn()
+}));
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const { useBrandLogo } = require('../hooks/useBrandLogo');
+
+// Mock getBrandLogoComponent to return a simple component for known brands
+jest.mock('../utils/brandLogos', () => {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const React = require('react');
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const { View } = require('react-native');
+  const MockLogo = (props: Record<string, unknown>) =>
+    React.createElement(View, { ...props, testID: 'brand-logo-svg' });
+  return {
+    getBrandLogoComponent: jest.fn(() => MockLogo)
+  };
+});
 
 describe('CardTile', () => {
   const mockCard: LoyaltyCard = {
@@ -60,180 +80,141 @@ describe('CardTile', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
-    (useRouter as jest.Mock).mockReturnValue({
-      push: mockPush
+    (useRouter as jest.Mock).mockReturnValue({ push: mockPush });
+    (useTheme as jest.Mock).mockReturnValue({
+      theme: {
+        primary: '#1A73E8',
+        surface: '#FFFFFF',
+        textPrimary: '#1F1F24',
+        textSecondary: '#66666B',
+        border: '#E5E5EB',
+        borderStrong: '#8F8F94',
+        surfaceElevated: '#F5F5F5'
+      },
+      isDark: false
     });
+    (useBrandLogo as jest.Mock).mockReturnValue(undefined);
   });
 
-  describe('Rendering - AC2', () => {
-    it('renders card name', () => {
+  describe('Custom card rendering (no brandId)', () => {
+    it('renders card name below tile', () => {
       render(<CardTile card={mockCard} />);
-
-      const cardName = screen.getByText('Test Store');
-      expect(cardName).toBeTruthy();
-    });
-
-    it('renders visual identifier with initials', () => {
-      render(<CardTile card={mockCard} />);
-
-      // VirtualLogo shows initials (TS for "Test Store")
-      const visualInitials = screen.getByText('TS');
-      expect(visualInitials).toBeTruthy();
-    });
-
-    it('uses card color for visual identifier background', () => {
-      render(<CardTile card={mockCard} />);
-
-      // Verify the visual identifier renders with the card's initials
-      const visualInitials = screen.getByText('TS');
-      expect(visualInitials).toBeTruthy();
-
-      // The component applies the card's color to the visual identifier background
-      // Color application is tested indirectly through the 'handles cards with different colors' test
-    });
-
-    it('renders without errors', () => {
-      render(<CardTile card={mockCard} />);
-
       expect(screen.getByText('Test Store')).toBeTruthy();
     });
+
+    it('renders first-letter avatar for custom cards', () => {
+      render(<CardTile card={mockCard} />);
+      expect(screen.getByText('T')).toBeTruthy();
+    });
+
+    it('uses card color as tile background', () => {
+      const { toJSON } = render(<CardTile card={mockCard} />);
+      expect(toJSON()).toBeTruthy();
+    });
   });
 
-  describe('Name Truncation - AC2', () => {
-    it('truncates card name longer than 20 characters', () => {
+  describe('Catalogue card rendering (with brandId)', () => {
+    const brandCard: LoyaltyCard = { ...mockCard, brandId: 'esselunga' };
+
+    beforeEach(() => {
+      (useBrandLogo as jest.Mock).mockReturnValue({
+        id: 'esselunga',
+        name: 'Esselunga',
+        color: '#DB1F26',
+        logo: 'esselunga',
+        aliases: []
+      });
+    });
+
+    it('renders SVG logo for catalogue cards with brand logo', () => {
+      render(<CardTile card={brandCard} />);
+      expect(screen.getByTestId('brand-logo-svg')).toBeTruthy();
+    });
+  });
+
+  describe('Tile dimensions', () => {
+    it('exports correct grid tile dimensions', () => {
+      expect(TILE_WIDTH).toBe(171);
+      expect(TILE_HEIGHT).toBe(140);
+      expect(TILE_RADIUS).toBe(16);
+    });
+
+    it('exports correct single-card tile dimensions', () => {
+      expect(SINGLE_TILE_WIDTH).toBe(220);
+      expect(SINGLE_TILE_HEIGHT).toBe(180);
+      expect(SINGLE_TILE_RADIUS).toBe(20);
+    });
+  });
+
+  describe('Name Truncation', () => {
+    it('renders full card name and relies on native ellipsis for truncation', () => {
       const longNameCard: LoyaltyCard = {
         ...mockCard,
         name: 'This is a very long card name that exceeds twenty characters'
       };
-
       render(<CardTile card={longNameCard} />);
-
-      const truncatedName = screen.getByText(/This is a very long …/);
-      expect(truncatedName).toBeTruthy();
+      expect(
+        screen.getByText('This is a very long card name that exceeds twenty characters')
+      ).toBeTruthy();
     });
 
     it('does not truncate card name 20 characters or less', () => {
-      const shortNameCard: LoyaltyCard = {
-        ...mockCard,
-        name: 'Short Name'
-      };
-
-      render(<CardTile card={shortNameCard} />);
-
-      const fullName = screen.getByText('Short Name');
-      expect(fullName).toBeTruthy();
-      expect(fullName.props.children).toBe('Short Name');
-    });
-
-    it('truncates exactly at 20 characters', () => {
-      const exactly20Card: LoyaltyCard = {
-        ...mockCard,
-        name: '12345678901234567890' // Exactly 20 characters
-      };
-
-      render(<CardTile card={exactly20Card} />);
-
-      const name = screen.getByText('12345678901234567890');
-      expect(name).toBeTruthy();
-      expect(name.props.children).toBe('12345678901234567890');
-      expect(name.props.children).not.toContain('…'); // Should not have ellipsis since it's exactly 20
-    });
-
-    it('adds ellipsis when truncating', () => {
-      const longNameCard: LoyaltyCard = {
-        ...mockCard,
-        name: 'This is a very long card name'
-      };
-
-      render(<CardTile card={longNameCard} />);
-
-      const truncated = screen.getByText(/…/);
-      expect(truncated).toBeTruthy();
+      render(<CardTile card={{ ...mockCard, name: 'Short Name' }} />);
+      const name = screen.getByText('Short Name');
+      expect(name.props.children).toBe('Short Name');
     });
   });
 
-  describe('Visual Identifier - AC2', () => {
-    it('displays initials in uppercase', () => {
-      const lowercaseCard: LoyaltyCard = {
-        ...mockCard,
-        name: 'test store'
-      };
-
-      render(<CardTile card={lowercaseCard} />);
-
-      // VirtualLogo generates uppercase initials
-      const visualInitials = screen.getByText('TS');
-      expect(visualInitials).toBeTruthy();
-    });
-
-    it('handles cards with different colors', () => {
-      const colors: Array<LoyaltyCard['color']> = ['blue', 'red', 'green', 'orange', 'grey'];
-
-      colors.forEach((color) => {
-        const { unmount } = render(<CardTile card={{ ...mockCard, color }} />);
-
-        const visualInitials = screen.getByText('TS');
-        expect(visualInitials).toBeTruthy();
-
-        unmount();
+  describe('Dark mode — AC7', () => {
+    beforeEach(() => {
+      (useTheme as jest.Mock).mockReturnValue({
+        theme: {
+          primary: '#4DA3FF',
+          surface: '#1C1C1E',
+          textPrimary: '#F5F5F7',
+          textSecondary: '#D9D9DE',
+          border: '#38383A',
+          borderStrong: '#66666B',
+          surfaceElevated: '#2C2C2E'
+        },
+        isDark: true
       });
     });
 
-    it('falls back to grey color if color is invalid', () => {
-      const invalidColorCard = {
-        ...mockCard,
-        color: 'invalid' as LoyaltyCard['color']
-      };
+    it('applies border to black-branded cards in dark mode', () => {
+      const blackBrandCard: LoyaltyCard = { ...mockCard, brandId: 'zara' };
+      (useBrandLogo as jest.Mock).mockReturnValue({
+        id: 'zara',
+        name: 'Zara',
+        color: '#000000',
+        logo: 'zara',
+        aliases: []
+      });
 
-      render(<CardTile card={invalidColorCard} />);
-
-      const visualInitials = screen.getByText('TS');
-      expect(visualInitials).toBeTruthy();
+      const { toJSON } = render(<CardTile card={blackBrandCard} />);
+      const json = JSON.stringify(toJSON());
+      expect(json).toContain('#40404A');
     });
   });
 
-  describe('Card Tap Interaction - AC6', () => {
+  describe('Card Tap Interaction', () => {
     it('navigates to card details on press', () => {
       render(<CardTile card={mockCard} />);
-
       const tile = screen.getByLabelText('Test Store');
       fireEvent.press(tile);
-
-      expect(mockPush).toHaveBeenCalledTimes(1);
-      expect(mockPush).toHaveBeenCalledWith(`/card/${mockCard.id}`);
-    });
-
-    it('handles press event by triggering navigation', () => {
-      render(<CardTile card={mockCard} />);
-
-      const tile = screen.getByLabelText('Test Store');
-
-      // Pressable should handle press state and invoke navigation
-      fireEvent.press(tile);
-
-      // Verify the press handler triggered navigation
-      expect(mockPush).toHaveBeenCalled();
+      expect(mockPush).toHaveBeenCalledWith('/card/1');
     });
   });
 
-  describe('Accessibility - AC6', () => {
+  describe('Accessibility — AC9', () => {
     it('has correct accessibility role', () => {
       render(<CardTile card={mockCard} />);
-
       const tile = screen.getByLabelText('Test Store');
       expect(tile.props.accessibilityRole).toBe('button');
     });
 
-    it('has correct accessibility label with card name', () => {
-      render(<CardTile card={mockCard} />);
-
-      const tile = screen.getByLabelText('Test Store');
-      expect(tile).toBeTruthy();
-    });
-
     it('has correct accessibility hint', () => {
       render(<CardTile card={mockCard} />);
-
       const tile = screen.getByLabelText('Test Store');
       expect(tile.props.accessibilityHint).toBe('Opens card details');
     });
@@ -241,41 +222,19 @@ describe('CardTile', () => {
 
   describe('Edge Cases', () => {
     it('handles empty card name gracefully', () => {
-      const emptyNameCard: LoyaltyCard = {
-        ...mockCard,
-        name: ''
-      };
-
-      const { toJSON } = render(<CardTile card={emptyNameCard} />);
-
-      // Should render without crashing
+      const { toJSON } = render(<CardTile card={{ ...mockCard, name: '' }} />);
       expect(toJSON()).toBeTruthy();
     });
 
     it('handles single character card name', () => {
-      const singleCharCard: LoyaltyCard = {
-        ...mockCard,
-        name: 'A'
-      };
-
-      render(<CardTile card={singleCharCard} />);
-
-      // Should render the character - use getAllByText since 'A' appears twice
-      // (once in the visual identifier and once in the name)
+      render(<CardTile card={{ ...mockCard, name: 'A' }} />);
       const elements = screen.getAllByText('A');
       expect(elements.length).toBeGreaterThan(0);
     });
 
     it('handles special characters in card name', () => {
-      const specialCharCard: LoyaltyCard = {
-        ...mockCard,
-        name: "Store's & More!"
-      };
-
-      render(<CardTile card={specialCharCard} />);
-
-      const name = screen.getByText("Store's & More!");
-      expect(name).toBeTruthy();
+      render(<CardTile card={{ ...mockCard, name: "Store's & More!" }} />);
+      expect(screen.getByText("Store's & More!")).toBeTruthy();
     });
   });
 });

@@ -10,6 +10,7 @@
  * Story 2.8: Delete Card
  * Story 3.2: Browse Catalogue Grid
  * Story 3.4: Cache Catalogue for Offline
+ * Story 13.2: Restyle Home Screen
  *
  * Exports card-related components, hooks, and repositories.
  */
@@ -31,6 +32,8 @@ export type { BarcodeFlashProps } from './components/BarcodeFlash';
 export { CardDetails } from './components/CardDetails';
 export { DetailRow } from './components/DetailRow';
 export { CatalogueGrid } from './components/CatalogueGrid';
+export { SearchBar } from './components/SearchBar';
+export { SortFilterRow } from './components/SortFilterRow';
 
 // Hooks
 export { useCards } from './hooks/useCards';
@@ -45,6 +48,9 @@ export type { ScanResult } from './hooks/useBarcodeScanner';
 export { useBrightness } from './hooks/useBrightness';
 export type { UseBrightnessReturn } from './hooks/useBrightness';
 export { useBrandLogo } from './hooks/useBrandLogo';
+export { useCardSearch } from './hooks/useCardSearch';
+export { useCardSort } from './hooks/useCardSort';
+export type { SortOption } from './hooks/useCardSort';
 
 // Repositories
 export { CatalogueRepository, catalogueRepository } from './repositories/catalogue-repository';
