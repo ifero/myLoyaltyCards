@@ -1,0 +1,49 @@
+app/__tests__/home-highlight.test.tsx
+  b882d82d6e334705 1-104
+features/cards/components/CardList.test.tsx
+  807f5d583a8670e3 20-21,76-86,90-91,264-274
+jest.setup.js
+  807f5d583a8670e3 118
+  b882d82d6e334705 271-272,274-278
+features/cards/components/CardTile.test.tsx
+  807f5d583a8670e3 223-229
+features/add-card/hooks/useBrandSearch.test.ts
+  b882d82d6e334705 1-212
+app/__tests__/scan.brand.test.tsx
+  b882d82d6e334705 2,4,7-8,14,17,22,25-30,33-44,48-49,51,53-57
+features/cards/hooks/useAddCard.test.ts
+  b882d82d6e334705 154-160
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.2.5",
+  "base_commit_sha": "b705752470a877471d986e690c0cdc497ac0cd4a",
+  "prompts": {
+    "807f5d583a8670e3": {
+      "agent_id": {
+        "tool": "github-copilot",
+        "id": "cfa652de-8bec-4209-8ca8-ab3b46b88ae9",
+        "model": "copilot/claude-opus-4.6"
+      },
+      "human_author": "Andrea Pacino",
+      "messages": [],
+      "total_additions": 0,
+      "total_deletions": 0,
+      "accepted_lines": 35,
+      "overriden_lines": 0
+    },
+    "b882d82d6e334705": {
+      "agent_id": {
+        "tool": "github-copilot",
+        "id": "02fcb981-677e-4467-85e3-d7c754dc9c47",
+        "model": "copilot/claude-opus-4.6"
+      },
+      "human_author": "Andrea Pacino",
+      "messages": [],
+      "total_additions": 0,
+      "total_deletions": 0,
+      "accepted_lines": 377,
+      "overriden_lines": 0
+    }
+  }
+}
