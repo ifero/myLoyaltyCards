@@ -1,0 +1,25 @@
+docs/sprint-artifacts/stories/13-4-restyle-add-card-flow.md
+  b882d82d6e334705 3,355-357,361-363,367
+docs/sprint-artifacts/sprint-status.yaml
+  b882d82d6e334705 38,327
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.2.5",
+  "base_commit_sha": "301f38472c5707ca3bcc8bd3eb470b62dd89f219",
+  "prompts": {
+    "b882d82d6e334705": {
+      "agent_id": {
+        "tool": "github-copilot",
+        "id": "02fcb981-677e-4467-85e3-d7c754dc9c47",
+        "model": "copilot/claude-opus-4.6"
+      },
+      "human_author": "Andrea Pacino",
+      "messages": [],
+      "total_additions": 0,
+      "total_deletions": 0,
+      "accepted_lines": 10,
+      "overriden_lines": 0
+    }
+  }
+}
