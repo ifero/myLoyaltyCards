@@ -220,6 +220,13 @@ describe('CardTile', () => {
     });
   });
 
+  describe('New Card Highlight', () => {
+    it('renders without crashing when highlighted is true', () => {
+      const { toJSON } = render(<CardTile card={mockCard} highlighted />);
+      expect(toJSON()).toBeTruthy();
+    });
+  });
+
   describe('Edge Cases', () => {
     it('handles empty card name gracefully', () => {
       const { toJSON } = render(<CardTile card={{ ...mockCard, name: '' }} />);

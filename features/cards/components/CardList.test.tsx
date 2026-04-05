@@ -17,6 +17,8 @@ import { useCards } from '../hooks/useCards';
 import { useCardSearch } from '../hooks/useCardSearch';
 import { useCardSort } from '../hooks/useCardSort';
 
+const mockCardTileProps = jest.fn();
+
 // Extend global type for test mocks
 declare global {
   var mockFlashListState: { numColumns: number | undefined };
@@ -71,12 +73,22 @@ jest.mock('./CardTile', () => {
   // eslint-disable-next-line @typescript-eslint/no-require-imports
   const { Text } = require('react-native');
   return {
-    CardTile: ({ card, enlarged }: { card: { name: string }; enlarged?: boolean }) =>
-      React.createElement(
+    CardTile: ({
+      card,
+      enlarged,
+      highlighted
+    }: {
+      card: { name: string };
+      enlarged?: boolean;
+      highlighted?: boolean;
+    }) => {
+      mockCardTileProps({ card, enlarged, highlighted });
+      return React.createElement(
         Text,
         { testID: enlarged ? 'card-tile-enlarged' : 'card-tile' },
         card.name
-      ),
+      );
+    },
     TILE_WIDTH: 171,
     TILE_HEIGHT: 140,
     TILE_RADIUS: 16,
@@ -248,6 +260,18 @@ describe('CardList', () => {
       setupCards([makeCard()]);
       render(<CardList />);
       expect(screen.queryByLabelText('Search loyalty cards')).toBeNull();
+    });
+
+    it('passes highlighted=true for matching single-card highlight id', () => {
+      setupCards([makeCard({ id: 'single-1' })]);
+      render(<CardList highlightCardId="single-1" />);
+
+      expect(mockCardTileProps).toHaveBeenCalledWith(
+        expect.objectContaining({
+          highlighted: true,
+          enlarged: true
+        })
+      );
     });
   });
 
