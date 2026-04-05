@@ -1,0 +1,104 @@
+features/add-card/screens/CardSetupScreen.tsx
+  b882d82d6e334705 1-190,192-336
+features/add-card/screens/CardTypeSelectionScreen.test.tsx
+  b882d82d6e334705 1-188
+app/add-card/index.tsx
+  b882d82d6e334705 1-8
+features/add-card/components/OtherCardRow.test.tsx
+  b882d82d6e334705 1-62
+features/add-card/screens/BrandScannerScreen.tsx
+  b882d82d6e334705 1-13,15-109
+features/add-card/components/BrandPill.test.tsx
+  b882d82d6e334705 1-61
+features/cards/components/CardTile.tsx
+  b882d82d6e334705 58-59,74-75,81-94,128,139-140,159
+  807f5d583a8670e3 12,14-19
+features/add-card/index.ts
+  b882d82d6e334705 1-24
+features/add-card/components/InlineScanButton.test.tsx
+  b882d82d6e334705 1-46
+features/add-card/screens/BrandScannerScreen.test.tsx
+  b882d82d6e334705 1-176
+features/add-card/components/ScannerOverlay.test.tsx
+  b882d82d6e334705 1-210
+app/index.tsx
+  b882d82d6e334705 26,28,46-52,69,87
+features/add-card/components/BrandPill.tsx
+  b882d82d6e334705 1-63
+features/add-card/hooks/useBrandSearch.ts
+  b882d82d6e334705 1-70
+features/add-card/components/FloatingBackButton.tsx
+  b882d82d6e334705 1-56
+features/add-card/components/BrandRow.test.tsx
+  b882d82d6e334705 1-109
+features/add-card/components/BrandSearchBar.test.tsx
+  b882d82d6e334705 1-90
+features/add-card/components/OtherCardRow.tsx
+  b882d82d6e334705 1-101
+app/scan.tsx
+  b882d82d6e334705 2,4-5,8-9,11-16,20,22,24,34,36
+features/add-card/components/InlineScanButton.tsx
+  b882d82d6e334705 1-48
+app/_layout.tsx
+  807f5d583a8670e3 117-118
+features/cards/components/CardList.tsx
+  807f5d583a8670e3 55
+  b882d82d6e334705 101,104,139
+features/add-card/screens/CardSetupScreen.test.tsx
+  b882d82d6e334705 1-268
+features/add-card/components/BrandList.tsx
+  b882d82d6e334705 1-12,17-83,85-179
+features/add-card/components/FloatingBackButton.test.tsx
+  b882d82d6e334705 1-44
+features/add-card/components/BrandSearchBar.tsx
+  b882d82d6e334705 1-98
+app/add-card/_layout.tsx
+  b882d82d6e334705 1-42
+features/add-card/components/BrandRow.tsx
+  b882d82d6e334705 1-13,16,20-73,75-111
+features/add-card/screens/CardTypeSelectionScreen.tsx
+  b882d82d6e334705 1-118
+app/add-card/setup.tsx
+  b882d82d6e334705 1-8
+app/add-card/scan.tsx
+  b882d82d6e334705 1-8
+eslint.config.mjs
+  b882d82d6e334705 64-70
+features/add-card/components/ScannerOverlay.tsx
+  b882d82d6e334705 1-383
+features/cards/hooks/useAddCard.ts
+  b882d82d6e334705 89-93
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.2.5",
+  "base_commit_sha": "0f706ef9542dbc34ce4f5d0c1a1298aa3d1c17f2",
+  "prompts": {
+    "807f5d583a8670e3": {
+      "agent_id": {
+        "tool": "github-copilot",
+        "id": "cfa652de-8bec-4209-8ca8-ab3b46b88ae9",
+        "model": "copilot/claude-opus-4.6"
+      },
+      "human_author": "Andrea Pacino",
+      "messages": [],
+      "total_additions": 45,
+      "total_deletions": 6,
+      "accepted_lines": 45,
+      "overriden_lines": 0
+    },
+    "b882d82d6e334705": {
+      "agent_id": {
+        "tool": "github-copilot",
+        "id": "02fcb981-677e-4467-85e3-d7c754dc9c47",
+        "model": "copilot/claude-opus-4.6"
+      },
+      "human_author": "Andrea Pacino",
+      "messages": [],
+      "total_additions": 3593,
+      "total_deletions": 263,
+      "accepted_lines": 3392,
+      "overriden_lines": 3
+    }
+  }
+}
