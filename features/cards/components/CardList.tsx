@@ -52,7 +52,7 @@ const GUTTER = 16;
  * - Empty state via ListEmptyComponent
  * - Pull-to-refresh for cloud sync
  */
-export const CardList: React.FC = () => {
+export const CardList: React.FC<{ highlightCardId?: string | null }> = ({ highlightCardId }) => {
   const { theme } = useTheme();
   const { cards, isLoading, error, refetch } = useCards();
   const { forceSync } = useCloudSync();
@@ -98,10 +98,10 @@ export const CardList: React.FC = () => {
   const renderItem = useCallback(
     ({ item }: { item: LoyaltyCard }) => (
       <View style={styles.tileWrapper}>
-        <CardTile card={item} />
+        <CardTile card={item} highlighted={item.id === highlightCardId} />
       </View>
     ),
-    []
+    [highlightCardId]
   );
 
   // ---- Loading state ----
@@ -136,7 +136,7 @@ export const CardList: React.FC = () => {
           />
         }
       >
-        <CardTile card={cards[0]!} enlarged />
+        <CardTile card={cards[0]!} enlarged highlighted={cards[0]!.id === highlightCardId} />
         <Text style={[styles.singleCardTip, { color: theme.textTertiary }]}>
           Tap + to add more cards to your wallet
         </Text>

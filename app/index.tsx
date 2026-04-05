@@ -6,7 +6,7 @@
  */
 
 import { useCameraPermissions } from 'expo-camera';
-import { useRouter } from 'expo-router';
+import { useRouter, useLocalSearchParams } from 'expo-router';
 import { useEffect, useState } from 'react';
 
 import { SyncErrorBanner } from '@/shared/components/SyncErrorBanner';
@@ -23,7 +23,9 @@ import { isOnboardingCompleted, completeOnboarding } from '@/features/settings';
 const HomeScreen = () => {
   const { cards, isLoading } = useCards();
   const [visible, setVisible] = useState(false);
+  const [highlightCardId, setHighlightCardId] = useState<string | null>(null);
   const router = useRouter();
+  const { newCardId } = useLocalSearchParams<{ newCardId?: string }>();
   const [, requestPermission] = useCameraPermissions();
   const { status, message, retry, dismiss } = useGuestMigration();
   const { isSyncing, syncError, forceSync, clearSyncError } = useCloudSync();
@@ -41,6 +43,13 @@ const HomeScreen = () => {
     }
   }, [isLoading, cards.length]);
 
+  useEffect(() => {
+    if (typeof newCardId === 'string' && newCardId.length > 0) {
+      setHighlightCardId(newCardId);
+      router.replace('/');
+    }
+  }, [newCardId, router]);
+
   const handleRequestClose = () => {
     completeOnboarding();
     setVisible(false);
@@ -57,7 +66,7 @@ const HomeScreen = () => {
       (err as { name?: string }).name = 'PermissionDenied';
       throw err;
     }
-    router.push('/scan');
+    router.push('/add-card/scan');
   };
 
   return (
@@ -75,7 +84,7 @@ const HomeScreen = () => {
           clearAutoSyncError();
         }}
       />
-      <CardList />
+      <CardList highlightCardId={highlightCardId} />
       <OnboardingOverlay
         visible={visible}
         onRequestClose={handleRequestClose}

@@ -86,8 +86,11 @@ export function useAddCard(): UseAddCardReturn {
           preset: 'done'
         });
 
-        // Navigate to main cards list page (Story 3.3: from catalogue)
-        router.replace('/');
+        // Navigate to main cards list page with new card ID for highlight
+        router.replace({
+          pathname: '/',
+          params: { newCardId: card.id, newCardName: card.name }
+        });
       } catch (err) {
         const message = err instanceof Error ? err.message : 'Failed to add card';
         setError(message);

@@ -1,6 +1,6 @@
 # Story 13.4: Restyle Add Card Flow
 
-Status: ready-for-dev
+Status: review
 
 ## Story
 
@@ -350,13 +350,18 @@ Story 13-1 provides the design system foundation: `Button`, `CardShell`, `TextFi
 
 ### Attempt Log
 
-| #   | Date | Agent | Result | Reason |
-| --- | ---- | ----- | ------ | ------ |
+| #   | Date       | Agent                                         | Result    | Reason                                                     |
+| --- | ---------- | --------------------------------------------- | --------- | ---------------------------------------------------------- |
+| 1   | 2026-04-05 | Dev (bmad-agent-bmm-dev)                      | completed | Implemented add-card flow restyle, route migration, tests  |
+| 2   | 2026-04-05 | QA subagent (`bmad-agent-tea-tea` via `[RV]`) | approved  | Final QA gate approved after scanner-flow and typing fixes |
+| 3   | 2026-04-05 | Dev subagent (`bmad-agent-bmm-dev`)           | approved  | Independent review approved, no remaining must-fix         |
 
 ### Decisions Made During Dev
 
-_(none yet)_
+- `Other card` uses scanner-first navigation (`/add-card/scan`) to align with AC3 scanner-primary flow.
+- Legacy `/scan` is preserved as a compatibility bridge that redirects into `/add-card/scan`.
+- Home highlight consumes `newCardId` once and clears route params to avoid repeated highlight.
 
 ### Open Questions
 
-_(none yet)_
+- None.

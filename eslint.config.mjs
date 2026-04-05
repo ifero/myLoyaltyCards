@@ -61,6 +61,13 @@ export default [
                 ['feature', { featureName: '${from.featureName}' }],
               ],
             },
+            // add-card feature depends on cards feature (shared hooks and utils)
+            {
+              from: [['feature', { featureName: 'add-card' }]],
+              allow: [
+                ['feature', { featureName: 'cards' }],
+              ],
+            },
             // shared can import from core, catalogue, and other shared modules
             {
               from: 'shared',

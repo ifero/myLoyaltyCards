@@ -151,7 +151,13 @@ describe('useAddCard', () => {
         await result.current.addCard(mockCardInput);
       });
 
-      expect(router.replace).toHaveBeenCalledWith('/');
+      expect(router.replace).toHaveBeenCalledWith({
+        pathname: '/',
+        params: expect.objectContaining({
+          newCardId: expect.any(String),
+          newCardName: 'Test Store'
+        })
+      });
     });
   });
 
