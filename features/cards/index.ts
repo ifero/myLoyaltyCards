@@ -11,6 +11,7 @@
  * Story 3.2: Browse Catalogue Grid
  * Story 3.4: Cache Catalogue for Offline
  * Story 13.2: Restyle Home Screen
+ * Story 13.3: Restyle Card Detail Screen
  *
  * Exports card-related components, hooks, and repositories.
  */
@@ -31,6 +32,8 @@ export { BarcodeFlash } from './components/BarcodeFlash';
 export type { BarcodeFlashProps } from './components/BarcodeFlash';
 export { CardDetails } from './components/CardDetails';
 export { DetailRow } from './components/DetailRow';
+export { BrandHero } from './components/BrandHero';
+export { FullscreenBarcode } from './components/FullscreenBarcode';
 export { CatalogueGrid } from './components/CatalogueGrid';
 export { SearchBar } from './components/SearchBar';
 export { SortFilterRow } from './components/SortFilterRow';

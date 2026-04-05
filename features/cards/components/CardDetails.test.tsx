@@ -1,6 +1,6 @@
 /**
  * CardDetails Component Tests
- * Story 2.6: View Card Details
+ * Story 13.3: Restyle Card Detail Screen
  */
 
 import { render, fireEvent, waitFor } from '@testing-library/react-native';
@@ -45,40 +45,73 @@ jest.mock('react-native-safe-area-context', () => ({
 jest.mock('@/shared/theme', () => ({
   useTheme: () => ({
     theme: {
-      background: '#FAFAFA',
+      background: '#FFFFFF',
       surface: '#FFFFFF',
-      textPrimary: '#1F2937',
-      textSecondary: '#6B7280',
+      surfaceElevated: '#F5F5F5',
+      textPrimary: '#1F1F24',
+      textSecondary: '#66666B',
+      textTertiary: '#8F8F94',
       primary: '#1A73E8',
-      border: '#E5E7EB'
-    }
+      border: '#E5E5EB',
+      error: '#DC2626'
+    },
+    isDark: false
   }),
   CARD_COLORS: {
-    blue: '#3B82F6',
-    red: '#EF4444',
-    green: '#22C55E',
-    orange: '#F97316',
-    grey: '#6B7280'
+    blue: '#1A73E8',
+    red: '#E2231A',
+    green: '#16A34A',
+    orange: '#F59E0B',
+    grey: '#64748B'
   }
 }));
 
-// Mock BarcodeRenderer - return null component
+// Mock BarcodeRenderer
 jest.mock('./BarcodeRenderer', () => ({
   BarcodeRenderer: () => null
 }));
 
-// Mock VirtualLogo - forward testID prop
-jest.mock('./VirtualLogo', () => ({
-  VirtualLogo: jest.fn(({ testID }: { testID?: string }) =>
+// Mock BrandHero
+jest.mock('./BrandHero', () => ({
+  BrandHero: ({ testID }: { testID?: string }) =>
     // eslint-disable-next-line @typescript-eslint/no-require-imports
     require('react').createElement('View', { testID })
-  )
+}));
+
+// Mock FullscreenBarcode
+jest.mock('./FullscreenBarcode', () => ({
+  FullscreenBarcode: ({ visible, onClose }: { visible: boolean; onClose: () => void }) =>
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    require('react').createElement(
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
+      require('react-native').View,
+      { testID: 'fullscreen-barcode-modal', accessibilityState: { expanded: visible } },
+      visible
+        ? // eslint-disable-next-line @typescript-eslint/no-require-imports
+          require('react').createElement(
+            // eslint-disable-next-line @typescript-eslint/no-require-imports
+            require('react-native').Pressable,
+            {
+              testID: 'fullscreen-barcode-close',
+              onPress: onClose
+            }
+          )
+        : null
+    )
+}));
+
+// Mock useBrightness
+jest.mock('../hooks/useBrightness', () => ({
+  useBrightness: () => ({
+    maximize: jest.fn(),
+    restore: jest.fn()
+  })
 }));
 
 // Mock Alert
 jest.spyOn(Alert, 'alert');
 
-const mockCard: LoyaltyCard = {
+const mockCustomCard: LoyaltyCard = {
   id: '550e8400-e29b-41d4-a716-446655440000',
   name: 'Test Store',
   barcode: '1234567890128',
@@ -92,70 +125,125 @@ const mockCard: LoyaltyCard = {
   updatedAt: '2026-01-07T10:00:00Z'
 };
 
+const mockCatalogueCard: LoyaltyCard = {
+  id: '660e8400-e29b-41d4-a716-446655440001',
+  name: 'Conad',
+  barcode: '9876543210123',
+  barcodeFormat: 'EAN13',
+  brandId: 'conad',
+  color: 'red',
+  isFavorite: false,
+  lastUsedAt: null,
+  usageCount: 0,
+  createdAt: '2026-02-15T12:00:00Z',
+  updatedAt: '2026-02-15T12:00:00Z'
+};
+
 describe('CardDetails', () => {
   beforeEach(() => {
     jest.clearAllMocks();
   });
 
-  describe('Rendering', () => {
-    it('renders card name prominently', () => {
-      const { getByTestId } = render(<CardDetails card={mockCard} />);
-
-      expect(getByTestId('card-details-name')).toBeTruthy();
-    });
-
-    it('renders Virtual Logo', () => {
-      const { getByTestId } = render(<CardDetails card={mockCard} />);
-
-      expect(getByTestId('card-details-logo')).toBeTruthy();
-    });
-
-    it('renders barcode preview', () => {
-      const { getByTestId } = render(<CardDetails card={mockCard} />);
-
-      expect(getByTestId('card-details-barcode-preview')).toBeTruthy();
-    });
-
-    it('renders barcode number', () => {
-      const { getByTestId } = render(<CardDetails card={mockCard} />);
-
-      expect(getByTestId('card-details-barcode-number')).toBeTruthy();
-    });
-
-    it('renders barcode format', () => {
-      const { getByTestId } = render(<CardDetails card={mockCard} />);
-
-      expect(getByTestId('card-details-format')).toBeTruthy();
-    });
-
-    it('renders card color', () => {
-      const { getByTestId } = render(<CardDetails card={mockCard} />);
-
-      expect(getByTestId('card-details-color')).toBeTruthy();
-    });
-
-    it('renders date added', () => {
-      const { getByTestId } = render(<CardDetails card={mockCard} />);
-
-      expect(getByTestId('card-details-date')).toBeTruthy();
-    });
-
-    it('renders Edit Card button', () => {
-      const { getByTestId } = render(<CardDetails card={mockCard} />);
-
-      expect(getByTestId('card-details-edit-button')).toBeTruthy();
-    });
-
-    it('renders Delete Card button', () => {
-      const { getByTestId } = render(<CardDetails card={mockCard} />);
-
-      expect(getByTestId('card-details-delete-button')).toBeTruthy();
+  describe('Rendering — AC1: Brand Hero', () => {
+    it('renders BrandHero component', () => {
+      const { getByTestId } = render(<CardDetails card={mockCustomCard} />);
+      expect(getByTestId('card-details-hero')).toBeTruthy();
     });
   });
 
-  describe('Barcode Copy', () => {
-    it('copies barcode to clipboard when number row is tapped', async () => {
-      const { getByTestId } = render(<CardDetails card={mockCard} />);
+  describe('Rendering — AC2: Barcode Display', () => {
+    it('renders barcode preview area', () => {
+      const { getByTestId } = render(<CardDetails card={mockCustomCard} />);
+      expect(getByTestId('card-details-barcode-preview')).toBeTruthy();
+    });
+
+    it('renders formatted barcode number', () => {
+      const { getByTestId } = render(<CardDetails card={mockCustomCard} />);
+      expect(getByTestId('card-details-barcode-number-display')).toBeTruthy();
+    });
+
+    it('displays barcode number with spaces', () => {
+      const { getByTestId } = render(<CardDetails card={mockCustomCard} />);
+      const display = getByTestId('card-details-barcode-number-display');
+      // "1234567890128" → "1234 5678 9012 8"
+      expect(display.props.children).toBe('1234 5678 9012 8');
+    });
+
+    it('shows "Tap to enlarge" hint', () => {
+      const { getByText } = render(<CardDetails card={mockCustomCard} />);
+      expect(getByText('Tap to enlarge')).toBeTruthy();
+    });
+  });
+
+  describe('Rendering — AC7: Brightness Hint', () => {
+    it('renders brightness hint', () => {
+      const { getByTestId } = render(<CardDetails card={mockCustomCard} />);
+      expect(getByTestId('card-details-brightness-hint')).toBeTruthy();
+    });
+
+    it('shows brightness hint text', () => {
+      const { getByText } = render(<CardDetails card={mockCustomCard} />);
+      expect(getByText('Increase brightness for scanning')).toBeTruthy();
+    });
+  });
+
+  describe('Rendering — AC3: Card Info Section', () => {
+    it('renders barcode number row', () => {
+      const { getByTestId } = render(<CardDetails card={mockCustomCard} />);
+      expect(getByTestId('card-details-barcode-number')).toBeTruthy();
+    });
+
+    it('does NOT render barcode format row (removed per design)', () => {
+      const { queryByTestId } = render(<CardDetails card={mockCustomCard} />);
+      expect(queryByTestId('card-details-format')).toBeNull();
+    });
+
+    it('renders color row for custom cards', () => {
+      const { getByTestId } = render(<CardDetails card={mockCustomCard} />);
+      expect(getByTestId('card-details-color')).toBeTruthy();
+    });
+
+    it('does NOT render color row for catalogue cards', () => {
+      const { queryByTestId } = render(<CardDetails card={mockCatalogueCard} />);
+      expect(queryByTestId('card-details-color')).toBeNull();
+    });
+
+    it('renders date added row', () => {
+      const { getByTestId } = render(<CardDetails card={mockCustomCard} />);
+      expect(getByTestId('card-details-date')).toBeTruthy();
+    });
+
+    it('renders info section container', () => {
+      const { getByTestId } = render(<CardDetails card={mockCustomCard} />);
+      expect(getByTestId('card-details-info-section')).toBeTruthy();
+    });
+  });
+
+  describe('Rendering — AC4: Manage Actions', () => {
+    it('renders Manage section header', () => {
+      const { getByText } = render(<CardDetails card={mockCustomCard} />);
+      expect(getByText('Manage')).toBeTruthy();
+    });
+
+    it('renders Edit card action row', () => {
+      const { getByTestId } = render(<CardDetails card={mockCustomCard} />);
+      expect(getByTestId('card-details-edit-row')).toBeTruthy();
+    });
+
+    it('renders Delete card action row', () => {
+      const { getByTestId } = render(<CardDetails card={mockCustomCard} />);
+      expect(getByTestId('card-details-delete-row')).toBeTruthy();
+    });
+
+    it('renders manage section container', () => {
+      const { getByTestId } = render(<CardDetails card={mockCustomCard} />);
+      expect(getByTestId('card-details-manage-section')).toBeTruthy();
+    });
+  });
+
+  describe('Barcode Copy — AC3', () => {
+    it('copies barcode to clipboard with MI icon', async () => {
+      const { getByTestId } = render(<CardDetails card={mockCustomCard} />);
 
       fireEvent.press(getByTestId('card-details-barcode-number'));
 
@@ -165,7 +253,7 @@ describe('CardDetails', () => {
     });
 
     it('triggers haptic feedback on copy', async () => {
-      const { getByTestId } = render(<CardDetails card={mockCard} />);
+      const { getByTestId } = render(<CardDetails card={mockCustomCard} />);
 
       fireEvent.press(getByTestId('card-details-barcode-number'));
 
@@ -178,7 +266,7 @@ describe('CardDetails', () => {
 
     it('calls onCopy callback after copy', async () => {
       const mockOnCopy = jest.fn();
-      const { getByTestId } = render(<CardDetails card={mockCard} onCopy={mockOnCopy} />);
+      const { getByTestId } = render(<CardDetails card={mockCustomCard} onCopy={mockOnCopy} />);
 
       fireEvent.press(getByTestId('card-details-barcode-number'));
 
@@ -188,31 +276,63 @@ describe('CardDetails', () => {
     });
   });
 
-  describe('Barcode Flash Navigation', () => {
-    it('navigates to Barcode Flash when barcode preview is tapped', () => {
-      const { getByTestId } = render(<CardDetails card={mockCard} />);
+  describe('Fullscreen Barcode — AC6', () => {
+    it('fullscreen barcode modal is initially hidden', () => {
+      const { getByTestId } = render(<CardDetails card={mockCustomCard} />);
+      const modal = getByTestId('fullscreen-barcode-modal');
+      expect(modal.props.accessibilityState.expanded).toBe(false);
+    });
 
+    it('opens fullscreen barcode when barcode preview is tapped', async () => {
+      const { getByTestId } = render(<CardDetails card={mockCustomCard} />);
+
+      await waitFor(() => {
+        fireEvent.press(getByTestId('card-details-barcode-preview'));
+      });
+
+      await waitFor(() => {
+        expect(getByTestId('fullscreen-barcode-modal').props.accessibilityState.expanded).toBe(
+          true
+        );
+      });
+    });
+
+    it('closes fullscreen barcode when close button is tapped', async () => {
+      const { getByTestId } = render(<CardDetails card={mockCustomCard} />);
+
+      // Open
       fireEvent.press(getByTestId('card-details-barcode-preview'));
+      await waitFor(() => {
+        expect(getByTestId('fullscreen-barcode-modal').props.accessibilityState.expanded).toBe(
+          true
+        );
+      });
 
-      expect(mockPush).toHaveBeenCalledWith(`/barcode/${mockCard.id}`);
+      // Close
+      fireEvent.press(getByTestId('fullscreen-barcode-close'));
+      await waitFor(() => {
+        expect(getByTestId('fullscreen-barcode-modal').props.accessibilityState.expanded).toBe(
+          false
+        );
+      });
     });
   });
 
-  describe('Edit Navigation', () => {
-    it('navigates to edit screen when Edit button is tapped', () => {
-      const { getByTestId } = render(<CardDetails card={mockCard} />);
+  describe('Edit Navigation — AC4', () => {
+    it('navigates to edit screen when Edit row is tapped', () => {
+      const { getByTestId } = render(<CardDetails card={mockCustomCard} />);
 
-      fireEvent.press(getByTestId('card-details-edit-button'));
+      fireEvent.press(getByTestId('card-details-edit-row'));
 
-      expect(mockPush).toHaveBeenCalledWith(`/card/${mockCard.id}/edit`);
+      expect(mockPush).toHaveBeenCalledWith(`/card/${mockCustomCard.id}/edit`);
     });
   });
 
-  describe('Delete Confirmation - Story 2.8', () => {
-    it('shows delete confirmation dialog with correct message (AC2)', () => {
-      const { getByTestId } = render(<CardDetails card={mockCard} />);
+  describe('Delete Confirmation — AC4', () => {
+    it('shows delete confirmation dialog', () => {
+      const { getByTestId } = render(<CardDetails card={mockCustomCard} />);
 
-      fireEvent.press(getByTestId('card-details-delete-button'));
+      fireEvent.press(getByTestId('card-details-delete-row'));
 
       expect(Alert.alert).toHaveBeenCalledWith(
         'Delete Card?',
@@ -225,125 +345,234 @@ describe('CardDetails', () => {
       );
     });
 
-    it('calls onDelete callback when Delete is confirmed (AC3)', () => {
+    it('calls onDelete callback when Delete is confirmed', () => {
       const mockOnDelete = jest.fn();
-      const { getByTestId } = render(<CardDetails card={mockCard} onDelete={mockOnDelete} />);
+      const { getByTestId } = render(<CardDetails card={mockCustomCard} onDelete={mockOnDelete} />);
 
-      fireEvent.press(getByTestId('card-details-delete-button'));
+      fireEvent.press(getByTestId('card-details-delete-row'));
 
-      // Get the onPress callback from the Delete button in the alert
       const alertCall = (Alert.alert as jest.Mock).mock.calls[0];
       const buttons = alertCall[2];
       const deleteButton = buttons.find((b: { text: string }) => b.text === 'Delete');
-
-      // Simulate pressing Delete in the alert
       deleteButton.onPress();
 
       expect(mockOnDelete).toHaveBeenCalled();
     });
 
-    it('does not call onDelete when Cancel is pressed (AC4)', () => {
+    it('does not call onDelete when Cancel is pressed', () => {
       const mockOnDelete = jest.fn();
-      const { getByTestId } = render(<CardDetails card={mockCard} onDelete={mockOnDelete} />);
+      const { getByTestId } = render(<CardDetails card={mockCustomCard} onDelete={mockOnDelete} />);
 
-      fireEvent.press(getByTestId('card-details-delete-button'));
+      fireEvent.press(getByTestId('card-details-delete-row'));
 
-      // Get the Cancel button - it has no onPress, so pressing it should not call onDelete
       expect(mockOnDelete).not.toHaveBeenCalled();
     });
 
-    it('disables buttons when isDeleting is true', () => {
-      const { getByTestId } = render(<CardDetails card={mockCard} isDeleting={true} />);
+    it('disables action rows when isDeleting is true', () => {
+      const { getByTestId } = render(<CardDetails card={mockCustomCard} isDeleting={true} />);
 
-      const editButton = getByTestId('card-details-edit-button');
-      const deleteButton = getByTestId('card-details-delete-button');
+      const editRow = getByTestId('card-details-edit-row');
+      const deleteRow = getByTestId('card-details-delete-row');
 
-      expect(editButton.props.accessibilityState?.disabled).toBe(true);
-      expect(deleteButton.props.accessibilityState?.disabled).toBe(true);
+      expect(editRow.props.accessibilityState?.disabled).toBe(true);
+      expect(deleteRow.props.accessibilityState?.disabled).toBe(true);
     });
 
     it('shows "Deleting..." text when isDeleting is true', () => {
-      const { getByText } = render(<CardDetails card={mockCard} isDeleting={true} />);
+      const { getByText } = render(<CardDetails card={mockCustomCard} isDeleting={true} />);
 
       expect(getByText('Deleting...')).toBeTruthy();
     });
 
-    it('shows "Delete Card" text when not deleting', () => {
-      const { getByText } = render(<CardDetails card={mockCard} isDeleting={false} />);
+    it('shows "Delete card" text when not deleting', () => {
+      const { getByText } = render(<CardDetails card={mockCustomCard} isDeleting={false} />);
 
-      expect(getByText('Delete Card')).toBeTruthy();
+      expect(getByText('Delete card')).toBeTruthy();
     });
   });
 
   describe('Date Formatting', () => {
     it('formats date correctly', () => {
-      const { getByText } = render(<CardDetails card={mockCard} />);
-
-      // Should format "2026-01-07T10:00:00Z" as "Jan 7, 2026"
+      const { getByText } = render(<CardDetails card={mockCustomCard} />);
       expect(getByText('Jan 7, 2026')).toBeTruthy();
     });
   });
 
-  describe('Barcode Format Labels', () => {
-    it('displays human-readable format for EAN-13', () => {
-      const { getByText } = render(<CardDetails card={mockCard} />);
-
-      expect(getByText('EAN-13')).toBeTruthy();
+  describe('Color Display — custom cards only', () => {
+    it('displays color name for custom cards', () => {
+      const { getByText } = render(<CardDetails card={mockCustomCard} />);
+      expect(getByText('Blue')).toBeTruthy();
     });
 
-    it('displays human-readable format for QR', () => {
-      const qrCard: LoyaltyCard = { ...mockCard, barcodeFormat: 'QR' };
-      const { getByText } = render(<CardDetails card={qrCard} />);
-
-      expect(getByText('QR Code')).toBeTruthy();
-    });
-
-    it('displays human-readable format for Code 128', () => {
-      const code128Card: LoyaltyCard = { ...mockCard, barcodeFormat: 'CODE128' };
-      const { getByText } = render(<CardDetails card={code128Card} />);
-
-      expect(getByText('Code 128')).toBeTruthy();
+    it('hides color row for catalogue cards', () => {
+      const { queryByTestId } = render(<CardDetails card={mockCatalogueCard} />);
+      expect(queryByTestId('card-details-color')).toBeNull();
     });
   });
 
-  describe('Color Display', () => {
-    it('displays color name', () => {
-      const { getByText } = render(<CardDetails card={mockCard} />);
+  describe('Scroll condensing — AC5', () => {
+    it('sets a minimum content height to preserve full scroll range', () => {
+      const { getByTestId } = render(<CardDetails card={mockCustomCard} />);
 
-      expect(getByText('Blue')).toBeTruthy();
+      const scrollView = getByTestId('card-details-scroll');
+      const contentStyles = Array.isArray(scrollView.props.contentContainerStyle)
+        ? scrollView.props.contentContainerStyle
+        : [scrollView.props.contentContainerStyle];
+
+      const minHeightStyle = contentStyles.find(
+        (style: { minHeight?: number } | undefined) => style && typeof style.minHeight === 'number'
+      );
+
+      expect(minHeightStyle).toBeDefined();
+      expect(minHeightStyle.minHeight).toBeGreaterThan(0);
+    });
+
+    it('calls onScrollPastHero(true) when scroll exceeds hero threshold', () => {
+      const mockScrollCallback = jest.fn();
+      const { getByTestId } = render(
+        <CardDetails card={mockCustomCard} onScrollPastHero={mockScrollCallback} />
+      );
+
+      const scrollView = getByTestId('card-details-scroll');
+      fireEvent.scroll(scrollView, {
+        nativeEvent: { contentOffset: { y: 150 } }
+      });
+
+      expect(mockScrollCallback).toHaveBeenCalledWith(true);
+    });
+
+    it('calls onScrollPastHero(false) when scroll returns below threshold', () => {
+      const mockScrollCallback = jest.fn();
+      const { getByTestId } = render(
+        <CardDetails card={mockCustomCard} onScrollPastHero={mockScrollCallback} />
+      );
+
+      const scrollView = getByTestId('card-details-scroll');
+
+      // Scroll past
+      fireEvent.scroll(scrollView, {
+        nativeEvent: { contentOffset: { y: 150 } }
+      });
+
+      // Scroll back
+      fireEvent.scroll(scrollView, {
+        nativeEvent: { contentOffset: { y: 50 } }
+      });
+
+      expect(mockScrollCallback).toHaveBeenCalledWith(false);
+    });
+
+    it('does not call onScrollPastHero when scroll stays below threshold', () => {
+      const mockScrollCallback = jest.fn();
+      const { getByTestId } = render(
+        <CardDetails card={mockCustomCard} onScrollPastHero={mockScrollCallback} />
+      );
+
+      const scrollView = getByTestId('card-details-scroll');
+      fireEvent.scroll(scrollView, {
+        nativeEvent: { contentOffset: { y: 50 } }
+      });
+
+      expect(mockScrollCallback).not.toHaveBeenCalled();
+    });
+
+    it('does not crash when onScrollPastHero is not provided', () => {
+      const { getByTestId } = render(<CardDetails card={mockCustomCard} />);
+
+      const scrollView = getByTestId('card-details-scroll');
+      expect(() => {
+        fireEvent.scroll(scrollView, {
+          nativeEvent: { contentOffset: { y: 150 } }
+        });
+      }).not.toThrow();
+    });
+  });
+
+  describe('Copy error handling', () => {
+    it('shows error alert when clipboard copy fails', async () => {
+      (Clipboard.setStringAsync as jest.Mock).mockRejectedValueOnce(new Error('Clipboard error'));
+
+      const { getByTestId } = render(<CardDetails card={mockCustomCard} />);
+
+      fireEvent.press(getByTestId('card-details-barcode-number'));
+
+      await waitFor(() => {
+        expect(Alert.alert).toHaveBeenCalledWith('Error', 'Failed to copy barcode to clipboard');
+      });
+    });
+
+    it('does not trigger haptic or callback when copy fails', async () => {
+      (Clipboard.setStringAsync as jest.Mock).mockRejectedValueOnce(new Error('fail'));
+
+      const mockOnCopy = jest.fn();
+      const { getByTestId } = render(<CardDetails card={mockCustomCard} onCopy={mockOnCopy} />);
+
+      fireEvent.press(getByTestId('card-details-barcode-number'));
+
+      await waitFor(() => {
+        expect(Alert.alert).toHaveBeenCalled();
+      });
+      expect(Haptics.notificationAsync).not.toHaveBeenCalled();
+      expect(mockOnCopy).not.toHaveBeenCalled();
+    });
+
+    it('copies barcode without onCopy callback', async () => {
+      const { getByTestId } = render(<CardDetails card={mockCustomCard} />);
+
+      fireEvent.press(getByTestId('card-details-barcode-number'));
+
+      await waitFor(() => {
+        expect(Clipboard.setStringAsync).toHaveBeenCalledWith('1234567890128');
+        expect(Haptics.notificationAsync).toHaveBeenCalled();
+      });
+    });
+  });
+
+  describe('Color display fallback', () => {
+    it('falls back to raw color value when not in COLOR_LABELS', () => {
+      const unknownColorCard = { ...mockCustomCard, color: 'purple' as LoyaltyCard['color'] };
+      const { getByText } = render(<CardDetails card={unknownColorCard} />);
+      expect(getByText('purple')).toBeTruthy();
+    });
+  });
+
+  describe('QR barcode format', () => {
+    it('renders with QR dimensions', () => {
+      const qrCard = { ...mockCustomCard, barcodeFormat: 'QR' as LoyaltyCard['barcodeFormat'] };
+      const { getByTestId } = render(<CardDetails card={qrCard} />);
+      expect(getByTestId('card-details-barcode-preview')).toBeTruthy();
     });
   });
 
   describe('Accessibility', () => {
     it('barcode preview has correct accessibility attributes', () => {
-      const { getByTestId } = render(<CardDetails card={mockCard} />);
+      const { getByTestId } = render(<CardDetails card={mockCustomCard} />);
 
       const preview = getByTestId('card-details-barcode-preview');
       expect(preview.props.accessibilityRole).toBe('button');
       expect(preview.props.accessibilityLabel).toBe('View full screen barcode');
     });
 
-    it('edit button has correct accessibility label', () => {
-      const { getByTestId } = render(<CardDetails card={mockCard} />);
+    it('edit row has correct accessibility', () => {
+      const { getByTestId } = render(<CardDetails card={mockCustomCard} />);
 
-      const editButton = getByTestId('card-details-edit-button');
-      expect(editButton.props.accessibilityRole).toBe('button');
-      expect(editButton.props.accessibilityLabel).toBe('Edit card');
+      const editRow = getByTestId('card-details-edit-row');
+      expect(editRow.props.accessibilityRole).toBe('button');
     });
 
-    it('delete button has correct accessibility label', () => {
-      const { getByTestId } = render(<CardDetails card={mockCard} />);
+    it('delete row has correct accessibility label', () => {
+      const { getByTestId } = render(<CardDetails card={mockCustomCard} />);
 
-      const deleteButton = getByTestId('card-details-delete-button');
-      expect(deleteButton.props.accessibilityRole).toBe('button');
-      expect(deleteButton.props.accessibilityLabel).toBe('Delete card');
+      const deleteRow = getByTestId('card-details-delete-row');
+      expect(deleteRow.props.accessibilityRole).toBe('button');
+      expect(deleteRow.props.accessibilityLabel).toBe('Delete card');
     });
 
-    it('delete button has "Deleting card" label when isDeleting', () => {
-      const { getByTestId } = render(<CardDetails card={mockCard} isDeleting={true} />);
+    it('delete row has "Deleting card" label when isDeleting', () => {
+      const { getByTestId } = render(<CardDetails card={mockCustomCard} isDeleting={true} />);
 
-      const deleteButton = getByTestId('card-details-delete-button');
-      expect(deleteButton.props.accessibilityLabel).toBe('Deleting card');
+      const deleteRow = getByTestId('card-details-delete-row');
+      expect(deleteRow.props.accessibilityLabel).toBe('Deleting card');
     });
   });
 });
