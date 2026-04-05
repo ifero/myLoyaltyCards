@@ -190,7 +190,7 @@ export const CardDetails: React.FC<CardDetailsProps> = ({
         contentContainerStyle={[
           styles.contentContainer,
           { paddingBottom: insets.bottom + SPACING.xl },
-          { minHeight: viewportHeight + heroHeight }
+          { minHeight: viewportHeight + heroHeight - 80 } // Ensure content can scroll enough for header condensing
         ]}
         showsVerticalScrollIndicator={false}
         onScroll={handleScroll}
