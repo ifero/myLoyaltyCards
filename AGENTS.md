@@ -135,6 +135,30 @@ npx expo export -p web && npx eas-cli@latest deploy   # Deploy web to EAS Hostin
 - Without this polyfill, uuid and crypto libraries will crash at runtime
 - Import order is critical - the polyfill must execute before any dependent code
 
+### UI Interaction Reliability (NativeWind + Pressable)
+
+When using `Pressable` in this project:
+
+1. **Do NOT rely on `style={({ pressed }) => ...}` callbacks for critical visual states** in app UI screens.
+2. Prefer explicit pressed-state handling with `onPressIn`/`onPressOut` + local state when visual feedback is required.
+3. Keep base layout styles deterministic (`StyleSheet` or stable style arrays), and avoid runtime style callback branching for spacing/alignment.
+
+**Why This Matters:**
+
+- NativeWind/react-native-css-interop wrapping can interfere with `Pressable` style callback behavior.
+- Deterministic styles prevent intermittent visual regressions in production-like builds.
+
+### Safe Area Touch Rules (MANDATORY)
+
+1. Any top-edge tappable control (back, close, actions) **must respect safe area insets** (`insets.top`, and horizontal inset when near edges).
+2. Any bottom-edge tappable control **must include bottom inset** (`insets.bottom`) to remain reachable and non-overlapping with system UI.
+3. In scanner/camera screens, primary navigation control should be a back arrow under the status bar unless a spec explicitly requires otherwise.
+
+**Why This Matters:**
+
+- Ensures touch targets are always accessible across devices (Dynamic Island, notches, gesture bars).
+- Prevents clipped/overlapped controls and improves consistency with native platform ergonomics.
+
 ## Development Principles
 
 ### Code Style & Standards

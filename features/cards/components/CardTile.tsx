@@ -9,8 +9,14 @@
  */
 
 import { useRouter } from 'expo-router';
-import React from 'react';
+import React, { useEffect } from 'react';
 import { View, Text, Pressable, StyleSheet, Platform } from 'react-native';
+import Animated, {
+  useSharedValue,
+  useAnimatedStyle,
+  withDelay,
+  withTiming
+} from 'react-native-reanimated';
 
 import { LoyaltyCard } from '@/core/schemas';
 
@@ -49,6 +55,8 @@ interface CardTileProps {
   card: LoyaltyCard;
   /** Enlarged single-card mode */
   enlarged?: boolean;
+  /** Green border highlight for newly added card (fades after 2s) */
+  highlighted?: boolean;
 }
 
 /**
@@ -61,10 +69,29 @@ interface CardTileProps {
  * - Drop shadow: offset 0/2, blur 8, 8% opacity
  * - Dark mode: #40404A 1pt border on black-branded cards
  */
-export const CardTile: React.FC<CardTileProps> = ({ card, enlarged = false }) => {
+export const CardTile: React.FC<CardTileProps> = ({
+  card,
+  enlarged = false,
+  highlighted = false
+}) => {
   const { theme, isDark } = useTheme();
   const router = useRouter();
   const brand = useBrandLogo(card.brandId);
+
+  // Highlight animation: green border fades out after 2 seconds
+  const highlightOpacity = useSharedValue(highlighted ? 1 : 0);
+
+  useEffect(() => {
+    if (highlighted) {
+      highlightOpacity.value = 1;
+      highlightOpacity.value = withDelay(500, withTiming(0, { duration: 1500 }));
+    }
+  }, [highlighted, highlightOpacity]);
+
+  const highlightStyle = useAnimatedStyle(() => ({
+    borderWidth: highlightOpacity.value > 0 ? 3 : 0,
+    borderColor: `rgba(76, 175, 80, ${highlightOpacity.value})`
+  }));
 
   const handlePress = () => {
     router.push(`/card/${card.id}`);
@@ -98,7 +125,7 @@ export const CardTile: React.FC<CardTileProps> = ({ card, enlarged = false }) =>
       accessibilityHint="Opens card details"
     >
       {/* Tile */}
-      <View
+      <Animated.View
         style={[
           styles.tileContainer,
           {
@@ -109,7 +136,8 @@ export const CardTile: React.FC<CardTileProps> = ({ card, enlarged = false }) =>
             borderWidth: isDark && isBlackBrand ? 1 : 0,
             borderColor: isDark && isBlackBrand ? '#40404A' : 'transparent'
           },
-          !isDark && styles.shadow
+          !isDark && styles.shadow,
+          highlighted && highlightStyle
         ]}
       >
         {LogoComponent ? (
@@ -128,7 +156,7 @@ export const CardTile: React.FC<CardTileProps> = ({ card, enlarged = false }) =>
             <Text style={[styles.avatarText, { color: foregroundColor }]}>{firstLetter}</Text>
           </View>
         )}
-      </View>
+      </Animated.View>
 
       {/* Card name below tile */}
       <Text

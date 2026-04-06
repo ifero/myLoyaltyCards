@@ -35,7 +35,7 @@
 # - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
 
 generated: 2026-01-03
-updated: 2026-04-01
+updated: 2026-04-05
 project: myLoyaltyCards
 tracking_system: file-system
 story_location: docs/sprint-artifacts
@@ -323,8 +323,8 @@ development_status:
   epic-13: in-progress
   13-1-implement-design-system-tokens: done # implementation complete, QA + dev review approved
   13-2-restyle-home-screen: done # QA + dev review approved 2026-04-03
-  13-3-restyle-card-detail: review # QA + dev review approved, PR #90 awaiting stakeholder merge
-  13-4-restyle-add-card-flow: ready-for-dev # maps to 12-4
+  13-3-restyle-card-detail: done # QA + dev review approved, PR #90 awaiting stakeholder merge
+  13-4-restyle-add-card-flow: done # implementation complete, QA + dev review approved 2026-04-05
   13-5-restyle-auth-screens: ready-for-dev # maps to 12-5
   13-6-implement-settings-screen: ready-for-dev # maps to 12-6 (absorbs Epic 8)
   13-7-restyle-onboarding: ready-for-dev # maps to 12-7

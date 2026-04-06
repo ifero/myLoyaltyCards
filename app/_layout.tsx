@@ -114,7 +114,8 @@ const RootLayoutContent = () => {
         <Stack.Screen
           name="add-card"
           options={{
-            title: 'Add Card'
+            title: 'Add Card',
+            headerShown: false
           }}
         />
         <Stack.Screen

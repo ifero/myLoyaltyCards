@@ -115,6 +115,7 @@ jest.mock('expo-router', () => {
   return {
     router: routerObj,
     useRouter: () => routerObj,
+    useLocalSearchParams: jest.fn(() => ({})),
     useNavigation: () => ({
       addListener: jest.fn(() => jest.fn()),
       dispatch: jest.fn()
@@ -267,8 +268,14 @@ jest.mock('react-native-reanimated', () => {
       if (callback) callback();
       return value;
     },
+    withDelay: (_delay, value) => value,
+    withRepeat: (value) => value,
     withSpring: (value) => value,
-    runOnJS: (fn) => fn
+    runOnJS: (fn) => fn,
+    Easing: {
+      inOut: (fn) => fn,
+      ease: 'ease'
+    }
   };
 });
 
