@@ -1,0 +1,51 @@
+features/add-card/components/FloatingBackButton.tsx
+  b882d82d6e334705 11,29-30,35-36,39
+features/add-card/screens/BrandScannerScreen.test.tsx
+  b882d82d6e334705 91
+features/add-card/screens/CardTypeSelectionScreen.tsx
+  b882d82d6e334705 13,70-71,115-122
+features/add-card/components/OtherCardRow.tsx
+  b882d82d6e334705 10,28,35-36,39,68-70,90-91,94-95,99-100
+features/add-card/screens/CardSetupScreen.tsx
+  b882d82d6e334705 99
+AGENTS.md
+  b882d82d6e334705 138-161
+features/add-card/screens/CardTypeSelectionScreen.test.tsx
+  b882d82d6e334705 47,55,63,71,79,87
+features/add-card/screens/CardSetupScreen.test.tsx
+  b882d82d6e334705 70
+features/add-card/components/BrandRow.test.tsx
+  b882d82d6e334705 54-56,59
+features/add-card/components/BrandRow.tsx
+  b882d82d6e334705 11,35,43-44,47,52,73,75,93-94,98-99,103-104
+features/add-card/components/InlineScanButton.tsx
+  b882d82d6e334705 10,26,32-34
+features/add-card/components/BrandList.tsx
+  b882d82d6e334705 154-155,165,173
+features/add-card/components/ScannerOverlay.tsx
+  b882d82d6e334705 190-193,227-230,276-279
+docs/sprint-artifacts/stories/13-4-restyle-add-card-flow.md
+  b882d82d6e334705 3
+docs/sprint-artifacts/sprint-status.yaml
+  b882d82d6e334705 327
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.2.5",
+  "base_commit_sha": "61244c1f9eacc1a61ade1ec0fd45a93a6b7d8ce5",
+  "prompts": {
+    "b882d82d6e334705": {
+      "agent_id": {
+        "tool": "github-copilot",
+        "id": "02fcb981-677e-4467-85e3-d7c754dc9c47",
+        "model": "copilot/gpt-5.3-codex"
+      },
+      "human_author": "Andrea Pacino",
+      "messages": [],
+      "total_additions": 147,
+      "total_deletions": 134,
+      "accepted_lines": 106,
+      "overriden_lines": 1
+    }
+  }
+}
