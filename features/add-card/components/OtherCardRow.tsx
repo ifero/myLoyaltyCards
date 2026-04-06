@@ -7,7 +7,7 @@
  */
 
 import { MaterialIcons } from '@expo/vector-icons';
-import React from 'react';
+import React, { useState } from 'react';
 import { View, Text, Pressable, StyleSheet } from 'react-native';
 
 import { useTheme } from '@/shared/theme';
@@ -25,18 +25,18 @@ export const OtherCardRow: React.FC<OtherCardRowProps> = ({
   testID = 'other-card-row'
 }) => {
   const { theme } = useTheme();
+  const [isPressed, setIsPressed] = useState(false);
 
   return (
     <View>
       <Pressable
         testID={testID}
         onPress={onPress}
+        onPressIn={() => setIsPressed(true)}
+        onPressOut={() => setIsPressed(false)}
         accessibilityRole="button"
         accessibilityLabel="Other card. Add a custom loyalty card"
-        style={({ pressed }) => [
-          styles.row,
-          { backgroundColor: pressed ? theme.surfaceElevated : 'transparent' }
-        ]}
+        style={[styles.row, { backgroundColor: isPressed ? theme.surfaceElevated : 'transparent' }]}
       >
         <View style={styles.rowContent}>
           {/* Circle with "+" */}
@@ -65,9 +65,9 @@ export const OtherCardRow: React.FC<OtherCardRowProps> = ({
 
 const styles = StyleSheet.create({
   row: {
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    minHeight: TOUCH_TARGET.min + 16,
+    paddingHorizontal: 24,
+    paddingVertical: 8,
+    minHeight: TOUCH_TARGET.min + 12,
     justifyContent: 'center'
   },
   rowContent: {
@@ -87,15 +87,16 @@ const styles = StyleSheet.create({
     flex: 1
   },
   title: {
-    fontSize: 16,
-    fontWeight: '400'
+    fontSize: 17,
+    fontWeight: '500'
   },
   subtitle: {
-    fontSize: 13,
-    marginTop: 2
+    fontSize: 14,
+    marginTop: 1
   },
   separator: {
     height: StyleSheet.hairlineWidth,
-    marginHorizontal: 16
+    marginLeft: 76,
+    marginRight: 24
   }
 });

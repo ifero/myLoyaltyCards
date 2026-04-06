@@ -151,8 +151,8 @@ const styles = StyleSheet.create({
     paddingBottom: 32
   },
   sectionHeader: {
-    paddingHorizontal: 16,
-    paddingTop: 16,
+    paddingHorizontal: 24,
+    paddingTop: 14,
     paddingBottom: 8
   },
   sectionTitle: {
@@ -162,7 +162,7 @@ const styles = StyleSheet.create({
     textTransform: 'uppercase'
   },
   emptyContainer: {
-    paddingHorizontal: 16,
+    paddingHorizontal: 24,
     paddingTop: 24,
     alignItems: 'center'
   },
@@ -170,7 +170,7 @@ const styles = StyleSheet.create({
     fontSize: 16
   },
   footerContainer: {
-    paddingHorizontal: 16,
+    paddingHorizontal: 24,
     paddingTop: 24
   },
   footerText: {

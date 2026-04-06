@@ -67,8 +67,7 @@ jest.mock('@/core/catalogue/catalogue-repository', () => ({
               name: 'Esselunga',
               color: '#FF0000',
               logo: 'esselunga',
-              aliases: [],
-              barcodeFormats: []
+              aliases: []
             }
           : undefined
       )

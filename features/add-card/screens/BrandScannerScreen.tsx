@@ -51,8 +51,7 @@ export const BrandScannerScreen: React.FC = () => {
         name: params.brandName,
         color: params.brandColor,
         logo: params.brandLogo ?? '',
-        aliases: [],
-        barcodeFormats: []
+        aliases: []
       };
     }
 

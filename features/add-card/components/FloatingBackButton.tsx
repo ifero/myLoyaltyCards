@@ -8,7 +8,7 @@
  */
 
 import { MaterialIcons } from '@expo/vector-icons';
-import React from 'react';
+import React, { useState } from 'react';
 import { Pressable, StyleSheet, ViewStyle } from 'react-native';
 
 import { TOUCH_TARGET } from '@/shared/theme/spacing';
@@ -26,13 +26,17 @@ export const FloatingBackButton: React.FC<FloatingBackButtonProps> = ({
   style,
   testID = 'floating-back-button'
 }) => {
+  const [isPressed, setIsPressed] = useState(false);
+
   return (
     <Pressable
       testID={testID}
       onPress={onPress}
+      onPressIn={() => setIsPressed(true)}
+      onPressOut={() => setIsPressed(false)}
       accessibilityRole="button"
       accessibilityLabel="Go back"
-      style={({ pressed }) => [styles.button, style, { opacity: pressed ? 0.7 : 1 }]}
+      style={[styles.button, style, { opacity: isPressed ? 0.7 : 1 }]}
       hitSlop={8}
     >
       <MaterialIcons name="chevron-left" size={28} color="#FFFFFF" />

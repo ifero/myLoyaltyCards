@@ -44,7 +44,7 @@ const mockBrands = [
     color: '#FF0000',
     logo: 'esselunga',
     aliases: ['fidaty'],
-    barcodeFormats: ['EAN13']
+    defaultFormat: 'EAN13'
   },
   {
     id: 'conad',
@@ -52,7 +52,7 @@ const mockBrands = [
     color: '#00AA00',
     logo: 'conad',
     aliases: [],
-    barcodeFormats: ['EAN13']
+    defaultFormat: 'EAN13'
   },
   {
     id: 'coop',
@@ -60,7 +60,7 @@ const mockBrands = [
     color: '#E2231A',
     logo: 'coop',
     aliases: [],
-    barcodeFormats: ['CODE128']
+    defaultFormat: 'CODE128'
   },
   {
     id: 'carrefour',
@@ -68,7 +68,7 @@ const mockBrands = [
     color: '#0032A0',
     logo: 'carrefour',
     aliases: [],
-    barcodeFormats: ['EAN13']
+    defaultFormat: 'EAN13'
   },
   {
     id: 'lidl',
@@ -76,7 +76,7 @@ const mockBrands = [
     color: '#FFC300',
     logo: 'lidl',
     aliases: [],
-    barcodeFormats: ['EAN13']
+    defaultFormat: 'EAN13'
   },
   {
     id: 'auchan',
@@ -84,7 +84,7 @@ const mockBrands = [
     color: '#D4001B',
     logo: 'auchan',
     aliases: [],
-    barcodeFormats: ['EAN13']
+    defaultFormat: 'EAN13'
   }
 ];
 

@@ -7,7 +7,7 @@
  */
 
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import React from 'react';
+import React, { useState } from 'react';
 import { Pressable, StyleSheet } from 'react-native';
 
 import { useTheme } from '@/shared/theme';
@@ -23,12 +23,15 @@ export const InlineScanButton: React.FC<InlineScanButtonProps> = ({
   testID = 'inline-scan-button'
 }) => {
   const { theme } = useTheme();
+  const [isPressed, setIsPressed] = useState(false);
 
   return (
     <Pressable
       testID={testID}
       onPress={onPress}
-      style={({ pressed }) => [styles.button, { opacity: pressed ? 0.6 : 1 }]}
+      onPressIn={() => setIsPressed(true)}
+      onPressOut={() => setIsPressed(false)}
+      style={[styles.button, { opacity: isPressed ? 0.6 : 1 }]}
       accessibilityRole="button"
       accessibilityLabel="Scan barcode with camera"
       hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}

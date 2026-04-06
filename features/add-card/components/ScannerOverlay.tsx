@@ -187,7 +187,10 @@ export const ScannerOverlay: React.FC<ScannerOverlayProps> = ({
   if (permission && !permission.granted) {
     return (
       <View testID={testID} style={[styles.container, { backgroundColor: theme.background }]}>
-        <FloatingBackButton onPress={onBack} style={{ top: insets.top + SPACING.sm }} />
+        <FloatingBackButton
+          onPress={onBack}
+          style={{ top: insets.top + SPACING.sm, left: insets.left + SPACING.md }}
+        />
         <View style={styles.centeredContent}>
           <MaterialIcons name="no-photography" size={48} color={theme.textSecondary} />
           <Text
@@ -221,7 +224,10 @@ export const ScannerOverlay: React.FC<ScannerOverlayProps> = ({
   if (error && !isReady) {
     return (
       <View testID={testID} style={[styles.container, { backgroundColor: theme.background }]}>
-        <FloatingBackButton onPress={onBack} style={{ top: insets.top + SPACING.sm }} />
+        <FloatingBackButton
+          onPress={onBack}
+          style={{ top: insets.top + SPACING.sm, left: insets.left + SPACING.md }}
+        />
         <View style={styles.centeredContent}>
           <MaterialIcons name="error-outline" size={48} color={theme.error} />
           <Text style={[styles.permissionTitle, { color: theme.textPrimary }]}>Camera Error</Text>
@@ -267,7 +273,10 @@ export const ScannerOverlay: React.FC<ScannerOverlayProps> = ({
       <View style={[StyleSheet.absoluteFill, styles.overlay]} />
 
       {/* Floating back button */}
-      <FloatingBackButton onPress={onBack} style={{ top: insets.top + SPACING.sm }} />
+      <FloatingBackButton
+        onPress={onBack}
+        style={{ top: insets.top + SPACING.sm, left: insets.left + SPACING.md }}
+      />
 
       {/* Brand pill (if brand context) */}
       {brandPill && (

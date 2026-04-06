@@ -8,13 +8,11 @@
  */
 
 import { MaterialIcons } from '@expo/vector-icons';
-import React from 'react';
+import React, { useState } from 'react';
 import { View, Text, Pressable, StyleSheet } from 'react-native';
 
 import { useTheme } from '@/shared/theme';
 import { TOUCH_TARGET } from '@/shared/theme/spacing';
-
-import { getBrandLogoComponent } from '@/features/cards/utils/brandLogos';
 
 import { CatalogueBrand } from '@/catalogue/types';
 
@@ -26,7 +24,6 @@ interface BrandRowProps {
 }
 
 const CIRCLE_SIZE = 40;
-const LOGO_SIZE = 24;
 
 export const BrandRow: React.FC<BrandRowProps> = ({
   brand,
@@ -35,7 +32,7 @@ export const BrandRow: React.FC<BrandRowProps> = ({
   testID
 }) => {
   const { theme } = useTheme();
-  const LogoComponent = getBrandLogoComponent(brand.logo);
+  const [isPressed, setIsPressed] = useState(false);
   const firstLetter = brand.name.charAt(0).toUpperCase();
 
   return (
@@ -43,21 +40,16 @@ export const BrandRow: React.FC<BrandRowProps> = ({
       <Pressable
         testID={testID}
         onPress={() => onPress(brand)}
+        onPressIn={() => setIsPressed(true)}
+        onPressOut={() => setIsPressed(false)}
         accessibilityRole="button"
         accessibilityLabel={`${brand.name}`}
-        style={({ pressed }) => [
-          styles.row,
-          { backgroundColor: pressed ? theme.surfaceElevated : 'transparent' }
-        ]}
+        style={[styles.row, { backgroundColor: isPressed ? theme.surfaceElevated : 'transparent' }]}
       >
         <View style={styles.rowContent}>
           {/* Brand circle */}
           <View style={[styles.circle, { backgroundColor: brand.color }]}>
-            {LogoComponent ? (
-              <LogoComponent width={LOGO_SIZE} height={LOGO_SIZE} color="#FFFFFF" />
-            ) : (
-              <Text style={styles.circleText}>{firstLetter}</Text>
-            )}
+            <Text style={styles.circleText}>{firstLetter}</Text>
           </View>
 
           {/* Brand name */}
@@ -78,8 +70,9 @@ export const BrandRow: React.FC<BrandRowProps> = ({
 
 const styles = StyleSheet.create({
   row: {
-    paddingHorizontal: 16,
-    minHeight: TOUCH_TARGET.min + 8,
+    paddingHorizontal: 24,
+    paddingVertical: 8,
+    minHeight: TOUCH_TARGET.min + 10,
     justifyContent: 'center'
   },
   rowContent: {
@@ -97,15 +90,17 @@ const styles = StyleSheet.create({
   },
   circleText: {
     color: '#FFFFFF',
-    fontSize: 16,
-    fontWeight: '600'
+    fontSize: 22,
+    fontWeight: '700'
   },
   name: {
     flex: 1,
-    fontSize: 16
+    fontSize: 17,
+    fontWeight: '500'
   },
   separator: {
     height: StyleSheet.hairlineWidth,
-    marginLeft: 68 // Offset from left to align with brand name (per Figma)
+    marginLeft: 76,
+    marginRight: 24
   }
 });

@@ -10,7 +10,7 @@
 import { MaterialIcons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import React, { useCallback, useEffect } from 'react';
-import { View, StyleSheet, Pressable, AccessibilityInfo } from 'react-native';
+import { View, StyleSheet, Pressable, AccessibilityInfo, Text } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { useTheme } from '@/shared/theme';
@@ -67,6 +67,8 @@ export const CardTypeSelectionScreen: React.FC = () => {
         >
           <MaterialIcons name="chevron-left" size={28} color={theme.textPrimary} />
         </Pressable>
+        <Text style={[styles.headerTitle, { color: theme.textPrimary }]}>Add Card</Text>
+        <View style={styles.headerSpacer} />
       </View>
 
       {/* Search bar */}
@@ -109,6 +111,15 @@ const styles = StyleSheet.create({
     height: TOUCH_TARGET.min,
     justifyContent: 'center',
     alignItems: 'center'
+  },
+  headerTitle: {
+    flex: 1,
+    textAlign: 'center',
+    fontSize: 17,
+    fontWeight: '600'
+  },
+  headerSpacer: {
+    width: TOUCH_TARGET.min
   },
   searchContainer: {
     paddingHorizontal: LAYOUT.screenHorizontalMargin,

@@ -21,15 +21,6 @@ jest.mock('@/shared/theme', () => ({
   })
 }));
 
-// Mock brandLogos — return a simple component for known logos, undefined otherwise
-const MockLogo = ({ width, height }: { width: number; height: number }) =>
-  // eslint-disable-next-line @typescript-eslint/no-require-imports
-  require('react').createElement('View', { testID: 'brand-logo', style: { width, height } });
-
-jest.mock('@/features/cards/utils/brandLogos', () => ({
-  getBrandLogoComponent: jest.fn((logo: string) => (logo ? MockLogo : undefined))
-}));
-
 const testBrand: CatalogueBrand = {
   id: 'esselunga',
   name: 'Esselunga',
@@ -60,17 +51,12 @@ describe('BrandRow', () => {
       expect(screen.getByText('Esselunga')).toBeTruthy();
     });
 
-    it('renders SVG logo when available', () => {
-      render(<BrandRow brand={testBrand} onPress={mockOnPress} testID="row" />);
-      expect(screen.getByTestId('brand-logo')).toBeTruthy();
+    it('renders first-letter avatar for brand', () => {
+      render(<BrandRow brand={testBrand} onPress={mockOnPress} />);
+      expect(screen.getByText('E')).toBeTruthy();
     });
 
-    it('renders first-letter fallback when no logo', () => {
-      // Override mock to return undefined for empty logo
-      // eslint-disable-next-line @typescript-eslint/no-require-imports
-      const { getBrandLogoComponent } = require('@/features/cards/utils/brandLogos');
-      (getBrandLogoComponent as jest.Mock).mockReturnValueOnce(undefined);
-
+    it('renders first-letter avatar when logo is empty', () => {
       render(<BrandRow brand={brandNoLogo} onPress={mockOnPress} />);
       expect(screen.getByText('M')).toBeTruthy();
     });

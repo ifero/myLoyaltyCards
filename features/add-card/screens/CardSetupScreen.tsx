@@ -96,8 +96,7 @@ export const CardSetupScreen: React.FC = () => {
         name: params.brandName,
         color: params.brandColor,
         logo: params.brandLogo ?? '',
-        aliases: [],
-        barcodeFormats: []
+        aliases: []
       };
     }
     return undefined;
