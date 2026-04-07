@@ -1,61 +1,33 @@
-/**
- * ForgotPasswordScreen
- * Story 6-8: Password Reset
- *
- * Email entry form to request a password reset link.
- * Always shows a success message after submission — never reveals
- * whether the email is actually registered (prevents user enumeration).
- *
- * ⚠️ Never log user credentials or session tokens in this component.
- */
-
+import { MaterialIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useCallback, useState } from 'react';
-import {
-  ActivityIndicator,
-  KeyboardAvoidingView,
-  Platform,
-  Pressable,
-  ScrollView,
-  Text,
-  TextInput,
-  View
-} from 'react-native';
+import { Pressable, Text, View } from 'react-native';
 
 import { isValidEmail } from '@/core/auth/validation';
 
+import { Button, TextField } from '@/shared/components/ui';
 import { requestPasswordReset } from '@/shared/supabase/auth';
 import { useTheme } from '@/shared/theme';
 
-// ---------------------------------------------------------------------------
-// Component
-// ---------------------------------------------------------------------------
+import { AuthLink, AuthScreenLayout, ErrorBanner } from './components';
 
 const ForgotPasswordScreen = () => {
-  const { theme } = useTheme();
+  const { theme, spacing, touchTarget, typography } = useTheme();
   const router = useRouter();
 
-  // Form state
   const [email, setEmail] = useState('');
-
-  // UI state
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [fieldErrors, setFieldErrors] = useState<{ email?: string }>({});
   const [submitted, setSubmitted] = useState(false);
+  const [fieldErrors, setFieldErrors] = useState<{ email?: string }>({});
 
-  // ---------------------------------------------------------------------------
-  // Handlers
-  // ---------------------------------------------------------------------------
-
-  /** Validate email and return true when the form is ready. */
-  const validate = useCallback((): boolean => {
-    const errors: typeof fieldErrors = {};
+  const validate = useCallback(() => {
+    const errors: { email?: string } = {};
 
     if (!email.trim()) {
       errors.email = 'Email is required.';
     } else if (!isValidEmail(email)) {
-      errors.email = 'Please enter a valid email address.';
+      errors.email = 'Please enter a valid email address';
     }
 
     setFieldErrors(errors);
@@ -65,7 +37,9 @@ const ForgotPasswordScreen = () => {
   const handleSendReset = useCallback(async () => {
     setError(null);
 
-    if (!validate()) return;
+    if (!validate()) {
+      return;
+    }
 
     setLoading(true);
 
@@ -77,7 +51,6 @@ const ForgotPasswordScreen = () => {
         return;
       }
 
-      // Always show confirmation — prevents user enumeration
       setSubmitted(true);
     } catch {
       setError('An unexpected error occurred. Please try again.');
@@ -86,182 +59,138 @@ const ForgotPasswordScreen = () => {
     }
   }, [email, validate]);
 
-  // ---------------------------------------------------------------------------
-  // Confirmation view (after successful submission)
-  // ---------------------------------------------------------------------------
+  const handleTryAgain = useCallback(async () => {
+    setError(null);
+    setLoading(true);
+
+    try {
+      const result = await requestPasswordReset(email.trim());
+
+      if (!result.success) {
+        setSubmitted(false);
+        setError(result.error.message);
+      }
+    } catch {
+      setSubmitted(false);
+      setError('An unexpected error occurred. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  }, [email]);
 
   if (submitted) {
     return (
-      <View
+      <AuthScreenLayout
         testID="forgot-password-confirmation"
-        className="flex-1 px-6 pt-8"
-        style={{ backgroundColor: theme.background }}
+        heading="Check your email"
+        headingTestID="confirmation-title"
+        subtitle="If an account exists for that email, we've sent a reset link. Check your inbox and spam folder."
+        subtitleTestID="confirmation-subtitle"
+        showAppIcon={false}
       >
-        <Text
-          testID="confirmation-title"
-          accessibilityRole="header"
-          className="mb-4 text-2xl font-bold"
-          style={{ color: theme.textPrimary }}
-        >
-          Check Your Email
-        </Text>
-        <Text className="mb-4 text-base leading-6" style={{ color: theme.textSecondary }}>
-          {
-            "If an account exists for that email, we've sent a reset link. Check your inbox and spam folder."
-          }
-        </Text>
-        <Text className="mb-8 text-sm" style={{ color: theme.textSecondary }}>
-          {"Didn't receive it? Check your spam folder or try again."}
-        </Text>
+        <View className="w-full items-center">
+          <View testID="reset-password-confirmation-icon" className="mb-6">
+            <MaterialIcons name="mail-outline" size={56} color={theme.primary} />
+          </View>
 
-        <Pressable
-          testID="try-again-button"
-          onPress={() => setSubmitted(false)}
-          accessibilityRole="button"
-          accessibilityLabel="Try Again"
-          className="mb-4 h-[52px] items-center justify-center rounded-xl"
-          style={({ pressed }) => ({
-            backgroundColor: pressed ? theme.primaryDark : theme.primary,
-            transform: [{ scale: pressed ? 0.98 : 1 }]
-          })}
-        >
-          <Text className="text-base font-semibold text-white">Try Again</Text>
-        </Pressable>
+          <AuthLink
+            testID="try-again-button"
+            actionText="Try again"
+            onPress={handleTryAgain}
+            accessibilityLabel="Try again"
+          />
 
-        <Pressable
-          testID="back-to-sign-in-button"
-          onPress={() => router.back()}
-          accessibilityRole="button"
-          accessibilityLabel="Back to Sign In"
-          className="h-[52px] items-center justify-center rounded-xl border"
-          style={({ pressed }) => ({
-            borderColor: theme.primary,
-            backgroundColor: pressed ? theme.surface : 'transparent',
-            transform: [{ scale: pressed ? 0.98 : 1 }]
-          })}
-        >
-          <Text className="text-base font-semibold" style={{ color: theme.primary }}>
-            Back to Sign In
-          </Text>
-        </Pressable>
-      </View>
+          <AuthLink
+            testID="back-to-sign-in-button"
+            actionText="Back to Sign In"
+            onPress={() => router.push('/sign-in')}
+            accessibilityLabel="Back to Sign In"
+          />
+        </View>
+      </AuthScreenLayout>
     );
   }
 
-  // ---------------------------------------------------------------------------
-  // Email entry form
-  // ---------------------------------------------------------------------------
-
   return (
-    <KeyboardAvoidingView
+    <AuthScreenLayout
       testID="forgot-password-screen"
-      className="flex-1"
-      style={{ backgroundColor: theme.background }}
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      heading="Reset Password"
+      headingTestID="forgot-password-title"
+      subtitle="No worries. Enter your email and we'll send you a link to reset your password."
+      subtitleTestID="forgot-password-subtitle"
+      centerContent={false}
+      showAppIcon={false}
+      headerContent={
+        <Pressable
+          testID="forgot-password-back-chevron"
+          accessibilityRole="button"
+          accessibilityLabel="Back"
+          onPress={() => router.back()}
+          style={{
+            minHeight: touchTarget.min,
+            minWidth: touchTarget.min,
+            justifyContent: 'center',
+            alignItems: 'flex-start',
+            marginBottom: spacing.md
+          }}
+        >
+          <MaterialIcons name="chevron-left" size={28} color={theme.textPrimary} />
+        </Pressable>
+      }
     >
-      <ScrollView
-        contentContainerStyle={{ flexGrow: 1, paddingBottom: 40 }}
-        keyboardShouldPersistTaps="handled"
-      >
-        <View className="flex-1 px-6 pt-8">
-          {/* Title */}
-          <Text
-            testID="forgot-password-title"
-            accessibilityRole="header"
-            className="mb-2 text-2xl font-bold"
-            style={{ color: theme.textPrimary }}
-          >
-            Forgot Password?
-          </Text>
-          <Text className="mb-8 text-sm" style={{ color: theme.textSecondary }}>
-            Enter your email and we'll send you a link to reset your password.
-          </Text>
+      <View className="w-full" style={{ gap: spacing.md }}>
+        <ErrorBanner message={error} testID="server-error" />
 
-          {/* ---- Email ---- */}
-          <Text className="mb-1 text-sm font-medium" style={{ color: theme.textPrimary }}>
-            Email
-          </Text>
-          <TextInput
-            testID="email-input"
-            value={email}
-            onChangeText={(t) => {
-              setEmail(t);
-              if (fieldErrors.email) setFieldErrors({});
-            }}
-            placeholder="you@example.com"
-            placeholderTextColor={theme.textSecondary}
-            keyboardType="email-address"
-            autoCapitalize="none"
-            autoComplete="email"
-            autoCorrect={false}
-            accessibilityLabel="Email"
-            accessibilityHint="Enter your email address to receive a reset link"
-            className="mb-1 h-12 rounded-lg border px-4 text-base"
-            style={{
-              borderColor: fieldErrors.email ? '#EF4444' : theme.border,
-              color: theme.textPrimary,
-              backgroundColor: theme.surface
-            }}
-          />
-          {fieldErrors.email && (
-            <Text testID="email-error" className="mb-3 text-xs" style={{ color: '#EF4444' }}>
-              {fieldErrors.email}
-            </Text>
-          )}
-          {!fieldErrors.email && <View className="mb-3" />}
+        <TextField
+          testID="email-input"
+          label="Email"
+          value={email}
+          onChangeText={(value) => {
+            setEmail(value);
+            if (fieldErrors.email) {
+              setFieldErrors({});
+            }
+          }}
+          placeholder="you@example.com"
+          keyboardType="email-address"
+          autoCapitalize="none"
+          autoComplete="email"
+          autoCorrect={false}
+          accessibilityLabel="Email"
+          accessibilityHint="Enter your email address to receive a reset link"
+          error={fieldErrors.email}
+        />
 
-          {/* ---- Server error banner ---- */}
-          {error && (
-            <View
-              testID="server-error"
-              className="mb-4 rounded-lg px-4 py-3"
-              style={{ backgroundColor: '#FEE2E2' }}
-              accessibilityRole="alert"
-            >
-              <Text className="text-sm" style={{ color: '#991B1B' }}>
-                {error}
-              </Text>
-            </View>
-          )}
+        <Button
+          testID="send-reset-button"
+          variant="primary"
+          size="large"
+          onPress={handleSendReset}
+          loading={loading}
+          accessibilityLabel="Send Reset Link"
+        >
+          Send Reset Link
+        </Button>
 
-          {/* ---- Send Reset Link button ---- */}
-          <Pressable
-            testID="send-reset-button"
-            onPress={handleSendReset}
-            disabled={loading}
-            accessibilityRole="button"
-            accessibilityLabel="Send Reset Link"
-            accessibilityState={{ disabled: loading }}
-            className="h-[52px] items-center justify-center rounded-xl"
-            style={({ pressed }) => ({
-              backgroundColor: loading ? theme.border : pressed ? theme.primaryDark : theme.primary,
-              opacity: loading ? 0.7 : 1,
-              transform: [{ scale: pressed && !loading ? 0.98 : 1 }]
-            })}
-          >
-            {loading ? (
-              <ActivityIndicator testID="loading-indicator" color="#FFFFFF" />
-            ) : (
-              <Text className="text-base font-semibold text-white">Send Reset Link</Text>
-            )}
-          </Pressable>
+        <AuthLink
+          testID="back-to-sign-in-link"
+          actionText="Back to Sign In"
+          onPress={() => router.push('/sign-in')}
+          accessibilityLabel="Back to Sign In"
+        />
 
-          {/* ---- Back to Sign In link ---- */}
-          <View className="mt-6 flex-row items-center justify-center">
-            <Pressable
-              testID="back-to-sign-in-link"
-              onPress={() => router.back()}
-              accessibilityRole="link"
-              accessibilityLabel="Back to Sign In"
-            >
-              <Text className="text-sm font-semibold" style={{ color: theme.primary }}>
-                Back to Sign In
-              </Text>
-            </Pressable>
-          </View>
-        </View>
-      </ScrollView>
-    </KeyboardAvoidingView>
+        <Text
+          style={{
+            color: theme.textSecondary,
+            textAlign: 'center',
+            fontSize: typography.caption1.fontSize,
+            lineHeight: typography.caption1.lineHeight
+          }}
+        >
+          If the email exists, you'll receive a reset link shortly.
+        </Text>
+      </View>
+    </AuthScreenLayout>
   );
 };
 

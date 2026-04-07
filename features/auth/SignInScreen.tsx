@@ -1,47 +1,46 @@
-/**
- * SignInScreen
- * Story 6-7: Sign In with Email
- *
- * Sign-in form with email and password.
- * Validates input client-side, calls the signInWithEmail auth wrapper, and
- * redirects to the home screen on success. Session persistence is handled
- * automatically by the SecureStore-backed Supabase client adapter used by
- * that wrapper.
- *
- * ⚠️ Never log user credentials or session tokens in this component.
- */
-
 import { useRouter } from 'expo-router';
 import { useCallback, useState } from 'react';
-import {
-  ActivityIndicator,
-  KeyboardAvoidingView,
-  Platform,
-  Pressable,
-  ScrollView,
-  Text,
-  TextInput,
-  View
-} from 'react-native';
+import { Pressable, Text, View } from 'react-native';
 
 import { isValidEmail } from '@/core/auth/validation';
 
+import { Button, TextField } from '@/shared/components/ui';
 import { signInWithEmail } from '@/shared/supabase/auth';
 import { useTheme } from '@/shared/theme';
 
-// ---------------------------------------------------------------------------
-// Component
-// ---------------------------------------------------------------------------
+import { AuthLink, AuthScreenLayout, ErrorBanner, PasswordInput } from './components';
+
+const mapSignInErrorMessage = (code?: string, message?: string) => {
+  if (code === 'invalid_credentials') {
+    return 'Incorrect email or password. Please try again.';
+  }
+
+  if (code === 'email_not_confirmed') {
+    return 'Please verify your email address first.';
+  }
+
+  if (message?.toLowerCase().includes('invalid login credentials')) {
+    return 'Incorrect email or password. Please try again.';
+  }
+
+  if (message?.toLowerCase().includes('network')) {
+    return 'Unable to connect. Check your internet and try again.';
+  }
+
+  if (message?.trim()) {
+    return message;
+  }
+
+  return 'Something went wrong. Please try again.';
+};
 
 const SignInScreen = () => {
-  const { theme } = useTheme();
+  const { theme, spacing, touchTarget } = useTheme();
   const router = useRouter();
 
-  // Form state
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
 
-  // UI state
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<{
@@ -49,18 +48,13 @@ const SignInScreen = () => {
     password?: string;
   }>({});
 
-  // ---------------------------------------------------------------------------
-  // Handlers
-  // ---------------------------------------------------------------------------
-
-  /** Validate all fields and return true when the form is ready. */
-  const validate = useCallback((): boolean => {
-    const errors: typeof fieldErrors = {};
+  const validate = useCallback(() => {
+    const errors: { email?: string; password?: string } = {};
 
     if (!email.trim()) {
       errors.email = 'Email is required.';
     } else if (!isValidEmail(email)) {
-      errors.email = 'Please enter a valid email address.';
+      errors.email = 'Please enter a valid email address';
     }
 
     if (!password) {
@@ -74,7 +68,9 @@ const SignInScreen = () => {
   const handleSignIn = useCallback(async () => {
     setError(null);
 
-    if (!validate()) return;
+    if (!validate()) {
+      return;
+    }
 
     setLoading(true);
 
@@ -82,181 +78,110 @@ const SignInScreen = () => {
       const result = await signInWithEmail(email.trim(), password);
 
       if (!result.success) {
-        setError(result.error.message);
+        setError(mapSignInErrorMessage(result.error.code, result.error.message));
         return;
       }
 
-      // Session is automatically persisted by the SecureStore adapter.
       router.replace('/');
     } catch {
-      setError('An unexpected error occurred. Please try again.');
+      setError('Unable to connect. Check your internet and try again.');
     } finally {
       setLoading(false);
     }
-  }, [email, password, validate, router]);
+  }, [email, password, router, validate]);
 
-  // ---------------------------------------------------------------------------
-  // Render
-  // ---------------------------------------------------------------------------
+  const hasFormError = Boolean(error);
 
   return (
-    <KeyboardAvoidingView
+    <AuthScreenLayout
       testID="sign-in-screen"
-      className="flex-1"
-      style={{ backgroundColor: theme.background }}
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      heading="Welcome Back"
+      subtitle="Sign in to sync your loyalty cards across devices"
+      headingTestID="sign-in-title"
+      subtitleTestID="sign-in-subtitle"
     >
-      <ScrollView
-        contentContainerStyle={{ flexGrow: 1, paddingBottom: 40 }}
-        keyboardShouldPersistTaps="handled"
-      >
-        <View className="flex-1 px-6 pt-8">
-          {/* Title */}
-          <Text
-            testID="sign-in-title"
-            accessibilityRole="header"
-            className="mb-2 text-2xl font-bold"
-            style={{ color: theme.textPrimary }}
-          >
-            Sign In
-          </Text>
-          <Text className="mb-8 text-sm" style={{ color: theme.textSecondary }}>
-            Sign in to sync your loyalty cards across devices.
-          </Text>
+      <View className="w-full" style={{ gap: spacing.md }}>
+        <ErrorBanner message={error} testID="server-error" />
 
-          {/* ---- Email ---- */}
-          <Text className="mb-1 text-sm font-medium" style={{ color: theme.textPrimary }}>
-            Email
-          </Text>
-          <TextInput
-            testID="email-input"
-            value={email}
-            onChangeText={(t) => {
-              setEmail(t);
-              if (fieldErrors.email) setFieldErrors((prev) => ({ ...prev, email: undefined }));
-            }}
-            placeholder="you@example.com"
-            placeholderTextColor={theme.textSecondary}
-            keyboardType="email-address"
-            autoCapitalize="none"
-            autoComplete="email"
-            autoCorrect={false}
-            accessibilityLabel="Email"
-            accessibilityHint="Enter your email address"
-            className="mb-1 h-12 rounded-lg border px-4 text-base"
-            style={{
-              borderColor: fieldErrors.email ? '#EF4444' : theme.border,
-              color: theme.textPrimary,
-              backgroundColor: theme.surface
-            }}
-          />
-          {fieldErrors.email && (
-            <Text testID="email-error" className="mb-3 text-xs" style={{ color: '#EF4444' }}>
-              {fieldErrors.email}
-            </Text>
-          )}
-          {!fieldErrors.email && <View className="mb-3" />}
+        <TextField
+          testID="email-input"
+          label="Email"
+          value={email}
+          onChangeText={(value) => {
+            setEmail(value);
+            if (fieldErrors.email) {
+              setFieldErrors((previous) => ({ ...previous, email: undefined }));
+            }
+            if (error) {
+              setError(null);
+            }
+          }}
+          placeholder="you@example.com"
+          keyboardType="email-address"
+          autoCapitalize="none"
+          autoComplete="email"
+          autoCorrect={false}
+          accessibilityLabel="Email"
+          accessibilityHint="Enter your email address"
+          error={fieldErrors.email}
+          hasError={hasFormError}
+        />
 
-          {/* ---- Password ---- */}
-          <Text className="mb-1 text-sm font-medium" style={{ color: theme.textPrimary }}>
-            Password
-          </Text>
-          <TextInput
-            testID="password-input"
-            value={password}
-            onChangeText={(t) => {
-              setPassword(t);
-              if (fieldErrors.password)
-                setFieldErrors((prev) => ({ ...prev, password: undefined }));
-            }}
-            placeholder="Your password"
-            placeholderTextColor={theme.textSecondary}
-            secureTextEntry
-            autoComplete="current-password"
-            accessibilityLabel="Password"
-            accessibilityHint="Enter your password"
-            className="mb-1 h-12 rounded-lg border px-4 text-base"
-            style={{
-              borderColor: fieldErrors.password ? '#EF4444' : theme.border,
-              color: theme.textPrimary,
-              backgroundColor: theme.surface
-            }}
-          />
-          {fieldErrors.password && (
-            <Text testID="password-error" className="mb-3 text-xs" style={{ color: '#EF4444' }}>
-              {fieldErrors.password}
-            </Text>
-          )}
-          {!fieldErrors.password && <View className="mb-3" />}
+        <PasswordInput
+          testID="password-input"
+          label="Password"
+          value={password}
+          onChangeText={(value) => {
+            setPassword(value);
+            if (fieldErrors.password) {
+              setFieldErrors((previous) => ({ ...previous, password: undefined }));
+            }
+            if (error) {
+              setError(null);
+            }
+          }}
+          placeholder="Your password"
+          autoComplete="current-password"
+          accessibilityHint="Enter your password"
+          error={fieldErrors.password}
+          hasError={hasFormError}
+        />
 
-          {/* ---- Forgot Password link ---- */}
-          <Pressable
-            testID="forgot-password-link"
-            onPress={() => router.push('/forgot-password')}
-            accessibilityRole="link"
-            accessibilityLabel="Forgot Password?"
-            className="mb-4 self-end"
-          >
-            <Text className="text-sm font-semibold" style={{ color: theme.primary }}>
-              Forgot Password?
-            </Text>
-          </Pressable>
+        <Pressable
+          testID="forgot-password-link"
+          onPress={() => router.push('/forgot-password')}
+          accessibilityRole="button"
+          accessibilityLabel="Forgot password"
+          style={{
+            alignSelf: 'flex-end',
+            minHeight: touchTarget.min,
+            justifyContent: 'center',
+            minWidth: touchTarget.min
+          }}
+        >
+          <Text style={{ color: theme.link, fontWeight: '600' }}>Forgot password?</Text>
+        </Pressable>
 
-          {/* ---- Server error banner ---- */}
-          {error && (
-            <View
-              testID="server-error"
-              className="mb-4 rounded-lg px-4 py-3"
-              style={{ backgroundColor: '#FEE2E2' }}
-              accessibilityRole="alert"
-            >
-              <Text className="text-sm" style={{ color: '#991B1B' }}>
-                {error}
-              </Text>
-            </View>
-          )}
+        <Button
+          testID="sign-in-button"
+          variant="primary"
+          size="large"
+          onPress={handleSignIn}
+          loading={loading}
+          accessibilityLabel="Sign In"
+        >
+          Sign In
+        </Button>
 
-          {/* ---- Sign In button ---- */}
-          <Pressable
-            testID="sign-in-button"
-            onPress={handleSignIn}
-            disabled={loading}
-            accessibilityRole="button"
-            accessibilityLabel="Sign In"
-            accessibilityState={{ disabled: loading }}
-            className="h-[52px] items-center justify-center rounded-xl"
-            style={({ pressed }) => ({
-              backgroundColor: loading ? theme.border : pressed ? theme.primaryDark : theme.primary,
-              opacity: loading ? 0.7 : 1,
-              transform: [{ scale: pressed && !loading ? 0.98 : 1 }]
-            })}
-          >
-            {loading ? (
-              <ActivityIndicator testID="loading-indicator" color="#FFFFFF" />
-            ) : (
-              <Text className="text-base font-semibold text-white">Sign In</Text>
-            )}
-          </Pressable>
-
-          {/* ---- Link to Create Account ---- */}
-          <View className="mt-6 flex-row items-center justify-center">
-            <Text className="text-sm" style={{ color: theme.textSecondary }}>
-              {"Don't have an account? "}
-            </Text>
-            <Pressable
-              testID="create-account-link"
-              onPress={() => router.push('/create-account')}
-              accessibilityRole="link"
-              accessibilityLabel="Create an account"
-            >
-              <Text className="text-sm font-semibold" style={{ color: theme.primary }}>
-                Create Account
-              </Text>
-            </Pressable>
-          </View>
-        </View>
-      </ScrollView>
-    </KeyboardAvoidingView>
+        <AuthLink
+          testID="create-account-link"
+          prefixText="Don't have an account?"
+          actionText="Create one"
+          onPress={() => router.push('/create-account')}
+          accessibilityLabel="Create one"
+        />
+      </View>
+    </AuthScreenLayout>
   );
 };
 
