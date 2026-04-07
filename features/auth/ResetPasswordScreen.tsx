@@ -1,46 +1,28 @@
-/**
- * ResetPasswordScreen
- * Story 6-8: Password Reset
- *
- * Receives the Supabase access/refresh tokens from the deep-link URL,
- * establishes a session, and presents a new-password form.
- * On success the user is signed in automatically and navigated home.
- *
- * ⚠️ Never log user credentials or session tokens in this component.
- */
-
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import {
-  ActivityIndicator,
-  KeyboardAvoidingView,
-  Platform,
-  Pressable,
-  ScrollView,
-  Text,
-  TextInput,
-  View
-} from 'react-native';
+import { ActivityIndicator, Text, View } from 'react-native';
 
 import { isValidPassword } from '@/core/auth/validation';
 import { getInitialURL } from '@/core/utils/get-initial-url';
 
+import { Button } from '@/shared/components/ui';
 import { updatePassword } from '@/shared/supabase/auth';
 import { getSupabaseClient } from '@/shared/supabase/client';
 import { useTheme } from '@/shared/theme';
 
-// ---------------------------------------------------------------------------
-// Helpers
-// ---------------------------------------------------------------------------
+import {
+  AuthScreenLayout,
+  ErrorBanner,
+  PasswordInput,
+  PasswordStrengthIndicator
+} from './components';
 
-/**
- * Parse tokens from a URL hash fragment.
- * Supabase may deliver reset tokens as `#access_token=...&refresh_token=...`
- * rather than query parameters. This utility handles both formats.
- */
 const parseHashFragment = (url: string): Record<string, string> => {
   const hashIndex = url.indexOf('#');
-  if (hashIndex === -1) return {};
+  if (hashIndex === -1) {
+    return {};
+  }
+
   const hash = url.substring(hashIndex + 1);
   const result: Record<string, string> = {};
   for (const pair of hash.split('&')) {
@@ -49,16 +31,14 @@ const parseHashFragment = (url: string): Record<string, string> => {
       result[decodeURIComponent(key)] = decodeURIComponent(value);
     }
   }
+
   return result;
 };
 
-// ---------------------------------------------------------------------------
-// Component
-// ---------------------------------------------------------------------------
-
 const ResetPasswordScreen = () => {
-  const { theme } = useTheme();
+  const { theme, typography, spacing } = useTheme();
   const router = useRouter();
+
   const params = useLocalSearchParams<{
     access_token?: string;
     refresh_token?: string;
@@ -66,14 +46,11 @@ const ResetPasswordScreen = () => {
     error_description?: string;
   }>();
 
-  // Ref for cleanup of auto-redirect timer
   const redirectTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // Form state
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
 
-  // UI state
   const [loading, setLoading] = useState(false);
   const [sessionReady, setSessionReady] = useState(false);
   const [sessionError, setSessionError] = useState<string | null>(null);
@@ -84,13 +61,16 @@ const ResetPasswordScreen = () => {
     confirmPassword?: string;
   }>({});
 
-  // ---------------------------------------------------------------------------
-  // Session establishment from deep-link tokens
-  // ---------------------------------------------------------------------------
+  useEffect(() => {
+    return () => {
+      if (redirectTimerRef.current) {
+        clearTimeout(redirectTimerRef.current);
+      }
+    };
+  }, []);
 
   useEffect(() => {
     const establishSession = async () => {
-      // Check if the link itself carried an error (e.g. expired token)
       if (params.error_description) {
         setSessionError(params.error_description);
         return;
@@ -99,9 +79,6 @@ const ResetPasswordScreen = () => {
       let accessToken = params.access_token;
       let refreshToken = params.refresh_token;
 
-      // Fallback: Supabase may deliver tokens as a URL hash fragment
-      // (#access_token=...&refresh_token=...) which Expo Router's
-      // useLocalSearchParams does not parse.
       if (!accessToken || !refreshToken) {
         try {
           const initialUrl = await getInitialURL();
@@ -111,28 +88,28 @@ const ResetPasswordScreen = () => {
               setSessionError(hashParams.error_description);
               return;
             }
+
             accessToken = accessToken || hashParams.access_token;
             refreshToken = refreshToken || hashParams.refresh_token;
           }
         } catch {
-          // getInitialURL() can reject on some platforms — ignore
+          // No-op: getInitialURL may fail on some environments.
         }
       }
 
       if (!accessToken || !refreshToken) {
-        // No tokens — may have been opened manually (not from email link)
         setSessionError('Invalid or expired reset link. Please request a new one.');
         return;
       }
 
       try {
         const supabase = getSupabaseClient();
-        const { error: sessionErr } = await supabase.auth.setSession({
+        const { error: sessionSetupError } = await supabase.auth.setSession({
           access_token: accessToken,
           refresh_token: refreshToken
         });
 
-        if (sessionErr) {
+        if (sessionSetupError) {
           setSessionError('This reset link has expired. Please request a new one.');
           return;
         }
@@ -144,23 +121,10 @@ const ResetPasswordScreen = () => {
     };
 
     establishSession();
-  }, [params.access_token, params.refresh_token, params.error_description]);
+  }, [params.access_token, params.error_description, params.refresh_token]);
 
-  // Cleanup redirect timer on unmount
-  useEffect(() => {
-    return () => {
-      if (redirectTimerRef.current) {
-        clearTimeout(redirectTimerRef.current);
-      }
-    };
-  }, []);
-
-  // ---------------------------------------------------------------------------
-  // Handlers
-  // ---------------------------------------------------------------------------
-
-  const validate = useCallback((): boolean => {
-    const errors: typeof fieldErrors = {};
+  const validate = useCallback(() => {
+    const errors: { password?: string; confirmPassword?: string } = {};
 
     if (!password) {
       errors.password = 'Password is required.';
@@ -176,12 +140,14 @@ const ResetPasswordScreen = () => {
 
     setFieldErrors(errors);
     return Object.keys(errors).length === 0;
-  }, [password, confirmPassword]);
+  }, [confirmPassword, password]);
 
   const handleUpdatePassword = useCallback(async () => {
     setError(null);
 
-    if (!validate()) return;
+    if (!validate()) {
+      return;
+    }
 
     setLoading(true);
 
@@ -194,7 +160,6 @@ const ResetPasswordScreen = () => {
       }
 
       setSuccess(true);
-      // Auto-navigate home after a brief delay so user sees confirmation
       redirectTimerRef.current = setTimeout(() => {
         router.replace('/');
       }, 1500);
@@ -203,49 +168,30 @@ const ResetPasswordScreen = () => {
     } finally {
       setLoading(false);
     }
-  }, [password, validate, router]);
-
-  // ---------------------------------------------------------------------------
-  // Error state (invalid/expired link)
-  // ---------------------------------------------------------------------------
+  }, [password, router, validate]);
 
   if (sessionError) {
     return (
-      <View
+      <AuthScreenLayout
         testID="reset-password-error"
-        className="flex-1 items-center justify-center px-6"
-        style={{ backgroundColor: theme.background }}
+        heading="Reset Link Invalid"
+        showAppIcon={false}
       >
-        <Text
-          accessibilityRole="header"
-          className="mb-4 text-center text-lg font-semibold"
-          style={{ color: theme.textPrimary }}
-        >
-          Reset Link Invalid
-        </Text>
-        <Text className="mb-8 text-center text-sm" style={{ color: theme.textSecondary }}>
-          {sessionError}
-        </Text>
-        <Pressable
-          testID="request-new-link-button"
-          onPress={() => router.replace('/forgot-password')}
-          accessibilityRole="button"
-          accessibilityLabel="Request a new reset link"
-          className="h-[52px] w-full items-center justify-center rounded-xl"
-          style={({ pressed }) => ({
-            backgroundColor: pressed ? theme.primaryDark : theme.primary,
-            transform: [{ scale: pressed ? 0.98 : 1 }]
-          })}
-        >
-          <Text className="text-base font-semibold text-white">Request New Link</Text>
-        </Pressable>
-      </View>
+        <View className="w-full" style={{ gap: spacing.md }}>
+          <Text style={{ color: theme.textSecondary, textAlign: 'center' }}>{sessionError}</Text>
+          <Button
+            testID="request-new-link-button"
+            variant="primary"
+            size="large"
+            onPress={() => router.replace('/forgot-password')}
+            accessibilityLabel="Request a new reset link"
+          >
+            Request New Link
+          </Button>
+        </View>
+      </AuthScreenLayout>
     );
   }
-
-  // ---------------------------------------------------------------------------
-  // Loading state (establishing session from tokens)
-  // ---------------------------------------------------------------------------
 
   if (!sessionReady) {
     return (
@@ -255,178 +201,94 @@ const ResetPasswordScreen = () => {
         style={{ backgroundColor: theme.background }}
       >
         <ActivityIndicator testID="session-loading-indicator" size="large" color={theme.primary} />
-        <Text className="mt-4 text-sm" style={{ color: theme.textSecondary }}>
-          Verifying reset link…
-        </Text>
+        <Text style={{ color: theme.textSecondary, marginTop: 16 }}>Verifying reset link…</Text>
       </View>
     );
   }
-
-  // ---------------------------------------------------------------------------
-  // Success state
-  // ---------------------------------------------------------------------------
 
   if (success) {
     return (
-      <View
+      <AuthScreenLayout
         testID="reset-password-success"
-        className="flex-1 items-center justify-center px-6"
-        style={{ backgroundColor: theme.background }}
+        heading="Password Updated!"
+        showAppIcon={false}
       >
-        <Text className="mb-4 text-center text-2xl font-bold" style={{ color: theme.textPrimary }}>
-          Password Updated!
-        </Text>
-        <Text className="text-center text-sm" style={{ color: theme.textSecondary }}>
+        <Text style={{ color: theme.textSecondary, textAlign: 'center' }}>
           Redirecting to home…
         </Text>
-      </View>
+      </AuthScreenLayout>
     );
   }
 
-  // ---------------------------------------------------------------------------
-  // New password form
-  // ---------------------------------------------------------------------------
-
   return (
-    <KeyboardAvoidingView
+    <AuthScreenLayout
       testID="reset-password-screen"
-      className="flex-1"
-      style={{ backgroundColor: theme.background }}
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      heading="Set New Password"
+      headingTestID="reset-password-title"
+      subtitle="Choose a strong new password for your account."
+      subtitleTestID="reset-password-subtitle"
     >
-      <ScrollView
-        contentContainerStyle={{ flexGrow: 1, paddingBottom: 40 }}
-        keyboardShouldPersistTaps="handled"
-      >
-        <View className="flex-1 px-6 pt-8">
-          {/* Title */}
-          <Text
-            testID="reset-password-title"
-            accessibilityRole="header"
-            className="mb-2 text-2xl font-bold"
-            style={{ color: theme.textPrimary }}
-          >
-            Set New Password
-          </Text>
-          <Text className="mb-8 text-sm" style={{ color: theme.textSecondary }}>
-            Choose a strong new password for your account.
-          </Text>
+      <View className="w-full" style={{ gap: spacing.md }}>
+        <ErrorBanner message={error} testID="server-error" />
 
-          {/* ---- New Password ---- */}
-          <Text className="mb-1 text-sm font-medium" style={{ color: theme.textPrimary }}>
-            New Password
-          </Text>
-          <TextInput
+        <View>
+          <PasswordInput
             testID="password-input"
+            label="New Password"
             value={password}
-            onChangeText={(t) => {
-              setPassword(t);
-              if (fieldErrors.password)
-                setFieldErrors((prev) => ({ ...prev, password: undefined }));
+            onChangeText={(value) => {
+              setPassword(value);
+              if (fieldErrors.password) {
+                setFieldErrors((previous) => ({ ...previous, password: undefined }));
+              }
             }}
             placeholder="Min 8 chars, 1 letter, 1 number"
-            placeholderTextColor={theme.textSecondary}
-            secureTextEntry
             autoComplete="new-password"
-            accessibilityLabel="New Password"
             accessibilityHint="Minimum 8 characters with at least one letter and one number"
-            className="mb-1 h-12 rounded-lg border px-4 text-base"
-            style={{
-              borderColor: fieldErrors.password ? '#EF4444' : theme.border,
-              color: theme.textPrimary,
-              backgroundColor: theme.surface
-            }}
+            error={fieldErrors.password}
           />
-          {fieldErrors.password && (
-            <Text testID="password-error" className="mb-3 text-xs" style={{ color: '#EF4444' }}>
-              {fieldErrors.password}
-            </Text>
-          )}
-          {!fieldErrors.password && <View className="mb-3" />}
-
-          {/* ---- Confirm Password ---- */}
-          <Text className="mb-1 text-sm font-medium" style={{ color: theme.textPrimary }}>
-            Confirm Password
-          </Text>
-          <TextInput
-            testID="confirm-password-input"
-            value={confirmPassword}
-            onChangeText={(t) => {
-              setConfirmPassword(t);
-              if (fieldErrors.confirmPassword)
-                setFieldErrors((prev) => ({ ...prev, confirmPassword: undefined }));
-            }}
-            placeholder="Re-enter your new password"
-            placeholderTextColor={theme.textSecondary}
-            secureTextEntry
-            autoComplete="new-password"
-            accessibilityLabel="Confirm Password"
-            accessibilityHint="Re-enter your new password to confirm"
-            className="mb-1 h-12 rounded-lg border px-4 text-base"
-            style={{
-              borderColor: fieldErrors.confirmPassword ? '#EF4444' : theme.border,
-              color: theme.textPrimary,
-              backgroundColor: theme.surface
-            }}
-          />
-          {fieldErrors.confirmPassword && (
-            <Text
-              testID="confirm-password-error"
-              className="mb-3 text-xs"
-              style={{ color: '#EF4444' }}
-            >
-              {fieldErrors.confirmPassword}
-            </Text>
-          )}
-          {!fieldErrors.confirmPassword && <View className="mb-3" />}
-
-          {/* ---- Password requirements hint ---- */}
-          <Text
-            testID="password-requirements"
-            className="mb-6 text-xs"
-            style={{ color: theme.textSecondary }}
-          >
-            Password must be at least 8 characters with at least one letter and one number.
-          </Text>
-
-          {/* ---- Server error banner ---- */}
-          {error && (
-            <View
-              testID="server-error"
-              className="mb-4 rounded-lg px-4 py-3"
-              style={{ backgroundColor: '#FEE2E2' }}
-              accessibilityRole="alert"
-            >
-              <Text className="text-sm" style={{ color: '#991B1B' }}>
-                {error}
-              </Text>
-            </View>
-          )}
-
-          {/* ---- Update Password button ---- */}
-          <Pressable
-            testID="update-password-button"
-            onPress={handleUpdatePassword}
-            disabled={loading}
-            accessibilityRole="button"
-            accessibilityLabel="Update Password"
-            accessibilityState={{ disabled: loading }}
-            className="h-[52px] items-center justify-center rounded-xl"
-            style={({ pressed }) => ({
-              backgroundColor: loading ? theme.border : pressed ? theme.primaryDark : theme.primary,
-              opacity: loading ? 0.7 : 1,
-              transform: [{ scale: pressed && !loading ? 0.98 : 1 }]
-            })}
-          >
-            {loading ? (
-              <ActivityIndicator testID="loading-indicator" color="#FFFFFF" />
-            ) : (
-              <Text className="text-base font-semibold text-white">Update Password</Text>
-            )}
-          </Pressable>
+          <PasswordStrengthIndicator password={password} />
         </View>
-      </ScrollView>
-    </KeyboardAvoidingView>
+
+        <PasswordInput
+          testID="confirm-password-input"
+          label="Confirm Password"
+          value={confirmPassword}
+          onChangeText={(value) => {
+            setConfirmPassword(value);
+            if (fieldErrors.confirmPassword) {
+              setFieldErrors((previous) => ({ ...previous, confirmPassword: undefined }));
+            }
+          }}
+          placeholder="Re-enter your new password"
+          autoComplete="new-password"
+          accessibilityHint="Re-enter your new password to confirm"
+          error={fieldErrors.confirmPassword}
+        />
+
+        <Text
+          testID="password-requirements"
+          style={{
+            color: theme.textSecondary,
+            fontSize: typography.caption1.fontSize,
+            lineHeight: typography.caption1.lineHeight
+          }}
+        >
+          Password must be at least 8 characters with at least one letter and one number.
+        </Text>
+
+        <Button
+          testID="update-password-button"
+          variant="primary"
+          size="large"
+          onPress={handleUpdatePassword}
+          loading={loading}
+          accessibilityLabel="Update Password"
+        >
+          Update Password
+        </Button>
+      </View>
+    </AuthScreenLayout>
   );
 };
 

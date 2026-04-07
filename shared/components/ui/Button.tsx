@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { useTheme } from '@/shared/theme';
+import { NEUTRAL_COLORS } from '@/shared/theme/colors';
 import { TOUCH_TARGET } from '@/shared/theme/spacing';
 
 type ButtonVariant = 'primary' | 'secondary' | 'tertiary' | 'destructive';
@@ -11,8 +12,11 @@ type ButtonProps = {
   onPress?: () => void;
   loading?: boolean;
   disabled?: boolean;
+  size?: 'default' | 'large';
   children: React.ReactNode;
   testID?: string;
+  accessibilityLabel?: string;
+  accessibilityHint?: string;
 };
 
 const getVariantColors = (variant: ButtonVariant, theme: ReturnType<typeof useTheme>['theme']) => {
@@ -21,7 +25,7 @@ const getVariantColors = (variant: ButtonVariant, theme: ReturnType<typeof useTh
       backgroundColor: theme.primary,
       pressedColor: theme.primaryDark,
       borderColor: theme.primary,
-      textColor: '#FFFFFF',
+      textColor: NEUTRAL_COLORS.white
     };
   }
 
@@ -30,7 +34,7 @@ const getVariantColors = (variant: ButtonVariant, theme: ReturnType<typeof useTh
       backgroundColor: 'transparent',
       pressedColor: theme.primary + '14',
       borderColor: theme.primary,
-      textColor: theme.primary,
+      textColor: theme.primary
     };
   }
 
@@ -39,15 +43,15 @@ const getVariantColors = (variant: ButtonVariant, theme: ReturnType<typeof useTh
       backgroundColor: 'transparent',
       pressedColor: theme.primary + '14',
       borderColor: 'transparent',
-      textColor: theme.primary,
+      textColor: theme.primary
     };
   }
 
   return {
     backgroundColor: theme.error,
-    pressedColor: '#B91C1C',
+    pressedColor: theme.error,
     borderColor: theme.error,
-    textColor: '#FFFFFF',
+    textColor: NEUTRAL_COLORS.white
   };
 };
 
@@ -56,8 +60,11 @@ export const Button = ({
   onPress,
   loading = false,
   disabled = false,
+  size = 'default',
   children,
   testID,
+  accessibilityLabel,
+  accessibilityHint
 }: ButtonProps) => {
   const { theme } = useTheme();
   const [pressed, setPressed] = useState(false);
@@ -78,17 +85,20 @@ export const Button = ({
       onPressOut={() => setPressed(false)}
       disabled={isDisabled}
       accessibilityRole="button"
+      accessibilityLabel={accessibilityLabel}
+      accessibilityHint={accessibilityHint}
       accessibilityState={{ disabled: isDisabled, busy: loading }}
       style={styles.pressable}
     >
       <View
         style={[
           styles.container,
+          size === 'large' ? styles.large : null,
           {
             borderWidth: variant === 'tertiary' ? 0 : 1,
             borderColor: colors.borderColor,
-            backgroundColor: bgColor,
-          },
+            backgroundColor: bgColor
+          }
         ]}
       >
         {loading ? (
@@ -98,7 +108,7 @@ export const Button = ({
             style={{
               color: isDisabled ? theme.textTertiary : colors.textColor,
               fontSize: 16,
-              fontWeight: '600',
+              fontWeight: '600'
             }}
           >
             {children}
@@ -111,13 +121,16 @@ export const Button = ({
 
 const styles = StyleSheet.create({
   pressable: {
-    width: '100%',
+    width: '100%'
   },
   container: {
     minHeight: TOUCH_TARGET.min,
     borderRadius: 14,
     alignItems: 'center',
     justifyContent: 'center',
-    paddingHorizontal: 16,
+    paddingHorizontal: 16
   },
+  large: {
+    minHeight: 52
+  }
 });

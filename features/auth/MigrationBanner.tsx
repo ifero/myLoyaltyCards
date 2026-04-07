@@ -8,21 +8,14 @@
  * Cards remain visible and usable beneath this banner at all times.
  */
 
+import { MaterialIcons } from '@expo/vector-icons';
 import { ActivityIndicator, Pressable, Text, View } from 'react-native';
 
 import { useTheme } from '@/shared/theme';
-import { SEMANTIC_COLORS } from '@/shared/theme/colors';
 
 import { MigrationStatus } from './useGuestMigration';
 
 // ---------------------------------------------------------------------------
-// Banner color constants (error palette)
-// TODO: Move ERROR_BG and ERROR_TEXT into SEMANTIC_COLORS once the theme
-//       supports extended error tokens (see follow-up story).
-// ---------------------------------------------------------------------------
-
-const ERROR_BG = '#FEF2F2';
-const ERROR_TEXT = '#991B1B';
 const THEME_OPACITY_SUFFIX = '1A'; // 10% alpha for success background tint
 
 // ---------------------------------------------------------------------------
@@ -48,9 +41,11 @@ const MigrationBanner = ({ status, message, onRetry, onDismiss }: MigrationBanne
   const isError = status === 'error';
   const isMigrating = status === 'migrating';
 
-  const backgroundColor = isError ? ERROR_BG : theme.primary + THEME_OPACITY_SUFFIX;
-  const borderColor = isError ? SEMANTIC_COLORS.error : theme.primary;
-  const textColor = isError ? ERROR_TEXT : theme.textPrimary;
+  const backgroundColor = isError
+    ? `${theme.error}${THEME_OPACITY_SUFFIX}`
+    : theme.primary + THEME_OPACITY_SUFFIX;
+  const borderColor = isError ? theme.error : theme.primary;
+  const textColor = isError ? theme.error : theme.textPrimary;
 
   return (
     <View
@@ -85,7 +80,7 @@ const MigrationBanner = ({ status, message, onRetry, onDismiss }: MigrationBanne
           accessibilityLabel="Retry card backup"
           accessibilityRole="button"
           className="ml-2 rounded-md px-3 py-1"
-          style={{ backgroundColor: SEMANTIC_COLORS.error }}
+          style={{ backgroundColor: theme.error }}
         >
           <Text className="text-xs font-semibold text-white">Retry</Text>
         </Pressable>
@@ -99,7 +94,7 @@ const MigrationBanner = ({ status, message, onRetry, onDismiss }: MigrationBanne
           accessibilityRole="button"
           className="ml-2 px-1"
         >
-          <Text style={{ color: textColor, fontSize: 16 }}>✕</Text>
+          <MaterialIcons name="close" size={18} color={textColor} />
         </Pressable>
       )}
     </View>

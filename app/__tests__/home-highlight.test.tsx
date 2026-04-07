@@ -21,6 +21,9 @@ jest.mock('@/features/cards', () => ({
 }));
 
 jest.mock('@/features/auth/MigrationBanner', () => () => null);
+jest.mock('@/features/auth/components', () => ({
+  GuestModeBanner: () => null
+}));
 jest.mock('@/features/auth/useGuestMigration', () => ({
   useGuestMigration: () => ({
     status: 'idle',
@@ -28,6 +31,9 @@ jest.mock('@/features/auth/useGuestMigration', () => ({
     retry: jest.fn(),
     dismiss: jest.fn()
   })
+}));
+jest.mock('@/shared/supabase/useAuthState', () => ({
+  useAuthState: () => ({ authState: 'guest', isAuthenticated: false })
 }));
 
 jest.mock('@/shared/components/SyncErrorBanner', () => ({
