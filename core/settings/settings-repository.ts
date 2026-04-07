@@ -11,8 +11,12 @@ import Storage from 'expo-sqlite/kv-store';
 /** Settings keys — centralised to avoid magic strings */
 const KEYS = {
   FIRST_LAUNCH: 'first_launch',
-  ONBOARDING_COMPLETED: 'onboarding_completed'
+  ONBOARDING_COMPLETED: 'onboarding_completed',
+  THEME_PREFERENCE: 'theme_preference',
+  LANGUAGE_PREFERENCE: 'language_preference'
 } as const;
+
+export type ThemePreference = 'light' | 'dark' | 'system';
 
 /**
  * Check whether this is the user's first launch.
@@ -60,4 +64,38 @@ export const completeOnboarding = (): void => {
  */
 export const resetOnboarding = (): void => {
   Storage.removeItemSync(KEYS.ONBOARDING_COMPLETED);
+};
+
+/**
+ * Get the persisted theme preference.
+ * Defaults to system.
+ */
+export const getThemePreference = (): ThemePreference => {
+  const value = Storage.getItemSync(KEYS.THEME_PREFERENCE);
+  if (value === 'light' || value === 'dark' || value === 'system') {
+    return value;
+  }
+  return 'system';
+};
+
+/**
+ * Persist theme preference.
+ */
+export const setThemePreference = (value: ThemePreference): void => {
+  Storage.setItemSync(KEYS.THEME_PREFERENCE, value);
+};
+
+/**
+ * Get persisted language preference.
+ * Defaults to English.
+ */
+export const getLanguagePreference = (): string => {
+  return Storage.getItemSync(KEYS.LANGUAGE_PREFERENCE) ?? 'en';
+};
+
+/**
+ * Persist language preference.
+ */
+export const setLanguagePreference = (value: string): void => {
+  Storage.setItemSync(KEYS.LANGUAGE_PREFERENCE, value);
 };

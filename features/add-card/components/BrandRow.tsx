@@ -7,12 +7,10 @@
  * Separator line offset from left edge (starting at x=68 per Figma).
  */
 
-import { MaterialIcons } from '@expo/vector-icons';
-import React, { useState } from 'react';
-import { View, Text, Pressable, StyleSheet } from 'react-native';
+import React from 'react';
+import { View, Text, StyleSheet } from 'react-native';
 
-import { useTheme } from '@/shared/theme';
-import { TOUCH_TARGET } from '@/shared/theme/spacing';
+import { ActionRow } from '@/shared/components/ui';
 
 import { CatalogueBrand } from '@/catalogue/types';
 
@@ -31,55 +29,28 @@ export const BrandRow: React.FC<BrandRowProps> = ({
   showSeparator = true,
   testID
 }) => {
-  const { theme } = useTheme();
-  const [isPressed, setIsPressed] = useState(false);
   const firstLetter = brand.name.charAt(0).toUpperCase();
 
-  return (
-    <View>
-      <Pressable
-        testID={testID}
-        onPress={() => onPress(brand)}
-        onPressIn={() => setIsPressed(true)}
-        onPressOut={() => setIsPressed(false)}
-        accessibilityRole="button"
-        accessibilityLabel={`${brand.name}`}
-        style={[styles.row, { backgroundColor: isPressed ? theme.surfaceElevated : 'transparent' }]}
-      >
-        <View style={styles.rowContent}>
-          {/* Brand circle */}
-          <View style={[styles.circle, { backgroundColor: brand.color }]}>
-            <Text style={styles.circleText}>{firstLetter}</Text>
-          </View>
-
-          {/* Brand name */}
-          <Text style={[styles.name, { color: theme.textPrimary }]} numberOfLines={1}>
-            {brand.name}
-          </Text>
-
-          {/* Chevron */}
-          <MaterialIcons name="chevron-right" size={24} color={theme.textTertiary} />
-        </View>
-      </Pressable>
-
-      {/* Separator */}
-      {showSeparator && <View style={[styles.separator, { backgroundColor: theme.border }]} />}
+  const leading = (
+    <View style={[styles.circle, { backgroundColor: brand.color }]}>
+      <Text style={styles.circleText}>{firstLetter}</Text>
     </View>
+  );
+
+  return (
+    <ActionRow
+      testID={testID}
+      variant="plain"
+      prefix={leading}
+      label={brand.name}
+      onPress={() => onPress(brand)}
+      showBottomBorder={showSeparator}
+      accessibilityLabel={brand.name}
+    />
   );
 };
 
 const styles = StyleSheet.create({
-  row: {
-    paddingHorizontal: 24,
-    paddingVertical: 8,
-    minHeight: TOUCH_TARGET.min + 10,
-    justifyContent: 'center'
-  },
-  rowContent: {
-    width: '100%',
-    flexDirection: 'row',
-    alignItems: 'center'
-  },
   circle: {
     width: CIRCLE_SIZE,
     height: CIRCLE_SIZE,
@@ -92,15 +63,5 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     fontSize: 22,
     fontWeight: '700'
-  },
-  name: {
-    flex: 1,
-    fontSize: 17,
-    fontWeight: '500'
-  },
-  separator: {
-    height: StyleSheet.hairlineWidth,
-    marginLeft: 76,
-    marginRight: 24
   }
 });

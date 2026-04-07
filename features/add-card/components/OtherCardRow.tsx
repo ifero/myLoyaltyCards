@@ -7,11 +7,11 @@
  */
 
 import { MaterialIcons } from '@expo/vector-icons';
-import React, { useState } from 'react';
-import { View, Text, Pressable, StyleSheet } from 'react-native';
+import React from 'react';
+import { View, StyleSheet } from 'react-native';
 
+import { ActionRow } from '@/shared/components/ui';
 import { useTheme } from '@/shared/theme';
-import { TOUCH_TARGET } from '@/shared/theme/spacing';
 
 interface OtherCardRowProps {
   onPress: () => void;
@@ -25,56 +25,32 @@ export const OtherCardRow: React.FC<OtherCardRowProps> = ({
   testID = 'other-card-row'
 }) => {
   const { theme } = useTheme();
-  const [isPressed, setIsPressed] = useState(false);
+
+  const leading = (
+    <View style={[styles.circle, { backgroundColor: theme.border }]}>
+      <MaterialIcons name="add" size={22} color={theme.textSecondary} />
+    </View>
+  );
 
   return (
     <View>
-      <Pressable
+      <View style={[styles.separator, { backgroundColor: theme.border }]} />
+      <ActionRow
         testID={testID}
+        variant="plain"
+        prefix={leading}
+        label="Other card"
+        subtitle="Add a custom loyalty card"
         onPress={onPress}
-        onPressIn={() => setIsPressed(true)}
-        onPressOut={() => setIsPressed(false)}
-        accessibilityRole="button"
+        showBottomBorder={false}
         accessibilityLabel="Other card. Add a custom loyalty card"
-        style={[styles.row, { backgroundColor: isPressed ? theme.surfaceElevated : 'transparent' }]}
-      >
-        <View style={styles.rowContent}>
-          {/* Circle with "+" */}
-          <View style={[styles.circle, { backgroundColor: theme.border }]}>
-            <MaterialIcons name="add" size={22} color={theme.textSecondary} />
-          </View>
-
-          {/* Text content */}
-          <View style={styles.textContainer}>
-            <Text style={[styles.title, { color: theme.textPrimary }]}>Other card</Text>
-            <Text style={[styles.subtitle, { color: theme.textSecondary }]}>
-              Add a custom loyalty card
-            </Text>
-          </View>
-
-          {/* Chevron */}
-          <MaterialIcons name="chevron-right" size={24} color={theme.textTertiary} />
-        </View>
-      </Pressable>
-
-      {/* Full-width separator */}
+      />
       <View style={[styles.separator, { backgroundColor: theme.border }]} />
     </View>
   );
 };
 
 const styles = StyleSheet.create({
-  row: {
-    paddingHorizontal: 24,
-    paddingVertical: 8,
-    minHeight: TOUCH_TARGET.min + 12,
-    justifyContent: 'center'
-  },
-  rowContent: {
-    width: '100%',
-    flexDirection: 'row',
-    alignItems: 'center'
-  },
   circle: {
     width: CIRCLE_SIZE,
     height: CIRCLE_SIZE,
@@ -83,20 +59,9 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginRight: 12
   },
-  textContainer: {
-    flex: 1
-  },
-  title: {
-    fontSize: 17,
-    fontWeight: '500'
-  },
-  subtitle: {
-    fontSize: 14,
-    marginTop: 1
-  },
   separator: {
-    height: StyleSheet.hairlineWidth,
-    marginLeft: 76,
-    marginRight: 24
+    height: 1,
+    marginLeft: 16,
+    marginRight: 16
   }
 });

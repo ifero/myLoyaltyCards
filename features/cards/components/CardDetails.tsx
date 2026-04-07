@@ -285,8 +285,7 @@ export const CardDetails: React.FC<CardDetailsProps> = ({
 
           {/* Edit Card Row */}
           <ActionRow
-            icon="edit"
-            iconFamily="MI"
+            prefix={<MaterialIcons name="edit" size={24} color={theme.primary} />}
             label="Edit card"
             onPress={handleEditCard}
             disabled={isDeleting}
