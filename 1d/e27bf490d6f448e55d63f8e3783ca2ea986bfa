@@ -1,0 +1,161 @@
+features/settings/components/ExportConfirmationSheet.tsx
+  dd882b52b0c39b03 1-69
+app/settings.tsx
+  dd882b52b0c39b03 1
+features/settings/hooks/useLanguagePreference.ts
+  dd882b52b0c39b03 1-39
+features/settings/components/AboutSection.tsx
+  dd882b52b0c39b03 1-66
+features/settings/components/ExportConfirmationSheet.test.tsx
+  dd882b52b0c39b03 1-25,27-57
+features/settings/screens/LanguageListScreen.tsx
+  dd882b52b0c39b03 1-25
+features/settings/components/ThemePickerSheet.test.tsx
+  dd882b52b0c39b03 1-37
+docs/sprint-artifacts/sprint-status.yaml
+  dd882b52b0c39b03 329
+shared/theme/ThemeProvider.test.tsx
+  dd882b52b0c39b03 1-87
+features/settings/components/AboutSection.test.tsx
+  dd882b52b0c39b03 1-71
+features/settings/hooks/useExportData.ts
+  dd882b52b0c39b03 1-96
+features/settings/components/DataManagementSection.tsx
+  dd882b52b0c39b03 1-65
+features/settings/components/LanguagePickerSheet.tsx
+  dd882b52b0c39b03 1-69
+docs/sprint-artifacts/stories/13-6-implement-settings-screen.md
+  dd882b52b0c39b03 3,20,43-50,54-60,64-70,74-81,85-91,95-96,100-104,108-113,117-123,127-133,137-138,141-144,148-155,159,165-166,181-183,194,214-215,219-226,230-236,240-244,248-253,257-261,266-268,272-278,297,302-303,379,383-384,388,394-395,399,406-409,413-416,442,498,504,512-520,582,645,649-652,656
+features/settings/hooks/useExportData.test.ts
+  dd882b52b0c39b03 1-100
+features/settings/components/AccountSectionGuest.test.tsx
+  dd882b52b0c39b03 1-28,30-53
+AGENTS.md
+  b882d82d6e334705 142-145
+features/add-card/components/BrandRow.tsx
+  b882d82d6e334705 10,13,34-36,39-43,45-49
+  dd882b52b0c39b03 44
+shared/components/ui/BottomSheet.test.tsx
+  dd882b52b0c39b03 1-67
+features/settings/components/ImportPlaceholderSheet.tsx
+  dd882b52b0c39b03 1-42
+features/settings/hooks/useLanguagePreference.test.ts
+  dd882b52b0c39b03 1-36
+features/settings/screens/SettingsScreen.tsx
+  dd882b52b0c39b03 1-269
+core/settings/settings-repository.ts
+  dd882b52b0c39b03 14-16,19-20,68-100
+features/settings/types.ts
+  dd882b52b0c39b03 1-24
+features/settings/components/AccountSection.tsx
+  dd882b52b0c39b03 1-79
+features/settings/screens/SettingsScreen.test.tsx
+  dd882b52b0c39b03 1-206
+features/settings/components/DeleteAccountSheet.test.tsx
+  dd882b52b0c39b03 1-62
+features/settings/components/SignOutSheet.test.tsx
+  dd882b52b0c39b03 1-25,27-56
+features/cards/components/CardDetails.tsx
+  dd882b52b0c39b03 288
+features/settings/hooks/useSyncTrigger.ts
+  dd882b52b0c39b03 1-42
+features/settings/hooks/useSyncTrigger.test.ts
+  dd882b52b0c39b03 1-51
+features/settings/components/SettingsSection.tsx
+  dd882b52b0c39b03 1-31
+features/settings/components/AccountSection.test.tsx
+  dd882b52b0c39b03 1-30,32-61
+shared/theme/ThemeProvider.tsx
+  7e5dddf93f995e7e 4-9,21-22,49-51,53-56,59-60,62,64-66,70-72,78
+features/settings/components/PreferencesSection.tsx
+  dd882b52b0c39b03 1-46
+features/settings/components/ExportEmptyStateSheet.tsx
+  dd882b52b0c39b03 1-42
+features/settings/index.ts
+  dd882b52b0c39b03 4-11,18-22
+features/settings/hooks/useThemePreference.test.ts
+  dd882b52b0c39b03 1-48
+features/settings/components/PreferencesSection.test.tsx
+  dd882b52b0c39b03 1-25,27-59
+features/settings/components/ImportPlaceholderSheet.test.tsx
+  dd882b52b0c39b03 1-25,27-42
+features/add-card/components/OtherCardRow.tsx
+  b882d82d6e334705 10-11,13,29-33,37-38,40,42-43,47,63-65
+  dd882b52b0c39b03 41,45
+features/settings/components/ExportEmptyStateSheet.test.tsx
+  dd882b52b0c39b03 1-25,27-42
+features/settings/components/SignOutSheet.tsx
+  dd882b52b0c39b03 1-67
+features/settings/components/DataManagementSection.test.tsx
+  dd882b52b0c39b03 1-25,27-73
+features/settings/components/DeleteAccountSheet.tsx
+  dd882b52b0c39b03 1-123
+features/settings/settings-repository.ts
+  dd882b52b0c39b03 7-11
+shared/components/ui/ActionRow.tsx
+  dd882b52b0c39b03 10,12,14,20,27,29,31,37,43,45-46,48,54-55,62-71,75,77-78,87,89-92,94-96,98-123,125
+  7e5dddf93f995e7e 3,15,17-19,21,32,34-36,38,44,58,93,97,124,126
+core/settings/settings-repository.test.ts
+  dd882b52b0c39b03 18-22,62-91
+shared/components/ui/index.ts
+  7e5dddf93f995e7e 7
+features/settings/components/ThemePickerSheet.tsx
+  dd882b52b0c39b03 1-105
+shared/components/ui/BottomSheet.tsx
+  dd882b52b0c39b03 1-127
+features/settings/hooks/useThemePreference.ts
+  dd882b52b0c39b03 1-35
+features/settings/components/AccountSectionGuest.tsx
+  dd882b52b0c39b03 1-53
+app/__tests__/onboarding.integration.test.tsx
+  dd882b52b0c39b03 59-74,76-79,81-82
+  7e5dddf93f995e7e 50-53,57-58
+features/settings/components/LanguagePickerSheet.test.tsx
+  dd882b52b0c39b03 1-42
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.2.5",
+  "base_commit_sha": "1de27bf490d6f448e55d63f8e3783ca2ea986bfa",
+  "prompts": {
+    "7e5dddf93f995e7e": {
+      "agent_id": {
+        "tool": "github-copilot",
+        "id": "9854ccf1-82b7-4865-b93f-edfce1ab8a7a",
+        "model": "copilot/gpt-5.3-codex"
+      },
+      "human_author": "Andrea Pacino",
+      "messages": [],
+      "total_additions": 76,
+      "total_deletions": 13,
+      "accepted_lines": 50,
+      "overriden_lines": 4
+    },
+    "b882d82d6e334705": {
+      "agent_id": {
+        "tool": "github-copilot",
+        "id": "02fcb981-677e-4467-85e3-d7c754dc9c47",
+        "model": "copilot/gpt-5.3-codex"
+      },
+      "human_author": "Andrea Pacino",
+      "messages": [],
+      "total_additions": 46,
+      "total_deletions": 116,
+      "accepted_lines": 38,
+      "overriden_lines": 0
+    },
+    "dd882b52b0c39b03": {
+      "agent_id": {
+        "tool": "github-copilot",
+        "id": "c20404bf-7a4c-432a-90cf-24875852c3ef",
+        "model": "copilot/gpt-5.3-codex"
+      },
+      "human_author": "Andrea Pacino",
+      "messages": [],
+      "total_additions": 3347,
+      "total_deletions": 565,
+      "accepted_lines": 3109,
+      "overriden_lines": 13
+    }
+  }
+}
