@@ -30,6 +30,10 @@ export const PasswordStrengthIndicator = ({
   password,
   testID = 'password-strength-indicator'
 }: PasswordStrengthIndicatorProps) => {
+  if (!password.trim()) {
+    return null;
+  }
+
   const { theme, typography, spacing } = useTheme();
   const strength = getPasswordStrength(password);
 

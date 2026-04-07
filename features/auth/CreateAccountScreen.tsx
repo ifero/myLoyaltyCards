@@ -163,7 +163,7 @@ const CreateAccountScreen = () => {
             accessibilityHint="Minimum 8 characters with at least one letter and one number"
             error={fieldErrors.password}
           />
-          <PasswordStrengthIndicator password={password} />
+          {password.trim().length > 0 ? <PasswordStrengthIndicator password={password} /> : null}
         </View>
 
         <PasswordInput

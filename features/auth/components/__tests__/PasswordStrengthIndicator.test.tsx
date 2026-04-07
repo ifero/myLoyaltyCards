@@ -19,6 +19,11 @@ jest.mock('@/shared/theme', () => ({
 }));
 
 describe('PasswordStrengthIndicator', () => {
+  it('does not render when password is empty', () => {
+    render(<PasswordStrengthIndicator password="" />);
+    expect(screen.queryByTestId('password-strength-indicator')).toBeNull();
+  });
+
   it('shows Weak for short/simple password', () => {
     render(<PasswordStrengthIndicator password="abc" />);
     expect(screen.getByTestId('password-strength-indicator-label').props.children).toBe('Weak');

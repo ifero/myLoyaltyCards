@@ -15,7 +15,8 @@ const lightTheme = {
   primary: '#1A73E8',
   border: '#E5E5EB',
   backgroundSubtle: '#F5F5F5',
-  surface: '#FFFFFF'
+  surface: '#FFFFFF',
+  surfaceElevated: '#FFFFFF'
 };
 
 const darkTheme = {
@@ -25,7 +26,8 @@ const darkTheme = {
   primary: '#4DA3FF',
   border: '#38383A',
   backgroundSubtle: '#05070A',
-  surface: '#1C1C1E'
+  surface: '#1C1C1E',
+  surfaceElevated: '#1C1C1E'
 };
 
 describe('TextField', () => {
@@ -84,6 +86,6 @@ describe('TextField', () => {
     render(<TextField label="Name" value="" onChangeText={jest.fn()} testID="field" />);
 
     const input = screen.getByTestId('field');
-    expect(input.props.style.backgroundColor).toBe(darkTheme.surface);
+    expect(input.props.style.backgroundColor).toBe(darkTheme.surfaceElevated);
   });
 });

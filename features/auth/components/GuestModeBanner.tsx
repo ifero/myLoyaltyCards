@@ -15,6 +15,14 @@ type GuestModeBannerProps = {
 
 export const GuestModeBanner = ({ isGuestMode }: GuestModeBannerProps) => {
   const { theme, typography, spacing, touchTarget, isDark } = useTheme();
+  const spacingXs = spacing?.xs ?? 4;
+  const spacingSm = spacing?.sm ?? 8;
+  const spacingMd = spacing?.md ?? 16;
+  const minTouchTarget = touchTarget?.min ?? 44;
+  const subheadlineFontSize = typography?.subheadline?.fontSize ?? 16;
+  const subheadlineLineHeight = typography?.subheadline?.lineHeight ?? 20;
+  const footnoteFontSize = typography?.footnote?.fontSize ?? 13;
+  const footnoteLineHeight = typography?.footnote?.lineHeight ?? 18;
   const router = useRouter();
   const [isDismissed, setIsDismissed] = useState<boolean | null>(null);
 
@@ -75,38 +83,41 @@ export const GuestModeBanner = ({ isGuestMode }: GuestModeBannerProps) => {
         }}
       />
 
-      <View style={{ padding: spacing.md }}>
+      <View style={{ paddingHorizontal: spacingMd, paddingVertical: spacingMd }}>
         <Pressable
           testID="guest-mode-banner-dismiss-button"
           onPress={dismiss}
           accessibilityRole="button"
           accessibilityLabel="Dismiss banner"
           style={{
-            alignSelf: 'flex-end',
-            minHeight: touchTarget.min,
-            minWidth: touchTarget.min,
+            position: 'absolute',
+            top: spacingSm,
+            right: spacingSm,
+            minHeight: minTouchTarget,
+            minWidth: minTouchTarget,
             alignItems: 'center',
-            justifyContent: 'center'
+            justifyContent: 'center',
+            zIndex: 1
           }}
         >
-          <MaterialIcons name="close" size={20} color={theme.textSecondary} />
+          <MaterialIcons name="close" size={20} color={theme.primary} />
         </Pressable>
 
-        <View className="flex-row">
+        <View className="flex-row" style={{ paddingRight: minTouchTarget - spacingXs }}>
           <View
-            className="mr-3 mt-0.5 h-10 w-10 items-center justify-center rounded-full"
+            className="mr-3 mt-0.5 h-4.5 w-4.5 items-center justify-center rounded-full"
             style={{ backgroundColor: `${theme.primary}1A` }}
           >
-            <MaterialCommunityIcons name="shield-check-outline" size={22} color={theme.primary} />
+            <MaterialCommunityIcons name="shield-check-outline" size={24} color={theme.primary} />
           </View>
 
           <View className="flex-1">
             <Text
               style={{
                 color: theme.textPrimary,
-                fontSize: typography.headline.fontSize,
-                lineHeight: typography.headline.lineHeight,
-                fontWeight: typography.headline.fontWeight
+                fontSize: subheadlineFontSize,
+                lineHeight: subheadlineLineHeight,
+                fontWeight: '600'
               }}
             >
               Protect your cards
@@ -114,9 +125,9 @@ export const GuestModeBanner = ({ isGuestMode }: GuestModeBannerProps) => {
             <Text
               style={{
                 color: theme.textSecondary,
-                marginTop: spacing.xs,
-                fontSize: typography.footnote.fontSize,
-                lineHeight: typography.footnote.lineHeight
+                marginTop: spacingXs,
+                fontSize: footnoteFontSize,
+                lineHeight: footnoteLineHeight
               }}
             >
               Create a free account to back up your cards and access them on all your devices
@@ -124,38 +135,27 @@ export const GuestModeBanner = ({ isGuestMode }: GuestModeBannerProps) => {
           </View>
         </View>
 
-        <View style={{ marginTop: spacing.md }}>
-          <Button
-            testID="guest-mode-banner-create-account"
-            variant="primary"
-            size="large"
-            onPress={() => router.push('/create-account')}
-            accessibilityLabel="Create account"
-          >
-            Create Account
-          </Button>
-        </View>
-
-        <View className="mt-2 flex-row items-center justify-between">
-          <Pressable
-            testID="guest-mode-banner-sign-in"
-            onPress={() => router.push('/sign-in')}
-            accessibilityRole="button"
-            accessibilityLabel="Sign in"
-            style={{ minHeight: touchTarget.min, justifyContent: 'center' }}
-          >
-            <Text style={{ color: theme.link, fontWeight: '600' }}>Sign In</Text>
-          </Pressable>
-
-          <Pressable
-            testID="guest-mode-banner-not-now"
-            onPress={dismiss}
-            accessibilityRole="button"
-            accessibilityLabel="Not now"
-            style={{ minHeight: touchTarget.min, justifyContent: 'center' }}
-          >
-            <Text style={{ color: theme.textSecondary }}>Not now</Text>
-          </Pressable>
+        <View className="mt-3 flex-row items-center" style={{ gap: spacingSm }}>
+          <View>
+            <Button
+              testID="guest-mode-banner-create-account"
+              variant="primary"
+              onPress={() => router.push('/create-account')}
+              accessibilityLabel="Create account"
+            >
+              Create Account
+            </Button>
+          </View>
+          <View>
+            <Button
+              testID="guest-mode-banner-sign-in"
+              variant="secondary"
+              onPress={() => router.push('/sign-in')}
+              accessibilityLabel="Sign in"
+            >
+              Sign In
+            </Button>
+          </View>
         </View>
       </View>
     </View>

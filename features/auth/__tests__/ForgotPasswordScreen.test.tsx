@@ -59,7 +59,7 @@ describe('ForgotPasswordScreen', () => {
     render(<ForgotPasswordScreen />);
 
     expect(screen.getByTestId('forgot-password-title')).toBeTruthy();
-    expect(screen.getByText('Reset Password')).toBeTruthy();
+    expect(screen.getByText('Forgot Password?')).toBeTruthy();
     expect(screen.getByTestId('forgot-password-back-chevron')).toBeTruthy();
     expect(screen.getByTestId('send-reset-button')).toBeTruthy();
     expect(screen.getByTestId('back-to-sign-in-link')).toBeTruthy();

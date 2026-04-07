@@ -1,7 +1,7 @@
 import { MaterialIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useCallback, useState } from 'react';
-import { Pressable, Text, View } from 'react-native';
+import { Pressable, View } from 'react-native';
 
 import { isValidEmail } from '@/core/auth/validation';
 
@@ -12,7 +12,7 @@ import { useTheme } from '@/shared/theme';
 import { AuthLink, AuthScreenLayout, ErrorBanner } from './components';
 
 const ForgotPasswordScreen = () => {
-  const { theme, spacing, touchTarget, typography } = useTheme();
+  const { theme, spacing, touchTarget } = useTheme();
   const router = useRouter();
 
   const [email, setEmail] = useState('');
@@ -114,11 +114,11 @@ const ForgotPasswordScreen = () => {
   return (
     <AuthScreenLayout
       testID="forgot-password-screen"
-      heading="Reset Password"
+      heading="Forgot Password?"
       headingTestID="forgot-password-title"
-      subtitle="No worries. Enter your email and we'll send you a link to reset your password."
+      subtitle="No worries. Enter your email and we'll send you a reset link."
       subtitleTestID="forgot-password-subtitle"
-      centerContent={false}
+      centerContent
       showAppIcon={false}
       headerContent={
         <Pressable
@@ -178,17 +178,6 @@ const ForgotPasswordScreen = () => {
           onPress={() => router.push('/sign-in')}
           accessibilityLabel="Back to Sign In"
         />
-
-        <Text
-          style={{
-            color: theme.textSecondary,
-            textAlign: 'center',
-            fontSize: typography.caption1.fontSize,
-            lineHeight: typography.caption1.lineHeight
-          }}
-        >
-          If the email exists, you'll receive a reset link shortly.
-        </Text>
       </View>
     </AuthScreenLayout>
   );
