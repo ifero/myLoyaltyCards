@@ -271,6 +271,17 @@ git commit -m "feat(scope): short description
 - `test` - Adding or updating tests
 - `chore` - Maintenance tasks
 
+### 🚫 Hooks Bypass is Forbidden (MANDATORY)
+
+- **NEVER use `--no-verify`** for `git commit` or `git push`.
+- If pre-commit/pre-push hooks fail, you must fix the reported issues and rerun the command.
+- Do not bypass lint/typecheck/test gates, even for urgent delivery.
+
+**Why This Matters:**
+
+- Prevents broken or non-compliant code from entering shared branches.
+- Keeps CI behavior aligned with local developer workflow.
+
 ### Stakeholder sign-off before commits ✅
 
 - **Before committing any change that implements a story task, feature, or visible UX/behavior change, obtain explicit stakeholder (Ifero) review and approval for that step.**

@@ -9,6 +9,7 @@
 import {
   createSecureStoreAdapter,
   createSupabaseClient,
+  getSupabaseClient,
   getSupabaseCredentials,
   resetSupabaseClientForTesting,
   SecureStoreAdapter
@@ -314,8 +315,6 @@ describe('resetSupabaseClientForTesting', () => {
 // ---------------------------------------------------------------------------
 // Singleton caching behaviour (Story 6-3)
 // ---------------------------------------------------------------------------
-
-import { getSupabaseClient } from './client';
 
 describe('getSupabaseClient — singleton caching', () => {
   const validEnv = {

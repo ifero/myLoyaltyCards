@@ -1,5 +1,5 @@
-import React from 'react';
 import { MaterialIcons } from '@expo/vector-icons';
+import React from 'react';
 import { Text, View } from 'react-native';
 
 import { BottomSheet, Button } from '@/shared/components/ui';

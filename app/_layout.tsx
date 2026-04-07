@@ -85,6 +85,17 @@ const RootLayoutContent = () => {
       <OfflineIndicator />
       <Stack
         screenOptions={{
+          headerLeft: ({ canGoBack }: { canGoBack?: boolean }) =>
+            canGoBack ? (
+              <Pressable
+                onPress={() => router.back()}
+                accessibilityLabel="Go back"
+                accessibilityRole="button"
+                className="h-11 w-11 items-center justify-center"
+              >
+                <MaterialIcons name="chevron-left" size={28} color={theme.textPrimary} />
+              </Pressable>
+            ) : undefined,
           headerStyle: {
             backgroundColor: theme.surface
           },
@@ -92,7 +103,8 @@ const RootLayoutContent = () => {
           contentStyle: {
             backgroundColor: theme.background
           },
-          animation: 'slide_from_right'
+          animation: 'slide_from_right',
+          headerBackTitle: ''
         }}
       >
         <Stack.Screen

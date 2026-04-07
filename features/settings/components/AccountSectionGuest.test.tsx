@@ -1,5 +1,5 @@
 import { fireEvent, render } from '@testing-library/react-native';
-import React from 'react';
+import type { ReactNode } from 'react';
 
 import { AccountSectionGuest } from './AccountSectionGuest';
 
@@ -15,8 +15,7 @@ jest.mock('@/shared/theme', () => ({
 }));
 
 jest.mock('@/shared/components/ui', () => {
-  const React = require('react');
-  const { Pressable, Text } = require('react-native');
+  const { Pressable, Text } = jest.requireActual('react-native');
 
   return {
     Button: ({
@@ -25,7 +24,7 @@ jest.mock('@/shared/components/ui', () => {
       onPress
     }: {
       testID?: string;
-      children: React.ReactNode;
+      children: ReactNode;
       onPress: () => void;
     }) => (
       <Pressable testID={testID} onPress={onPress}>

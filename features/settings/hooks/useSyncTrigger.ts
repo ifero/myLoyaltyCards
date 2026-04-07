@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 
 import { getLastSyncAt } from '@/core/sync/sync-timestamp';
 import { formatRelativeTime } from '@/core/utils/relative-time';
+
 import { useCloudSync } from '@/shared/hooks/useCloudSync';
 
 export const useSyncTrigger = () => {
