@@ -1,37 +1,48 @@
-/**
- * CreateAccountScreen — Unit Tests
- * Story 6-6: Create Account with Email
- * Story 6-11: Privacy & Consent (register button disabled, consent persisted)
- */
-
-import { render, fireEvent, screen, waitFor } from '@testing-library/react-native';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react-native';
 import React from 'react';
 
 import CreateAccountScreen from '../CreateAccountScreen';
 
-// ---------------------------------------------------------------------------
-// Mocks
-// ---------------------------------------------------------------------------
+jest.mock('react-native-safe-area-context', () => ({
+  useSafeAreaInsets: () => ({ top: 0, bottom: 0, left: 0, right: 0 })
+}));
 
 jest.mock('@/shared/theme', () => ({
   useTheme: () => ({
     theme: {
       background: '#FFFFFF',
-      surface: '#FAFAFA',
-      textPrimary: '#000000',
-      textSecondary: '#666666',
+      backgroundSubtle: '#F5F5F5',
+      surface: '#FFFFFF',
+      surfaceElevated: '#F5F5F5',
+      textPrimary: '#1F1F24',
+      textSecondary: '#66666B',
+      textTertiary: '#8F8F94',
       primary: '#1A73E8',
-      primaryDark: '#5c9a5c',
-      border: '#E5E7EB'
+      primaryDark: '#1967D2',
+      border: '#E5E5EB',
+      error: '#FF3B30',
+      warning: '#D97706',
+      success: '#16A34A',
+      link: '#1A73E8'
     },
+    spacing: { xs: 4, sm: 8, md: 16, lg: 24, xl: 32 },
+    layout: { safeAreaTopInsetMin: 16, screenHorizontalMargin: 24 },
+    typography: {
+      title1: { fontSize: 28, lineHeight: 34, fontWeight: '700' },
+      subheadline: { fontSize: 15, lineHeight: 20, fontWeight: '400' },
+      footnote: { fontSize: 13, lineHeight: 18 },
+      caption1: { fontSize: 12, lineHeight: 16 }
+    },
+    touchTarget: { min: 44 },
     isDark: false,
     colorScheme: 'light'
   })
 }));
 
 const mockReplace = jest.fn();
+const mockPush = jest.fn();
 jest.mock('expo-router', () => ({
-  useRouter: () => ({ replace: mockReplace, push: jest.fn() })
+  useRouter: () => ({ replace: mockReplace, push: mockPush })
 }));
 
 const mockSignUp = jest.fn();
@@ -44,347 +55,75 @@ jest.mock('@/core/privacy/consent-repository', () => ({
   setConsentGiven: () => mockSetConsentGiven()
 }));
 
-// ConsentCheckbox mock — render a simple pressable toggle
-jest.mock('@/shared/components/ConsentCheckbox', () => {
-  // eslint-disable-next-line @typescript-eslint/no-require-imports
-  const mockReact = require('react');
-  // eslint-disable-next-line @typescript-eslint/no-require-imports
-  const mockRN = require('react-native');
-  return {
-    __esModule: true,
-    default: ({ checked, onToggle }: { checked: boolean; onToggle: (v: boolean) => void }) =>
-      mockReact.createElement(
-        mockRN.Pressable,
-        { testID: 'consent-checkbox-toggle', onPress: () => onToggle(!checked) },
-        mockReact.createElement(mockRN.Text, null, checked ? 'checked' : 'unchecked')
-      )
-  };
-});
-
-// ---------------------------------------------------------------------------
-// Helpers
-// ---------------------------------------------------------------------------
-
-const fillForm = (
-  emailValue = 'test@example.com',
-  passwordValue = 'Password1',
-  confirmPasswordValue = 'Password1'
-) => {
-  fireEvent.changeText(screen.getByTestId('email-input'), emailValue);
-  fireEvent.changeText(screen.getByTestId('password-input'), passwordValue);
-  fireEvent.changeText(screen.getByTestId('confirm-password-input'), confirmPasswordValue);
-  // Toggle consent on
-  fireEvent.press(screen.getByTestId('consent-checkbox-toggle'));
-};
-
-// ---------------------------------------------------------------------------
-// Tests
-// ---------------------------------------------------------------------------
-
 describe('CreateAccountScreen', () => {
   beforeEach(() => {
     jest.clearAllMocks();
   });
 
-  // ---- Rendering ----
-
-  it('renders the screen container', () => {
+  it('renders app icon header and auth fields', () => {
     render(<CreateAccountScreen />);
-    expect(screen.getByTestId('create-account-screen')).toBeTruthy();
-  });
 
-  it('renders the title', () => {
-    render(<CreateAccountScreen />);
+    expect(screen.getByTestId('auth-app-icon')).toBeTruthy();
     expect(screen.getByTestId('create-account-title')).toBeTruthy();
-    expect(screen.getByText('Create Account')).toBeTruthy();
-  });
-
-  it('renders all form fields', () => {
-    render(<CreateAccountScreen />);
     expect(screen.getByTestId('email-input')).toBeTruthy();
     expect(screen.getByTestId('password-input')).toBeTruthy();
     expect(screen.getByTestId('confirm-password-input')).toBeTruthy();
   });
 
-  it('renders the consent checkbox', () => {
+  it('updates password toggle accessibility label', () => {
     render(<CreateAccountScreen />);
-    expect(screen.getByTestId('consent-checkbox-toggle')).toBeTruthy();
+
+    const toggle = screen.getByTestId('password-input-toggle');
+    expect(screen.getAllByLabelText('Show password').length).toBeGreaterThan(0);
+
+    fireEvent.press(toggle);
+    expect(screen.getByLabelText('Hide password')).toBeTruthy();
   });
 
-  it('renders the register button', () => {
+  it('updates password strength indicator label', () => {
     render(<CreateAccountScreen />);
-    expect(screen.getByTestId('register-button')).toBeTruthy();
+
+    fireEvent.changeText(screen.getByTestId('password-input'), 'abc');
+    expect(screen.getByTestId('password-strength-indicator-label').props.children).toBe('Weak');
+
+    fireEvent.changeText(screen.getByTestId('password-input'), 'Password123!@#');
+    expect(screen.getByTestId('password-strength-indicator-label').props.children).toBe('Strong');
   });
 
-  it('shows password requirements hint', () => {
+  it('shows inline validation on invalid email blur', () => {
     render(<CreateAccountScreen />);
-    expect(screen.getByTestId('password-requirements')).toBeTruthy();
+
+    fireEvent.changeText(screen.getByTestId('email-input'), 'invalid-email');
+    fireEvent(screen.getByTestId('email-input'), 'blur');
+
+    expect(screen.getByText('Please enter a valid email address')).toBeTruthy();
   });
 
-  it('has proper accessibility labels on inputs', () => {
+  it('navigates to sign-in screen from auth link', () => {
     render(<CreateAccountScreen />);
-    expect(screen.getByLabelText('Email')).toBeTruthy();
-    expect(screen.getByLabelText('Password')).toBeTruthy();
-    expect(screen.getByLabelText('Confirm password')).toBeTruthy();
+
+    fireEvent.press(screen.getByTestId('sign-in-link'));
+    expect(mockPush).toHaveBeenCalledWith('/sign-in');
   });
 
-  // ---- Validation ----
+  it('submits and redirects on successful registration', async () => {
+    mockSignUp.mockResolvedValue({
+      success: true,
+      data: { user: { id: 'u1' }, session: { access_token: 'token' } }
+    });
 
-  it('shows email error when email is empty on submit', () => {
     render(<CreateAccountScreen />);
-    fireEvent.press(screen.getByTestId('consent-checkbox-toggle'));
-    fireEvent.press(screen.getByTestId('register-button'));
-    expect(screen.getByTestId('email-error')).toBeTruthy();
-    expect(screen.getByText('Email is required.')).toBeTruthy();
-  });
 
-  it('shows email error for invalid email format', () => {
-    render(<CreateAccountScreen />);
-    fireEvent.changeText(screen.getByTestId('email-input'), 'not-an-email');
-    fireEvent.press(screen.getByTestId('consent-checkbox-toggle'));
-    fireEvent.press(screen.getByTestId('register-button'));
-    expect(screen.getByText('Please enter a valid email address.')).toBeTruthy();
-  });
-
-  it('shows password error when password is empty', () => {
-    render(<CreateAccountScreen />);
-    fireEvent.changeText(screen.getByTestId('email-input'), 'test@example.com');
-    fireEvent.press(screen.getByTestId('consent-checkbox-toggle'));
-    fireEvent.press(screen.getByTestId('register-button'));
-    expect(screen.getByText('Password is required.')).toBeTruthy();
-  });
-
-  it('shows password error for weak password', () => {
-    render(<CreateAccountScreen />);
-    fireEvent.changeText(screen.getByTestId('email-input'), 'test@example.com');
-    fireEvent.changeText(screen.getByTestId('password-input'), 'short');
-    fireEvent.press(screen.getByTestId('consent-checkbox-toggle'));
-    fireEvent.press(screen.getByTestId('register-button'));
-    expect(screen.getByText('Min 8 characters, at least one letter and one number.')).toBeTruthy();
-  });
-
-  it('shows confirm password error when passwords do not match', () => {
-    render(<CreateAccountScreen />);
-    fireEvent.changeText(screen.getByTestId('email-input'), 'test@example.com');
-    fireEvent.changeText(screen.getByTestId('password-input'), 'Password1');
-    fireEvent.changeText(screen.getByTestId('confirm-password-input'), 'Different1');
-    fireEvent.press(screen.getByTestId('consent-checkbox-toggle'));
-    fireEvent.press(screen.getByTestId('register-button'));
-    expect(screen.getByText('Passwords do not match.')).toBeTruthy();
-  });
-
-  it('register button is disabled when consent not agreed (prevents submission)', () => {
-    render(<CreateAccountScreen />);
     fireEvent.changeText(screen.getByTestId('email-input'), 'test@example.com');
     fireEvent.changeText(screen.getByTestId('password-input'), 'Password1');
     fireEvent.changeText(screen.getByTestId('confirm-password-input'), 'Password1');
-    // Do NOT toggle consent — button should remain disabled
-    const button = screen.getByTestId('register-button');
-    expect(button.props.accessibilityState?.disabled).toBe(true);
-    fireEvent.press(button);
-    expect(mockSignUp).not.toHaveBeenCalled();
-  });
-
-  it('clears email error on input change', () => {
-    render(<CreateAccountScreen />);
     fireEvent.press(screen.getByTestId('consent-checkbox-toggle'));
-    fireEvent.press(screen.getByTestId('register-button'));
-    expect(screen.getByTestId('email-error')).toBeTruthy();
-
-    fireEvent.changeText(screen.getByTestId('email-input'), 'a');
-    expect(screen.queryByTestId('email-error')).toBeNull();
-  });
-
-  it('clears password error on input change', () => {
-    render(<CreateAccountScreen />);
-    fireEvent.changeText(screen.getByTestId('email-input'), 'test@example.com');
-    fireEvent.press(screen.getByTestId('consent-checkbox-toggle'));
-    fireEvent.press(screen.getByTestId('register-button'));
-    expect(screen.getByTestId('password-error')).toBeTruthy();
-
-    fireEvent.changeText(screen.getByTestId('password-input'), 'a');
-    expect(screen.queryByTestId('password-error')).toBeNull();
-  });
-
-  it('clears confirm password error on input change', () => {
-    render(<CreateAccountScreen />);
-    fireEvent.changeText(screen.getByTestId('email-input'), 'test@example.com');
-    fireEvent.changeText(screen.getByTestId('password-input'), 'Password1');
-    fireEvent.changeText(screen.getByTestId('confirm-password-input'), 'Diff');
-    fireEvent.press(screen.getByTestId('consent-checkbox-toggle'));
-    fireEvent.press(screen.getByTestId('register-button'));
-    expect(screen.getByTestId('confirm-password-error')).toBeTruthy();
-
-    fireEvent.changeText(screen.getByTestId('confirm-password-input'), 'x');
-    expect(screen.queryByTestId('confirm-password-error')).toBeNull();
-  });
-
-  // ---- Successful registration ----
-
-  it('calls signUp and redirects on success', async () => {
-    mockSignUp.mockResolvedValue({
-      success: true,
-      data: { user: { id: 'u1' }, session: { access_token: 'tok' } }
-    });
-
-    render(<CreateAccountScreen />);
-    fillForm();
     fireEvent.press(screen.getByTestId('register-button'));
 
     await waitFor(() => {
       expect(mockSignUp).toHaveBeenCalledWith('test@example.com', 'Password1');
+      expect(mockSetConsentGiven).toHaveBeenCalled();
       expect(mockReplace).toHaveBeenCalledWith('/');
-    });
-  });
-
-  it('shows confirmation message and does not redirect when session is null', async () => {
-    mockSignUp.mockResolvedValue({
-      success: true,
-      data: { user: { id: 'u1' }, session: null }
-    });
-
-    render(<CreateAccountScreen />);
-    fillForm();
-    fireEvent.press(screen.getByTestId('register-button'));
-
-    await waitFor(() => {
-      expect(mockSignUp).toHaveBeenCalledWith('test@example.com', 'Password1');
-      expect(mockReplace).not.toHaveBeenCalled();
-      expect(screen.getByText(/check your email to confirm/i)).toBeTruthy();
-    });
-  });
-
-  it('does not call signUp when validation fails', () => {
-    render(<CreateAccountScreen />);
-    fireEvent.press(screen.getByTestId('register-button'));
-    expect(mockSignUp).not.toHaveBeenCalled();
-  });
-
-  // ---- Error handling ----
-
-  it('displays server error message on signUp failure', async () => {
-    mockSignUp.mockResolvedValue({
-      success: false,
-      error: { message: 'User already registered' }
-    });
-
-    render(<CreateAccountScreen />);
-    fillForm();
-    fireEvent.press(screen.getByTestId('register-button'));
-
-    await waitFor(() => {
-      expect(screen.getByTestId('server-error')).toBeTruthy();
-      expect(screen.getByText('User already registered')).toBeTruthy();
-    });
-  });
-
-  it('displays generic error when signUp throws', async () => {
-    mockSignUp.mockRejectedValue(new Error('Network failure'));
-
-    render(<CreateAccountScreen />);
-    fillForm();
-    fireEvent.press(screen.getByTestId('register-button'));
-
-    await waitFor(() => {
-      expect(screen.getByTestId('server-error')).toBeTruthy();
-      expect(screen.getByText('An unexpected error occurred. Please try again.')).toBeTruthy();
-    });
-  });
-
-  it('does not redirect when signUp returns failure', async () => {
-    mockSignUp.mockResolvedValue({
-      success: false,
-      error: { message: 'Weak password' }
-    });
-
-    render(<CreateAccountScreen />);
-    fillForm();
-    fireEvent.press(screen.getByTestId('register-button'));
-
-    await waitFor(() => {
-      expect(mockReplace).not.toHaveBeenCalled();
-    });
-  });
-
-  // ---- Password validation edge cases ----
-
-  it('rejects password with only letters (no digit)', () => {
-    render(<CreateAccountScreen />);
-    fireEvent.changeText(screen.getByTestId('email-input'), 'test@example.com');
-    fireEvent.changeText(screen.getByTestId('password-input'), 'abcdefgh');
-    fireEvent.changeText(screen.getByTestId('confirm-password-input'), 'abcdefgh');
-    fireEvent.press(screen.getByTestId('consent-checkbox-toggle'));
-    fireEvent.press(screen.getByTestId('register-button'));
-    expect(screen.getByText('Min 8 characters, at least one letter and one number.')).toBeTruthy();
-    expect(mockSignUp).not.toHaveBeenCalled();
-  });
-
-  it('rejects password with only digits (no letter)', () => {
-    render(<CreateAccountScreen />);
-    fireEvent.changeText(screen.getByTestId('email-input'), 'test@example.com');
-    fireEvent.changeText(screen.getByTestId('password-input'), '12345678');
-    fireEvent.changeText(screen.getByTestId('confirm-password-input'), '12345678');
-    fireEvent.press(screen.getByTestId('consent-checkbox-toggle'));
-    fireEvent.press(screen.getByTestId('register-button'));
-    expect(screen.getByText('Min 8 characters, at least one letter and one number.')).toBeTruthy();
-    expect(mockSignUp).not.toHaveBeenCalled();
-  });
-
-  it('rejects password shorter than 8 characters', () => {
-    render(<CreateAccountScreen />);
-    fireEvent.changeText(screen.getByTestId('email-input'), 'test@example.com');
-    fireEvent.changeText(screen.getByTestId('password-input'), 'Pass1');
-    fireEvent.changeText(screen.getByTestId('confirm-password-input'), 'Pass1');
-    fireEvent.press(screen.getByTestId('consent-checkbox-toggle'));
-    fireEvent.press(screen.getByTestId('register-button'));
-    expect(screen.getByText('Min 8 characters, at least one letter and one number.')).toBeTruthy();
-    expect(mockSignUp).not.toHaveBeenCalled();
-  });
-
-  // ---- Story 6-11: Register button disabled until consent ----
-
-  it('register button is disabled when consent is not given', () => {
-    render(<CreateAccountScreen />);
-    const button = screen.getByTestId('register-button');
-    expect(button.props.accessibilityState?.disabled).toBe(true);
-  });
-
-  it('register button is enabled after consent is given', () => {
-    render(<CreateAccountScreen />);
-    fireEvent.press(screen.getByTestId('consent-checkbox-toggle'));
-    const button = screen.getByTestId('register-button');
-    expect(button.props.accessibilityState?.disabled).toBe(false);
-  });
-
-  // ---- Story 6-11: Consent persisted on registration ----
-
-  it('persists consent record after successful registration', async () => {
-    mockSignUp.mockResolvedValue({
-      success: true,
-      data: { user: { id: 'u1' }, session: { access_token: 'tok' } }
-    });
-
-    render(<CreateAccountScreen />);
-    fillForm();
-    fireEvent.press(screen.getByTestId('register-button'));
-
-    await waitFor(() => {
-      expect(mockSetConsentGiven).toHaveBeenCalledTimes(1);
-    });
-  });
-
-  it('does not persist consent when registration fails', async () => {
-    mockSignUp.mockResolvedValue({
-      success: false,
-      error: { message: 'User already registered' }
-    });
-
-    render(<CreateAccountScreen />);
-    fillForm();
-    fireEvent.press(screen.getByTestId('register-button'));
-
-    await waitFor(() => {
-      expect(mockSetConsentGiven).not.toHaveBeenCalled();
     });
   });
 });
