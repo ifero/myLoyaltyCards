@@ -75,7 +75,7 @@ export const LIGHT_THEME = {
   borderStrong: '#8F8F94',
   success: '#16A34A',
   warning: '#D97706',
-  error: '#FF3B30',
+  error: '#DC2626',
   info: '#1A73E8',
   link: '#1A73E8',
   statusBar: 'dark' as const
@@ -98,7 +98,7 @@ export const DARK_THEME = {
   borderStrong: '#636366',
   success: '#22C55E',
   warning: '#F59E0B',
-  error: '#FF453A',
+  error: '#F87171',
   info: '#4DA3FF',
   link: '#4DA3FF',
   statusBar: 'light' as const

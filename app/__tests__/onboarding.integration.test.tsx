@@ -47,6 +47,39 @@ jest.mock('expo-camera', () => ({
   useCameraPermissions: () => mockUseCameraPermissions()
 }));
 
+jest.mock('expo-constants', () => ({
+  __esModule: true,
+  default: {
+    expoConfig: {
+      version: '1.0.0'
+    }
+  }
+}));
+
+jest.mock('expo-file-system', () => ({
+  Paths: { cache: 'file:///cache/' },
+  File: class MockFile {
+    uri: string;
+
+    constructor(_base: string, name: string) {
+      this.uri = `file:///cache/${name}`;
+    }
+
+    create() {
+      return undefined;
+    }
+
+    write() {
+      return undefined;
+    }
+  }
+}));
+
+jest.mock('expo-sharing', () => ({
+  isAvailableAsync: jest.fn().mockResolvedValue(true),
+  shareAsync: jest.fn().mockResolvedValue(undefined)
+}));
+
 describe('Home onboarding integration', () => {
   beforeEach(() => {
     jest.clearAllMocks();

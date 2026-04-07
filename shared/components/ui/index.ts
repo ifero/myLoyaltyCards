@@ -4,3 +4,4 @@ export { TextField } from './TextField';
 export { ToggleSwitch } from './ToggleSwitch';
 export { ColorPicker } from './ColorPicker';
 export { ActionRow } from './ActionRow';
+export { BottomSheet } from './BottomSheet';

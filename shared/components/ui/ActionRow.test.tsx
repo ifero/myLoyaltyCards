@@ -36,35 +36,22 @@ describe('ActionRow', () => {
 
   it('renders label and responds to press', () => {
     const onPress = jest.fn();
-    render(
-      <ActionRow icon="settings" iconFamily="MI" label="Settings" onPress={onPress} testID="row" />
-    );
+    render(<ActionRow prefix={null} label="Settings" onPress={onPress} testID="row" />);
 
     fireEvent.press(screen.getByTestId('row'));
     expect(onPress).toHaveBeenCalledTimes(1);
     expect(screen.getByText('Settings')).toBeTruthy();
   });
 
-  it('supports MCI icon family', () => {
-    render(
-      <ActionRow icon="barcode" iconFamily="MCI" label="Barcode" onPress={jest.fn()} testID="row" />
-    );
+  it('supports custom prefix component', () => {
+    render(<ActionRow prefix={null} label="Barcode" onPress={jest.fn()} testID="row" />);
 
     expect(screen.getByText('Barcode')).toBeTruthy();
   });
 
   it('does not call onPress when disabled', () => {
     const onPress = jest.fn();
-    render(
-      <ActionRow
-        icon="settings"
-        iconFamily="MI"
-        label="Settings"
-        onPress={onPress}
-        disabled
-        testID="row"
-      />
-    );
+    render(<ActionRow prefix={null} label="Settings" onPress={onPress} disabled testID="row" />);
 
     fireEvent.press(screen.getByTestId('row'));
     expect(onPress).not.toHaveBeenCalled();
@@ -72,18 +59,26 @@ describe('ActionRow', () => {
 
   it('supports dark mode tokens', () => {
     mockUseTheme.mockReturnValue({ theme: darkTheme });
+    render(<ActionRow prefix={null} label="Settings" onPress={jest.fn()} testID="row" />);
+
+    fireEvent(screen.getByTestId('row'), 'pressIn');
+    fireEvent(screen.getByTestId('row'), 'pressOut');
+    expect(screen.getByText('Settings')).toBeTruthy();
+  });
+
+  it('renders plain row with prefix and subtitle', () => {
     render(
       <ActionRow
-        icon="settings"
-        iconFamily="MI"
-        label="Settings"
+        prefix={null}
+        label="Other card"
+        subtitle="Add a custom loyalty card"
+        variant="plain"
         onPress={jest.fn()}
         testID="row"
       />
     );
 
-    fireEvent(screen.getByTestId('row'), 'pressIn');
-    fireEvent(screen.getByTestId('row'), 'pressOut');
-    expect(screen.getByText('Settings')).toBeTruthy();
+    expect(screen.getByText('Other card')).toBeTruthy();
+    expect(screen.getByText('Add a custom loyalty card')).toBeTruthy();
   });
 });

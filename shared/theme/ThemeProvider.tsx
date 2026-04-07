@@ -1,6 +1,12 @@
 import React, { createContext, useContext, useMemo, type ReactNode } from 'react';
 import { useColorScheme } from 'react-native';
 
+import {
+  getThemePreference,
+  setThemePreference as persistThemePreference,
+  type ThemePreference
+} from '@/core/settings/settings-repository';
+
 import { LIGHT_THEME, DARK_THEME, type Theme } from './colors';
 import { SPACING, LAYOUT, TOUCH_TARGET } from './spacing';
 import { TYPOGRAPHY } from './typography';
@@ -12,6 +18,8 @@ interface ThemeContextType {
   theme: Theme;
   isDark: boolean;
   colorScheme: 'light' | 'dark';
+  themePreference: ThemePreference;
+  setThemePreference: (value: ThemePreference) => void;
   typography: typeof TYPOGRAPHY;
   spacing: typeof SPACING;
   layout: typeof LAYOUT;
@@ -38,19 +46,36 @@ interface ThemeProviderProps {
  */
 export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
   const systemColorScheme = useColorScheme();
+  const [themePreference, setThemePreferenceState] = React.useState<ThemePreference>(() =>
+    getThemePreference()
+  );
+
+  const setThemePreference = React.useCallback((value: ThemePreference) => {
+    setThemePreferenceState(value);
+    persistThemePreference(value);
+  }, []);
 
   const value = useMemo<ThemeContextType>(() => {
-    const isDark = systemColorScheme === 'dark';
+    const resolvedScheme =
+      themePreference === 'system'
+        ? systemColorScheme === 'dark'
+          ? 'dark'
+          : 'light'
+        : themePreference;
+    const isDark = resolvedScheme === 'dark';
+
     return {
       theme: isDark ? DARK_THEME : LIGHT_THEME,
       isDark,
-      colorScheme: isDark ? 'dark' : 'light',
+      colorScheme: resolvedScheme,
+      themePreference,
+      setThemePreference,
       typography: TYPOGRAPHY,
       spacing: SPACING,
       layout: LAYOUT,
       touchTarget: TOUCH_TARGET
     };
-  }, [systemColorScheme]);
+  }, [setThemePreference, systemColorScheme, themePreference]);
 
   return <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>;
 };

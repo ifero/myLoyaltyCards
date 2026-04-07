@@ -15,7 +15,11 @@ import {
   resetFirstLaunch,
   isOnboardingCompleted,
   completeOnboarding,
-  resetOnboarding
+  resetOnboarding,
+  getThemePreference,
+  setThemePreference,
+  getLanguagePreference,
+  setLanguagePreference
 } from './settings-repository';
 
 describe('settings-repository', () => {
@@ -54,5 +58,36 @@ describe('settings-repository', () => {
 
     resetOnboarding();
     expect(Storage.removeItemSync).toHaveBeenCalledWith('onboarding_completed');
+  });
+
+  test('theme preference defaults to system and supports persistence', () => {
+    (Storage.getItemSync as jest.Mock).mockReturnValueOnce(null);
+    expect(getThemePreference()).toBe('system');
+
+    (Storage.getItemSync as jest.Mock).mockReturnValueOnce('light');
+    expect(getThemePreference()).toBe('light');
+
+    (Storage.getItemSync as jest.Mock).mockReturnValueOnce('dark');
+    expect(getThemePreference()).toBe('dark');
+
+    (Storage.getItemSync as jest.Mock).mockReturnValueOnce('system');
+    expect(getThemePreference()).toBe('system');
+
+    (Storage.getItemSync as jest.Mock).mockReturnValueOnce('unexpected');
+    expect(getThemePreference()).toBe('system');
+
+    setThemePreference('dark');
+    expect(Storage.setItemSync).toHaveBeenCalledWith('theme_preference', 'dark');
+  });
+
+  test('language preference defaults to en and supports persistence', () => {
+    (Storage.getItemSync as jest.Mock).mockReturnValueOnce(null);
+    expect(getLanguagePreference()).toBe('en');
+
+    (Storage.getItemSync as jest.Mock).mockReturnValueOnce('it');
+    expect(getLanguagePreference()).toBe('it');
+
+    setLanguagePreference('en');
+    expect(Storage.setItemSync).toHaveBeenCalledWith('language_preference', 'en');
   });
 });

@@ -139,9 +139,10 @@ npx expo export -p web && npx eas-cli@latest deploy   # Deploy web to EAS Hostin
 
 When using `Pressable` in this project:
 
-1. **Do NOT rely on `style={({ pressed }) => ...}` callbacks for critical visual states** in app UI screens.
-2. Prefer explicit pressed-state handling with `onPressIn`/`onPressOut` + local state when visual feedback is required.
-3. Keep base layout styles deterministic (`StyleSheet` or stable style arrays), and avoid runtime style callback branching for spacing/alignment.
+1. **FORBIDDEN:** do not use `style={({ pressed }) => ...}` callbacks in app UI code (including shared components).
+2. Use explicit pressed-state handling with `onPressIn`/`onPressOut` + local state for pressed visuals.
+3. Keep base layout styles deterministic (`StyleSheet` or stable style objects/arrays); avoid runtime style callback branching for spacing/alignment.
+4. If you encounter existing callback-based `Pressable` styling while touching a file, refactor it in the same change before merge.
 
 **Why This Matters:**
 
@@ -269,6 +270,17 @@ git commit -m "feat(scope): short description
 - `docs` - Documentation
 - `test` - Adding or updating tests
 - `chore` - Maintenance tasks
+
+### 🚫 Hooks Bypass is Forbidden (MANDATORY)
+
+- **NEVER use `--no-verify`** for `git commit` or `git push`.
+- If pre-commit/pre-push hooks fail, you must fix the reported issues and rerun the command.
+- Do not bypass lint/typecheck/test gates, even for urgent delivery.
+
+**Why This Matters:**
+
+- Prevents broken or non-compliant code from entering shared branches.
+- Keeps CI behavior aligned with local developer workflow.
 
 ### Stakeholder sign-off before commits ✅
 

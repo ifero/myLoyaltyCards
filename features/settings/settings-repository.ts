@@ -4,5 +4,9 @@ export {
   resetFirstLaunch,
   isOnboardingCompleted,
   completeOnboarding,
-  resetOnboarding
+  resetOnboarding,
+  getThemePreference,
+  setThemePreference,
+  getLanguagePreference,
+  setLanguagePreference
 } from '@/core/settings/settings-repository';
