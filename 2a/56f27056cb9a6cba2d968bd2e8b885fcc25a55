@@ -1,0 +1,38 @@
+docs/sprint-artifacts/stories/13-5-restyle-auth-screens.md
+  cc12cb547458a623 136,140,143,148,153,158,416-420,422-435,444-448
+docs/sprint-artifacts/sprint-status.yaml
+  b882d82d6e334705 328
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.2.5",
+  "base_commit_sha": "2a56f27056cb9a6cba2d968bd2e8b885fcc25a55",
+  "prompts": {
+    "b882d82d6e334705": {
+      "agent_id": {
+        "tool": "github-copilot",
+        "id": "02fcb981-677e-4467-85e3-d7c754dc9c47",
+        "model": "copilot/gpt-5.3-codex"
+      },
+      "human_author": "Andrea Pacino",
+      "messages": [],
+      "total_additions": 0,
+      "total_deletions": 0,
+      "accepted_lines": 1,
+      "overriden_lines": 0
+    },
+    "cc12cb547458a623": {
+      "agent_id": {
+        "tool": "github-copilot",
+        "id": "c1200e32-a5a3-4dae-90b5-4dc1aa6ad11e",
+        "model": "copilot/gemini-3.1-pro-preview"
+      },
+      "human_author": "Andrea Pacino",
+      "messages": [],
+      "total_additions": 0,
+      "total_deletions": 0,
+      "accepted_lines": 30,
+      "overriden_lines": 9
+    }
+  }
+}
