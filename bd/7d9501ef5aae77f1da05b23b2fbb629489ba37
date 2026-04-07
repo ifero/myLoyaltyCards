@@ -1,0 +1,89 @@
+shared/components/ui/TextField.test.tsx
+  807f5d583a8670e3 18-19,29-30,89
+features/auth/__tests__/ForgotPasswordScreen.test.tsx
+  26baf97c007ff4e5 62
+features/auth/components/GuestModeBanner.tsx
+  26baf97c007ff4e5 18-25,86,93-97,99-100,103,106,111,118-120,128-130,138,150-154,156-158
+features/auth/components/__tests__/PasswordStrengthIndicator.test.tsx
+  26baf97c007ff4e5 22-26
+features/auth/CreateAccountScreen.tsx
+  26baf97c007ff4e5 166
+features/auth/ForgotPasswordScreen.tsx
+  26baf97c007ff4e5 4,15,117,119,121
+features/auth/__tests__/GuestModeBanner.test.tsx
+  26baf97c007ff4e5 28
+features/auth/components/PasswordStrengthIndicator.tsx
+  26baf97c007ff4e5 33-36
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.2.5",
+  "base_commit_sha": "bd7d9501ef5aae77f1da05b23b2fbb629489ba37",
+  "prompts": {
+    "096868a34003925d": {
+      "agent_id": {
+        "tool": "github-copilot",
+        "id": "a45a0e19-c40e-471a-a328-1b120c49b22a",
+        "model": "copilot/claude-opus-4.6"
+      },
+      "human_author": "Andrea Pacino <andrea.pacino87@gmail.com>",
+      "messages": [],
+      "total_additions": 3,
+      "total_deletions": 0,
+      "accepted_lines": 122,
+      "overriden_lines": 0
+    },
+    "26baf97c007ff4e5": {
+      "agent_id": {
+        "tool": "github-copilot",
+        "id": "7756e79a-9252-4543-9df9-dfe45cc41c4a",
+        "model": "copilot/gpt-5.3-codex"
+      },
+      "human_author": "Andrea Pacino",
+      "messages": [],
+      "total_additions": 72,
+      "total_deletions": 72,
+      "accepted_lines": 560,
+      "overriden_lines": 0
+    },
+    "27f621f798b69469": {
+      "agent_id": {
+        "tool": "github-copilot",
+        "id": "3ba7fa17-7048-4d38-821a-c7f02818e5c4",
+        "model": "copilot/claude-opus-4.6"
+      },
+      "human_author": "Andrea Pacino <andrea.pacino87@gmail.com>",
+      "messages": [],
+      "total_additions": 0,
+      "total_deletions": 0,
+      "accepted_lines": 2,
+      "overriden_lines": 0
+    },
+    "7e5dddf93f995e7e": {
+      "agent_id": {
+        "tool": "github-copilot",
+        "id": "9854ccf1-82b7-4865-b93f-edfce1ab8a7a",
+        "model": "copilot/gpt-5.3-codex"
+      },
+      "human_author": "Andrea Pacino",
+      "messages": [],
+      "total_additions": 0,
+      "total_deletions": 0,
+      "accepted_lines": 61,
+      "overriden_lines": 0
+    },
+    "807f5d583a8670e3": {
+      "agent_id": {
+        "tool": "github-copilot",
+        "id": "cfa652de-8bec-4209-8ca8-ab3b46b88ae9",
+        "model": "copilot/claude-opus-4.6"
+      },
+      "human_author": null,
+      "messages": [],
+      "total_additions": 5,
+      "total_deletions": 3,
+      "accepted_lines": 5,
+      "overriden_lines": 0
+    }
+  }
+}
