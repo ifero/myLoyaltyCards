@@ -1,0 +1,35 @@
+features/auth/ForgotPasswordScreen.tsx
+  26baf97c007ff4e5 4,15,117,119,121
+features/auth/CreateAccountScreen.tsx
+  26baf97c007ff4e5 166
+features/auth/components/__tests__/PasswordStrengthIndicator.test.tsx
+  26baf97c007ff4e5 22-26
+features/auth/__tests__/GuestModeBanner.test.tsx
+  26baf97c007ff4e5 28
+features/auth/components/GuestModeBanner.tsx
+  26baf97c007ff4e5 78,85-87,91-92,95,98,103,110-112,130,142-146,148-150
+features/auth/__tests__/ForgotPasswordScreen.test.tsx
+  26baf97c007ff4e5 62
+features/auth/components/PasswordStrengthIndicator.tsx
+  26baf97c007ff4e5 33-36
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.2.5",
+  "base_commit_sha": "9e7a984e899d4999a3c5673bcec66628bed2318f",
+  "prompts": {
+    "26baf97c007ff4e5": {
+      "agent_id": {
+        "tool": "github-copilot",
+        "id": "7756e79a-9252-4543-9df9-dfe45cc41c4a",
+        "model": "copilot/gpt-5.3-codex"
+      },
+      "human_author": "Andrea Pacino",
+      "messages": [],
+      "total_additions": 51,
+      "total_deletions": 59,
+      "accepted_lines": 38,
+      "overriden_lines": 0
+    }
+  }
+}
