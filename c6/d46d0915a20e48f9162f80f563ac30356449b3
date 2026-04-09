@@ -1,0 +1,55 @@
+app.json
+  1da082b1062de4f5 23-25
+docs/help.json
+  1da082b1062de4f5 44-88
+core/settings/importCards.ts
+  1da082b1062de4f5 1-213
+features/settings/hooks/useImportData.test.ts
+  1da082b1062de4f5 1-213
+shared/toast.ts
+  1da082b1062de4f5 1-16
+app/card/[id].tsx
+  1da082b1062de4f5 23,86
+features/settings/components/ImportErrorSheet.test.tsx
+  1da082b1062de4f5 1-55
+features/cards/hooks/useEditCard.ts
+  1da082b1062de4f5 17,84,99
+features/settings/components/ImportErrorSheet.tsx
+  1da082b1062de4f5 1-83
+features/settings/hooks/useImportData.ts
+  1da082b1062de4f5 1-9,11-144
+features/settings/components/ImportPreviewSheet.test.tsx
+  1da082b1062de4f5 1-45
+docs/sprint-artifacts/sprint-status.yaml
+  1da082b1062de4f5 38,331
+features/settings/hooks/useExportData.ts
+  1da082b1062de4f5 7,9,30-31,33-34,37-39,41-51,54,56-58,67
+features/settings/screens/SettingsScreen.tsx
+  1da082b1062de4f5 13,22-23,29,71-72,75-93,176,221,223,266-275,278-283
+docs/sprint-artifacts/stories/13-7a-import-data-from-json.md
+  1da082b1062de4f5 3,75,83,90,96,101
+core/settings/importCards.test.ts
+  1da082b1062de4f5 1-340
+features/settings/hooks/useExportData.test.ts
+  1da082b1062de4f5 19,24,47,106-122,125,134-140
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.2.6",
+  "base_commit_sha": "c6d46d0915a20e48f9162f80f563ac30356449b3",
+  "prompts": {
+    "1da082b1062de4f5": {
+      "agent_id": {
+        "tool": "github-copilot",
+        "id": "a345677d-4319-48e5-a841-26beb94a8f53",
+        "model": "copilot/gpt-5.4"
+      },
+      "human_author": "Andrea Pacino",
+      "messages": [],
+      "total_additions": 1622,
+      "total_deletions": 154,
+      "accepted_lines": 1270,
+      "overriden_lines": 59
+    }
+  }
+}
