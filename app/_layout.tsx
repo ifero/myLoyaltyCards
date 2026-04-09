@@ -124,6 +124,20 @@ const RootLayoutContent = () => {
           }}
         />
         <Stack.Screen
+          name="onboarding/mode-selection"
+          options={{
+            title: 'Get Started',
+            headerShown: false
+          }}
+        />
+        <Stack.Screen
+          name="onboarding/highlights"
+          options={{
+            title: 'Highlights',
+            headerShown: false
+          }}
+        />
+        <Stack.Screen
           name="add-card"
           options={{
             title: 'Add Card',

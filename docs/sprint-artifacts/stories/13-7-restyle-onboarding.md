@@ -1,6 +1,6 @@
 # Story 13.7: Restyle Onboarding Flow
 
-Status: ready-for-dev
+Status: review
 
 ## Story
 
@@ -432,13 +432,18 @@ No new "mode" flag may be needed if the app already defaults to local when no au
 
 ### Attempt Log
 
-| #   | Date | Agent | Result | Reason |
-| --- | ---- | ----- | ------ | ------ |
+| #   | Date       | Agent        | Result       | Reason                                                                                                                                                         |
+| --- | ---------- | ------------ | ------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1   | 2026-04-07 | Amelia (Dev) | ✅ Completed | Implemented full onboarding restyle flow (Welcome, Mode Selection, Highlights, First Card), routing, accessibility updates, and onboarding-focused test suite. |
 
 ### Decisions Made During Dev
 
-_(none yet)_
+- Removed legacy `OnboardingOverlay` path and migrated onboarding to dedicated route-based flow under `app/onboarding/*`.
+- Final onboarding completion is handled at terminal action (`Add Your First Card`) to avoid premature completion states.
+- Added route guards on onboarding screens to prevent direct access after first launch is completed.
+- Extended shared `Button` API with `size` and accessibility pass-through to enforce 52px onboarding CTAs without per-screen style duplication.
+- Strengthened modal accessibility behavior with focus-on-open and focus-restore-to-trigger patterns.
 
 ### Open Questions
 
-_(none yet)_
+- None.
