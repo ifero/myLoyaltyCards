@@ -42,4 +42,25 @@ describe('ImportPreviewSheet', () => {
     expect(getByText('3 duplicates will be skipped.')).toBeTruthy();
     expect(getByText('1 invalid entry will be skipped.')).toBeTruthy();
   });
+
+  it('renders singular labels and hides invalid copy when there are no invalid entries', () => {
+    const { getByText, queryByText } = render(
+      <ImportPreviewSheet
+        visible
+        fileName="single-card.json"
+        totalCards={1}
+        newCardsCount={1}
+        duplicateCount={1}
+        invalidCount={0}
+        isImporting={false}
+        onImport={jest.fn()}
+        onClose={jest.fn()}
+      />
+    );
+
+    expect(getByText('1 card found')).toBeTruthy();
+    expect(getByText('1 new card will be added.')).toBeTruthy();
+    expect(getByText('1 duplicate will be skipped.')).toBeTruthy();
+    expect(queryByText(/invalid entr/i)).toBeNull();
+  });
 });

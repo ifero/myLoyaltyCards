@@ -36,6 +36,21 @@ describe('useImportData', () => {
     jest.clearAllMocks();
   });
 
+  it('shows an invalid-file message when the picker returns no asset', async () => {
+    mockGetDocumentAsync.mockResolvedValue({ canceled: false, assets: [] });
+
+    const { result } = renderHook(() => useImportData({ isAuthenticated: false }));
+
+    await act(async () => {
+      await result.current.pickImportFile();
+    });
+
+    expect(result.current.errorState).toEqual({
+      title: 'Invalid File',
+      message: 'No file was selected.'
+    });
+  });
+
   it('does nothing when the picker is canceled', async () => {
     mockGetDocumentAsync.mockResolvedValue({ canceled: true, assets: null });
 
