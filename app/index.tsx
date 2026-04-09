@@ -5,7 +5,6 @@
  * Main screen displaying the card list grid or empty state.
  */
 
-import { useCameraPermissions } from 'expo-camera';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { useEffect, useState } from 'react';
 
@@ -19,16 +18,12 @@ import { GuestModeBanner } from '@/features/auth/components';
 import MigrationBanner from '@/features/auth/MigrationBanner';
 import { useGuestMigration } from '@/features/auth/useGuestMigration';
 import { CardList, useCards } from '@/features/cards';
-import { OnboardingOverlay } from '@/features/onboarding';
-import { isOnboardingCompleted, completeOnboarding } from '@/features/settings';
 
 const HomeScreen = () => {
-  const { cards, isLoading } = useCards();
-  const [visible, setVisible] = useState(false);
+  const { cards } = useCards();
   const [highlightCardId, setHighlightCardId] = useState<string | null>(null);
   const router = useRouter();
   const { newCardId } = useLocalSearchParams<{ newCardId?: string }>();
-  const [, requestPermission] = useCameraPermissions();
   const { authState } = useAuthState();
   const { status, message, retry, dismiss } = useGuestMigration();
   const { isSyncing, syncError, forceSync, clearSyncError } = useCloudSync();
@@ -41,40 +36,15 @@ const HomeScreen = () => {
   const hasSyncError = Boolean(syncError ?? autoSyncError);
 
   useEffect(() => {
-    if (!isLoading) {
-      setVisible(cards.length === 0 && !isOnboardingCompleted());
-    }
-  }, [isLoading, cards.length]);
-
-  useEffect(() => {
     if (typeof newCardId === 'string' && newCardId.length > 0) {
       setHighlightCardId(newCardId);
       router.replace('/');
     }
   }, [newCardId, router]);
 
-  const handleRequestClose = () => {
-    completeOnboarding();
-    setVisible(false);
-  };
-
-  const handleAddManual = () => {
-    router.push('/add-card');
-  };
-
-  const handleScan = async () => {
-    const res = await requestPermission();
-    if (!res.granted) {
-      const err = new Error('Permission denied');
-      (err as { name?: string }).name = 'PermissionDenied';
-      throw err;
-    }
-    router.push('/add-card/scan');
-  };
-
   return (
     <>
-      <GuestModeBanner isGuestMode={authState === 'guest'} />
+      <GuestModeBanner isGuestMode={authState === 'guest' && cards.length > 4} />
       <MigrationBanner status={status} message={message} onRetry={retry} onDismiss={dismiss} />
       <SyncIndicator isSyncing={isSyncing || isAutoSyncing} hasError={hasSyncError} />
       <SyncErrorBanner
@@ -89,16 +59,6 @@ const HomeScreen = () => {
         }}
       />
       <CardList highlightCardId={highlightCardId} />
-      <OnboardingOverlay
-        visible={visible}
-        onRequestClose={handleRequestClose}
-        onAddManual={handleAddManual}
-        onScan={handleScan}
-        onComplete={() => {
-          completeOnboarding();
-          setVisible(false);
-        }}
-      />
     </>
   );
 };

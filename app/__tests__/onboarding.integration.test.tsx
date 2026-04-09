@@ -1,152 +1,71 @@
-import { render, fireEvent, waitFor } from '@testing-library/react-native';
+import { fireEvent, render } from '@testing-library/react-native';
 import { useRouter } from 'expo-router';
-import Storage from 'expo-sqlite/kv-store';
-import React from 'react';
-import { Linking } from 'react-native';
 
-// Use global `expo-router` mock from jest.setup.js for stable spies
+import { completeFirstLaunch } from '@/core/settings/settings-repository';
 
-// Mock getAllCards to return empty list
-jest.mock('@/core/database', () => ({
-  getAllCards: jest.fn()
+import FeatureHighlightsScreen from '@/features/onboarding/screens/FeatureHighlightsScreen';
+import ModeSelectionScreen from '@/features/onboarding/screens/ModeSelectionScreen';
+import WelcomeScreen from '@/features/onboarding/screens/WelcomeScreen';
+
+jest.mock('@/core/settings/settings-repository', () => ({
+  isFirstLaunch: jest.fn(() => true),
+  completeFirstLaunch: jest.fn()
 }));
 
-// Mock useCards hook to avoid async state updates during render
-jest.mock('@/features/cards/hooks/useCards', () => ({
-  useCards: () => ({
-    cards: [],
-    isLoading: false,
-    error: null,
-    refetch: jest.fn()
-  })
+jest.mock('react-native-safe-area-context', () => ({
+  useSafeAreaInsets: () => ({ top: 0, bottom: 0, left: 0, right: 0 })
 }));
 
-import { getAllCards } from '@/core/database';
-
-import HomeScreen from '../index';
-
-// Mock ThemeProvider used by components rendered in HomeScreen
 jest.mock('@/shared/theme', () => ({
   useTheme: () => ({
     theme: {
-      background: '#FAFAFA',
+      background: '#FFFFFF',
       surface: '#FFFFFF',
-      textPrimary: '#1F2937',
-      textSecondary: '#6B7280',
+      textPrimary: '#1F1F24',
+      textSecondary: '#66666B',
+      textTertiary: '#8F8F94',
       primary: '#1A73E8',
-      border: '#E5E7EB'
+      primaryDark: '#1967D2',
+      border: '#E5E5EB',
+      borderStrong: '#8F8F94',
+      link: '#1A73E8'
     },
-    isDark: false
+    typography: {
+      title1: { fontSize: 28, lineHeight: 34, fontWeight: '700' },
+      title2: { fontSize: 22, lineHeight: 28, fontWeight: '700' },
+      headline: { fontSize: 17, lineHeight: 22, fontWeight: '600' },
+      footnote: { fontSize: 13, lineHeight: 18 }
+    }
   })
 }));
 
-const mockUseCameraPermissions = jest.fn();
-
-// Mock expo-camera hook used by HomeScreen — default granted, tests can override
-jest.mock('expo-camera', () => ({
-  useCameraPermissions: () => mockUseCameraPermissions()
-}));
-
-jest.mock('expo-constants', () => ({
-  __esModule: true,
-  default: {
-    expoConfig: {
-      version: '1.0.0'
-    }
-  }
-}));
-
-jest.mock('expo-file-system', () => ({
-  Paths: { cache: 'file:///cache/' },
-  File: class MockFile {
-    uri: string;
-
-    constructor(_base: string, name: string) {
-      this.uri = `file:///cache/${name}`;
-    }
-
-    create() {
-      return undefined;
-    }
-
-    write() {
-      return undefined;
-    }
-  }
-}));
-
-jest.mock('expo-sharing', () => ({
-  isAvailableAsync: jest.fn().mockResolvedValue(true),
-  shareAsync: jest.fn().mockResolvedValue(undefined)
-}));
-
-describe('Home onboarding integration', () => {
+describe('Onboarding flow integration', () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    // Ensure no onboarding flag is set
-    const g = global as unknown as { __kvStoreData?: Record<string, string> };
-    if (g.__kvStoreData) {
-      delete g.__kvStoreData['onboarding_completed'];
-    }
-
-    mockUseCameraPermissions.mockReturnValue([
-      { granted: true },
-      jest.fn().mockResolvedValue({ granted: true })
-    ]);
   });
 
-  it('shows the onboarding overlay when there are zero cards and onboarding not completed', async () => {
-    (getAllCards as jest.Mock).mockResolvedValue([]);
-
-    const { getByTestId } = render(<HomeScreen />);
-
-    await waitFor(() => expect(getByTestId('onboard-overlay')).toBeTruthy());
-  });
-
-  it('navigates to add-card when Add manually is tapped and marks onboarding completed', async () => {
+  it('Welcome -> Mode Selection via Get Started', () => {
     const pushSpy = useRouter().push as jest.Mock;
+    const { getByTestId } = render(<WelcomeScreen />);
 
-    (getAllCards as jest.Mock).mockResolvedValue([]);
-
-    const { getByTestId } = render(<HomeScreen />);
-
-    await waitFor(() => expect(getByTestId('onboard-overlay')).toBeTruthy());
-
-    fireEvent.press(getByTestId('onboard-add-manual'));
-
-    await waitFor(() => expect(pushSpy).toHaveBeenCalledWith('/add-card'));
-
-    // onboarding flag should be set
-    expect(Storage.setItemSync).toHaveBeenCalledWith('onboarding_completed', 'true');
+    fireEvent.press(getByTestId('welcome-get-started'));
+    expect(pushSpy).toHaveBeenCalledWith('/onboarding/mode-selection');
   });
 
-  it('shows permission denied state when Scan is tapped and permission is denied, opens Settings and back returns to intro', async () => {
-    // Mock camera permission to be denied for this test
-    mockUseCameraPermissions.mockReturnValue([
-      { granted: false },
-      jest.fn().mockResolvedValue({ granted: false })
-    ]);
+  it('Mode Selection local option -> Highlights', () => {
+    const pushSpy = useRouter().push as jest.Mock;
+    const { getByTestId } = render(<ModeSelectionScreen />);
 
-    (getAllCards as jest.Mock).mockResolvedValue([]);
+    fireEvent.press(getByTestId('mode-option-local'));
+    expect(pushSpy).toHaveBeenCalledWith('/onboarding/highlights');
+  });
 
-    const openSettingsSpy = jest.spyOn(Linking, 'openSettings').mockImplementation(jest.fn());
+  it('Highlights skip -> complete onboarding and home', () => {
+    const replaceSpy = useRouter().replace as jest.Mock;
+    const { getByTestId } = render(<FeatureHighlightsScreen />);
 
-    const { getByTestId, getByText } = render(<HomeScreen />);
-
-    await waitFor(() => expect(getByTestId('onboard-overlay')).toBeTruthy());
-
-    fireEvent.press(getByTestId('onboard-scan'));
-
-    await waitFor(() => expect(getByText('Camera access required')).toBeTruthy());
-
-    fireEvent.press(getByTestId('onboard-open-settings'));
-
-    expect(openSettingsSpy).toHaveBeenCalled();
-
-    // Back to intro
-    fireEvent.press(getByTestId('onboard-permission-back'));
-    await waitFor(() => expect(getByTestId('onboard-scan')).toBeTruthy());
-
-    openSettingsSpy.mockRestore();
+    fireEvent.press(getByTestId('highlights-skip'));
+    expect(completeFirstLaunch).toHaveBeenCalled();
+    expect(replaceSpy).toHaveBeenCalledWith('/');
   });
 });

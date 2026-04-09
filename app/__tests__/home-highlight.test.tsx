@@ -8,21 +8,29 @@ const mockCardList = jest.fn((props: { highlightCardId?: string | null }) => {
   void props;
   return null;
 });
+const mockGuestModeBanner = jest.fn((props: { isGuestMode: boolean }) => {
+  void props;
+  return null;
+});
+const mockUseCards = jest.fn(() => ({
+  cards: [{ id: 'card-1' }],
+  isLoading: false
+}));
 
 jest.mock('@/features/cards', () => ({
   CardList: (props: { highlightCardId?: string | null }) => {
     mockCardList(props);
     return null;
   },
-  useCards: () => ({
-    cards: [{ id: 'card-1' }],
-    isLoading: false
-  })
+  useCards: () => mockUseCards()
 }));
 
 jest.mock('@/features/auth/MigrationBanner', () => () => null);
 jest.mock('@/features/auth/components', () => ({
-  GuestModeBanner: () => null
+  GuestModeBanner: (props: { isGuestMode: boolean }) => {
+    mockGuestModeBanner(props);
+    return null;
+  }
 }));
 jest.mock('@/features/auth/useGuestMigration', () => ({
   useGuestMigration: () => ({
@@ -78,6 +86,10 @@ jest.mock('expo-camera', () => ({
 describe('HomeScreen highlight lifecycle', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    mockUseCards.mockReturnValue({
+      cards: [{ id: 'card-1' }],
+      isLoading: false
+    });
   });
 
   it('passes newCardId to CardList and clears route params via replace', async () => {
@@ -106,5 +118,35 @@ describe('HomeScreen highlight lifecycle', () => {
     });
 
     expect(useRouter().replace).not.toHaveBeenCalled();
+  });
+
+  it('hides guest banner when cards are 4 or fewer', async () => {
+    mockUseCards.mockReturnValue({
+      cards: [{ id: '1' }, { id: '2' }, { id: '3' }, { id: '4' }],
+      isLoading: false
+    });
+
+    render(<HomeScreen />);
+
+    await waitFor(() => {
+      expect(mockGuestModeBanner).toHaveBeenCalledWith(
+        expect.objectContaining({ isGuestMode: false })
+      );
+    });
+  });
+
+  it('shows guest banner when guest has more than 4 cards', async () => {
+    mockUseCards.mockReturnValue({
+      cards: [{ id: '1' }, { id: '2' }, { id: '3' }, { id: '4' }, { id: '5' }],
+      isLoading: false
+    });
+
+    render(<HomeScreen />);
+
+    await waitFor(() => {
+      expect(mockGuestModeBanner).toHaveBeenCalledWith(
+        expect.objectContaining({ isGuestMode: true })
+      );
+    });
   });
 });

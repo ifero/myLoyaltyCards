@@ -1,163 +1,49 @@
-/**
- * Welcome Screen Tests
- * Story 4.1: Welcome Screen
- *
- * Tests for the Welcome Screen component:
- * - Renders all required elements (AC1)
- * - CTA behavior and navigation (AC2)
- * - Accessibility attributes
- */
-
-import { render, fireEvent } from '@testing-library/react-native';
+import { fireEvent, render } from '@testing-library/react-native';
+import { useRouter } from 'expo-router';
 
 import WelcomeScreen from '../welcome';
 
-// Track navigation calls
-const mockReplace = jest.fn();
-const mockPush = jest.fn();
-
-jest.mock('expo-router', () => ({
-  useRouter: () => ({
-    replace: mockReplace,
-    push: mockPush,
-    back: jest.fn()
-  })
+jest.mock('react-native-safe-area-context', () => ({
+  useSafeAreaInsets: () => ({ top: 0, bottom: 0, left: 0, right: 0 })
 }));
 
 jest.mock('@/shared/theme', () => ({
   useTheme: () => ({
     theme: {
-      background: '#FAFAFA',
+      background: '#FFFFFF',
       surface: '#FFFFFF',
-      textPrimary: '#1F2937',
-      textSecondary: '#6B7280',
+      textPrimary: '#1F1F24',
+      textSecondary: '#66666B',
+      textTertiary: '#8F8F94',
       primary: '#1A73E8',
-      primaryDark: '#5C9A5C',
-      border: '#E5E7EB'
+      primaryDark: '#1967D2',
+      border: '#E5E5EB',
+      link: '#1A73E8'
     },
-    isDark: false
+    typography: {
+      title1: { fontSize: 28, lineHeight: 34, fontWeight: '700' },
+      headline: { fontSize: 17, lineHeight: 22, fontWeight: '600' }
+    }
   })
 }));
 
-const mockCompleteFirstLaunch = jest.fn();
-jest.mock('@/core/settings/settings-repository', () => ({
-  completeFirstLaunch: (...args: unknown[]) => mockCompleteFirstLaunch(...args)
-}));
-
-describe('WelcomeScreen — Story 4.1', () => {
+describe('app/welcome route', () => {
   beforeEach(() => {
     jest.clearAllMocks();
   });
 
-  // ── AC1: First Launch — renders all required elements ──
+  it('renders get started and sign in options', () => {
+    const { getByTestId } = render(<WelcomeScreen />);
 
-  describe('AC1: First Launch rendering', () => {
-    it('renders the welcome screen container', () => {
-      const { getByTestId } = render(<WelcomeScreen />);
-      expect(getByTestId('welcome-screen')).toBeTruthy();
-    });
-
-    it('renders the app title', () => {
-      const { getByTestId } = render(<WelcomeScreen />);
-      const title = getByTestId('welcome-title');
-      expect(title).toBeTruthy();
-      expect(title.props.children).toBe('myLoyaltyCards');
-    });
-
-    it('renders the illustration placeholder', () => {
-      const { getByTestId } = render(<WelcomeScreen />);
-      // The illustration has importantForAccessibility="no-hide-descendants"
-      // which hides it from accessibility queries, so we verify it exists
-      // by checking the parent container renders without error
-      const screen = getByTestId('welcome-screen');
-      expect(screen).toBeTruthy();
-    });
-
-    it('renders the tagline text', () => {
-      const { getByText } = render(<WelcomeScreen />);
-      // The tagline is split across two Text children via {'\n'}
-      expect(getByText(/Your loyalty cards, always ready/)).toBeTruthy();
-    });
-
-    it('renders the "Get started" primary CTA', () => {
-      const { getByTestId } = render(<WelcomeScreen />);
-      expect(getByTestId('welcome-get-started')).toBeTruthy();
-    });
-
-    it('renders the "Skip" secondary CTA', () => {
-      const { getByTestId } = render(<WelcomeScreen />);
-      expect(getByTestId('welcome-skip')).toBeTruthy();
-    });
+    expect(getByTestId('welcome-get-started')).toBeTruthy();
+    expect(getByTestId('welcome-sign-in')).toBeTruthy();
   });
 
-  // ── AC2: CTA Behavior ──
+  it('get started goes to onboarding mode selection', () => {
+    const pushSpy = useRouter().push as jest.Mock;
+    const { getByTestId } = render(<WelcomeScreen />);
 
-  describe('AC2: CTA Behavior', () => {
-    it('"Get started" calls completeFirstLaunch and navigates to add-card', () => {
-      const { getByTestId } = render(<WelcomeScreen />);
-      fireEvent.press(getByTestId('welcome-get-started'));
-
-      expect(mockCompleteFirstLaunch).toHaveBeenCalledTimes(1);
-      expect(mockReplace).toHaveBeenCalledWith('/add-card');
-    });
-
-    it('"Skip" calls completeFirstLaunch and navigates to card list', () => {
-      const { getByTestId } = render(<WelcomeScreen />);
-      fireEvent.press(getByTestId('welcome-skip'));
-
-      expect(mockCompleteFirstLaunch).toHaveBeenCalledTimes(1);
-      expect(mockReplace).toHaveBeenCalledWith('/');
-    });
-
-    it('"Help & FAQ" navigates to help screen', () => {
-      const { getByTestId } = render(<WelcomeScreen />);
-      fireEvent.press(getByTestId('welcome-help'));
-
-      expect(mockPush).toHaveBeenCalledWith('/help');
-    });
-
-    it('"Privacy Policy" navigates to privacy-policy screen', () => {
-      const { getByTestId } = render(<WelcomeScreen />);
-      fireEvent.press(getByTestId('welcome-privacy-policy'));
-
-      expect(mockPush).toHaveBeenCalledWith('/privacy-policy');
-    });
-  });
-
-  // ── Accessibility ──
-
-  describe('Accessibility', () => {
-    it('title has header accessibility role', () => {
-      const { getByTestId } = render(<WelcomeScreen />);
-      expect(getByTestId('welcome-title').props.accessibilityRole).toBe('header');
-    });
-
-    it('"Get started" has correct accessibility label and hint', () => {
-      const { getByTestId } = render(<WelcomeScreen />);
-      const btn = getByTestId('welcome-get-started');
-      expect(btn.props.accessibilityLabel).toBe('Get started');
-      expect(btn.props.accessibilityHint).toBe('Opens first card setup');
-    });
-
-    it('"Skip" has correct accessibility label and hint', () => {
-      const { getByTestId } = render(<WelcomeScreen />);
-      const btn = getByTestId('welcome-skip');
-      expect(btn.props.accessibilityLabel).toBe('Skip onboarding');
-      expect(btn.props.accessibilityHint).toBe('Goes to your card list');
-    });
-
-    it('illustration is hidden from screen readers', () => {
-      const { UNSAFE_getByProps } = render(<WelcomeScreen />);
-      const illustration = UNSAFE_getByProps({ testID: 'welcome-illustration' });
-      expect(illustration.props.accessibilityElementsHidden).toBe(true);
-      expect(illustration.props.importantForAccessibility).toBe('no-hide-descendants');
-    });
-
-    it('screen has accessible label', () => {
-      const { getByTestId } = render(<WelcomeScreen />);
-      expect(getByTestId('welcome-screen').props.accessibilityLabel).toBe(
-        'Welcome to myLoyaltyCards'
-      );
-    });
+    fireEvent.press(getByTestId('welcome-get-started'));
+    expect(pushSpy).toHaveBeenCalledWith('/onboarding/mode-selection');
   });
 });
