@@ -1,0 +1,25 @@
+shared/components/SyncIndicator.test.tsx
+  8682beb03bb3c020 1,9-10,12-14,18-24,26-27,31-34,36-37,40,44-45,48-70,73-75,77
+shared/components/SyncIndicator.tsx
+  8682beb03bb3c020 1-21,23-24,27-28,31,33-52,54-60,62-74,78-88,90-91,94-96,99,101-103,105-130
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.2.8",
+  "base_commit_sha": "792ee3f226a9046041781c8816f2c4be5409960f",
+  "prompts": {
+    "8682beb03bb3c020": {
+      "agent_id": {
+        "tool": "github-copilot",
+        "id": "385112d1-f750-4a83-9bab-14d1b07f2eb7",
+        "model": "copilot/claude-opus-4.6"
+      },
+      "human_author": "Andrea Pacino",
+      "messages": [],
+      "total_additions": 0,
+      "total_deletions": 0,
+      "accepted_lines": 1329,
+      "overriden_lines": 0
+    }
+  }
+}
