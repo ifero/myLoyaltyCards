@@ -12,7 +12,6 @@ import { initializeDatabase } from '@/core/database';
 import { getAllCards } from '@/core/database/card-repository';
 import { subscribeToWatchMessages, syncCardToWatch, WatchMessage } from '@/core/watch-connectivity';
 
-import { OfflineIndicator } from '@/shared/components/OfflineIndicator';
 import { getSupabaseClient } from '@/shared/supabase/client';
 import { LIGHT_THEME, ThemeProvider, useTheme } from '@/shared/theme';
 
@@ -82,7 +81,7 @@ const RootLayoutContent = () => {
 
   return (
     <>
-      <OfflineIndicator />
+      {/* Offline indicator is now rendered by SyncStatusContainer in index.tsx */}
       <Stack
         screenOptions={{
           headerLeft: ({ canGoBack }: { canGoBack?: boolean }) =>
