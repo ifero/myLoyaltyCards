@@ -1,0 +1,47 @@
+shared/components/SyncStatusContainer.tsx
+  8682beb03bb3c020 65
+shared/components/ConflictResolutionModal.tsx
+  8682beb03bb3c020 16,21-54,77-79,83,174-178
+shared/components/SyncIndicator.tsx
+  8682beb03bb3c020 24,35,82-85
+shared/components/SyncErrorBanner.test.tsx
+  8682beb03bb3c020 5-6,9-12,29-36,93-110
+shared/components/OfflineIndicator.test.tsx
+  8682beb03bb3c020 3,7-10,14-18,29,36,42,47-48,54,60,66,70-79
+shared/components/SyncErrorBanner.tsx
+  8682beb03bb3c020 14,29-31,33
+shared/theme/sync-tokens.ts
+  8682beb03bb3c020 1-36
+shared/components/ConflictComparisonCard.test.tsx
+  8682beb03bb3c020 5-6,9-12,16-22,90-118
+shared/components/ConflictResolutionModal.test.tsx
+  8682beb03bb3c020 5-6,9-34,41-50,169-205
+shared/components/SyncIndicator.test.tsx
+  8682beb03bb3c020 5-6,9-22,26-34,98-115
+app/_layout.tsx
+  8682beb03bb3c020 84
+shared/components/ConflictComparisonCard.tsx
+  8682beb03bb3c020 10,13,31-33,108
+shared/components/OfflineIndicator.tsx
+  8682beb03bb3c020 8-10,17,20,24,31-33
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.2.8",
+  "base_commit_sha": "76713fe04ed8ace315da374b406b4fb1e8cc8fab",
+  "prompts": {
+    "8682beb03bb3c020": {
+      "agent_id": {
+        "tool": "github-copilot",
+        "id": "385112d1-f750-4a83-9bab-14d1b07f2eb7",
+        "model": "copilot/claude-opus-4.6"
+      },
+      "human_author": "Andrea Pacino",
+      "messages": [],
+      "total_additions": 473,
+      "total_deletions": 264,
+      "accepted_lines": 332,
+      "overriden_lines": 0
+    }
+  }
+}
