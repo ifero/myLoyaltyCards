@@ -11,7 +11,6 @@
  * Works offline - deletion is local-only for MVP.
  */
 
-import burnt from 'burnt';
 import * as Haptics from 'expo-haptics';
 import { router } from 'expo-router';
 import { useCallback, useState } from 'react';
@@ -20,6 +19,7 @@ import { deleteCard as deleteCardFromDb } from '@/core/database';
 import { addPendingDeletion, markDirty } from '@/core/sync';
 
 import { useAuthState } from '@/shared/supabase/useAuthState';
+import { showToast } from '@/shared/toast';
 
 export interface UseDeleteCardReturn {
   /** Async function to delete the card */
@@ -77,7 +77,7 @@ export function useDeleteCard(cardId: string): UseDeleteCardReturn {
       await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
 
       // Success feedback - toast
-      burnt.toast({
+      await showToast({
         title: 'Card deleted',
         preset: 'done',
         haptic: 'success',
@@ -94,7 +94,7 @@ export function useDeleteCard(cardId: string): UseDeleteCardReturn {
       setError(errorMessage);
 
       // Error feedback - toast
-      burnt.toast({
+      await showToast({
         title: 'Failed to delete card',
         preset: 'error',
         haptic: 'error',

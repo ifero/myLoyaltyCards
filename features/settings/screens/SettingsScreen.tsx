@@ -1,4 +1,3 @@
-import Burnt from 'burnt';
 import Constants from 'expo-constants';
 import { useRouter } from 'expo-router';
 import { useEffect, useMemo, useState } from 'react';
@@ -11,6 +10,7 @@ import { clearLastSyncAt } from '@/core/sync/sync-timestamp';
 import { deleteAccount, getSession, signOut } from '@/shared/supabase/auth';
 import { useAuthState } from '@/shared/supabase/useAuthState';
 import { useTheme } from '@/shared/theme';
+import { showToast } from '@/shared/toast';
 
 import { AboutSection } from '../components/AboutSection';
 import { AccountSection } from '../components/AccountSection';
@@ -19,12 +19,14 @@ import { DataManagementSection } from '../components/DataManagementSection';
 import { DeleteAccountSheet } from '../components/DeleteAccountSheet';
 import { ExportConfirmationSheet } from '../components/ExportConfirmationSheet';
 import { ExportEmptyStateSheet } from '../components/ExportEmptyStateSheet';
-import { ImportPlaceholderSheet } from '../components/ImportPlaceholderSheet';
+import { ImportErrorSheet } from '../components/ImportErrorSheet';
+import { ImportPreviewSheet } from '../components/ImportPreviewSheet';
 import { LanguagePickerSheet } from '../components/LanguagePickerSheet';
 import { PreferencesSection } from '../components/PreferencesSection';
 import { SignOutSheet } from '../components/SignOutSheet';
 import { ThemePickerSheet } from '../components/ThemePickerSheet';
 import { useExportData } from '../hooks/useExportData';
+import { useImportData } from '../hooks/useImportData';
 import { useLanguagePreference } from '../hooks/useLanguagePreference';
 import { useSyncTrigger } from '../hooks/useSyncTrigger';
 import { useThemePreference } from '../hooks/useThemePreference';
@@ -38,7 +40,6 @@ const SettingsScreen = () => {
   const [email, setEmail] = useState('');
   const [isSignOutSheetOpen, setIsSignOutSheetOpen] = useState(false);
   const [isDeleteSheetOpen, setIsDeleteSheetOpen] = useState(false);
-  const [isImportSheetOpen, setIsImportSheetOpen] = useState(false);
   const [isExportConfirmOpen, setIsExportConfirmOpen] = useState(false);
   const [isExportEmptyOpen, setIsExportEmptyOpen] = useState(false);
 
@@ -67,8 +68,28 @@ const SettingsScreen = () => {
     selectLanguage
   } = useLanguagePreference();
 
-  const { cardCount, hasCards, isExporting, exportError, exportCards } = useExportData();
+  const { cardCount, hasCards, isExporting, exportError, exportCards, refreshCardCount } =
+    useExportData();
   const { isSyncing, syncLabel, triggerSync } = useSyncTrigger();
+
+  const refreshAfterImport = async () => {
+    await refreshCardCount();
+  };
+
+  const {
+    preview,
+    errorState,
+    isPreparing,
+    isImporting,
+    pickImportFile,
+    confirmImport,
+    closePreview,
+    closeError
+  } = useImportData({
+    isAuthenticated,
+    onImportSuccess: refreshAfterImport,
+    onSyncRequested: triggerSync
+  });
 
   useEffect(() => {
     const loadEmail = async () => {
@@ -152,7 +173,7 @@ const SettingsScreen = () => {
       }
 
       setIsDeleteSheetOpen(false);
-      Burnt.toast({ title: 'Account deleted', preset: 'done' });
+      await showToast({ title: 'Account deleted', preset: 'done' });
       router.replace('/');
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Unable to delete account';
@@ -197,9 +218,9 @@ const SettingsScreen = () => {
         <DataManagementSection
           isAuthenticated={isAuthenticated}
           syncLabel={syncLabel}
-          isSyncing={isSyncing}
+          isSyncing={isSyncing || isPreparing}
           onExportPress={openExport}
-          onImportPress={() => setIsImportSheetOpen(true)}
+          onImportPress={pickImportFile}
           onSyncPress={triggerSync}
         />
 
@@ -242,9 +263,24 @@ const SettingsScreen = () => {
         onClose={() => setIsExportEmptyOpen(false)}
       />
 
-      <ImportPlaceholderSheet
-        visible={isImportSheetOpen}
-        onClose={() => setIsImportSheetOpen(false)}
+      <ImportPreviewSheet
+        visible={preview !== null}
+        fileName={preview?.fileName ?? ''}
+        totalCards={preview?.totalCards ?? 0}
+        newCardsCount={preview?.newCardsCount ?? 0}
+        duplicateCount={preview?.duplicateCount ?? 0}
+        invalidCount={preview?.invalidCount ?? 0}
+        isImporting={isImporting}
+        onImport={confirmImport}
+        onClose={closePreview}
+      />
+
+      <ImportErrorSheet
+        visible={errorState !== null}
+        title={errorState?.title ?? 'Invalid File'}
+        message={errorState?.message ?? ''}
+        variant={errorState?.title === 'No Card Data' ? 'empty' : 'invalid'}
+        onClose={closeError}
       />
 
       <SignOutSheet

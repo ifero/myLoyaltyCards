@@ -35,7 +35,7 @@
 # - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
 
 generated: 2026-01-03
-updated: 2026-04-05
+updated: 2026-04-09
 project: myLoyaltyCards
 tracking_system: file-system
 story_location: docs/sprint-artifacts
@@ -327,8 +327,8 @@ development_status:
   13-4-restyle-add-card-flow: done # implementation complete, QA + dev review approved 2026-04-05
   13-5-restyle-auth-screens: done # implementation complete, QA + dev review approved; awaiting stakeholder approval before push
   13-6-implement-settings-screen: done # implementation complete, QA approved, dev review loop in progress
-  13-7-restyle-onboarding: review # maps to 12-7
-  13-7a-import-data-from-json: ready-for-dev # depends on 13-6 — Wave 3b
+  13-7-restyle-onboarding: done # maps to 12-7
+  13-7a-import-data-from-json: review # implementation complete locally; QA + dev review approved, awaiting stakeholder approval
   13-8-restyle-sync-indicators: ready-for-dev # maps to 12-8
   13-9-update-apple-watch-ui: ready-for-dev # maps to 12-9
   epic-13-retrospective: optional

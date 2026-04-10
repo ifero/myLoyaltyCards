@@ -1,26 +1,12 @@
-import Burnt from 'burnt';
 import Constants from 'expo-constants';
 import { File, Paths } from 'expo-file-system';
 import * as Sharing from 'expo-sharing';
 import { useEffect, useState } from 'react';
 
 import { getAllCards, getCardCount } from '@/core/database/card-repository';
+import { createExportPayload } from '@/core/settings/importCards';
 
-import type { ExportCardRecord, ExportPayload } from '../types';
-
-const EXPORT_VERSION = '1.0';
-
-const toExportCards = async (): Promise<ExportCardRecord[]> => {
-  const cards = await getAllCards();
-
-  return cards.map((card) => ({
-    storeName: card.name,
-    cardNumber: card.barcode,
-    barcodeFormat: card.barcodeFormat,
-    color: card.color,
-    createdAt: card.createdAt
-  }));
-};
+import { showToast } from '@/shared/toast';
 
 export const useExportData = () => {
   const [cardCount, setCardCount] = useState(0);
@@ -41,31 +27,35 @@ export const useExportData = () => {
     setExportError(null);
 
     try {
-      const cards = await toExportCards();
-      const payload: ExportPayload = {
-        version: EXPORT_VERSION,
-        appVersion: Constants.expoConfig?.version ?? '1.0.0',
-        exportDate: new Date().toISOString(),
-        cardCount: cards.length,
-        cards
-      };
+      const cards = await getAllCards();
+      const payload = createExportPayload(cards, Constants.expoConfig?.version ?? '1.0.0');
 
-      const file = new File(Paths.cache, `myloyaltycards-export-${Date.now()}.json`);
-      file.create();
+      const file = new File(Paths.document, `myloyaltycards-export-${Date.now()}.json`);
+      file.create({ overwrite: true });
       file.write(JSON.stringify(payload, null, 2));
 
-      const canShare = await Sharing.isAvailableAsync();
-      if (!canShare) {
-        throw new Error('Sharing is not available on this device');
+      let shareFailed = false;
+
+      try {
+        const canShare = await Sharing.isAvailableAsync();
+        if (!canShare) {
+          shareFailed = true;
+        } else {
+          await Sharing.shareAsync(file.uri, {
+            mimeType: 'application/json',
+            dialogTitle: 'Export cards'
+          });
+        }
+      } catch (error) {
+        shareFailed = true;
+        console.warn('[useExportData] Sharing failed, keeping exported file locally', error);
       }
 
-      await Sharing.shareAsync(file.uri, {
-        mimeType: 'application/json',
-        dialogTitle: 'Export cards'
-      });
-
-      Burnt.toast({
+      await showToast({
         title: 'Export complete',
+        message: shareFailed
+          ? 'Backup saved locally in Files. Sharing is unavailable in this environment.'
+          : undefined,
         preset: 'done'
       });
 
@@ -74,7 +64,7 @@ export const useExportData = () => {
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Export failed';
       setExportError(message);
-      Burnt.toast({
+      await showToast({
         title: 'Export failed',
         message,
         preset: 'error'

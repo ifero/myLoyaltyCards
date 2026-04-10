@@ -41,5 +41,50 @@
     "answer": "Use Help & FAQ to reach the support options.",
     "steps": ["Open Help & FAQ", "Tap Contact Support or Submit Feedback"],
     "tags": ["support", "feedback"]
+  },
+  {
+    "id": "6",
+    "question": "How do I import a backup JSON file?",
+    "answer": "Open Settings > Data > Import Data and select a JSON file previously exported by MyLoyaltyCards.",
+    "steps": [
+      "Open Settings",
+      "In Data, tap Import Data",
+      "Choose your exported JSON backup",
+      "Review the preview and confirm Import"
+    ],
+    "tags": ["import", "backup", "json", "settings"]
+  },
+  {
+    "id": "7",
+    "question": "What JSON structure does import expect?",
+    "answer": "The file must be a MyLoyaltyCards export payload with metadata fields and a cards array. Each card should include the same fields used by the app for restore, such as id, name, barcode, barcodeFormat, brandId, color, favorites, usage counters, and timestamps.",
+    "steps": [
+      "Use Export Data from Settings to generate a valid backup",
+      "Do not rename or remove payload fields manually",
+      "Keep cardCount aligned with the number of items in cards"
+    ],
+    "tags": ["import", "export", "json", "schema", "restore"]
+  },
+  {
+    "id": "8",
+    "question": "Why does my JSON import fail?",
+    "answer": "Import fails when the file is corrupted, malformed, or no longer matches the exported payload structure. The app checks JSON integrity before writing anything to the database.",
+    "steps": [
+      "Make sure the file opens as valid JSON",
+      "Confirm it was exported by MyLoyaltyCards",
+      "If you edited the file manually, export a fresh backup and try again"
+    ],
+    "tags": ["import", "json", "troubleshooting", "corrupt"]
+  },
+  {
+    "id": "9",
+    "question": "What happens to duplicates or invalid entries during import?",
+    "answer": "Cards already present with the same barcode and programme/brand are skipped. If some entries are invalid but the file is otherwise valid, the app imports the valid cards and reports how many invalid entries were skipped.",
+    "steps": [
+      "Review the import preview counts",
+      "Confirm Import to add only new valid cards",
+      "Check the completion message for duplicates and invalid entries skipped"
+    ],
+    "tags": ["import", "duplicates", "validation", "json"]
   }
 ]

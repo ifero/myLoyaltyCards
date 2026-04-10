@@ -1,6 +1,6 @@
 # Story 13.7a: Import Data from JSON
 
-Status: ready-for-dev
+Status: review
 
 ## Story
 
@@ -20,89 +20,89 @@ Export Data (JSON) is implemented in story 13-6. Export without Import is a one-
 
 ### AC1: Import Entry Point
 
-- [ ] "Import Data" ActionRow in Settings Data Management section (MI: file-upload icon)
-- [ ] Tapping opens system file picker via `DocumentPicker.getDocumentAsync()` from expo-document-picker
-- [ ] File picker filters for JSON files (`.json` mime type)
-- [ ] Works in both light and dark mode
+- [x] "Import Data" ActionRow in Settings Data Management section (MI: file-upload icon)
+- [x] Tapping opens system file picker via `DocumentPicker.getDocumentAsync()` from expo-document-picker
+- [x] File picker filters for JSON files (`.json` mime type)
+- [x] Works in both light and dark mode
 
 ### AC2: Import Preview & Confirmation
 
-- [ ] Valid JSON selected → preview bottom sheet appears
-- [ ] Shows: file name, number of cards found, duplicate handling note ("X cards will be added. Duplicates will be skipped.")
-- [ ] Two CTAs: "Cancel" (secondary outlined), "Import" (primary filled)
-- [ ] Light + dark mode bottom sheet styling matching 13-6 bottom sheet patterns
+- [x] Valid JSON selected → preview bottom sheet appears
+- [x] Shows: file name, number of cards found, duplicate handling note ("X cards will be added. Duplicates will be skipped.")
+- [x] Two CTAs: "Cancel" (secondary outlined), "Import" (primary filled)
+- [x] Light + dark mode bottom sheet styling matching 13-6 bottom sheet patterns
 
 ### AC3: Successful Import
 
-- [ ] Cards from file added to local SQLite database via transaction
-- [ ] Duplicates skipped (matched by barcode value + programme/brandId combination)
-- [ ] Success confirmation: "X cards imported successfully" (toast or bottom sheet update)
-- [ ] Imported cards appear in card list immediately
-- [ ] If user is signed in, triggers cloud sync for newly imported cards
+- [x] Cards from file added to local SQLite database via transaction
+- [x] Duplicates skipped (matched by barcode value + programme/brandId combination)
+- [x] Success confirmation: "X cards imported successfully" (toast or bottom sheet update)
+- [x] Imported cards appear in card list immediately
+- [x] If user is signed in, triggers cloud sync for newly imported cards
 
 ### AC4: Invalid File Handling
 
-- [ ] Non-JSON file or malformed JSON → error state in bottom sheet
-- [ ] Error icon (MI: error-outline) in amber/warning color
-- [ ] Message: "This file doesn't contain valid card data. Please select a different file."
-- [ ] Single "OK" button to dismiss
-- [ ] No data modified on error
+- [x] Non-JSON file or malformed JSON → error state in bottom sheet
+- [x] Error icon (MI: error-outline) in amber/warning color
+- [x] Message: "This file doesn't contain valid card data. Please select a different file."
+- [x] Single "OK" button to dismiss
+- [x] No data modified on error
 
 ### AC5: Empty File Handling
 
-- [ ] Valid JSON with zero cards → message: "This file contains no card data."
-- [ ] Single "OK" button to dismiss
-- [ ] No data modified
+- [x] Valid JSON with zero cards → message: "This file contains no card data."
+- [x] Single "OK" button to dismiss
+- [x] No data modified
 
 ### AC6: Schema Validation
 
-- [ ] JSON must match the Export format from 13-6 (cards array with required fields)
-- [ ] Validate using Zod schema (reuse or extend `loyaltyCardSchema` from `core/schemas/card.ts`)
-- [ ] Partial import: if some cards valid and some invalid, import valid ones and report count of skipped invalid entries
+- [x] JSON must match the Export format from 13-6 (cards array with required fields)
+- [x] Validate using Zod schema (reuse or extend `loyaltyCardSchema` from `core/schemas/card.ts`)
+- [x] Partial import: if some cards valid and some invalid, import valid ones and report count of skipped invalid entries
 
 ### AC7: All Tests Pass
 
-- [ ] Unit tests for JSON parsing, validation, duplicate detection, import logic
-- [ ] Component tests for bottom sheet states (preview, error, empty, success)
-- [ ] All existing tests still pass
-- [ ] 80% coverage threshold maintained
+- [x] Unit tests for JSON parsing, validation, duplicate detection, import logic
+- [x] Component tests for bottom sheet states (preview, error, empty, success)
+- [x] All existing tests still pass
+- [x] 80% coverage threshold maintained
 
 ## Tasks / Subtasks
 
-- [ ] **Task 1: Install expo-document-picker** (AC: 1)
-  - [ ] Add `expo-document-picker` dependency
-  - [ ] Verify Expo config plugin setup if needed
+- [x] **Task 1: Install expo-document-picker** (AC: 1)
+  - [x] Add `expo-document-picker` dependency
+  - [x] Verify Expo config plugin setup if needed
 
-- [ ] **Task 2: Create import service** (AC: 3, 4, 5, 6)
-  - [ ] Create `core/settings/importCards.ts` (or extend existing settings module)
-  - [ ] Implement JSON parsing and Zod validation
-  - [ ] Implement duplicate detection logic (barcode + brandId match)
-  - [ ] Implement database insert via transaction
-  - [ ] Implement sync trigger for signed-in users
-  - [ ] Create `core/settings/importCards.test.ts`
+- [x] **Task 2: Create import service** (AC: 3, 4, 5, 6)
+  - [x] Create `core/settings/importCards.ts` (or extend existing settings module)
+  - [x] Implement JSON parsing and Zod validation
+  - [x] Implement duplicate detection logic (barcode + brandId match)
+  - [x] Implement database insert via transaction
+  - [x] Implement sync trigger for signed-in users
+  - [x] Create `core/settings/importCards.test.ts`
 
-- [ ] **Task 3: Create ImportPreviewSheet component** (AC: 2)
-  - [ ] Create `features/settings/components/ImportPreviewSheet.tsx`
-  - [ ] Display file name, card count, duplicate note
-  - [ ] Cancel and Import CTAs
-  - [ ] Reuse bottom sheet pattern from 13-6 (export/sign-out sheets)
-  - [ ] Create test file
+- [x] **Task 3: Create ImportPreviewSheet component** (AC: 2)
+  - [x] Create `features/settings/components/ImportPreviewSheet.tsx`
+  - [x] Display file name, card count, duplicate note
+  - [x] Cancel and Import CTAs
+  - [x] Reuse bottom sheet pattern from 13-6 (export/sign-out sheets)
+  - [x] Create test file
 
-- [ ] **Task 4: Create ImportErrorSheet component** (AC: 4, 5)
-  - [ ] Create `features/settings/components/ImportErrorSheet.tsx`
-  - [ ] Error state: MI: error-outline icon, error message, OK button
-  - [ ] Empty state: informational message, OK button
-  - [ ] Create test file
+- [x] **Task 4: Create ImportErrorSheet component** (AC: 4, 5)
+  - [x] Create `features/settings/components/ImportErrorSheet.tsx`
+  - [x] Error state: MI: error-outline icon, error message, OK button
+  - [x] Empty state: informational message, OK button
+  - [x] Create test file
 
-- [ ] **Task 5: Wire import flow into settings screen** (AC: 1)
-  - [ ] Add Import ActionRow to Data Management section (already scaffolded in 13-6)
-  - [ ] Wire document picker trigger
-  - [ ] Connect preview/error sheets to picker result
+- [x] **Task 5: Wire import flow into settings screen** (AC: 1)
+  - [x] Add Import ActionRow to Data Management section (already scaffolded in 13-6)
+  - [x] Wire document picker trigger
+  - [x] Connect preview/error sheets to picker result
 
-- [ ] **Task 6: Run full test suite** (AC: 7)
-  - [ ] All new tests pass
-  - [ ] All existing tests pass
-  - [ ] Coverage threshold met
+- [x] **Task 6: Run full test suite** (AC: 7)
+  - [x] All new tests pass
+  - [x] All existing tests pass
+  - [x] Coverage threshold met
 
 ## Dev Notes
 
@@ -184,8 +184,40 @@ Match on `barcode` + `brandId` combination. If both match an existing card, skip
 
 ### Agent Model Used
 
+GPT-5.4
+
 ### Debug Log References
+
+- Installed `expo-document-picker` via `npx expo install expo-document-picker`
+- `runTests` targeted: 28 passed, 0 failed
+- `runTests` full suite: 1224 passed, 0 failed
+- `yarn lint`: passed
+- `yarn typecheck`: passed
 
 ### Completion Notes List
 
+- Replaced the placeholder import sheet with a full JSON import flow using Expo Document Picker and `expo-file-system` `File.text()`.
+- Added `core/settings/importCards.ts` as the shared import/export payload authority, including integrity checks (`cardCount` vs `cards.length`), Zod validation, duplicate detection, partial-import reporting, and DB persistence.
+- Fixed the export payload to become round-trip safe by exporting full loyalty card records instead of the previous reduced shape.
+- Added new preview and error bottom sheets aligned to the Figma import states and reused the existing settings bottom-sheet/button patterns.
+- Added Help & FAQ entries documenting the JSON structure, corruption failure mode, and duplicate/invalid-entry behavior.
+
 ### File List
+
+- package.json
+- yarn.lock
+- core/settings/importCards.ts
+- core/settings/importCards.test.ts
+- features/settings/hooks/useExportData.ts
+- features/settings/hooks/useExportData.test.ts
+- features/settings/hooks/useImportData.ts
+- features/settings/components/ImportPreviewSheet.tsx
+- features/settings/components/ImportPreviewSheet.test.tsx
+- features/settings/components/ImportErrorSheet.tsx
+- features/settings/components/ImportErrorSheet.test.tsx
+- features/settings/components/ImportPlaceholderSheet.tsx (deleted)
+- features/settings/components/ImportPlaceholderSheet.test.tsx (deleted)
+- features/settings/screens/SettingsScreen.tsx
+- features/settings/screens/SettingsScreen.test.tsx
+- features/help/help-data.json
+- docs/help.json

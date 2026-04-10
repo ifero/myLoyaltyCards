@@ -14,6 +14,7 @@ const mockClearLastSyncAt = jest.fn();
 const mockUseThemePreference = jest.fn();
 const mockUseLanguagePreference = jest.fn();
 const mockUseExportData = jest.fn();
+const mockUseImportData = jest.fn();
 const mockUseSyncTrigger = jest.fn();
 
 jest.mock('expo-router', () => ({
@@ -78,6 +79,10 @@ jest.mock('../hooks/useExportData', () => ({
   useExportData: () => mockUseExportData()
 }));
 
+jest.mock('../hooks/useImportData', () => ({
+  useImportData: () => mockUseImportData()
+}));
+
 jest.mock('../hooks/useSyncTrigger', () => ({
   useSyncTrigger: () => mockUseSyncTrigger()
 }));
@@ -110,7 +115,19 @@ describe('SettingsScreen', () => {
       hasCards: true,
       isExporting: false,
       exportError: null,
+      refreshCardCount: jest.fn().mockResolvedValue(undefined),
       exportCards: jest.fn().mockResolvedValue(true)
+    });
+
+    mockUseImportData.mockReturnValue({
+      preview: null,
+      errorState: null,
+      isPreparing: false,
+      isImporting: false,
+      pickImportFile: jest.fn(),
+      confirmImport: jest.fn(),
+      closePreview: jest.fn(),
+      closeError: jest.fn()
     });
 
     mockUseSyncTrigger.mockReturnValue({
@@ -156,6 +173,56 @@ describe('SettingsScreen', () => {
     fireEvent.press(getByTestId('settings-create-account-button'));
 
     expect(mockPush).toHaveBeenCalledWith('/create-account');
+  });
+
+  it('starts the import flow from the import action row', () => {
+    const pickImportFile = jest.fn();
+    mockUseAuthState.mockReturnValue({ isAuthenticated: false, authState: 'guest' });
+    mockUseImportData.mockReturnValue({
+      preview: null,
+      errorState: null,
+      isPreparing: false,
+      isImporting: false,
+      pickImportFile,
+      confirmImport: jest.fn(),
+      closePreview: jest.fn(),
+      closeError: jest.fn()
+    });
+
+    const { getByTestId } = render(<SettingsScreen />);
+
+    fireEvent.press(getByTestId('settings-import-row'));
+
+    expect(pickImportFile).toHaveBeenCalled();
+  });
+
+  it('renders import sheets from hook state', () => {
+    mockUseAuthState.mockReturnValue({ isAuthenticated: false, authState: 'guest' });
+    mockUseImportData.mockReturnValue({
+      preview: {
+        fileName: 'my-cards-backup.json',
+        totalCards: 8,
+        newCardsCount: 5,
+        duplicateCount: 3,
+        invalidCount: 1,
+        importableCards: []
+      },
+      errorState: {
+        title: 'Invalid File',
+        message: "This file doesn't contain valid card data. Please select a different file."
+      },
+      isPreparing: false,
+      isImporting: false,
+      pickImportFile: jest.fn(),
+      confirmImport: jest.fn(),
+      closePreview: jest.fn(),
+      closeError: jest.fn()
+    });
+
+    const { getByText } = render(<SettingsScreen />);
+
+    expect(getByText('Import Cards')).toBeTruthy();
+    expect(getByText('Invalid File')).toBeTruthy();
   });
 
   it('opens sign out sheet and signs out', async () => {

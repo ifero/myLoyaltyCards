@@ -10,7 +10,6 @@
  */
 
 import { MaterialIcons } from '@expo/vector-icons';
-import burnt from 'burnt';
 import { useLocalSearchParams, Stack, useFocusEffect, useRouter } from 'expo-router';
 import React, { useState, useCallback } from 'react';
 import { View, Text, ActivityIndicator, Pressable } from 'react-native';
@@ -21,6 +20,7 @@ import { LoyaltyCard } from '@/core/schemas';
 import { useTheme } from '@/shared/theme';
 import { getContrastForeground } from '@/shared/theme/luminance';
 import { SPACING } from '@/shared/theme/spacing';
+import { showToast } from '@/shared/toast';
 
 import { CardDetails, useDeleteCard, useBrandLogo } from '@/features/cards';
 
@@ -83,7 +83,7 @@ const CardDetailsScreen = () => {
    * Show toast notification when barcode is copied
    */
   const handleCopy = useCallback(() => {
-    burnt.toast({
+    void showToast({
       title: 'Copied to clipboard ✓',
       preset: 'done',
       haptic: 'success',

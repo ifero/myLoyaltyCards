@@ -5,7 +5,6 @@
  * Hook for adding a new loyalty card with haptic feedback and toast.
  */
 
-import * as Burnt from 'burnt';
 import * as Haptics from 'expo-haptics';
 import { router } from 'expo-router';
 import { useCallback, useState } from 'react';
@@ -16,6 +15,7 @@ import { LoyaltyCard, BarcodeFormat, CardColor } from '@/core/schemas';
 import { markDirty } from '@/core/sync';
 
 import { useAuthState } from '@/shared/supabase/useAuthState';
+import { showToast } from '@/shared/toast';
 
 /**
  * Input type for adding a card (subset of LoyaltyCard)
@@ -81,7 +81,7 @@ export function useAddCard(): UseAddCardReturn {
 
         // Success feedback per AC7
         await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-        Burnt.toast({
+        await showToast({
           title: 'Card added',
           preset: 'done'
         });
@@ -99,7 +99,7 @@ export function useAddCard(): UseAddCardReturn {
 
         // Error feedback
         await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
-        Burnt.toast({
+        await showToast({
           title: 'Error',
           message,
           preset: 'error'
