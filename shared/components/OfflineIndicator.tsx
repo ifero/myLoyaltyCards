@@ -41,7 +41,7 @@ export const OfflineIndicator = ({ isOffline, pendingChangeCount }: OfflineIndic
     <Animated.View entering={FadeIn.duration(300)} exiting={FadeOut.duration(200)}>
       <View
         testID="offline-indicator"
-        accessibilityRole="status"
+        accessibilityRole="summary"
         accessibilityLabel={message}
         className="mx-4 mt-2 flex-row items-center rounded-xl px-3 py-2"
         style={{ backgroundColor }}

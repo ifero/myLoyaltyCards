@@ -50,10 +50,10 @@ describe('OfflineIndicator', () => {
     expect(screen.queryByTestId('offline-indicator')).toBeNull();
   });
 
-  it('has status accessibility role (not alert)', () => {
+  it('has summary accessibility role (not alert)', () => {
     render(<OfflineIndicator isOffline pendingChangeCount={3} />);
 
-    expect(screen.getByTestId('offline-indicator').props.accessibilityRole).toBe('status');
+    expect(screen.getByTestId('offline-indicator').props.accessibilityRole).toBe('summary');
   });
 
   it('displays cloud-off icon', () => {
