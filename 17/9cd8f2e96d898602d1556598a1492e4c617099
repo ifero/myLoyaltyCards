@@ -1,0 +1,27 @@
+docs/sprint-artifacts/stories/13-8-restyle-sync-indicators.md
+  8682beb03bb3c020 27-36,40-47,51-60,64-73,77-80,84,88-92,96-100,104-108,112-118,122-128,134-140,144-151,155-163,167-175,179,181-182,187-193,197,201-204,208-212,216-217,223-225,229,234,239,245,251,260,264
+docs/sprint-artifacts/sprint-status.yaml
+  8682beb03bb3c020 332
+jest.setup.js
+  8682beb03bb3c020 274-275
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.2.8",
+  "base_commit_sha": "179cd8f2e96d898602d1556598a1492e4c617099",
+  "prompts": {
+    "8682beb03bb3c020": {
+      "agent_id": {
+        "tool": "github-copilot",
+        "id": "385112d1-f750-4a83-9bab-14d1b07f2eb7",
+        "model": "copilot/claude-opus-4.6"
+      },
+      "human_author": "Andrea Pacino",
+      "messages": [],
+      "total_additions": 0,
+      "total_deletions": 0,
+      "accepted_lines": 140,
+      "overriden_lines": 0
+    }
+  }
+}
