@@ -1,0 +1,27 @@
+shared/components/SyncErrorBanner.test.tsx
+  8682beb03bb3c020 68,71-80
+jest.setup.js
+  8682beb03bb3c020 279-280
+shared/components/SyncErrorBanner.tsx
+  8682beb03bb3c020 66,71,73,90
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.2.8",
+  "base_commit_sha": "a05e61c8bbc3aea0db1eac95c9590e57fa259b7c",
+  "prompts": {
+    "8682beb03bb3c020": {
+      "agent_id": {
+        "tool": "github-copilot",
+        "id": "385112d1-f750-4a83-9bab-14d1b07f2eb7",
+        "model": "copilot/claude-opus-4.6"
+      },
+      "human_author": "Andrea Pacino",
+      "messages": [],
+      "total_additions": 19,
+      "total_deletions": 5,
+      "accepted_lines": 17,
+      "overriden_lines": 0
+    }
+  }
+}
