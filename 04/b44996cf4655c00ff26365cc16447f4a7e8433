@@ -1,0 +1,25 @@
+shared/components/OfflineIndicator.test.tsx
+  8682beb03bb3c020 53,56
+shared/components/OfflineIndicator.tsx
+  8682beb03bb3c020 44
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.2.8",
+  "base_commit_sha": "04b44996cf4655c00ff26365cc16447f4a7e8433",
+  "prompts": {
+    "8682beb03bb3c020": {
+      "agent_id": {
+        "tool": "github-copilot",
+        "id": "385112d1-f750-4a83-9bab-14d1b07f2eb7",
+        "model": "copilot/claude-opus-4.6"
+      },
+      "human_author": "Andrea Pacino",
+      "messages": [],
+      "total_additions": 6,
+      "total_deletions": 6,
+      "accepted_lines": 3,
+      "overriden_lines": 0
+    }
+  }
+}
