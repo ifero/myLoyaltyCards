@@ -82,7 +82,8 @@ const RootLayoutContent = () => {
 
   return (
     <>
-      <OfflineIndicator />
+      {/* pendingChangeCount will be sourced from SyncStatusContainer in T6 */}
+      <OfflineIndicator pendingChangeCount={0} />
       <Stack
         screenOptions={{
           headerLeft: ({ canGoBack }: { canGoBack?: boolean }) =>
