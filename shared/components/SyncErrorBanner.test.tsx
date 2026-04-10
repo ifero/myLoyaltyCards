@@ -65,11 +65,19 @@ describe('SyncErrorBanner', () => {
     expect(screen.getByTestId('sync-error-banner').props.accessibilityRole).toBe('alert');
   });
 
-  it('retry button has correct accessibility label', () => {
+  it('retry button has correct accessibility label and hint', () => {
     render(<SyncErrorBanner message="Error" onRetry={jest.fn()} onDismiss={jest.fn()} />);
 
-    expect(screen.getByTestId('sync-error-retry-button').props.accessibilityLabel).toBe(
-      'Retry cloud sync'
+    const retryBtn = screen.getByTestId('sync-error-retry-button');
+    expect(retryBtn.props.accessibilityLabel).toBe('Retry cloud sync');
+    expect(retryBtn.props.accessibilityHint).toBe('Attempts to sync your cards to the cloud again');
+  });
+
+  it('dismiss button has correct accessibility hint', () => {
+    render(<SyncErrorBanner message="Error" onRetry={jest.fn()} onDismiss={jest.fn()} />);
+
+    expect(screen.getByTestId('sync-error-dismiss-button').props.accessibilityHint).toBe(
+      'Hides the error message'
     );
   });
 });

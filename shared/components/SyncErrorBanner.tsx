@@ -63,12 +63,14 @@ export const SyncErrorBanner = ({ message, onRetry, onDismiss }: SyncErrorBanner
           testID="sync-error-retry-button"
           onPress={onRetry}
           accessibilityLabel="Retry cloud sync"
+          accessibilityHint="Attempts to sync your cards to the cloud again"
           accessibilityRole="button"
           className="ml-2 items-center justify-center rounded-lg px-3 py-1"
           style={{
             backgroundColor: errorAccent,
-            minHeight: TOUCH_TARGET.min / 1.5
+            minHeight: TOUCH_TARGET.min
           }}
+          hitSlop={8}
         >
           <Text
             style={{
@@ -85,6 +87,7 @@ export const SyncErrorBanner = ({ message, onRetry, onDismiss }: SyncErrorBanner
           testID="sync-error-dismiss-button"
           onPress={onDismiss}
           accessibilityLabel="Dismiss sync error"
+          accessibilityHint="Hides the error message"
           accessibilityRole="button"
           className="ml-2 items-center justify-center"
           style={{ minWidth: TOUCH_TARGET.min, minHeight: TOUCH_TARGET.min }}

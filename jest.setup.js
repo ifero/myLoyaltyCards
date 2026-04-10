@@ -276,7 +276,8 @@ jest.mock('react-native-reanimated', () => {
     runOnJS: (fn) => fn,
     Easing: {
       inOut: (fn) => fn,
-      ease: 'ease'
+      ease: 'ease',
+      linear: (v) => v
     }
   };
 });
