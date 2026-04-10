@@ -7,9 +7,10 @@
  * Uses CardShell-like container styling with semantic tokens.
  */
 import { MaterialIcons } from '@expo/vector-icons';
-import { Text, View } from 'react-native';
+import { Platform, Text, View } from 'react-native';
 
 import { useTheme } from '@/shared/theme';
+import { SYNC_TOKENS } from '@/shared/theme/sync-tokens';
 import type { ConflictCardData } from '@/shared/types/sync-ui';
 
 type ConflictComparisonCardProps = {
@@ -27,8 +28,9 @@ export const ConflictComparisonCard = ({
 }: ConflictComparisonCardProps) => {
   const { theme, isDark } = useTheme();
 
-  const cardBg = isDark ? '#2C2C2E' : '#F5F5F7';
-  const accentColor = isDark ? '#FF453A' : '#FF5B30';
+  const mode = isDark ? 'dark' : 'light';
+  const cardBg = SYNC_TOKENS.conflictCardBg[mode];
+  const accentColor = SYNC_TOKENS.conflictAccent[mode];
   const labelColor = theme.textSecondary;
   const valueColor = theme.textPrimary;
 
@@ -103,7 +105,7 @@ export const ConflictComparisonCard = ({
             color: isChangedField('barcodeTail') ? accentColor : valueColor,
             fontSize: 12,
             fontWeight: isChangedField('barcodeTail') ? '700' : '500',
-            fontFamily: 'monospace'
+            fontFamily: Platform.select({ ios: 'Courier', default: 'monospace' })
           }}
         >
           •••{data.barcodeTail}

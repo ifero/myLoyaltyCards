@@ -13,9 +13,44 @@ import { Modal, Pressable, ScrollView, Text, View } from 'react-native';
 import { Button } from '@/shared/components/ui/Button';
 import { useTheme } from '@/shared/theme';
 import { TOUCH_TARGET } from '@/shared/theme/spacing';
+import { SYNC_TOKENS } from '@/shared/theme/sync-tokens';
 import type { ConflictCardData } from '@/shared/types/sync-ui';
 
 import { ConflictComparisonCard } from './ConflictComparisonCard';
+
+/** Custom "Keep both" button — avoids nesting <Text> inside Button's own <Text> */
+const KeepBothButton = ({
+  testID,
+  onPress,
+  tintColor
+}: {
+  testID: string;
+  onPress: () => void;
+  tintColor: string;
+}) => {
+  const [pressed, setPressed] = useState(false);
+
+  return (
+    <View className="rounded-xl px-3 py-0.5" style={{ backgroundColor: `${tintColor}18` }}>
+      <Pressable
+        testID={testID}
+        onPress={onPress}
+        onPressIn={() => setPressed(true)}
+        onPressOut={() => setPressed(false)}
+        accessibilityRole="button"
+        accessibilityLabel="Keep both versions"
+        accessibilityHint="Creates a copy so both versions are saved"
+        className="items-center justify-center rounded-xl"
+        style={{
+          minHeight: TOUCH_TARGET.min,
+          opacity: pressed ? 0.7 : 1
+        }}
+      >
+        <Text style={{ color: tintColor, fontWeight: '600', fontSize: 16 }}>Keep both</Text>
+      </Pressable>
+    </View>
+  );
+};
 
 type ConflictResolutionModalProps = {
   visible: boolean;
@@ -39,12 +74,13 @@ export const ConflictResolutionModal = ({
   const { theme, isDark } = useTheme();
   const [pressedDecideLater, setPressedDecideLater] = useState(false);
 
-  const overlayBg = 'rgba(0, 0, 0, 0.5)';
-  const modalBg = isDark ? '#1C1C1E' : '#FFFFFF';
+  const mode = isDark ? 'dark' : 'light';
+  const overlayBg = SYNC_TOKENS.modalOverlay;
+  const modalBg = SYNC_TOKENS.modalBg[mode];
   const titleColor = theme.textPrimary;
   const subtitleColor = theme.textSecondary;
   const decideLaterColor = theme.primary;
-  const successTint = isDark ? '#30D158' : '#34C759';
+  const successTint = SYNC_TOKENS.keepBothTint[mode];
 
   return (
     <Modal
@@ -63,7 +99,6 @@ export const ConflictResolutionModal = ({
         <View
           testID="conflict-modal-content"
           accessibilityViewIsModal
-          accessibilityRole="none"
           accessibilityLabel="Resolve sync conflict"
           className="mx-4 mb-8 rounded-2xl px-5 pb-5 pt-6"
           style={{ backgroundColor: modalBg, maxHeight: '85%' }}
@@ -136,22 +171,11 @@ export const ConflictResolutionModal = ({
                 Keep cloud
               </Button>
 
-              <View
-                className="rounded-xl px-3 py-2"
-                style={{ backgroundColor: `${successTint}18` }}
-              >
-                <Button
-                  testID="conflict-keep-both-button"
-                  variant="tertiary"
-                  onPress={onKeepBoth}
-                  accessibilityLabel="Keep both versions"
-                  accessibilityHint="Creates a copy so both versions are saved"
-                >
-                  <Text style={{ color: successTint, fontWeight: '600', fontSize: 16 }}>
-                    Keep both
-                  </Text>
-                </Button>
-              </View>
+              <KeepBothButton
+                testID="conflict-keep-both-button"
+                onPress={onKeepBoth}
+                tintColor={successTint}
+              />
             </View>
 
             {/* Decide later link */}

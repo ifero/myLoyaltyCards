@@ -2,16 +2,34 @@ import { act, render, screen } from '@testing-library/react-native';
 
 import { SyncIndicator } from './SyncIndicator';
 
+let mockIsDark = false;
+
 jest.mock('@/shared/theme', () => ({
   useTheme: () => ({
-    theme: {
-      primary: '#1A73E8',
-      success: '#16A34A',
-      surfaceElevated: '#2C2C2E',
-      textSecondary: '#6B7280'
-    },
-    isDark: false
+    theme: mockIsDark
+      ? {
+          primary: '#4DA3FF',
+          success: '#22C55E',
+          surfaceElevated: '#2C2C2E',
+          textSecondary: '#D9D9DE'
+        }
+      : {
+          primary: '#1A73E8',
+          success: '#16A34A',
+          surfaceElevated: '#2C2C2E',
+          textSecondary: '#6B7280'
+        },
+    isDark: mockIsDark
   })
+}));
+
+jest.mock('@/shared/theme/sync-tokens', () => ({
+  SYNC_TOKENS: {
+    syncingBg: { light: '#E5F5FA', dark: '#2C2C2E' },
+    syncingText: { light: '#1A73E8', dark: '#4DA3FF' },
+    successBg: { light: '#E9F4EB', dark: '#1E3A27' },
+    successText: { light: '#16A34A', dark: '#22C55E' }
+  }
 }));
 
 describe('SyncIndicator', () => {
@@ -75,5 +93,23 @@ describe('SyncIndicator', () => {
     const indicator = screen.getByTestId('sync-indicator');
 
     expect(indicator.props.accessibilityLabel).toBe('Cards synced');
+  });
+});
+
+describe('SyncIndicator (dark mode)', () => {
+  beforeEach(() => {
+    mockIsDark = true;
+  });
+
+  afterEach(() => {
+    mockIsDark = false;
+  });
+
+  it('uses dark mode syncing tokens', () => {
+    render(<SyncIndicator syncState="syncing" />);
+
+    const container = screen.getByTestId('sync-indicator');
+    const innerView = container.children[0];
+    expect(innerView.props.style.backgroundColor).toBe('#2C2C2E');
   });
 });

@@ -11,6 +11,7 @@ import Animated, { FadeIn, FadeOut } from 'react-native-reanimated';
 import { useTheme } from '@/shared/theme';
 import { NEUTRAL_COLORS } from '@/shared/theme/colors';
 import { TOUCH_TARGET } from '@/shared/theme/spacing';
+import { SYNC_TOKENS } from '@/shared/theme/sync-tokens';
 
 type SyncErrorBannerProps = {
   message: string | null;
@@ -25,18 +26,17 @@ export const SyncErrorBanner = ({ message, onRetry, onDismiss }: SyncErrorBanner
     return null;
   }
 
-  // Token-based colors from Figma error banner frames
-  const bannerBg = isDark ? '#461E22' : '#FFECEC';
-  const errorAccent = isDark ? '#FF453A' : '#FF5B30';
+  const mode = isDark ? 'dark' : 'light';
+  const bannerBg = SYNC_TOKENS.errorBg[mode];
+  const errorAccent = SYNC_TOKENS.errorAccent[mode];
   const messageColor = isDark ? NEUTRAL_COLORS.white : theme.textPrimary;
-  const dismissColor = isDark ? '#BEBFC5' : '#636366';
+  const dismissColor = SYNC_TOKENS.errorDismiss[mode];
 
   return (
     <Animated.View entering={FadeIn.duration(300)} exiting={FadeOut.duration(300)}>
       <View
         testID="sync-error-banner"
         accessibilityRole="alert"
-        accessibilityLiveRegion="polite"
         className="mx-4 mt-2 flex-row items-center rounded-xl border px-3 py-3"
         style={{ backgroundColor: bannerBg, borderColor: errorAccent }}
       >

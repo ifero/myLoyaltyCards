@@ -62,7 +62,7 @@ export const SyncStatusContainer = ({
     case 'syncing':
       return <SyncIndicator syncState="syncing" />;
     case 'offline':
-      return <OfflineIndicator pendingChangeCount={pendingChangeCount} />;
+      return <OfflineIndicator isOffline pendingChangeCount={pendingChangeCount} />;
     case 'success':
       return <SyncIndicator syncState="success" onSuccessDismissed={onSuccessDismissed} />;
     case 'none':

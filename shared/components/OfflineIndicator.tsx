@@ -5,30 +5,32 @@
  * Shows ONLY when offline AND pending changes > 0 (DEC-12.8-003).
  * Uses neutral/muted tokens — not warning/alarm colors.
  * Matches Figma: "Offline — Light/Dark".
+ *
+ * Offline state is passed as a prop (single source of truth from
+ * SyncStatusContainer). This component does NOT read useNetworkStatus.
  */
 import { MaterialIcons } from '@expo/vector-icons';
 import { Text, View } from 'react-native';
 import Animated, { FadeIn, FadeOut } from 'react-native-reanimated';
 
-import { useNetworkStatus } from '@/shared/hooks/useNetworkStatus';
 import { useTheme } from '@/shared/theme';
+import { SYNC_TOKENS } from '@/shared/theme/sync-tokens';
 
 type OfflineIndicatorProps = {
+  isOffline: boolean;
   pendingChangeCount: number;
 };
 
-export const OfflineIndicator = ({ pendingChangeCount }: OfflineIndicatorProps) => {
-  const { isConnected, isInternetReachable } = useNetworkStatus();
+export const OfflineIndicator = ({ isOffline, pendingChangeCount }: OfflineIndicatorProps) => {
   const { isDark } = useTheme();
-  const isOffline = !isConnected || !isInternetReachable;
 
   if (!isOffline || pendingChangeCount <= 0) {
     return null;
   }
 
-  // Neutral/muted tokens from Figma — reassurance, not alarm
-  const backgroundColor = isDark ? '#4A3A1A' : '#FFF3D6';
-  const textColor = isDark ? '#FFD60A' : '#EF9500';
+  const mode = isDark ? 'dark' : 'light';
+  const backgroundColor = SYNC_TOKENS.offlineBg[mode];
+  const textColor = SYNC_TOKENS.offlineText[mode];
 
   const message =
     pendingChangeCount === 1

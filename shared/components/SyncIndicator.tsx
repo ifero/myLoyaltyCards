@@ -21,6 +21,7 @@ import Animated, {
 } from 'react-native-reanimated';
 
 import { useTheme } from '@/shared/theme';
+import { SYNC_TOKENS } from '@/shared/theme/sync-tokens';
 import type { SyncState } from '@/shared/types/sync-ui';
 
 type SyncIndicatorProps = {
@@ -31,7 +32,7 @@ type SyncIndicatorProps = {
 const AUTO_DISMISS_MS = 2500;
 
 export const SyncIndicator = ({ syncState, onSuccessDismissed }: SyncIndicatorProps) => {
-  const { theme, isDark } = useTheme();
+  const { isDark } = useTheme();
   const rotation = useSharedValue(0);
   const reducedMotion = useReducedMotion();
   const dismissTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -78,17 +79,10 @@ export const SyncIndicator = ({ syncState, onSuccessDismissed }: SyncIndicatorPr
   const isSyncing = syncState === 'syncing';
   const isSuccess = syncState === 'success';
 
-  // Token-based colors — mapped from Figma frames
-  const backgroundColor = isSyncing
-    ? isDark
-      ? theme.surfaceElevated // #2C2C2E dark
-      : '#E5F5FA' // light primary tint from Figma
-    : isDark
-      ? '#1E3A27' // dark success tint
-      : '#E9F4EB'; // light success tint from Figma
-
-  const iconColor = isSyncing ? theme.primary : theme.success;
-  const textColor = isSyncing ? theme.primary : theme.success;
+  const mode = isDark ? 'dark' : 'light';
+  const backgroundColor = isSyncing ? SYNC_TOKENS.syncingBg[mode] : SYNC_TOKENS.successBg[mode];
+  const iconColor = isSyncing ? SYNC_TOKENS.syncingText[mode] : SYNC_TOKENS.successText[mode];
+  const textColor = iconColor;
 
   return (
     <Animated.View

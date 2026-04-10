@@ -2,13 +2,14 @@ import { fireEvent, render, screen } from '@testing-library/react-native';
 
 import { SyncErrorBanner } from './SyncErrorBanner';
 
+let mockIsDark = false;
+
 jest.mock('@/shared/theme', () => ({
   useTheme: () => ({
-    theme: {
-      textPrimary: '#1F2937',
-      textSecondary: '#66666B'
-    },
-    isDark: false
+    theme: mockIsDark
+      ? { textPrimary: '#F5F5F7', textSecondary: '#D9D9DE' }
+      : { textPrimary: '#1F2937', textSecondary: '#66666B' },
+    isDark: mockIsDark
   }),
   NEUTRAL_COLORS: {
     white: '#FFFFFF'
@@ -23,6 +24,14 @@ jest.mock('@/shared/theme/colors', () => ({
 
 jest.mock('@/shared/theme/spacing', () => ({
   TOUCH_TARGET: { min: 44, recommended: 48 }
+}));
+
+jest.mock('@/shared/theme/sync-tokens', () => ({
+  SYNC_TOKENS: {
+    errorBg: { light: '#FFECEC', dark: '#461E22' },
+    errorAccent: { light: '#FF5B30', dark: '#FF453A' },
+    errorDismiss: { light: '#636366', dark: '#BEBFC5' }
+  }
 }));
 
 describe('SyncErrorBanner', () => {
@@ -79,5 +88,23 @@ describe('SyncErrorBanner', () => {
     expect(screen.getByTestId('sync-error-dismiss-button').props.accessibilityHint).toBe(
       'Hides the error message'
     );
+  });
+});
+
+describe('SyncErrorBanner (dark mode)', () => {
+  beforeEach(() => {
+    mockIsDark = true;
+  });
+
+  afterEach(() => {
+    mockIsDark = false;
+  });
+
+  it('uses dark mode error tokens', () => {
+    render(<SyncErrorBanner message="Error" onRetry={jest.fn()} onDismiss={jest.fn()} />);
+
+    const banner = screen.getByTestId('sync-error-banner');
+    expect(banner.props.style.backgroundColor).toBe('#461E22');
+    expect(banner.props.style.borderColor).toBe('#FF453A');
   });
 });
