@@ -44,12 +44,12 @@ jest.mock('@/shared/supabase/useAuthState', () => ({
   useAuthState: () => ({ authState: 'guest', isAuthenticated: false })
 }));
 
-jest.mock('@/shared/components/SyncErrorBanner', () => ({
-  SyncErrorBanner: () => null
+jest.mock('@/shared/components/SyncStatusContainer', () => ({
+  SyncStatusContainer: () => null
 }));
 
-jest.mock('@/shared/components/SyncIndicator', () => ({
-  SyncIndicator: () => null
+jest.mock('@/shared/hooks/useNetworkStatus', () => ({
+  useNetworkStatus: () => ({ isConnected: true, isInternetReachable: true })
 }));
 
 jest.mock('@/shared/hooks/useCloudSync', () => ({
