@@ -1,0 +1,23 @@
+app/__tests__/home-highlight.test.tsx
+  8682beb03bb3c020 47-48,51-52
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.2.8",
+  "base_commit_sha": "5cdb3d6bf5f190b137f547b4c61b51607f3b444b",
+  "prompts": {
+    "8682beb03bb3c020": {
+      "agent_id": {
+        "tool": "github-copilot",
+        "id": "385112d1-f750-4a83-9bab-14d1b07f2eb7",
+        "model": "copilot/claude-opus-4.6"
+      },
+      "human_author": "Andrea Pacino",
+      "messages": [],
+      "total_additions": 0,
+      "total_deletions": 0,
+      "accepted_lines": 144,
+      "overriden_lines": 0
+    }
+  }
+}
