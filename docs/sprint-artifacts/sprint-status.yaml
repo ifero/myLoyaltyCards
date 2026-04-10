@@ -329,6 +329,6 @@ development_status:
   13-6-implement-settings-screen: done # implementation complete, QA approved, dev review loop in progress
   13-7-restyle-onboarding: done # maps to 12-7
   13-7a-import-data-from-json: done # implementation complete locally; QA + dev review approved, awaiting stakeholder approval
-  13-8-restyle-sync-indicators: in-progress # maps to 12-8
+  13-8-restyle-sync-indicators: done # QA + dev review approved, PR created 2026-04-11
   13-9-update-apple-watch-ui: ready-for-dev # maps to 12-9
   epic-13-retrospective: optional
