@@ -1,0 +1,25 @@
+shared/components/SyncStatusContainer.tsx
+  8682beb03bb3c020 1-66,68-75
+shared/components/SyncStatusContainer.test.tsx
+  8682beb03bb3c020 1-119
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.2.8",
+  "base_commit_sha": "cea03663c836b2fa64e20edef6ee7bbcb30a8cc8",
+  "prompts": {
+    "8682beb03bb3c020": {
+      "agent_id": {
+        "tool": "github-copilot",
+        "id": "385112d1-f750-4a83-9bab-14d1b07f2eb7",
+        "model": "copilot/claude-opus-4.6"
+      },
+      "human_author": "Andrea Pacino",
+      "messages": [],
+      "total_additions": 0,
+      "total_deletions": 0,
+      "accepted_lines": 337,
+      "overriden_lines": 1
+    }
+  }
+}
