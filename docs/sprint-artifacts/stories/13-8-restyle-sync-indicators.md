@@ -24,231 +24,231 @@ The existing components currently use hardcoded colors (e.g., `ERROR_BG = '#FEF2
 
 ### AC1: Syncing Active Indicator
 
-- [ ] Inline status strip rendered above the card grid (not overlaying the header/title) (DEC-12.8-001)
-- [ ] Strip uses subtle background tint from design-system primary token (not hardcoded hex)
-- [ ] Animated sync glyph (MI: sync or MCI: cloud-sync) with continuous rotation animation replacing `ActivityIndicator`
-- [ ] Label text: "Syncing cards..." using caption/body-small typography token
-- [ ] Strip is non-blocking -- user can scroll and interact with the card grid underneath
-- [ ] Strip appears when `isSyncing` is true; hidden otherwise
-- [ ] `accessibilityLiveRegion="polite"` preserved for screen reader announcement
-- [ ] Light mode: primary-tinted background, primary icon color, secondary text color
-- [ ] Dark mode: dark-appropriate primary tint, matching dark tokens
-- [ ] Matches Figma frame: "Syncing Active -- Light" / "Syncing Active -- Dark"
+- [x] Inline status strip rendered above the card grid (not overlaying the header/title) (DEC-12.8-001)
+- [x] Strip uses subtle background tint from design-system primary token (not hardcoded hex)
+- [x] Animated sync glyph (MI: sync or MCI: cloud-sync) with continuous rotation animation replacing `ActivityIndicator`
+- [x] Label text: "Syncing cards..." using caption/body-small typography token
+- [x] Strip is non-blocking -- user can scroll and interact with the card grid underneath
+- [x] Strip appears when `isSyncing` is true; hidden otherwise
+- [x] `accessibilityLiveRegion="polite"` preserved for screen reader announcement
+- [x] Light mode: primary-tinted background, primary icon color, secondary text color
+- [x] Dark mode: dark-appropriate primary tint, matching dark tokens
+- [x] Matches Figma frame: "Syncing Active -- Light" / "Syncing Active -- Dark"
 
 ### AC2: Sync Success Indicator
 
-- [ ] Brief checkmark confirmation strip appears after successful sync
-- [ ] Strip shows MI: check-circle or MCI: check-circle-outline glyph with success color from design tokens
-- [ ] Label text: "Cards synced" or equivalent concise confirmation
-- [ ] Auto-dismisses after 2-3 seconds with a fade-out animation
-- [ ] Non-blocking -- user can continue interacting during display
-- [ ] Strip renders in the same position as the syncing-active indicator (above card grid)
-- [ ] Light/dark mode using semantic success tokens from 13-1
-- [ ] Matches Figma frame: "Sync Success -- Light" / "Sync Success -- Dark"
+- [x] Brief checkmark confirmation strip appears after successful sync
+- [x] Strip shows MI: check-circle or MCI: check-circle-outline glyph with success color from design tokens
+- [x] Label text: "Cards synced" or equivalent concise confirmation
+- [x] Auto-dismisses after 2-3 seconds with a fade-out animation
+- [x] Non-blocking -- user can continue interacting during display
+- [x] Strip renders in the same position as the syncing-active indicator (above card grid)
+- [x] Light/dark mode using semantic success tokens from 13-1
+- [x] Matches Figma frame: "Sync Success -- Light" / "Sync Success -- Dark"
 
 ### AC3: Sync Error Banner
 
-- [ ] Inline banner rendered above card grid (not a modal -- DEC-12.8-002)
-- [ ] Uses design-system semantic error color tokens (replacing hardcoded `#FEF2F2` / `#991B1B`)
-- [ ] Concise error message (prop-driven), max 2 lines, body-small typography token
-- [ ] "Retry" CTA button using error-colored `Button` variant or styled Pressable
-- [ ] Dismiss affordance (close icon) to hide the banner
-- [ ] Banner persists until dismissed or retry succeeds (no auto-dismiss)
-- [ ] Accessible: `accessibilityRole="alert"`, `accessibilityLiveRegion="polite"`
-- [ ] Light mode: error-tinted background, error text, error-colored Retry button
-- [ ] Dark mode: dark error tokens
-- [ ] Matches Figma frame: "Sync Error -- Light" / "Sync Error -- Dark"
+- [x] Inline banner rendered above card grid (not a modal -- DEC-12.8-002)
+- [x] Uses design-system semantic error color tokens (replacing hardcoded `#FEF2F2` / `#991B1B`)
+- [x] Concise error message (prop-driven), max 2 lines, body-small typography token
+- [x] "Retry" CTA button using error-colored `Button` variant or styled Pressable
+- [x] Dismiss affordance (close icon) to hide the banner
+- [x] Banner persists until dismissed or retry succeeds (no auto-dismiss)
+- [x] Accessible: `accessibilityRole="alert"`, `accessibilityLiveRegion="polite"`
+- [x] Light mode: error-tinted background, error text, error-colored Retry button
+- [x] Dark mode: dark error tokens
+- [x] Matches Figma frame: "Sync Error -- Light" / "Sync Error -- Dark"
 
 ### AC4: Offline Indicator
 
-- [ ] Inline strip shown ONLY when device is offline AND there are pending unsynced changes (DEC-12.8-003)
-- [ ] Message: "Offline -- N changes will sync when online" (where N is the count of pending changes)
-- [ ] Reassuring tone, not alarming -- subtle neutral/muted background, no warning/error colors
-- [ ] MI: cloud-off or MCI: cloud-off-outline glyph
-- [ ] Animated entry (FadeIn) and exit (FadeOut) preserved from current implementation
-- [ ] No dismiss affordance -- strip disappears automatically when back online or when pending count reaches 0
-- [ ] Accessible: `accessibilityRole="status"`, descriptive label including pending count
-- [ ] Light mode: neutral/muted background tint
-- [ ] Dark mode: dark muted tint
-- [ ] Matches Figma frame: "Offline -- Light" / "Offline -- Dark"
+- [x] Inline strip shown ONLY when device is offline AND there are pending unsynced changes (DEC-12.8-003)
+- [x] Message: "Offline -- N changes will sync when online" (where N is the count of pending changes)
+- [x] Reassuring tone, not alarming -- subtle neutral/muted background, no warning/error colors
+- [x] MI: cloud-off or MCI: cloud-off-outline glyph
+- [x] Animated entry (FadeIn) and exit (FadeOut) preserved from current implementation
+- [x] No dismiss affordance -- strip disappears automatically when back online or when pending count reaches 0
+- [x] Accessible: `accessibilityRole="status"`, descriptive label including pending count
+- [x] Light mode: neutral/muted background tint
+- [x] Dark mode: dark muted tint
+- [x] Matches Figma frame: "Offline -- Light" / "Offline -- Dark"
 
 ### AC5: Conflict Resolution Modal
 
-- [ ] Modal dialog presented when sync detects a conflict (DEC-12.8-004)
-- [ ] Calm, non-alarming visual treatment -- no red/error colors
-- [ ] Issue summary at top: card name, brief explanation of conflict (e.g., "This card was updated on both devices")
-- [ ] Side-by-side comparison cards showing local vs cloud versions (DEC-12.8-005):
+- [x] Modal dialog presented when sync detects a conflict (DEC-12.8-004)
+- [x] Calm, non-alarming visual treatment -- no red/error colors
+- [x] Issue summary at top: card name, brief explanation of conflict (e.g., "This card was updated on both devices")
+- [x] Side-by-side comparison cards showing local vs cloud versions (DEC-12.8-005):
   - Each card displays: points/balance value, barcode tail (last 4-6 digits), last updated timestamp, list of changed fields highlighted
   - Local card labeled "This device" with MI: smartphone icon
   - Cloud card labeled "Cloud" with MI: cloud icon
-- [ ] Three action choices as distinct buttons:
+- [x] Three action choices as distinct buttons:
   - "Keep local" -- resolves with local version
   - "Keep cloud" -- resolves with cloud version
   - "Keep both" -- creates duplicate card entries
-- [ ] "Decide later" secondary link/button to dismiss modal and defer resolution
-- [ ] Modal uses `CardShell` from 13-1 for comparison cards
-- [ ] Focus trap and `accessibilityViewIsModal={true}`
-- [ ] Light/dark mode using design tokens
-- [ ] Matches Figma frames from 12-8 conflict resolution concept
+- [x] "Decide later" secondary link/button to dismiss modal and defer resolution
+- [x] Modal uses `CardShell` from 13-1 for comparison cards
+- [x] Focus trap and `accessibilityViewIsModal={true}`
+- [x] Light/dark mode using design tokens
+- [x] Matches Figma frames from 12-8 conflict resolution concept
 
 ### AC6: Strip Positioning and Layout Integration
 
-- [ ] All status strips (syncing, success, error, offline) render in a consistent position above the card grid on the home screen
-- [ ] Only one strip/banner visible at a time; priority order: error > syncing > offline > success
-- [ ] Strips do not overlap header, tab bar, or FAB
-- [ ] Transition between strip states is smooth (fade or slide animation)
-- [ ] No layout shift when strip appears/disappears (reserved space or animated height)
+- [x] All status strips (syncing, success, error, offline) render in a consistent position above the card grid on the home screen
+- [x] Only one strip/banner visible at a time; priority order: error > syncing > offline > success
+- [x] Strips do not overlap header, tab bar, or FAB
+- [x] Transition between strip states is smooth (fade or slide animation)
+- [x] No layout shift when strip appears/disappears (reserved space or animated height)
 
 ### AC7: Dark Mode Parity
 
-- [ ] Every indicator/banner has dark mode variant matching Figma dark frames
-- [ ] All colors sourced from design-system tokens -- zero hardcoded hex values in component files
-- [ ] Backgrounds use appropriate dark-mode semantic tints
-- [ ] Icon and text colors follow dark mode hierarchy tokens from 13-1
-- [ ] Conflict resolution modal backgrounds and card shells adapt correctly
+- [x] Every indicator/banner has dark mode variant matching Figma dark frames
+- [x] All colors sourced from design-system tokens -- zero hardcoded hex values in component files
+- [x] Backgrounds use appropriate dark-mode semantic tints
+- [x] Icon and text colors follow dark mode hierarchy tokens from 13-1
+- [x] Conflict resolution modal backgrounds and card shells adapt correctly
 
 ### AC8: Accessibility
 
-- [ ] All interactive elements (Retry, dismiss, conflict action buttons, "Decide later") have 44pt minimum touch targets
-- [ ] All elements have appropriate `accessibilityRole` and `accessibilityLabel`
-- [ ] Sync status changes announced via `accessibilityLiveRegion="polite"`
-- [ ] Error banner announced as `accessibilityRole="alert"`
-- [ ] Conflict modal: focus trapped, announced as modal to screen readers
-- [ ] Conflict comparison cards have descriptive labels (e.g., "Local version: 450 points, updated March 30")
-- [ ] Action buttons have clear accessible labels with hint text
+- [x] All interactive elements (Retry, dismiss, conflict action buttons, "Decide later") have 44pt minimum touch targets
+- [x] All elements have appropriate `accessibilityRole` and `accessibilityLabel`
+- [x] Sync status changes announced via `accessibilityLiveRegion="polite"`
+- [x] Error banner announced as `accessibilityRole="alert"`
+- [x] Conflict modal: focus trapped, announced as modal to screen readers
+- [x] Conflict comparison cards have descriptive labels (e.g., "Local version: 450 points, updated March 30")
+- [x] Action buttons have clear accessible labels with hint text
 
 ### AC9: Test Coverage
 
-- [ ] Unit tests for each restyled/new component (>= 80% coverage)
-- [ ] Unit tests for sync success auto-dismiss timer logic
-- [ ] Unit tests for offline indicator conditional display (offline AND pending changes)
-- [ ] Unit tests for conflict resolution modal actions (keep local, keep cloud, keep both, decide later)
-- [ ] Unit tests for strip priority logic (error > syncing > offline > success)
-- [ ] Unit tests for dark mode token application (no hardcoded colors)
-- [ ] Tests co-located with source files
+- [x] Unit tests for each restyled/new component (>= 80% coverage)
+- [x] Unit tests for sync success auto-dismiss timer logic
+- [x] Unit tests for offline indicator conditional display (offline AND pending changes)
+- [x] Unit tests for conflict resolution modal actions (keep local, keep cloud, keep both, decide later)
+- [x] Unit tests for strip priority logic (error > syncing > offline > success)
+- [x] Unit tests for dark mode token application (no hardcoded colors)
+- [x] Tests co-located with source files
 
 ## Tasks / Subtasks
 
 ### T1: Restyle SyncIndicator -- Syncing Active State (AC1, AC7)
 
-- [ ] Replace `ActivityIndicator` with animated sync glyph (MI: sync) using `react-native-reanimated` continuous rotation
-- [ ] Replace hardcoded background color (`${theme.primary}1A`) with design-system token
-- [ ] Replace hardcoded text color with typography/color token from 13-1
-- [ ] Update label text to use caption/body-small typography class from NativeWind tokens
-- [ ] Ensure strip placement is above card grid, not overlaying header (verify in home screen integration)
-- [ ] Apply light/dark mode via theme tokens (remove all hardcoded hex)
-- [ ] Visual QA against Figma frame: "Syncing Active -- Light" / "Syncing Active -- Dark"
+- [x] Replace `ActivityIndicator` with animated sync glyph (MI: sync) using `react-native-reanimated` continuous rotation
+- [x] Replace hardcoded background color (`${theme.primary}1A`) with design-system token
+- [x] Replace hardcoded text color with typography/color token from 13-1
+- [x] Update label text to use caption/body-small typography class from NativeWind tokens
+- [x] Ensure strip placement is above card grid, not overlaying header (verify in home screen integration)
+- [x] Apply light/dark mode via theme tokens (remove all hardcoded hex)
+- [x] Visual QA against Figma frame: "Syncing Active -- Light" / "Syncing Active -- Dark"
 
 ### T2: Add Sync Success State (AC2, AC7)
 
-- [ ] Extend `SyncIndicator` or create `SyncSuccessStrip` component for the success state
-- [ ] Props: `showSuccess: boolean` or new `syncState: 'idle' | 'syncing' | 'success' | 'error'` enum
-- [ ] Render checkmark glyph (MI: check-circle) with semantic success color token
-- [ ] Label text: "Cards synced"
-- [ ] Implement auto-dismiss timer (2-3s) with fade-out using `react-native-reanimated`
-- [ ] Expose `onSuccessDismissed` callback so parent can clean up state
-- [ ] Light/dark mode via tokens
-- [ ] Visual QA against Figma frame: "Sync Success -- Light" / "Sync Success -- Dark"
+- [x] Extend `SyncIndicator` or create `SyncSuccessStrip` component for the success state
+- [x] Props: `showSuccess: boolean` or new `syncState: 'idle' | 'syncing' | 'success' | 'error'` enum
+- [x] Render checkmark glyph (MI: check-circle) with semantic success color token
+- [x] Label text: "Cards synced"
+- [x] Implement auto-dismiss timer (2-3s) with fade-out using `react-native-reanimated`
+- [x] Expose `onSuccessDismissed` callback so parent can clean up state
+- [x] Light/dark mode via tokens
+- [x] Visual QA against Figma frame: "Sync Success -- Light" / "Sync Success -- Dark"
 
 ### T3: Restyle SyncErrorBanner (AC3, AC7)
 
-- [ ] Replace hardcoded `ERROR_BG = '#FEF2F2'` and `ERROR_TEXT = '#991B1B'` with design-system semantic error tokens
-- [ ] Replace hardcoded `borderColor` with error border token
-- [ ] Restyle "Retry" button to use design-system button styling (error variant or error-colored Pressable)
-- [ ] Replace plain-text dismiss icon ("X") with MI: close vector icon
-- [ ] Update typography to use body-small token from NativeWind
-- [ ] Ensure banner renders inline above card grid, consistent with other strips
-- [ ] Maintain `accessibilityRole="alert"` and `accessibilityLiveRegion="polite"`
-- [ ] Light/dark mode via tokens
-- [ ] Visual QA against Figma frame: "Sync Error -- Light" / "Sync Error -- Dark"
+- [x] Replace hardcoded `ERROR_BG = '#FEF2F2'` and `ERROR_TEXT = '#991B1B'` with design-system semantic error tokens
+- [x] Replace hardcoded `borderColor` with error border token
+- [x] Restyle "Retry" button to use design-system button styling (error variant or error-colored Pressable)
+- [x] Replace plain-text dismiss icon ("X") with MI: close vector icon
+- [x] Update typography to use body-small token from NativeWind
+- [x] Ensure banner renders inline above card grid, consistent with other strips
+- [x] Maintain `accessibilityRole="alert"` and `accessibilityLiveRegion="polite"`
+- [x] Light/dark mode via tokens
+- [x] Visual QA against Figma frame: "Sync Error -- Light" / "Sync Error -- Dark"
 
 ### T4: Restyle OfflineIndicator (AC4, AC7)
 
-- [ ] Add `pendingChangeCount` prop (or source from sync state) to conditionally display only when offline AND pending > 0
-- [ ] Update message to: "Offline -- N changes will sync when online" (dynamic count)
-- [ ] Replace warning colors (`SEMANTIC_COLORS.warning`) with neutral/muted design tokens (DEC-12.8-003: reassurance, not alarm)
-- [ ] Add MI: cloud-off or MCI: cloud-off-outline glyph
-- [ ] Change `accessibilityRole` from `"alert"` to `"status"` (reassurance, not urgency)
-- [ ] Update `accessibilityLabel` to include pending count
-- [ ] Maintain `FadeIn`/`FadeOut` animations from `react-native-reanimated`
-- [ ] Light/dark mode via tokens
-- [ ] Visual QA against Figma frame: "Offline -- Light" / "Offline -- Dark"
+- [x] Add `pendingChangeCount` prop (or source from sync state) to conditionally display only when offline AND pending > 0
+- [x] Update message to: "Offline -- N changes will sync when online" (dynamic count)
+- [x] Replace warning colors (`SEMANTIC_COLORS.warning`) with neutral/muted design tokens (DEC-12.8-003: reassurance, not alarm)
+- [x] Add MI: cloud-off or MCI: cloud-off-outline glyph
+- [x] Change `accessibilityRole` from `"alert"` to `"status"` (reassurance, not urgency)
+- [x] Update `accessibilityLabel` to include pending count
+- [x] Maintain `FadeIn`/`FadeOut` animations from `react-native-reanimated`
+- [x] Light/dark mode via tokens
+- [x] Visual QA against Figma frame: "Offline -- Light" / "Offline -- Dark"
 
 ### T5: Implement Conflict Resolution Modal (AC5, AC7)
 
-- [ ] Create `shared/components/ConflictResolutionModal.tsx`:
+- [x] Create `shared/components/ConflictResolutionModal.tsx`:
   - Props: `visible: boolean`, `localCard: ConflictCardData`, `cloudCard: ConflictCardData`, `onKeepLocal: () => void`, `onKeepCloud: () => void`, `onKeepBoth: () => void`, `onDecideLater: () => void`
-- [ ] Define `ConflictCardData` type: `{ name: string, points?: number, barcodeTail: string, updatedAt: string, changedFields: string[] }`
-- [ ] Create `shared/components/ConflictComparisonCard.tsx`:
+- [x] Define `ConflictCardData` type: `{ name: string, points?: number, barcodeTail: string, updatedAt: string, changedFields: string[] }`
+- [x] Create `shared/components/ConflictComparisonCard.tsx`:
   - Props: `label: string` ("This device" / "Cloud"), `icon: string` (MI: smartphone / MI: cloud), `data: ConflictCardData`
   - Uses `CardShell` from 13-1 for container
   - Displays points/balance, barcode tail, updated timestamp, changed fields list
   - Changed fields visually highlighted (bold or accent color)
-- [ ] Layout: issue summary at top, two comparison cards side by side (or stacked on narrow screens), action buttons below
-- [ ] Three primary-level action buttons: "Keep local", "Keep cloud", "Keep both"
-- [ ] "Decide later" as secondary text link below action buttons
-- [ ] Calm visual treatment: neutral/primary modal background, no error/warning colors
-- [ ] Modal overlay with semi-transparent backdrop
-- [ ] Focus trap: `accessibilityViewIsModal={true}`
-- [ ] Light/dark mode via tokens
+- [x] Layout: issue summary at top, two comparison cards side by side (or stacked on narrow screens), action buttons below
+- [x] Three primary-level action buttons: "Keep local", "Keep cloud", "Keep both"
+- [x] "Decide later" as secondary text link below action buttons
+- [x] Calm visual treatment: neutral/primary modal background, no error/warning colors
+- [x] Modal overlay with semi-transparent backdrop
+- [x] Focus trap: `accessibilityViewIsModal={true}`
+- [x] Light/dark mode via tokens
 
 ### T6: Implement Strip Priority and Layout Integration (AC6)
 
-- [ ] Create `shared/components/SyncStatusContainer.tsx` (or update home screen layout):
+- [x] Create `shared/components/SyncStatusContainer.tsx` (or update home screen layout):
   - Receives sync state and determines which strip to show
   - Priority: error banner > syncing indicator > offline strip > success strip
   - Only one visible at a time
-- [ ] Animated transitions between strip states (height animation or cross-fade)
-- [ ] Position the container above the card grid FlatList, below the header
-- [ ] Ensure no layout shift: use `Animated.View` with height interpolation or `LayoutAnimation`
-- [ ] Verify strips do not overlap header, tab bar, or FAB
+- [x] Animated transitions between strip states (height animation or cross-fade)
+- [x] Position the container above the card grid FlatList, below the header
+- [x] Ensure no layout shift: use `Animated.View` with height interpolation or `LayoutAnimation`
+- [x] Verify strips do not overlap header, tab bar, or FAB
 
 ### T7: Dark Mode Verification (AC7)
 
-- [ ] Audit all 5 components for zero hardcoded hex color values
-- [ ] Verify all backgrounds use semantic tokens from `@/shared/theme/`
-- [ ] Verify all text colors use typography hierarchy tokens
-- [ ] Verify all icon colors use semantic/primary tokens
-- [ ] Visual QA pass on all 10 Figma frames (5 concepts x 2 themes)
+- [x] Audit all 5 components for zero hardcoded hex color values
+- [x] Verify all backgrounds use semantic tokens from `@/shared/theme/`
+- [x] Verify all text colors use typography hierarchy tokens
+- [x] Verify all icon colors use semantic/primary tokens
+- [x] Visual QA pass on all 10 Figma frames (5 concepts x 2 themes)
 
 ### T8: Accessibility Pass (AC8)
 
-- [ ] Verify 44pt minimum touch targets: Retry button, dismiss icon, conflict action buttons, "Decide later"
-- [ ] Verify `accessibilityRole` on all elements:
+- [x] Verify 44pt minimum touch targets: Retry button, dismiss icon, conflict action buttons, "Decide later"
+- [x] Verify `accessibilityRole` on all elements:
   - Sync strips: `accessibilityLiveRegion="polite"`
   - Error banner: `accessibilityRole="alert"`
   - Offline: `accessibilityRole="status"`
   - Conflict modal: `accessibilityViewIsModal={true}`
   - All buttons: `accessibilityRole="button"` with labels
-- [ ] Conflict comparison cards: descriptive `accessibilityLabel` including data values
-- [ ] Action buttons: `accessibilityHint` explaining outcome (e.g., "Replaces cloud version with local data")
-- [ ] Sync glyph animation respects `reduceMotion` accessibility setting
+- [x] Conflict comparison cards: descriptive `accessibilityLabel` including data values
+- [x] Action buttons: `accessibilityHint` explaining outcome (e.g., "Replaces cloud version with local data")
+- [x] Sync glyph animation respects `reduceMotion` accessibility setting
 
 ### T9: Unit Tests (AC9)
 
-- [ ] `shared/components/SyncIndicator.test.tsx` (update existing):
+- [x] `shared/components/SyncIndicator.test.tsx` (update existing):
   - Renders animated sync glyph when syncing (not ActivityIndicator)
   - Uses design tokens (no hardcoded colors in rendered output)
   - Hidden when idle
   - `accessibilityLiveRegion` set to "polite"
-- [ ] `shared/components/SyncSuccessStrip.test.tsx` (or extended SyncIndicator tests):
+- [x] `shared/components/SyncSuccessStrip.test.tsx` (or extended SyncIndicator tests):
   - Renders checkmark and "Cards synced" text on success
   - Auto-dismisses after timer (use `jest.advanceTimersByTime`)
   - Calls `onSuccessDismissed` callback after auto-dismiss
   - Fade-out animation triggers
-- [ ] `shared/components/SyncErrorBanner.test.tsx` (update existing):
+- [x] `shared/components/SyncErrorBanner.test.tsx` (update existing):
   - Renders error message, Retry button, dismiss icon
   - Uses design tokens (no hardcoded ERROR_BG / ERROR_TEXT)
   - `onRetry` fires on Retry press
   - `onDismiss` fires on dismiss press
   - `accessibilityRole` is "alert"
-- [ ] `shared/components/OfflineIndicator.test.tsx` (update existing):
+- [x] `shared/components/OfflineIndicator.test.tsx` (update existing):
   - Renders only when offline AND pendingChangeCount > 0
   - Does NOT render when offline but pendingChangeCount is 0
   - Displays correct pending count in message
   - Uses neutral tokens (no warning colors)
   - `accessibilityRole` is "status"
-- [ ] `shared/components/ConflictResolutionModal.test.tsx` (new):
+- [x] `shared/components/ConflictResolutionModal.test.tsx` (new):
   - Renders when visible, hidden when not visible
   - Displays local and cloud comparison cards with correct data
   - "Keep local" fires `onKeepLocal` callback
@@ -257,11 +257,11 @@ The existing components currently use hardcoded colors (e.g., `ERROR_BG = '#FEF2
   - "Decide later" fires `onDecideLater` callback
   - Changed fields are highlighted in comparison cards
   - `accessibilityViewIsModal` is true
-- [ ] `shared/components/ConflictComparisonCard.test.tsx` (new):
+- [x] `shared/components/ConflictComparisonCard.test.tsx` (new):
   - Renders label, icon, points, barcode tail, updated timestamp
   - Changed fields displayed with highlight styling
   - Accessible label includes data values
-- [ ] `shared/components/SyncStatusContainer.test.tsx` (new):
+- [x] `shared/components/SyncStatusContainer.test.tsx` (new):
   - Shows error banner when error state is active
   - Shows syncing indicator when syncing (and no error)
   - Shows offline strip when offline with pending changes (and no error/syncing)
