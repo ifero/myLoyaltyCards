@@ -1,0 +1,25 @@
+watch-ios/MyLoyaltyCardsWatch/ComplicationProvider.swift
+  7e2c261ff38324da 1-128
+watch-ios/MyLoyaltyCardsWatch/CardListView.swift
+  7e2c261ff38324da 3,82-84
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.2.8",
+  "base_commit_sha": "1132bc1d0e3ccebb1b84589c64e46ed08c168d3a",
+  "prompts": {
+    "7e2c261ff38324da": {
+      "agent_id": {
+        "tool": "github-copilot",
+        "id": "cf62283a-d4c6-426e-b614-b41f5a70fb03",
+        "model": "copilot/claude-opus-4.6"
+      },
+      "human_author": "Andrea Pacino",
+      "messages": [],
+      "total_additions": 135,
+      "total_deletions": 3,
+      "accepted_lines": 132,
+      "overriden_lines": 0
+    }
+  }
+}
