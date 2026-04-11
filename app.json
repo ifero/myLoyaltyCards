@@ -47,7 +47,8 @@
           "recordAudioAndroid": false
         }
       ],
-      "expo-sqlite"
+      "expo-sqlite",
+      "@bacons/apple-targets"
     ],
     "experiments": {
       "typedRoutes": true

@@ -4,12 +4,12 @@ on:
   pull_request:
     types: [opened, synchronize, reopened, ready_for_review]
     paths:
-      - 'watch-ios/**'
+      - 'targets/watch/**'
       - 'ios/**'
   push:
     branches: [main]
     paths:
-      - 'watch-ios/**'
+      - 'targets/watch/**'
       - 'ios/**'
 
 jobs:
@@ -42,6 +42,9 @@ jobs:
 
       - name: Install dependencies
         run: yarn install --frozen-lockfile
+
+      - name: Generate iOS project with watch target
+        run: npx expo prebuild --clean --platform ios
 
       - name: Run watchOS tests (xcodebuild)
         run: yarn test:watchos
