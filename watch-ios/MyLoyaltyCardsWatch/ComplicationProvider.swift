@@ -54,6 +54,7 @@ struct CardComplicationSmallView: View {
     Image(systemName: "creditcard.fill")
       .font(.title3)
       .foregroundColor(.white)
+      .accessibilityLabel("myLoyaltyCards")
   }
 }
 
@@ -71,10 +72,29 @@ struct CardComplicationMediumView: View {
           .foregroundColor(.white)
           .lineLimit(1)
       }
+      .accessibilityLabel("Loyalty card: \(name)")
     } else {
       Image(systemName: "creditcard.fill")
         .font(.title3)
         .foregroundColor(.white)
+        .accessibilityLabel("myLoyaltyCards")
+    }
+  }
+}
+
+/// Dispatches the correct complication view based on the widget family.
+struct CardComplicationEntryView: View {
+  @Environment(\.widgetFamily) var family
+  let entry: CardComplicationEntry
+
+  var body: some View {
+    switch family {
+    case .accessoryCircular:
+      CardComplicationSmallView()
+    case .accessoryRectangular, .accessoryInline:
+      CardComplicationMediumView(entry: entry)
+    default:
+      CardComplicationMediumView(entry: entry)
     }
   }
 }
@@ -86,7 +106,7 @@ struct MyLoyaltyCardsComplication: Widget {
 
   var body: some WidgetConfiguration {
     StaticConfiguration(kind: kind, provider: CardComplicationProvider()) { entry in
-      CardComplicationMediumView(entry: entry)
+      CardComplicationEntryView(entry: entry)
         .containerBackground(.black, for: .widget)
     }
     .configurationDisplayName("Loyalty Card")
@@ -100,10 +120,11 @@ struct MyLoyaltyCardsComplication: Widget {
 }
 
 // MARK: - Widget Bundle
-// NOTE: When adding a separate Widget Extension target in Xcode,
-// move this file to that target and uncomment the @main annotation below.
-// The @main is commented out because it conflicts with the app's @main in
-// MyLoyaltyCardsWatchApp.swift when included in the same target.
+// ⚠️ KNOWN LIMITATION: This complication requires a separate Widget Extension target
+// to appear on watch faces. The @main annotation is commented out because including
+// it in the main app target conflicts with MyLoyaltyCardsWatchApp.swift's @main.
+// To activate: create a Widget Extension target in Xcode, move this file there,
+// and uncomment @main below. Tracked for follow-up implementation.
 // @main
 struct MyLoyaltyCardsWidgetBundle: WidgetBundle {
   var body: some Widget {

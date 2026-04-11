@@ -135,6 +135,11 @@ struct CardRowView: View {
       RoundedRectangle(cornerRadius: 16)
         .fill(Color(red: 28 / 255, green: 28 / 255, blue: 31 / 255)) // #1C1C1F
     )
+    .overlay(
+      // Near-black brands get a subtle border for OLED contrast (AC3)
+      RoundedRectangle(cornerRadius: 16)
+        .stroke(isNearBlack(hex: resolvedColorHex) ? Color.white.opacity(0.15) : Color.clear, lineWidth: 1)
+    )
     .accessibilityElement(children: .combine)
     .accessibilityLabel("Card, \(card.name)")
   }
