@@ -80,48 +80,79 @@ final class CardStore: ObservableObject {
 struct CardRowView: View {
   let card: WatchCard
 
+  /// Resolved brand color hex string (from catalogue or user-selected).
+  private var resolvedColorHex: String {
+    if let brandId = card.brandId,
+      let brand = WatchBrands.all.first(where: { $0.id == brandId })
+    {
+      // Use a deterministic hex from the brand id hash when no explicit color exists
+      return card.colorHex ?? "#\(String(format: "%06X", abs(brand.id.hashValue) % 0xFFFFFF))"
+    }
+    return card.colorHex ?? ""
+  }
+
+  /// Accent color derived from the resolved hex.
+  private var accentColor: Color {
+    mapColor(hex: resolvedColorHex) ?? .gray
+  }
+
   var body: some View {
     HStack(spacing: 12) {
-      visualIdentifier
-        .frame(width: 44, height: 28)
-        .cornerRadius(6)
+      // Vertical accent bar — brand color indicator (Figma: 6×32, 3px rounded)
+      RoundedRectangle(cornerRadius: 3)
+        .fill(accentColor)
+        .frame(width: 6, height: 32)
 
+      // Circular logo/avatar area (Figma: 36×36)
+      logoView
+        .frame(width: 36, height: 36)
+        .clipShape(Circle())
+
+      // Card name (Figma: 20px medium, white, single line)
       Text(card.name)
         .font(.system(size: 16, weight: .semibold))
         .foregroundColor(.white)
         .lineLimit(1)
+        .truncationMode(.tail)
 
       Spacer()
     }
-    .padding(.vertical, 6)
+    .padding(.horizontal, 12)
+    .padding(.vertical, 16)
+    .background(
+      RoundedRectangle(cornerRadius: 16)
+        .fill(Color(red: 28 / 255, green: 28 / 255, blue: 31 / 255)) // #1C1C1F
+    )
     .accessibilityElement(children: .combine)
     .accessibilityLabel("Card, \(card.name)")
   }
 
   @ViewBuilder
-  private var visualIdentifier: some View {
+  private var logoView: some View {
     if let brandId = card.brandId,
       let brand = WatchBrands.all.first(where: { $0.id == brandId })
     {
-      // For now show brand initials from generated catalogue (watch-side asset mapping is handled elsewhere)
+      // Catalogue brand — initials on brand-colored circle
+      let bgColor = accentColor
+      let useWhite = shouldUseWhiteText(onBackgroundHex: resolvedColorHex)
       ZStack {
-        Color.gray.opacity(0.15)
-        Text(brandInitials(name: brand.name ?? brand.id))
-          .font(.system(size: 12, weight: .bold))
-          .foregroundColor(.white)
+        bgColor
+        Text(initials(from: brand.name ?? brand.id))
+          .font(.system(size: 14, weight: .bold))
+          .foregroundColor(useWhite ? .white : .black)
       }
     } else {
+      // Custom card — user-selected color with initials
+      let bgColor = accentColor
+      let colorHex = card.colorHex ?? ""
+      let useWhite = shouldUseWhiteText(onBackgroundHex: colorHex)
       ZStack {
-        mapColor(hex: card.colorHex) ?? Color.gray
+        bgColor
         Text(initials(from: card.name))
-          .font(.system(size: 12, weight: .bold))
-          .foregroundColor(.black)
+          .font(.system(size: 14, weight: .bold))
+          .foregroundColor(useWhite ? .white : .black)
       }
     }
-  }
-
-  private func brandInitials(name: String) -> String {
-    return String(name.trimmingCharacters(in: .whitespacesAndNewlines).prefix(2)).uppercased()
   }
 }
 
