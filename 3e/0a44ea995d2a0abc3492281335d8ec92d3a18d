@@ -1,0 +1,38 @@
+docs/sprint-artifacts/stories/13-9-update-apple-watch-ui.md
+  7e2c261ff38324da 3,27-36,40-48,52-58,62-66,70-74,78-81,85-90,94-97,101-106,110-114,120-125,129-137,141-149,153-161,165-170,174-181,185-187,191-200,330,334-335,339-343,347-354
+docs/sprint-artifacts/sprint-status.yaml
+  8682beb03bb3c020 333
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.2.8",
+  "base_commit_sha": "3e0a44ea995d2a0abc3492281335d8ec92d3a18d",
+  "prompts": {
+    "7e2c261ff38324da": {
+      "agent_id": {
+        "tool": "github-copilot",
+        "id": "cf62283a-d4c6-426e-b614-b41f5a70fb03",
+        "model": "copilot/claude-opus-4.6"
+      },
+      "human_author": "Andrea Pacino",
+      "messages": [],
+      "total_additions": 138,
+      "total_deletions": 122,
+      "accepted_lines": 204,
+      "overriden_lines": 0
+    },
+    "8682beb03bb3c020": {
+      "agent_id": {
+        "tool": "github-copilot",
+        "id": "385112d1-f750-4a83-9bab-14d1b07f2eb7",
+        "model": "copilot/claude-opus-4.6"
+      },
+      "human_author": "Andrea Pacino",
+      "messages": [],
+      "total_additions": 1,
+      "total_deletions": 1,
+      "accepted_lines": 1,
+      "overriden_lines": 0
+    }
+  }
+}
