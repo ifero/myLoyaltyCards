@@ -55,11 +55,8 @@ expo-env.d.ts
 # Lock files
 package-lock.json
 
-# WatchOS
-watch-ios/.derivedData
-watch-ios/build
-watch-ios/Generated
-watch-ios/test-results*
+# WatchOS (targets/watch — source managed by @bacons/apple-targets)
+targets/watch/Generated
 
 # Fastlane
 bundler/

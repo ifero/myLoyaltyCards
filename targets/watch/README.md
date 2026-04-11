@@ -1,0 +1,113 @@
+# watchOS App (targets/watch)
+
+Native Swift/SwiftUI watchOS app distributed as an embedded companion inside the iOS archive. Managed by [`@bacons/apple-targets`](https://github.com/nicklockwood/apple-targets) via Expo's Continuous Native Generation (CNG).
+
+## Architecture
+
+The watchOS app lives in `targets/watch/` and is automatically embedded in the iOS Xcode project when you run `expo prebuild`. There is **no standalone Xcode project** — the Xcode project is regenerated each time.
+
+```
+targets/watch/
+├── expo-target.config.js      ← @bacons/apple-targets config
+├── MyLoyaltyCardsWatchApp.swift
+├── ContentView.swift
+├── CardListView.swift
+├── BarcodeFlashView.swift
+├── BarcodeGenerator.swift
+├── ColorHelpers.swift
+├── ComplicationProvider.swift
+├── WatchCardEntity.swift
+├── Assets.xcassets/
+├── Preview Content/
+├── Scripts/
+│   └── generate-catalogue.swift
+├── Generated/                   ← gitignored, auto-generated
+│   └── Brands.swift
+└── __tests__/
+    └── generate-catalogue.test.ts
+```
+
+## Requirements
+
+- macOS with Xcode 16 or newer
+- watchOS 10+ SDK (minimum deployment target: 10.0)
+- Node.js 22+
+- Yarn
+
+## Bundle Identifiers
+
+- iOS app: `com.iferoporefi.myloyaltycards`
+- watchOS app: `com.iferoporefi.myloyaltycards.watch`
+
+## Local Development
+
+### 1. Generate the Xcode project (required after any config change)
+
+```bash
+yarn watch:prebuild
+# or: npx expo prebuild --clean --platform ios
+```
+
+### 2. Build the watchOS app in simulator
+
+```bash
+yarn watch:build
+```
+
+### 3. Build and run on watch simulator
+
+```bash
+yarn watch:run
+```
+
+### 4. Open in Xcode (for debugging/running on device)
+
+```bash
+npx expo prebuild --platform ios
+open ios/myLoyaltyCards.xcworkspace
+```
+
+Then in Xcode:
+
+1. Select the `watch` scheme
+2. Choose an Apple Watch simulator or paired device
+3. Run (`Cmd + R`)
+
+### Editing Swift source files
+
+Source files in `targets/watch/` are **linked** (not copied) into the generated Xcode project. Edit them directly and changes are reflected immediately.
+
+## Testing
+
+### Unit tests (macOS xcodebuild)
+
+```bash
+yarn test:watchos
+```
+
+This runs `xcodebuild test` against the prebuild-generated workspace with the watch scheme.
+
+### Catalogue generation tests (Jest)
+
+The `targets/watch/__tests__/generate-catalogue.test.ts` file is a Node.js/Jest test that validates the Swift catalogue generator. It runs as part of the standard Jest suite only on macOS (requires `swift` and `xcrun`), and is excluded from the default `yarn test` run via `jest.config.js`.
+
+## CI/CD
+
+### watchOS tests workflow
+
+The `.github/workflows/watchos-tests.yml` workflow triggers on changes to `targets/watch/**` or `ios/**`. It runs `expo prebuild` and then `yarn test:watchos`.
+
+### TestFlight / App Store distribution
+
+The watchOS app is **automatically embedded** in the iOS archive. No separate build or upload is needed:
+
+1. `expo prebuild --platform ios` generates the Xcode project with the watch target
+2. `fastlane ios beta` (or `upload_release`) signs both iOS and watchOS targets and uploads a single archive
+3. TestFlight distributes both apps together — the watchOS app appears automatically on paired watches
+
+## Notes
+
+- **Companion-only**: no card creation or editing on watch
+- **Sync**: via `WatchConnectivity` with the iPhone app
+- **No React Native**: the watch app is pure Swift/SwiftUI; the `@bacons/apple-targets` plugin just handles Xcode project generation
+- **Future targets**: adding watch complications or other Apple targets follows the same pattern — create `targets/<name>/expo-target.config.js` and add source files
