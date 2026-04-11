@@ -83,7 +83,7 @@ struct BarcodeFlashView: View {
         $crownRotation, from: -1.0, through: 1.0, by: 0.1, sensitivity: .low, isContinuous: true,
         isHapticFeedbackEnabled: true
       )
-      .onChange(of: crownRotation) { newValue in
+      .onChange(of: crownRotation) { _, newValue in
         // Dismiss on any crown movement (single-shot)
         guard !crownTriggered else { return }
         if abs(newValue) > 0.01 {
