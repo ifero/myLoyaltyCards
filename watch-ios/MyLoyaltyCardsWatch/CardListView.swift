@@ -257,22 +257,30 @@ struct CardListView: View {
   }
 
   private var emptyState: some View {
-    VStack(spacing: 10) {
-      Text("No cards yet")
-        .font(.system(size: 16, weight: .semibold))
-        .foregroundColor(.white)
-        .accessibilityIdentifier("empty-state-title")
+    VStack(spacing: 16) {
+      // Icon — creditcard SF Symbol, prominent per watchOS HIG empty state guidance
+      Image(systemName: "creditcard")
+        .font(.system(size: 48, weight: .light))
+        .foregroundColor(.white.opacity(0.5))
+        .accessibilityHidden(true)
 
-      Text("Open myLoyaltyCards on your iPhone to add cards. They'll sync here automatically.")
-        .font(.system(size: 13))
-        .foregroundColor(.white.opacity(0.7))
-        .multilineTextAlignment(.center)
-        .padding(.horizontal, 12)
-        .accessibilityIdentifier("empty-state-subtitle")
+      VStack(spacing: 8) {
+        Text("No cards yet")
+          .font(.headline)
+          .foregroundColor(.white)
+          .accessibilityIdentifier("empty-state-title")
+
+        Text("Add cards on your iPhone — they sync here automatically.")
+          .font(.footnote)
+          .foregroundColor(.white.opacity(0.6))
+          .multilineTextAlignment(.center)
+          .accessibilityIdentifier("empty-state-subtitle")
+      }
     }
+    .padding(.horizontal, 12)
     .frame(maxWidth: .infinity, maxHeight: .infinity)
     .accessibilityElement(children: .combine)
-    .accessibilityLabel("No cards yet. Open myLoyaltyCards on your iPhone to add cards.")
+    .accessibilityLabel("No cards yet. Add cards on your iPhone, they sync here automatically.")
   }
 
   #if DEBUG
