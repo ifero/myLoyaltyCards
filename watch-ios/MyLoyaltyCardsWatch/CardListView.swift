@@ -73,35 +73,9 @@ final class CardStore: ObservableObject {
   }
 }
 
-// MARK: - Helpers (file-level, testable)
-
-func initials(from name: String) -> String {
-  let trimmed = name.trimmingCharacters(in: .whitespacesAndNewlines)
-  guard !trimmed.isEmpty else { return "" }
-  let parts = trimmed.split(separator: " ")
-  if parts.count >= 2 {
-    let first = parts[0].first.map(String.init) ?? ""
-    let second = parts[1].first.map(String.init) ?? ""
-    return (first + second).uppercased()
-  }
-  return String(trimmed.prefix(2)).uppercased()
-}
-
-func mapColor(hex: String?) -> Color? {
-  guard let hex = hex?.trimmingCharacters(in: .whitespacesAndNewlines), !hex.isEmpty else {
-    return nil
-  }
-  switch hex.lowercased() {
-  case "#1e90ff", "blue": return Color.blue
-  case "#ff6b6b", "red": return Color.red
-  case "#2ecc71", "green": return Color.green
-  case "#ffa500", "orange": return Color.orange
-  case "#9ca3af", "gray", "grey":
-    return Color(red: 156 / 255, green: 163 / 255, blue: 175 / 255)
-  default:
-    return Color.gray
-  }
-}
+// MARK: - Helpers moved to ColorHelpers.swift
+// initials(from:), mapColor(hex:), parseHexColor(_:), contrast helpers
+// are now in ColorHelpers.swift for reusability and testability.
 
 struct CardRowView: View {
   let card: WatchCard
