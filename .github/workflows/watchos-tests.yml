@@ -47,7 +47,3 @@ jobs:
         run: yarn test:watchos
         env:
           CI: true
-      - name: Run watchOS tests (Jest)
-        run: yarn test --testPathPattern=watch-ios --runInBand
-        env:
-          CI: true
