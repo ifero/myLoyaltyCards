@@ -1,0 +1,21 @@
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.2.8",
+  "base_commit_sha": "fca8826c54cd9733dfc1488632c0499d94adacb6",
+  "prompts": {
+    "7e2c261ff38324da": {
+      "agent_id": {
+        "tool": "github-copilot",
+        "id": "cf62283a-d4c6-426e-b614-b41f5a70fb03",
+        "model": "copilot/claude-opus-4.6"
+      },
+      "human_author": "Andrea Pacino",
+      "messages": [],
+      "total_additions": 0,
+      "total_deletions": 1,
+      "accepted_lines": 0,
+      "overriden_lines": 0
+    }
+  }
+}
