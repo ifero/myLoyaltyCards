@@ -6,11 +6,15 @@ on:
     paths:
       - 'targets/watch/**'
       - 'ios/**'
+      - 'app.json'
+      - 'fastlane/Fastfile'
   push:
     branches: [main]
     paths:
       - 'targets/watch/**'
       - 'ios/**'
+      - 'app.json'
+      - 'fastlane/Fastfile'
 
 jobs:
   watchos-tests:
@@ -42,6 +46,11 @@ jobs:
 
       - name: Install dependencies
         run: yarn install --frozen-lockfile
+
+      - name: Run watchOS catalogue generation tests (Jest)
+        run: npx jest --testPathPattern='targets/watch/__tests__' --no-coverage
+        env:
+          CI: true
 
       - name: Generate iOS project with watch target
         run: npx expo prebuild --clean --platform ios

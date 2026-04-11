@@ -1,6 +1,6 @@
 # watchOS App (targets/watch)
 
-Native Swift/SwiftUI watchOS app distributed as an embedded companion inside the iOS archive. Managed by [`@bacons/apple-targets`](https://github.com/nicklockwood/apple-targets) via Expo's Continuous Native Generation (CNG).
+Native Swift/SwiftUI watchOS app distributed as an embedded companion inside the iOS archive. Managed by [`@bacons/apple-targets`](https://github.com/EvanBacon/expo-apple-targets) via Expo's Continuous Native Generation (CNG).
 
 ## Architecture
 
@@ -89,7 +89,7 @@ This runs `xcodebuild test` against the prebuild-generated workspace with the wa
 
 ### Catalogue generation tests (Jest)
 
-The `targets/watch/__tests__/generate-catalogue.test.ts` file is a Node.js/Jest test that validates the Swift catalogue generator. It runs as part of the standard Jest suite only on macOS (requires `swift` and `xcrun`), and is excluded from the default `yarn test` run via `jest.config.js`.
+The `targets/watch/__tests__/generate-catalogue.test.ts` file is a Node.js/Jest test that validates the Swift catalogue generator. It requires `swift` and `xcrun` (macOS only), so it is excluded from the default `yarn test` run via `jest.config.js`. It runs in the watchOS CI workflow (`.github/workflows/watchos-tests.yml`) on macOS runners.
 
 ## CI/CD
 
