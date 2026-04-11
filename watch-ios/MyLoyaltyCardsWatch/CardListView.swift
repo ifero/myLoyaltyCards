@@ -1,5 +1,6 @@
 import SwiftData
 import SwiftUI
+import WidgetKit
 
 // Simple watch-side card model (read-only snapshot for display)
 struct WatchCard: Identifiable, Codable {
@@ -10,6 +11,14 @@ struct WatchCard: Identifiable, Codable {
   // Optional barcode fields (may be absent for older persisted payloads)
   let barcodeValue: String?
   let barcodeFormat: String?  // values like "CODE128", "EAN13", "QR" etc.
+  // Sorting fields (non-coded for backward compat with older JSON payloads)
+  var usageCount: Int = 0
+  var lastUsedAt: Date? = nil
+  var createdAt: Date = Date()
+
+  enum CodingKeys: String, CodingKey {
+    case id, name, brandId, colorHex, barcodeValue, barcodeFormat
+  }
 }
 
 final class CardStore: ObservableObject {
@@ -70,111 +79,136 @@ final class CardStore: ObservableObject {
 
     try? modelContext.save()
     UserDefaults.standard.removeObject(forKey: "watch.cards")
+
+    // Reload complications so they reflect the migrated data
+    WidgetCenter.shared.reloadAllTimelines()
   }
 }
 
-// MARK: - Helpers (file-level, testable)
-
-func initials(from name: String) -> String {
-  let trimmed = name.trimmingCharacters(in: .whitespacesAndNewlines)
-  guard !trimmed.isEmpty else { return "" }
-  let parts = trimmed.split(separator: " ")
-  if parts.count >= 2 {
-    let first = parts[0].first.map(String.init) ?? ""
-    let second = parts[1].first.map(String.init) ?? ""
-    return (first + second).uppercased()
-  }
-  return String(trimmed.prefix(2)).uppercased()
-}
-
-func mapColor(hex: String?) -> Color? {
-  guard let hex = hex?.trimmingCharacters(in: .whitespacesAndNewlines), !hex.isEmpty else {
-    return nil
-  }
-  switch hex.lowercased() {
-  case "#1e90ff", "blue": return Color.blue
-  case "#ff6b6b", "red": return Color.red
-  case "#2ecc71", "green": return Color.green
-  case "#ffa500", "orange": return Color.orange
-  case "#9ca3af", "gray", "grey":
-    return Color(red: 156 / 255, green: 163 / 255, blue: 175 / 255)
-  default:
-    return Color.gray
-  }
-}
+// MARK: - Helpers moved to ColorHelpers.swift
+// initials(from:), mapColor(hex:), parseHexColor(_:), contrast helpers
+// are now in ColorHelpers.swift for reusability and testability.
 
 struct CardRowView: View {
   let card: WatchCard
 
+  /// Resolved brand color hex string (from catalogue or user-selected).
+  private var resolvedColorHex: String {
+    if let brandId = card.brandId,
+      let brand = WatchBrands.all.first(where: { $0.id == brandId })
+    {
+      // Use a deterministic hex from the brand id hash when no explicit color exists
+      return card.colorHex ?? "#\(String(format: "%06X", abs(brand.id.hashValue) % 0xFFFFFF))"
+    }
+    return card.colorHex ?? ""
+  }
+
+  /// Accent color derived from the resolved hex.
+  private var accentColor: Color {
+    mapColor(hex: resolvedColorHex) ?? .gray
+  }
+
   var body: some View {
     HStack(spacing: 12) {
-      visualIdentifier
-        .frame(width: 44, height: 28)
-        .cornerRadius(6)
+      // Vertical accent bar — brand color indicator (Figma: 6×32, 3px rounded)
+      RoundedRectangle(cornerRadius: 3)
+        .fill(accentColor)
+        .frame(width: 6, height: 32)
 
+      // Circular logo/avatar area (Figma: 36×36)
+      logoView
+        .frame(width: 36, height: 36)
+        .clipShape(Circle())
+
+      // Card name (Figma: 20px medium, white, single line)
       Text(card.name)
         .font(.system(size: 16, weight: .semibold))
         .foregroundColor(.white)
         .lineLimit(1)
+        .truncationMode(.tail)
 
       Spacer()
     }
-    .padding(.vertical, 6)
+    .padding(.horizontal, 12)
+    .padding(.vertical, 16)
+    .background(
+      RoundedRectangle(cornerRadius: 16)
+        .fill(Color(red: 28 / 255, green: 28 / 255, blue: 31 / 255)) // #1C1C1F
+    )
+    .overlay(
+      // Near-black brands get a subtle border for OLED contrast (AC3)
+      RoundedRectangle(cornerRadius: 16)
+        .stroke(isNearBlack(hex: resolvedColorHex) ? Color.white.opacity(0.15) : Color.clear, lineWidth: 1)
+    )
     .accessibilityElement(children: .combine)
     .accessibilityLabel("Card, \(card.name)")
   }
 
   @ViewBuilder
-  private var visualIdentifier: some View {
+  private var logoView: some View {
     if let brandId = card.brandId,
       let brand = WatchBrands.all.first(where: { $0.id == brandId })
     {
-      // For now show brand initials from generated catalogue (watch-side asset mapping is handled elsewhere)
+      // Catalogue brand — initials on brand-colored circle
+      let bgColor = accentColor
+      let useWhite = shouldUseWhiteText(onBackgroundHex: resolvedColorHex)
       ZStack {
-        Color.gray.opacity(0.15)
-        Text(brandInitials(name: brand.name ?? brand.id))
-          .font(.system(size: 12, weight: .bold))
-          .foregroundColor(.white)
+        bgColor
+        Text(initials(from: brand.name ?? brand.id))
+          .font(.system(size: 14, weight: .bold))
+          .foregroundColor(useWhite ? .white : .black)
       }
     } else {
+      // Custom card — user-selected color with initials
+      let bgColor = accentColor
+      let colorHex = card.colorHex ?? ""
+      let useWhite = shouldUseWhiteText(onBackgroundHex: colorHex)
       ZStack {
-        mapColor(hex: card.colorHex) ?? Color.gray
+        bgColor
         Text(initials(from: card.name))
-          .font(.system(size: 12, weight: .bold))
-          .foregroundColor(.black)
+          .font(.system(size: 14, weight: .bold))
+          .foregroundColor(useWhite ? .white : .black)
       }
     }
-  }
-
-  private func brandInitials(name: String) -> String {
-    return String(name.trimmingCharacters(in: .whitespacesAndNewlines).prefix(2)).uppercased()
   }
 }
 
 struct CardListView: View {
   @Environment(\.modelContext) private var modelContext
-  @Query(sort: \WatchCardEntity.createdAt, order: .reverse) private var persistedEntities:
-    [WatchCardEntity]
+  @Query private var persistedEntities: [WatchCardEntity]
   @StateObject private var store: CardStore
 
   init(store: CardStore = CardStore()) {
     _store = StateObject(wrappedValue: store)
   }
 
+  /// Cards sorted by usageCount desc → lastUsedAt desc → createdAt desc.
   private var displayCards: [WatchCard] {
+    let entities: [WatchCard]
     if !persistedEntities.isEmpty {
-      return persistedEntities.map { e in
+      entities = persistedEntities.map { e in
         WatchCard(
           id: e.id,
           name: e.name,
           brandId: e.brandId,
           colorHex: e.color,
           barcodeValue: e.barcode,
-          barcodeFormat: e.barcodeFormat
+          barcodeFormat: e.barcodeFormat,
+          usageCount: e.usageCount,
+          lastUsedAt: e.lastUsedAt,
+          createdAt: e.createdAt
         )
       }
+    } else {
+      entities = store.cards
     }
-    return store.cards
+    return entities.sorted { a, b in
+      if a.usageCount != b.usageCount { return a.usageCount > b.usageCount }
+      if let aLast = a.lastUsedAt, let bLast = b.lastUsedAt, aLast != bLast {
+        return aLast > bLast
+      }
+      return a.createdAt > b.createdAt
+    }
   }
 
   var body: some View {
@@ -183,16 +217,21 @@ struct CardListView: View {
         if displayCards.isEmpty {
           emptyState
         } else {
-          List(displayCards) { card in
-            NavigationLink(destination: BarcodeFlashView(card: card)) {
-              CardRowView(card: card)
-                .listRowBackground(Color.clear)
+          ScrollView {
+            LazyVStack(spacing: 8) {
+              ForEach(displayCards) { card in
+                NavigationLink(destination: BarcodeFlashView(card: card)) {
+                  CardRowView(card: card)
+                }
+                .buttonStyle(.plain)
+                .accessibilityIdentifier("card-row-\(card.id)")
+              }
             }
-            .accessibilityIdentifier("card-row-\(card.id)")
+            .padding(.horizontal, 4)
           }
-          .listStyle(.plain)
         }
       }
+      .navigationTitle("Cards")
     }
     #if DEBUG
       .toolbar {
@@ -205,8 +244,6 @@ struct CardListView: View {
         }
       }
     #endif
-    .navigationTitle("")
-    .navigationBarHidden(true)
     .background(Color.black)
     .scrollContentBackground(.hidden)
     .onAppear {
@@ -220,17 +257,30 @@ struct CardListView: View {
   }
 
   private var emptyState: some View {
-    VStack(spacing: 6) {
-      Text("No cards on this watch yet")
-        .font(.system(size: 14, weight: .semibold))
-        .foregroundColor(.white)
-      Text("Add cards from the phone app; they’ll appear here automatically when synced.")
-        .font(.system(size: 11))
-        .foregroundColor(.white.opacity(0.7))
-        .multilineTextAlignment(.center)
-        .padding(.horizontal, 6)
+    VStack(spacing: 16) {
+      // Icon — creditcard SF Symbol, prominent per watchOS HIG empty state guidance
+      Image(systemName: "creditcard")
+        .font(.system(size: 48, weight: .light))
+        .foregroundColor(.white.opacity(0.5))
+        .accessibilityHidden(true)
+
+      VStack(spacing: 8) {
+        Text("No cards yet")
+          .font(.headline)
+          .foregroundColor(.white)
+          .accessibilityIdentifier("empty-state-title")
+
+        Text("Add cards on your iPhone — they sync here automatically.")
+          .font(.footnote)
+          .foregroundColor(.white.opacity(0.6))
+          .multilineTextAlignment(.center)
+          .accessibilityIdentifier("empty-state-subtitle")
+      }
     }
-    .padding()
+    .padding(.horizontal, 12)
+    .frame(maxWidth: .infinity, maxHeight: .infinity)
+    .accessibilityElement(children: .combine)
+    .accessibilityLabel("No cards yet. Add cards on your iPhone, they sync here automatically.")
   }
 
   #if DEBUG
@@ -256,11 +306,6 @@ struct CardListView: View {
       WKInterfaceDevice.current().play(.success)
     }
   #endif
-
-  private func openCard(_ card: WatchCard) {
-    // Post-MVP: navigate to barcode view. For now no-op (watch is read-only).
-    WKInterfaceDevice.current().play(.click)
-  }
 }
 
 struct CardListView_Previews: PreviewProvider {
