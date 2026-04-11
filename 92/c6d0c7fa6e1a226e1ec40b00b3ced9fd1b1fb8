@@ -1,0 +1,27 @@
+watch-ios/MyLoyaltyCardsWatch/CardListView.swift
+  7e2c261ff38324da 76-78
+watch-ios/MyLoyaltyCardsWatch/ColorHelpers.swift
+  7e2c261ff38324da 1-86
+watch-ios/MyLoyaltyCardsWatchTests/CardRowHelpersTests.swift
+  7e2c261ff38324da 5-7,20-25,28-29,39-50,53-62,64-151
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.2.8",
+  "base_commit_sha": "92c6d0c7fa6e1a226e1ec40b00b3ced9fd1b1fb8",
+  "prompts": {
+    "7e2c261ff38324da": {
+      "agent_id": {
+        "tool": "github-copilot",
+        "id": "cf62283a-d4c6-426e-b614-b41f5a70fb03",
+        "model": "copilot/claude-opus-4.6"
+      },
+      "human_author": "Andrea Pacino",
+      "messages": [],
+      "total_additions": 214,
+      "total_deletions": 31,
+      "accepted_lines": 214,
+      "overriden_lines": 0
+    }
+  }
+}
