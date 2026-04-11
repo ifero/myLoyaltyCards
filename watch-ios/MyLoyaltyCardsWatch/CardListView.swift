@@ -1,5 +1,6 @@
 import SwiftData
 import SwiftUI
+import WidgetKit
 
 // Simple watch-side card model (read-only snapshot for display)
 struct WatchCard: Identifiable, Codable {
@@ -78,6 +79,9 @@ final class CardStore: ObservableObject {
 
     try? modelContext.save()
     UserDefaults.standard.removeObject(forKey: "watch.cards")
+
+    // Reload complications so they reflect the migrated data
+    WidgetCenter.shared.reloadAllTimelines()
   }
 }
 
