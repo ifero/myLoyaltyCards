@@ -47,8 +47,8 @@ describe('watchOS catalogue generation', () => {
   });
 
   // NOTE: The 'configures Xcode build integration' test was removed because the Xcode project
-  // is now generated dynamically by `expo prebuild` via @bacons/apple-targets. The old test
-  // verified the hand-maintained watch-ios/MyLoyaltyCardsWatch.xcodeproj which no longer exists.
+  // is now generated dynamically by `expo prebuild` via @bacons/apple-targets. Build integration
+  // is validated by the CI workflow (watchos-tests.yml) which runs `expo prebuild` + `xcodebuild test`.
 
   it('escapes special characters and generated file type-checks', () => {
     const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'watch-catalogue-'));
