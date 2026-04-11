@@ -248,17 +248,22 @@ struct CardListView: View {
   }
 
   private var emptyState: some View {
-    VStack(spacing: 6) {
-      Text("No cards on this watch yet")
-        .font(.system(size: 14, weight: .semibold))
+    VStack(spacing: 10) {
+      Text("No cards yet")
+        .font(.system(size: 16, weight: .semibold))
         .foregroundColor(.white)
-      Text("Add cards from the phone app; they’ll appear here automatically when synced.")
-        .font(.system(size: 11))
+        .accessibilityIdentifier("empty-state-title")
+
+      Text("Open myLoyaltyCards on your iPhone to add cards. They'll sync here automatically.")
+        .font(.system(size: 13))
         .foregroundColor(.white.opacity(0.7))
         .multilineTextAlignment(.center)
-        .padding(.horizontal, 6)
+        .padding(.horizontal, 12)
+        .accessibilityIdentifier("empty-state-subtitle")
     }
-    .padding()
+    .frame(maxWidth: .infinity, maxHeight: .infinity)
+    .accessibilityElement(children: .combine)
+    .accessibilityLabel("No cards yet. Open myLoyaltyCards on your iPhone to add cards.")
   }
 
   #if DEBUG

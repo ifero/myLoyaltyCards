@@ -11,7 +11,7 @@ final class CardListUITests: XCTestCase {
     app.launchEnvironment["UITEST_CARDS"] = "[]"
     app.launch()
 
-    let emptyText = app.staticTexts["No cards on this watch yet"]
+    let emptyText = app.staticTexts["No cards yet"]
     XCTAssertTrue(emptyText.waitForExistence(timeout: 2), "Empty state message should appear")
   }
 
