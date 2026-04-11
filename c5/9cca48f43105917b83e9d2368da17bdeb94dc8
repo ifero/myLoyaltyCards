@@ -1,0 +1,59 @@
+docs/sprint-artifacts/stories/11-5-document-cicd-pipeline.md
+  6d6aad8906483283 1-19,21-25,27-169,171-177
+docs/prd.md
+  6d6aad8906483283 83-84,1062-1064
+docs/sprint-artifacts/stories/11-6-watchos-testflight-pipeline.md
+  6d6aad8906483283 1-65,67-79,81-185,187-200,206,208,210-212,214-241,243-311,313-319,321-324,326-376,378-410,412-424,426-433
+docs/sprint-artifacts/epic-13-retro-2026-04-11.md
+  6d6aad8906483283 1-13,15-31,33-76,78-83,85-90,92-103,105-121,123-138,140-154,156-163,165-189,191-198
+docs/architecture.md
+  6d6aad8906483283 67-68,165-173,175-182,189-194,196,198,226-238,245,252-253,255,257-261,280-283,1725-1730,1732-1735
+docs/sprint-artifacts/sprint-status.yaml
+  6d6aad8906483283 38,51-52,55-57,68-69,71-84,86-100,102-118,296-299,318,320,330-332
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.2.8",
+  "base_commit_sha": "c59cca48f43105917b83e9d2368da17bdeb94dc8",
+  "prompts": {
+    "6d6aad8906483283": {
+      "agent_id": {
+        "tool": "github-copilot",
+        "id": "3aa9ad8e-8829-438b-8e07-556e3c4f4f0a",
+        "model": "copilot/claude-opus-4.6"
+      },
+      "human_author": "Andrea Pacino",
+      "messages": [],
+      "total_additions": 1182,
+      "total_deletions": 127,
+      "accepted_lines": 910,
+      "overriden_lines": 21
+    },
+    "7e5dddf93f995e7e": {
+      "agent_id": {
+        "tool": "github-copilot",
+        "id": "9854ccf1-82b7-4865-b93f-edfce1ab8a7a",
+        "model": "copilot/gpt-5.3-codex"
+      },
+      "human_author": null,
+      "messages": [],
+      "total_additions": 0,
+      "total_deletions": 0,
+      "accepted_lines": 343,
+      "overriden_lines": 0
+    },
+    "807f5d583a8670e3": {
+      "agent_id": {
+        "tool": "github-copilot",
+        "id": "cfa652de-8bec-4209-8ca8-ab3b46b88ae9",
+        "model": "copilot/claude-opus-4.6"
+      },
+      "human_author": null,
+      "messages": [],
+      "total_additions": 0,
+      "total_deletions": 0,
+      "accepted_lines": 369,
+      "overriden_lines": 0
+    }
+  }
+}
