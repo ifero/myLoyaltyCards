@@ -35,7 +35,7 @@
 # - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
 
 generated: 2026-01-03
-updated: 2026-04-09
+updated: 2026-04-11
 project: myLoyaltyCards
 tracking_system: file-system
 story_location: docs/sprint-artifacts
@@ -44,82 +44,78 @@ story_location: docs/sprint-artifacts
 # LAST SPRINT (completed)
 # ============================================
 last_sprint:
-  number: 10
-  name: 'Sprint 10: App-Wide Design Overhaul'
-  goal: 'Deliver complete Figma designs for all app screens (Epic 12) — design-only sprint, no implementation'
-  start_date: 2026-03-28
-  end_date: 2026-04-01
+  number: 11
+  name: 'Sprint 11: UI Implementation (Epic 13)'
+  goal: 'Implement approved Figma designs across all app screens — full Epic 13 delivery'
+  start_date: 2026-04-01
+  end_date: 2026-04-11
   status: completed
-  epics: [12]
+  epics: [13]
   stories:
-    - 12-1-design-system-foundation
-    - 12-2-home-screen-card-list
-    - 12-3-card-detail
-    - 12-4-add-card-flow
-    - 12-5-auth-screens
-    - 12-6-settings-screen
-    - 12-7-onboarding
-    - 12-8-sync-status-indicators
-    - 12-9-apple-watch
+    - 12-icon-doc-cleanup
+    - 12-figma-icon-update
+    - 13-1-implement-design-system-tokens
+    - 13-2-restyle-home-screen
+    - 13-3-restyle-card-detail
+    - 13-4-restyle-add-card-flow
+    - 13-5-restyle-auth-screens
+    - 13-6-implement-settings-screen
+    - 13-7-restyle-onboarding
+    - 13-7a-import-data-from-json
+    - 13-8-restyle-sync-indicators
+    - 13-9-update-apple-watch-ui
   notes: |
-    All 9 stories completed. Epic 12 closed.
-    Pure design sprint — all deliverables are Figma pages.
+    All 13 stories completed (2 blockers + 11 implementation). Epic 13 closed.
+    73 commits, 11 PRs merged (#87–#97), 272 files changed, +19,872 / -7,136 lines.
     Figma file: https://www.figma.com/design/4PSsX8SyTUU0GCUdBAAEED/Test
-    Retrospective completed 2026-03-31. Key insights:
-      - Design-only sprints are cheap places to discover scope
-      - Icon system pivot (FontAwesome → MI/MCI) identified as cleanup before Epic 13
-      - Collaborative party mode sessions produced higher-quality design decisions
-    Follow-up items: 12-1a (brand logos, ifero), icon doc cleanup, Figma icon update.
+    Retrospective completed 2026-04-11. Key insights:
+      - App now has cohesive, polished visual identity across all screens
+      - NativeWind caused persistent friction (~23% fix commits) — decision to evaluate alternatives
+      - Party mode for story development is now standard practice
+      - Definition of Ready / Definition of Done established as process gates
+    Next: Sprint 12 — CI/CD & TestFlight delivery (Epic 11).
 
 # ============================================
 # CURRENT SPRINT
 # ============================================
 current_sprint:
-  number: 11
-  name: 'Sprint 11: UI Implementation (Epic 13)'
-  goal: 'Implement approved Figma designs across all app screens — full Epic 13 delivery'
+  number: 12
+  name: 'Sprint 12: CI/CD & TestFlight Delivery'
+  goal: 'Complete CI/CD pipeline (Epic 11) and ship iOS + watchOS builds to TestFlight for real-device testing'
   status: in-progress
-  start_date: 2026-04-01
-  end_date: 2026-04-15
+  start_date: 2026-04-14
+  end_date: 2026-04-28
   duration: 2 weeks
-  epics: [13]
+  epics: [11]
   stories:
-    # Wave 1: Blockers + Foundation (sequential)
-    - 12-icon-doc-cleanup # blocker: update FA → MI/MCI refs in stories 12-1 to 12-4
-    - 12-figma-icon-update # blocker: update Figma design system page icon section
-    - 13-1-implement-design-system-tokens # foundation — everything depends on this
-    # Wave 2: Core card screens (parallel)
-    - 13-2-restyle-home-screen
-    - 13-3-restyle-card-detail
-    - 13-4-restyle-add-card-flow
-    # Wave 3: Supporting screens (parallel)
-    - 13-5-restyle-auth-screens
-    - 13-6-implement-settings-screen
-    - 13-7-restyle-onboarding
-    # Wave 3b: After 13-6 completes
-    - 13-7a-import-data-from-json
-    # Wave 4: Peripheral (parallel)
-    - 13-8-restyle-sync-indicators
-    - 13-9-update-apple-watch-ui
-  parallel_track:
-    - 12-1a-source-real-brand-logos # ifero — non-blocking
-  # Wave order (dependency chain):
-  #   Wave 1 (sequential): 12-icon-doc-cleanup → 12-figma-icon-update → 13-1 (foundation)
-  #   Wave 2 (parallel):   13-2 + 13-3 + 13-4 (core card experience)
-  #   Wave 3 (parallel):   13-5 + 13-6 + 13-7 (supporting screens)
-  #   Wave 3b:             13-7a (after 13-6 completes — import needs settings scaffold)
-  #   Wave 4 (parallel):   13-8 + 13-9 (peripheral)
+    - 11-5-document-cicd-pipeline
+    - 11-6-watchos-testflight-pipeline # Fastlane lane + GHA workflow for watchOS → TestFlight
+  parallel_track: []
   notes: |
-    Implementation of all approved Epic 12 Figma designs.
-    Figma file: https://www.figma.com/design/4PSsX8SyTUU0GCUdBAAEED/Test
-    Each story must reference exact Figma frame names for dev and QA traceability.
-    Stories are PLACEHOLDERS — must be refined via Create Story workflow before dev picks up.
-    Key constraints:
-      - 13-1 blocked on icon doc cleanup (2 small tickets)
-      - 13-7a depends on 13-6 (import needs settings screen scaffold)
-      - 12-1a (brand logos) runs parallel, non-blocking — ifero owns
-      - Epic 8 absorbed — 13-6 covers full settings implementation
+    Focus: close out Epic 11 (CI/CD) and add watchOS TestFlight pipeline.
+    iOS TestFlight already works (fastlane ios beta, triggered by v*-rc.* tags).
+    Only gap: watchOS companion has no build/upload pipeline — story 11-6 covers this.
+    Stories 11-3 and 11-4 cancelled (not applicable to mobile apps).
+    Priority is real-device testing — ifero needs to validate the full app in daily life.
+    Stories must be refined via Create Story workflow (party mode) before dev picks up.
   decisions:
+    - id: DEC-S12-001
+      date: 2026-04-11
+      title: 'Prioritize TestFlight delivery for real-device testing'
+      context: |
+        Epic 13 delivered full UI implementation. ifero needs to test the complete app
+        on real devices (iPhone + Apple Watch) to validate before any further feature work.
+        iOS TestFlight pipeline already exists (Fastlane ios beta + beta-releases.yml).
+        watchOS companion has CI tests but no build/upload pipeline.
+      decision: |
+        Sprint 12 focuses on CI/CD completion + adding watchOS TestFlight pipeline.
+        One new story (11-6) added to Epic 11 for Fastlane watchOS → TestFlight.
+        iOS can ship immediately by tagging an RC (v*.*.*-rc.*).
+      consequences: |
+        - Feature work (Epic 9, 10) deferred until real-device testing completes
+        - watchOS needs Fastlane lane + GHA workflow (signing, scheme, upload)
+        - May surface real-device bugs that weren't caught in simulator
+      status: approved
     - id: DEC-S10-001
       date: 2026-03-28
       title: 'Create Epic 13 (UI Implementation) as separate epic from Epic 12 (Design)'
@@ -297,9 +293,10 @@ development_status:
   epic-11: in-progress
   11-1-block-pr-on-quality-gates: done
   11-2-build-on-main-app-changes-only: done
-  11-3-notify-on-build-status: drafted
-  11-4-rollback-on-failed-deploy: drafted
-  11-5-document-cicd-pipeline: drafted
+  11-3-notify-on-build-status: cancelled # not needed — GitHub shows build status natively
+  11-4-rollback-on-failed-deploy: cancelled # rollback doesn't apply to mobile app store binaries
+  11-5-document-cicd-pipeline: drafted # depends on 11-6
+  11-6-watchos-testflight-pipeline: ready-for-dev # embed watchOS in iOS build via @bacons/apple-targets
 
   # Epic 12: App-Wide Design Overhaul (Figma) ✅ COMPLETE
   epic-12: done
@@ -318,9 +315,9 @@ development_status:
   12-figma-icon-update: done # Sprint 11 blocker resolved: MI/MCI icon migration completed in docs + Figma
   epic-12-retrospective: done # completed 2026-03-31
 
-  # Epic 13: UI Implementation (Sprint 11 — all stories need refinement via Create Story)
+  # Epic 13: UI Implementation ✅ COMPLETE
   # Absorbs Epic 8 (Settings) — 8-X stories will NOT be implemented separately
-  epic-13: in-progress
+  epic-13: done
   13-1-implement-design-system-tokens: done # implementation complete, QA + dev review approved
   13-2-restyle-home-screen: done # QA + dev review approved 2026-04-03
   13-3-restyle-card-detail: done # QA + dev review approved, PR #90 awaiting stakeholder merge
@@ -330,5 +327,6 @@ development_status:
   13-7-restyle-onboarding: done # maps to 12-7
   13-7a-import-data-from-json: done # implementation complete locally; QA + dev review approved, awaiting stakeholder approval
   13-8-restyle-sync-indicators: done # QA + dev review approved, PR created 2026-04-11
-  13-9-update-apple-watch-ui: in-progress # maps to 12-9
-  epic-13-retrospective: optional
+  13-9-update-apple-watch-ui: done # maps to 12-9, PR #97 merged 2026-04-11
+  epic-13-completed: 2026-04-11
+  epic-13-retrospective: done # completed 2026-04-11

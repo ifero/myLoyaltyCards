@@ -64,8 +64,8 @@ _This document builds collaboratively through step-by-step discovery. Sections a
 **Technology Stack (Pre-decided):**
 
 - React Native + Expo SDK (latest)
-- NativeWind (Tailwind CSS) for styling
-- Native components for wearable apps
+- NativeWind (Tailwind CSS) for styling ⚠️ **Under evaluation** — see ADR-2026-04-11-001
+- Native components for wearable apps, embedded via `@bacons/apple-targets` (CNG)
 
 **Market Constraints:**
 
@@ -162,21 +162,40 @@ Project initialized with `npx create-expo-app@latest` providing:
 4. Single wearable focus enables faster time to validation
 5. Expo phone app already supports both iOS and Android
 
+### watchOS Distribution Architecture (Updated 2026-04-11)
+
+> **ADR-2026-04-11-002: watchOS apps must be embedded in the iOS app archive**
+>
+> Apple requires ALL watchOS apps — including "independent" ones (watchOS 6+) — to be distributed embedded inside the iOS app's IPA archive. There is no standalone watchOS binary upload to App Store Connect or TestFlight. The watch binary is discovered by watchOS via the "Embed Watch Content" build phase within the iOS archive.
+>
+> **Previous approach (pre-Sprint 12):** Standalone Xcode project at `watch-ios/MyLoyaltyCardsWatch.xcodeproj`, completely disconnected from the Expo-generated iOS project. This could not produce distributable builds.
+>
+> **Current approach:** Use `@bacons/apple-targets` (Expo Config Plugin by Evan Bacon, Expo team) to embed the watchOS target in the iOS Xcode project during `expo prebuild`. Source files live at `targets/watch/` outside the `ios/` directory, surviving `expo prebuild --clean`. The plugin generates:
+>
+> - A native watchOS target with correct build settings (`SDKROOT: watchos`, `TARGETED_DEVICE_FAMILY: 4`)
+> - An "Embed Watch Content" copy files build phase on the main iOS target
+> - Source file references linked from `targets/watch/`
+>
+> **Result:** A single `fastlane ios beta` command archives both iOS + watchOS into one IPA → one TestFlight upload → both apps distributed.
+>
+> **Signing:** Fastlane lanes (`beta`, `adhoc`, `upload_release`) call `match` and `update_code_signing_settings` for BOTH bundle IDs: `com.iferoporefi.myloyaltycards` (iOS) and `com.iferoporefi.myloyaltycards.watch` (watchOS).
+
 ### Project Structure
 
 ```
 myLoyaltyCards/
 ├── .github/                # GitHub Actions CI/CD
 │   └── workflows/
-│       ├── dev-phone.yml       # Dev builds on PR/push
-│       ├── dev-watch-ios.yml   # Dev watchOS builds
-│       ├── dev-watch-android.yml
-│       ├── prod-release.yml    # Production releases (manual)
-│       └── test-schemas.yml    # Cross-platform validation
+│       ├── ci-quality-gates.yml    # PR quality gates (lint, typecheck, test, coverage)
+│       ├── ios-release.yml         # AdHoc iOS build on push to main (app paths)
+│       ├── android-release.yml     # AdHoc Android build on push to main (app paths)
+│       ├── beta-releases.yml       # TestFlight + beta on v*.*.*-rc.* tags (iOS+watchOS+Android)
+│       ├── store-upload.yml        # App Store + Play Store on v*.*.* tags
+│       └── watchos-tests.yml       # watchOS tests on PR/push (targets/watch/**)
 ├── fastlane/               # Build automation
-│   ├── Fastfile            # Build lanes per platform/env
+│   ├── Fastfile            # Build lanes (adhoc, beta, upload_release) — signs iOS + watchOS
 │   ├── Appfile             # App identifiers
-│   └── Matchfile           # iOS code signing
+│   └── Matchfile           # iOS + watchOS code signing (match)
 ├── app/                    # Expo Router (thin routing layer)
 │   ├── _layout.tsx         # Root layout with header (+/⚙️ buttons)
 │   ├── index.tsx           # → features/cards
@@ -204,37 +223,42 @@ myLoyaltyCards/
 ├── test-fixtures/          # Cross-platform test data
 │   ├── card-valid.json
 │   └── sync-message-v1.json
-├── watch-ios/              # Phase 1: Native watchOS (Swift/SwiftUI)
-│   ├── README.md           # ⚠️ Documents this is native Swift, not RN
-│   ├── Scripts/            # Build scripts
-│   │   └── generate-catalogue.swift
-│   ├── Generated/          # .gitignore'd - created at build time
-│   │   └── Brands.swift    # Generated from /catalogue/italy.json
-│   └── WatchApp/           # Swift source code
-├── watch-android/          # Phase 2: Native Wear OS (Kotlin/Compose)
+├── targets/                # Apple native targets (CNG-managed via @bacons/apple-targets)
+│   └── watch/              # watchOS companion app (Swift/SwiftUI)
+│       ├── expo-target.config.js  # Target config (type, bundle ID, frameworks)
+│       ├── MyLoyaltyCardsWatchApp.swift  # @main entry point
+│       ├── ContentView.swift
+│       ├── CardListView.swift
+│       ├── BarcodeFlashView.swift
+│       ├── BarcodeGenerator.swift
+│       ├── ColorHelpers.swift
+│       ├── ComplicationProvider.swift
+│       ├── WatchCardEntity.swift  # SwiftData model
+│       └── Assets.xcassets/       # Watch app icon, AccentColor
+├── watch-android/          # Phase 2: Native Wear OS (Kotlin/Compose) — future
 │   ├── README.md           # ⚠️ Documents this is native Kotlin, not RN
 │   ├── scripts/
 │   │   └── generate-catalogue.kts
 │   └── app/src/main/
 │       └── generated/      # .gitignore'd - created at build time
 │           └── Brands.kt   # Generated from /catalogue/italy.json
-├── app.config.ts           # Expo config with environment switching
+├── app.json                # Expo config with @bacons/apple-targets plugin
 └── .env.example            # Template for local development
 ```
 
 **Watch App Documentation Strategy:**
 
 - Root `README.md`: Overview table showing which folders are React Native vs Native
-- `watch-ios/README.md`: Swift/SwiftUI build instructions, Xcode setup
-- `watch-android/README.md`: Kotlin/Compose build instructions, Android Studio setup
+- `targets/watch/`: Source lives here, but Xcode project is generated by `expo prebuild` inside `ios/`. No standalone Xcode project — developers open `ios/myLoyaltyCards.xcworkspace` and select the watch scheme.
+- `watch-android/README.md` (future): Kotlin/Compose build instructions, Android Studio setup
 
-Each watch README must include:
+Key documentation points for watchOS:
 
-1. Clear statement: "This is NOT React Native"
-2. Technology stack (language, framework, IDE)
-3. Build instructions
-4. Catalogue generation explanation
-5. Relationship to phone app (sync protocol)
+1. Clear statement: "This is native Swift/SwiftUI, NOT React Native"
+2. Source location: `targets/watch/` (survives `expo prebuild --clean`)
+3. Build: `npx expo prebuild --platform ios` → Xcode → watch scheme → run on simulator
+4. Distribution: Embedded in iOS IPA — `fastlane ios beta` ships both apps
+5. Relationship to phone app: WatchConnectivity (`react-native-watch-connectivity` on iOS side)
 
 ### Architectural Decisions Provided by Starter
 
@@ -253,9 +277,10 @@ Each watch README must include:
 **Build Tooling:**
 
 - GitHub Actions for CI/CD (free for OSS, transparent to contributors)
-- Fastlane for build automation (iOS, Android, watchOS, Wear OS)
-- Xcode for watchOS builds (via macOS GitHub runners)
-- Android Studio / Gradle for Wear OS builds
+- Fastlane for build automation (iOS, Android — watchOS embedded in iOS archive)
+- `@bacons/apple-targets` Config Plugin for Continuous Native Generation of watchOS target
+- Xcode for iOS + embedded watchOS builds (via macOS GitHub runners)
+- Android Studio / Gradle for Wear OS builds (Phase 2)
 - Expo Development Build to bridge phone and native code
 
 **Data Synchronization:**
@@ -1697,3 +1722,14 @@ All AI agents implementing this architecture MUST:
 **Next Phase:** Begin implementation using the architectural decisions and patterns documented herein.
 
 **Document Maintenance:** Update this architecture when major technical decisions are made during implementation.
+
+---
+
+## Revision History
+
+| Date       | Section(s)                                              | Change                                                                                                                                                                                                                                                                                                                                                     | Decision Ref                         |
+| ---------- | ------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------ |
+| 2026-04-11 | Wearable Architecture, Project Structure, Build Tooling | **watchOS distribution model updated.** watchOS apps must be embedded in iOS IPA (Apple requirement). Adopted `@bacons/apple-targets` for CNG-based watchOS embedding. Source migrated from `watch-ios/` to `targets/watch/`. Fastlane lanes updated for multi-target signing. No separate watchOS CI/CD pipeline — single iOS archive includes both apps. | ADR-2026-04-11-002, Story 11-6       |
+| 2026-04-11 | Technical Constraints                                   | **NativeWind under evaluation.** Sprint 11 (Epic 13 — UI Implementation) showed ~23% fix/rework commits caused by NativeWind interactions (Pressable style callbacks, dark mode inconsistencies, scroll behavior). Decision to evaluate alternatives (StyleSheet + design tokens, Unistyles, Tamagui) before next UI-heavy epic.                           | DEC-S11-RETRO-001                    |
+| 2026-04-11 | (Process)                                               | **Definition of Ready / Definition of Done adopted.** 7-gate DoR and 8-gate DoD as mandatory process gates for all stories. Party mode is default for story refinement and complex problem-solving.                                                                                                                                                        | DEC-S11-RETRO-002, DEC-S11-RETRO-003 |
+| 2026-04-11 | Project Structure, CI/CD                                | **GitHub Actions workflow names corrected** to match actual implementation: `ci-quality-gates.yml`, `ios-release.yml`, `android-release.yml`, `beta-releases.yml`, `store-upload.yml`, `watchos-tests.yml`.                                                                                                                                                | Sprint 12 planning                   |

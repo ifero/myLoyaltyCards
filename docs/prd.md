@@ -1,6 +1,6 @@
 ---
 stepsCompleted: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
-inputDocuments: 
+inputDocuments:
   - 'docs/analysis/brainstorming-session-2025-12-11.md'
 documentCounts:
   briefs: 0
@@ -55,7 +55,8 @@ date: '2025-12-21'
 
 **Project Context:** Greenfield - new project
 
-**Classification Rationale:** 
+**Classification Rationale:**
+
 - **Mobile App Signals:** Multi-platform mobile application (iOS/Android) with native wearable companions requiring offline capabilities, local data synchronization, and cross-platform consistency
 - **Medium Complexity:** The MVP scope includes:
   - Multi-platform development (4 platforms: iOS, Android, watchOS, Wear OS)
@@ -67,6 +68,7 @@ date: '2025-12-21'
   - Hybrid backend architecture (server database + JSON delivery for offline caching)
 
 **Key Technical Considerations for MVP:**
+
 - Native vs. cross-platform development decision (React Native/Flutter vs. native Swift/Kotlin)
 - Wearable storage constraints and data sync strategy (delta sync vs. full sync)
 - Battery optimization for wearable apps (minimize background processes)
@@ -74,10 +76,12 @@ date: '2025-12-21'
 - App store compliance across iOS, Android, watchOS, and Wear OS platforms
 
 **Technical Platform Decision (MVP):**
+
 - React Native with Expo for cross-platform development
 - Expo dev client with custom native modules for wearable apps
 - Single codebase approach for faster time to market
-- Note: Wearable independence may require bare workflow or custom development builds for full native capability
+- Note: watchOS companion is embedded in the iOS app archive via `@bacons/apple-targets` (CNG). Apple does not allow standalone watchOS binary uploads — all watchOS apps are distributed inside the iOS IPA.
+- Note: NativeWind (Tailwind CSS) is the current styling solution but is **under evaluation** (DEC-S11-RETRO-001) due to persistent implementation friction. Alternatives being considered before next UI-heavy epic.
 
 ## Success Criteria
 
@@ -86,6 +90,7 @@ date: '2025-12-21'
 **Speed Breakthrough:** Users display their loyalty card on their wearable device in **≤3 seconds** from decision to display, compared to 8-12 seconds with competing phone-based apps or 10-15 seconds with physical cards.
 
 **Primary Success Metrics:**
+
 - **Card Display Speed:** ≤3 seconds on wearable (wrist raise → tap → barcode visible)
 - **Offline Reliability:** 100% functionality without network connectivity - zero failed attempts due to connectivity issues
 - **Wearable Independence:** Users access cards without touching their phone - standalone wearable operation
@@ -99,12 +104,14 @@ date: '2025-12-21'
 This is a **community-driven, open-source passion project** with no monetization or advertising. Success is measured by problem-solving impact and community engagement, not revenue.
 
 **Personal Satisfaction:**
+
 - App solves the checkout friction problem reliably for the creator and users
 - Code quality is maintainable, well-architected, and contribution-friendly
 - Project ships and runs stably without constant maintenance burden
 - Pride in building something useful that solves a real problem
 
 **Community Success:**
+
 - Users provide positive feedback confirming the problem is solved
 - Organic growth through word-of-mouth as users discover value
 - Open-source contributors join to improve the app and expand catalogues
@@ -112,6 +119,7 @@ This is a **community-driven, open-source passion project** with no monetization
 - Active community participation via GitHub issues, PRs, and discussions
 
 **Project Health:**
+
 - Maintainable codebase that creator and contributors can easily work with
 - Open-source community forms around the project
 - Bug reports filed and collaboratively fixed
@@ -121,6 +129,7 @@ This is a **community-driven, open-source passion project** with no monetization
 ### Technical Success
 
 **Performance Requirements:**
+
 - **Card Display Latency:** <3 seconds from wrist raise to barcode visible on wearable
 - **App Launch Time:** <1 second on phone, <2 seconds on wearable (from cold start)
 - **Offline Operation:** 100% feature availability without network connectivity
@@ -128,12 +137,14 @@ This is a **community-driven, open-source passion project** with no monetization
 - **Battery Efficiency:** Minimal battery impact on wearable device during standby
 
 **Reliability Requirements:**
+
 - **Barcode Rendering:** 100% successful barcode generation and display across supported formats
 - **Camera Scanning:** >95% successful barcode capture rate under normal lighting conditions
 - **Data Persistence:** Zero data loss during app updates or device sync
 - **Cross-Platform Consistency:** Identical user experience on iOS/Android and watchOS/Wear OS
 
 **Technical Quality:**
+
 - Clean, maintainable React Native + Expo codebase
 - Open-source contribution guidelines and architecture documentation
 - Comprehensive error handling for offline scenarios
@@ -142,6 +153,7 @@ This is a **community-driven, open-source passion project** with no monetization
 ### Measurable Outcomes
 
 **3-Month Success Indicators:**
+
 - App successfully deployed to all app stores (iOS, Android, watchOS, Wear OS)
 - Personal usage validates the 3-second card display goal
 - Initial community feedback confirms problem is solved
@@ -149,6 +161,7 @@ This is a **community-driven, open-source passion project** with no monetization
 - First community contributions received (code or catalogue PRs)
 
 **12-Month Success Indicators:**
+
 - Active open-source community with regular contributions
 - Positive app store ratings (>4.0 stars) reflecting user satisfaction
 - Italian catalogue complete and community-maintained
@@ -166,6 +179,7 @@ This is a **community-driven, open-source passion project** with no monetization
 **Core Features:**
 
 **Mobile Applications:**
+
 - iOS and Android apps (React Native + Expo)
 - Offline-first card storage (local persistence)
 - Card management interface
@@ -181,6 +195,7 @@ This is a **community-driven, open-source passion project** with no monetization
   - Alphabetical fallback
 
 **Wearable Applications:**
+
 - Apple Watch (watchOS) and Android Wear (Wear OS) apps
 - Standalone operation (independent from phone)
 - Local card storage on wearable device
@@ -189,12 +204,14 @@ This is a **community-driven, open-source passion project** with no monetization
 - Battery-efficient implementation
 
 **Synchronization:**
+
 - Phone-to-wearable sync when devices connected
 - Catalogue updates from repository
 - User card sync across devices
 - Delta sync for efficiency
 
 **Catalogue System:**
+
 - **Italy-only brand catalogue** (top 20 brands by user awareness)
 - JSON file structure in GitHub repository
 - Community contributions via Pull Requests
@@ -202,11 +219,13 @@ This is a **community-driven, open-source passion project** with no monetization
 - Catalogue includes: brand name, logo (SVG/PNG), aliases
 
 **Barcode Support:**
+
 - Multiple barcode format support (Code 128, EAN-13, QR, etc.)
 - Fast rendering optimized for wearable displays
 - Clear, scannable output at point-of-sale
 
 **Out of Scope for MVP:**
+
 - Admin panel (using JSON + PRs instead)
 - Other EU countries (Italy only for validation)
 - Contextual card detection
@@ -216,24 +235,28 @@ This is a **community-driven, open-source passion project** with no monetization
 ### Growth Features (Post-MVP)
 
 **EU Market Expansion:**
+
 - Expand catalogue to additional EU countries (Spain, France, Germany, etc.)
 - Country-specific top 20 brand lists
 - Multi-language support for UI
 - Regional barcode format handling
 
 **Enhanced Catalogue Management:**
+
 - Web-based admin panel for easier catalogue updates
 - Formal user card submission workflow
 - Community voting on card additions
 - Automated logo scraping pipeline (from brainstorming session)
 
 **Advanced Features:**
+
 - Contextual card detection using location services
 - Merchant identification for auto-card selection
 - Usage pattern learning for smarter sorting
 - Card sharing within community
 
 **Community & Platform:**
+
 - Contributor documentation and onboarding
 - Localization and translation contributions
 - Platform-specific optimizations based on feedback
@@ -242,23 +265,27 @@ This is a **community-driven, open-source passion project** with no monetization
 ### Vision (Future)
 
 **Full EU Coverage:**
+
 - Comprehensive catalogues for all EU member countries
 - Community-driven localization and maintenance
 - Unified barcode database across regions
 
 **Intelligence Layer:**
+
 - AI-powered merchant detection
 - Predictive card suggestions based on location and context
 - Automatic card selection at payment moment
 - Learning from user behavior patterns
 
 **Ecosystem Integration:**
+
 - Open API for third-party integrations
 - Integration with payment apps and digital wallets
 - Cross-platform ecosystem (desktop, tablet extensions)
 - Partnerships with loyalty program providers
 
 **Global Expansion:**
+
 - Expand beyond EU to other regions
 - International brand catalogue
 - Multi-currency and regional compliance handling
@@ -294,6 +321,7 @@ She adds two more cards the same way - Conad and her local pharmacy's loyalty ca
 These user journeys reveal the following capabilities needed for myLoyaltyCards:
 
 **Core Card Management:**
+
 - Browse Italian brand catalogue with recognizable logos
 - Add cards from catalogue (select brand, scan/enter barcode)
 - Add custom cards manually (name, barcode via camera/manual entry, optional logo upload)
@@ -301,6 +329,7 @@ These user journeys reveal the following capabilities needed for myLoyaltyCards:
 - Tap card to display barcode in scannable format
 
 **Wearable Experience:**
+
 - Standalone watch app that works independently from phone
 - Instant app launch on wearable with offline card access
 - Background automatic sync from phone to watch
@@ -309,6 +338,7 @@ These user journeys reveal the following capabilities needed for myLoyaltyCards:
 - Quick navigation through card list on watch interface
 
 **Onboarding & Setup:**
+
 - Clear welcome/explanation of concept
 - Simple card addition workflow (catalogue vs. manual)
 - Camera barcode scanning capability
@@ -316,12 +346,14 @@ These user journeys reveal the following capabilities needed for myLoyaltyCards:
 - Automatic background sync setup between phone and watch
 
 **Offline & Reliability:**
+
 - 100% offline functionality (no network required to display cards)
 - Local storage on both phone and wearable
 - Background sync when devices connected (no user intervention)
 - Works in areas with poor/no signal (basement stores, rural areas)
 
 **Performance:**
+
 - Sub-3-second card display on wearable
 - Instant watch app launch
 - Fast barcode rendering
@@ -332,18 +364,21 @@ These user journeys reveal the following capabilities needed for myLoyaltyCards:
 ### Platform & Development Strategy
 
 **Technology Stack:**
+
 - React Native with Expo for cross-platform development
 - Expo dev client with custom native modules for wearable functionality
 - Single codebase for iOS, Android, watchOS, and Wear OS
 - Note: Wearable independence may require bare workflow or custom development builds for full native capability
 
 **Target Platforms:**
+
 - iOS (mobile phones - iPhone)
 - Android (mobile phones)
 - watchOS (Apple Watch - standalone app)
 - Wear OS (Android wearables - standalone app)
 
 **Minimum OS Versions:**
+
 - iOS: To be determined based on React Native/Expo requirements
 - Android: To be determined based on React Native/Expo requirements
 - watchOS: To be determined based on wearable features needed
@@ -354,6 +389,7 @@ These user journeys reveal the following capabilities needed for myLoyaltyCards:
 **Authentication Model: Optional Accounts (Local-First)**
 
 **Guest Mode (No Account):**
+
 - Users can download and use app immediately without creating account
 - All cards stored locally on device only
 - Phone-to-watch sync works via direct Bluetooth connection
@@ -361,6 +397,7 @@ These user journeys reveal the following capabilities needed for myLoyaltyCards:
 - Perfect for privacy-conscious users who don't need multi-device sync
 
 **Authenticated Mode (Cloud Sync):**
+
 - **Optional** account creation for users who want cloud backup
 - Authentication methods:
   - Email + password
@@ -371,6 +408,7 @@ These user journeys reveal the following capabilities needed for myLoyaltyCards:
 - Seamless transition: users can upgrade from guest to authenticated without losing data
 
 **Data Storage Models:**
+
 - **Guest Mode:** Local SQLite/AsyncStorage only
 - **Authenticated Mode:** Local storage + cloud backend with bidirectional sync
 - Users can delete account and all cloud data at any time (GDPR right to erasure)
@@ -380,17 +418,20 @@ These user journeys reveal the following capabilities needed for myLoyaltyCards:
 **Required Permissions:**
 
 **Camera Access:**
+
 - **Purpose:** Barcode scanning for adding loyalty cards
 - **Usage:** Only activated when user explicitly taps "Scan Barcode" button
 - **Privacy:** Images not stored, only barcode data extracted
 - **App Store Justification:** "Scan loyalty card barcodes to add them to your digital wallet"
 
 **Bluetooth/Wearable Connectivity:**
+
 - **Purpose:** Phone-to-watch synchronization
 - **Usage:** Background sync when devices are paired and connected
 - **Handled by:** React Native Expo wearable modules (platform-managed)
 
 **Not Required (Explicitly Excluded):**
+
 - ❌ Photo Library Access: Removed from MVP (no custom logo uploads to avoid content moderation issues)
 - ❌ Location Services: Post-MVP feature (contextual card detection)
 - ❌ Push Notifications: Not needed for MVP
@@ -400,6 +441,7 @@ These user journeys reveal the following capabilities needed for myLoyaltyCards:
 ### Offline Mode & Data Sync
 
 **Offline-First Architecture:**
+
 - **100% offline functionality** - all core features work without network
 - Cards stored locally with full read/write capability offline
 - Barcode rendering works entirely offline
@@ -408,11 +450,13 @@ These user journeys reveal the following capabilities needed for myLoyaltyCards:
 **Synchronization Strategy:**
 
 **Guest Mode (Local-Only Sync):**
+
 - Phone ↔ Watch direct Bluetooth sync
 - No cloud involvement
 - Sync triggers: app launch on watch, card added/edited on phone
 
 **Authenticated Mode (Cloud Sync):**
+
 - Phone ↔ Backend (when online)
 - Watch ↔ Phone (Bluetooth)
 - Watch ↔ Backend (indirect via phone, or direct when watch has connectivity)
@@ -421,6 +465,7 @@ These user journeys reveal the following capabilities needed for myLoyaltyCards:
 - **Background Sync:** Automatic when app backgrounded or device wakes
 
 **Sync Reliability:**
+
 - Queued operations when offline
 - Retry logic for failed syncs
 - User visibility: subtle sync status indicator
@@ -431,23 +476,27 @@ These user journeys reveal the following capabilities needed for myLoyaltyCards:
 **GDPR Requirements:**
 
 **Data Collection & Processing:**
+
 - Clear disclosure of what data is collected (email, barcode numbers, card names)
 - User consent required before account creation
 - Privacy policy accessible before and after account creation
 - No tracking, analytics, or advertising (open-source, non-monetized)
 
 **User Rights:**
+
 - **Right to Access:** Users can export all their data
 - **Right to Erasure:** Users can delete account and all cloud data
 - **Right to Portability:** Data export in JSON format
 - **Right to Object:** Users can opt out of cloud sync (use guest mode)
 
 **Data Security:**
+
 - Barcode data encrypted at rest in cloud database
 - HTTPS/TLS for all API communication
 - No third-party data sharing (open-source, self-contained)
 
 **Privacy Policy Requirements:**
+
 - Required for app store submission
 - Must cover: data collected, how it's used, how long it's stored, user rights
 - Available in app and on project website/repo
@@ -455,18 +504,21 @@ These user journeys reveal the following capabilities needed for myLoyaltyCards:
 ### App Store Compliance
 
 **iOS App Store:**
+
 - Privacy nutrition labels required (data types collected)
 - Sign in with Apple required if offering other social logins
 - Age rating: 4+ (no objectionable content, no user-generated content in MVP)
 - No special permissions that need extended justification
 
 **Google Play Store:**
+
 - Privacy policy URL required
 - Data safety section disclosure (user data collected and shared)
 - Age rating: Everyone (no objectionable content)
 - No special permissions that need extended justification
 
 **Both Stores:**
+
 - Clear app description stating offline capability and optional cloud sync
 - Screenshots showing both phone and watch apps
 - Disclosure that app is open source (builds trust)
@@ -476,17 +528,20 @@ These user journeys reveal the following capabilities needed for myLoyaltyCards:
 **License Selection: MIT License**
 
 **Permissions:**
+
 - ✅ Free use, modification, and distribution
 - ✅ Commercial and private use
 - ✅ Forking with attribution required
 - ✅ Original author credit in derivative works
 
 **Attribution Requirements:**
+
 - Copyright notice and license text must be included in all copies
 - Derivatives must credit original author
 - Project README with clear attribution guidelines
 
 **Benefits for Community:**
+
 - Simple, widely recognized license
 - Minimal restrictions encourage contributions
 - Protects original author credit
@@ -495,18 +550,21 @@ These user journeys reveal the following capabilities needed for myLoyaltyCards:
 ### Platform-Specific Considerations
 
 **iOS/watchOS:**
+
 - Apple Watch complications (future enhancement - quick launch)
 - Handoff support between iPhone and Apple Watch
 - SwiftUI wearable UI optimization (if using native modules)
 - App Clip potential (future - quick demo without full install)
 
 **Android/Wear OS:**
+
 - Wear OS tiles for quick card access (future enhancement)
 - Android intent handling (future - share cards)
 - Material Design adherence
 - Battery optimization whitelisting for background sync
 
 **Cross-Platform Consistency:**
+
 - Identical UX across iOS and Android mobile apps
 - Adapted but consistent UX on wearables (accounting for screen size)
 - Feature parity across all platforms in MVP
@@ -514,23 +572,27 @@ These user journeys reveal the following capabilities needed for myLoyaltyCards:
 ### Technical Implementation Considerations
 
 **Barcode Rendering:**
+
 - Support multiple barcode formats (Code 128, EAN-13, EAN-8, QR Code, etc.)
 - Optimized for wearable screen sizes (clear, scannable)
 - High contrast for point-of-sale scanners
 - Adaptive brightness for different lighting conditions
 
 **Performance Requirements:**
+
 - Cold start: <1 second on phone, <2 seconds on watch
 - Card display: <3 seconds total from wrist raise to barcode visible
 - Smooth scrolling through card list (60fps target)
 - Minimal battery impact on wearables during standby
 
 **Storage Constraints:**
+
 - Watch storage limits (typically <100MB for app + data)
 - Optimize logo file sizes (SVG preferred, compressed PNG fallback)
 - Efficient local database structure
 
 **React Native/Expo Considerations:**
+
 - Custom native modules may be needed for full wearable independence
 - Expo Go limitations for watch app development
 - Development builds required for testing wearable features
@@ -555,6 +617,7 @@ myLoyaltyCards follows a problem-solving MVP strategy focused on eliminating che
 **Strategic Rationale:**
 
 This scoping strategy prioritizes:
+
 1. **Complete core experience** over partial features - all 4 platforms (iOS, Android, watchOS, Wear OS) in MVP
 2. **Offline reliability** over cloud features - guest mode works perfectly, cloud sync is optional enhancement
 3. **Single market validation** (Italy) over multi-country complexity
@@ -584,6 +647,7 @@ Despite solo developer resource constraint, MVP includes complete feature set fo
 **Must-Have Capabilities:**
 
 **Mobile Applications (iOS + Android):**
+
 - React Native + Expo cross-platform implementation
 - Offline-first card storage (local persistence)
 - Card management interface
@@ -597,6 +661,7 @@ Despite solo developer resource constraint, MVP includes complete feature set fo
 - Cloud sync for authenticated users
 
 **Wearable Applications (watchOS + Wear OS):**
+
 - Standalone operation (phone-independent)
 - Local card storage on device
 - Instant app launch (<2 seconds)
@@ -605,6 +670,7 @@ Despite solo developer resource constraint, MVP includes complete feature set fo
 - Battery-efficient implementation
 
 **Catalogue System:**
+
 - Italy-only brand catalogue (top 20 brands)
 - JSON file in GitHub repository
 - Community contributions via Pull Requests
@@ -612,6 +678,7 @@ Despite solo developer resource constraint, MVP includes complete feature set fo
 - App fetches latest on sync
 
 **Backend & Sync:**
+
 - Optional backend for cloud sync (authenticated users only)
 - Guest mode: phone ↔ watch Bluetooth sync only
 - Authenticated mode: bidirectional cloud sync
@@ -619,6 +686,7 @@ Despite solo developer resource constraint, MVP includes complete feature set fo
 - User data export and deletion
 
 **Technical Requirements:**
+
 - Multiple barcode format support
 - <3-second card display performance
 - 100% offline functionality
@@ -626,6 +694,7 @@ Despite solo developer resource constraint, MVP includes complete feature set fo
 - Privacy policy and GDPR compliance
 
 **Explicitly Out of Scope for MVP:**
+
 - ❌ Admin panel (using JSON + PRs instead)
 - ❌ Custom logo uploads (content moderation concerns)
 - ❌ Other EU countries (Italy validation first)
@@ -637,24 +706,28 @@ Despite solo developer resource constraint, MVP includes complete feature set fo
 ### Post-MVP Features (Phase 2: Growth)
 
 **EU Market Expansion:**
+
 - Expand catalogue to additional EU countries
 - Country-specific top 20 brand lists
 - Multi-language UI support
 - Regional barcode format handling
 
 **Enhanced Catalogue Management:**
+
 - Web-based admin panel for easier updates
 - Formal user card submission workflow
 - Community voting on card additions
 - Automated logo scraping pipeline
 
 **Advanced Features:**
+
 - Contextual card detection using location services
 - Merchant identification for auto-card selection
 - Usage pattern learning for smarter sorting
 - Card sharing within community
 
 **User Experience Enhancements:**
+
 - Custom logo uploads with content moderation
 - Card categories and organization
 - Search and filter capabilities
@@ -663,23 +736,27 @@ Despite solo developer resource constraint, MVP includes complete feature set fo
 ### Vision Features (Phase 3: Expansion)
 
 **Full EU Coverage:**
+
 - Comprehensive catalogues for all EU member countries
 - Community-driven localization and maintenance
 - Unified barcode database across regions
 
 **Intelligence Layer:**
+
 - AI-powered merchant detection
 - Predictive card suggestions based on location and context
 - Automatic card selection at payment moment
 - Learning from user behavior patterns
 
 **Ecosystem Integration:**
+
 - Open API for third-party integrations
 - Integration with payment apps and digital wallets
 - Cross-platform ecosystem (desktop, tablet extensions)
 - Partnerships with loyalty program providers
 
 **Global Expansion:**
+
 - Expand beyond EU to other regions
 - International brand catalogue
 - Multi-currency and regional compliance handling
@@ -691,6 +768,7 @@ Despite solo developer resource constraint, MVP includes complete feature set fo
 **Risk:** React Native + Expo wearable support may have limitations for true standalone functionality
 
 **Mitigation:**
+
 - Expo dev client with custom native modules planned
 - Willing to eject to bare workflow if needed
 - Solo developer has flexibility to adjust technical approach
@@ -701,6 +779,7 @@ Despite solo developer resource constraint, MVP includes complete feature set fo
 **Risk:** Low community adoption or contribution
 
 **Mitigation:**
+
 - Primary user is the developer himself - MVP succeeds if it solves personal problem
 - Community adoption is welcome bonus, not success requirement
 - Open-source model lowers barrier to contribution
@@ -711,6 +790,7 @@ Despite solo developer resource constraint, MVP includes complete feature set fo
 **Risk:** Solo developer capacity constraints
 
 **Mitigation:**
+
 - No external deadlines or pressure
 - Flexible timeline allows quality-focused development
 - MVP scope is ambitious but developer committed
@@ -722,6 +802,7 @@ Despite solo developer resource constraint, MVP includes complete feature set fo
 **Risk:** Full 4-platform MVP is significant undertaking for solo developer
 
 **Mitigation:**
+
 - Developer explicitly chose not to descope
 - React Native single codebase reduces platform duplication
 - Building for personal use first means incremental value at each milestone
@@ -731,6 +812,7 @@ Despite solo developer resource constraint, MVP includes complete feature set fo
 ### Development Approach
 
 **Iterative Implementation:**
+
 1. **Core phone app** (iOS/Android) with offline card management
 2. **Barcode scanning** and display functionality
 3. **Italian catalogue** integration (JSON-based)
@@ -741,6 +823,7 @@ Despite solo developer resource constraint, MVP includes complete feature set fo
 8. **App store submission** and launch
 
 **Quality Gates:**
+
 - Personal usage testing at each stage
 - Performance validation (<3-second target)
 - Offline reliability testing
@@ -748,6 +831,7 @@ Despite solo developer resource constraint, MVP includes complete feature set fo
 - Community code review (open source benefit)
 
 **Success Validation:**
+
 - Developer personally uses app daily at checkout
 - Achieves 3-second card display goal
 - Works reliably offline in all Italian stores tested
@@ -975,4 +1059,13 @@ Despite solo developer resource constraint, MVP includes complete feature set fo
 - **NFR-A2:** Future versions should support voice control on supported platforms
 - **NFR-A3:** Future versions should provide high contrast modes for visual accessibility
 
+---
 
+## Revision History
+
+| Date       | Section(s)                   | Change                                                                                                                                                                                                                                                                                                                      | Decision Ref                         |
+| ---------- | ---------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------ |
+| 2026-04-11 | Technical Platform Decision  | **watchOS distribution model clarified.** watchOS apps must be embedded in the iOS IPA archive (Apple requirement). Using `@bacons/apple-targets` Expo Config Plugin for Continuous Native Generation. Source at `targets/watch/`, auto-embedded during `expo prebuild`. No standalone watchOS binary or separate pipeline. | ADR-2026-04-11-002, Story 11-6       |
+| 2026-04-11 | Technical Platform Decision  | **NativeWind under evaluation.** Sprint 11 (Epic 13) showed ~23% rework rate from NativeWind interactions. Evaluating alternatives (pure StyleSheet + design tokens, Unistyles, Tamagui) before next UI implementation epic. Current AGENTS.md Pressable restrictions remain in force.                                      | DEC-S11-RETRO-001                    |
+| 2026-04-11 | (Process — not in PRD body)  | **Definition of Ready (7 gates) and Definition of Done (8 gates) adopted** as mandatory process gates. Party mode is the default for story refinement. See [Epic 13 Retro](sprint-artifacts/epic-13-retro-2026-04-11.md) for full definitions.                                                                              | DEC-S11-RETRO-002, DEC-S11-RETRO-003 |
+| 2026-04-11 | Key Technical Considerations | **Wearable independence note updated.** Future plan: watchOS app becomes a "standalone-companion" with on-watch login for registered users. Distribution model remains the same (embedded in iOS IPA).                                                                                                                      | Sprint 12 planning                   |
