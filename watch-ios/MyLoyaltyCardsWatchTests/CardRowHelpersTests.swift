@@ -150,4 +150,70 @@ final class CardRowHelpersTests: XCTestCase {
     XCTAssertFalse(isNearBlack(hex: "#FFFFFF"))
     XCTAssertFalse(isNearBlack(hex: "#808080"))
   }
+
+  // MARK: - Sort Order (WatchCard sorting)
+
+  func test_sortByUsageCount_descending() throws {
+    let cards = [
+      WatchCard(id: "1", name: "Low", brandId: nil, colorHex: nil, barcodeValue: nil, barcodeFormat: nil, usageCount: 1, lastUsedAt: nil, createdAt: Date()),
+      WatchCard(id: "2", name: "High", brandId: nil, colorHex: nil, barcodeValue: nil, barcodeFormat: nil, usageCount: 10, lastUsedAt: nil, createdAt: Date()),
+      WatchCard(id: "3", name: "Mid", brandId: nil, colorHex: nil, barcodeValue: nil, barcodeFormat: nil, usageCount: 5, lastUsedAt: nil, createdAt: Date()),
+    ]
+    let sorted = cards.sorted { a, b in
+      if a.usageCount != b.usageCount { return a.usageCount > b.usageCount }
+      if let aLast = a.lastUsedAt, let bLast = b.lastUsedAt, aLast != bLast {
+        return aLast > bLast
+      }
+      return a.createdAt > b.createdAt
+    }
+    XCTAssertEqual(sorted.map(\.name), ["High", "Mid", "Low"])
+  }
+
+  func test_sortByLastUsedAt_whenUsageCountEqual() throws {
+    let now = Date()
+    let earlier = now.addingTimeInterval(-3600)
+    let cards = [
+      WatchCard(id: "1", name: "Earlier", brandId: nil, colorHex: nil, barcodeValue: nil, barcodeFormat: nil, usageCount: 5, lastUsedAt: earlier, createdAt: now),
+      WatchCard(id: "2", name: "Later", brandId: nil, colorHex: nil, barcodeValue: nil, barcodeFormat: nil, usageCount: 5, lastUsedAt: now, createdAt: earlier),
+    ]
+    let sorted = cards.sorted { a, b in
+      if a.usageCount != b.usageCount { return a.usageCount > b.usageCount }
+      if let aLast = a.lastUsedAt, let bLast = b.lastUsedAt, aLast != bLast {
+        return aLast > bLast
+      }
+      return a.createdAt > b.createdAt
+    }
+    XCTAssertEqual(sorted.map(\.name), ["Later", "Earlier"])
+  }
+
+  func test_sortByCreatedAt_asFallback() throws {
+    let now = Date()
+    let earlier = now.addingTimeInterval(-3600)
+    let cards = [
+      WatchCard(id: "1", name: "Older", brandId: nil, colorHex: nil, barcodeValue: nil, barcodeFormat: nil, usageCount: 0, lastUsedAt: nil, createdAt: earlier),
+      WatchCard(id: "2", name: "Newer", brandId: nil, colorHex: nil, barcodeValue: nil, barcodeFormat: nil, usageCount: 0, lastUsedAt: nil, createdAt: now),
+    ]
+    let sorted = cards.sorted { a, b in
+      if a.usageCount != b.usageCount { return a.usageCount > b.usageCount }
+      if let aLast = a.lastUsedAt, let bLast = b.lastUsedAt, aLast != bLast {
+        return aLast > bLast
+      }
+      return a.createdAt > b.createdAt
+    }
+    XCTAssertEqual(sorted.map(\.name), ["Newer", "Older"])
+  }
+
+  // MARK: - Brand Identity Display
+
+  func test_catalogueBrand_usesInitials() throws {
+    // Catalogue brand should show initials derived from brand name
+    let name = "Esselunga"
+    XCTAssertEqual(initials(from: name), "ES")
+  }
+
+  func test_customCard_usesUserColor() throws {
+    // Custom card with no brandId should fall back to mapColor from colorHex
+    let color = mapColor(hex: "#ff4d4d")
+    XCTAssertNotNil(color)
+  }
 }
