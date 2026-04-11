@@ -10,6 +10,14 @@ struct WatchCard: Identifiable, Codable {
   // Optional barcode fields (may be absent for older persisted payloads)
   let barcodeValue: String?
   let barcodeFormat: String?  // values like "CODE128", "EAN13", "QR" etc.
+  // Sorting fields (non-coded for backward compat with older JSON payloads)
+  var usageCount: Int = 0
+  var lastUsedAt: Date? = nil
+  var createdAt: Date = Date()
+
+  enum CodingKeys: String, CodingKey {
+    case id, name, brandId, colorHex, barcodeValue, barcodeFormat
+  }
 }
 
 final class CardStore: ObservableObject {
@@ -158,28 +166,40 @@ struct CardRowView: View {
 
 struct CardListView: View {
   @Environment(\.modelContext) private var modelContext
-  @Query(sort: \WatchCardEntity.createdAt, order: .reverse) private var persistedEntities:
-    [WatchCardEntity]
+  @Query private var persistedEntities: [WatchCardEntity]
   @StateObject private var store: CardStore
 
   init(store: CardStore = CardStore()) {
     _store = StateObject(wrappedValue: store)
   }
 
+  /// Cards sorted by usageCount desc → lastUsedAt desc → createdAt desc.
   private var displayCards: [WatchCard] {
+    let entities: [WatchCard]
     if !persistedEntities.isEmpty {
-      return persistedEntities.map { e in
+      entities = persistedEntities.map { e in
         WatchCard(
           id: e.id,
           name: e.name,
           brandId: e.brandId,
           colorHex: e.color,
           barcodeValue: e.barcode,
-          barcodeFormat: e.barcodeFormat
+          barcodeFormat: e.barcodeFormat,
+          usageCount: e.usageCount,
+          lastUsedAt: e.lastUsedAt,
+          createdAt: e.createdAt
         )
       }
+    } else {
+      entities = store.cards
     }
-    return store.cards
+    return entities.sorted { a, b in
+      if a.usageCount != b.usageCount { return a.usageCount > b.usageCount }
+      if let aLast = a.lastUsedAt, let bLast = b.lastUsedAt, aLast != bLast {
+        return aLast > bLast
+      }
+      return a.createdAt > b.createdAt
+    }
   }
 
   var body: some View {
@@ -188,16 +208,21 @@ struct CardListView: View {
         if displayCards.isEmpty {
           emptyState
         } else {
-          List(displayCards) { card in
-            NavigationLink(destination: BarcodeFlashView(card: card)) {
-              CardRowView(card: card)
-                .listRowBackground(Color.clear)
+          ScrollView {
+            LazyVStack(spacing: 8) {
+              ForEach(displayCards) { card in
+                NavigationLink(destination: BarcodeFlashView(card: card)) {
+                  CardRowView(card: card)
+                }
+                .buttonStyle(.plain)
+                .accessibilityIdentifier("card-row-\(card.id)")
+              }
             }
-            .accessibilityIdentifier("card-row-\(card.id)")
+            .padding(.horizontal, 4)
           }
-          .listStyle(.plain)
         }
       }
+      .navigationTitle("Cards")
     }
     #if DEBUG
       .toolbar {
@@ -210,8 +235,6 @@ struct CardListView: View {
         }
       }
     #endif
-    .navigationTitle("")
-    .navigationBarHidden(true)
     .background(Color.black)
     .scrollContentBackground(.hidden)
     .onAppear {
@@ -261,11 +284,6 @@ struct CardListView: View {
       WKInterfaceDevice.current().play(.success)
     }
   #endif
-
-  private func openCard(_ card: WatchCard) {
-    // Post-MVP: navigate to barcode view. For now no-op (watch is read-only).
-    WKInterfaceDevice.current().play(.click)
-  }
 }
 
 struct CardListView_Previews: PreviewProvider {
