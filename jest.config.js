@@ -15,7 +15,7 @@ module.exports = {
     '\\.svg$': '<rootDir>/__mocks__/svgMock.js'
   },
   testMatch: ['**/*.test.[jt]s?(x)'],
-  testPathIgnorePatterns: ['/node_modules/', 'babel.config.test.js', 'watch-ios/'],
+  testPathIgnorePatterns: ['/node_modules/', 'babel.config.test.js', 'targets/watch/'],
   collectCoverageFrom: [
     'features/**/*.{ts,tsx}',
     'core/**/*.{ts,tsx}',

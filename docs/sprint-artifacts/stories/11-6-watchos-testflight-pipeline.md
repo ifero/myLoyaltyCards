@@ -89,14 +89,14 @@ When Fastlane runs `fastlane ios beta` and archives the `myLoyaltyCards` scheme,
 
 ### AC1: Install and configure `@bacons/apple-targets`
 
-- [ ] Package `@bacons/apple-targets` is installed via `npx expo install @bacons/apple-targets`
-- [ ] Plugin is registered in `app.json` under `plugins` array
-- [ ] Plugin configuration points to `./targets` directory
+- [x] Package `@bacons/apple-targets` is installed via `npx expo install @bacons/apple-targets`
+- [x] Plugin is registered in `app.json` under `plugins` array
+- [x] Plugin configuration points to `./targets` directory
 
 ### AC2: Migrate watchOS source to `targets/watch/`
 
-- [ ] Directory `targets/watch/` exists at project root
-- [ ] All Swift source files from `watch-ios/MyLoyaltyCardsWatch/` are moved to `targets/watch/`:
+- [x] Directory `targets/watch/` exists at project root
+- [x] All Swift source files from `watch-ios/MyLoyaltyCardsWatch/` are moved to `targets/watch/`:
   - `MyLoyaltyCardsWatchApp.swift`
   - `ContentView.swift`
   - `CardListView.swift`
@@ -106,22 +106,22 @@ When Fastlane runs `fastlane ios beta` and archives the `myLoyaltyCards` scheme,
   - `ColorHelpers.swift`
   - `ComplicationProvider.swift`
   - `WatchCardEntity.swift`
-- [ ] `Assets.xcassets/` (AccentColor, app icon) moved to `targets/watch/`
-- [ ] `expo-target.config.js` created with correct configuration (see Tech Notes)
-- [ ] The `@main` entry point (`MyLoyaltyCardsWatchApp.swift`) remains the app entry
+- [x] `Assets.xcassets/` (AccentColor, app icon) moved to `targets/watch/`
+- [x] `expo-target.config.js` created with correct configuration (see Tech Notes)
+- [x] The `@main` entry point (`MyLoyaltyCardsWatchApp.swift`) remains the app entry
 
 ### AC3: `expo prebuild --clean` generates correct Xcode project
 
-- [ ] Running `npx expo prebuild --clean --platform ios` produces an iOS Xcode project that includes:
+- [x] Running `npx expo prebuild --clean --platform ios` produces an iOS Xcode project that includes:
   - A native target named `watch` (or the configured name) with `productType: com.apple.product-type.application`
   - Build settings: `SDKROOT: watchos`, `TARGETED_DEVICE_FAMILY: 4`, `WATCHOS_DEPLOYMENT_TARGET: 10.0`
   - Source files linked from `targets/watch/`
-- [ ] The main iOS target (`myLoyaltyCards`) has an "Embed Watch Content" copy files build phase
-- [ ] The watch target's `PRODUCT_BUNDLE_IDENTIFIER` is `com.iferoporefi.myloyaltycards.watch`
+- [x] The main iOS target (`myLoyaltyCards`) has an "Embed Watch Content" copy files build phase
+- [x] The watch target's `PRODUCT_BUNDLE_IDENTIFIER` is `com.iferoporefi.myloyaltycards.watch`
 
 ### AC4: Fastlane `beta` lane signs and builds both targets
 
-- [ ] `fastlane ios beta` lane is updated to also:
+- [x] `fastlane ios beta` lane is updated to also:
   - Fetch match `appstore` profile for BOTH `com.iferoporefi.myloyaltycards` AND `com.iferoporefi.myloyaltycards.watch`
   - Apply `update_code_signing_settings` for the watch target in the iOS Xcode project (separate call with watch bundle ID, profile name, and xcodeproj path)
 - [ ] The archive produced by `build_app` contains both the iOS app and the embedded watchOS app
@@ -129,27 +129,27 @@ When Fastlane runs `fastlane ios beta` and archives the `myLoyaltyCards` scheme,
 
 ### AC5: Fastlane `adhoc` and `upload_release` lanes updated
 
-- [ ] `fastlane ios adhoc` lane updated with watch target signing (match adhoc for watch bundle ID + `update_code_signing_settings`)
-- [ ] `fastlane ios upload_release` lane updated with watch target signing (match appstore for watch bundle ID + `update_code_signing_settings`)
+- [x] `fastlane ios adhoc` lane updated with watch target signing (match adhoc for watch bundle ID + `update_code_signing_settings`)
+- [x] `fastlane ios upload_release` lane updated with watch target signing (match appstore for watch bundle ID + `update_code_signing_settings`)
 - [ ] Both lanes produce archives containing iOS + watchOS
 
 ### AC6: Update `watchos-tests.yml` and test scripts
 
-- [ ] `watchos-tests.yml` workflow path trigger updated from `watch-ios/**` to `targets/watch/**`
-- [ ] `test:watchos` script in `package.json` updated to build from the new location:
+- [x] `watchos-tests.yml` workflow path trigger updated from `watch-ios/**` to `targets/watch/**`
+- [x] `test:watchos` script in `package.json` updated to build from the new location:
   - **Option A (preferred):** Run tests via `expo prebuild` output: `xcodebuild test -project ios/myLoyaltyCards.xcodeproj -scheme watch ...`
   - **Option B:** If the watch target's test setup requires a standalone project, keep a lightweight project file for testing only
-- [ ] `watch:build` and `watch:run` scripts updated or removed depending on new workflow
+- [x] `watch:build` and `watch:run` scripts updated or removed depending on new workflow
 - [ ] All existing watchOS tests pass
 
 ### AC7: Remove old `watch-ios/` directory
 
-- [ ] `watch-ios/MyLoyaltyCardsWatch.xcodeproj` removed (no longer needed — Xcode project is generated by prebuild)
-- [ ] `watch-ios/MyLoyaltyCardsWatch/` source files removed (migrated to `targets/watch/`)
-- [ ] `watch-ios/__tests__/` tests migrated or adapted to new path
-- [ ] `watch-ios/README.md` content merged into updated docs
-- [ ] `watch-ios/Generated/`, `watch-ios/build/` removed
-- [ ] No references to `watch-ios/` remain in:
+- [x] `watch-ios/MyLoyaltyCardsWatch.xcodeproj` removed (no longer needed — Xcode project is generated by prebuild)
+- [x] `watch-ios/MyLoyaltyCardsWatch/` source files removed (migrated to `targets/watch/`)
+- [x] `watch-ios/__tests__/` tests migrated or adapted to new path
+- [x] `watch-ios/README.md` content merged into updated docs
+- [x] `watch-ios/Generated/`, `watch-ios/build/` removed
+- [x] No references to `watch-ios/` remain in:
   - `package.json` scripts
   - GitHub Actions workflows (`.github/workflows/`)
   - `docs/cicd.md`
@@ -166,11 +166,11 @@ When Fastlane runs `fastlane ios beta` and archives the `myLoyaltyCards` scheme,
 
 ### AC9: Local development workflow preserved
 
-- [ ] Developers can still run the watchOS app in the simulator:
+- [x] Developers can still run the watchOS app in the simulator:
   - `npx expo prebuild --platform ios` → open `ios/myLoyaltyCards.xcworkspace` in Xcode → select watch scheme → run on watch simulator
   - OR a simplified script in `package.json` that does this
-- [ ] Developers can still edit Swift source files in `targets/watch/` and changes are reflected immediately (files are linked, not copied)
-- [ ] `watch-ios/README.md` guidance is replaced with updated instructions
+- [x] Developers can still edit Swift source files in `targets/watch/` and changes are reflected immediately (files are linked, not copied)
+- [x] `watch-ios/README.md` guidance is replaced with updated instructions
 
 ---
 

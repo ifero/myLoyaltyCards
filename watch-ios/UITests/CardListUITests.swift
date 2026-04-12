@@ -143,5 +143,4 @@ final class CardListUITests: XCTestCase {
     // Back to list
     XCTAssertTrue(firstRow.waitForExistence(timeout: 1))
   }
-  }
 }

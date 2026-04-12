@@ -8,17 +8,11 @@ type Brand = {
   logo: string;
 };
 
-const repoRoot = path.resolve(__dirname, '../..');
+const repoRoot = path.resolve(__dirname, '../../..');
 const scriptPath = path.join(repoRoot, 'watch-ios', 'Scripts', 'generate-catalogue.swift');
-const generatedDir = path.join(repoRoot, 'watch-ios', 'Generated');
+const generatedDir = path.join(repoRoot, 'targets', 'watch', 'Generated');
 const generatedFile = path.join(generatedDir, 'Brands.swift');
 const cataloguePath = path.join(repoRoot, 'catalogue', 'italy.json');
-const pbxprojPath = path.join(
-  repoRoot,
-  'watch-ios',
-  'MyLoyaltyCardsWatch.xcodeproj',
-  'project.pbxproj'
-);
 
 const runGenerator = (env?: Record<string, string | undefined>) => {
   execFileSync('swift', [scriptPath], {
@@ -52,29 +46,9 @@ describe('watchOS catalogue generation', () => {
     }
   });
 
-  it('configures Xcode build integration for generated file', () => {
-    const project = fs.readFileSync(pbxprojPath, 'utf8');
-    const targetBlockMatch = project.match(
-      /\/\* MyLoyaltyCardsWatch \*\/ = \{[\s\S]*?buildPhases = \(([\s\S]*?)\);/m
-    );
-
-    expect(targetBlockMatch).not.toBeNull();
-
-    const buildPhases = targetBlockMatch?.[1] ?? '';
-    const generateIndex = buildPhases.indexOf('Generate Watch Catalogue');
-    const sourcesIndex = buildPhases.indexOf('Sources');
-
-    expect(project).toContain('Generate Watch Catalogue');
-    expect(project).toContain('Scripts/generate-catalogue.swift');
-    expect(project).toContain('Brands.swift in Sources');
-    expect(project).toContain('../Generated/Brands.swift');
-    expect(project).toContain('"$(SRCROOT)/../catalogue/italy.json"');
-    expect(project).toContain('"$(SRCROOT)/Generated/Brands.swift"');
-    expect(project).toContain('/usr/bin/xcrun --sdk macosx swift');
-    expect(generateIndex).toBeGreaterThanOrEqual(0);
-    expect(sourcesIndex).toBeGreaterThanOrEqual(0);
-    expect(generateIndex).toBeLessThan(sourcesIndex);
-  });
+  // NOTE: The 'configures Xcode build integration' test was removed because the Xcode project
+  // is now generated dynamically by `expo prebuild` via @bacons/apple-targets. Build integration
+  // is validated by the CI workflow (watchos-tests.yml) which runs `expo prebuild` + `xcodebuild test`.
 
   it('escapes special characters and generated file type-checks', () => {
     const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'watch-catalogue-'));
@@ -100,7 +74,7 @@ describe('watchOS catalogue generation', () => {
     expect(generated).toContain('name: "Line1\\nLine2\\t\\"Quoted\\"\\\\Backslash"');
     expect(generated).toContain('"A\\nB"');
     expect(generated).toContain('"Tab\\tAlias"');
-    expect(generated).toContain('"Quote \\\" alias"');
+    expect(generated).toContain('"Quote \\" alias"');
     expect(generated).toContain('"Slash \\\\ alias"');
 
     execFileSync('xcrun', ['--sdk', 'macosx', 'swiftc', '-typecheck', generatedFile], {

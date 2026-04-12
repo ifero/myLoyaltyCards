@@ -1,6 +1,7 @@
 default_platform(:ios)
 
 app_identifier = CredentialsManager::AppfileConfig.try_fetch_value(:app_identifier)
+watch_identifier = "#{app_identifier}.watch"
 
 platform :ios do
   before_all do
@@ -11,18 +12,20 @@ platform :ios do
 
   desc "Fetch certificates (appstore, adhoc, development)"
   lane :fetch_certificates do
-    match(
-      type: 'development',
-      app_identifier: app_identifier
-    )
-    match(
-      type: 'adhoc',
-      app_identifier: app_identifier
-    )
-    match(
-      type: 'appstore',
-      app_identifier: app_identifier
-    )
+    [app_identifier, watch_identifier].each do |id|
+      match(
+        type: 'development',
+        app_identifier: id
+      )
+      match(
+        type: 'adhoc',
+        app_identifier: id
+      )
+      match(
+        type: 'appstore',
+        app_identifier: id
+      )
+    end
   end
 
   desc "Build iOS Dev app"
@@ -42,16 +45,29 @@ platform :ios do
       key_content: ENV['APP_STORE_CONNECT_API_KEY_KEY'],
       in_house: false
     )
-    match(type: "adhoc", readonly: is_ci)
-    # expo prebuild regenerates the Xcode project with empty signing settings.
-    # Patch the project with the correct team, profile, and identity from match.
+
+    # Sign iOS app
+    match(type: "adhoc", app_identifier: app_identifier, readonly: is_ci)
     update_code_signing_settings(
       use_automatic_signing: false,
       path: "ios/myLoyaltyCards.xcodeproj",
       team_id: ENV['FASTLANE_TEAM_ID'],
       profile_name: "match AdHoc #{app_identifier}",
-      code_sign_identity: "iPhone Distribution"
+      code_sign_identity: "iPhone Distribution",
+      targets: ["myLoyaltyCards"]
     )
+
+    # Sign watchOS app
+    match(type: "adhoc", app_identifier: watch_identifier, readonly: is_ci)
+    update_code_signing_settings(
+      use_automatic_signing: false,
+      path: "ios/myLoyaltyCards.xcodeproj",
+      team_id: ENV['FASTLANE_TEAM_ID'],
+      profile_name: "match AdHoc #{watch_identifier}",
+      code_sign_identity: "iPhone Distribution",
+      targets: ["watch"]
+    )
+
     # Use CI run number for a guaranteed-unique, ever-increasing build number.
     # Falls back to Unix timestamp when running locally.
     build_number = ENV['GITHUB_RUN_NUMBER'] || Time.now.to_i.to_s
@@ -76,16 +92,29 @@ platform :ios do
       key_content: ENV['APP_STORE_CONNECT_API_KEY_KEY'],
       in_house: false
     )
-    match(type: "appstore", readonly: is_ci)
-    # expo prebuild regenerates the Xcode project with empty signing settings.
-    # Patch the project with the correct team, profile, and identity from match.
+
+    # Sign iOS app
+    match(type: "appstore", app_identifier: app_identifier, readonly: is_ci)
     update_code_signing_settings(
       use_automatic_signing: false,
       path: "ios/myLoyaltyCards.xcodeproj",
       team_id: ENV['FASTLANE_TEAM_ID'],
       profile_name: "match AppStore #{app_identifier}",
-      code_sign_identity: "iPhone Distribution"
+      code_sign_identity: "iPhone Distribution",
+      targets: ["myLoyaltyCards"]
     )
+
+    # Sign watchOS app
+    match(type: "appstore", app_identifier: watch_identifier, readonly: is_ci)
+    update_code_signing_settings(
+      use_automatic_signing: false,
+      path: "ios/myLoyaltyCards.xcodeproj",
+      team_id: ENV['FASTLANE_TEAM_ID'],
+      profile_name: "match AppStore #{watch_identifier}",
+      code_sign_identity: "iPhone Distribution",
+      targets: ["watch"]
+    )
+
     # Retrieve last build number from TestFlight and increment
     last_build = latest_testflight_build_number(
       app_identifier: app_identifier,
@@ -115,16 +144,29 @@ platform :ios do
       key_content: ENV['APP_STORE_CONNECT_API_KEY_KEY'],
       in_house: false
     )
-    match(type: "appstore", readonly: is_ci)
-    # expo prebuild regenerates the Xcode project with empty signing settings.
-    # Patch the project with the correct team, profile, and identity from match.
+
+    # Sign iOS app
+    match(type: "appstore", app_identifier: app_identifier, readonly: is_ci)
     update_code_signing_settings(
       use_automatic_signing: false,
       path: "ios/myLoyaltyCards.xcodeproj",
       team_id: ENV['FASTLANE_TEAM_ID'],
       profile_name: "match AppStore #{app_identifier}",
-      code_sign_identity: "iPhone Distribution"
+      code_sign_identity: "iPhone Distribution",
+      targets: ["myLoyaltyCards"]
     )
+
+    # Sign watchOS app
+    match(type: "appstore", app_identifier: watch_identifier, readonly: is_ci)
+    update_code_signing_settings(
+      use_automatic_signing: false,
+      path: "ios/myLoyaltyCards.xcodeproj",
+      team_id: ENV['FASTLANE_TEAM_ID'],
+      profile_name: "match AppStore #{watch_identifier}",
+      code_sign_identity: "iPhone Distribution",
+      targets: ["watch"]
+    )
+
     build_number = ENV['GITHUB_RUN_NUMBER'] || Time.now.to_i.to_s
     increment_build_number(
       xcodeproj: "ios/myLoyaltyCards.xcodeproj",
