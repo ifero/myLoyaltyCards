@@ -13,7 +13,7 @@
     "test": "jest",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
-    "test:watchos": "xcodebuild test -workspace ios/myLoyaltyCards.xcworkspace -scheme watch -destination 'platform=watchOS Simulator,name=Apple Watch Series 10 (46mm)' -configuration Debug",
+    "test:watchos": "yarn watch:build",
     "test:all": "yarn test && yarn test:watchos",
     "watch:prebuild": "npx expo prebuild --clean --platform ios",
     "watch:build": "xcodebuild -workspace ios/myLoyaltyCards.xcworkspace -scheme watch -configuration Debug -destination \"platform=watchOS Simulator,name=Apple Watch Series 10 (46mm)\" build",

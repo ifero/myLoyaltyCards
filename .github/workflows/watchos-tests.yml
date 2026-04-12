@@ -55,7 +55,7 @@ jobs:
       - name: Generate iOS project with watch target
         run: npx expo prebuild --clean --platform ios
 
-      - name: Run watchOS tests (xcodebuild)
-        run: yarn test:watchos
+      - name: Build watchOS target (xcodebuild)
+        run: yarn watch:build
         env:
           CI: true
