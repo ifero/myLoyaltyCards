@@ -5,6 +5,7 @@ on:
     types: [opened, synchronize, reopened, ready_for_review]
     paths:
       - 'targets/watch/**'
+      - 'watch-ios/**'
       - 'ios/**'
       - 'app.json'
       - 'fastlane/Fastfile'
@@ -12,6 +13,7 @@ on:
     branches: [main]
     paths:
       - 'targets/watch/**'
+      - 'watch-ios/**'
       - 'ios/**'
       - 'app.json'
       - 'fastlane/Fastfile'
@@ -54,6 +56,9 @@ jobs:
 
       - name: Generate iOS project with watch target
         run: npx expo prebuild --clean --platform ios
+
+      - name: Generate watchOS catalogue (Brands.swift)
+        run: xcrun --sdk macosx swift watch-ios/Scripts/generate-catalogue.swift
 
       - name: Build watchOS target (xcodebuild)
         run: yarn watch:build:ci

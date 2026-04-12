@@ -9,7 +9,7 @@ type Brand = {
 };
 
 const repoRoot = path.resolve(__dirname, '../../..');
-const scriptPath = path.join(repoRoot, 'targets', 'watch', 'Scripts', 'generate-catalogue.swift');
+const scriptPath = path.join(repoRoot, 'watch-ios', 'Scripts', 'generate-catalogue.swift');
 const generatedDir = path.join(repoRoot, 'targets', 'watch', 'Generated');
 const generatedFile = path.join(generatedDir, 'Brands.swift');
 const cataloguePath = path.join(repoRoot, 'catalogue', 'italy.json');
