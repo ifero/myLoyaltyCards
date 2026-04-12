@@ -1,0 +1,53 @@
+.github/workflows/ios-release.yml
+  52057ee15cf659f1 46-47
+.github/workflows/store-upload.yml
+  52057ee15cf659f1 41-42
+.github/workflows/beta-releases.yml
+  52057ee15cf659f1 37-38
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.2.8",
+  "base_commit_sha": "ce448f46e748e05d3023dc338450a055b7730342",
+  "prompts": {
+    "52057ee15cf659f1": {
+      "agent_id": {
+        "tool": "github-copilot",
+        "id": "b853fa2a-16c8-4dbf-b448-09e769ce91df",
+        "model": "copilot/claude-opus-4.6"
+      },
+      "human_author": "Andrea Pacino",
+      "messages": [],
+      "total_additions": 10,
+      "total_deletions": 4,
+      "accepted_lines": 13,
+      "overriden_lines": 1
+    },
+    "7e5dddf93f995e7e": {
+      "agent_id": {
+        "tool": "github-copilot",
+        "id": "9854ccf1-82b7-4865-b93f-edfce1ab8a7a",
+        "model": "copilot/gpt-5.3-codex"
+      },
+      "human_author": null,
+      "messages": [],
+      "total_additions": 0,
+      "total_deletions": 0,
+      "accepted_lines": 342,
+      "overriden_lines": 0
+    },
+    "807f5d583a8670e3": {
+      "agent_id": {
+        "tool": "github-copilot",
+        "id": "cfa652de-8bec-4209-8ca8-ab3b46b88ae9",
+        "model": "copilot/claude-opus-4.6"
+      },
+      "human_author": null,
+      "messages": [],
+      "total_additions": 0,
+      "total_deletions": 0,
+      "accepted_lines": 369,
+      "overriden_lines": 0
+    }
+  }
+}
