@@ -56,6 +56,6 @@ jobs:
         run: npx expo prebuild --clean --platform ios
 
       - name: Build watchOS target (xcodebuild)
-        run: yarn watch:build
+        run: yarn watch:build:ci
         env:
           CI: true
