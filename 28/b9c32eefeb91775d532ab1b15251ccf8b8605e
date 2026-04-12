@@ -1,0 +1,53 @@
+.github/workflows/watchos-tests.yml
+  52057ee15cf659f1 8,16,60-61
+watch-ios/Scripts/generate-catalogue.swift
+  52057ee15cf659f1 23,65-68,85,102
+targets/watch/__tests__/generate-catalogue.test.ts
+  52057ee15cf659f1 12
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.2.8",
+  "base_commit_sha": "28b9c32eefeb91775d532ab1b15251ccf8b8605e",
+  "prompts": {
+    "52057ee15cf659f1": {
+      "agent_id": {
+        "tool": "github-copilot",
+        "id": "b853fa2a-16c8-4dbf-b448-09e769ce91df",
+        "model": "copilot/claude-opus-4.6"
+      },
+      "human_author": "Andrea Pacino",
+      "messages": [],
+      "total_additions": 13,
+      "total_deletions": 11,
+      "accepted_lines": 13,
+      "overriden_lines": 0
+    },
+    "7e5dddf93f995e7e": {
+      "agent_id": {
+        "tool": "github-copilot",
+        "id": "9854ccf1-82b7-4865-b93f-edfce1ab8a7a",
+        "model": "copilot/gpt-5.3-codex"
+      },
+      "human_author": null,
+      "messages": [],
+      "total_additions": 0,
+      "total_deletions": 0,
+      "accepted_lines": 342,
+      "overriden_lines": 0
+    },
+    "807f5d583a8670e3": {
+      "agent_id": {
+        "tool": "github-copilot",
+        "id": "cfa652de-8bec-4209-8ca8-ab3b46b88ae9",
+        "model": "copilot/claude-opus-4.6"
+      },
+      "human_author": null,
+      "messages": [],
+      "total_additions": 0,
+      "total_deletions": 0,
+      "accepted_lines": 369,
+      "overriden_lines": 0
+    }
+  }
+}
