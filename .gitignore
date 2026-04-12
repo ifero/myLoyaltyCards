@@ -57,6 +57,14 @@ package-lock.json
 
 # WatchOS (targets/watch — source managed by @bacons/apple-targets)
 targets/watch/Generated
+targets/watch/generated.entitlements
+
+# WatchOS build artifacts (watch-ios/ — only Scripts/, Tests/, UITests/ are source)
+watch-ios/.derivedData/
+watch-ios/Generated/
+watch-ios/build/
+watch-ios/test-results.xcresult/
+watch-ios/MyLoyaltyCardsWatch.xcodeproj/xcuserdata/
 
 # Fastlane
 bundler/
