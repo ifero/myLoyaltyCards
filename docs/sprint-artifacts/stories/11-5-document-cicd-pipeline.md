@@ -1,7 +1,7 @@
 # Story 11-5: Document CI/CD Pipeline
 
 **Epic:** 11 — CI/CD & Quality Gates
-**Status:** drafted
+**Status:** done
 **Sprint:** 12
 **Priority:** Medium — follows 11-6 (watchOS pipeline)
 **Depends on:** 11-6 (watchOS pipeline must be implemented first so docs reflect reality)

@@ -1,182 +1,379 @@
 # CI/CD Pipeline & Quality Gates
 
-This document describes the CI/CD pipeline, quality gates, and related workflows for the myLoyaltyCards project. All automation is managed via GitHub Actions.
+_Last updated: 2026-04-16_
 
-## Overview
+This document describes the current GitHub Actions and Fastlane CI/CD pipeline for the myLoyaltyCards repository. It is the single source of truth for how builds, tests, tags, and deploys run across iOS, Android, and watchOS.
 
-- CI/CD covers linting, type checking, testing, coverage, native builds, and deploys.
-- Quality gates block PR merges if any check fails.
-- Minimum coverage: 80% lines/statements.
-- Build and coverage badges are shown in README.
-- Notifications: GitHub status checks, Slack (#ci-alerts), email (dev lead).
-- Visual regression: pipeline ready for future addition.
+## Table of Contents
 
-## Project Structure
+- [Pipeline at a Glance](#pipeline-at-a-glance)
+- [Workflow Details](#workflow-details)
+  - [Quality Gates](#quality-gates)
+  - [watchOS Tests](#watchos-tests)
+  - [iOS AdHoc Build](#ios-adhoc-build)
+  - [Android AdHoc Build](#android-adhoc-build)
+  - [Beta Releases (RC)](#beta-releases-rc)
+  - [Store Upload (Final Release)](#store-upload-final-release)
+- [Fastlane & Native Build Notes](#fastlane--native-build-notes)
+- [Release Runbooks](#release-runbooks)
+  - [Ship to TestFlight](#ship-to-testflight)
+  - [Release to Production](#release-to-production)
+  - [Manual / AdHoc Build](#manual--adhoc-build)
+- [watchOS CI/CD](#watchos-ci-cd)
+- [Provisioning & match](#provisioning--match)
+- [Troubleshooting](#troubleshooting)
+- [References](#references)
 
-**Important:** The Fastfile and Gemfile are at the **project root**, not inside `ios/` or `android/` subdirectories. All `bundle exec fastlane` commands must run from the project root.
+## Pipeline at a Glance
 
-- `Gemfile` / `Gemfile.lock` — Ruby dependencies (Fastlane)
-- `fastlane/Fastfile` — Lane definitions for both iOS and Android
-- `fastlane/Appfile` — App identifier and Apple ID
-- `fastlane/Matchfile` — Certificate repository configuration
-
-## Path Filters & Build Triggers
-
-### AdHoc Builds (main branch + manual)
-
-AdHoc build workflows trigger on push to `main` **only if files change in these folders:**
-
-- `app/`
-- `core/`
-- `features/`
-- `shared/`
-- `android/` (Android workflow only)
-- `ios/` (iOS workflow only)
-
-**Manual trigger:** Both iOS and Android adhoc build workflows support `workflow_dispatch`, allowing manual runs on **any branch** (feature branches, main, etc.) from the GitHub Actions UI.
-
-**Main branch builds use the `adhoc` Fastlane lane for both iOS and Android.**
-
-### How to Update Path Filters
-
-Edit the `paths` section in the following workflow files:
-
-- `.github/workflows/android-release.yml`
-- `.github/workflows/ios-release.yml`
-
-Example:
-
-```yaml
-on:
-  push:
-    branches: [main]
-    paths:
-      - 'app/**'
-      - 'core/**'
-      - 'features/**'
-      - 'shared/**'
-      - 'ios/**'
-  workflow_dispatch:
+```mermaid
+flowchart LR
+  PR["PR opened / updated"] -->|checks| QG["ci-quality-gates.yml"]
+  PR -->|watchOS path changes| WT["watchos-tests.yml"]
+  PUSH["Push to main"] -->|app/core/features/shared/ios changes| IOSA["ios-release.yml"]
+  PUSH -->|app/core/features/shared/android changes| ANDA["android-release.yml"]
+  RCTAG["RC tag v*.*.*-rc.*"] --> BETA["beta-releases.yml"]
+  RELTAG["Release tag v*.*.*"] --> STORE["store-upload.yml"]
+  BETA -->|builds| TF["TestFlight + Android Beta"]
+  STORE -->|uploads| STORE2["App Store + Play Store"]
 ```
 
-If you need to add or remove folders, update the `paths` list in both workflow files and document the change here.
+### Workflow names
 
-### Beta and Release Builds by Tag
+- `.github/workflows/ci-quality-gates.yml`
+- `.github/workflows/watchos-tests.yml`
+- `.github/workflows/ios-release.yml`
+- `.github/workflows/android-release.yml`
+- `.github/workflows/beta-releases.yml`
+- `.github/workflows/store-upload.yml`
 
-Beta builds (TestFlight/Android beta) are triggered by tags matching `v*.*.*-rc.*` (e.g., `v1.2.3-rc.1`).
+## Workflow Details
 
-Release builds (store upload) are triggered by tags matching `v*.*.*` **excluding** pre-release tags (the `!v*.*.*-*` exclusion pattern prevents RC tags from triggering store uploads).
+### Quality Gates
 
-Workflow files:
-
-- `.github/workflows/beta-releases.yml` (for RC builds)
-- `.github/workflows/store-upload.yml` (for final release uploads)
+File: `.github/workflows/ci-quality-gates.yml`
 
 Triggers:
 
-- On `v*.*.*-rc.*` tags: `beta-releases.yml` builds iOS TestFlight and Android beta (using `beta` lane)
-- On `v*.*.*` tags (excluding pre-release): `store-upload.yml` uploads iOS and Android release builds to stores (using `upload_release` lane)
+- `pull_request` on opened, synchronize, reopened, ready_for_review
+- `push` to `main`
 
-To change the trigger pattern, update the `tags:` section in the relevant workflow and document the change here.
+What it runs:
 
-## Bundler Setup (Ruby dependencies)
+- `yarn install --frozen-lockfile`
+- `yarn lint`
+- `yarn typecheck`
+- `yarn test:coverage --watchAll=false --runInBand`
+- uploads the coverage report as an artifact
 
-- Version Gemfile and Gemfile.lock.
-- Use `ruby/setup-ruby@v1` with `bundler-cache: true` for automatic install and caching.
-- Always run `bundle install` before Fastlane or Ruby scripts.
+Notes:
 
-### GitHub Actions Example
+- GitHub status checks are the primary notification mechanism.
+- Slack notification is optional and only sent when `SLACK_WEBHOOK_URL` is configured.
+- No email notifications are configured in the workflow.
 
-```yaml
-- name: Set up Ruby
-  uses: ruby/setup-ruby@v1
-  with:
-    ruby-version: '3.2'
-    bundler-cache: true
+### watchOS Tests
+
+File: `.github/workflows/watchos-tests.yml`
+
+Triggers:
+
+- `pull_request` on opened, synchronize, reopened, ready_for_review
+- `push` to `main`
+
+Path filters:
+
+- `targets/watch/**`
+- `watch-ios/**`
+- `ios/**`
+- `app.json`
+- `fastlane/Fastfile`
+
+What it runs:
+
+- `yarn install --frozen-lockfile`
+- Jest tests for `targets/watch/__tests__`
+- `npx expo prebuild --clean --platform ios`
+- `xcrun --sdk macosx swift watch-ios/Scripts/generate-catalogue.swift`
+- `yarn watch:build:ci`
+
+Purpose:
+
+- Verifies the watchOS companion target builds on macOS.
+- Ensures watch target signing and generated catalogue code remain valid.
+
+### iOS AdHoc Build
+
+File: `.github/workflows/ios-release.yml`
+
+Triggers:
+
+- `push` to `main` when any of these paths change:
+  - `app/**`
+  - `core/**`
+  - `features/**`
+  - `shared/**`
+  - `ios/**`
+- `workflow_dispatch` for manual runs on any branch
+
+What it runs:
+
+- `yarn install --frozen-lockfile`
+- `npx expo prebuild --platform ios`
+- `xcrun --sdk macosx swift watch-ios/Scripts/generate-catalogue.swift`
+- `bundle exec fastlane ios adhoc`
+
+Output:
+
+- `output/*.ipa` uploaded as a workflow artifact
+
+### Android AdHoc Build
+
+File: `.github/workflows/android-release.yml`
+
+Triggers:
+
+- `push` to `main` when any of these paths change:
+  - `app/**`
+  - `core/**`
+  - `features/**`
+  - `shared/**`
+  - `android/**`
+- `workflow_dispatch` for manual runs on any branch
+
+What it runs:
+
+- `yarn install --frozen-lockfile`
+- `npx expo prebuild --platform android`
+- `bundle exec fastlane android adhoc`
+
+Output:
+
+- `android/app/build/outputs/apk/release/*.apk` uploaded as a workflow artifact
+
+### Beta Releases (RC)
+
+File: `.github/workflows/beta-releases.yml`
+
+Triggers:
+
+- `push` tags matching `v*.*.*-rc.*`
+
+Jobs:
+
+- `ios-testflight-beta` builds and uploads the iOS app to TestFlight using `bundle exec fastlane ios beta`
+- `android-beta` builds the Android beta artifact using `bundle exec fastlane android beta`; it does not currently upload to Play Console.
+
+Notes:
+
+- The iOS job runs `npx expo prebuild --platform ios` and generates the watchOS catalogue before Fastlane.
+- There is no separate `watch_beta` lane; the watch companion is included in the iOS `beta` lane.
+
+### Store Upload (Final Release)
+
+File: `.github/workflows/store-upload.yml`
+
+Triggers:
+
+- `push` tags matching `v*.*.*`
+- excludes pre-release tags via `!v*.*.*-*`
+
+Jobs:
+
+- `upload-ios-release` runs `bundle exec fastlane ios upload_release`
+- `upload-android-release` runs `bundle exec fastlane android upload_release`
+
+Notes:
+
+- The iOS release job includes the watchOS companion app build and signing as part of the same lane.
+- This workflow uploads to App Store Connect and Play Store production.
+
+## Fastlane & Native Build Notes
+
+Location:
+
+- `fastlane/Fastfile`
+- `fastlane/Appfile`
+- `fastlane/Matchfile`
+
+Important details:
+
+- `setup_ci` runs automatically in iOS lanes on CI to create a temporary keychain for `match`.
+- `npx expo prebuild` is required before iOS and Android Fastlane lanes to generate native projects.
+- iOS signing is handled with `fastlane match` and `update_code_signing_settings` for both:
+  - main iOS bundle ID
+  - watchOS bundle ID (`#{app_identifier}.watch`)
+- The watch app is built together with the iOS app in the same `ios` lane, not by a separate lane.
+
+iOS lanes summary:
+
+- `ios adhoc` — AdHoc distribution build
+- `ios beta` — TestFlight upload
+- `ios upload_release` — App Store release upload
+
+Android lanes summary:
+
+- `android adhoc` — Release APK build
+- `android beta` — Android beta artifact build (no Play Store upload in the current lane)
+- `android upload_release` — Play Store production upload
+
+## Release Runbooks
+
+### Ship to TestFlight
+
+1. Confirm `main` is green with passing CI.
+2. Decide the release version.
+3. Create an RC tag:
+
+```bash
+git tag v1.0.0-rc.1
+git push --tags
 ```
 
-## Fastlane Setup (Native build & deploy)
+4. Monitor `.github/workflows/beta-releases.yml` in GitHub Actions.
+5. Verify the iOS build appears in App Store Connect → TestFlight.
+6. Verify Android beta appears in Play Console beta.
+7. Distribute to testers.
 
-- The Fastfile is at `fastlane/Fastfile` (project root) — **not** inside `ios/` or `android/`.
-- Use lanes with explicit platform prefix: `bundle exec fastlane ios adhoc`, `bundle exec fastlane android adhoc`.
-- Store secrets in GitHub Actions (never in repo).
-- Use `fastlane match` for certificate management.
-- Always run `npx expo prebuild` before Fastlane for native sync.
-- iOS lanes use `setup_ci` automatically on CI to create a temporary keychain for `match`.
+### Release to Production
 
-### Available Lanes
+1. Validate the RC/TestFlight build.
+2. Create a final release tag:
 
-**iOS:**
-
-- `ios fetch_certificates` — Fetch dev, adhoc, and appstore certificates
-- `ios build_dev` — Build development app
-- `ios adhoc` — Build AdHoc distribution (used by main branch CI + manual dispatch)
-- `ios beta` — Build and upload to TestFlight (used by RC tag CI)
-- `ios upload_release` — Build and upload to App Store Connect (used by release tag CI)
-
-**Android:**
-
-- `android build_dev` — Build debug APK
-- `android adhoc` — Build release APK (used by main branch CI + manual dispatch)
-- `android beta` — Build and upload to Play Console beta track (used by RC tag CI)
-- `android upload_release` — Build AAB and upload to Play Store production (used by release tag CI)
-
-### GitHub Actions Example
-
-```yaml
-- name: Prebuild native projects
-  run: npx expo prebuild --platform ios
-- name: Run Fastlane (iOS AdHoc)
-  run: bundle exec fastlane ios adhoc
+```bash
+git tag v1.0.0
+git push --tags
 ```
 
-## Quality Gates
+3. Monitor `.github/workflows/store-upload.yml` in GitHub Actions.
+4. After upload completes, submit the build for App Store / Play Store review.
 
-- ESLint, TypeScript, Jest (unit/integration tests).
-- Minimum 80% coverage enforced.
-- PR merge blocked if any check fails.
-- Clear report on GitHub.
+### Manual / AdHoc Build
 
-## Notifications
+Manual workflow:
 
-- GitHub status checks for all builds.
-- Slack (#ci-alerts) for build/deploy/rollback.
-- Email to dev lead for failures.
-- Notification content includes link to log/build.
+- Open the GitHub Actions UI.
+- Trigger `.github/workflows/ios-release.yml` or `.github/workflows/android-release.yml` via `workflow_dispatch`.
 
-## Rollback Strategy
+Local adhoc build:
 
-- Automatic rollback on failed deploys to production (web/app).
-- Revert to last stable release.
-- Manual override and fallback documented.
+```bash
+bundle exec fastlane ios adhoc
+bundle exec fastlane android adhoc
+```
 
-## Troubleshooting & Updating
+## watchOS CI/CD
 
-- Update Gemfile for new Ruby dependencies, then run `bundle install`.
-- Update Fastfile for new lanes or build steps.
-- Add new secrets in GitHub Actions settings.
-- If build fails, check logs for Bundler or Fastlane errors.
-- For path filter changes, update workflow triggers and document here.
-- **Common issue:** If Fastlane fails immediately (~1 second), check that all required secrets are configured in GitHub repository settings.
+The watchOS companion app is part of the iOS build pipeline.
 
-## Required GitHub Secrets
+Key points:
 
-### iOS Builds
+- `watchos-tests.yml` verifies watch target compilation and catalogue generation on macOS.
+- It is a build verification path, not a full signed release validation.
+- `beta-releases.yml` and `store-upload.yml` build the watch app as part of the same iOS lane.
+- The watch app uses a separate watch bundle ID and provisioning profile managed by `match`.
 
-- `MATCH_PASSWORD` — Password for decrypting match certificates
-- `MATCH_GIT_BASIC_AUTHORIZATION` — Base64-encoded credentials for the certificates git repo
-- `MATCH_USERNAME` — Apple ID username for match
-- `FASTLANE_TEAM_ID` — Apple Developer Team ID
-- `APP_STORE_CONNECT_API_KEY_KEY_ID` — App Store Connect API key ID
-- `APP_STORE_CONNECT_API_KEY_ISSUER_ID` — App Store Connect API issuer ID
-- `APP_STORE_CONNECT_API_KEY_KEY` — App Store Connect API private key content (p8)
+watchOS signing path:
 
-### Android Builds
+- `match(type: 'adhoc', app_identifier: watch_identifier, readonly: is_ci)` for AdHoc builds
+- `match(type: 'appstore', app_identifier: watch_identifier, readonly: is_ci)` for beta/release uploads
+- `update_code_signing_settings` targets the watch target explicitly
 
-- `ANDROID_PACKAGE_NAME` — Android package name (e.g. com.iferoporefi.myloyaltycards)
-- `PLAY_STORE_API_KEY` — Google Play Store service account key (JSON)
+Note:
+
+- There is no dedicated `watch_beta` or `watch_upload_release` lane in the current Fastfile.
+- The watch companion is signed and built inside the iOS `beta` and `upload_release` lanes.
+
+## Provisioning & match
+
+fastlane match behavior:
+
+- `match` is configured in `fastlane/Matchfile` and uses the certificate repository referenced there.
+- CI runs `match` in readonly mode via `readonly: is_ci`.
+- Local runs may use write mode if the developer has access to the certificate repo and the correct secrets.
+- The iOS `fastlane` lanes call `setup_ci` on macOS CI runners to create a temporary keychain before `match` runs.
+
+CI environment variables used for `match` and signing:
+
+- `MATCH_PASSWORD`
+- `MATCH_GIT_BASIC_AUTHORIZATION`
+- `MATCH_USERNAME`
+- `FASTLANE_TEAM_ID`
+- `APP_STORE_CONNECT_API_KEY_KEY_ID`
+- `APP_STORE_CONNECT_API_KEY_ISSUER_ID`
+- `APP_STORE_CONNECT_API_KEY_KEY`
+
+For Android uploads, the CI secrets are:
+
+- `ANDROID_PACKAGE_NAME`
+- `PLAY_STORE_API_KEY`
+- `EXPO_PUBLIC_SUPABASE_URL`
+- `EXPO_PUBLIC_SUPABASE_KEY`
+
+Adding a new bundle ID in this repo:
+
+1. Register the new app identifier in Apple Developer.
+2. Create the app record in App Store Connect if needed.
+3. Add the identifier to `fastlane/Matchfile` if the repo configuration is restrictive.
+4. Run locally:
+
+```bash
+bundle exec fastlane ios fetch_certificates
+```
+
+5. Confirm the new provisioning profile is committed to the certificate repository.
+
+Project-specific notes:
+
+- `fastlane/Appfile` defines the base iOS app identifier used by the Fastlane lanes.
+- `fastlane/Matchfile` defines how `match` connects to the certificate repository and which app identifiers are synced.
+- The watch bundle ID is derived from the base iOS app identifier as `#{app_identifier}.watch`.
+
+CI keychain setup:
+
+- `setup_ci` creates a temporary keychain on macOS CI runners.
+- This temporary keychain is required before `match` can install certificates.
+- It is enabled automatically in iOS lanes when `is_ci` is true.
+
+## Troubleshooting
+
+### Fastlane fails immediately (~1 second)
+
+- Check GitHub Actions secrets.
+- Verify `MATCH_PASSWORD`, App Store Connect API secrets, and platform-specific secrets are present.
+- Confirm `SLACK_WEBHOOK_URL` is not causing unexpected failure in the quality gates workflow.
+
+### Code signing error
+
+- Check the app identifier and watch bundle ID in `fastlane/Appfile`.
+- Verify `match` profile names match the bundle IDs.
+- Confirm the correct Xcode project and target names are passed to `update_code_signing_settings`.
+
+### Build number conflict
+
+- iOS `beta` lane uses the last TestFlight build number and increments it.
+- `adhoc` and `upload_release` use `GITHUB_RUN_NUMBER` on CI or a timestamp locally.
+- Android beta/release lanes use the next Play Console version code.
+
+### `expo prebuild` changes signing settings
+
+- Always run `npx expo prebuild` in the workflow before Fastlane.
+- watchOS and iOS native project generation must happen before `build_app`.
+
+### watchOS build uses wrong destination
+
+- Verify the watch target is still named `watch` in `update_code_signing_settings`.
+- Confirm `watch-ios/Scripts/generate-catalogue.swift` runs successfully before the Xcode build.
 
 ## References
 
-- See Epic 11 and related stories in docs/sprint-artifacts/epic-11-cicd.yaml and docs/sprint-artifacts/stories/.
-- For more details, see Fastlane documentation and Expo CI/CD guides.
+- `docs/sprint-artifacts/stories/11-6-watchos-testflight-pipeline.md`
+- `docs/sprint-artifacts/stories/11-2-build-on-main-app-changes-only.md`
+- `docs/sprint-artifacts/epic-11-cicd.yaml`
+- `fastlane/Fastfile`
+- `.github/workflows/ci-quality-gates.yml`
+- `.github/workflows/watchos-tests.yml`
+- `.github/workflows/ios-release.yml`
+- `.github/workflows/android-release.yml`
+- `.github/workflows/beta-releases.yml`
+- `.github/workflows/store-upload.yml`
