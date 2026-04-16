@@ -1,0 +1,77 @@
+assets/images/brands/zara.svg
+  d0020ee0208bea06 1-49
+assets/images/brands/hm.svg
+  d0020ee0208bea06 1-8
+assets/images/brands/sephora.svg
+  d0020ee0208bea06 1
+assets/images/brands/ovs.svg
+  d0020ee0208bea06 1
+assets/images/brands/tigota.svg
+  d0020ee0208bea06 1,10-11
+assets/images/brands/douglas.svg
+  d0020ee0208bea06 1
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.3.0",
+  "base_commit_sha": "ec43811f1a778834c92dd39c9eceedc0eaf205aa",
+  "prompts": {
+    "52057ee15cf659f1": {
+      "agent_id": {
+        "tool": "github-copilot",
+        "id": "b853fa2a-16c8-4dbf-b448-09e769ce91df",
+        "model": "copilot/claude-opus-4.6"
+      },
+      "human_author": "Andrea Pacino",
+      "messages": [],
+      "total_additions": 0,
+      "total_deletions": 0,
+      "accepted_lines": 7,
+      "overriden_lines": 0
+    },
+    "7e5dddf93f995e7e": {
+      "agent_id": {
+        "tool": "github-copilot",
+        "id": "9854ccf1-82b7-4865-b93f-edfce1ab8a7a",
+        "model": "copilot/gpt-5.3-codex"
+      },
+      "human_author": null,
+      "messages": [],
+      "total_additions": 0,
+      "total_deletions": 0,
+      "accepted_lines": 342,
+      "overriden_lines": 0
+    },
+    "807f5d583a8670e3": {
+      "agent_id": {
+        "tool": "github-copilot",
+        "id": "cfa652de-8bec-4209-8ca8-ab3b46b88ae9",
+        "model": "copilot/claude-opus-4.6"
+      },
+      "human_author": null,
+      "messages": [],
+      "total_additions": 0,
+      "total_deletions": 0,
+      "accepted_lines": 369,
+      "overriden_lines": 0
+    },
+    "d0020ee0208bea06": {
+      "agent_id": {
+        "tool": "github-copilot",
+        "id": "eb1eb87d-3c71-43ac-984a-70f26ac3d0fa",
+        "model": "copilot/oswe-vscode-prime"
+      },
+      "human_author": "Andrea Pacino",
+      "messages": [],
+      "total_additions": 63,
+      "total_deletions": 17,
+      "accepted_lines": 63,
+      "overriden_lines": 0
+    }
+  },
+  "humans": {
+    "h_806fb4fc1f8dfb": {
+      "author": "Andrea Pacino"
+    }
+  }
+}
