@@ -295,7 +295,7 @@ development_status:
   11-2-build-on-main-app-changes-only: done
   11-3-notify-on-build-status: cancelled # not needed — GitHub shows build status natively
   11-4-rollback-on-failed-deploy: cancelled # rollback doesn't apply to mobile app store binaries
-  11-5-document-cicd-pipeline: drafted # depends on 11-6
+  11-5-document-cicd-pipeline: done # depends on 11-6
   11-6-watchos-testflight-pipeline: in-progress # embed watchOS in iOS build via @bacons/apple-targets
 
   # Epic 12: App-Wide Design Overhaul (Figma) ✅ COMPLETE

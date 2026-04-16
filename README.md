@@ -50,6 +50,8 @@ The BMAD framework is installed in the `.bmad-core/` directory with the followin
 
 ### Documentation
 
+- [CI/CD Pipeline Guide](docs/cicd.md)
+
 For more information about BMAD-METHOD, visit:
 
 - [BMAD-METHOD Official Repository](https://github.com/bmad-code-org/BMAD-METHOD)
