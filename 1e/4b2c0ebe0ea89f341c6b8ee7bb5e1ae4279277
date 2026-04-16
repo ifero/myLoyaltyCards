@@ -1,0 +1,68 @@
+README.md
+  412fac78115d175c 53-54
+docs/cicd.md
+  412fac78115d175c 165,217,272
+docs/sprint-artifacts/stories/11-5-document-cicd-pipeline.md
+  412fac78115d175c 4
+docs/sprint-artifacts/sprint-status.yaml
+  412fac78115d175c 298
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.2.8",
+  "base_commit_sha": "1e4b2c0ebe0ea89f341c6b8ee7bb5e1ae4279277",
+  "prompts": {
+    "412fac78115d175c": {
+      "agent_id": {
+        "tool": "github-copilot",
+        "id": "92cfc311-961d-41d5-9119-a7a203733d35",
+        "model": "copilot/gpt-5.4"
+      },
+      "human_author": "Andrea Pacino",
+      "messages": [],
+      "total_additions": 9,
+      "total_deletions": 6,
+      "accepted_lines": 8,
+      "overriden_lines": 0
+    },
+    "52057ee15cf659f1": {
+      "agent_id": {
+        "tool": "github-copilot",
+        "id": "b853fa2a-16c8-4dbf-b448-09e769ce91df",
+        "model": "copilot/claude-opus-4.6"
+      },
+      "human_author": "Andrea Pacino",
+      "messages": [],
+      "total_additions": 0,
+      "total_deletions": 0,
+      "accepted_lines": 7,
+      "overriden_lines": 0
+    },
+    "7e5dddf93f995e7e": {
+      "agent_id": {
+        "tool": "github-copilot",
+        "id": "9854ccf1-82b7-4865-b93f-edfce1ab8a7a",
+        "model": "copilot/gpt-5.3-codex"
+      },
+      "human_author": null,
+      "messages": [],
+      "total_additions": 0,
+      "total_deletions": 0,
+      "accepted_lines": 342,
+      "overriden_lines": 0
+    },
+    "807f5d583a8670e3": {
+      "agent_id": {
+        "tool": "github-copilot",
+        "id": "cfa652de-8bec-4209-8ca8-ab3b46b88ae9",
+        "model": "copilot/claude-opus-4.6"
+      },
+      "human_author": null,
+      "messages": [],
+      "total_additions": 0,
+      "total_deletions": 0,
+      "accepted_lines": 369,
+      "overriden_lines": 0
+    }
+  }
+}
