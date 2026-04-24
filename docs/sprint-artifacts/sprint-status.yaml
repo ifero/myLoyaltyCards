@@ -289,14 +289,24 @@ development_status:
   10-6-sync-cards-from-phone: backlog
   epic-10-retrospective: optional
 
+  # Epic 14: Household Collaboration
+  epic-14: backlog
+  14-1-create-household-membership: backlog
+  14-2-share-household-shopping-list: backlog
+  14-3-share-household-bills: backlog
+  14-4-share-household-cards: backlog
+  14-5-household-sync-conflict-resolution: backlog
+  epic-14-retrospective: optional
+
   # Epic 11: CI/CD & Quality Gates
-  epic-11: in-progress
+  epic-11: done
   11-1-block-pr-on-quality-gates: done
   11-2-build-on-main-app-changes-only: done
   11-3-notify-on-build-status: cancelled # not needed — GitHub shows build status natively
   11-4-rollback-on-failed-deploy: cancelled # rollback doesn't apply to mobile app store binaries
   11-5-document-cicd-pipeline: done # depends on 11-6
-  11-6-watchos-testflight-pipeline: in-progress # embed watchOS in iOS build via @bacons/apple-targets
+  11-6-watchos-testflight-pipeline: done # embed watchOS in iOS build via @bacons/apple-targets
+  epic-11-retrospective: done
 
   # Epic 12: App-Wide Design Overhaul (Figma) ✅ COMPLETE
   epic-12: done

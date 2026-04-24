@@ -726,6 +726,14 @@ Despite solo developer resource constraint, MVP includes complete feature set fo
 - Usage pattern learning for smarter sorting
 - Card sharing within community
 
+**Household Collaboration:**
+
+- Household entity for member registration, shared data, and visibility controls
+- Shared shopping lists across household members
+- Shared bill tracking, expense splitting, and paid/unpaid status
+- Optional household-visible cards with per-card privacy settings
+- Household membership roles, onboarding, and sync conflict handling
+
 **User Experience Enhancements:**
 
 - Custom logo uploads with content moderation
