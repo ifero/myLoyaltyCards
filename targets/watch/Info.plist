@@ -4,6 +4,18 @@
   <dict>
     <key>CFBundleDisplayName</key>
     <string>myLoyaltyCards</string>
+    <key>CFBundleIcons</key>
+    <dict>
+      <key>CFBundlePrimaryIcon</key>
+      <dict>
+        <key>CFBundleIconName</key>
+        <string>AppIcon</string>
+        <key>CFBundleIconFiles</key>
+        <array>
+          <string>AppIcon</string>
+        </array>
+      </dict>
+    </dict>
     <key>CFBundleIconFiles</key>
     <array>
       <string>AppIcon</string>
