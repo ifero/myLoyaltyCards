@@ -1,0 +1,25 @@
+targets/watch/Assets.xcassets/AppIcon.appiconset/Contents.json
+  846556124bd3b61c 1-15
+targets/watch/Info.plist
+  846556124bd3b61c 7-12
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.3.4",
+  "base_commit_sha": "f8031794ae8f44827c9d2146a8e1aa4be0db6c3f",
+  "prompts": {
+    "846556124bd3b61c": {
+      "agent_id": {
+        "tool": "github-copilot",
+        "id": "ee519033-8697-43ca-9482-60b1b6dae3ef",
+        "model": "copilot/oswe-vscode-prime"
+      },
+      "human_author": "Andrea Pacino",
+      "messages": [],
+      "total_additions": 24,
+      "total_deletions": 0,
+      "accepted_lines": 24,
+      "overriden_lines": 0
+    }
+  }
+}
