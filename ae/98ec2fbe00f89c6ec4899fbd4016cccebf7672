@@ -1,0 +1,21 @@
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.3.4",
+  "base_commit_sha": "ae98ec2fbe00f89c6ec4899fbd4016cccebf7672",
+  "prompts": {
+    "846556124bd3b61c": {
+      "agent_id": {
+        "tool": "github-copilot",
+        "id": "ee519033-8697-43ca-9482-60b1b6dae3ef",
+        "model": "copilot/oswe-vscode-prime"
+      },
+      "human_author": "Andrea Pacino",
+      "messages": [],
+      "total_additions": 3,
+      "total_deletions": 0,
+      "accepted_lines": 3,
+      "overriden_lines": 0
+    }
+  }
+}
