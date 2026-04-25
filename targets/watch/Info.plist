@@ -4,5 +4,11 @@
   <dict>
     <key>CFBundleDisplayName</key>
     <string>myLoyaltyCards</string>
+    <key>CFBundleIconFiles</key>
+    <array>
+      <string>AppIcon</string>
+    </array>
+    <key>CFBundleIconName</key>
+    <string>AppIcon</string>
   </dict>
 </plist>
