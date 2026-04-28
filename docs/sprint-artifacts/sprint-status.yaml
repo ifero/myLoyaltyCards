@@ -157,7 +157,7 @@ current_sprint:
       note: 'All four run in parallel. 6-17 is UX design; 13-10, 6-16, 15-1 are dev. 15-1 requires Ifero Italian copy review before merge.'
     wave_2:
       stories: [6-18]
-      blocked_on: '6-17 Ifero approval of Figma frames'
+      blocked_on: 'confirmation-setting + email-template verification (6-17 design approval completed 2026-04-28)'
   decisions:
     - id: DEC-S13-001
       date: 2026-04-27
@@ -275,8 +275,8 @@ development_status:
   6-14-upgrade-guest-to-account: done
   6-15-migration-banner-polish: drafted # follow-up from 6.14 review — L1/L2/L3
   6-16-user-profile-creation-on-signup: done # Sprint 13 — implementation and live local signup validated; awaiting review disposition
-  6-17-design-otp-verification-screen: ready-for-dev # Sprint 13 — refined; DoR passed for UX delivery, still blocks 6-18 until approved
-  6-18-otp-email-verification-flow: drafted # Sprint 13 — refined, but still blocked on 6-17 approval + confirmation-setting verification
+  6-17-design-otp-verification-screen: done # Sprint 13 — Figma OTP Verification page approved by Ifero on 2026-04-28; design dependency cleared
+  6-18-otp-email-verification-flow: drafted # Sprint 13 — 6-17 approved; local repo still has auth.email.enable_confirmations=false; production confirmation + email-template verification pending
   epic-6-retrospective: optional
 
   # Epic 7: Cloud Synchronization

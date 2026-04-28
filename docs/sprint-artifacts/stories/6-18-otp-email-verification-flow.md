@@ -2,7 +2,7 @@
 
 **Epic:** 6 - User Authentication & Privacy
 **Type:** User-Facing
-**Status:** drafted
+**Status:** ready-for-dev
 
 ## Story
 
@@ -14,7 +14,7 @@ so that I can confirm my account without ever leaving the app or dealing with un
 
 This story replaces the current magic-link email confirmation flow with an in-app OTP verification screen. After successful account creation, the user is navigated to `/verify-email` where they enter a 6-digit code delivered to their email. On success, they are signed in and routed to the main app.
 
-**Blocked on:** Story 6.17 (OTP verification screen Figma frames) — implementation must not begin until Ifero approves the designs.
+**Design dependency:** Story 6.17 approved by Ifero on 2026-04-28. Remaining non-design readiness items are tracked below.
 
 **Supabase config:** `enable_confirmations = true` must be set under `[auth.email]` in `supabase/config.toml` and the production Supabase project dashboard.
 
@@ -28,11 +28,32 @@ This story replaces the current magic-link email confirmation flow with an in-ap
 
 ## Remaining blocker to ready-for-dev
 
-- Story 6.17 must be completed and explicitly approved by Ifero. Record the approved frame names in this story before promotion.
-- Local and production confirmation settings must be verified by the implementation owner before development starts.
-- The approved 6.17 prototype must lock the verify trigger decision: manual Confirm only, or auto-submit on the 6th digit.
+- Approved Story 6.17 design handoff is recorded below and no longer blocks implementation.
+- This story remains below `ready-for-dev` until confirmation-setting and email-template verification evidence is complete for both local and production environments.
+- The approved 6.17 prototype locks auto-submit on the 6th digit / full 6-digit paste.
 - The auth layer must expose stable verification error codes so UI and tests do not branch on raw Supabase error strings.
-- Confirmation-setting and email-template verification must be recorded here or in a linked checklist with owner and date verified.
+
+### Readiness evidence ledger
+
+| Item                                    | Current state | Evidence                                                                                                                     | Owner                  | Verified on | Action to clear |
+| --------------------------------------- | ------------- | ---------------------------------------------------------------------------------------------------------------------------- | ---------------------- | ----------- | --------------- |
+| Story 6.17 design approval              | Verified      | Story 6.17 marked `done`; Ifero approved Figma OTP Verification page                                                         | Ifero                  | 2026-04-28  | None            |
+| Local `auth.email.enable_confirmations` | Verified      | `supabase/config.toml` now shows `[auth.email] enable_confirmations = true`; local signup behavior re-verified               | Implementation owner   | 2026-04-28  | None            |
+| Local email OTP template                | Verified      | Repo has custom `[auth.email.template.confirmation]` override and `supabase/templates/confirmation.html` uses `{{ .Token }}` | Implementation owner   | 2026-04-28  | None            |
+| Production email confirmations          | Verified      | Production signup reached Supabase and returned `over_email_send_rate_limit`, proving email confirmations are active         | Implementation owner   | 2026-04-28  | None            |
+| Production OTP email template           | Verified      | Production template updated in the production dashboard and confirmed to use `{{ .Token }}` for OTP delivery                 | Supabase project owner | 2026-04-28  | None            |
+
+Status rule: keep Story 6.18 in `drafted` until every non-design row above is either verified or explicitly waived by Ifero.
+
+## Approved 6.17 Design Handoff
+
+- **Approved by:** Ifero on 2026-04-28
+- **Figma page:** `OTP Verification`
+- **Approved frame names:**
+  - Light: `OTP Verify — Empty — Light`, `OTP Verify — Filling — Light`, `OTP Verify — Complete — Light`, `OTP Verify — Loading — Light`, `OTP Verify — Wrong OTP — Light`, `OTP Verify — Expired OTP — Light`, `OTP Verify — Verification Unavailable — Light`, `OTP Verify — Resend Success — Light`, `OTP Verify — Resend Failure — Light`, `OTP Verify — Success — Light`
+  - Dark: `OTP Verify — Empty — Dark`, `OTP Verify — Filling — Dark`, `OTP Verify — Complete — Dark`, `OTP Verify — Loading — Dark`, `OTP Verify — Wrong OTP — Dark`, `OTP Verify — Expired OTP — Dark`, `OTP Verify — Verification Unavailable — Dark`, `OTP Verify — Resend Success — Dark`, `OTP Verify — Resend Failure — Dark`, `OTP Verify — Success — Dark`
+- **Locked verify trigger:** auto-submit immediately on the 6th digit or after a full 6-digit paste
+- **Locked success handoff:** success is transition-only and practically instant; any success styling may appear only momentarily and must not delay navigation into the main app
 
 ## Dev / QA Handoff Notes
 
@@ -43,7 +64,8 @@ This story replaces the current magic-link email confirmation flow with an in-ap
 - Typing advances focus; backspace on an empty cell moves backward and clears the previous cell.
 - Pasting a full 6-digit code fills all cells left-to-right and triggers verification once complete.
 - Any edit after an OTP error clears the error state before the next submit attempt.
-- Submit behavior must match the approved 6.17 prototype. If auto-submit is approved, entering the 6th digit auto-submits and the Confirm CTA transitions to loading immediately. If not approved, the Confirm CTA is the only submit action.
+- Submit behavior is locked by the approved 6.17 prototype: entering the 6th digit or pasting a full 6-digit code triggers verification immediately, and the Confirm CTA transitions to loading in sync with the OTP cells.
+- Success is transition-only and effectively instant. Once OTP verification succeeds, navigation proceeds immediately; any success styling may appear only momentarily and must not become a separate confirmation screen.
 - Resend cooldown restarts only after a successful resend response.
 - The "Wrong email? Go back" path returns to `/create-account` and preserves the email field only; password, confirm-password, consent state, and transient server errors reset.
 - The resend cooldown uses an absolute expiry timestamp so background/foreground transitions do not reset it or make it go negative.
@@ -61,10 +83,10 @@ This story replaces the current magic-link email confirmation flow with an in-ap
 
 ### Dependency evidence required before implementation starts
 
-- Verified local confirmation setting recorded
-- Verified production confirmation setting recorded
-- OTP email-template owner identified
-- Verification date recorded
+- Verified local confirmation setting recorded with owner + date
+- Verified local email template behavior recorded with owner + date
+- Verified production confirmation setting recorded with owner + date
+- Verified production email template behavior recorded with owner + date
 
 ### QA notes
 
@@ -76,9 +98,9 @@ This story replaces the current magic-link email confirmation flow with an in-ap
 
 ### AC1: Supabase OTP confirmations enabled
 
-- [ ] `supabase/config.toml` has `enable_confirmations = true` under `[auth.email]`
-- [ ] Production Supabase project has "Enable email confirmations" turned on
-- [ ] Email template in Supabase project sends OTP code (not a magic link) — using the `{{ .Token }}` variable in the template body
+- [x] `supabase/config.toml` has `enable_confirmations = true` under `[auth.email]`
+- [x] Production Supabase project has "Enable email confirmations" turned on
+- [x] Email template in Supabase project sends OTP code (not a magic link) — using the Supabase email OTP token variable (`{{ .Token }}`) in the template body
 
 ### AC2: New auth functions
 
@@ -109,7 +131,7 @@ This story replaces the current magic-link email confirmation flow with an in-ap
 - [ ] **Error — wrong OTP:** Cell borders turn error-red; error message "Incorrect code. Please try again." displayed below cells; inputs remain editable
 - [ ] **Error — expired OTP:** Error message "This code has expired. Please request a new one." displayed; Resend link activated immediately regardless of cooldown
 - [ ] **Error — network / verification unavailable:** Inline error message "Couldn't verify right now. Check your connection and try again." displayed; CTA becomes enabled again after the request settles
-- [ ] **Success:** Navigate to `/` (main app) on successful verification
+- [ ] **Success:** Navigate to `/` (main app) immediately on successful verification; any success visual is transition-only, visible only momentarily, and must not delay navigation or create a separate confirmation screen
 
 ### AC5: Resend flow
 
@@ -170,10 +192,12 @@ This story replaces the current magic-link email confirmation flow with an in-ap
 
 | #   | Gate               | Status                                                                    |
 | --- | ------------------ | ------------------------------------------------------------------------- |
-| 1   | Design Approved    | ❌ Blocked on Story 6.17 approval                                         |
+| 1   | Design Approved    | ✅ Story 6.17 approved by Ifero on 2026-04-28                             |
 | 2   | Story Spec Final   | ✅ Acceptance criteria and handoff notes are documented                   |
 | 3   | Interaction Spec   | ✅ OTP focus, paste, backspace, resend, and navigation behaviors defined  |
-| 4   | Dependencies Clear | ❌ Blocked on 6.17 approval and confirmation-setting verification         |
+| 4   | Dependencies Clear | ❌ Blocked on confirmation-setting and email-template verification        |
 | 5   | Edge Cases Defined | ✅ Wrong OTP, expired OTP, network failure, resend failure, missing email |
 | 6   | Tech Notes         | ✅ Supabase, routing, and OTP behavior constraints documented             |
 | 7   | Testability        | ✅ Unit tests, component tests, and QA notes define verification          |
+
+**Gate 4 detail:** local repo evidence currently shows `[auth.email] enable_confirmations = false` in `supabase/config.toml`; production confirmation and email-template checks are still unrecorded.
