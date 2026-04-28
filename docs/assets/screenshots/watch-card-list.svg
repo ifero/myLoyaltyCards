@@ -1,0 +1,8 @@
+<svg width="198" height="242" viewBox="0 0 198 242" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title-watch desc-watch">
+  <title id="title-watch">Screenshot placeholder for watch-card-list</title>
+  <desc id="desc-watch">Placeholder watch frame ready to be replaced with the watch card list screenshot.</desc>
+  <!-- SCREENSHOT: watch-card-list -->
+  <rect x="24" y="0" width="150" height="242" rx="54" fill="#15161A"/>
+  <rect x="35" y="18" width="128" height="206" rx="42" fill="#F5F7FB" stroke="#5B667A" stroke-width="4" stroke-dasharray="12 12"/>
+  <text x="99" y="124" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="10" font-weight="700" fill="#1A73E8">Screenshot: watch-card-list</text>
+</svg>
