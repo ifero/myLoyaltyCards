@@ -1,5 +1,5 @@
 # generated: 2026-01-03
-# updated: 2026-03-17
+# updated: 2026-04-27
 # project: myLoyaltyCards
 # tracking_system: file-system
 # story_location: docs/sprint-artifacts
@@ -35,7 +35,7 @@
 # - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
 
 generated: 2026-01-03
-updated: 2026-04-11
+updated: 2026-04-27
 project: myLoyaltyCards
 tracking_system: file-system
 story_location: docs/sprint-artifacts
@@ -98,6 +98,14 @@ current_sprint:
     Stories 11-3 and 11-4 cancelled (not applicable to mobile apps).
     Priority is real-device testing — ifero needs to validate the full app in daily life.
     Stories must be refined via Create Story workflow (party mode) before dev picks up.
+  notes_sprint13_planning: |
+    Sprint 13 planned in party mode on 2026-04-27.
+    Three real-device bugs surfaced from TestFlight testing:
+      1. Dark mode system preference not honoured (NativeWind darkMode config missing)
+      2. public.users not populated on signup (trigger + schema fix)
+      3. Magic link replaced with OTP verification flow
+    Design gate: story 6-17 (OTP screen design) must be approved by Ifero before 6-18 begins.
+    Schema extended: display_name + avatar_url added to public.users (nullable, Epic 14 prep).
   decisions:
     - id: DEC-S12-001
       date: 2026-04-11
@@ -163,6 +171,80 @@ current_sprint:
         - Cleaner integration, no rework
       status: approved
 
+# ============================================
+# NEXT SPRINT
+# ============================================
+next_sprint:
+  number: 13
+  name: 'Sprint 13: Auth Fixes, OTP Verification & Landing Page'
+  goal: 'Resolve three real-device bugs (dark mode, user profile, OTP auth), ship GitHub Pages landing page (EN + IT), and lay groundwork for Italian in-app (Epic 15)'
+  status: planned
+  start_date: 2026-04-29
+  end_date: 2026-05-12
+  duration: 2 weeks
+  epics: [13, 6, 15]
+  stories:
+    - 13-10-fix-dark-mode-system-preference   # Wave 1 (parallel)
+    - 6-16-user-profile-creation-on-signup    # Wave 1 (parallel)
+    - 6-17-design-otp-verification-screen     # Wave 1 (parallel) — BLOCKS 6-18
+    - 15-1-github-pages-landing-page          # Wave 1 (parallel) — fully independent
+    - 6-18-otp-email-verification-flow        # Wave 2 — depends on 6-17 approval
+  waves:
+    wave_1:
+      stories: [13-10, 6-16, 6-17, 15-1]
+      note: 'All four run in parallel. 6-17 is UX design; 13-10, 6-16, 15-1 are dev. 15-1 requires Ifero Italian copy review before merge.'
+    wave_2:
+      stories: [6-18]
+      blocked_on: '6-17 Ifero approval of Figma frames'
+  decisions:
+    - id: DEC-S13-001
+      date: 2026-04-27
+      title: 'Replace magic link with OTP verification, design gate before implementation'
+      context: |
+        Magic links are fragile on mobile — they open Safari and lose navigation state.
+        Supabase already supports OTP (otp_length=6 configured). UX design needed first.
+      decision: |
+        Story 6-17 delivers Figma frames. Story 6-18 is blocked until Ifero approves them.
+        Same design gate pattern used successfully between Epic 12 and Epic 13.
+      consequences: |
+        - 6-18 cannot start until 6-17 is approved
+        - enable_confirmations must be set to true in both local config and production
+        - CreateAccountScreen redirects to /verify-email after signup
+      status: approved
+    - id: DEC-S13-002
+      date: 2026-04-27
+      title: 'Extend public.users with display_name and avatar_url for Epic 14 prep'
+      context: |
+        Story 6-16 fixes the missing public.users insert. While touching the schema,
+        Ifero confirmed display_name and avatar_url should be added (nullable) now
+        to serve as the anchor for Epic 14 (Household Collaboration).
+      decision: |
+        Migration 002 adds display_name text (nullable) and avatar_url text (nullable)
+        to public.users alongside the trigger for auto-creating profile rows.
+      consequences: |
+        - Schema extended additively — no breaking changes
+        - Epic 14 household stories can reference these columns without a new migration
+      status: approved
+    - id: DEC-S13-003
+      date: 2026-04-27
+      title: 'GitHub Pages landing page — pure HTML/CSS, no framework, EN + IT'
+      context: |
+        Ifero wants a portfolio-quality landing page for the project.
+        Primary audience: developers and portfolio reviewers from GitHub.
+        Secondary audience: future end users via search.
+      decision: |
+        Single docs/index.html + docs/style.css — no build step, no CDN dependencies.
+        Pure CSS with CSS custom properties. Language toggle for EN/IT via vanilla JS.
+        App Store / Google Play badges show "coming soon" alert until store listings live.
+        Screenshot placeholders with injection point comments for easy future replacement.
+        Italian copy reviewed and approved by Ifero before merge.
+      consequences: |
+        - GitHub Pages configured to serve from docs/ on main branch
+        - Default URL: ifero.github.io/myLoyaltyCards (custom domain deferred)
+        - Epic 15 created for Italian in-app localisation (separate, future sprint)
+        - No Figma design needed — Barry builds directly from content brief
+      status: approved
+
 development_status:
   # ============================================
   # PHASE 1 - CORE MVP
@@ -223,7 +305,7 @@ development_status:
   epic-5-retrospective: optional
 
   # Epic 6: User Authentication & Privacy
-  epic-6: done
+  epic-6: in-progress
   epic-6-completed: 2026-03-28
   # Sprint 7 stories (in sprint)
   6-1-create-supabase-project-environments: done
@@ -242,6 +324,9 @@ development_status:
   6-13-sign-in-with-google: backlog
   6-14-upgrade-guest-to-account: done
   6-15-migration-banner-polish: drafted # follow-up from 6.14 review — L1/L2/L3
+  6-16-user-profile-creation-on-signup: backlog # Sprint 13 — Bug: public.users not created on signup
+  6-17-design-otp-verification-screen: backlog  # Sprint 13 — Design gate before 6-18
+  6-18-otp-email-verification-flow: backlog     # Sprint 13 — Blocked on 6-17 approval
   epic-6-retrospective: optional
 
   # Epic 7: Cloud Synchronization
@@ -298,6 +383,12 @@ development_status:
   14-5-household-sync-conflict-resolution: backlog
   epic-14-retrospective: optional
 
+  # Epic 15: Internationalisation & Public Presence
+  epic-15: in-progress
+  15-1-github-pages-landing-page: backlog  # Sprint 13 Wave 1 — EN + IT, pure HTML/CSS
+  15-2-italian-language-in-app: backlog    # Future sprint — i18next full app translation
+  epic-15-retrospective: optional
+
   # Epic 11: CI/CD & Quality Gates
   epic-11: done
   11-1-block-pr-on-quality-gates: done
@@ -327,7 +418,7 @@ development_status:
 
   # Epic 13: UI Implementation ✅ COMPLETE
   # Absorbs Epic 8 (Settings) — 8-X stories will NOT be implemented separately
-  epic-13: done
+  epic-13: in-progress
   13-1-implement-design-system-tokens: done # implementation complete, QA + dev review approved
   13-2-restyle-home-screen: done # QA + dev review approved 2026-04-03
   13-3-restyle-card-detail: done # QA + dev review approved, PR #90 awaiting stakeholder merge
@@ -338,5 +429,6 @@ development_status:
   13-7a-import-data-from-json: done # implementation complete locally; QA + dev review approved, awaiting stakeholder approval
   13-8-restyle-sync-indicators: done # QA + dev review approved, PR created 2026-04-11
   13-9-update-apple-watch-ui: done # maps to 12-9, PR #97 merged 2026-04-11
-  epic-13-completed: 2026-04-11
+  13-10-fix-dark-mode-system-preference: backlog # Sprint 13 — Bug: dark mode not applied with system preference
+  epic-13-completed: ~
   epic-13-retrospective: done # completed 2026-04-11
