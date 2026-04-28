@@ -274,7 +274,7 @@ development_status:
   6-13-sign-in-with-google: backlog
   6-14-upgrade-guest-to-account: done
   6-15-migration-banner-polish: drafted # follow-up from 6.14 review — L1/L2/L3
-  6-16-user-profile-creation-on-signup: backlog # Sprint 13 — Bug: public.users not created on signup
+  6-16-user-profile-creation-on-signup: review # Sprint 13 — implementation and live local signup validated; awaiting review disposition
   6-17-design-otp-verification-screen: backlog # Sprint 13 — Design gate before 6-18
   6-18-otp-email-verification-flow: backlog # Sprint 13 — Blocked on 6-17 approval
   epic-6-retrospective: optional

@@ -11,6 +11,8 @@
 
 import type { Session, User } from '@supabase/supabase-js';
 
+import { getConsentStatus, getConsentTimestamp } from '@/core/privacy/consent-repository';
+
 import { getSupabaseClient } from './client';
 
 // ---------------------------------------------------------------------------
@@ -111,7 +113,21 @@ export const signUp = async (
 ): Promise<AuthResult<{ user: User; session: Session | null }>> => {
   try {
     const supabase = getSupabaseClient();
-    const { data, error } = await supabase.auth.signUp({ email, password });
+    const consentGiven = getConsentStatus();
+    const consentedAt = consentGiven ? (getConsentTimestamp() ?? new Date().toISOString()) : null;
+    const signUpPayload = consentGiven
+      ? {
+          email,
+          password,
+          options: {
+            data: {
+              consent_status: true,
+              consented_at: consentedAt
+            }
+          }
+        }
+      : { email, password };
+    const { data, error } = await supabase.auth.signUp(signUpPayload);
 
     if (error) {
       return { success: false, error: toAuthError(error) };
@@ -122,6 +138,36 @@ export const signUp = async (
         success: false,
         error: { message: 'Registration completed but no user was returned. Please try again.' }
       };
+    }
+
+    // Confirmation-required signups return no session, so RLS would reject the
+    // client fallback write. In that path the auth.users trigger is authoritative.
+    if (!data.session) {
+      return { success: true, data: { user: data.user, session: data.session } };
+    }
+
+    const profilePayload = {
+      id: data.user.id,
+      email: data.user.email ?? email,
+      created_at: data.user.created_at ?? new Date().toISOString(),
+      ...(consentGiven
+        ? {
+            consent_status: true,
+            consented_at: consentedAt
+          }
+        : {})
+    };
+
+    try {
+      const { error: profileError } = await supabase
+        .from('users')
+        .upsert(profilePayload, { onConflict: 'id' });
+
+      if (profileError) {
+        console.warn('[auth] Failed to upsert signup profile:', profileError);
+      }
+    } catch (profileError) {
+      console.warn('[auth] Failed to upsert signup profile:', profileError);
     }
 
     return { success: true, data: { user: data.user, session: data.session } };

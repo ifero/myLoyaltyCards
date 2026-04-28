@@ -29,9 +29,13 @@ const mockSignOut = jest.fn();
 const mockGetSession = jest.fn();
 const mockResetPasswordForEmail = jest.fn();
 const mockUpdateUser = jest.fn();
+const mockFrom = jest.fn();
+const mockUpsert = jest.fn();
 const mockFunctionsInvoke = jest.fn();
 const mockGetCardCount = jest.fn();
 const mockDeleteAllCards = jest.fn();
+const mockGetConsentStatus = jest.fn();
+const mockGetConsentTimestamp = jest.fn();
 
 const mockSupabaseAuth = {
   signInWithPassword: mockSignInWithPassword,
@@ -45,13 +49,19 @@ const mockSupabaseAuth = {
 jest.mock('./client', () => ({
   getSupabaseClient: jest.fn(() => ({
     auth: mockSupabaseAuth,
-    functions: { invoke: mockFunctionsInvoke }
+    functions: { invoke: mockFunctionsInvoke },
+    from: mockFrom
   }))
 }));
 
 jest.mock('@/core/database/card-repository', () => ({
   getCardCount: (...args: unknown[]) => mockGetCardCount(...args),
   deleteAllCards: (...args: unknown[]) => mockDeleteAllCards(...args)
+}));
+
+jest.mock('@/core/privacy/consent-repository', () => ({
+  getConsentStatus: (): boolean => mockGetConsentStatus(),
+  getConsentTimestamp: (): string | null => mockGetConsentTimestamp()
 }));
 
 // ---------------------------------------------------------------------------
@@ -166,11 +176,27 @@ describe('signInWithEmail', () => {
 // ---------------------------------------------------------------------------
 
 describe('signUp', () => {
+  let mockWarn: jest.SpiedFunction<typeof console.warn>;
+
   beforeEach(() => {
     mockSignUp.mockReset();
+    mockFrom.mockReset();
+    mockUpsert.mockReset();
+    mockGetConsentStatus.mockReset();
+    mockGetConsentTimestamp.mockReset();
+
+    mockFrom.mockImplementation(() => ({ upsert: mockUpsert }));
+    mockUpsert.mockResolvedValue({ data: null, error: null });
+    mockGetConsentStatus.mockReturnValue(false);
+    mockGetConsentTimestamp.mockReturnValue(null);
+    mockWarn = jest.spyOn(console, 'warn').mockImplementation(() => undefined);
   });
 
-  it('returns success with user and session on registration', async () => {
+  afterEach(() => {
+    mockWarn.mockRestore();
+  });
+
+  it('returns success with user and session on registration and upserts the profile payload', async () => {
     mockSignUp.mockResolvedValue({
       data: { user: MOCK_USER, session: MOCK_SESSION },
       error: null
@@ -183,6 +209,20 @@ describe('signUp', () => {
       expect(result.data.user).toEqual(MOCK_USER);
       expect(result.data.session).toEqual(MOCK_SESSION);
     }
+
+    expect(mockSignUp).toHaveBeenCalledWith({
+      email: 'new@example.com',
+      password: 'Password123!'
+    });
+    expect(mockFrom).toHaveBeenCalledWith('users');
+    expect(mockUpsert).toHaveBeenCalledWith(
+      {
+        id: MOCK_USER.id,
+        email: MOCK_USER.email,
+        created_at: MOCK_USER.created_at
+      },
+      { onConflict: 'id' }
+    );
   });
 
   it('returns success with null session when email confirmation is required', async () => {
@@ -197,6 +237,117 @@ describe('signUp', () => {
     if (result.success) {
       expect(result.data.session).toBeNull();
     }
+
+    expect(mockSignUp).toHaveBeenCalledWith({
+      email: 'new@example.com',
+      password: 'Password123!'
+    });
+    expect(mockFrom).not.toHaveBeenCalled();
+    expect(mockUpsert).not.toHaveBeenCalled();
+  });
+
+  it('passes consent metadata through signup when consent is already granted', async () => {
+    const consentedAt = '2026-04-28T09:15:00.000Z';
+
+    mockGetConsentStatus.mockReturnValue(true);
+    mockGetConsentTimestamp.mockReturnValue(consentedAt);
+    mockSignUp.mockResolvedValue({
+      data: { user: MOCK_USER, session: null },
+      error: null
+    });
+
+    const result = await signUp('new@example.com', 'Password123!');
+
+    expect(result.success).toBe(true);
+    expect(mockSignUp).toHaveBeenCalledWith({
+      email: 'new@example.com',
+      password: 'Password123!',
+      options: {
+        data: {
+          consent_status: true,
+          consented_at: consentedAt
+        }
+      }
+    });
+    expect(mockFrom).not.toHaveBeenCalled();
+    expect(mockUpsert).not.toHaveBeenCalled();
+  });
+
+  it('includes consent fields in the fallback profile upsert when a session is returned', async () => {
+    const consentedAt = '2026-04-28T09:15:00.000Z';
+
+    mockGetConsentStatus.mockReturnValue(true);
+    mockGetConsentTimestamp.mockReturnValue(consentedAt);
+    mockSignUp.mockResolvedValue({
+      data: { user: MOCK_USER, session: MOCK_SESSION },
+      error: null
+    });
+
+    const result = await signUp('new@example.com', 'Password123!');
+
+    expect(result.success).toBe(true);
+    expect(mockSignUp).toHaveBeenCalledWith({
+      email: 'new@example.com',
+      password: 'Password123!',
+      options: {
+        data: {
+          consent_status: true,
+          consented_at: consentedAt
+        }
+      }
+    });
+    expect(mockUpsert).toHaveBeenCalledWith(
+      {
+        id: MOCK_USER.id,
+        email: MOCK_USER.email,
+        created_at: MOCK_USER.created_at,
+        consent_status: true,
+        consented_at: consentedAt
+      },
+      { onConflict: 'id' }
+    );
+  });
+
+  it('returns success when the profile row already exists and upsert resolves cleanly', async () => {
+    mockSignUp.mockResolvedValue({
+      data: { user: MOCK_USER, session: MOCK_SESSION },
+      error: null
+    });
+    mockUpsert.mockResolvedValue({
+      data: { id: MOCK_USER.id },
+      error: null
+    });
+
+    const result = await signUp('new@example.com', 'Password123!');
+
+    expect(result.success).toBe(true);
+    expect(mockFrom).toHaveBeenCalledWith('users');
+    expect(mockUpsert).toHaveBeenCalledWith(
+      {
+        id: MOCK_USER.id,
+        email: MOCK_USER.email,
+        created_at: MOCK_USER.created_at
+      },
+      { onConflict: 'id' }
+    );
+  });
+
+  it('returns success and logs a warning when the profile upsert fails', async () => {
+    mockSignUp.mockResolvedValue({
+      data: { user: MOCK_USER, session: MOCK_SESSION },
+      error: null
+    });
+    mockUpsert.mockResolvedValue({
+      data: null,
+      error: { message: 'profile insert failed' }
+    });
+
+    const result = await signUp('new@example.com', 'Password123!');
+
+    expect(result.success).toBe(true);
+    expect(mockWarn).toHaveBeenCalledWith('[auth] Failed to upsert signup profile:', {
+      message: 'profile insert failed'
+    });
   });
 
   it('returns failure when Supabase returns a registration error', async () => {
@@ -396,7 +547,10 @@ describe('updatePassword', () => {
   });
 
   it('returns success when password is updated', async () => {
-    mockUpdateUser.mockResolvedValue({ data: { user: {} }, error: null });
+    mockUpdateUser.mockResolvedValue({
+      data: { user: MOCK_USER },
+      error: null
+    });
 
     const result = await updatePassword('NewPassword1');
 
