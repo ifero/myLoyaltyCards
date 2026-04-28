@@ -13,7 +13,8 @@ import { getAllCards } from '@/core/database/card-repository';
 import { subscribeToWatchMessages, syncCardToWatch, WatchMessage } from '@/core/watch-connectivity';
 
 import { getSupabaseClient } from '@/shared/supabase/client';
-import { LIGHT_THEME, ThemeProvider, useTheme } from '@/shared/theme';
+import { ThemeProvider, useTheme } from '@/shared/theme';
+import { PRIMARY_COLORS } from '@/shared/theme/colors';
 
 import { isFirstLaunch } from '@/features/settings';
 
@@ -295,7 +296,7 @@ const RootLayout = () => {
   if (!isReady) {
     return (
       <View className="flex-1 items-center justify-center bg-neutral-900">
-        <ActivityIndicator size="large" color={LIGHT_THEME.primary} />
+        <ActivityIndicator size="large" color={PRIMARY_COLORS[500]} />
       </View>
     );
   }

@@ -320,8 +320,21 @@ jest.mock('@react-native-community/netinfo', () => ({
 }));
 
 // Mock NativeWind/CSS interop to prevent issues in tests
+const mockNativeWind = {
+  colorScheme: 'light',
+  setColorScheme: jest.fn(),
+  toggleColorScheme: jest.fn()
+};
+
+global.__nativeWindMock = mockNativeWind;
+
 jest.mock('nativewind', () => ({
-  styled: (component) => component
+  styled: (component) => component,
+  useColorScheme: () => mockNativeWind,
+  colorScheme: {
+    set: mockNativeWind.setColorScheme,
+    toggle: mockNativeWind.toggleColorScheme
+  }
 }));
 
 // Mock react-native-css-interop to prevent displayName access issues
@@ -370,6 +383,7 @@ jest.mock('expo-brightness', () => ({
 // Clear mock calls after each test to prevent leakage (do not restore spies defined at top-level)
 afterEach(() => {
   jest.clearAllMocks();
+  mockNativeWind.colorScheme = 'light';
 });
 
 // Silence console warnings in tests
