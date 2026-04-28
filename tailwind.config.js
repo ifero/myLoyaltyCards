@@ -18,6 +18,7 @@ module.exports = {
     './shared/**/*.{js,jsx,ts,tsx}',
     './core/**/*.{js,jsx,ts,tsx}'
   ],
+  darkMode: 'media',
   presets: [require('nativewind/preset')],
   theme: {
     extend: {

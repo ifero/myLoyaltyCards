@@ -8,6 +8,17 @@ const mockUseColorScheme = jest.fn();
 const mockGetThemePreference = jest.fn();
 const mockSetThemePreference = jest.fn();
 
+const getNativeWindMock = () =>
+  (
+    globalThis as typeof globalThis & {
+      __nativeWindMock: {
+        colorScheme: 'light' | 'dark' | 'system';
+        setColorScheme: jest.Mock;
+        toggleColorScheme: jest.Mock;
+      };
+    }
+  ).__nativeWindMock;
+
 jest.mock('react-native/Libraries/Utilities/useColorScheme', () => ({
   __esModule: true,
   default: () => mockUseColorScheme()
@@ -39,6 +50,7 @@ const Probe = () => {
 describe('ThemeProvider', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    getNativeWindMock().colorScheme = 'light';
     mockUseColorScheme.mockReturnValue('light');
     mockGetThemePreference.mockReturnValue('system');
   });
@@ -55,6 +67,28 @@ describe('ThemeProvider', () => {
 
     expect(getByTestId('theme-preference').props.children).toBe('system');
     expect(getByTestId('color-scheme').props.children).toBe('dark');
+    expect(getNativeWindMock().setColorScheme).toHaveBeenCalledWith('dark');
+  });
+
+  it('reacts to OS appearance changes while using the system preference', () => {
+    const { getByTestId, rerender } = render(
+      <ThemeProvider>
+        <Probe />
+      </ThemeProvider>
+    );
+
+    expect(getByTestId('color-scheme').props.children).toBe('light');
+
+    mockUseColorScheme.mockReturnValue('dark');
+
+    rerender(
+      <ThemeProvider>
+        <Probe />
+      </ThemeProvider>
+    );
+
+    expect(getByTestId('color-scheme').props.children).toBe('dark');
+    expect(getNativeWindMock().setColorScheme).toHaveBeenLastCalledWith('dark');
   });
 
   it('overrides system when stored preference is light', () => {
@@ -69,9 +103,10 @@ describe('ThemeProvider', () => {
 
     expect(getByTestId('theme-preference').props.children).toBe('light');
     expect(getByTestId('color-scheme').props.children).toBe('light');
+    expect(getNativeWindMock().setColorScheme).toHaveBeenCalledWith('light');
   });
 
-  it('persists updates when changing preference', () => {
+  it('persists updates and syncs NativeWind when changing preference', () => {
     const { getByTestId } = render(
       <ThemeProvider>
         <Probe />
@@ -80,8 +115,10 @@ describe('ThemeProvider', () => {
 
     fireEvent.press(getByTestId('set-dark'));
     expect(mockSetThemePreference).toHaveBeenCalledWith('dark');
+    expect(getNativeWindMock().setColorScheme).toHaveBeenLastCalledWith('dark');
 
     fireEvent.press(getByTestId('set-system'));
     expect(mockSetThemePreference).toHaveBeenCalledWith('system');
+    expect(getNativeWindMock().setColorScheme).toHaveBeenLastCalledWith('light');
   });
 });

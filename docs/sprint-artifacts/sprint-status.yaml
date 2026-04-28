@@ -35,7 +35,7 @@
 # - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
 
 generated: 2026-01-03
-updated: 2026-04-27
+updated: 2026-04-28
 project: myLoyaltyCards
 tracking_system: file-system
 story_location: docs/sprint-artifacts
@@ -44,60 +44,22 @@ story_location: docs/sprint-artifacts
 # LAST SPRINT (completed)
 # ============================================
 last_sprint:
-  number: 11
-  name: 'Sprint 11: UI Implementation (Epic 13)'
-  goal: 'Implement approved Figma designs across all app screens — full Epic 13 delivery'
-  start_date: 2026-04-01
-  end_date: 2026-04-11
-  status: completed
-  epics: [13]
-  stories:
-    - 12-icon-doc-cleanup
-    - 12-figma-icon-update
-    - 13-1-implement-design-system-tokens
-    - 13-2-restyle-home-screen
-    - 13-3-restyle-card-detail
-    - 13-4-restyle-add-card-flow
-    - 13-5-restyle-auth-screens
-    - 13-6-implement-settings-screen
-    - 13-7-restyle-onboarding
-    - 13-7a-import-data-from-json
-    - 13-8-restyle-sync-indicators
-    - 13-9-update-apple-watch-ui
-  notes: |
-    All 13 stories completed (2 blockers + 11 implementation). Epic 13 closed.
-    73 commits, 11 PRs merged (#87–#97), 272 files changed, +19,872 / -7,136 lines.
-    Figma file: https://www.figma.com/design/4PSsX8SyTUU0GCUdBAAEED/Test
-    Retrospective completed 2026-04-11. Key insights:
-      - App now has cohesive, polished visual identity across all screens
-      - NativeWind caused persistent friction (~23% fix commits) — decision to evaluate alternatives
-      - Party mode for story development is now standard practice
-      - Definition of Ready / Definition of Done established as process gates
-    Next: Sprint 12 — CI/CD & TestFlight delivery (Epic 11).
-
-# ============================================
-# CURRENT SPRINT
-# ============================================
-current_sprint:
   number: 12
   name: 'Sprint 12: CI/CD & TestFlight Delivery'
   goal: 'Complete CI/CD pipeline (Epic 11) and ship iOS + watchOS builds to TestFlight for real-device testing'
-  status: in-progress
   start_date: 2026-04-14
   end_date: 2026-04-28
-  duration: 2 weeks
+  status: completed
   epics: [11]
   stories:
     - 11-5-document-cicd-pipeline
     - 11-6-watchos-testflight-pipeline # Fastlane lane + GHA workflow for watchOS → TestFlight
   parallel_track: []
   notes: |
-    Focus: close out Epic 11 (CI/CD) and add watchOS TestFlight pipeline.
-    iOS TestFlight already works (fastlane ios beta, triggered by v*-rc.* tags).
-    Only gap: watchOS companion has no build/upload pipeline — story 11-6 covers this.
-    Stories 11-3 and 11-4 cancelled (not applicable to mobile apps).
-    Priority is real-device testing — ifero needs to validate the full app in daily life.
-    Stories must be refined via Create Story workflow (party mode) before dev picks up.
+    Sprint 12 closed successfully with the CI/CD pipeline complete for iOS TestFlight.
+    Party mode wrap session confirmed the release readiness criteria and surfaced next-phase priorities.
+    watchOS upload support is now documented and ready for the next sprint.
+    Stories 11-3 and 11-4 were cancelled as not applicable to the mobile app.
   notes_sprint13_planning: |
     Sprint 13 planned in party mode on 2026-04-27.
     Three real-device bugs surfaced from TestFlight testing:
@@ -172,23 +134,23 @@ current_sprint:
       status: approved
 
 # ============================================
-# NEXT SPRINT
+# CURRENT SPRINT
 # ============================================
-next_sprint:
+current_sprint:
   number: 13
   name: 'Sprint 13: Auth Fixes, OTP Verification & Landing Page'
   goal: 'Resolve three real-device bugs (dark mode, user profile, OTP auth), ship GitHub Pages landing page (EN + IT), and lay groundwork for Italian in-app (Epic 15)'
-  status: planned
+  status: in-progress
   start_date: 2026-04-29
   end_date: 2026-05-12
   duration: 2 weeks
   epics: [13, 6, 15]
   stories:
-    - 13-10-fix-dark-mode-system-preference   # Wave 1 (parallel)
-    - 6-16-user-profile-creation-on-signup    # Wave 1 (parallel)
-    - 6-17-design-otp-verification-screen     # Wave 1 (parallel) — BLOCKS 6-18
-    - 15-1-github-pages-landing-page          # Wave 1 (parallel) — fully independent
-    - 6-18-otp-email-verification-flow        # Wave 2 — depends on 6-17 approval
+    - 13-10-fix-dark-mode-system-preference # Wave 1 (parallel)
+    - 6-16-user-profile-creation-on-signup # Wave 1 (parallel)
+    - 6-17-design-otp-verification-screen # Wave 1 (parallel) — BLOCKS 6-18
+    - 15-1-github-pages-landing-page # Wave 1 (parallel) — fully independent
+    - 6-18-otp-email-verification-flow # Wave 2 — depends on 6-17 approval
   waves:
     wave_1:
       stories: [13-10, 6-16, 6-17, 15-1]
@@ -219,31 +181,19 @@ next_sprint:
         Ifero confirmed display_name and avatar_url should be added (nullable) now
         to serve as the anchor for Epic 14 (Household Collaboration).
       decision: |
-        Migration 002 adds display_name text (nullable) and avatar_url text (nullable)
-        to public.users alongside the trigger for auto-creating profile rows.
+        Story 6-16 fixes the missing public.users insert. While touching the schema,
+        Ifero confirmed display_name and avatar_url should be added (nullable) now
+        to serve as the anchor for Epic 14 (Household Collaboration).
       consequences: |
-        - Schema extended additively — no breaking changes
-        - Epic 14 household stories can reference these columns without a new migration
+        - Nullable profile fields support future collaboration features
+        - Backfill path begins with signup flow and profile edit
       status: approved
-    - id: DEC-S13-003
-      date: 2026-04-27
-      title: 'GitHub Pages landing page — pure HTML/CSS, no framework, EN + IT'
-      context: |
-        Ifero wants a portfolio-quality landing page for the project.
-        Primary audience: developers and portfolio reviewers from GitHub.
-        Secondary audience: future end users via search.
-      decision: |
-        Single docs/index.html + docs/style.css — no build step, no CDN dependencies.
-        Pure CSS with CSS custom properties. Language toggle for EN/IT via vanilla JS.
-        App Store / Google Play badges show "coming soon" alert until store listings live.
-        Screenshot placeholders with injection point comments for easy future replacement.
-        Italian copy reviewed and approved by Ifero before merge.
-      consequences: |
-        - GitHub Pages configured to serve from docs/ on main branch
-        - Default URL: ifero.github.io/myLoyaltyCards (custom domain deferred)
-        - Epic 15 created for Italian in-app localisation (separate, future sprint)
-        - No Figma design needed — Barry builds directly from content brief
-      status: approved
+
+# ============================================
+# NEXT SPRINT
+# ============================================
+next_sprint: null
+# Future sprint details will be planned after Sprint 13 completion.
 
 development_status:
   # ============================================
@@ -325,8 +275,8 @@ development_status:
   6-14-upgrade-guest-to-account: done
   6-15-migration-banner-polish: drafted # follow-up from 6.14 review — L1/L2/L3
   6-16-user-profile-creation-on-signup: backlog # Sprint 13 — Bug: public.users not created on signup
-  6-17-design-otp-verification-screen: backlog  # Sprint 13 — Design gate before 6-18
-  6-18-otp-email-verification-flow: backlog     # Sprint 13 — Blocked on 6-17 approval
+  6-17-design-otp-verification-screen: backlog # Sprint 13 — Design gate before 6-18
+  6-18-otp-email-verification-flow: backlog # Sprint 13 — Blocked on 6-17 approval
   epic-6-retrospective: optional
 
   # Epic 7: Cloud Synchronization
@@ -385,8 +335,8 @@ development_status:
 
   # Epic 15: Internationalisation & Public Presence
   epic-15: in-progress
-  15-1-github-pages-landing-page: backlog  # Sprint 13 Wave 1 — EN + IT, pure HTML/CSS
-  15-2-italian-language-in-app: backlog    # Future sprint — i18next full app translation
+  15-1-github-pages-landing-page: backlog # Sprint 13 Wave 1 — EN + IT, pure HTML/CSS
+  15-2-italian-language-in-app: backlog # Future sprint — i18next full app translation
   epic-15-retrospective: optional
 
   # Epic 11: CI/CD & Quality Gates
@@ -429,6 +379,6 @@ development_status:
   13-7a-import-data-from-json: done # implementation complete locally; QA + dev review approved, awaiting stakeholder approval
   13-8-restyle-sync-indicators: done # QA + dev review approved, PR created 2026-04-11
   13-9-update-apple-watch-ui: done # maps to 12-9, PR #97 merged 2026-04-11
-  13-10-fix-dark-mode-system-preference: backlog # Sprint 13 — Bug: dark mode not applied with system preference
+  13-10-fix-dark-mode-system-preference: done # Sprint 13 — tests green, dev + QA approved, stakeholder approved push/PR
   epic-13-completed: ~
   epic-13-retrospective: done # completed 2026-04-11

@@ -1,4 +1,5 @@
-import React, { createContext, useContext, useMemo, type ReactNode } from 'react';
+import { useColorScheme as useNativeWindColorScheme } from 'nativewind';
+import React, { createContext, useContext, useLayoutEffect, useMemo, type ReactNode } from 'react';
 import { useColorScheme } from 'react-native';
 
 import {
@@ -46,6 +47,7 @@ interface ThemeProviderProps {
  */
 export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
   const systemColorScheme = useColorScheme();
+  const { setColorScheme } = useNativeWindColorScheme();
   const [themePreference, setThemePreferenceState] = React.useState<ThemePreference>(() =>
     getThemePreference()
   );
@@ -55,15 +57,19 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
     persistThemePreference(value);
   }, []);
 
-  const value = useMemo<ThemeContextType>(() => {
-    const resolvedScheme =
-      themePreference === 'system'
-        ? systemColorScheme === 'dark'
-          ? 'dark'
-          : 'light'
-        : themePreference;
-    const isDark = resolvedScheme === 'dark';
+  const resolvedScheme =
+    themePreference === 'system'
+      ? systemColorScheme === 'dark'
+        ? 'dark'
+        : 'light'
+      : themePreference;
+  const isDark = resolvedScheme === 'dark';
 
+  useLayoutEffect(() => {
+    setColorScheme(resolvedScheme);
+  }, [resolvedScheme, setColorScheme]);
+
+  const value = useMemo<ThemeContextType>(() => {
     return {
       theme: isDark ? DARK_THEME : LIGHT_THEME,
       isDark,
@@ -75,7 +81,7 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
       layout: LAYOUT,
       touchTarget: TOUCH_TARGET
     };
-  }, [setThemePreference, systemColorScheme, themePreference]);
+  }, [isDark, resolvedScheme, setThemePreference, themePreference]);
 
   return <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>;
 };
