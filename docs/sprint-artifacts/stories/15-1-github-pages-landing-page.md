@@ -2,7 +2,7 @@
 
 **Epic:** 15 - Internationalisation & Public Presence
 **Type:** User-Facing (Portfolio / Discovery)
-**Status:** ready-for-dev
+**Status:** review
 
 ## Story
 
@@ -35,71 +35,71 @@ Screenshots are placeholders — styled device frame SVGs with `<!-- SCREENSHOT:
 
 ### AC1: File structure
 
-- [ ] `docs/index.html` — single HTML file, the entire page
-- [ ] `docs/style.css` — all styles, no inline styles
-- [ ] `docs/assets/` — folder for images and icons
-- [ ] `docs/assets/screenshots/` — placeholder SVG device frames (phone + watch)
-- [ ] `docs/assets/badges/` — official App Store and Google Play badge SVGs (sourced from Apple/Google press kits)
-- [ ] No JavaScript frameworks, no build tools, no `node_modules`
-- [ ] No CDN dependencies — all assets self-hosted in `docs/assets/`
+- [x] `docs/index.html` — single HTML file, the entire page
+- [x] `docs/style.css` — all styles, no inline styles
+- [x] `docs/assets/` — folder for images and icons
+- [x] `docs/assets/screenshots/` — placeholder SVG device frames (phone + watch)
+- [x] `docs/assets/badges/` — official App Store and Google Play badge SVGs (sourced from Apple/Google press kits)
+- [x] No JavaScript frameworks, no build tools, no `node_modules`
+- [x] No CDN dependencies — all assets self-hosted in `docs/assets/`
 
 ### AC2: Page sections (in order)
 
-- [ ] **Header** — app name, language toggle (EN / IT), no other navigation
-- [ ] **Hero** — app name, tagline, hero image (phone + watch device frame placeholders side by side), two CTA buttons: App Store badge + Google Play badge
-- [ ] **Features** — 4 cards in a 2×2 grid (mobile: 1 column): Offline-First, Wearable Independent, Italian Catalogue, Privacy-First. Each card: icon (inline SVG or Unicode emoji), short heading, 1-sentence description.
-- [ ] **How it works** — numbered 3-step flow: (1) Add your cards — scan or browse the catalogue; (2) Sync to your wrist — cards appear automatically on Apple Watch; (3) Show at checkout — raise wrist, tap, done.
-- [ ] **Screenshots** — row of exactly 3 device frame placeholders: `home-card-list` (phone), `barcode-display` (phone), and `watch-card-list` (Apple Watch). Each placeholder is a labelled SVG with dashed border and centred text "Screenshot: {screen name}". `<!-- SCREENSHOT: {name} -->` comment above each for easy replacement.
-- [ ] **Footer** — GitHub repo link, "Open Source — MIT License" badge/text, privacy policy link (placeholder `#` until a public destination is available; must not point to a broken absolute path)
+- [x] **Header** — app name, language toggle (EN / IT), no other navigation
+- [x] **Hero** — app name, tagline, hero image (phone + watch device frame placeholders side by side), two CTA buttons: App Store badge + Google Play badge
+- [x] **Features** — 4 cards in a 2×2 grid (mobile: 1 column): Offline-First, Wearable Independent, Italian Catalogue, Privacy-First. Each card: icon (inline SVG or Unicode emoji), short heading, 1-sentence description.
+- [x] **How it works** — numbered 3-step flow: (1) Add your cards — scan or browse the catalogue; (2) Sync to your wrist — cards appear automatically on Apple Watch; (3) Show at checkout — raise wrist, tap, done.
+- [x] **Screenshots** — row of exactly 3 device frame placeholders: `home-card-list` (phone), `barcode-display` (phone), and `watch-card-list` (Apple Watch). Each placeholder is a labelled SVG with dashed border and centred text "Screenshot: {screen name}". `<!-- SCREENSHOT: {name} -->` comment above each for easy replacement.
+- [x] **Footer** — GitHub repo link, "Open Source — MIT License" badge/text, privacy policy link (placeholder `#` until a public destination is available; must not point to a broken absolute path)
 
 ### AC3: Language toggle (EN / IT)
 
-- [ ] Toggle button in header: "EN" / "IT" — switches active language
-- [ ] All user-visible text on the page has both an English and Italian version
-- [ ] Toggle implemented with pure JS: elements with `class="lang-en"` shown when EN active, `class="lang-it"` shown when IT active
-- [ ] Default language is detected from `navigator.language` — Italian if `it`, English otherwise
-- [ ] Language preference persisted in `localStorage` so returning visitors get their last choice
-- [ ] English is the default rendered state in raw HTML/CSS before JavaScript executes; JavaScript may switch to Italian after load
-- [ ] The language toggle is keyboard-operable, exposes an accessible name and selected state, preserves a visible focus indicator, and hides inactive-language content from assistive technology as well as visually
+- [x] Toggle button in header: "EN" / "IT" — switches active language
+- [x] All user-visible text on the page has both an English and Italian version
+- [x] Toggle implemented with pure JS: elements with `class="lang-en"` shown when EN active, `class="lang-it"` shown when IT active
+- [x] Default language is detected from `navigator.language` — Italian if `it`, English otherwise
+- [x] Language preference persisted in `localStorage` so returning visitors get their last choice
+- [x] English is the default rendered state in raw HTML/CSS before JavaScript executes; JavaScript may switch to Italian after load
+- [x] The language toggle is keyboard-operable, exposes an accessible name and selected state, preserves a visible focus indicator, and hides inactive-language content from assistive technology as well as visually
 - [ ] Ifero reviews and approves all Italian copy before PR is merged (AC gate)
 
 ### AC4: Store badge behaviour
 
-- [ ] App Store badge uses official Apple badge SVG (`docs/assets/badges/app-store.svg`)
-- [ ] Google Play badge uses official Google badge SVG (`docs/assets/badges/google-play.svg`)
-- [ ] Both badges link to `href="javascript:void(0)"` (or `href="#"`) with an `onclick` that calls `alert()`
-- [ ] English alert: `"Coming soon on the App Store / Google Play. Stay tuned!"`
-- [ ] Italian alert: `"Prossimamente sull'App Store / Google Play. Resta aggiornato!"`
-- [ ] Alert text matches the currently active language
+- [x] App Store badge uses official Apple badge SVG (`docs/assets/badges/app-store.svg`)
+- [x] Google Play badge uses official Google badge SVG (`docs/assets/badges/google-play.svg`)
+- [x] Both badges link to `href="javascript:void(0)"` (or `href="#"`) with an `onclick` that calls `alert()`
+- [x] English alert: `"Coming soon on the App Store / Google Play. Stay tuned!"`
+- [x] Italian alert: `"Prossimamente sull'App Store / Google Play. Resta aggiornato!"`
+- [x] Alert text matches the currently active language
 
 ### AC5: Visual design
 
-- [ ] Pure CSS — no framework, no CDN
-- [ ] CSS custom properties (variables) for all colours, using the app's brand palette:
+- [x] Pure CSS — no framework, no CDN
+- [x] CSS custom properties (variables) for all colours, using the app's brand palette:
   - Primary: `#1A73E8` (light) / dark surface: `#1C1C1E`
   - Accent: follows app design system tokens
-- [ ] Responsive: single-column on mobile (≤768px), multi-column on desktop
-- [ ] System font stack — no web font dependencies
-- [ ] Dark mode via `@media (prefers-color-scheme: dark)` — CSS variables swap automatically
-- [ ] No horizontal scroll at any viewport width
-- [ ] Minimum touch target 44px for all interactive elements
+- [x] Responsive: single-column on mobile (≤768px), multi-column on desktop
+- [x] System font stack — no web font dependencies
+- [x] Dark mode via `@media (prefers-color-scheme: dark)` — CSS variables swap automatically
+- [x] No horizontal scroll at any viewport width
+- [x] Minimum touch target 44px for all interactive elements
 
 ### AC6: GitHub Pages configuration
 
-- [ ] `docs/` folder exists in `main` branch root
+- [x] `docs/` folder exists in `main` branch root
 - [ ] GitHub Pages configured in repo settings: Source = `main` branch, folder = `/docs`
 - [ ] Ifero or another repo admin applies the Pages settings change and performs final live-URL verification
 - [ ] Page loads correctly at `https://ifero.github.io/myLoyaltyCards`
-- [ ] `<html lang="en">` default (JS updates to `"it"` when Italian active)
-- [ ] `<meta name="viewport" content="width=device-width, initial-scale=1">` present
-- [ ] Open Graph tags for social sharing: `og:title`, `og:description`, `og:url`
-- [ ] Final metadata copy is locked in the story: page title, meta description, and OG description use approved public-facing wording
+- [x] `<html lang="en">` default (JS updates to `"it"` when Italian active)
+- [x] `<meta name="viewport" content="width=device-width, initial-scale=1">` present
+- [x] Open Graph tags for social sharing: `og:title`, `og:description`, `og:url`
+- [x] Final metadata copy is locked in the story: page title, meta description, and OG description use approved public-facing wording
 
 ### AC7: Screenshot injection points
 
-- [ ] Each placeholder SVG has a commented annotation: `<!-- SCREENSHOT: home-card-list -->`, `<!-- SCREENSHOT: barcode-display -->`, `<!-- SCREENSHOT: watch-card-list -->`
-- [ ] `docs/assets/screenshots/README.md` — brief note explaining: "Replace placeholder SVGs with real screenshots at 390×844px (iPhone) / 198×242px (Apple Watch). Update `src` in `index.html`."
-- [ ] File names match the comment names: `home-card-list.svg`, `barcode-display.svg`, `watch-card-list.svg`
+- [x] Each placeholder SVG has a commented annotation: `<!-- SCREENSHOT: home-card-list -->`, `<!-- SCREENSHOT: barcode-display -->`, `<!-- SCREENSHOT: watch-card-list -->`
+- [x] `docs/assets/screenshots/README.md` — brief note explaining: "Replace placeholder SVGs with real screenshots at 390×844px (iPhone) / 198×242px (Apple Watch). Update `src` in `index.html`."
+- [x] File names match the comment names: `home-card-list.svg`, `barcode-display.svg`, `watch-card-list.svg`
 
 ### AC8: Content (English — for reference / Italian reviewed by Ifero)
 
@@ -160,15 +160,15 @@ _Italian:_ "Le tue carte fedeltà. Sempre al polso."
 
 ## Definition of Done
 
-- [ ] `docs/index.html` and `docs/style.css` exist in `main` branch
+- [x] `docs/index.html` and `docs/style.css` exist in `main` branch
 - [ ] Page loads at `https://ifero.github.io/myLoyaltyCards` (GitHub Pages configured)
-- [ ] English and Italian copy present, language toggle works
+- [x] English and Italian copy present, language toggle works
 - [ ] Ifero has reviewed and approved Italian translations
-- [ ] Store badges show correct "coming soon" alert in both languages
-- [ ] Page is responsive — tested at 375px (iPhone SE) and 1280px (desktop)
-- [ ] Dark mode renders correctly
-- [ ] Screenshot placeholder comments in place
-- [ ] All existing repo tests still pass (no app code changed)
+- [x] Store badges show correct "coming soon" alert in both languages
+- [x] Page is responsive — tested at 375px (iPhone SE) and 1280px (desktop)
+- [x] Dark mode renders correctly
+- [x] Screenshot placeholder comments in place
+- [x] All existing repo tests still pass (no app code changed)
 - [ ] PR reviewed and approved
 
 ## Definition of Ready Checklist
@@ -182,3 +182,77 @@ _Italian:_ "Le tue carte fedeltà. Sempre al polso."
 | 5   | Edge Cases Defined | ✅ Mobile layout, dark mode, default language, and placeholder assets covered             |
 | 6   | Tech Notes         | ✅ File structure and implementation constraints documented                               |
 | 7   | Testability        | ✅ QA notes and AC6/AC7 provide a verification path                                       |
+
+## Tasks / Subtasks
+
+- [x] **Task 1: Build the GitHub Pages landing page surface** (AC1, AC2, AC4, AC5)
+  - [x] 1.1 Add `docs/index.html` with the locked section order and EN/IT content
+  - [x] 1.2 Add `docs/style.css` with responsive light/dark tokens and touch-target rules
+  - [x] 1.3 Add official App Store and Google Play badge assets in English and Italian under `docs/assets/badges/`
+  - [x] 1.4 Add screenshot placeholder SVGs plus replacement instructions under `docs/assets/screenshots/`
+
+- [x] **Task 2: Implement localization and accessible interactions** (AC3, AC4, AC6)
+  - [x] 2.1 Add an accessible EN / IT toggle with localized visible and assistive labels
+  - [x] 2.2 Detect default language from `navigator.language` and persist the user choice in `localStorage`
+  - [x] 2.3 Localize store-badge alerts and CTA badge artwork for English and Italian
+  - [x] 2.4 Keep the raw HTML English-first while updating `<html lang>` after JavaScript runs
+
+- [x] **Task 3: Validate the landing page locally and close review loops** (AC2, AC3, AC4, AC5, AC7)
+  - [x] 3.1 Validate browser behavior for `navigator.language = it-IT` and `en-US`
+  - [x] 3.2 Validate language persistence after reload and badge-alert copy in both languages
+  - [x] 3.3 Validate dark-mode token swaps and keyboard tab order for toggle, CTAs, and footer links
+  - [x] 3.4 Run the full repo test suite to confirm existing tests still pass
+  - [x] 3.5 Close dev review and QA review loops with zero findings
+
+- [ ] **Task 4: Complete post-push release gates** (AC3, AC6)
+  - [ ] 4.1 Ifero approves the Italian copy before PR merge
+  - [ ] 4.2 A repo admin confirms GitHub Pages source = `main` / `docs`
+  - [ ] 4.3 Final live-URL verification passes at `https://ifero.github.io/myLoyaltyCards`
+
+## Dev Agent Record
+
+### Agent Model Used
+
+GPT-5.4
+
+### Debug Log References
+
+- 2026-04-29: Working branch created: `feature/15-1-github-pages-landing-page`.
+- 2026-04-29: Initial browser validation exposed a `lang-it` visibility bug; fixed the CSS visibility rules and reran the interaction checks.
+- 2026-04-29: Replaced custom badge placeholders with official Apple and Google badge assets in English and Italian.
+- 2026-04-29: Dev review surfaced accessible-label, touch-target, placeholder annotation, metadata-lock, and brand-presentation issues; all were fixed and the dev review reran to `NO_FINDINGS`.
+- 2026-04-29: QA review surfaced the overlapping hero preview and missing story-tracking updates; hero layout was corrected to a true side-by-side phone/watch pair and the story tracking was updated with local QA evidence.
+
+### Completion Notes List
+
+- Added a pure HTML/CSS GitHub Pages landing page under `docs/` with EN/IT content, official store badges, and replaceable screenshot placeholders.
+- Validated local behavior through browser automation for default-language detection (`it-IT`, `en-US`), persistence after reload, localized store alerts, dark mode token swaps, and keyboard tab order.
+- Ran the full repo test suite successfully after the docs-only changes.
+- Closed both the dev review loop and the QA review loop with zero remaining findings.
+- External release gates remain pending until after push: Italian copy approval by Ifero before merge, GitHub Pages settings confirmation, and live URL verification.
+
+### Change Log
+
+- 2026-04-29: Added `docs/index.html`, `docs/style.css`, official localized badge assets, screenshot placeholders, and screenshot replacement instructions.
+- 2026-04-29: Implemented EN/IT language toggling, `navigator.language` detection, `localStorage` persistence, localized alert copy, and accessible naming updates.
+- 2026-04-29: Adjusted hero previews to a side-by-side phone/watch layout and aligned placeholder SVG annotations with the story contract.
+- 2026-04-29: Validated the page locally, ran the full test suite, updated sprint/story tracking, and moved the story to `review`.
+
+### File List
+
+- `docs/index.html` — NEW: GitHub Pages landing page markup, localized copy, and inline behavior for language switching and store alerts
+- `docs/style.css` — NEW: Landing page layout, tokens, responsive rules, accessibility affordances, and dark-mode styling
+- `docs/assets/badges/app-store.svg` — NEW: Official English App Store badge asset
+- `docs/assets/badges/app-store-it.svg` — NEW: Official Italian App Store badge asset
+- `docs/assets/badges/google-play.svg` — NEW: Official English Google Play badge asset
+- `docs/assets/badges/google-play-it.svg` — NEW: Official Italian Google Play badge asset
+- `docs/assets/screenshots/home-card-list.svg` — NEW: Phone placeholder asset with screenshot injection marker
+- `docs/assets/screenshots/barcode-display.svg` — NEW: Phone placeholder asset with screenshot injection marker
+- `docs/assets/screenshots/watch-card-list.svg` — NEW: Watch placeholder asset with screenshot injection marker
+- `docs/assets/screenshots/README.md` — NEW: Screenshot replacement guidance for future real captures
+- `docs/sprint-artifacts/stories/15-1-github-pages-landing-page.md` — MODIFIED: Updated AC checklist progress, tasks, validations, and status
+- `docs/sprint-artifacts/sprint-status.yaml` — MODIFIED: Moved Story 15.1 to `review`
+
+## Status
+
+review
