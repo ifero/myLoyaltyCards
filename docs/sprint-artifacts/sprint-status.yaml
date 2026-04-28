@@ -274,9 +274,9 @@ development_status:
   6-13-sign-in-with-google: backlog
   6-14-upgrade-guest-to-account: done
   6-15-migration-banner-polish: drafted # follow-up from 6.14 review — L1/L2/L3
-  6-16-user-profile-creation-on-signup: review # Sprint 13 — implementation and live local signup validated; awaiting review disposition
-  6-17-design-otp-verification-screen: backlog # Sprint 13 — Design gate before 6-18
-  6-18-otp-email-verification-flow: backlog # Sprint 13 — Blocked on 6-17 approval
+  6-16-user-profile-creation-on-signup: done # Sprint 13 — implementation and live local signup validated; awaiting review disposition
+  6-17-design-otp-verification-screen: ready-for-dev # Sprint 13 — refined; DoR passed for UX delivery, still blocks 6-18 until approved
+  6-18-otp-email-verification-flow: drafted # Sprint 13 — refined, but still blocked on 6-17 approval + confirmation-setting verification
   epic-6-retrospective: optional
 
   # Epic 7: Cloud Synchronization
@@ -335,7 +335,7 @@ development_status:
 
   # Epic 15: Internationalisation & Public Presence
   epic-15: in-progress
-  15-1-github-pages-landing-page: backlog # Sprint 13 Wave 1 — EN + IT, pure HTML/CSS
+  15-1-github-pages-landing-page: ready-for-dev # Sprint 13 Wave 1 — refined; EN + IT, pure HTML/CSS
   15-2-italian-language-in-app: backlog # Future sprint — i18next full app translation
   epic-15-retrospective: optional
 
