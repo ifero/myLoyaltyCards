@@ -335,7 +335,7 @@ development_status:
 
   # Epic 15: Internationalisation & Public Presence
   epic-15: in-progress
-  15-1-github-pages-landing-page: ready-for-dev # Sprint 13 Wave 1 — refined; EN + IT, pure HTML/CSS
+  15-1-github-pages-landing-page: review # Sprint 13 Wave 1 — local implementation, tests, dev review, and QA review complete; Italian copy approved, Pages config/live verification pending
   15-2-italian-language-in-app: backlog # Future sprint — i18next full app translation
   epic-15-retrospective: optional
 

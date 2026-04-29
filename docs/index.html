@@ -1,0 +1,501 @@
+<!DOCTYPE html>
+<html lang="en" data-active-language="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>myLoyaltyCards — Your loyalty cards. Always on your wrist.</title>
+    <meta
+      name="description"
+      content="Offline-first loyalty cards for iPhone and Apple Watch. Add your cards, sync them to your wrist, and show them instantly at checkout."
+    />
+    <meta property="og:title" content="myLoyaltyCards — Your loyalty cards. Always on your wrist." />
+    <meta
+      property="og:description"
+      content="Offline-first loyalty cards for iPhone and Apple Watch. Add your cards, sync them to your wrist, and show them instantly at checkout."
+    />
+    <meta property="og:url" content="https://ifero.github.io/myLoyaltyCards" />
+    <meta property="og:type" content="website" />
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <div class="page-shell">
+      <header class="site-header">
+        <div class="brand-lockup">
+          <span class="brand-mark" aria-hidden="true">MLC</span>
+          <h1 class="site-title">myLoyaltyCards</h1>
+        </div>
+
+        <div
+          class="language-toggle"
+          role="group"
+          aria-label="Language selector"
+          data-aria-label-en="Language selector"
+          data-aria-label-it="Selettore lingua"
+        >
+          <button
+            class="language-button is-selected"
+            type="button"
+            data-language-button="en"
+            aria-pressed="true"
+          >
+            EN
+          </button>
+          <button
+            class="language-button"
+            type="button"
+            data-language-button="it"
+            aria-pressed="false"
+          >
+            IT
+          </button>
+        </div>
+      </header>
+
+      <main>
+        <section class="hero-panel">
+          <div class="hero-copy">
+            <p class="hero-kicker">
+              <span class="lang-en">Offline-first loyalty wallet</span>
+              <span class="lang-it">Wallet fedeltà offline-first</span>
+            </p>
+            <h2 class="hero-title">myLoyaltyCards</h2>
+            <p class="hero-tagline">
+              <span class="lang-en">Your loyalty cards. Always on your wrist.</span>
+              <span class="lang-it">Le tue carte fedeltà. Sempre al polso.</span>
+            </p>
+            <p class="hero-description">
+              <span class="lang-en"
+                >Built for quick checkouts, real offline access, and a privacy-first flow that keeps your cards close and your data local.</span
+              >
+              <span class="lang-it"
+                >Pensata per code veloci, accesso davvero offline e un flusso privacy-first che tiene le tue carte vicine e i tuoi dati sul dispositivo.</span
+              >
+            </p>
+
+            <div
+              class="hero-actions"
+              role="group"
+              aria-label="Store links"
+              data-aria-label-en="Store links"
+              data-aria-label-it="Link agli store"
+            >
+              <a
+                class="store-link"
+                href="#"
+                data-store-link="app-store"
+                data-store-label-en="Coming soon on the App Store"
+                data-store-label-it="Prossimamente sull'App Store"
+              >
+                <img class="lang-en" src="assets/badges/app-store.svg" alt="Download on the App Store" />
+                <img class="lang-it" src="assets/badges/app-store-it.svg" alt="Scarica su App Store" />
+              </a>
+              <a
+                class="store-link"
+                href="#"
+                data-store-link="google-play"
+                data-store-label-en="Coming soon on Google Play"
+                data-store-label-it="Prossimamente su Google Play"
+              >
+                <img class="lang-en" src="assets/badges/google-play.svg" alt="Get it on Google Play" />
+                <img class="lang-it" src="assets/badges/google-play-it.svg" alt="Disponibile su Google Play" />
+              </a>
+            </div>
+          </div>
+
+          <div
+            class="hero-stage"
+            role="group"
+            aria-label="App preview placeholders"
+            data-aria-label-en="App preview placeholders"
+            data-aria-label-it="Anteprime placeholder dell'app"
+          >
+            <figure class="device-preview device-preview-phone">
+              <img
+                class="lang-en"
+                src="assets/screenshots/home-card-list.svg"
+                alt="Placeholder preview of the iPhone home card list screen"
+              />
+              <img
+                class="lang-it"
+                src="assets/screenshots/home-card-list-it.svg"
+                alt="Anteprima segnaposto della schermata elenco carte home su iPhone"
+              />
+            </figure>
+            <figure class="device-preview device-preview-watch">
+              <img
+                class="lang-en"
+                src="assets/screenshots/watch-card-list.svg"
+                alt="Placeholder preview of the Apple Watch card list screen"
+              />
+              <img
+                class="lang-it"
+                src="assets/screenshots/watch-card-list-it.svg"
+                alt="Anteprima segnaposto della schermata elenco carte su Apple Watch"
+              />
+            </figure>
+          </div>
+        </section>
+
+        <section class="content-section section-card" aria-labelledby="features-heading">
+          <div class="section-heading-row">
+            <p class="section-kicker">
+              <span class="lang-en">Four reasons it feels native from day one</span>
+              <span class="lang-it">Quattro motivi per cui sembra nativa dal primo giorno</span>
+            </p>
+            <h2 id="features-heading" class="section-title">
+              <span class="lang-en">Features</span>
+              <span class="lang-it">Funzionalità</span>
+            </h2>
+          </div>
+
+          <div class="features-grid">
+            <article class="feature-card">
+              <div class="feature-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" focusable="false">
+                  <path d="M12 3a7 7 0 0 0-7 7v2.5L3.5 15v1h17v-1L19 12.5V10a7 7 0 0 0-7-7Zm0 18a2.5 2.5 0 0 1-2.45-2h4.9A2.5 2.5 0 0 1 12 21Z" />
+                </svg>
+              </div>
+              <h3>
+                <span class="lang-en">Offline-First</span>
+                <span class="lang-it">Sempre offline</span>
+              </h3>
+              <p>
+                <span class="lang-en"
+                  >Works without internet — your cards are always available, even underground.</span
+                >
+                <span class="lang-it"
+                  >Funziona senza internet — le tue carte sono sempre disponibili, anche in metropolitana.</span
+                >
+              </p>
+            </article>
+
+            <article class="feature-card">
+              <div class="feature-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" focusable="false">
+                  <path d="M8 3.5A2.5 2.5 0 0 0 5.5 6v12A2.5 2.5 0 0 0 8 20.5h8a2.5 2.5 0 0 0 2.5-2.5V6A2.5 2.5 0 0 0 16 3.5H8Zm2 2h4v1h-4v-1Zm2 12.75a1.25 1.25 0 1 1 0-2.5 1.25 1.25 0 0 1 0 2.5Z" />
+                </svg>
+              </div>
+              <h3>
+                <span class="lang-en">Wearable Independent</span>
+                <span class="lang-it">Indipendente sul wearable</span>
+              </h3>
+              <p>
+                <span class="lang-en"
+                  >Apple Watch app stores cards directly on your wrist. No phone needed at checkout.</span
+                >
+                <span class="lang-it"
+                  >L'app per Apple Watch salva le carte direttamente al polso. Niente telefono alla cassa.</span
+                >
+              </p>
+            </article>
+
+            <article class="feature-card">
+              <div class="feature-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" focusable="false">
+                  <path d="M4 5.5A1.5 1.5 0 0 1 5.5 4h13A1.5 1.5 0 0 1 20 5.5v2A1.5 1.5 0 0 1 18.5 9h-13A1.5 1.5 0 0 1 4 7.5v-2Zm0 5.5h16v2.5A1.5 1.5 0 0 1 18.5 15h-13A1.5 1.5 0 0 1 4 13.5V11Zm0 4h16v2.5A1.5 1.5 0 0 1 18.5 19h-13A1.5 1.5 0 0 1 4 17.5V15Z" />
+                </svg>
+              </div>
+              <h3>
+                <span class="lang-en">Italian Catalogue</span>
+                <span class="lang-it">Catalogo Italiano</span>
+              </h3>
+              <p>
+                <span class="lang-en">Browse top Italian loyalty brands and add cards in seconds.</span>
+                <span class="lang-it"
+                  >Sfoglia i principali brand fedeltà italiani e aggiungi le carte in pochi secondi.</span
+                >
+              </p>
+            </article>
+
+            <article class="feature-card">
+              <div class="feature-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" focusable="false">
+                  <path d="M12 2 4 5v6c0 5.25 3.4 9.55 8 11 4.6-1.45 8-5.75 8-11V5l-8-3Zm0 5.25a2.25 2.25 0 1 1 0 4.5 2.25 2.25 0 0 1 0-4.5Zm4 8.75H8v-.5c0-1.66 2.69-2.5 4-2.5s4 .84 4 2.5v.5Z" />
+                </svg>
+              </div>
+              <h3>
+                <span class="lang-en">Privacy-First</span>
+                <span class="lang-it">Privacy al primo posto</span>
+              </h3>
+              <p>
+                <span class="lang-en"
+                  >No tracking, no analytics. Your data stays on your device. Open source, MIT license.</span
+                >
+                <span class="lang-it"
+                  >Nessun tracciamento, nessuna analisi. I tuoi dati restano sul tuo dispositivo. Open source, licenza MIT.</span
+                >
+              </p>
+            </article>
+          </div>
+        </section>
+
+        <section class="content-section" aria-labelledby="how-it-works-heading">
+          <div class="section-heading-row">
+            <p class="section-kicker">
+              <span class="lang-en">Fast enough for rush-hour checkout</span>
+              <span class="lang-it">Abbastanza veloce per la coda dell'ora di punta</span>
+            </p>
+            <h2 id="how-it-works-heading" class="section-title">
+              <span class="lang-en">How it works</span>
+              <span class="lang-it">Come funziona</span>
+            </h2>
+          </div>
+
+          <ol class="steps-grid">
+            <li class="step-card">
+              <span class="step-number">1</span>
+              <h3>
+                <span class="lang-en">Add your cards</span>
+                <span class="lang-it">Aggiungi le tue carte</span>
+              </h3>
+              <p>
+                <span class="lang-en"
+                  >Add your cards — scan the barcode or browse the Italian brand catalogue.</span
+                >
+                <span class="lang-it"
+                  >Aggiungi le tue carte — scansiona il codice a barre o sfoglia il catalogo.</span
+                >
+              </p>
+            </li>
+            <li class="step-card">
+              <span class="step-number">2</span>
+              <h3>
+                <span class="lang-en">Sync to your wrist</span>
+                <span class="lang-it">Sincronizza al polso</span>
+              </h3>
+              <p>
+                <span class="lang-en"
+                  >Sync to your wrist — cards appear automatically on your Apple Watch.</span
+                >
+                <span class="lang-it"
+                  >Sincronizza al polso — le carte appaiono automaticamente sul tuo Apple Watch.</span
+                >
+              </p>
+            </li>
+            <li class="step-card">
+              <span class="step-number">3</span>
+              <h3>
+                <span class="lang-en">Show at checkout</span>
+                <span class="lang-it">Mostra alla cassa</span>
+              </h3>
+              <p>
+                <span class="lang-en"
+                  >Show at checkout — raise your wrist, tap once, show the barcode. Done.</span
+                >
+                <span class="lang-it"
+                  >Mostra alla cassa — alza il polso, tocca una volta, mostra il codice. Fatto.</span
+                >
+              </p>
+            </li>
+          </ol>
+        </section>
+
+        <section class="content-section section-card" aria-labelledby="screenshots-heading">
+          <div class="section-heading-row">
+            <p class="section-kicker">
+              <span class="lang-en">Placeholder frames ready for real captures</span>
+              <span class="lang-it">Cornici placeholder pronte per le catture reali</span>
+            </p>
+            <h2 id="screenshots-heading" class="section-title">
+              <span class="lang-en">Screenshots</span>
+              <span class="lang-it">Screenshot</span>
+            </h2>
+          </div>
+
+          <div class="screenshots-grid">
+            <!-- SCREENSHOT: home-card-list -->
+            <figure class="screenshot-card">
+              <img
+                class="lang-en"
+                src="assets/screenshots/home-card-list.svg"
+                alt="Placeholder screenshot for the home card list screen"
+              />
+              <img
+                class="lang-it"
+                src="assets/screenshots/home-card-list-it.svg"
+                alt="Screenshot segnaposto della schermata elenco carte home"
+              />
+              <figcaption>
+                <span class="lang-en">Home card list</span>
+                <span class="lang-it">Elenco carte home</span>
+              </figcaption>
+            </figure>
+
+            <!-- SCREENSHOT: barcode-display -->
+            <figure class="screenshot-card">
+              <img
+                class="lang-en"
+                src="assets/screenshots/barcode-display.svg"
+                alt="Placeholder screenshot for the barcode display screen"
+              />
+              <img
+                class="lang-it"
+                src="assets/screenshots/barcode-display-it.svg"
+                alt="Screenshot segnaposto della schermata codice a barre"
+              />
+              <figcaption>
+                <span class="lang-en">Barcode display</span>
+                <span class="lang-it">Visualizzazione codice a barre</span>
+              </figcaption>
+            </figure>
+
+            <!-- SCREENSHOT: watch-card-list -->
+            <figure class="screenshot-card">
+              <img
+                class="lang-en"
+                src="assets/screenshots/watch-card-list.svg"
+                alt="Placeholder screenshot for the Apple Watch card list screen"
+              />
+              <img
+                class="lang-it"
+                src="assets/screenshots/watch-card-list-it.svg"
+                alt="Screenshot segnaposto della schermata elenco carte su Apple Watch"
+              />
+              <figcaption>
+                <span class="lang-en">Apple Watch card list</span>
+                <span class="lang-it">Elenco carte Apple Watch</span>
+              </figcaption>
+            </figure>
+          </div>
+        </section>
+      </main>
+
+      <footer class="site-footer">
+        <a class="footer-link" href="https://github.com/ifero/myLoyaltyCards">
+          <span class="lang-en">View the GitHub repository</span>
+          <span class="lang-it">Vai al repository GitHub</span>
+        </a>
+
+        <span class="license-pill">
+          <span class="lang-en">Open Source — MIT License</span>
+          <span class="lang-it">Open Source — Licenza MIT</span>
+        </span>
+
+        <a class="footer-link" href="privacy-policy.html">
+          <span class="lang-en">Privacy policy</span>
+          <span class="lang-it">Informativa privacy</span>
+        </a>
+      </footer>
+    </div>
+
+    <script>
+      (function () {
+        var languageButtons = document.querySelectorAll('[data-language-button]');
+        var localizedNodes = document.querySelectorAll('.lang-en, .lang-it');
+        var storeLinks = document.querySelectorAll('[data-store-link]');
+        var localizedLabels = document.querySelectorAll('[data-aria-label-en][data-aria-label-it]');
+        var metaDescription = document.querySelector('meta[name="description"]');
+        var ogDescription = document.querySelector('meta[property="og:description"]');
+        var title = document.querySelector('title');
+
+        var metadataByLanguage = {
+          en: {
+            title: 'myLoyaltyCards — Your loyalty cards. Always on your wrist.',
+            description:
+              'Offline-first loyalty cards for iPhone and Apple Watch. Add your cards, sync them to your wrist, and show them instantly at checkout.'
+          },
+          it: {
+            title: 'myLoyaltyCards — Your loyalty cards. Always on your wrist.',
+            description:
+              'Carte fedeltà offline-first per iPhone e Apple Watch. Aggiungi le tue carte, sincronizzale al polso e mostrale subito alla cassa.'
+          }
+        };
+
+        var storeMessages = {
+          en: {
+            'app-store': 'Coming soon on the App Store. Stay tuned!',
+            'google-play': 'Coming soon on Google Play. Stay tuned!'
+          },
+          it: {
+            'app-store': 'Prossimamente sull\'App Store. Resta aggiornato!',
+            'google-play': 'Prossimamente su Google Play. Resta aggiornato!'
+          }
+        };
+
+        function readStoredLanguage() {
+          try {
+            return window.localStorage.getItem('mlc-landing-language');
+          } catch (error) {
+            return null;
+          }
+        }
+
+        function writeStoredLanguage(language) {
+          try {
+            window.localStorage.setItem('mlc-landing-language', language);
+          } catch (error) {
+            return;
+          }
+        }
+
+        function setLanguage(language) {
+          document.documentElement.lang = language;
+          document.documentElement.dataset.activeLanguage = language;
+
+          localizedNodes.forEach(function (node) {
+            var shouldShow = node.classList.contains('lang-' + language);
+            node.hidden = !shouldShow;
+            node.setAttribute('aria-hidden', shouldShow ? 'false' : 'true');
+          });
+
+          languageButtons.forEach(function (button) {
+            var isSelected = button.dataset.languageButton === language;
+            button.classList.toggle('is-selected', isSelected);
+            button.setAttribute('aria-pressed', isSelected ? 'true' : 'false');
+          });
+
+          localizedLabels.forEach(function (node) {
+            var label = language === 'it' ? node.dataset.ariaLabelIt : node.dataset.ariaLabelEn;
+            node.setAttribute('aria-label', label);
+          });
+
+          storeLinks.forEach(function (link) {
+            var label = language === 'it' ? link.dataset.storeLabelIt : link.dataset.storeLabelEn;
+            link.setAttribute('aria-label', label);
+          });
+
+          if (title) {
+            title.textContent = metadataByLanguage[language].title;
+          }
+
+          if (metaDescription) {
+            metaDescription.setAttribute('content', metadataByLanguage[language].description);
+          }
+
+          if (ogDescription) {
+            ogDescription.setAttribute('content', metadataByLanguage[language].description);
+          }
+        }
+
+        function detectInitialLanguage() {
+          var stored = readStoredLanguage();
+
+          if (stored === 'en' || stored === 'it') {
+            return stored;
+          }
+
+          return navigator.language && navigator.language.toLowerCase().indexOf('it') === 0 ? 'it' : 'en';
+        }
+
+        languageButtons.forEach(function (button) {
+          button.addEventListener('click', function () {
+            var nextLanguage = button.dataset.languageButton;
+            setLanguage(nextLanguage);
+            writeStoredLanguage(nextLanguage);
+          });
+        });
+
+        storeLinks.forEach(function (link) {
+          link.addEventListener('click', function (event) {
+            event.preventDefault();
+
+            var activeLanguage = document.documentElement.lang === 'it' ? 'it' : 'en';
+            window.alert(storeMessages[activeLanguage][link.dataset.storeLink]);
+          });
+        });
+
+        setLanguage(detectInitialLanguage());
+      })();
+    </script>
+  </body>
+</html>
