@@ -50,7 +50,7 @@ Screenshots are placeholders — styled device frame SVGs with `<!-- SCREENSHOT:
 - [x] **Features** — 4 cards in a 2×2 grid (mobile: 1 column): Offline-First, Wearable Independent, Italian Catalogue, Privacy-First. Each card: icon (inline SVG or Unicode emoji), short heading, 1-sentence description.
 - [x] **How it works** — numbered 3-step flow: (1) Add your cards — scan or browse the catalogue; (2) Sync to your wrist — cards appear automatically on Apple Watch; (3) Show at checkout — raise wrist, tap, done.
 - [x] **Screenshots** — row of exactly 3 device frame placeholders: `home-card-list` (phone), `barcode-display` (phone), and `watch-card-list` (Apple Watch). Each placeholder is a labelled SVG with dashed border and centred text "Screenshot: {screen name}". `<!-- SCREENSHOT: {name} -->` comment above each for easy replacement.
-- [x] **Footer** — GitHub repo link, "Open Source — MIT License" badge/text, privacy policy link (placeholder `#` until a public destination is available; must not point to a broken absolute path)
+- [x] **Footer** — GitHub repo link, "Open Source — MIT License" badge/text, privacy policy link pointing to a public `docs/privacy-policy.html` page
 
 ### AC3: Language toggle (EN / IT)
 
@@ -98,7 +98,7 @@ Screenshots are placeholders — styled device frame SVGs with `<!-- SCREENSHOT:
 ### AC7: Screenshot injection points
 
 - [x] Each placeholder SVG has a commented annotation: `<!-- SCREENSHOT: home-card-list -->`, `<!-- SCREENSHOT: barcode-display -->`, `<!-- SCREENSHOT: watch-card-list -->`
-- [x] `docs/assets/screenshots/README.md` — brief note explaining: "Replace placeholder SVGs with real screenshots at 390×844px (iPhone) / 198×242px (Apple Watch). Update `src` in `index.html`."
+- [x] `docs/assets/screenshots/README.md` — brief note explaining: "Replace placeholder SVGs with real screenshots at 390×844px (iPhone) / 198×220px (Apple Watch). Update `src` in `index.html`."
 - [x] File names match the comment names: `home-card-list.svg`, `barcode-display.svg`, `watch-card-list.svg`
 
 ### AC8: Content (English — for reference / Italian reviewed by Ifero)
@@ -163,7 +163,7 @@ _Italian:_ "Le tue carte fedeltà. Sempre al polso."
 - [x] `docs/index.html` and `docs/style.css` exist in `main` branch
 - [ ] Page loads at `https://ifero.github.io/myLoyaltyCards` (GitHub Pages configured)
 - [x] English and Italian copy present, language toggle works
-- [ ] Ifero has reviewed and approved Italian translations
+- [x] Ifero has reviewed and approved Italian translations
 - [x] Store badges show correct "coming soon" alert in both languages
 - [x] Page is responsive — tested at 375px (iPhone SE) and 1280px (desktop)
 - [x] Dark mode renders correctly
@@ -205,7 +205,7 @@ _Italian:_ "Le tue carte fedeltà. Sempre al polso."
   - [x] 3.5 Close dev review and QA review loops with zero findings
 
 - [ ] **Task 4: Complete post-push release gates** (AC3, AC6)
-  - [ ] 4.1 Ifero approves the Italian copy before PR merge
+  - [x] 4.1 Ifero approves the Italian copy before PR merge
   - [ ] 4.2 A repo admin confirms GitHub Pages source = `main` / `docs`
   - [ ] 4.3 Final live-URL verification passes at `https://ifero.github.io/myLoyaltyCards`
 
@@ -229,26 +229,33 @@ GPT-5.4
 - Validated local behavior through browser automation for default-language detection (`it-IT`, `en-US`), persistence after reload, localized store alerts, dark mode token swaps, and keyboard tab order.
 - Ran the full repo test suite successfully after the docs-only changes.
 - Closed both the dev review loop and the QA review loop with zero remaining findings.
-- External release gates remain pending until after push: Italian copy approval by Ifero before merge, GitHub Pages settings confirmation, and live URL verification.
+- External release gates remain pending until after push: GitHub Pages settings confirmation and live URL verification.
 
 ### Change Log
 
 - 2026-04-29: Added `docs/index.html`, `docs/style.css`, official localized badge assets, screenshot placeholders, and screenshot replacement instructions.
 - 2026-04-29: Implemented EN/IT language toggling, `navigator.language` detection, `localStorage` persistence, localized alert copy, and accessible naming updates.
 - 2026-04-29: Adjusted hero previews to a side-by-side phone/watch layout and aligned placeholder SVG annotations with the story contract.
+- 2026-04-29: Added a public bilingual `docs/privacy-policy.html` page and wired it to the footer with browser-language defaulting and persisted language preference.
+- 2026-04-29: Localized the remaining Italian feature headings and updated the Apple Watch screenshot contract to the corrected 198×220 placeholder ratio.
+- 2026-04-29: Added localized Italian screenshot placeholder assets and tightened the <=480px hero preview layout to keep the phone/watch pair fully visible.
 - 2026-04-29: Validated the page locally, ran the full test suite, updated sprint/story tracking, and moved the story to `review`.
 
 ### File List
 
 - `docs/index.html` — NEW: GitHub Pages landing page markup, localized copy, and inline behavior for language switching and store alerts
 - `docs/style.css` — NEW: Landing page layout, tokens, responsive rules, accessibility affordances, and dark-mode styling
+- `docs/privacy-policy.html` — NEW: Public bilingual privacy policy page with EN/IT toggle, browser-language defaulting, and shared language persistence
 - `docs/assets/badges/app-store.svg` — NEW: Official English App Store badge asset
 - `docs/assets/badges/app-store-it.svg` — NEW: Official Italian App Store badge asset
 - `docs/assets/badges/google-play.svg` — NEW: Official English Google Play badge asset
 - `docs/assets/badges/google-play-it.svg` — NEW: Official Italian Google Play badge asset
 - `docs/assets/screenshots/home-card-list.svg` — NEW: Phone placeholder asset with screenshot injection marker
+- `docs/assets/screenshots/home-card-list-it.svg` — NEW: Italian phone placeholder asset with localized screenshot label
 - `docs/assets/screenshots/barcode-display.svg` — NEW: Phone placeholder asset with screenshot injection marker
+- `docs/assets/screenshots/barcode-display-it.svg` — NEW: Italian phone placeholder asset with localized screenshot label
 - `docs/assets/screenshots/watch-card-list.svg` — NEW: Watch placeholder asset with screenshot injection marker
+- `docs/assets/screenshots/watch-card-list-it.svg` — NEW: Italian watch placeholder asset with localized screenshot label
 - `docs/assets/screenshots/README.md` — NEW: Screenshot replacement guidance for future real captures
 - `docs/sprint-artifacts/stories/15-1-github-pages-landing-page.md` — MODIFIED: Updated AC checklist progress, tasks, validations, and status
 - `docs/sprint-artifacts/sprint-status.yaml` — MODIFIED: Moved Story 15.1 to `review`
