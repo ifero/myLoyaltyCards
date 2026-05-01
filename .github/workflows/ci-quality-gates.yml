@@ -31,9 +31,12 @@ jobs:
           path: |
             node_modules
             ~/.cache/yarn
-          key: ${{ runner.os }}-yarn-${{ hashFiles('**/yarn.lock') }}
+          # Bump the salt (sdk55) when the dependency tree changes shape so
+          # we don't restore a partial cache from a previous SDK with stale
+          # hoisting (e.g. strip-ansi alias mismatch).
+          key: ${{ runner.os }}-yarn-sdk55-${{ hashFiles('**/yarn.lock') }}
           restore-keys: |
-            ${{ runner.os }}-yarn-
+            ${{ runner.os }}-yarn-sdk55-
 
       - name: Install dependencies
         run: yarn install --frozen-lockfile

@@ -8,7 +8,7 @@ on:
 jobs:
   ios-testflight-beta:
     name: Build iOS TestFlight (RC)
-    runs-on: macos-15
+    runs-on: macos-latest
     env:
       MATCH_PASSWORD: ${{ secrets.MATCH_PASSWORD }}
       MATCH_GIT_BASIC_AUTHORIZATION: ${{ secrets.MATCH_GIT_BASIC_AUTHORIZATION }}
@@ -25,6 +25,10 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+      - name: Select Xcode (latest stable for iOS 26 SDK)
+        uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: latest-stable
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:

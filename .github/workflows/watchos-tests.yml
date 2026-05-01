@@ -30,6 +30,11 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Select Xcode (latest stable for iOS 26 SDK)
+        uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: latest-stable
+
       - name: Use Node.js 22
         uses: actions/setup-node@v4
         with:
@@ -42,9 +47,12 @@ jobs:
           path: |
             node_modules
             ~/.cache/yarn
-          key: ${{ runner.os }}-yarn-${{ hashFiles('**/yarn.lock') }}
+          # See ci-quality-gates.yml — bump the sdk55 salt when the dep tree
+          # changes shape so a stale node_modules from a prior SDK is not
+          # restored via restore-keys.
+          key: ${{ runner.os }}-yarn-sdk55-${{ hashFiles('**/yarn.lock') }}
           restore-keys: |
-            ${{ runner.os }}-yarn-
+            ${{ runner.os }}-yarn-sdk55-
 
       - name: Install dependencies
         run: yarn install --frozen-lockfile
