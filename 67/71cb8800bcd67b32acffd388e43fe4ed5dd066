@@ -1,0 +1,33 @@
+.github/workflows/watchos-tests.yml
+  c83fa23082fc81c0 33-37
+.github/workflows/beta-releases.yml
+  c83fa23082fc81c0 11,28-31
+.github/workflows/ios-release.yml
+  c83fa23082fc81c0 20,37-40
+package.json
+  c83fa23082fc81c0 36-37,41-55,57,59-60,62,64-65,67,76,86
+app.json
+  c83fa23082fc81c0 51-52
+.github/workflows/store-upload.yml
+  c83fa23082fc81c0 15,32-35
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.3.4",
+  "base_commit_sha": "6771cb8800bcd67b32acffd388e43fe4ed5dd066",
+  "prompts": {
+    "c83fa23082fc81c0": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "8bbed78c-272c-42e8-a2a4-28ef0e36b8e6",
+        "model": "claude-opus-4-7"
+      },
+      "human_author": "Andrea Pacino",
+      "messages": [],
+      "total_additions": 58,
+      "total_deletions": 40,
+      "accepted_lines": 62,
+      "overriden_lines": 0
+    }
+  }
+}
