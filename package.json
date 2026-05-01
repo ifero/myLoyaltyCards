@@ -101,5 +101,9 @@
       "prettier --write"
     ]
   },
+  "resolutions": {
+    "string-length/strip-ansi": "6.0.1",
+    "jest-message-util/strip-ansi": "6.0.1"
+  },
   "private": true
 }
