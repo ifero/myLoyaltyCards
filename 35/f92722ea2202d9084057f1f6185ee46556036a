@@ -1,0 +1,23 @@
+package.json
+  c83fa23082fc81c0 104-107
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.3.4",
+  "base_commit_sha": "35f92722ea2202d9084057f1f6185ee46556036a",
+  "prompts": {
+    "c83fa23082fc81c0": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "8bbed78c-272c-42e8-a2a4-28ef0e36b8e6",
+        "model": "claude-opus-4-7"
+      },
+      "human_author": "Andrea Pacino",
+      "messages": [],
+      "total_additions": 4,
+      "total_deletions": 0,
+      "accepted_lines": 18,
+      "overriden_lines": 0
+    }
+  }
+}
