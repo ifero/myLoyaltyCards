@@ -228,6 +228,180 @@ describe('watch-connectivity wrapper (scaffold)', () => {
       expect(typeof mod.subscribeToWatchMessages).toBe('function');
       expect(typeof mod.requestCardsFromPhone).toBe('function');
       expect(typeof mod.syncCardToWatch).toBe('function');
+      expect(typeof mod.pushCardsToWatch).toBe('function');
+    });
+  });
+
+  describe('pushCardsToWatch', () => {
+    const sampleCard = {
+      id: 'c1',
+      name: 'Card',
+      barcode: '123',
+      barcodeFormat: 'CODE128',
+      brandId: null,
+      color: 'blue',
+      isFavorite: false,
+      lastUsedAt: null,
+      usageCount: 0,
+      createdAt: '2026-01-01T00:00:00.000Z',
+      updatedAt: '2026-01-01T00:00:00.000Z'
+    } as any;
+
+    test('returns false when native module missing', async () => {
+      jest.isolateModules(async () => {
+        const mod = require('./watch-connectivity');
+        await expect(mod.pushCardsToWatch([sampleCard])).resolves.toBe(false);
+      });
+    });
+
+    test('uses updateApplicationContext when available', async () => {
+      const updateApplicationContext = jest.fn().mockResolvedValue(undefined);
+      let mod: any = null;
+      jest.isolateModules(() => {
+        jest.doMock('react-native-watch-connectivity', () => ({ updateApplicationContext }), {
+          virtual: true
+        });
+        mod = require('./watch-connectivity');
+      });
+
+      await expect(mod.pushCardsToWatch([sampleCard])).resolves.toBe(true);
+      expect(updateApplicationContext).toHaveBeenCalledWith({
+        type: 'cards',
+        payload: [
+          {
+            id: 'c1',
+            name: 'Card',
+            brandId: null,
+            colorHex: 'blue',
+            barcodeValue: '123',
+            barcodeFormat: 'CODE128',
+            usageCount: 0,
+            lastUsedAt: null,
+            createdAt: '2026-01-01T00:00:00.000Z'
+          }
+        ]
+      });
+    });
+
+    test('falls back to transferUserInfo when updateApplicationContext missing', async () => {
+      const transferUserInfo = jest.fn().mockResolvedValue(undefined);
+      let mod: any = null;
+      jest.isolateModules(() => {
+        jest.doMock('react-native-watch-connectivity', () => ({ transferUserInfo }), {
+          virtual: true
+        });
+        mod = require('./watch-connectivity');
+      });
+
+      await expect(mod.pushCardsToWatch([sampleCard])).resolves.toBe(true);
+      expect(transferUserInfo).toHaveBeenCalled();
+    });
+
+    test('falls back to sendMessage when only sendMessage is available', async () => {
+      const sendMessage = jest.fn().mockResolvedValue(undefined);
+      let mod: any = null;
+      jest.isolateModules(() => {
+        jest.doMock('react-native-watch-connectivity', () => ({ sendMessage }), {
+          virtual: true
+        });
+        mod = require('./watch-connectivity');
+      });
+
+      await expect(mod.pushCardsToWatch([sampleCard])).resolves.toBe(true);
+      expect(sendMessage).toHaveBeenCalled();
+    });
+
+    test('returns false when native module exposes none of the APIs', async () => {
+      let mod: any = null;
+      jest.isolateModules(() => {
+        jest.doMock('react-native-watch-connectivity', () => ({ irrelevant: jest.fn() }), {
+          virtual: true
+        });
+        mod = require('./watch-connectivity');
+      });
+
+      await expect(mod.pushCardsToWatch([sampleCard])).resolves.toBe(false);
+    });
+
+    test('swallows native rejections without throwing', async () => {
+      const updateApplicationContext = jest.fn().mockRejectedValue(new Error('boom'));
+      let mod: any = null;
+      jest.isolateModules(() => {
+        jest.doMock('react-native-watch-connectivity', () => ({ updateApplicationContext }), {
+          virtual: true
+        });
+        mod = require('./watch-connectivity');
+      });
+
+      await expect(mod.pushCardsToWatch([sampleCard])).resolves.toBe(true);
+    });
+
+    test('maps optional usageCount and lastUsedAt to safe defaults', async () => {
+      const updateApplicationContext = jest.fn().mockResolvedValue(undefined);
+      let mod: any = null;
+      jest.isolateModules(() => {
+        jest.doMock('react-native-watch-connectivity', () => ({ updateApplicationContext }), {
+          virtual: true
+        });
+        mod = require('./watch-connectivity');
+      });
+
+      const cardMissingOptionals = { ...sampleCard, usageCount: undefined, lastUsedAt: undefined };
+      await mod.pushCardsToWatch([cardMissingOptionals]);
+      const payload = updateApplicationContext.mock.calls[0]![0].payload[0];
+      expect(payload.usageCount).toBe(0);
+      expect(payload.lastUsedAt).toBeNull();
+    });
+  });
+
+  describe('subscribeToWatchMessages — applicationContext fan-out', () => {
+    test('subscribes to applicationContext channel when supported and unsubscribes cleanly', () => {
+      const off = jest.fn();
+      const subscribeToApplicationContext = jest.fn().mockReturnValue(off);
+      let mod: any = null;
+      jest.isolateModules(() => {
+        jest.doMock('react-native-watch-connectivity', () => ({ subscribeToApplicationContext }), {
+          virtual: true
+        });
+        mod = require('./watch-connectivity');
+      });
+
+      const handler = jest.fn();
+      const unsub = mod.subscribeToWatchMessages(handler);
+      expect(subscribeToApplicationContext).toHaveBeenCalledWith(handler);
+      unsub();
+      expect(off).toHaveBeenCalled();
+    });
+
+    test('tolerates subscribeToApplicationContext returning a non-function', () => {
+      const subscribeToApplicationContext = jest.fn().mockReturnValue(undefined);
+      let mod: any = null;
+      jest.isolateModules(() => {
+        jest.doMock('react-native-watch-connectivity', () => ({ subscribeToApplicationContext }), {
+          virtual: true
+        });
+        mod = require('./watch-connectivity');
+      });
+
+      const unsub = mod.subscribeToWatchMessages(jest.fn());
+      expect(() => unsub()).not.toThrow();
+    });
+
+    test('unsubscribe swallows errors from individual unsubscribers', () => {
+      const off = jest.fn().mockImplementation(() => {
+        throw new Error('boom');
+      });
+      const subscribeToApplicationContext = jest.fn().mockReturnValue(off);
+      let mod: any = null;
+      jest.isolateModules(() => {
+        jest.doMock('react-native-watch-connectivity', () => ({ subscribeToApplicationContext }), {
+          virtual: true
+        });
+        mod = require('./watch-connectivity');
+      });
+
+      const unsub = mod.subscribeToWatchMessages(jest.fn());
+      expect(() => unsub()).not.toThrow();
     });
   });
 });
