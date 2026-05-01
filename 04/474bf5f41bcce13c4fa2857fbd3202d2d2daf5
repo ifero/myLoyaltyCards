@@ -1,0 +1,25 @@
+.github/workflows/ci-quality-gates.yml
+  c83fa23082fc81c0 34-37,39
+.github/workflows/watchos-tests.yml
+  c83fa23082fc81c0 50-53,55
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.3.4",
+  "base_commit_sha": "04474bf5f41bcce13c4fa2857fbd3202d2d2daf5",
+  "prompts": {
+    "c83fa23082fc81c0": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "8bbed78c-272c-42e8-a2a4-28ef0e36b8e6",
+        "model": "claude-opus-4-7"
+      },
+      "human_author": "Andrea Pacino",
+      "messages": [],
+      "total_additions": 10,
+      "total_deletions": 4,
+      "accepted_lines": 24,
+      "overriden_lines": 0
+    }
+  }
+}
