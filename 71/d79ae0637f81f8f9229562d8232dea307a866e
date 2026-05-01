@@ -1,0 +1,23 @@
+core/watch-connectivity.test.ts
+  c83fa23082fc81c0 231-404
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.3.4",
+  "base_commit_sha": "71d79ae0637f81f8f9229562d8232dea307a866e",
+  "prompts": {
+    "c83fa23082fc81c0": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "8bbed78c-272c-42e8-a2a4-28ef0e36b8e6",
+        "model": "claude-opus-4-7"
+      },
+      "human_author": "Andrea Pacino",
+      "messages": [],
+      "total_additions": 180,
+      "total_deletions": 0,
+      "accepted_lines": 179,
+      "overriden_lines": 0
+    }
+  }
+}
