@@ -60,6 +60,18 @@ yarn watch:build
 yarn watch:run
 ```
 
+This builds the watch target and installs it on whichever watchOS simulator is currently booted. Boot a paired Apple Watch in `Simulator.app` first.
+
+### 3b. Run iPhone + Watch together
+
+`yarn ios` only installs the iPhone `.app` on the iPhone simulator — `xcrun simctl install` does not propagate the embedded `watch.app` to the paired Apple Watch sim (only Xcode's Run button does that). Use the combined script:
+
+```bash
+yarn ios:watch
+```
+
+This runs `yarn ios` for the phone and then `yarn watch:run` for the watch. Alternatively, open the Xcode workspace and run the iOS scheme — Xcode handles watch propagation natively.
+
 ### 4. Open in Xcode (for debugging/running on device)
 
 ```bash
@@ -108,6 +120,6 @@ The watchOS app is **automatically embedded** in the iOS archive. No separate bu
 ## Notes
 
 - **Companion-only**: no card creation or editing on watch
-- **Sync**: via `WatchConnectivity` with the iPhone app
+- **Sync**: the iPhone publishes the full card list via `WCSession.updateApplicationContext` (last-write-wins snapshot). `WatchSessionManager` (in this folder) activates `WCSession`, receives the snapshot, and upserts into SwiftData — `CardListView`'s `@Query` then renders it. No App Group is needed because everything goes through `WatchConnectivity`.
 - **No React Native**: the watch app is pure Swift/SwiftUI; the `@bacons/apple-targets` plugin just handles Xcode project generation
 - **Future targets**: adding watch complications or other Apple targets follows the same pattern — create `targets/<name>/expo-target.config.js` and add source files

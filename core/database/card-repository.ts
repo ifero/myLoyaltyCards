@@ -9,7 +9,17 @@
 import { SQLiteDatabase } from 'expo-sqlite';
 
 import { LoyaltyCard, BarcodeFormat, CardColor } from '../schemas';
+import { pushCardsToWatch } from '../watch-connectivity';
 import { getDatabase } from './database';
+
+async function pushSnapshotToWatch(db: SQLiteDatabase): Promise<void> {
+  try {
+    const cards = await getAllCards(db);
+    await pushCardsToWatch(cards);
+  } catch {
+    // best-effort — never fail a DB write because the watch couldn't be reached
+  }
+}
 
 /**
  * Raw card row from database (snake_case columns)
@@ -97,6 +107,7 @@ export async function insertCard(
       ]
     );
   });
+  await pushSnapshotToWatch(db);
 }
 
 /**
@@ -134,6 +145,7 @@ export async function updateCard(
       ]
     );
   });
+  await pushSnapshotToWatch(db);
 }
 
 /**
@@ -144,6 +156,7 @@ export async function deleteCard(id: string, db: SQLiteDatabase = getDatabase())
   await db.withTransactionAsync(async () => {
     await db.runAsync('DELETE FROM loyalty_cards WHERE id = ?', [id]);
   });
+  await pushSnapshotToWatch(db);
 }
 
 /**
@@ -175,6 +188,7 @@ export async function upsertCard(
       ]
     );
   });
+  await pushSnapshotToWatch(db);
 }
 
 /**
@@ -186,6 +200,7 @@ export async function deleteAllCards(db: SQLiteDatabase = getDatabase()): Promis
   await db.withTransactionAsync(async () => {
     await db.runAsync('DELETE FROM loyalty_cards');
   });
+  await pushSnapshotToWatch(db);
 }
 
 /**
@@ -223,6 +238,7 @@ export async function batchUpsertCards(
       );
     }
   });
+  await pushSnapshotToWatch(db);
 }
 
 /**

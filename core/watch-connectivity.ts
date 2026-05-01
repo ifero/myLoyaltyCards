@@ -1,24 +1,22 @@
 /**
  * Lightweight wrapper for phone <-> watch messaging.
  *
- * - Intentionally tolerant: if `react-native-watch-connectivity` isn't
- *   installed the functions are no-ops so the app remains runnable.
- * - When the native module is added the wrapper will preferentially call
- *   `sendMessage` then `updateApplicationContext` if available.
- *
- * Story: 5.6 — initial scaffold. Implementation TODO: install and wire
- * `react-native-watch-connectivity` then replace the fallbacks.
+ * - Tolerant: if `react-native-watch-connectivity` isn't available the
+ *   functions are no-ops so the app remains runnable in tests / Android.
+ * - Snapshot sync: `pushCardsToWatch` publishes the full card list as the
+ *   single replaceable `applicationContext` so the watch always converges
+ *   on the latest state, even if it was asleep when the change happened.
  */
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable @typescript-eslint/no-require-imports */
 
+import type { LoyaltyCard } from './schemas';
+
 type Unsubscribe = () => void;
 
 function getNativeModule(): any | null {
   try {
-    // runtime require to avoid import-time native checks during Jest
-
     const pkg = require('react-native-watch-connectivity');
     return pkg;
   } catch {
@@ -26,12 +24,28 @@ function getNativeModule(): any | null {
   }
 }
 
-// Message schema used for phone <-> watch communication in story 5.6
 export type WatchMessage =
   | { type: 'requestCards' }
+  | { type: 'cards'; payload: WatchCardPayload[] }
   | { type: 'syncCard'; payload: { id: string; cardData: any } }
   | { type: 'ack'; payload?: { id?: string } }
   | { type: string; payload?: any };
+
+/**
+ * Shape sent over the wire to the watch. Field names match the watch-side
+ * `WatchCard` Codable struct in `targets/watch/CardListView.swift`.
+ */
+export interface WatchCardPayload {
+  id: string;
+  name: string;
+  brandId: string | null;
+  colorHex: string;
+  barcodeValue: string;
+  barcodeFormat: string;
+  usageCount: number;
+  lastUsedAt: string | null;
+  createdAt: string;
+}
 
 export const isWatchConnectivityAvailable = (): boolean => {
   const native = getNativeModule();
@@ -64,22 +78,34 @@ export function subscribeToWatchMessages(handler: (msg: WatchMessage) => void): 
   const native = getNativeModule();
   if (!native) return () => {};
 
-  // Common shapes: `addListener('message', cb)` or `onMessage(cb)`
+  const unsubscribers: Unsubscribe[] = [];
+
   if (typeof native.addListener === 'function') {
     const subscription = native.addListener('message', handler);
-    return () => {
+    unsubscribers.push(() => {
       if (subscription && typeof subscription.remove === 'function') subscription.remove();
-    };
-  }
-
-  if (typeof native.onMessage === 'function') {
+    });
+  } else if (typeof native.onMessage === 'function') {
     native.onMessage(handler);
-    return () => {
+    unsubscribers.push(() => {
       if (typeof native.removeMessageListener === 'function') native.removeMessageListener(handler);
-    };
+    });
   }
 
-  return () => {};
+  if (typeof native.subscribeToApplicationContext === 'function') {
+    const off = native.subscribeToApplicationContext(handler);
+    if (typeof off === 'function') unsubscribers.push(off);
+  }
+
+  return () => {
+    for (const off of unsubscribers) {
+      try {
+        off();
+      } catch {
+        // ignore
+      }
+    }
+  };
 }
 
 export function requestCardsFromPhone(): Promise<boolean> {
@@ -90,10 +116,56 @@ export function syncCardToWatch(id: string, cardData: any): Promise<boolean> {
   return sendMessageToWatch({ type: 'syncCard', payload: { id, cardData } });
 }
 
+function toWatchCardPayload(card: LoyaltyCard): WatchCardPayload {
+  return {
+    id: card.id,
+    name: card.name,
+    brandId: card.brandId,
+    colorHex: card.color,
+    barcodeValue: card.barcode,
+    barcodeFormat: card.barcodeFormat,
+    usageCount: card.usageCount ?? 0,
+    lastUsedAt: card.lastUsedAt ?? null,
+    createdAt: card.createdAt
+  };
+}
+
+/**
+ * Publish the full card list as the watch's applicationContext snapshot.
+ * Replaces any previous snapshot — last-write-wins semantics. Falls back to
+ * `transferUserInfo` (queued) and finally `sendMessage` if needed.
+ */
+export async function pushCardsToWatch(cards: LoyaltyCard[]): Promise<boolean> {
+  const native = getNativeModule();
+  if (!native) return false;
+
+  const payload: WatchCardPayload[] = cards.map(toWatchCardPayload);
+  const message = { type: 'cards', payload };
+
+  try {
+    if (typeof native.updateApplicationContext === 'function') {
+      await native.updateApplicationContext(message).catch(() => {});
+      return true;
+    }
+    if (typeof native.transferUserInfo === 'function') {
+      await native.transferUserInfo(message).catch(() => {});
+      return true;
+    }
+    if (typeof native.sendMessage === 'function') {
+      await native.sendMessage(message).catch(() => {});
+      return true;
+    }
+    return false;
+  } catch {
+    return false;
+  }
+}
+
 export default {
   isWatchConnectivityAvailable,
   sendMessageToWatch,
   subscribeToWatchMessages,
   requestCardsFromPhone,
-  syncCardToWatch
+  syncCardToWatch,
+  pushCardsToWatch
 };
