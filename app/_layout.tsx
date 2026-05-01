@@ -10,7 +10,11 @@ import { ActivityIndicator, Pressable, Text, View } from 'react-native';
 import { getOrCreateGuestSessionId } from '@/core/auth/guest-session-repository';
 import { initializeDatabase } from '@/core/database';
 import { getAllCards } from '@/core/database/card-repository';
-import { subscribeToWatchMessages, syncCardToWatch, WatchMessage } from '@/core/watch-connectivity';
+import {
+  pushCardsToWatch,
+  subscribeToWatchMessages,
+  WatchMessage
+} from '@/core/watch-connectivity';
 
 import { getSupabaseClient } from '@/shared/supabase/client';
 import { ThemeProvider, useTheme } from '@/shared/theme';
@@ -260,16 +264,19 @@ const RootLayout = () => {
     let unsubscribe: (() => void) | undefined;
 
     initializeApp().then(() => {
-      // wire watch connectivity after DB initialized
+      // Push an initial snapshot so the watch converges on launch, even if no
+      // mutation happens this session. CRUD paths in card-repository keep it
+      // in sync afterwards.
+      getAllCards()
+        .then((cards) => pushCardsToWatch(cards))
+        .catch(() => {});
+
       try {
         unsubscribe = subscribeToWatchMessages(async (msg: WatchMessage) => {
           try {
             if (msg?.type === 'requestCards') {
               const cards = await getAllCards();
-              // send cards one by one (best-effort)
-              for (const c of cards) {
-                syncCardToWatch(c.id, c);
-              }
+              await pushCardsToWatch(cards);
             }
           } catch (e) {
             console.warn('Watch message handler error:', e);
