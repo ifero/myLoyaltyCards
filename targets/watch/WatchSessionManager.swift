@@ -1,7 +1,10 @@
 import Foundation
+import OSLog
 import SwiftData
 import WatchConnectivity
 import WidgetKit
+
+private let log = Logger(subsystem: "com.iferoporefi.myloyaltycards.watch", category: "WCSession")
 
 /// Receives card snapshots from the paired iPhone via WatchConnectivity and
 /// persists them into SwiftData so `CardListView`'s `@Query` picks them up.
@@ -14,19 +17,27 @@ final class WatchSessionManager: NSObject, WCSessionDelegate {
 
   private var container: ModelContainer?
 
+  /// Wire up the persistence container and kick off `WCSession` activation.
+  /// Cached `applicationContext` is intentionally NOT read here — the iOS API
+  /// only populates `WCSession.default.receivedApplicationContext` after the
+  /// activation handshake completes, so we apply it from
+  /// `session(_:activationDidCompleteWith:error:)` instead.
   func bind(container: ModelContainer) {
     self.container = container
     activateIfNeeded()
-    applyCachedContextIfAvailable()
   }
 
   private func activateIfNeeded() {
-    guard WCSession.isSupported() else { return }
+    guard WCSession.isSupported() else {
+      log.notice("WCSession not supported on this device")
+      return
+    }
     let session = WCSession.default
     if session.delegate == nil {
       session.delegate = self
     }
     if session.activationState != .activated {
+      log.info("activating WCSession (state was \(session.activationState.rawValue))")
       session.activate()
     }
   }
@@ -35,6 +46,7 @@ final class WatchSessionManager: NSObject, WCSessionDelegate {
     guard WCSession.isSupported() else { return }
     let cached = WCSession.default.receivedApplicationContext
     if !cached.isEmpty {
+      log.info("applying cached applicationContext (keys=\(cached.keys.sorted().joined(separator: ",")))")
       handleIncoming(payload: cached)
     }
   }
@@ -46,20 +58,31 @@ final class WatchSessionManager: NSObject, WCSessionDelegate {
     activationDidCompleteWith activationState: WCSessionActivationState,
     error: Error?
   ) {
+    if let error {
+      log.error("WCSession activation error: \(error.localizedDescription, privacy: .public)")
+    }
+    log.info(
+      "activation complete: state=\(activationState.rawValue) reachable=\(session.isReachable)"
+    )
     if activationState == .activated {
       applyCachedContextIfAvailable()
-      // Best-effort ping; only delivered when the phone app is reachable.
+      // Best-effort ping so the phone can reply with the latest list if it's
+      // foregrounded right now. The applicationContext path covers the
+      // unreachable case.
       if session.isReachable {
+        log.info("pinging phone with requestCards")
         session.sendMessage(["type": "requestCards"], replyHandler: nil, errorHandler: nil)
       }
     }
   }
 
   func session(_ session: WCSession, didReceiveApplicationContext applicationContext: [String: Any]) {
+    log.info("didReceiveApplicationContext")
     handleIncoming(payload: applicationContext)
   }
 
   func session(_ session: WCSession, didReceiveMessage message: [String: Any]) {
+    log.info("didReceiveMessage")
     handleIncoming(payload: message)
   }
 
@@ -68,20 +91,24 @@ final class WatchSessionManager: NSObject, WCSessionDelegate {
     didReceiveMessage message: [String: Any],
     replyHandler: @escaping ([String: Any]) -> Void
   ) {
+    log.info("didReceiveMessage (reply expected)")
     handleIncoming(payload: message)
     replyHandler(["type": "ack"])
   }
 
   func session(_ session: WCSession, didReceiveUserInfo userInfo: [String: Any] = [:]) {
+    log.info("didReceiveUserInfo")
     handleIncoming(payload: userInfo)
   }
 
   // MARK: - Payload handling
 
   private func handleIncoming(payload: [String: Any]) {
-    let cards = decodeCards(from: payload)
-    guard let cards else { return }
-
+    guard let cards = decodeCards(from: payload) else {
+      log.notice("incoming payload had no decodable cards (type=\(payload["type"] as? String ?? "<nil>"))")
+      return
+    }
+    log.info("decoded \(cards.count) card(s) from incoming payload — upserting")
     Task { @MainActor in
       self.upsert(cards: cards)
     }
