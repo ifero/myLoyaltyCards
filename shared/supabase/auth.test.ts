@@ -16,7 +16,9 @@ import {
   signInWithEmail,
   signOut,
   signUp,
-  updatePassword
+  updatePassword,
+  verifyEmailOtp,
+  resendVerificationEmail
 } from './auth';
 
 // ---------------------------------------------------------------------------
@@ -27,6 +29,8 @@ const mockSignInWithPassword = jest.fn();
 const mockSignUp = jest.fn();
 const mockSignOut = jest.fn();
 const mockGetSession = jest.fn();
+const mockVerifyOtp = jest.fn();
+const mockResend = jest.fn();
 const mockResetPasswordForEmail = jest.fn();
 const mockUpdateUser = jest.fn();
 const mockFrom = jest.fn();
@@ -42,6 +46,8 @@ const mockSupabaseAuth = {
   signUp: mockSignUp,
   signOut: mockSignOut,
   getSession: mockGetSession,
+  verifyOtp: mockVerifyOtp,
+  resend: mockResend,
   resetPasswordForEmail: mockResetPasswordForEmail,
   updateUser: mockUpdateUser
 };
@@ -380,6 +386,128 @@ describe('signUp', () => {
     expect(result.success).toBe(false);
     if (!result.success) {
       expect(result.error.message).toBe('Timeout');
+    }
+  });
+});
+
+// ---------------------------------------------------------------------------
+// verifyEmailOtp
+// ---------------------------------------------------------------------------
+
+describe('verifyEmailOtp', () => {
+  beforeEach(() => {
+    mockVerifyOtp.mockReset();
+  });
+
+  it('returns success with user and session when OTP verification succeeds', async () => {
+    mockVerifyOtp.mockResolvedValue({
+      data: { user: MOCK_USER, session: MOCK_SESSION },
+      error: null
+    });
+
+    const result = await verifyEmailOtp('test@example.com', '123456');
+
+    expect(mockVerifyOtp).toHaveBeenCalledWith({
+      email: 'test@example.com',
+      token: '123456',
+      type: 'signup'
+    });
+    expect(result.success).toBe(true);
+    if (result.success) {
+      expect(result.data.user).toEqual(MOCK_USER);
+      expect(result.data.session).toEqual(MOCK_SESSION);
+    }
+  });
+
+  it('returns invalid_otp when provider rejects wrong token', async () => {
+    mockVerifyOtp.mockResolvedValue({
+      data: { user: null, session: null },
+      error: { message: 'Token is invalid or has expired', code: 'otp_invalid' }
+    });
+
+    const result = await verifyEmailOtp('test@example.com', '000000');
+
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      expect(result.error.code).toBe('invalid_otp');
+    }
+  });
+
+  it('returns expired_otp when provider reports expired token', async () => {
+    mockVerifyOtp.mockResolvedValue({
+      data: { user: null, session: null },
+      error: { message: 'Token has expired', code: 'otp_expired' }
+    });
+
+    const result = await verifyEmailOtp('test@example.com', '123456');
+
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      expect(result.error.code).toBe('expired_otp');
+    }
+  });
+
+  it('returns network_error when verification throws for connectivity issues', async () => {
+    mockVerifyOtp.mockRejectedValue(new Error('Network request failed'));
+
+    const result = await verifyEmailOtp('test@example.com', '123456');
+
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      expect(result.error.code).toBe('network_error');
+    }
+  });
+
+  it('returns unknown_error when provider error does not match known patterns', async () => {
+    mockVerifyOtp.mockResolvedValue({
+      data: { user: null, session: null },
+      error: { message: 'OTP verification unavailable', code: 'provider_down' }
+    });
+
+    const result = await verifyEmailOtp('test@example.com', '123456');
+
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      expect(result.error.code).toBe('unknown_error');
+    }
+  });
+});
+
+// ---------------------------------------------------------------------------
+// resendVerificationEmail
+// ---------------------------------------------------------------------------
+
+describe('resendVerificationEmail', () => {
+  beforeEach(() => {
+    mockResend.mockReset();
+  });
+
+  it('returns success when signup verification email is resent', async () => {
+    mockResend.mockResolvedValue({
+      data: { user: null, session: null },
+      error: null
+    });
+
+    const result = await resendVerificationEmail('test@example.com');
+
+    expect(mockResend).toHaveBeenCalledWith({
+      type: 'signup',
+      email: 'test@example.com'
+    });
+    expect(result.success).toBe(true);
+  });
+
+  it('returns failure when resend returns an error', async () => {
+    mockResend.mockResolvedValue({
+      data: null,
+      error: { message: 'Email rate limit exceeded', code: 'over_email_send_rate_limit' }
+    });
+
+    const result = await resendVerificationEmail('test@example.com');
+
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      expect(result.error.message).toBe('Email rate limit exceeded');
     }
   });
 });

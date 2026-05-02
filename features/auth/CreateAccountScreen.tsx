@@ -1,5 +1,5 @@
-import { useRouter } from 'expo-router';
-import { useCallback, useState } from 'react';
+import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useCallback, useEffect, useState } from 'react';
 import { Text, View } from 'react-native';
 
 import { isValidEmail, isValidPassword } from '@/core/auth/validation';
@@ -21,15 +21,18 @@ import {
 const CreateAccountScreen = () => {
   const { theme, spacing, typography } = useTheme();
   const router = useRouter();
+  const params = useLocalSearchParams<{ email?: string | string[] }>();
+  const prefilledEmail = Array.isArray(params.email)
+    ? (params.email[0] ?? '')
+    : (params.email ?? '');
 
-  const [email, setEmail] = useState('');
+  const [email, setEmail] = useState(prefilledEmail);
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [consent, setConsent] = useState(false);
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [statusMessage, setStatusMessage] = useState<string | null>(null);
   const [emailTouched, setEmailTouched] = useState(false);
   const [fieldErrors, setFieldErrors] = useState<{
     email?: string;
@@ -49,6 +52,17 @@ const CreateAccountScreen = () => {
 
     return undefined;
   }, []);
+
+  useEffect(() => {
+    setEmail(prefilledEmail);
+    setPassword('');
+    setConfirmPassword('');
+    setConsent(false);
+    setLoading(false);
+    setError(null);
+    setEmailTouched(false);
+    setFieldErrors({});
+  }, [prefilledEmail]);
 
   const validate = useCallback(() => {
     const errors: typeof fieldErrors = {};
@@ -80,7 +94,6 @@ const CreateAccountScreen = () => {
 
   const handleRegister = useCallback(async () => {
     setError(null);
-    setStatusMessage(null);
 
     if (!validate()) {
       return;
@@ -89,7 +102,8 @@ const CreateAccountScreen = () => {
     setLoading(true);
 
     try {
-      const result = await signUp(email.trim(), password);
+      const trimmedEmail = email.trim();
+      const result = await signUp(trimmedEmail, password);
 
       if (!result.success) {
         setError(result.error.message);
@@ -101,9 +115,13 @@ const CreateAccountScreen = () => {
       if (result.data.session) {
         router.replace('/');
       } else {
-        setStatusMessage(
-          'Registration successful! Please check your email to confirm your account before signing in.'
-        );
+        router.push({
+          pathname: '/verify-email',
+          params: {
+            email: trimmedEmail,
+            sentAt: String(Date.now())
+          }
+        });
       }
     } catch {
       setError('An unexpected error occurred. Please try again.');
@@ -127,7 +145,6 @@ const CreateAccountScreen = () => {
           value={email}
           onChangeText={(value) => {
             setEmail(value);
-            setStatusMessage(null);
             if (fieldErrors.email) {
               setFieldErrors((previous) => ({ ...previous, email: undefined }));
             }
@@ -212,10 +229,6 @@ const CreateAccountScreen = () => {
         </View>
 
         <ErrorBanner message={error} testID="server-error" />
-
-        {statusMessage ? (
-          <Text style={{ color: theme.textSecondary, textAlign: 'center' }}>{statusMessage}</Text>
-        ) : null}
 
         <Button
           testID="register-button"

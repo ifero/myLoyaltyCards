@@ -41,8 +41,10 @@ jest.mock('@/shared/theme', () => ({
 
 const mockReplace = jest.fn();
 const mockPush = jest.fn();
+const mockParams: Record<string, string | undefined> = {};
 jest.mock('expo-router', () => ({
-  useRouter: () => ({ replace: mockReplace, push: mockPush })
+  useRouter: () => ({ replace: mockReplace, push: mockPush }),
+  useLocalSearchParams: () => mockParams
 }));
 
 const mockSignUp = jest.fn();
@@ -58,6 +60,7 @@ jest.mock('@/core/privacy/consent-repository', () => ({
 describe('CreateAccountScreen', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    Object.keys(mockParams).forEach((key) => delete mockParams[key]);
   });
 
   it('renders app icon header and auth fields', () => {
@@ -124,6 +127,39 @@ describe('CreateAccountScreen', () => {
       expect(mockSignUp).toHaveBeenCalledWith('test@example.com', 'Password1');
       expect(mockSetConsentGiven).toHaveBeenCalled();
       expect(mockReplace).toHaveBeenCalledWith('/');
+    });
+  });
+
+  it('prefills the email field from route params', () => {
+    mockParams.email = 'saved@example.com';
+
+    render(<CreateAccountScreen />);
+
+    expect(screen.getByTestId('email-input').props.value).toBe('saved@example.com');
+  });
+
+  it('navigates to verify-email when registration succeeds without a session', async () => {
+    mockSignUp.mockResolvedValue({
+      success: true,
+      data: { user: { id: 'u1' }, session: null }
+    });
+
+    render(<CreateAccountScreen />);
+
+    fireEvent.changeText(screen.getByTestId('email-input'), 'test@example.com');
+    fireEvent.changeText(screen.getByTestId('password-input'), 'Password1');
+    fireEvent.changeText(screen.getByTestId('confirm-password-input'), 'Password1');
+    fireEvent.press(screen.getByTestId('consent-checkbox-toggle'));
+    fireEvent.press(screen.getByTestId('register-button'));
+
+    await waitFor(() => {
+      expect(mockSetConsentGiven).toHaveBeenCalled();
+      expect(mockPush).toHaveBeenCalledWith({
+        pathname: '/verify-email',
+        params: expect.objectContaining({
+          email: 'test@example.com'
+        })
+      });
     });
   });
 });

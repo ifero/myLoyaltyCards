@@ -4,6 +4,7 @@ export { default as ForgotPasswordScreen } from './ForgotPasswordScreen';
 export { default as MigrationBanner } from './MigrationBanner';
 export { default as ResetPasswordScreen } from './ResetPasswordScreen';
 export { default as SignInScreen } from './SignInScreen';
+export { default as VerifyEmailScreen } from './VerifyEmailScreen';
 export {
   AppIconHeader,
   AuthLink,
