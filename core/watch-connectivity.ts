@@ -1,11 +1,27 @@
 /**
- * Lightweight wrapper for phone <-> watch messaging.
+ * Phone-side wrapper around `react-native-watch-connectivity` for syncing the
+ * loyalty-card list to a paired Apple Watch.
  *
- * - Tolerant: if `react-native-watch-connectivity` isn't available the
- *   functions are no-ops so the app remains runnable in tests / Android.
- * - Snapshot sync: `pushCardsToWatch` publishes the full card list as the
- *   single replaceable `applicationContext` so the watch always converges
- *   on the latest state, even if it was asleep when the change happened.
+ * Architecture (per Apple's WatchConnectivity guidance):
+ *   - The phone publishes the *latest* card list as a `WCSession`
+ *     `applicationContext` snapshot. Apple keeps only the most recent value
+ *     and delivers it to the watch the next time the watch becomes reachable
+ *     (even if the watch app isn't running).
+ *   - The watch persists the snapshot into its own SwiftData store, so the
+ *     watch app stays usable when the phone is off / out of range.
+ *
+ * Important quirks of the underlying library (`react-native-watch-connectivity`
+ * v1.x) that this wrapper papers over:
+ *   - `updateApplicationContext`, `transferUserInfo`, and `sendMessage` are
+ *     all *synchronous* and return `void`. Awaiting them as Promises is a
+ *     no-op and silently masks errors. We catch errors via the
+ *     `application-context-error` / `activation-error` event channels
+ *     instead.
+ *   - The native iOS module auto-activates `WCSession` on first import, but
+ *     the activation is async — pushes issued before activation completes
+ *     can be dropped by the OS. We therefore cache the latest snapshot in
+ *     memory and re-flush whenever the library reports a state transition
+ *     (`paired`, `installed`, `reachability`).
  */
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
@@ -15,15 +31,68 @@ import type { LoyaltyCard } from './schemas';
 
 type Unsubscribe = () => void;
 
-function getNativeModule(): any | null {
-  try {
-    const pkg = require('react-native-watch-connectivity');
-    return pkg;
-  } catch {
-    return null;
-  }
+interface NativeModule {
+  updateApplicationContext?: (ctx: any) => void;
+  transferUserInfo?: (info: any) => void;
+  sendMessage?: (msg: any, replyCb?: (reply: any) => void, errCb?: (err: Error) => void) => void;
+  getIsPaired?: () => Promise<boolean>;
+  getIsWatchAppInstalled?: () => Promise<boolean>;
+  getReachability?: () => Promise<boolean>;
+  getApplicationContext?: () => Promise<any | null>;
+  watchEvents?: {
+    addListener: (event: string, cb: (payload: any) => void) => Unsubscribe;
+  };
+  // Older shapes used as fallback for tests / partial mocks
+  addListener?: (event: string, cb: (payload: any) => void) => any;
+  onMessage?: (cb: (msg: any) => void) => void;
+  removeMessageListener?: (cb: (msg: any) => void) => void;
+  subscribeToApplicationContext?: (cb: (msg: any) => void) => Unsubscribe;
 }
 
+let cachedNative: NativeModule | null | undefined;
+
+function getNativeModule(): NativeModule | null {
+  if (cachedNative !== undefined) return cachedNative;
+  try {
+    const pkg = require('react-native-watch-connectivity');
+    // The package exports both named functions and a `watchEvents` default;
+    // normalise into a single shape. Some test mocks pass a flat object.
+    cachedNative = {
+      updateApplicationContext: pkg.updateApplicationContext,
+      transferUserInfo: pkg.transferUserInfo,
+      sendMessage: pkg.sendMessage,
+      getIsPaired: pkg.getIsPaired,
+      getIsWatchAppInstalled: pkg.getIsWatchAppInstalled,
+      getReachability: pkg.getReachability,
+      getApplicationContext: pkg.getApplicationContext,
+      watchEvents: pkg.watchEvents,
+      addListener: pkg.addListener,
+      onMessage: pkg.onMessage,
+      removeMessageListener: pkg.removeMessageListener,
+      subscribeToApplicationContext: pkg.subscribeToApplicationContext
+    };
+  } catch {
+    cachedNative = null;
+  }
+  return cachedNative;
+}
+
+/** Test-only hook: drop the cached native module so a fresh `require` runs. */
+export function __resetWatchConnectivityForTests(): void {
+  cachedNative = undefined;
+  latestSnapshot = null;
+  diagnosticsRegistered = false;
+  for (const off of diagnosticsUnsubscribers) {
+    try {
+      off();
+    } catch {
+      /* ignore */
+    }
+  }
+  diagnosticsUnsubscribers.length = 0;
+}
+
+// Message schema used for phone <-> watch communication.
 export type WatchMessage =
   | { type: 'requestCards' }
   | { type: 'cards'; payload: WatchCardPayload[] }
@@ -47,6 +116,69 @@ export interface WatchCardPayload {
   createdAt: string;
 }
 
+// ---------------------------------------------------------------------------
+// State + diagnostics
+// ---------------------------------------------------------------------------
+
+let latestSnapshot: WatchCardPayload[] | null = null;
+let diagnosticsRegistered = false;
+const diagnosticsUnsubscribers: Unsubscribe[] = [];
+
+function subscribe(
+  native: NativeModule,
+  event: string,
+  cb: (payload: any) => void
+): Unsubscribe | null {
+  const we = native.watchEvents;
+  if (we && typeof we.addListener === 'function') {
+    return we.addListener(event, cb);
+  }
+  if (typeof native.addListener === 'function') {
+    const sub = native.addListener(event, cb);
+    return () => {
+      if (sub && typeof sub.remove === 'function') sub.remove();
+    };
+  }
+  return null;
+}
+
+function ensureDiagnostics(native: NativeModule): void {
+  if (diagnosticsRegistered) return;
+  diagnosticsRegistered = true;
+
+  // Errors — these are the signals we were missing entirely before.
+  for (const ev of [
+    'activation-error',
+    'application-context-error',
+    'application-context-received-error',
+    'user-info-error',
+    'file-received-error'
+  ]) {
+    const off = subscribe(native, ev, (payload) => {
+      console.warn(`[watch-connectivity] ${ev}:`, payload);
+    });
+    if (off) diagnosticsUnsubscribers.push(off);
+  }
+
+  // State transitions — re-flush the latest snapshot whenever the watch
+  // becomes reachable / paired / installed, since the previous flush may
+  // have been dropped by the OS.
+  for (const ev of ['reachability', 'paired', 'installed']) {
+    const off = subscribe(native, ev, (value) => {
+      console.info(`[watch-connectivity] ${ev}:`, value);
+      if (value === true && latestSnapshot) {
+        // best-effort re-push; flushSnapshot() re-checks paired+installed
+        void flushSnapshot();
+      }
+    });
+    if (off) diagnosticsUnsubscribers.push(off);
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Public API
+// ---------------------------------------------------------------------------
+
 export const isWatchConnectivityAvailable = (): boolean => {
   const native = getNativeModule();
   return (
@@ -56,39 +188,73 @@ export const isWatchConnectivityAvailable = (): boolean => {
   );
 };
 
+/**
+ * Send a one-shot message. Used for `requestCards` from watch and similar
+ * interactive pings — NOT used for the snapshot push (that goes through
+ * `pushCardsToWatch` -> `updateApplicationContext`).
+ *
+ * The library's `sendMessage` is synchronous (void). We model it as a
+ * Promise<boolean> for ergonomics: resolves `true` if the call was issued,
+ * `false` if no native module is available. Errors are surfaced via the
+ * provided `errCb` and through the diagnostics channel.
+ */
 export async function sendMessageToWatch(message: WatchMessage): Promise<boolean> {
   const native = getNativeModule();
   if (!native) return false;
-  try {
-    if (typeof native.sendMessage === 'function') {
-      await native.sendMessage(message).catch(() => {});
+  ensureDiagnostics(native);
+  if (typeof native.sendMessage === 'function') {
+    try {
+      native.sendMessage(message, undefined, (err) => {
+        console.warn('[watch-connectivity] sendMessage error:', err);
+      });
       return true;
+    } catch (err) {
+      console.warn('[watch-connectivity] sendMessage threw:', err);
+      return false;
     }
-    if (typeof native.updateApplicationContext === 'function') {
-      await native.updateApplicationContext(message).catch(() => {});
-      return true;
-    }
-    return false;
-  } catch {
-    return false;
   }
+  if (typeof native.updateApplicationContext === 'function') {
+    try {
+      native.updateApplicationContext(message);
+      return true;
+    } catch (err) {
+      console.warn('[watch-connectivity] updateApplicationContext threw:', err);
+      return false;
+    }
+  }
+  return false;
 }
 
+/**
+ * Subscribe to messages sent from the watch (e.g. `requestCards`) and to
+ * `applicationContext` updates if the library exposes them.
+ */
 export function subscribeToWatchMessages(handler: (msg: WatchMessage) => void): Unsubscribe {
   const native = getNativeModule();
   if (!native) return () => {};
+  ensureDiagnostics(native);
 
   const unsubscribers: Unsubscribe[] = [];
 
-  if (typeof native.addListener === 'function') {
-    const subscription = native.addListener('message', handler);
+  // Modern API: watchEvents.addListener('message', cb)
+  const we = native.watchEvents;
+  if (we && typeof we.addListener === 'function') {
+    const off = we.addListener('message', handler);
+    if (typeof off === 'function') unsubscribers.push(off);
+    const ctxOff = we.addListener('application-context', handler);
+    if (typeof ctxOff === 'function') unsubscribers.push(ctxOff);
+  } else if (typeof native.addListener === 'function') {
+    // Older / mocked API: addListener('message', cb)
+    const sub = native.addListener('message', handler);
     unsubscribers.push(() => {
-      if (subscription && typeof subscription.remove === 'function') subscription.remove();
+      if (sub && typeof sub.remove === 'function') sub.remove();
     });
   } else if (typeof native.onMessage === 'function') {
     native.onMessage(handler);
     unsubscribers.push(() => {
-      if (typeof native.removeMessageListener === 'function') native.removeMessageListener(handler);
+      if (typeof native.removeMessageListener === 'function') {
+        native.removeMessageListener(handler);
+      }
     });
   }
 
@@ -102,7 +268,7 @@ export function subscribeToWatchMessages(handler: (msg: WatchMessage) => void): 
       try {
         off();
       } catch {
-        // ignore
+        /* ignore */
       }
     }
   };
@@ -131,34 +297,66 @@ function toWatchCardPayload(card: LoyaltyCard): WatchCardPayload {
 }
 
 /**
- * Publish the full card list as the watch's applicationContext snapshot.
- * Replaces any previous snapshot — last-write-wins semantics. Falls back to
- * `transferUserInfo` (queued) and finally `sendMessage` if needed.
+ * Internal: try to push the cached `latestSnapshot` to the watch. Gates the
+ * push on `getIsPaired() && getIsWatchAppInstalled()` so we don't waste
+ * cycles when there's no watch listening. When either check is unavailable
+ * we proceed optimistically (the pre-libary check is best-effort).
+ */
+async function flushSnapshot(): Promise<boolean> {
+  const native = getNativeModule();
+  if (!native || !latestSnapshot) return false;
+
+  // Gating: skip when the device says no watch is paired / app not installed.
+  try {
+    if (typeof native.getIsPaired === 'function') {
+      const paired = await native.getIsPaired();
+      if (paired === false) return false;
+    }
+    if (typeof native.getIsWatchAppInstalled === 'function') {
+      const installed = await native.getIsWatchAppInstalled();
+      if (installed === false) return false;
+    }
+  } catch {
+    /* If the gate-check API throws, fall through and try anyway. */
+  }
+
+  const message = { type: 'cards', payload: latestSnapshot };
+
+  if (typeof native.updateApplicationContext === 'function') {
+    try {
+      native.updateApplicationContext(message);
+      return true;
+    } catch (err) {
+      console.warn('[watch-connectivity] updateApplicationContext threw:', err);
+    }
+  }
+  // Defensive fallback: queued user info. Not snapshot semantics, but at
+  // least the watch will eventually see something. Only used if the library
+  // doesn't expose `updateApplicationContext` (shouldn't happen on v1.x).
+  if (typeof native.transferUserInfo === 'function') {
+    try {
+      native.transferUserInfo(message);
+      return true;
+    } catch (err) {
+      console.warn('[watch-connectivity] transferUserInfo threw:', err);
+    }
+  }
+  return false;
+}
+
+/**
+ * Publish the full card list to the paired watch as a snapshot. Replaces
+ * any prior snapshot — last-write-wins per Apple's `applicationContext`
+ * contract. Best-effort; if the watch is unavailable now, the snapshot is
+ * cached and re-flushed when the library next reports `reachability`,
+ * `paired`, or `installed`.
  */
 export async function pushCardsToWatch(cards: LoyaltyCard[]): Promise<boolean> {
+  latestSnapshot = cards.map(toWatchCardPayload);
   const native = getNativeModule();
   if (!native) return false;
-
-  const payload: WatchCardPayload[] = cards.map(toWatchCardPayload);
-  const message = { type: 'cards', payload };
-
-  try {
-    if (typeof native.updateApplicationContext === 'function') {
-      await native.updateApplicationContext(message).catch(() => {});
-      return true;
-    }
-    if (typeof native.transferUserInfo === 'function') {
-      await native.transferUserInfo(message).catch(() => {});
-      return true;
-    }
-    if (typeof native.sendMessage === 'function') {
-      await native.sendMessage(message).catch(() => {});
-      return true;
-    }
-    return false;
-  } catch {
-    return false;
-  }
+  ensureDiagnostics(native);
+  return flushSnapshot();
 }
 
 export default {
@@ -167,5 +365,6 @@ export default {
   subscribeToWatchMessages,
   requestCardsFromPhone,
   syncCardToWatch,
-  pushCardsToWatch
+  pushCardsToWatch,
+  __resetWatchConnectivityForTests
 };
