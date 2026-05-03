@@ -1,0 +1,25 @@
+features/auth/__tests__/VerifyEmailScreen.test.tsx
+  2769b77722919b48 45,65-69,172-198
+features/auth/VerifyEmailScreen.tsx
+  2769b77722919b48 27,32-34,49-50,100,112,127-128,131,193,195-197,214,304,315
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.3.4",
+  "base_commit_sha": "ee9bb0de98665e49b7b385f46239de8143e67cf2",
+  "prompts": {
+    "2769b77722919b48": {
+      "agent_id": {
+        "tool": "github-copilot",
+        "id": "775162bc-ea0c-412e-a8e0-1b9b99a5b168",
+        "model": "copilot/gpt-5.4"
+      },
+      "human_author": "Andrea Pacino",
+      "messages": [],
+      "total_additions": 56,
+      "total_deletions": 18,
+      "accepted_lines": 51,
+      "overriden_lines": 0
+    }
+  }
+}
