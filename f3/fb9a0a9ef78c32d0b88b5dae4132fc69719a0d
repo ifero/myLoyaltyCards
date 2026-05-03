@@ -1,0 +1,28 @@
+features/add-card/components/ScannerOverlay.tsx
+  ed3ff66f4fb8a303 11,19-20,38,194,308-327,398-435
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.3.4",
+  "base_commit_sha": "f3fb9a0a9ef78c32d0b88b5dae4132fc69719a0d",
+  "prompts": {
+    "ed3ff66f4fb8a303": {
+      "agent_id": {
+        "tool": "github-copilot",
+        "id": "2c48ef8f-09e2-4892-a90d-f7e018d20693",
+        "model": "copilot/claude-sonnet-4.6"
+      },
+      "human_author": "Andrea Pacino",
+      "messages": [],
+      "total_additions": 570,
+      "total_deletions": 2,
+      "accepted_lines": 2248,
+      "overriden_lines": 2
+    }
+  },
+  "humans": {
+    "h_806fb4fc1f8dfb": {
+      "author": "Andrea Pacino"
+    }
+  }
+}
