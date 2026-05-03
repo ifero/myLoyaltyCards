@@ -8,6 +8,7 @@ import { router, useLocalSearchParams } from 'expo-router';
 import { AccessibilityInfo } from 'react-native';
 
 import { BrandScannerScreen } from './BrandScannerScreen';
+import { useImageScan } from '../hooks/useImageScan';
 
 // Override expo-router mock to add useLocalSearchParams
 jest.mock('expo-router', () => ({
@@ -72,6 +73,7 @@ jest.mock('react-native-reanimated', () => {
     withSpring: (value: number) => value,
     Easing: {
       inOut: () => 'easing-fn',
+      out: () => 'easing-fn',
       ease: 'ease'
     }
   };
@@ -108,6 +110,26 @@ jest.mock('@/features/cards/hooks/useBarcodeScanner', () => ({
     isReady: true
   }),
   ScanResult: {}
+}));
+
+// Mock useImageScan
+const mockPickAndScan = jest.fn();
+const mockDismissError = jest.fn();
+const mockDismissMultiPicker = jest.fn();
+const mockSelectCode = jest.fn();
+
+const mockUseImageScan = {
+  isProcessing: false,
+  showError: false,
+  multiCodes: [],
+  pickAndScan: mockPickAndScan,
+  dismissError: mockDismissError,
+  dismissMultiPicker: mockDismissMultiPicker,
+  selectCode: mockSelectCode
+};
+
+jest.mock('../hooks/useImageScan', () => ({
+  useImageScan: jest.fn(() => mockUseImageScan)
 }));
 
 // Mock brandLogos
@@ -171,5 +193,87 @@ describe('BrandScannerScreen', () => {
     expect(router.replace).toHaveBeenCalledWith(
       expect.objectContaining({ pathname: '/add-card/setup' })
     );
+  });
+
+  describe('image scan integration', () => {
+    beforeEach(() => {
+      (useLocalSearchParams as jest.Mock).mockReturnValue({
+        brandId: 'esselunga',
+        brandName: 'Esselunga',
+        brandColor: '#FF0000',
+        brandLogo: 'esselunga'
+      });
+    });
+
+    it('renders scan-from-image-row (onImageScan provided via useImageScan)', () => {
+      render(<BrandScannerScreen />);
+      expect(screen.getByTestId('scan-from-image-row')).toBeTruthy();
+    });
+
+    it('calls pickAndScan when scan-from-image-row is pressed', () => {
+      render(<BrandScannerScreen />);
+      fireEvent.press(screen.getByTestId('scan-from-image-row'));
+      expect(mockPickAndScan).toHaveBeenCalledTimes(1);
+    });
+
+    it('shows processing indicator when isProcessing is true', () => {
+      (useImageScan as jest.Mock).mockReturnValueOnce({
+        ...mockUseImageScan,
+        isProcessing: true
+      });
+      render(<BrandScannerScreen />);
+      expect(screen.getByTestId('image-processing-indicator')).toBeTruthy();
+    });
+
+    it('shows no-code-found banner when showError is true', () => {
+      (useImageScan as jest.Mock).mockReturnValueOnce({
+        ...mockUseImageScan,
+        showError: true
+      });
+      render(<BrandScannerScreen />);
+      expect(screen.getByTestId('no-code-found-banner')).toBeTruthy();
+    });
+
+    it('calls dismissError when banner close is pressed', () => {
+      (useImageScan as jest.Mock).mockReturnValueOnce({
+        ...mockUseImageScan,
+        showError: true
+      });
+      render(<BrandScannerScreen />);
+      fireEvent.press(screen.getByTestId('banner-close'));
+      expect(mockDismissError).toHaveBeenCalledTimes(1);
+    });
+
+    it('renders MultiCodePickerSheet when multiCodes is non-empty', () => {
+      (useImageScan as jest.Mock).mockReturnValueOnce({
+        ...mockUseImageScan,
+        multiCodes: [
+          { value: 'CODE-A', format: 'CODE128' },
+          { value: 'CODE-B', format: 'EAN13' }
+        ]
+      });
+      render(<BrandScannerScreen />);
+      expect(screen.getByTestId('multi-code-picker-sheet')).toBeTruthy();
+    });
+
+    it('calls dismissMultiPicker when MultiCodePickerSheet cancel is pressed', () => {
+      (useImageScan as jest.Mock).mockReturnValueOnce({
+        ...mockUseImageScan,
+        multiCodes: [{ value: 'CODE-A', format: 'CODE128' }]
+      });
+      render(<BrandScannerScreen />);
+      fireEvent.press(screen.getByTestId('multi-code-cancel'));
+      expect(mockDismissMultiPicker).toHaveBeenCalledTimes(1);
+    });
+
+    it('calls selectCode when a code row is pressed in the sheet', () => {
+      (useImageScan as jest.Mock).mockReturnValueOnce({
+        ...mockUseImageScan,
+        multiCodes: [{ value: 'CODE-A', format: 'CODE128' }]
+      });
+      render(<BrandScannerScreen />);
+      fireEvent.press(screen.getByTestId('code-row-0'));
+      expect(mockSelectCode).toHaveBeenCalledWith({ value: 'CODE-A', format: 'CODE128' });
+    });
   });
 });

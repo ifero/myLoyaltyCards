@@ -132,6 +132,88 @@ describe('ScannerOverlay', () => {
       render(<ScannerOverlay {...defaultProps} brandPill={pill} />);
       expect(screen.getByTestId('test-pill')).toBeTruthy();
     });
+
+    describe('image scan row', () => {
+      it('does not render scan-from-image-row when onImageScan is not provided', () => {
+        render(<ScannerOverlay {...defaultProps} />);
+        expect(screen.queryByTestId('scan-from-image-row')).toBeNull();
+      });
+
+      it('renders scan-from-image-row when onImageScan is provided', () => {
+        render(<ScannerOverlay {...defaultProps} onImageScan={jest.fn()} />);
+        expect(screen.getByTestId('scan-from-image-row')).toBeTruthy();
+        expect(screen.getByText('Scan from image')).toBeTruthy();
+      });
+
+      it('calls onImageScan when scan-from-image-row is pressed', () => {
+        const onImageScan = jest.fn();
+        render(<ScannerOverlay {...defaultProps} onImageScan={onImageScan} />);
+        fireEvent.press(screen.getByTestId('scan-from-image-row'));
+        expect(onImageScan).toHaveBeenCalledTimes(1);
+      });
+    });
+
+    describe('processing indicator', () => {
+      it('does not render processing indicator by default', () => {
+        render(<ScannerOverlay {...defaultProps} />);
+        expect(screen.queryByTestId('image-processing-indicator')).toBeNull();
+      });
+
+      it('renders processing indicator when isProcessingImage is true', () => {
+        render(<ScannerOverlay {...defaultProps} isProcessingImage />);
+        expect(screen.getByTestId('image-processing-indicator')).toBeTruthy();
+        expect(screen.getByText('Scanning image\u2026')).toBeTruthy();
+      });
+    });
+
+    describe('imageError / NoCodeFoundBanner', () => {
+      it('does not render banner when imageError is false', () => {
+        render(<ScannerOverlay {...defaultProps} onImageErrorDismiss={jest.fn()} />);
+        expect(screen.queryByTestId('no-code-found-banner')).toBeNull();
+      });
+
+      it('renders NoCodeFoundBanner when imageError is true and onImageErrorDismiss provided', () => {
+        render(<ScannerOverlay {...defaultProps} imageError onImageErrorDismiss={jest.fn()} />);
+        expect(screen.getByTestId('no-code-found-banner')).toBeTruthy();
+      });
+
+      it('calls onImageErrorDismiss when banner close is pressed', () => {
+        const onImageErrorDismiss = jest.fn();
+        render(
+          <ScannerOverlay {...defaultProps} imageError onImageErrorDismiss={onImageErrorDismiss} />
+        );
+        fireEvent.press(screen.getByTestId('banner-close'));
+        expect(onImageErrorDismiss).toHaveBeenCalledTimes(1);
+      });
+
+      it('calls onImageErrorRetry when banner retry is pressed', () => {
+        const onImageErrorRetry = jest.fn();
+        render(
+          <ScannerOverlay
+            {...defaultProps}
+            imageError
+            onImageErrorDismiss={jest.fn()}
+            onImageErrorRetry={onImageErrorRetry}
+          />
+        );
+        fireEvent.press(screen.getByTestId('banner-retry-image'));
+        expect(onImageErrorRetry).toHaveBeenCalledTimes(1);
+      });
+
+      it('calls onImageErrorManualEntry when banner manual entry is pressed', () => {
+        const onImageErrorManualEntry = jest.fn();
+        render(
+          <ScannerOverlay
+            {...defaultProps}
+            imageError
+            onImageErrorDismiss={jest.fn()}
+            onImageErrorManualEntry={onImageErrorManualEntry}
+          />
+        );
+        fireEvent.press(screen.getByTestId('banner-manual-entry'));
+        expect(onImageErrorManualEntry).toHaveBeenCalledTimes(1);
+      });
+    });
   });
 
   describe('permission denied state', () => {

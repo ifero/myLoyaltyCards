@@ -49,7 +49,13 @@
       ],
       "expo-sqlite",
       "@bacons/apple-targets",
-      "expo-sharing"
+      "expo-sharing",
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Allow $(PRODUCT_NAME) to access your photos to scan loyalty card barcodes from images."
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true

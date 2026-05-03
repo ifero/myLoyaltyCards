@@ -9,7 +9,7 @@
 
 import { router, useLocalSearchParams } from 'expo-router';
 import React, { useCallback, useEffect, useMemo } from 'react';
-import { AccessibilityInfo } from 'react-native';
+import { AccessibilityInfo, View } from 'react-native';
 
 import { CatalogueRepository } from '@/core/catalogue/catalogue-repository';
 
@@ -18,7 +18,9 @@ import { ScanResult } from '@/features/cards/hooks/useBarcodeScanner';
 import { CatalogueBrand } from '@/catalogue/types';
 
 import { BrandPill } from '../components/BrandPill';
+import { MultiCodePickerSheet } from '../components/MultiCodePickerSheet';
 import { ScannerOverlay } from '../components/ScannerOverlay';
+import { useImageScan } from '../hooks/useImageScan';
 
 type ScanParams = {
   brandId?: string;
@@ -96,13 +98,37 @@ export const BrandScannerScreen: React.FC = () => {
     router.back();
   }, []);
 
+  const {
+    isProcessing: isProcessingImage,
+    showError: imageError,
+    multiCodes,
+    pickAndScan,
+    dismissError,
+    dismissMultiPicker,
+    selectCode
+  } = useImageScan({ onCodeResolved: handleScan });
+
   return (
-    <ScannerOverlay
-      onScan={handleScan}
-      onManualEntry={handleManualEntry}
-      onBack={handleBack}
-      brandPill={brand ? <BrandPill brand={brand} /> : undefined}
-      testID="brand-scanner-screen"
-    />
+    <View style={{ flex: 1 }}>
+      <ScannerOverlay
+        onScan={handleScan}
+        onManualEntry={handleManualEntry}
+        onBack={handleBack}
+        brandPill={brand ? <BrandPill brand={brand} /> : undefined}
+        testID="brand-scanner-screen"
+        onImageScan={pickAndScan}
+        isProcessingImage={isProcessingImage}
+        imageError={imageError}
+        onImageErrorDismiss={dismissError}
+        onImageErrorRetry={pickAndScan}
+        onImageErrorManualEntry={handleManualEntry}
+      />
+      <MultiCodePickerSheet
+        visible={multiCodes.length > 0}
+        codes={multiCodes}
+        onSelect={selectCode}
+        onDismiss={dismissMultiPicker}
+      />
+    </View>
   );
 };
