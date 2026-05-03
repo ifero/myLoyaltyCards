@@ -18,7 +18,36 @@
 
 As a developer I want the watch catalogue code generator to run incrementally so that iterative Xcode builds are fast and developer feedback loops are not slowed by re-generating `watch-ios/Generated/Brands.swift` on every build. We must continue to keep the generated `Brands.swift` committed and ensure CI will fail if the committed generated file becomes stale.
 
----
+## Acceptance Criteria
+
+- AC1 — Skip regeneration when inputs unchanged
+  - Given a clean repo and previously-generated `watch-ios/Generated/Brands.swift`, when I run a local watch build (`xcodebuild` or `yarn watch:build`), then the generator step does NOT re-run and build time is reduced.
+
+- AC2 — Regenerate when an input changes
+  - Given `catalogue/italy.json` (or the generator script) is modified/touched, when I run the watch build, then `watch-ios/Generated/Brands.swift` is regenerated and the change is visible in the generated file.
+
+- AC3 — CI enforces generated-file correctness
+  - Given a PR, CI runs a `check:catalogue-generated` job that runs the generator and compares output with the committed `watch-ios/Generated/Brands.swift`; CI fails if they differ.
+
+- AC4 — Keep generated file committed
+  - The project continues to commit `watch-ios/Generated/Brands.swift`; any automation that regenerates the file must update the committed artifact or fail CI.
+
+## Implementation Tasks
+
+- [ ] Add deterministic input hashing to the catalogue generator.
+- [ ] Add `watch-ios/xcfilelists/generate-catalogue-inputs.xcfilelist` and `...-outputs.xcfilelist` for build-phase incremental skip.
+- [ ] Update `watch-ios/Scripts/generate-catalogue.swift` (or a wrapper) to short-circuit when inputs are unchanged and still write the generated file when inputs change.
+- [ ] Add `yarn check:catalogue-generated` to compare generated output with the committed artifact.
+- [ ] Add unit and integration tests for input hashing, regeneration on change, and stale-output detection.
+- [ ] Add CI coverage for the `check:catalogue-generated` job.
+
+## Definition of Done
+
+- [ ] Watch build no longer re-runs the catalogue generator when inputs are unchanged.
+- [ ] `watch-ios/Generated/Brands.swift` regenerates correctly when inputs change.
+- [ ] CI verifies the generated catalogue file is up to date.
+- [ ] Tests exist for the generator's incremental behavior.
+- [ ] The generated `Brands.swift` file remains committed and correct.
 
 ## Acceptance Criteria
 

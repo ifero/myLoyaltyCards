@@ -44,30 +44,39 @@ story_location: docs/sprint-artifacts
 # LAST SPRINT (completed)
 # ============================================
 last_sprint:
-  number: 12
-  name: 'Sprint 12: CI/CD & TestFlight Delivery'
-  goal: 'Complete CI/CD pipeline (Epic 11) and ship iOS + watchOS builds to TestFlight for real-device testing'
-  start_date: 2026-04-14
-  end_date: 2026-04-28
+  number: 13
+  name: 'Sprint 13: Auth Fixes, OTP Verification & Landing Page'
+  goal: 'Resolve three real-device bugs (dark mode, user profile, OTP auth), ship GitHub Pages landing page (EN + IT), and lay groundwork for Italian in-app (Epic 15)'
+  start_date: 2026-04-29
+  end_date: 2026-05-12
   status: completed
-  epics: [11]
+  duration: 2 weeks
+  epics: [13, 6, 15, 5]
   stories:
-    - 11-5-document-cicd-pipeline
-    - 11-6-watchos-testflight-pipeline # Fastlane lane + GHA workflow for watchOS → TestFlight
-  parallel_track: []
+    - 13-10-fix-dark-mode-system-preference # Wave 1 (parallel)
+    - 6-16-user-profile-creation-on-signup # Wave 1 (parallel)
+    - 6-17-design-otp-verification-screen # Wave 1 (parallel) — BLOCKS 6-18
+    - 15-1-github-pages-landing-page # Wave 1 (parallel) — fully independent
+    - 5-6a-watch-connectivity-payload-hardening # Wave 1 bugfix follow-up from Apple Watch device validation
+    - 6-18-otp-email-verification-flow # Wave 2 — depends on 6-17 approval
   notes: |
-    Sprint 12 closed successfully with the CI/CD pipeline complete for iOS TestFlight.
-    Party mode wrap session confirmed the release readiness criteria and surfaced next-phase priorities.
-    watchOS upload support is now documented and ready for the next sprint.
-    Stories 11-3 and 11-4 were cancelled as not applicable to the mobile app.
-  notes_sprint13_planning: |
-    Sprint 13 planned in party mode on 2026-04-27.
-    Three real-device bugs surfaced from TestFlight testing:
-      1. Dark mode system preference not honoured (NativeWind darkMode config missing)
-      2. public.users not populated on signup (trigger + schema fix)
-      3. Magic link replaced with OTP verification flow
-    Design gate: story 6-17 (OTP screen design) must be approved by Ifero before 6-18 begins.
-    Schema extended: display_name + avatar_url added to public.users (nullable, Epic 14 prep).
+    Sprint 13 closed successfully on 2026-05-03.
+    Summary:
+      - Delivered a mixed-epic sprint spanning Epics 13, 6, 15, and 5.
+      - Completed dark mode system preference fix, OTP verification flow, GitHub Pages landing page, and Apple Watch payload hardening.
+      - Achieved strong cross-epic coordination with design gating for 6-17 → 6-18 and real-device validation follow-up for 5-6a.
+    Retrospective lessons:
+      - Maintain sprint-level review checkpoints when multiple epics are active in the same sprint.
+      - Keep dependency gates explicit for design-to-implementation handoffs.
+      - Track device-specific follow-up work as separate bugfix stories after major epic delivery.
+    Action items:
+      1. Plan Sprint 14 with a focused backlog for Apple Watch roadmap (`5-7`, `5-8`) and Epic 15 internationalisation (`15-2`).
+      2. Carry remaining `epic-5` backlog items and `15-2` into Sprint 14 planning.
+      3. Capture technical debt discovered during this sprint in next sprint planning notes.
+  notes_sprint14_planning: |
+    Sprint 14 planned in party mode on 2026-05-03.
+    Primary Sprint 14 goals are Apple Watch reliability, Italian localization, and household collaboration discovery.
+    Core dependencies include watch complication validation, incremental catalogue generation, image-based scanning, and Italian copy approval.
   decisions:
     - id: DEC-S12-001
       date: 2026-04-11
@@ -137,64 +146,35 @@ last_sprint:
 # CURRENT SPRINT
 # ============================================
 current_sprint:
-  number: 13
-  name: 'Sprint 13: Auth Fixes, OTP Verification & Landing Page'
-  goal: 'Resolve three real-device bugs (dark mode, user profile, OTP auth), ship GitHub Pages landing page (EN + IT), and lay groundwork for Italian in-app (Epic 15)'
+  number: 14
+  name: 'Sprint 14: WatchOS Reliability, Italian In-App, and Household Collaboration Planning'
+  goal: 'Complete Apple Watch reliability work, finish incremental catalogue generation, enable Italian in-app readiness, and begin household collaboration discovery.'
   status: in-progress
-  start_date: 2026-04-29
-  end_date: 2026-05-12
+  planning_date: 2026-05-03
+  start_date: 2026-05-13
+  end_date: 2026-05-26
   duration: 2 weeks
-  epics: [13, 6, 15, 5]
+  epics: [5, 15, 14]
   stories:
-    - 13-10-fix-dark-mode-system-preference # Wave 1 (parallel)
-    - 6-16-user-profile-creation-on-signup # Wave 1 (parallel)
-    - 6-17-design-otp-verification-screen # Wave 1 (parallel) — BLOCKS 6-18
-    - 15-1-github-pages-landing-page # Wave 1 (parallel) — fully independent
-    - 5-6a-watch-connectivity-payload-hardening # Wave 1 bugfix follow-up from Apple Watch device validation
-    - 6-18-otp-email-verification-flow # Wave 2 — depends on 6-17 approval
+    - 5-7-create-watch-complication
+    - 5-8-incremental-catalogue-generation
+    - 2-9-scan-cards-from-image-screenshot
+    - 15-2-italian-language-in-app
+    - 14-1-household-collaboration
   waves:
     wave_1:
-      stories: [13-10, 6-16, 6-17, 15-1, 5-6a]
-      note: 'All five run in parallel. 6-17 is UX design; 13-10, 6-16, 15-1, and 5-6a are dev. 15-1 requires Ifero Italian copy review before merge.'
+      stories: [5-7, 5-8, 2-9, 15-2]
+      note: 'Primary implementation work on Apple Watch reliability, image-based scanning, and Italian in-app readiness.'
     wave_2:
-      stories: [6-18]
-      blocked_on: 'confirmation-setting + email-template verification (6-17 design approval completed 2026-04-28)'
-  decisions:
-    - id: DEC-S13-001
-      date: 2026-04-27
-      title: 'Replace magic link with OTP verification, design gate before implementation'
-      context: |
-        Magic links are fragile on mobile — they open Safari and lose navigation state.
-        Supabase already supports OTP (otp_length=6 configured). UX design needed first.
-      decision: |
-        Story 6-17 delivers Figma frames. Story 6-18 is blocked until Ifero approves them.
-        Same design gate pattern used successfully between Epic 12 and Epic 13.
-      consequences: |
-        - 6-18 cannot start until 6-17 is approved
-        - enable_confirmations must be set to true in both local config and production
-        - CreateAccountScreen redirects to /verify-email after signup
-      status: approved
-    - id: DEC-S13-002
-      date: 2026-04-27
-      title: 'Extend public.users with display_name and avatar_url for Epic 14 prep'
-      context: |
-        Story 6-16 fixes the missing public.users insert. While touching the schema,
-        Ifero confirmed display_name and avatar_url should be added (nullable) now
-        to serve as the anchor for Epic 14 (Household Collaboration).
-      decision: |
-        Story 6-16 fixes the missing public.users insert. While touching the schema,
-        Ifero confirmed display_name and avatar_url should be added (nullable) now
-        to serve as the anchor for Epic 14 (Household Collaboration).
-      consequences: |
-        - Nullable profile fields support future collaboration features
-        - Backfill path begins with signup flow and profile edit
-      status: approved
+      stories: [14-1]
+      note: 'Begin household collaboration discovery and alignment once core sprint capacity is confirmed.'
+  notes: |
+    Sprint 14 has started. The focus is on completing Apple Watch reliability work, Italian in-app readiness, and beginning household collaboration discovery.
+    This sprint keeps scope tight while advancing the highest-value customer and platform work.
 
-# ============================================
-# NEXT SPRINT
-# ============================================
 next_sprint: null
-# Future sprint details will be planned after Sprint 13 completion.
+
+# Future sprint details will be planned after Sprint 14 completion.
 
 development_status:
   # ============================================
@@ -212,8 +192,8 @@ development_status:
   epic-1-retrospective: optional
   epic-1-completed: 2026-01-07
 
-  # Epic 2: Card Management & Barcode Display ✅ COMPLETE
-  epic-2: done
+  # Epic 2: Card Management & Barcode Display
+  epic-2: in-progress
   2-1-display-card-list: done
   2-2-add-card-manually: done
   2-3-scan-barcode-with-camera: done
@@ -222,7 +202,7 @@ development_status:
   2-6-view-card-details: done
   2-7-edit-card: done
   2-8-delete-card: done
-  epic-2-completed: 2026-02-01
+  2-9-scan-cards-from-image-screenshot: ready-for-dev
   epic-2-retrospective: optional
 
   # Epic 3: Italian Brand Catalogue
@@ -250,10 +230,10 @@ development_status:
   5-4-display-barcode-on-watch: done
   5-5-store-cards-locally-on-watch: done
   5-6-sync-cards-from-phone: done
-  5-6a-watch-connectivity-payload-hardening: review
+  5-6a-watch-connectivity-payload-hardening: done # Sprint 13 — review completed, validation passed
   5-9-remove-userdefaults-fallback: done
-  5-7-create-watch-complication: backlog
-  5-8-incremental-catalogue-generation: backlog
+  5-7-create-watch-complication: ready-for-dev
+  5-8-incremental-catalogue-generation: ready-for-dev
   epic-5-retrospective: optional
 
   # Epic 6: User Authentication & Privacy
@@ -278,7 +258,7 @@ development_status:
   6-15-migration-banner-polish: drafted # follow-up from 6.14 review — L1/L2/L3
   6-16-user-profile-creation-on-signup: done # Sprint 13 — implementation and live local signup validated; awaiting review disposition
   6-17-design-otp-verification-screen: done # Sprint 13 — Figma OTP Verification page approved by Ifero on 2026-04-28; design dependency cleared
-  6-18-otp-email-verification-flow: review # Sprint 13 — OTP verify flow implemented, full validation green, dev+QA subagent reviews approved on 2026-04-29
+  6-18-otp-email-verification-flow: done # Sprint 13 — OTP verify flow implemented, full validation green, dev+QA subagent reviews approved on 2026-04-29
   epic-6-retrospective: optional
 
   # Epic 7: Cloud Synchronization
@@ -327,8 +307,8 @@ development_status:
   epic-10-retrospective: optional
 
   # Epic 14: Household Collaboration
-  epic-14: backlog
-  14-1-create-household-membership: backlog
+  epic-14: in-progress
+  14-1-create-household-membership: ready-for-dev
   14-2-share-household-shopping-list: backlog
   14-3-share-household-bills: backlog
   14-4-share-household-cards: backlog
@@ -338,7 +318,7 @@ development_status:
   # Epic 15: Internationalisation & Public Presence
   epic-15: in-progress
   15-1-github-pages-landing-page: done # Sprint 13 Wave 1 — local implementation, tests, dev review, and QA review complete; Italian copy approved, Pages config/live verification pending
-  15-2-italian-language-in-app: backlog # Future sprint — i18next full app translation
+  15-2-italian-language-in-app: ready-for-dev # Next sprint Italian localization work
   epic-15-retrospective: optional
 
   # Epic 11: CI/CD & Quality Gates
