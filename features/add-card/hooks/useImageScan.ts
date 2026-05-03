@@ -119,7 +119,7 @@ export const useImageScan = ({ onCodeResolved }: UseImageScanOptions): UseImageS
       return;
     }
 
-    const asset = result.assets[0];
+    const asset = result.assets[0]!;
     const uri = asset.uri;
     setIsProcessing(true);
     setShowError(false);
@@ -131,7 +131,7 @@ export const useImageScan = ({ onCodeResolved }: UseImageScanOptions): UseImageS
       if (scanned.length === 0) {
         setShowError(true);
       } else if (scanned.length === 1) {
-        const firstBarcode = scanned[0];
+        const firstBarcode = scanned[0]!;
         const baseFormat = mapFormat(firstBarcode.type);
         const correctedFormat = intelCorrectFormat(firstBarcode.data, baseFormat);
         onCodeResolved({ barcode: firstBarcode.data, format: correctedFormat });
