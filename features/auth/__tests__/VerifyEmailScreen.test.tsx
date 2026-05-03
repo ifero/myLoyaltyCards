@@ -42,6 +42,7 @@ jest.mock('@/shared/theme', () => ({
 const mockDismissTo = jest.fn();
 const mockReplace = jest.fn();
 const mockParams: Record<string, string | undefined> = {};
+let sentAtSeed = 0;
 
 jest.mock('expo-router', () => ({
   useRouter: () => ({ dismissTo: mockDismissTo, replace: mockReplace }),
@@ -61,7 +62,11 @@ describe('VerifyEmailScreen', () => {
     jest.clearAllMocks();
     Object.keys(mockParams).forEach((key) => delete mockParams[key]);
     mockParams.email = 'test@example.com';
-    mockParams.sentAt = String(Date.now());
+    mockParams.sentAt = String(Date.now() + sentAtSeed++);
+  });
+
+  afterEach(() => {
+    jest.useRealTimers();
   });
 
   it('renders the email subtitle and six OTP cells', () => {
@@ -162,6 +167,33 @@ describe('VerifyEmailScreen', () => {
     await waitFor(() => {
       expect(mockResendVerificationEmail).toHaveBeenCalledWith('test@example.com');
     });
+  });
+
+  it('keeps resend enabled after expired OTP when the screen remounts for the same flow', async () => {
+    mockVerifyEmailOtp.mockResolvedValue({
+      success: false,
+      error: { code: 'expired_otp', message: 'expired' }
+    });
+
+    const view = render(<VerifyEmailScreen />);
+
+    fireEvent.changeText(screen.getByTestId('otp-input-0'), '1');
+    fireEvent.changeText(screen.getByTestId('otp-input-1'), '2');
+    fireEvent.changeText(screen.getByTestId('otp-input-2'), '3');
+    fireEvent.changeText(screen.getByTestId('otp-input-3'), '4');
+    fireEvent.changeText(screen.getByTestId('otp-input-4'), '5');
+    fireEvent.changeText(screen.getByTestId('otp-input-5'), '6');
+
+    await waitFor(() => {
+      expect(screen.getByText('This code has expired. Please request a new one.')).toBeTruthy();
+      expect(screen.getByText('Resend code')).toBeTruthy();
+    });
+
+    view.unmount();
+
+    render(<VerifyEmailScreen />);
+
+    expect(screen.getByText('Resend code')).toBeTruthy();
   });
 
   it('shows network verification error banner', async () => {

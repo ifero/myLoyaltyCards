@@ -24,10 +24,13 @@ const VERIFY_UNAVAILABLE_MESSAGE =
   "Couldn't verify right now. Check your connection and try again.";
 const RESEND_FAILURE_MESSAGE = "Couldn't resend code. Try again.";
 const RESEND_SUCCESS_MESSAGE = 'Code resent. Enter the newest code from your email.';
-const resendCooldownExpiryByEmail = new Map<string, number>();
+const resendCooldownExpiryByFlow = new Map<string, number>();
 
 const getSingleParam = (value: string | string[] | undefined): string | undefined =>
   Array.isArray(value) ? value[0] : value;
+
+const buildCooldownFlowKey = (email: string, sentAt: string | undefined) =>
+  `${email}::${sentAt ?? 'initial'}`;
 
 const createEmptyDigits = () => Array.from({ length: OTP_LENGTH }, () => '');
 
@@ -43,8 +46,8 @@ const resolveInitialCooldownExpiry = (sentAt: string | undefined) => {
   return baseTime + RESEND_COOLDOWN_MS;
 };
 
-const resolvePersistedCooldownExpiry = (email: string, sentAt: string | undefined) =>
-  Math.max(resolveInitialCooldownExpiry(sentAt), resendCooldownExpiryByEmail.get(email) ?? 0);
+const resolvePersistedCooldownExpiry = (cooldownFlowKey: string, sentAt: string | undefined) =>
+  resendCooldownExpiryByFlow.get(cooldownFlowKey) ?? resolveInitialCooldownExpiry(sentAt);
 
 type StatusNoticeProps = {
   message: string;
@@ -94,6 +97,7 @@ const VerifyEmailScreen = () => {
   const email = getSingleParam(params.email) ?? '';
   const sentAt = getSingleParam(params.sentAt);
   const isEmailParamValid = isValidEmail(email);
+  const cooldownFlowKey = useMemo(() => buildCooldownFlowKey(email, sentAt), [email, sentAt]);
 
   const inputRefs = useRef<Array<TextInput | null>>([]);
   const isVerifyingRef = useRef(false);
@@ -105,7 +109,7 @@ const VerifyEmailScreen = () => {
   const [bannerErrorMessage, setBannerErrorMessage] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [cooldownExpiresAt, setCooldownExpiresAt] = useState(
-    resolvePersistedCooldownExpiry(email, sentAt)
+    resolvePersistedCooldownExpiry(cooldownFlowKey, sentAt)
   );
   const [now, setNow] = useState(Date.now());
 
@@ -120,11 +124,11 @@ const VerifyEmailScreen = () => {
       return;
     }
 
-    const nextExpiry = resolvePersistedCooldownExpiry(email, sentAt);
-    resendCooldownExpiryByEmail.set(email, nextExpiry);
+    const nextExpiry = resolvePersistedCooldownExpiry(cooldownFlowKey, sentAt);
+    resendCooldownExpiryByFlow.set(cooldownFlowKey, nextExpiry);
     setCooldownExpiresAt(nextExpiry);
     setNow(Date.now());
-  }, [email, isEmailParamValid, sentAt]);
+  }, [cooldownFlowKey, isEmailParamValid, sentAt]);
 
   useEffect(() => {
     if (cooldownExpiresAt <= Date.now()) {
@@ -186,9 +190,11 @@ const VerifyEmailScreen = () => {
           }
 
           if (result.error.code === 'expired_otp') {
+            const nextCooldownExpiresAt = Date.now();
             setOtpErrorMessage('This code has expired. Please request a new one.');
-            setCooldownExpiresAt(Date.now());
-            setNow(Date.now());
+            resendCooldownExpiryByFlow.set(cooldownFlowKey, nextCooldownExpiresAt);
+            setCooldownExpiresAt(nextCooldownExpiresAt);
+            setNow(nextCooldownExpiresAt);
             return;
           }
 
@@ -205,7 +211,7 @@ const VerifyEmailScreen = () => {
         setLoading(false);
       }
     },
-    [clearFeedback, email, isEmailParamValid, loading, router]
+    [clearFeedback, cooldownFlowKey, email, isEmailParamValid, loading, router]
   );
 
   const commitDigits = useCallback(
@@ -295,7 +301,7 @@ const VerifyEmailScreen = () => {
       }
 
       const nextCooldownExpiresAt = Date.now() + RESEND_COOLDOWN_MS;
-      resendCooldownExpiryByEmail.set(email, nextCooldownExpiresAt);
+      resendCooldownExpiryByFlow.set(cooldownFlowKey, nextCooldownExpiresAt);
       setDigits(createEmptyDigits());
       setSuccessMessage(RESEND_SUCCESS_MESSAGE);
       setCooldownExpiresAt(nextCooldownExpiresAt);
@@ -306,7 +312,7 @@ const VerifyEmailScreen = () => {
     } finally {
       setLoading(false);
     }
-  }, [clearFeedback, email, focusInput, isEmailParamValid, resendDisabled]);
+  }, [clearFeedback, cooldownFlowKey, email, focusInput, isEmailParamValid, resendDisabled]);
 
   if (!isEmailParamValid) {
     return null;
