@@ -18,12 +18,10 @@ const sampleCard = {
 const expectedCardPayload = {
   id: 'c1',
   name: 'Card',
-  brandId: null,
   colorHex: 'blue',
   barcodeValue: '123',
   barcodeFormat: 'CODE128',
   usageCount: 0,
-  lastUsedAt: null,
   createdAt: '2026-01-01T00:00:00.000Z'
 };
 
@@ -151,6 +149,47 @@ describe('watch-connectivity wrapper', () => {
 
       await expect(mod.sendMessageToWatch({ x: 1 })).resolves.toBe(false);
       expect(consoleWarnSpy).toHaveBeenCalled();
+    });
+
+    test('removes null fields from nested payloads before sending', async () => {
+      const sendMessage = jest.fn();
+      let mod: any = null;
+      jest.isolateModules(() => {
+        jest.doMock('react-native-watch-connectivity', () => ({ sendMessage }), {
+          virtual: true
+        });
+        mod = require('./watch-connectivity');
+      });
+
+      await expect(
+        mod.sendMessageToWatch({
+          type: 'syncCard',
+          payload: {
+            id: 'id-xyz',
+            cardData: {
+              brandId: null,
+              lastUsedAt: null,
+              usageCount: 3,
+              nested: { ok: 'yes', nope: null }
+            }
+          }
+        })
+      ).resolves.toBe(true);
+
+      expect(sendMessage).toHaveBeenCalledWith(
+        {
+          type: 'syncCard',
+          payload: {
+            id: 'id-xyz',
+            cardData: {
+              usageCount: 3,
+              nested: { ok: 'yes' }
+            }
+          }
+        },
+        undefined,
+        expect.any(Function)
+      );
     });
 
     test('returns false when native module exposes neither API', async () => {
@@ -352,7 +391,7 @@ describe('watch-connectivity wrapper', () => {
       expect(consoleWarnSpy).toHaveBeenCalled();
     });
 
-    test('maps optional usageCount and lastUsedAt to safe defaults', async () => {
+    test('maps usageCount to a safe default and omits null optionals', async () => {
       const updateApplicationContext = jest.fn();
       let mod: any = null;
       jest.isolateModules(() => {
@@ -368,7 +407,8 @@ describe('watch-connectivity wrapper', () => {
       await mod.pushCardsToWatch([cardMissingOptionals]);
       const payload = updateApplicationContext.mock.calls[0]![0].payload[0];
       expect(payload.usageCount).toBe(0);
-      expect(payload.lastUsedAt).toBeNull();
+      expect(payload).not.toHaveProperty('brandId');
+      expect(payload).not.toHaveProperty('lastUsedAt');
     });
   });
 

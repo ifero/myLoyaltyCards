@@ -116,6 +116,13 @@ export interface WatchCardPayload {
   createdAt: string;
 }
 
+type WatchTransportValue =
+  | string
+  | number
+  | boolean
+  | WatchTransportValue[]
+  | { [key: string]: WatchTransportValue };
+
 // ---------------------------------------------------------------------------
 // State + diagnostics
 // ---------------------------------------------------------------------------
@@ -123,6 +130,60 @@ export interface WatchCardPayload {
 let latestSnapshot: WatchCardPayload[] | null = null;
 let diagnosticsRegistered = false;
 const diagnosticsUnsubscribers: Unsubscribe[] = [];
+
+function isPlainObject(value: unknown): value is Record<string, unknown> {
+  return Object.prototype.toString.call(value) === '[object Object]';
+}
+
+function sanitizeWatchTransportValue(value: unknown): WatchTransportValue | undefined {
+  if (value === null || value === undefined) return undefined;
+
+  if (typeof value === 'string' || typeof value === 'boolean') {
+    return value;
+  }
+
+  if (typeof value === 'number') {
+    return Number.isFinite(value) ? value : undefined;
+  }
+
+  if (value instanceof Date) {
+    return value.toISOString();
+  }
+
+  if (Array.isArray(value)) {
+    const result: WatchTransportValue[] = [];
+    for (const item of value) {
+      const sanitized = sanitizeWatchTransportValue(item);
+      if (sanitized !== undefined) {
+        result.push(sanitized);
+      }
+    }
+    return result;
+  }
+
+  if (isPlainObject(value)) {
+    const result: Record<string, WatchTransportValue> = {};
+    for (const [key, nestedValue] of Object.entries(value)) {
+      const sanitized = sanitizeWatchTransportValue(nestedValue);
+      if (sanitized !== undefined) {
+        result[key] = sanitized;
+      }
+    }
+    return result;
+  }
+
+  return undefined;
+}
+
+function sanitizeWatchTransportObject(
+  value: Record<string, unknown>
+): Record<string, WatchTransportValue> {
+  const sanitized = sanitizeWatchTransportValue(value);
+  if (sanitized && !Array.isArray(sanitized) && typeof sanitized === 'object') {
+    return sanitized;
+  }
+  return {};
+}
 
 function subscribe(
   native: NativeModule,
@@ -202,9 +263,11 @@ export async function sendMessageToWatch(message: WatchMessage): Promise<boolean
   const native = getNativeModule();
   if (!native) return false;
   ensureDiagnostics(native);
+  const sanitizedMessage = sanitizeWatchTransportObject(message);
+
   if (typeof native.sendMessage === 'function') {
     try {
-      native.sendMessage(message, undefined, (err) => {
+      native.sendMessage(sanitizedMessage, undefined, (err) => {
         console.warn('[watch-connectivity] sendMessage error:', err);
       });
       return true;
@@ -215,7 +278,7 @@ export async function sendMessageToWatch(message: WatchMessage): Promise<boolean
   }
   if (typeof native.updateApplicationContext === 'function') {
     try {
-      native.updateApplicationContext(message);
+      native.updateApplicationContext(sanitizedMessage);
       return true;
     } catch (err) {
       console.warn('[watch-connectivity] updateApplicationContext threw:', err);
@@ -320,7 +383,7 @@ async function flushSnapshot(): Promise<boolean> {
     /* If the gate-check API throws, fall through and try anyway. */
   }
 
-  const message = { type: 'cards', payload: latestSnapshot };
+  const message = sanitizeWatchTransportObject({ type: 'cards', payload: latestSnapshot });
 
   if (typeof native.updateApplicationContext === 'function') {
     try {
