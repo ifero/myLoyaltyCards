@@ -69,16 +69,15 @@ describe('VerifyEmailScreen', () => {
     jest.useRealTimers();
   });
 
-  it('renders the email subtitle and six OTP cells', () => {
+  it('renders the email subtitle and single OTP field', () => {
     render(<VerifyEmailScreen />);
 
     expect(screen.getByText('Verify your email')).toBeTruthy();
-    expect(screen.getByText('We sent a 6-digit code to test@example.com')).toBeTruthy();
-    expect(screen.getByTestId('otp-input-0')).toBeTruthy();
-    expect(screen.getByTestId('otp-input-5')).toBeTruthy();
+    expect(screen.getByText('We sent an 8-digit code to test@example.com')).toBeTruthy();
+    expect(screen.getByTestId('otp-input')).toBeTruthy();
   });
 
-  it('auto-submits on the sixth digit and navigates home on success', async () => {
+  it('auto-submits on the eighth digit and navigates home on success', async () => {
     mockVerifyEmailOtp.mockResolvedValue({
       success: true,
       data: { user: { id: 'u1' }, session: { access_token: 'token' } }
@@ -86,21 +85,25 @@ describe('VerifyEmailScreen', () => {
 
     render(<VerifyEmailScreen />);
 
-    fireEvent.changeText(screen.getByTestId('otp-input-0'), '1');
-    fireEvent.changeText(screen.getByTestId('otp-input-1'), '2');
-    fireEvent.changeText(screen.getByTestId('otp-input-2'), '3');
-    fireEvent.changeText(screen.getByTestId('otp-input-3'), '4');
-    fireEvent.changeText(screen.getByTestId('otp-input-4'), '5');
-    fireEvent.changeText(screen.getByTestId('otp-input-5'), '6');
+    const input = screen.getByTestId('otp-input');
+
+    fireEvent.changeText(input, '1');
+    fireEvent.changeText(input, '12');
+    fireEvent.changeText(input, '123');
+    fireEvent.changeText(input, '1234');
+    fireEvent.changeText(input, '12345');
+    fireEvent.changeText(input, '123456');
+    fireEvent.changeText(input, '1234567');
+    fireEvent.changeText(input, '12345678');
 
     await waitFor(() => {
-      expect(mockVerifyEmailOtp).toHaveBeenCalledWith('test@example.com', '123456');
+      expect(mockVerifyEmailOtp).toHaveBeenCalledWith('test@example.com', '12345678');
       expect(mockDismissTo).toHaveBeenCalledWith('/');
       expect(mockReplace).toHaveBeenCalledWith('/');
     });
   });
 
-  it('accepts a full 6-digit paste and auto-submits', async () => {
+  it('accepts a full 8-digit paste and auto-submits', async () => {
     mockVerifyEmailOtp.mockResolvedValue({
       success: true,
       data: { user: { id: 'u1' }, session: { access_token: 'token' } }
@@ -108,10 +111,25 @@ describe('VerifyEmailScreen', () => {
 
     render(<VerifyEmailScreen />);
 
-    fireEvent.changeText(screen.getByTestId('otp-input-0'), '654321');
+    fireEvent.changeText(screen.getByTestId('otp-input'), '87654321');
 
     await waitFor(() => {
-      expect(mockVerifyEmailOtp).toHaveBeenCalledWith('test@example.com', '654321');
+      expect(mockVerifyEmailOtp).toHaveBeenCalledWith('test@example.com', '87654321');
+    });
+  });
+
+  it('sanitizes a formatted 8-digit paste before auto-submitting', async () => {
+    mockVerifyEmailOtp.mockResolvedValue({
+      success: true,
+      data: { user: { id: 'u1' }, session: { access_token: 'token' } }
+    });
+
+    render(<VerifyEmailScreen />);
+
+    fireEvent.changeText(screen.getByTestId('otp-input'), '1234 5678');
+
+    await waitFor(() => {
+      expect(mockVerifyEmailOtp).toHaveBeenCalledWith('test@example.com', '12345678');
     });
   });
 
@@ -123,18 +141,13 @@ describe('VerifyEmailScreen', () => {
 
     render(<VerifyEmailScreen />);
 
-    fireEvent.changeText(screen.getByTestId('otp-input-0'), '1');
-    fireEvent.changeText(screen.getByTestId('otp-input-1'), '2');
-    fireEvent.changeText(screen.getByTestId('otp-input-2'), '3');
-    fireEvent.changeText(screen.getByTestId('otp-input-3'), '4');
-    fireEvent.changeText(screen.getByTestId('otp-input-4'), '5');
-    fireEvent.changeText(screen.getByTestId('otp-input-5'), '6');
+    fireEvent.changeText(screen.getByTestId('otp-input'), '12345678');
 
     await waitFor(() => {
       expect(screen.getByText('Incorrect code. Please try again.')).toBeTruthy();
     });
 
-    fireEvent.changeText(screen.getByTestId('otp-input-5'), '');
+    fireEvent.changeText(screen.getByTestId('otp-input'), '1234567');
 
     await waitFor(() => {
       expect(screen.queryByText('Incorrect code. Please try again.')).toBeNull();
@@ -150,12 +163,7 @@ describe('VerifyEmailScreen', () => {
 
     render(<VerifyEmailScreen />);
 
-    fireEvent.changeText(screen.getByTestId('otp-input-0'), '1');
-    fireEvent.changeText(screen.getByTestId('otp-input-1'), '2');
-    fireEvent.changeText(screen.getByTestId('otp-input-2'), '3');
-    fireEvent.changeText(screen.getByTestId('otp-input-3'), '4');
-    fireEvent.changeText(screen.getByTestId('otp-input-4'), '5');
-    fireEvent.changeText(screen.getByTestId('otp-input-5'), '6');
+    fireEvent.changeText(screen.getByTestId('otp-input'), '12345678');
 
     await waitFor(() => {
       expect(screen.getByText('This code has expired. Please request a new one.')).toBeTruthy();
@@ -177,12 +185,7 @@ describe('VerifyEmailScreen', () => {
 
     const view = render(<VerifyEmailScreen />);
 
-    fireEvent.changeText(screen.getByTestId('otp-input-0'), '1');
-    fireEvent.changeText(screen.getByTestId('otp-input-1'), '2');
-    fireEvent.changeText(screen.getByTestId('otp-input-2'), '3');
-    fireEvent.changeText(screen.getByTestId('otp-input-3'), '4');
-    fireEvent.changeText(screen.getByTestId('otp-input-4'), '5');
-    fireEvent.changeText(screen.getByTestId('otp-input-5'), '6');
+    fireEvent.changeText(screen.getByTestId('otp-input'), '12345678');
 
     await waitFor(() => {
       expect(screen.getByText('This code has expired. Please request a new one.')).toBeTruthy();
@@ -204,12 +207,7 @@ describe('VerifyEmailScreen', () => {
 
     render(<VerifyEmailScreen />);
 
-    fireEvent.changeText(screen.getByTestId('otp-input-0'), '1');
-    fireEvent.changeText(screen.getByTestId('otp-input-1'), '2');
-    fireEvent.changeText(screen.getByTestId('otp-input-2'), '3');
-    fireEvent.changeText(screen.getByTestId('otp-input-3'), '4');
-    fireEvent.changeText(screen.getByTestId('otp-input-4'), '5');
-    fireEvent.changeText(screen.getByTestId('otp-input-5'), '6');
+    fireEvent.changeText(screen.getByTestId('otp-input'), '12345678');
 
     await waitFor(() => {
       expect(

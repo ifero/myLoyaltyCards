@@ -405,12 +405,12 @@ describe('verifyEmailOtp', () => {
       error: null
     });
 
-    const result = await verifyEmailOtp('test@example.com', '123456');
+    const result = await verifyEmailOtp('test@example.com', '12345678');
 
     expect(mockVerifyOtp).toHaveBeenCalledWith({
       email: 'test@example.com',
-      token: '123456',
-      type: 'signup'
+      token: '12345678',
+      type: 'email'
     });
     expect(result.success).toBe(true);
     if (result.success) {
@@ -425,7 +425,7 @@ describe('verifyEmailOtp', () => {
       error: { message: 'Token is invalid or has expired', code: 'otp_invalid' }
     });
 
-    const result = await verifyEmailOtp('test@example.com', '000000');
+    const result = await verifyEmailOtp('test@example.com', '00000000');
 
     expect(result.success).toBe(false);
     if (!result.success) {
@@ -439,7 +439,7 @@ describe('verifyEmailOtp', () => {
       error: { message: 'Token has expired', code: 'otp_expired' }
     });
 
-    const result = await verifyEmailOtp('test@example.com', '123456');
+    const result = await verifyEmailOtp('test@example.com', '12345678');
 
     expect(result.success).toBe(false);
     if (!result.success) {
@@ -450,7 +450,7 @@ describe('verifyEmailOtp', () => {
   it('returns network_error when verification throws for connectivity issues', async () => {
     mockVerifyOtp.mockRejectedValue(new Error('Network request failed'));
 
-    const result = await verifyEmailOtp('test@example.com', '123456');
+    const result = await verifyEmailOtp('test@example.com', '12345678');
 
     expect(result.success).toBe(false);
     if (!result.success) {
@@ -464,7 +464,7 @@ describe('verifyEmailOtp', () => {
       error: { message: 'OTP verification unavailable', code: 'provider_down' }
     });
 
-    const result = await verifyEmailOtp('test@example.com', '123456');
+    const result = await verifyEmailOtp('test@example.com', '12345678');
 
     expect(result.success).toBe(false);
     if (!result.success) {

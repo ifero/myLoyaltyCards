@@ -1,14 +1,7 @@
 import { MaterialIcons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import {
-  Pressable,
-  Text,
-  TextInput,
-  TextInputKeyPressEventData,
-  NativeSyntheticEvent,
-  View
-} from 'react-native';
+import { Pressable, Text, TextInput, View } from 'react-native';
 
 import { isValidEmail } from '@/core/auth/validation';
 
@@ -18,7 +11,8 @@ import { useTheme } from '@/shared/theme';
 
 import { AuthLink, AuthScreenLayout, ErrorBanner } from './components';
 
-const OTP_LENGTH = 6;
+const OTP_LENGTH = 8;
+const OTP_INPUT_MAX_LENGTH = OTP_LENGTH * 2;
 const RESEND_COOLDOWN_MS = 60_000;
 const VERIFY_UNAVAILABLE_MESSAGE =
   "Couldn't verify right now. Check your connection and try again.";
@@ -31,8 +25,6 @@ const getSingleParam = (value: string | string[] | undefined): string | undefine
 
 const buildCooldownFlowKey = (email: string, sentAt: string | undefined) =>
   `${email}::${sentAt ?? 'initial'}`;
-
-const createEmptyDigits = () => Array.from({ length: OTP_LENGTH }, () => '');
 
 const formatCooldown = (remainingSeconds: number) => {
   const minutes = Math.floor(remainingSeconds / 60);
@@ -99,11 +91,11 @@ const VerifyEmailScreen = () => {
   const isEmailParamValid = isValidEmail(email);
   const cooldownFlowKey = useMemo(() => buildCooldownFlowKey(email, sentAt), [email, sentAt]);
 
-  const inputRefs = useRef<Array<TextInput | null>>([]);
+  const inputRef = useRef<TextInput | null>(null);
   const isVerifyingRef = useRef(false);
 
-  const [digits, setDigits] = useState<string[]>(createEmptyDigits);
-  const [activeIndex, setActiveIndex] = useState(0);
+  const [otpValue, setOtpValue] = useState('');
+  const [isOtpFocused, setIsOtpFocused] = useState(false);
   const [loading, setLoading] = useState(false);
   const [otpErrorMessage, setOtpErrorMessage] = useState<string | null>(null);
   const [bannerErrorMessage, setBannerErrorMessage] = useState<string | null>(null);
@@ -148,16 +140,30 @@ const VerifyEmailScreen = () => {
   }, [cooldownExpiresAt]);
 
   useEffect(() => {
-    inputRefs.current[0]?.focus();
+    inputRef.current?.focus();
   }, []);
 
   const remainingSeconds = useMemo(
     () => Math.max(0, Math.ceil((cooldownExpiresAt - now) / 1000)),
     [cooldownExpiresAt, now]
   );
-  const otpValue = digits.join('');
-  const isOtpComplete = /^\d{6}$/.test(otpValue);
+  const isOtpComplete = new RegExp(`^\\d{${OTP_LENGTH}}$`).test(otpValue);
   const resendDisabled = loading || remainingSeconds > 0;
+  const otpFieldBorderColor = otpErrorMessage
+    ? theme.error
+    : isOtpFocused
+      ? theme.primary
+      : otpValue.length > 0
+        ? theme.textSecondary
+        : theme.border;
+  const otpFieldBackgroundColor = loading
+    ? theme.backgroundSubtle
+    : otpErrorMessage
+      ? `${theme.error}14`
+      : isOtpFocused
+        ? `${theme.primary}14`
+        : theme.surfaceElevated;
+  const otpFieldBorderWidth = otpErrorMessage || isOtpFocused ? 2 : 1.5;
 
   const clearFeedback = useCallback(() => {
     setOtpErrorMessage(null);
@@ -165,14 +171,19 @@ const VerifyEmailScreen = () => {
     setSuccessMessage(null);
   }, []);
 
-  const focusInput = useCallback((index: number) => {
-    inputRefs.current[index]?.focus();
-    setActiveIndex(index);
+  const focusInput = useCallback(() => {
+    inputRef.current?.focus();
+    setIsOtpFocused(true);
   }, []);
 
   const handleVerify = useCallback(
     async (code: string) => {
-      if (!isEmailParamValid || loading || isVerifyingRef.current || !/^\d{6}$/.test(code)) {
+      if (
+        !isEmailParamValid ||
+        loading ||
+        isVerifyingRef.current ||
+        !new RegExp(`^\\d{${OTP_LENGTH}}$`).test(code)
+      ) {
         return;
       }
 
@@ -214,74 +225,22 @@ const VerifyEmailScreen = () => {
     [clearFeedback, cooldownFlowKey, email, isEmailParamValid, loading, router]
   );
 
-  const commitDigits = useCallback(
-    (nextDigits: string[]) => {
-      setDigits(nextDigits);
-      const nextCode = nextDigits.join('');
-
-      if (/^\d{6}$/.test(nextCode)) {
-        void handleVerify(nextCode);
-      }
-    },
-    [handleVerify]
-  );
-
   const handleOtpChange = useCallback(
-    (index: number, value: string) => {
+    (value: string) => {
       if (loading) {
         return;
       }
 
-      const sanitized = value.replace(/\D/g, '');
+      const sanitized = value.replace(/\D/g, '').slice(0, OTP_LENGTH);
       clearFeedback();
 
-      if (!sanitized) {
-        const nextDigits = [...digits];
-        nextDigits[index] = '';
-        setDigits(nextDigits);
-        return;
+      setOtpValue(sanitized);
+
+      if (sanitized.length === OTP_LENGTH) {
+        void handleVerify(sanitized);
       }
-
-      const nextDigits = [...digits];
-
-      if (sanitized.length === 1) {
-        nextDigits[index] = sanitized;
-
-        if (index < OTP_LENGTH - 1) {
-          focusInput(index + 1);
-        }
-
-        commitDigits(nextDigits);
-        return;
-      }
-
-      sanitized
-        .slice(0, OTP_LENGTH - index)
-        .split('')
-        .forEach((digit, digitOffset) => {
-          nextDigits[index + digitOffset] = digit;
-        });
-
-      const lastFilledIndex = Math.min(index + sanitized.length - 1, OTP_LENGTH - 1);
-      focusInput(lastFilledIndex);
-      commitDigits(nextDigits);
     },
-    [clearFeedback, commitDigits, digits, focusInput, loading]
-  );
-
-  const handleOtpKeyPress = useCallback(
-    (index: number, event: NativeSyntheticEvent<TextInputKeyPressEventData>) => {
-      if (loading || event.nativeEvent.key !== 'Backspace' || digits[index] || index === 0) {
-        return;
-      }
-
-      clearFeedback();
-      const nextDigits = [...digits];
-      nextDigits[index - 1] = '';
-      setDigits(nextDigits);
-      focusInput(index - 1);
-    },
-    [clearFeedback, digits, focusInput, loading]
+    [clearFeedback, handleVerify, loading]
   );
 
   const handleResend = useCallback(async () => {
@@ -302,11 +261,11 @@ const VerifyEmailScreen = () => {
 
       const nextCooldownExpiresAt = Date.now() + RESEND_COOLDOWN_MS;
       resendCooldownExpiryByFlow.set(cooldownFlowKey, nextCooldownExpiresAt);
-      setDigits(createEmptyDigits());
+      setOtpValue('');
       setSuccessMessage(RESEND_SUCCESS_MESSAGE);
       setCooldownExpiresAt(nextCooldownExpiresAt);
       setNow(Date.now());
-      focusInput(0);
+      focusInput();
     } catch {
       setBannerErrorMessage(RESEND_FAILURE_MESSAGE);
     } finally {
@@ -322,64 +281,45 @@ const VerifyEmailScreen = () => {
     <AuthScreenLayout
       testID="verify-email-screen"
       heading="Verify your email"
-      subtitle={`We sent a 6-digit code to ${email}`}
+      subtitle={`We sent an 8-digit code to ${email}`}
       headingTestID="verify-email-title"
       subtitleTestID="verify-email-subtitle"
     >
       <View className="w-full" style={{ gap: spacing.md }}>
-        <View
-          className="w-full flex-row"
+        <TextInput
+          ref={inputRef}
+          testID="otp-input"
+          value={otpValue}
+          onChangeText={handleOtpChange}
+          onFocus={() => setIsOtpFocused(true)}
+          onBlur={() => setIsOtpFocused(false)}
+          editable={!loading}
+          keyboardType="number-pad"
+          textContentType="oneTimeCode"
+          autoComplete="one-time-code"
+          maxLength={OTP_INPUT_MAX_LENGTH}
+          selectTextOnFocus
+          placeholder="8-digit code"
+          placeholderTextColor={theme.textTertiary}
+          accessibilityLabel="8-digit verification code"
+          accessibilityHint="Enter the 8-digit code from your email"
+          accessibilityState={{ disabled: loading }}
           style={{
-            gap: spacing.sm,
-            justifyContent: 'space-between',
-            alignItems: 'center'
+            minHeight: 52,
+            borderRadius: 12,
+            borderWidth: otpFieldBorderWidth,
+            borderColor: otpFieldBorderColor,
+            backgroundColor: otpFieldBackgroundColor,
+            color: theme.textPrimary,
+            textAlign: 'center',
+            fontSize: 24,
+            lineHeight: 32,
+            fontWeight: '600',
+            letterSpacing: 1.5,
+            paddingHorizontal: spacing.md,
+            paddingVertical: 0
           }}
-        >
-          {digits.map((digit, index) => {
-            const borderColor = otpErrorMessage
-              ? theme.error
-              : activeIndex === index
-                ? theme.primary
-                : theme.border;
-
-            return (
-              <TextInput
-                key={`otp-cell-${index}`}
-                ref={(input) => {
-                  inputRefs.current[index] = input;
-                }}
-                testID={`otp-input-${index}`}
-                value={digit}
-                onChangeText={(value) => handleOtpChange(index, value)}
-                onKeyPress={(event) => handleOtpKeyPress(index, event)}
-                onFocus={() => setActiveIndex(index)}
-                editable={!loading}
-                keyboardType="number-pad"
-                textContentType="oneTimeCode"
-                autoComplete="one-time-code"
-                maxLength={OTP_LENGTH}
-                selectTextOnFocus
-                accessibilityLabel={`OTP digit ${index + 1}`}
-                accessibilityState={{ disabled: loading }}
-                style={{
-                  flex: 1,
-                  maxWidth: 40,
-                  minHeight: 52,
-                  borderRadius: 12,
-                  borderWidth: 1,
-                  borderColor,
-                  backgroundColor: loading ? theme.backgroundSubtle : theme.surfaceElevated,
-                  color: theme.textPrimary,
-                  textAlign: 'center',
-                  fontSize: 28,
-                  lineHeight: 32,
-                  fontWeight: '600',
-                  paddingVertical: 0
-                }}
-              />
-            );
-          })}
-        </View>
+        />
 
         {otpErrorMessage ? <StatusNotice message={otpErrorMessage} tone="error" /> : null}
 

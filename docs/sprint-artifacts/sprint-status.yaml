@@ -148,28 +148,29 @@ last_sprint:
 current_sprint:
   number: 14
   name: 'Sprint 14: WatchOS Reliability, Italian In-App, and Household Collaboration Planning'
-  goal: 'Complete Apple Watch reliability work, finish incremental catalogue generation, enable Italian in-app readiness, and begin household collaboration discovery.'
+  goal: 'Complete Apple Watch reliability work, finish incremental catalogue generation, enable Italian in-app readiness, begin household collaboration discovery, and repair the OTP verification regression from Story 6.18.'
   status: in-progress
   planning_date: 2026-05-03
   start_date: 2026-05-13
   end_date: 2026-05-26
   duration: 2 weeks
-  epics: [5, 15, 14]
+  epics: [5, 15, 14, 6]
   stories:
     - 5-7-create-watch-complication
     - 5-8-incremental-catalogue-generation
     - 2-9-scan-cards-from-image-screenshot
     - 15-2-italian-language-in-app
     - 14-1-household-collaboration
+    - 6-18a-otp-verification-followup
   waves:
     wave_1:
-      stories: [5-7, 5-8, 2-9, 15-2]
-      note: 'Primary implementation work on Apple Watch reliability, image-based scanning, and Italian in-app readiness.'
+      stories: [5-7, 5-8, 2-9, 15-2, 6-18a]
+      note: 'Primary implementation work on Apple Watch reliability, image-based scanning, Italian in-app readiness, and the OTP verification follow-up bugfix.'
     wave_2:
       stories: [14-1]
       note: 'Begin household collaboration discovery and alignment once core sprint capacity is confirmed.'
   notes: |
-    Sprint 14 has started. The focus is on completing Apple Watch reliability work, Italian in-app readiness, and beginning household collaboration discovery.
+    Sprint 14 has started. The focus is on completing Apple Watch reliability work, Italian in-app readiness, beginning household collaboration discovery, and absorbing the OTP verification follow-up bugfix discovered after Story 6.18 shipped.
     This sprint keeps scope tight while advancing the highest-value customer and platform work.
 
 next_sprint: null
@@ -259,6 +260,7 @@ development_status:
   6-16-user-profile-creation-on-signup: done # Sprint 13 — implementation and live local signup validated; awaiting review disposition
   6-17-design-otp-verification-screen: done # Sprint 13 — Figma OTP Verification page approved by Ifero on 2026-04-28; design dependency cleared
   6-18-otp-email-verification-flow: done # Sprint 13 — OTP verify flow implemented, full validation green, dev+QA subagent reviews approved on 2026-04-29
+  6-18a-otp-verification-followup: done # Sprint 14 — stakeholder-approved follow-up bugfix for 8-digit OTP + single-field redesign from Story 6.18
   epic-6-retrospective: optional
 
   # Epic 7: Cloud Synchronization
