@@ -179,10 +179,10 @@ function sanitizeWatchTransportObject(
   value: Record<string, unknown>
 ): Record<string, WatchTransportValue> {
   const sanitized = sanitizeWatchTransportValue(value);
-  if (!sanitized || Array.isArray(sanitized)) {
-    return {};
+  if (sanitized && !Array.isArray(sanitized) && typeof sanitized === 'object') {
+    return sanitized;
   }
-  return sanitized;
+  return {};
 }
 
 function subscribe(
