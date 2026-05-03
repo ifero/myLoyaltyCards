@@ -1,0 +1,32 @@
+.github/workflows/ios-release.yml
+  4b012c6fefe7a647 48-51
+.github/workflows/android-release.yml
+  4b012c6fefe7a647 37-40
+.github/workflows/store-upload.yml
+  4b012c6fefe7a647 43-46,80-83
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.3.4",
+  "base_commit_sha": "04d7112f23008facacd6cbdc506ccbd1cb9e81c4",
+  "prompts": {
+    "4b012c6fefe7a647": {
+      "agent_id": {
+        "tool": "github-copilot",
+        "id": "82bb9752-0db9-4f32-8101-76ee4d18edec",
+        "model": "unknown"
+      },
+      "human_author": "Andrea Pacino",
+      "messages": [],
+      "total_additions": 0,
+      "total_deletions": 0,
+      "accepted_lines": 707,
+      "overriden_lines": 0
+    }
+  },
+  "humans": {
+    "h_806fb4fc1f8dfb": {
+      "author": "Andrea Pacino"
+    }
+  }
+}
