@@ -8,7 +8,9 @@
  *   3. Return state for single-code auto-resolve, multi-code selection, and error cases
  */
 
-import { scanFromURLAsync, BarcodeType } from 'expo-camera';
+import BarcodeScanning, {
+  BarcodeFormat as MlKitBarcodeFormat
+} from '@react-native-ml-kit/barcode-scanning';
 import * as ImagePicker from 'expo-image-picker';
 import { useState, useCallback } from 'react';
 
@@ -18,11 +20,26 @@ import { ScanResult } from '@/features/cards/hooks/useBarcodeScanner';
 
 const BARCODE_FORMAT_MAP: Record<string, BarcodeFormat> = {
   code128: 'CODE128',
+  code_128: 'CODE128',
   ean13: 'EAN13',
+  ean_13: 'EAN13',
   ean8: 'EAN8',
+  ean_8: 'EAN8',
   qr: 'QR',
+  qrcode: 'QR',
+  qr_code: 'QR',
   code39: 'CODE39',
+  code_39: 'CODE39',
   upc_a: 'UPCA'
+};
+
+const MLKIT_FORMAT_MAP: Partial<Record<MlKitBarcodeFormat, BarcodeFormat>> = {
+  [MlKitBarcodeFormat.CODE_128]: 'CODE128',
+  [MlKitBarcodeFormat.EAN_13]: 'EAN13',
+  [MlKitBarcodeFormat.EAN_8]: 'EAN8',
+  [MlKitBarcodeFormat.QR_CODE]: 'QR',
+  [MlKitBarcodeFormat.CODE_39]: 'CODE39',
+  [MlKitBarcodeFormat.UPC_A]: 'UPCA'
 };
 
 /**
@@ -56,17 +73,13 @@ function intelCorrectFormat(barcode: string, detectedFormat: BarcodeFormat): Bar
   return detectedFormat;
 }
 
-const SUPPORTED_BARCODE_TYPES: BarcodeType[] = [
-  'code128',
-  'ean13',
-  'ean8',
-  'qr',
-  'code39',
-  'upc_a'
-];
+function mapFormat(rawFormat: string | number): BarcodeFormat {
+  if (typeof rawFormat === 'number') {
+    return MLKIT_FORMAT_MAP[rawFormat as MlKitBarcodeFormat] ?? 'CODE128';
+  }
 
-function mapFormat(expoFormat: string): BarcodeFormat {
-  return BARCODE_FORMAT_MAP[expoFormat.toLowerCase()] ?? 'CODE128';
+  const normalizedFormat = rawFormat.toLowerCase();
+  return BARCODE_FORMAT_MAP[normalizedFormat] ?? 'CODE128';
 }
 
 export interface DetectedCode {
@@ -126,21 +139,23 @@ export const useImageScan = ({ onCodeResolved }: UseImageScanOptions): UseImageS
     setMultiCodes([]);
 
     try {
-      const scanned = await scanFromURLAsync(uri, SUPPORTED_BARCODE_TYPES);
+      const scanned = await BarcodeScanning.scan(uri);
 
       if (scanned.length === 0) {
         setShowError(true);
       } else if (scanned.length === 1) {
         const firstBarcode = scanned[0]!;
-        const baseFormat = mapFormat(firstBarcode.type);
-        const correctedFormat = intelCorrectFormat(firstBarcode.data, baseFormat);
-        onCodeResolved({ barcode: firstBarcode.data, format: correctedFormat });
+        const barcodeValue = firstBarcode.value;
+        const baseFormat = mapFormat(firstBarcode.format);
+        const correctedFormat = intelCorrectFormat(barcodeValue, baseFormat);
+        onCodeResolved({ barcode: barcodeValue, format: correctedFormat });
       } else {
         const codes: DetectedCode[] = scanned.slice(0, 6).map((r) => {
-          const baseFormat = mapFormat(r.type);
-          const correctedFormat = intelCorrectFormat(r.data, baseFormat);
+          const barcodeValue = r.value;
+          const baseFormat = mapFormat(r.format);
+          const correctedFormat = intelCorrectFormat(barcodeValue, baseFormat);
           return {
-            value: r.data,
+            value: barcodeValue,
             format: correctedFormat
           };
         });
