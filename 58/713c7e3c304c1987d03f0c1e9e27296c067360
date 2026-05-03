@@ -1,0 +1,30 @@
+features/add-card/hooks/useImageScan.ts
+  ed3ff66f4fb8a303 38,44,122-123,134-137
+features/cards/hooks/useBarcodeScanner.ts
+  ed3ff66f4fb8a303 36,42
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.3.4",
+  "base_commit_sha": "58713c7e3c304c1987d03f0c1e9e27296c067360",
+  "prompts": {
+    "ed3ff66f4fb8a303": {
+      "agent_id": {
+        "tool": "github-copilot",
+        "id": "2c48ef8f-09e2-4892-a90d-f7e018d20693",
+        "model": "copilot/claude-sonnet-4.6"
+      },
+      "human_author": "Andrea Pacino",
+      "messages": [],
+      "total_additions": 16,
+      "total_deletions": 14,
+      "accepted_lines": 2026,
+      "overriden_lines": 10
+    }
+  },
+  "humans": {
+    "h_806fb4fc1f8dfb": {
+      "author": "Andrea Pacino"
+    }
+  }
+}
