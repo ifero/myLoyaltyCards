@@ -1,5 +1,8 @@
 import SwiftData
 import SwiftUI
+#if DEBUG
+  import WatchConnectivity
+#endif
 import WidgetKit
 
 // Simple watch-side card model (read-only snapshot for display)
@@ -177,6 +180,9 @@ struct CardListView: View {
   @Environment(\.modelContext) private var modelContext
   @Query private var persistedEntities: [WatchCardEntity]
   @StateObject private var store: CardStore
+  #if DEBUG
+    @ObservedObject private var session = WatchSessionManager.shared
+  #endif
 
   init(store: CardStore = CardStore()) {
     _store = StateObject(wrappedValue: store)
@@ -243,6 +249,9 @@ struct CardListView: View {
           .accessibilityIdentifier("import-sample-cards")
         }
       }
+      .safeAreaInset(edge: .bottom) {
+        diagnosticsFooter
+      }
     #endif
     .background(Color.black)
     .scrollContentBackground(.hidden)
@@ -304,6 +313,54 @@ struct CardListView: View {
       // Immediately refresh visible store
       store.cards = sample
       WKInterfaceDevice.current().play(.success)
+    }
+
+    private static let diagnosticsTimeFormatter: DateFormatter = {
+      let f = DateFormatter()
+      f.dateFormat = "HH:mm:ss"
+      return f
+    }()
+
+    private var diagnosticsFooter: some View {
+      VStack(alignment: .leading, spacing: 1) {
+        HStack(spacing: 4) {
+          Image(
+            systemName: session.isReachable
+              ? "antenna.radiowaves.left.and.right"
+              : "antenna.radiowaves.left.and.right.slash"
+          )
+          Text(activationLabel)
+        }
+        if let lastReceivedAt = session.lastReceivedAt {
+          Text(
+            "Last sync: "
+              + Self.diagnosticsTimeFormatter.string(from: lastReceivedAt)
+              + " (\(session.lastReceivedCardCount))"
+          )
+        } else {
+          Text("Awaiting phone…")
+        }
+        if let lastError = session.lastErrorMessage {
+          Text("Err: \(lastError)")
+            .foregroundColor(.red)
+        }
+      }
+      .font(.system(size: 9))
+      .foregroundColor(.white.opacity(0.45))
+      .frame(maxWidth: .infinity, alignment: .leading)
+      .padding(.horizontal, 6)
+      .padding(.vertical, 2)
+      .background(Color.black.opacity(0.6))
+      .accessibilityIdentifier("watch-sync-diagnostics")
+    }
+
+    private var activationLabel: String {
+      switch WCSessionActivationState(rawValue: session.activationStateRaw) ?? .notActivated {
+      case .notActivated: return "WC: not activated"
+      case .inactive: return "WC: inactive"
+      case .activated: return "WC: activated"
+      @unknown default: return "WC: unknown"
+      }
     }
   #endif
 }

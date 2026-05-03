@@ -476,6 +476,162 @@ describe('watch-connectivity wrapper', () => {
         expect(typeof mod.requestCardsFromPhone).toBe('function');
         expect(typeof mod.syncCardToWatch).toBe('function');
         expect(typeof mod.pushCardsToWatch).toBe('function');
+        expect(typeof mod.getWatchDiagnostics).toBe('function');
+        expect(typeof mod.forceResyncWatch).toBe('function');
+      });
+    });
+  });
+
+  describe('getWatchDiagnostics', () => {
+    test('reports unavailable + zero snapshot when native module missing', async () => {
+      let mod: any = null;
+      jest.isolateModules(() => {
+        jest.doMock('react-native-watch-connectivity', () => ({}), { virtual: true });
+        mod = require('./watch-connectivity');
+      });
+      const diag = await mod.getWatchDiagnostics();
+      expect(diag).toEqual({
+        available: false,
+        paired: null,
+        installed: null,
+        reachable: null,
+        lastPushAt: null,
+        lastErrorMessage: null,
+        snapshotSize: 0
+      });
+    });
+
+    test('reports paired/installed/reachable when native getters resolve', async () => {
+      let mod: any = null;
+      jest.isolateModules(() => {
+        jest.doMock(
+          'react-native-watch-connectivity',
+          () => ({
+            updateApplicationContext: jest.fn(),
+            getIsPaired: jest.fn().mockResolvedValue(true),
+            getIsWatchAppInstalled: jest.fn().mockResolvedValue(true),
+            getReachability: jest.fn().mockResolvedValue(false),
+            watchEvents: makeEvents()
+          }),
+          { virtual: true }
+        );
+        mod = require('./watch-connectivity');
+      });
+      const diag = await mod.getWatchDiagnostics();
+      expect(diag.available).toBe(true);
+      expect(diag.paired).toBe(true);
+      expect(diag.installed).toBe(true);
+      expect(diag.reachable).toBe(false);
+    });
+
+    test('exposes snapshot size and lastPushAt after a successful push', async () => {
+      const updateApplicationContext = jest.fn();
+      let mod: any = null;
+      jest.isolateModules(() => {
+        jest.doMock(
+          'react-native-watch-connectivity',
+          () => ({
+            updateApplicationContext,
+            getIsPaired: jest.fn().mockResolvedValue(true),
+            getIsWatchAppInstalled: jest.fn().mockResolvedValue(true),
+            watchEvents: makeEvents()
+          }),
+          { virtual: true }
+        );
+        mod = require('./watch-connectivity');
+      });
+      const before = Date.now();
+      await mod.pushCardsToWatch([sampleCard, sampleCard]);
+      const diag = await mod.getWatchDiagnostics();
+      expect(diag.snapshotSize).toBe(2);
+      expect(diag.lastPushAt).not.toBeNull();
+      expect(diag.lastPushAt!).toBeGreaterThanOrEqual(before);
+      expect(diag.lastErrorMessage).toBeNull();
+    });
+
+    test('records "gated" reason when watch is not paired', async () => {
+      let mod: any = null;
+      jest.isolateModules(() => {
+        jest.doMock(
+          'react-native-watch-connectivity',
+          () => ({
+            updateApplicationContext: jest.fn(),
+            getIsPaired: jest.fn().mockResolvedValue(false),
+            getIsWatchAppInstalled: jest.fn().mockResolvedValue(true),
+            watchEvents: makeEvents()
+          }),
+          { virtual: true }
+        );
+        mod = require('./watch-connectivity');
+      });
+      const ok = await mod.pushCardsToWatch([sampleCard]);
+      expect(ok).toBe(false);
+      const diag = await mod.getWatchDiagnostics();
+      expect(diag.lastErrorMessage).toMatch(/gated.*not paired/i);
+    });
+
+    test('records error reason when an error event fires', async () => {
+      const events = makeEvents();
+      let mod: any = null;
+      jest.isolateModules(() => {
+        jest.doMock(
+          'react-native-watch-connectivity',
+          () => ({
+            updateApplicationContext: jest.fn(),
+            getIsPaired: jest.fn().mockResolvedValue(true),
+            getIsWatchAppInstalled: jest.fn().mockResolvedValue(true),
+            watchEvents: events
+          }),
+          { virtual: true }
+        );
+        mod = require('./watch-connectivity');
+      });
+      // Trigger registration of error subscribers, then emit one.
+      await mod.pushCardsToWatch([sampleCard]);
+      events.emit('application-context-error', { message: 'payload too large' });
+      const diag = await mod.getWatchDiagnostics();
+      expect(diag.lastErrorMessage).toMatch(/application-context-error.*payload too large/);
+    });
+  });
+
+  describe('forceResyncWatch', () => {
+    test('returns false when no snapshot has been pushed yet', async () => {
+      let mod: any = null;
+      jest.isolateModules(() => {
+        jest.doMock(
+          'react-native-watch-connectivity',
+          () => ({ updateApplicationContext: jest.fn() }),
+          { virtual: true }
+        );
+        mod = require('./watch-connectivity');
+      });
+      expect(await mod.forceResyncWatch()).toBe(false);
+    });
+
+    test('re-pushes the cached snapshot ignoring reachability', async () => {
+      const updateApplicationContext = jest.fn();
+      let mod: any = null;
+      jest.isolateModules(() => {
+        jest.doMock(
+          'react-native-watch-connectivity',
+          () => ({
+            updateApplicationContext,
+            getIsPaired: jest.fn().mockResolvedValue(true),
+            getIsWatchAppInstalled: jest.fn().mockResolvedValue(true),
+            watchEvents: makeEvents()
+          }),
+          { virtual: true }
+        );
+        mod = require('./watch-connectivity');
+      });
+      await mod.pushCardsToWatch([sampleCard]);
+      updateApplicationContext.mockClear();
+      const ok = await mod.forceResyncWatch();
+      expect(ok).toBe(true);
+      expect(updateApplicationContext).toHaveBeenCalledTimes(1);
+      expect(updateApplicationContext.mock.calls[0]![0]).toEqual({
+        type: 'cards',
+        payload: [expectedCardPayload]
       });
     });
   });

@@ -82,6 +82,9 @@ export function __resetWatchConnectivityForTests(): void {
   cachedNative = undefined;
   latestSnapshot = null;
   diagnosticsRegistered = false;
+  lastPushAt = null;
+  lastErrorMessage = null;
+  lastReachability = null;
   for (const off of diagnosticsUnsubscribers) {
     try {
       off();
@@ -124,6 +127,28 @@ let latestSnapshot: WatchCardPayload[] | null = null;
 let diagnosticsRegistered = false;
 const diagnosticsUnsubscribers: Unsubscribe[] = [];
 
+// Live diagnostics — read by `getWatchDiagnostics()` for the in-app debug
+// screen. They carry no functional weight; treat them as a sliding window of
+// "what happened most recently."
+let lastPushAt: number | null = null;
+let lastErrorMessage: string | null = null;
+let lastReachability: boolean | null = null;
+
+function describeError(payload: unknown): string {
+  if (payload instanceof Error) return payload.message;
+  if (typeof payload === 'string') return payload;
+  if (payload && typeof payload === 'object') {
+    const maybeMsg = (payload as { message?: unknown }).message;
+    if (typeof maybeMsg === 'string') return maybeMsg;
+    try {
+      return JSON.stringify(payload);
+    } catch {
+      return String(payload);
+    }
+  }
+  return String(payload);
+}
+
 function subscribe(
   native: NativeModule,
   event: string,
@@ -156,6 +181,7 @@ function ensureDiagnostics(native: NativeModule): void {
   ]) {
     const off = subscribe(native, ev, (payload) => {
       console.warn(`[watch-connectivity] ${ev}:`, payload);
+      lastErrorMessage = `${ev}: ${describeError(payload)}`;
     });
     if (off) diagnosticsUnsubscribers.push(off);
   }
@@ -166,6 +192,9 @@ function ensureDiagnostics(native: NativeModule): void {
   for (const ev of ['reachability', 'paired', 'installed']) {
     const off = subscribe(native, ev, (value) => {
       console.info(`[watch-connectivity] ${ev}:`, value);
+      if (ev === 'reachability' && typeof value === 'boolean') {
+        lastReachability = value;
+      }
       if (value === true && latestSnapshot) {
         // best-effort re-push; flushSnapshot() re-checks paired+installed
         void flushSnapshot();
@@ -310,11 +339,17 @@ async function flushSnapshot(): Promise<boolean> {
   try {
     if (typeof native.getIsPaired === 'function') {
       const paired = await native.getIsPaired();
-      if (paired === false) return false;
+      if (paired === false) {
+        lastErrorMessage = 'gated: watch not paired';
+        return false;
+      }
     }
     if (typeof native.getIsWatchAppInstalled === 'function') {
       const installed = await native.getIsWatchAppInstalled();
-      if (installed === false) return false;
+      if (installed === false) {
+        lastErrorMessage = 'gated: watch app not installed';
+        return false;
+      }
     }
   } catch {
     /* If the gate-check API throws, fall through and try anyway. */
@@ -325,9 +360,11 @@ async function flushSnapshot(): Promise<boolean> {
   if (typeof native.updateApplicationContext === 'function') {
     try {
       native.updateApplicationContext(message);
+      lastPushAt = Date.now();
       return true;
     } catch (err) {
       console.warn('[watch-connectivity] updateApplicationContext threw:', err);
+      lastErrorMessage = `updateApplicationContext threw: ${describeError(err)}`;
     }
   }
   // Defensive fallback: queued user info. Not snapshot semantics, but at
@@ -336,9 +373,11 @@ async function flushSnapshot(): Promise<boolean> {
   if (typeof native.transferUserInfo === 'function') {
     try {
       native.transferUserInfo(message);
+      lastPushAt = Date.now();
       return true;
     } catch (err) {
       console.warn('[watch-connectivity] transferUserInfo threw:', err);
+      lastErrorMessage = `transferUserInfo threw: ${describeError(err)}`;
     }
   }
   return false;
@@ -359,6 +398,91 @@ export async function pushCardsToWatch(cards: LoyaltyCard[]): Promise<boolean> {
   return flushSnapshot();
 }
 
+// ---------------------------------------------------------------------------
+// Diagnostics — read-only view of the wrapper's state for the debug screen.
+// ---------------------------------------------------------------------------
+
+export interface WatchDiagnostics {
+  /** Whether `react-native-watch-connectivity` is loaded at all. */
+  available: boolean;
+  /** `null` when the API isn't exposed by the library or the call threw. */
+  paired: boolean | null;
+  /** `null` when the API isn't exposed by the library or the call threw. */
+  installed: boolean | null;
+  /**
+   * Most recent reachability value — either freshly fetched via
+   * `getReachability()` or the last value seen on the `reachability` event
+   * channel. `null` if never observed.
+   */
+  reachable: boolean | null;
+  /** epoch-ms timestamp of the last successful native push, or `null`. */
+  lastPushAt: number | null;
+  /** Most recent error or "gated: ..." reason; cleared on successful push. */
+  lastErrorMessage: string | null;
+  /** Number of cards in the cached snapshot pending re-flush, or 0. */
+  snapshotSize: number;
+}
+
+async function safeBoolCall(fn?: () => Promise<boolean>): Promise<boolean | null> {
+  if (typeof fn !== 'function') return null;
+  try {
+    const v = await fn();
+    return typeof v === 'boolean' ? v : null;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Snapshot the current state of the watch-connectivity wrapper. Used by the
+ * `/watch-diagnostics` debug screen. Safe to call from anywhere; never
+ * throws.
+ */
+export async function getWatchDiagnostics(): Promise<WatchDiagnostics> {
+  const native = getNativeModule();
+  // `available` mirrors `isWatchConnectivityAvailable()` so the diagnostics
+  // screen and any feature-gating use the same definition.
+  const available =
+    !!native &&
+    (typeof native.sendMessage === 'function' ||
+      typeof native.updateApplicationContext === 'function');
+  if (!available) {
+    return {
+      available: false,
+      paired: null,
+      installed: null,
+      reachable: lastReachability,
+      lastPushAt,
+      lastErrorMessage,
+      snapshotSize: latestSnapshot?.length ?? 0
+    };
+  }
+  ensureDiagnostics(native!);
+  const [paired, installed, reachable] = await Promise.all([
+    safeBoolCall(native!.getIsPaired),
+    safeBoolCall(native!.getIsWatchAppInstalled),
+    safeBoolCall(native!.getReachability)
+  ]);
+  return {
+    available: true,
+    paired,
+    installed,
+    reachable: reachable ?? lastReachability,
+    lastPushAt,
+    lastErrorMessage,
+    snapshotSize: latestSnapshot?.length ?? 0
+  };
+}
+
+/**
+ * Re-push the cached snapshot, ignoring whether reachability changed. Useful
+ * from the debug screen when the user wants to manually retry after
+ * reconnecting. No-op if no snapshot has been pushed yet this session.
+ */
+export async function forceResyncWatch(): Promise<boolean> {
+  return flushSnapshot();
+}
+
 export default {
   isWatchConnectivityAvailable,
   sendMessageToWatch,
@@ -366,5 +490,7 @@ export default {
   requestCardsFromPhone,
   syncCardToWatch,
   pushCardsToWatch,
+  getWatchDiagnostics,
+  forceResyncWatch,
   __resetWatchConnectivityForTests
 };

@@ -72,6 +72,27 @@ yarn ios:watch
 
 This runs `yarn ios` for the phone and then `yarn watch:run` for the watch. Alternatively, open the Xcode workspace and run the iOS scheme — Xcode handles watch propagation natively.
 
+### Pairing iPhone and watchOS simulators
+
+`yarn ios:watch` requires a paired sim pair to actually exercise WatchConnectivity. To set one up if you don't have one:
+
+1. Open Xcode → **Window → Devices and Simulators** → **Simulators** tab.
+2. Select an iPhone simulator (e.g. iPhone 16). Look at the **Paired Apple Watch** row at the bottom. If it says **None**, click the row and pick a watchOS sim (e.g. Apple Watch Series 10).
+3. Boot both sims:
+   ```bash
+   xcrun simctl boot "iPhone 16"
+   xcrun simctl boot "Apple Watch Series 10 (46mm)"
+   ```
+4. `yarn ios:watch` will install the phone app on the iPhone sim and the embedded `watch.app` on the watch sim.
+5. **Foreground the watch app on the watch sim** by clicking it. WCSession on watchOS doesn't activate until the app has been launched at least once — pushes from the phone are queued silently until activation completes.
+
+### Simulator known limitations
+
+- `WCSession.isReachable` is often `false` in sims even when paired. This is normal. The phone uses `updateApplicationContext` (snapshot, last-write-wins) which delivers regardless of reachability — don't rely on `sendMessage` for sim testing.
+- If activation never completes on the watch sim, **erase contents/settings on both sims and reboot**: WCSession state can wedge across re-pairings or runtime upgrades.
+- The DEBUG `Watch sync diagnostics` screen on the iPhone (Settings → Watch sync diagnostics, shown only in `__DEV__` builds) shows `paired` / `installed` / `reachable` / `lastPushAt` / `lastErrorMessage` so you can see what the wrapper is doing without an attached debugger.
+- The DEBUG footer at the bottom of the watch's card list shows WCSession activation state, reachability, last-received timestamp, and last error.
+
 ### 4. Open in Xcode (for debugging/running on device)
 
 ```bash

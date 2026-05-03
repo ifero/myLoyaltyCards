@@ -12,8 +12,17 @@ private let log = Logger(subsystem: "com.iferoporefi.myloyaltycards.watch", cate
 /// Phone publishes the full card list via `updateApplicationContext` (snapshot,
 /// last-write-wins). On activation we also send a `requestCards` ping so the
 /// phone can immediately reply if it's reachable.
-final class WatchSessionManager: NSObject, WCSessionDelegate {
+final class WatchSessionManager: NSObject, ObservableObject, WCSessionDelegate {
   static let shared = WatchSessionManager()
+
+  // Published state for #if DEBUG diagnostic UI in CardListView. Storing the
+  // raw Int for `activationState` because `WCSessionActivationState` isn't
+  // Equatable / Sendable in older watchOS SDKs and SwiftUI prefers value types.
+  @MainActor @Published private(set) var activationStateRaw: Int = WCSessionActivationState.notActivated.rawValue
+  @MainActor @Published private(set) var isReachable: Bool = false
+  @MainActor @Published private(set) var lastReceivedAt: Date?
+  @MainActor @Published private(set) var lastReceivedCardCount: Int = 0
+  @MainActor @Published private(set) var lastErrorMessage: String?
 
   private var container: ModelContainer?
 
@@ -64,6 +73,16 @@ final class WatchSessionManager: NSObject, WCSessionDelegate {
     log.info(
       "activation complete: state=\(activationState.rawValue) reachable=\(session.isReachable)"
     )
+    let stateRaw = activationState.rawValue
+    let reachable = session.isReachable
+    let errorDescription = error?.localizedDescription
+    Task { @MainActor in
+      self.activationStateRaw = stateRaw
+      self.isReachable = reachable
+      if let errorDescription {
+        self.lastErrorMessage = errorDescription
+      }
+    }
     if activationState == .activated {
       applyCachedContextIfAvailable()
       // Best-effort ping so the phone can reply with the latest list if it's
@@ -73,6 +92,14 @@ final class WatchSessionManager: NSObject, WCSessionDelegate {
         log.info("pinging phone with requestCards")
         session.sendMessage(["type": "requestCards"], replyHandler: nil, errorHandler: nil)
       }
+    }
+  }
+
+  func sessionReachabilityDidChange(_ session: WCSession) {
+    log.info("reachability changed: \(session.isReachable)")
+    let reachable = session.isReachable
+    Task { @MainActor in
+      self.isReachable = reachable
     }
   }
 
@@ -111,6 +138,9 @@ final class WatchSessionManager: NSObject, WCSessionDelegate {
     log.info("decoded \(cards.count) card(s) from incoming payload — upserting")
     Task { @MainActor in
       self.upsert(cards: cards)
+      self.lastReceivedAt = Date()
+      self.lastReceivedCardCount = cards.count
+      self.lastErrorMessage = nil
     }
   }
 

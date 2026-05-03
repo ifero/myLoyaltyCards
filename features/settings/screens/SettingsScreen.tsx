@@ -1,7 +1,7 @@
 import Constants from 'expo-constants';
 import { useRouter } from 'expo-router';
 import { useEffect, useMemo, useState } from 'react';
-import { ScrollView, View } from 'react-native';
+import { Pressable, ScrollView, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { catalogueRepository } from '@/core/catalogue/catalogue-repository';
@@ -230,6 +230,27 @@ const SettingsScreen = () => {
           onHelpPress={() => router.push('/help')}
           onPrivacyPress={() => router.push('/privacy-policy')}
         />
+
+        {__DEV__ ? (
+          <Pressable
+            testID="settings-watch-diagnostics-row"
+            accessibilityRole="button"
+            onPress={() => router.push('/watch-diagnostics')}
+            style={{
+              backgroundColor: theme.surface,
+              borderRadius: 12,
+              paddingHorizontal: 16,
+              paddingVertical: 12
+            }}
+          >
+            <Text style={{ color: theme.textPrimary, fontSize: 14, fontWeight: '600' }}>
+              Watch sync diagnostics
+            </Text>
+            <Text style={{ color: theme.textSecondary, fontSize: 12, marginTop: 2 }}>
+              Dev only — see why iPhone→Watch sync isn't firing.
+            </Text>
+          </Pressable>
+        ) : null}
 
         <View style={{ height: 8 }} />
       </ScrollView>
