@@ -1,5 +1,5 @@
 # generated: 2026-01-03
-# updated: 2026-04-27
+# updated: 2026-05-03
 # project: myLoyaltyCards
 # tracking_system: file-system
 # story_location: docs/sprint-artifacts
@@ -35,7 +35,7 @@
 # - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
 
 generated: 2026-01-03
-updated: 2026-04-28
+updated: 2026-05-03
 project: myLoyaltyCards
 tracking_system: file-system
 story_location: docs/sprint-artifacts
@@ -144,17 +144,18 @@ current_sprint:
   start_date: 2026-04-29
   end_date: 2026-05-12
   duration: 2 weeks
-  epics: [13, 6, 15]
+  epics: [13, 6, 15, 5]
   stories:
     - 13-10-fix-dark-mode-system-preference # Wave 1 (parallel)
     - 6-16-user-profile-creation-on-signup # Wave 1 (parallel)
     - 6-17-design-otp-verification-screen # Wave 1 (parallel) — BLOCKS 6-18
     - 15-1-github-pages-landing-page # Wave 1 (parallel) — fully independent
+    - 5-6a-watch-connectivity-payload-hardening # Wave 1 bugfix follow-up from Apple Watch device validation
     - 6-18-otp-email-verification-flow # Wave 2 — depends on 6-17 approval
   waves:
     wave_1:
-      stories: [13-10, 6-16, 6-17, 15-1]
-      note: 'All four run in parallel. 6-17 is UX design; 13-10, 6-16, 15-1 are dev. 15-1 requires Ifero Italian copy review before merge.'
+      stories: [13-10, 6-16, 6-17, 15-1, 5-6a]
+      note: 'All five run in parallel. 6-17 is UX design; 13-10, 6-16, 15-1, and 5-6a are dev. 15-1 requires Ifero Italian copy review before merge.'
     wave_2:
       stories: [6-18]
       blocked_on: 'confirmation-setting + email-template verification (6-17 design approval completed 2026-04-28)'
@@ -242,13 +243,14 @@ development_status:
   epic-4-retrospective: optional
 
   # Epic 5: Apple Watch App
-  epic-5: done
+  epic-5: in-progress
   5-1-create-watchos-project-structure: done
   5-2-generate-catalogue-for-watchos: done
   5-3-implement-card-list-carbon-ui: done
   5-4-display-barcode-on-watch: done
   5-5-store-cards-locally-on-watch: done
   5-6-sync-cards-from-phone: done
+  5-6a-watch-connectivity-payload-hardening: review
   5-9-remove-userdefaults-fallback: done
   5-7-create-watch-complication: backlog
   5-8-incremental-catalogue-generation: backlog

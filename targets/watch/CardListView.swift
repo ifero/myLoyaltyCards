@@ -11,14 +11,105 @@ struct WatchCard: Identifiable, Codable {
   // Optional barcode fields (may be absent for older persisted payloads)
   let barcodeValue: String?
   let barcodeFormat: String?  // values like "CODE128", "EAN13", "QR" etc.
-  // Sorting fields (non-coded for backward compat with older JSON payloads)
+  // Sorting fields are decoded when present and defaulted when absent so
+  // older persisted payloads remain compatible.
   var usageCount: Int = 0
   var lastUsedAt: Date? = nil
   var createdAt: Date = Date()
 
-  enum CodingKeys: String, CodingKey {
-    case id, name, brandId, colorHex, barcodeValue, barcodeFormat
+  init(
+    id: String,
+    name: String,
+    brandId: String? = nil,
+    colorHex: String? = nil,
+    barcodeValue: String? = nil,
+    barcodeFormat: String? = nil,
+    usageCount: Int = 0,
+    lastUsedAt: Date? = nil,
+    createdAt: Date = Date()
+  ) {
+    self.id = id
+    self.name = name
+    self.brandId = brandId
+    self.colorHex = colorHex
+    self.barcodeValue = barcodeValue
+    self.barcodeFormat = barcodeFormat
+    self.usageCount = usageCount
+    self.lastUsedAt = lastUsedAt
+    self.createdAt = createdAt
   }
+
+  enum CodingKeys: String, CodingKey {
+    case id, name, brandId, colorHex, barcodeValue, barcodeFormat, usageCount, lastUsedAt,
+      createdAt
+  }
+
+  init(from decoder: Decoder) throws {
+    let container = try decoder.container(keyedBy: CodingKeys.self)
+    id = try container.decode(String.self, forKey: .id)
+    name = try container.decode(String.self, forKey: .name)
+    brandId = try container.decodeIfPresent(String.self, forKey: .brandId)
+    colorHex = try container.decodeIfPresent(String.self, forKey: .colorHex)
+    barcodeValue = try container.decodeIfPresent(String.self, forKey: .barcodeValue)
+    barcodeFormat = try container.decodeIfPresent(String.self, forKey: .barcodeFormat)
+    usageCount = try container.decodeIfPresent(Int.self, forKey: .usageCount) ?? 0
+    lastUsedAt = try Self.decodeDateIfPresent(from: container, forKey: .lastUsedAt)
+    createdAt = try Self.decodeDateIfPresent(from: container, forKey: .createdAt) ?? Date()
+  }
+
+  func encode(to encoder: Encoder) throws {
+    var container = encoder.container(keyedBy: CodingKeys.self)
+    try container.encode(id, forKey: .id)
+    try container.encode(name, forKey: .name)
+    try container.encodeIfPresent(brandId, forKey: .brandId)
+    try container.encodeIfPresent(colorHex, forKey: .colorHex)
+    try container.encodeIfPresent(barcodeValue, forKey: .barcodeValue)
+    try container.encodeIfPresent(barcodeFormat, forKey: .barcodeFormat)
+    try container.encode(usageCount, forKey: .usageCount)
+    if let lastUsedAt {
+      try container.encode(Self.encodeDate(lastUsedAt), forKey: .lastUsedAt)
+    }
+    try container.encode(Self.encodeDate(createdAt), forKey: .createdAt)
+  }
+
+  private static func decodeDateIfPresent(
+    from container: KeyedDecodingContainer<CodingKeys>,
+    forKey key: CodingKeys
+  ) throws -> Date? {
+    if let value = try container.decodeIfPresent(String.self, forKey: key) {
+      return decodeDate(value)
+    }
+
+    if let value = try container.decodeIfPresent(Double.self, forKey: key) {
+      return Date(timeIntervalSinceReferenceDate: value)
+    }
+
+    return nil
+  }
+
+  private static func decodeDate(_ value: String) -> Date? {
+    if let date = fractionalSecondsFormatter.date(from: value) {
+      return date
+    }
+
+    return internetDateTimeFormatter.date(from: value)
+  }
+
+  private static func encodeDate(_ value: Date) -> String {
+    fractionalSecondsFormatter.string(from: value)
+  }
+
+  private static let fractionalSecondsFormatter: ISO8601DateFormatter = {
+    let formatter = ISO8601DateFormatter()
+    formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+    return formatter
+  }()
+
+  private static let internetDateTimeFormatter: ISO8601DateFormatter = {
+    let formatter = ISO8601DateFormatter()
+    formatter.formatOptions = [.withInternetDateTime]
+    return formatter
+  }()
 }
 
 final class CardStore: ObservableObject {
@@ -68,9 +159,9 @@ final class CardStore: ObservableObject {
         brandId: c.brandId,
         color: c.colorHex ?? "grey",
         isFavorite: false,
-        lastUsedAt: nil,
-        usageCount: 0,
-        createdAt: Date(),
+        lastUsedAt: c.lastUsedAt,
+        usageCount: c.usageCount,
+        createdAt: c.createdAt,
         updatedAt: Date(),
         rawPayload: raw
       )

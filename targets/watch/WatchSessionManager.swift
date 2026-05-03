@@ -160,7 +160,11 @@ final class WatchSessionManager: NSObject, WCSessionDelegate {
   @MainActor
   private func upsert(cards: [WatchCard]) {
     guard let container else { return }
-    let context = container.mainContext
+    Self.upsert(cards: cards, in: container.mainContext)
+  }
+
+  @MainActor
+  static func upsert(cards: [WatchCard], in context: ModelContext) {
 
     let existing = (try? context.fetch(FetchDescriptor<WatchCardEntity>())) ?? []
     var byId: [String: WatchCardEntity] = [:]
@@ -178,6 +182,7 @@ final class WatchSessionManager: NSObject, WCSessionDelegate {
         entity.color = card.colorHex ?? entity.color
         entity.usageCount = card.usageCount
         entity.lastUsedAt = card.lastUsedAt
+        entity.createdAt = card.createdAt
         entity.updatedAt = Date()
         entity.rawPayload = raw
       } else {
