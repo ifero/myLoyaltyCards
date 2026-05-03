@@ -1,0 +1,23 @@
+core/watch-connectivity.ts
+  0b1f0025c76503c9 182-183,185
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.3.4",
+  "base_commit_sha": "3ddfeb4553837f588fca2d7f11bf3def2d233aec",
+  "prompts": {
+    "0b1f0025c76503c9": {
+      "agent_id": {
+        "tool": "github-copilot",
+        "id": "f6abab0e-4953-4f33-81a6-1d0f4f724c28",
+        "model": "copilot/gpt-5.4"
+      },
+      "human_author": "Andrea Pacino",
+      "messages": [],
+      "total_additions": 3,
+      "total_deletions": 3,
+      "accepted_lines": 13,
+      "overriden_lines": 0
+    }
+  }
+}
