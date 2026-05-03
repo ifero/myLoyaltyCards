@@ -1,0 +1,28 @@
+features/add-card/hooks/useImageScan.ts
+  ed3ff66f4fb8a303 122,134
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.3.4",
+  "base_commit_sha": "2cd97d6cc6ee59383b600cf4baf9a4da3440f563",
+  "prompts": {
+    "ed3ff66f4fb8a303": {
+      "agent_id": {
+        "tool": "github-copilot",
+        "id": "2c48ef8f-09e2-4892-a90d-f7e018d20693",
+        "model": "copilot/claude-sonnet-4.6"
+      },
+      "human_author": "Andrea Pacino",
+      "messages": [],
+      "total_additions": 2,
+      "total_deletions": 2,
+      "accepted_lines": 2024,
+      "overriden_lines": 2
+    }
+  },
+  "humans": {
+    "h_806fb4fc1f8dfb": {
+      "author": "Andrea Pacino"
+    }
+  }
+}
