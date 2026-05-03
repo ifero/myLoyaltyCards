@@ -33,13 +33,13 @@ function isValidEAN13Checksum(code: string): boolean {
 
   let sum = 0;
   for (let i = 0; i < 12; i++) {
-    const digit = parseInt(code[i], 10);
+    const digit = parseInt(code.charAt(i), 10);
     const weight = i % 2 === 0 ? 1 : 3;
     sum += digit * weight;
   }
 
   const checkDigit = (10 - (sum % 10)) % 10;
-  return checkDigit === parseInt(code[12], 10);
+  return checkDigit === parseInt(code.charAt(12), 10);
 }
 
 /**

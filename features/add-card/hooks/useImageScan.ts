@@ -35,13 +35,13 @@ function isValidEAN13Checksum(code: string): boolean {
 
   let sum = 0;
   for (let i = 0; i < 12; i++) {
-    const digit = parseInt(code[i], 10);
+    const digit = parseInt(code.charAt(i), 10);
     const weight = i % 2 === 0 ? 1 : 3;
     sum += digit * weight;
   }
 
   const checkDigit = (10 - (sum % 10)) % 10;
-  return checkDigit === parseInt(code[12], 10);
+  return checkDigit === parseInt(code.charAt(12), 10);
 }
 
 /**
@@ -119,7 +119,8 @@ export const useImageScan = ({ onCodeResolved }: UseImageScanOptions): UseImageS
       return;
     }
 
-    const uri = result.assets[0].uri;
+    const asset = result.assets[0];
+    const uri = asset.uri;
     setIsProcessing(true);
     setShowError(false);
     setMultiCodes([]);
@@ -130,9 +131,10 @@ export const useImageScan = ({ onCodeResolved }: UseImageScanOptions): UseImageS
       if (scanned.length === 0) {
         setShowError(true);
       } else if (scanned.length === 1) {
-        const baseFormat = mapFormat(scanned[0].type);
-        const correctedFormat = intelCorrectFormat(scanned[0].data, baseFormat);
-        onCodeResolved({ barcode: scanned[0].data, format: correctedFormat });
+        const firstBarcode = scanned[0];
+        const baseFormat = mapFormat(firstBarcode.type);
+        const correctedFormat = intelCorrectFormat(firstBarcode.data, baseFormat);
+        onCodeResolved({ barcode: firstBarcode.data, format: correctedFormat });
       } else {
         const codes: DetectedCode[] = scanned.slice(0, 6).map((r) => {
           const baseFormat = mapFormat(r.type);
