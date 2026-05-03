@@ -16,6 +16,8 @@ import { BarcodeFormat } from '@/core/schemas';
 
 import { ScanResult } from '@/features/cards/hooks/useBarcodeScanner';
 
+import { logScanDebug } from './useImageScan.debug';
+
 const BARCODE_FORMAT_MAP: Record<string, BarcodeFormat> = {
   code128: 'CODE128',
   ean13: 'EAN13',
@@ -111,26 +113,57 @@ export const useImageScan = ({ onCodeResolved }: UseImageScanOptions): UseImageS
       quality: 1,
       allowsEditing: false,
       exif: false,
-      base64: false
+      base64: false,
+      aspect: [4, 3]
     });
 
-    if (result.canceled || result.assets.length === 0) return;
+    if (result.canceled || result.assets.length === 0) {
+      console.log('[useImageScan] User canceled image picker');
+      return;
+    }
 
     const uri = result.assets[0].uri;
+    console.log('[useImageScan] Selected image URI:', uri, 'dimensions:', {
+      width: result.assets[0].width,
+      height: result.assets[0].height
+    });
     setIsProcessing(true);
     setShowError(false);
     setMultiCodes([]);
 
     try {
+      console.log('[useImageScan] Scanning barcode from URI...');
+      const scanStartTime = Date.now();
       const scanned = await scanFromURLAsync(uri, SUPPORTED_BARCODE_TYPES);
+      const scanDurationMs = Date.now() - scanStartTime;
+      console.log('[useImageScan] scanFromURLAsync result:', {
+        count: scanned.length,
+        details: scanned.map((s) => ({ data: s.data, type: s.type })),
+        durationMs: scanDurationMs
+      });
+
+      // Log debug info
+      logScanDebug(
+        uri,
+        SUPPORTED_BARCODE_TYPES,
+        scanned.length,
+        scanned.map((s) => ({ data: s.data, type: s.type })),
+        scanDurationMs
+      );
 
       if (scanned.length === 0) {
+        console.log('[useImageScan] No barcodes detected in image');
         setShowError(true);
       } else if (scanned.length === 1) {
+        console.log('[useImageScan] Single barcode detected:', scanned[0]);
         const baseFormat = mapFormat(scanned[0].type);
         const correctedFormat = intelCorrectFormat(scanned[0].data, baseFormat);
+        console.log(
+          `[useImageScan] Format: ${scanned[0].type} → ${baseFormat} → ${correctedFormat}`
+        );
         onCodeResolved({ barcode: scanned[0].data, format: correctedFormat });
       } else {
+        console.log('[useImageScan] Multiple barcodes detected:', scanned.length);
         const codes: DetectedCode[] = scanned.slice(0, 6).map((r) => {
           const baseFormat = mapFormat(r.type);
           const correctedFormat = intelCorrectFormat(r.data, baseFormat);
@@ -141,7 +174,13 @@ export const useImageScan = ({ onCodeResolved }: UseImageScanOptions): UseImageS
         });
         setMultiCodes(codes);
       }
-    } catch {
+    } catch (error) {
+      const errorMsg = error instanceof Error ? error.message : String(error);
+      console.error('[useImageScan] Error scanning barcode:', errorMsg);
+
+      // Log debug info with error
+      logScanDebug(uri, SUPPORTED_BARCODE_TYPES, 0, [], 0, errorMsg);
+
       setShowError(true);
     } finally {
       setIsProcessing(false);

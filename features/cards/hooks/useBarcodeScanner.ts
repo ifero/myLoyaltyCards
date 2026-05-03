@@ -103,6 +103,8 @@ export function useBarcodeScanner({ onScan, enabled = true }: UseBarcodeScannerO
       return;
     }
 
+    console.log('[useBarcodeScanner] Barcode detected:', { data: event.data, type: event.type });
+
     // Clear any existing timeout
     if (scanTimeoutRef.current) {
       clearTimeout(scanTimeoutRef.current);
@@ -117,6 +119,9 @@ export function useBarcodeScanner({ onScan, enabled = true }: UseBarcodeScannerO
     // Map format and apply intelligent correction
     const baseFormat = mapBarcodeFormat(event.type);
     const correctedFormat = intelCorrectFormat(event.data, baseFormat);
+    console.log(
+      `[useBarcodeScanner] Format correction: ${event.type} → ${baseFormat} → ${correctedFormat}`
+    );
     onScan({
       barcode: event.data,
       format: correctedFormat
