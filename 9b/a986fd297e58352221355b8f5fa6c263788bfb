@@ -1,0 +1,56 @@
+features/add-card/hooks/useImageScan.ts
+  ed3ff66f4fb8a303 1-100,102-123
+features/add-card/components/ScannerOverlay.test.tsx
+  ed3ff66f4fb8a303 135-216
+docs/sprint-artifacts/stories/2-9-scan-cards-from-image-screenshot.md
+  ed3ff66f4fb8a303 10,48-52,55-67,70-71,76-115
+docs/ux-designs/2-9-scan-from-image.md
+  ed3ff66f4fb8a303 1-426
+app.json
+  ed3ff66f4fb8a303 52-58
+features/add-card/components/MultiCodePickerSheet.tsx
+  ed3ff66f4fb8a303 1-268
+features/add-card/components/NoCodeFoundBanner.test.tsx
+  ed3ff66f4fb8a303 1-126
+features/add-card/components/MultiCodePickerSheet.test.tsx
+  ed3ff66f4fb8a303 1-211
+features/add-card/screens/BrandScannerScreen.test.tsx
+  ed3ff66f4fb8a303 11,76,115-134,197-278
+docs/sprint-artifacts/sprint-status.yaml
+  ed3ff66f4fb8a303 206
+features/add-card/screens/BrandScannerScreen.tsx
+  ed3ff66f4fb8a303 12,21,23,101-110,112-132
+features/add-card/components/ScannerOverlay.tsx
+  ed3ff66f4fb8a303 12-20,37,45-53,180-186,326-345,347-362,428-448
+package.json
+  ed3ff66f4fb8a303 49
+features/add-card/components/NoCodeFoundBanner.tsx
+  ed3ff66f4fb8a303 1-115
+features/add-card/hooks/useImageScan.test.ts
+  ed3ff66f4fb8a303 1-259
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.3.4",
+  "base_commit_sha": "9ba986fd297e58352221355b8f5fa6c263788bfb",
+  "prompts": {
+    "ed3ff66f4fb8a303": {
+      "agent_id": {
+        "tool": "github-copilot",
+        "id": "2c48ef8f-09e2-4892-a90d-f7e018d20693",
+        "model": "copilot/claude-sonnet-4.6"
+      },
+      "human_author": "Andrea Pacino",
+      "messages": [],
+      "total_additions": 2066,
+      "total_deletions": 173,
+      "accepted_lines": 1900,
+      "overriden_lines": 1
+    }
+  },
+  "humans": {
+    "h_806fb4fc1f8dfb": {
+      "author": "Andrea Pacino"
+    }
+  }
+}
