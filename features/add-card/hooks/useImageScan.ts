@@ -25,6 +25,37 @@ const BARCODE_FORMAT_MAP: Record<string, BarcodeFormat> = {
   upc_a: 'UPCA'
 };
 
+/**
+ * Validate EAN-13 checksum
+ * EAN-13 uses a standard weighted sum calculation
+ */
+function isValidEAN13Checksum(code: string): boolean {
+  if (code.length !== 13) return false;
+  if (!/^\d+$/.test(code)) return false;
+
+  let sum = 0;
+  for (let i = 0; i < 12; i++) {
+    const digit = parseInt(code[i], 10);
+    const weight = i % 2 === 0 ? 1 : 3;
+    sum += digit * weight;
+  }
+
+  const checkDigit = (10 - (sum % 10)) % 10;
+  return checkDigit === parseInt(code[12], 10);
+}
+
+/**
+ * Auto-correct format when CODE128 is detected but looks like EAN-13
+ * This handles cases where the barcode was encoded as CODE128 but contains valid EAN-13 data
+ */
+function intelCorrectFormat(barcode: string, detectedFormat: BarcodeFormat): BarcodeFormat {
+  // If detected as CODE128, check if it's actually a valid EAN-13
+  if (detectedFormat === 'CODE128' && barcode.length === 13 && isValidEAN13Checksum(barcode)) {
+    return 'EAN13';
+  }
+  return detectedFormat;
+}
+
 const SUPPORTED_BARCODE_TYPES: BarcodeType[] = [
   'code128',
   'ean13',
@@ -96,12 +127,18 @@ export const useImageScan = ({ onCodeResolved }: UseImageScanOptions): UseImageS
       if (scanned.length === 0) {
         setShowError(true);
       } else if (scanned.length === 1) {
-        onCodeResolved({ barcode: scanned[0].data, format: mapFormat(scanned[0].type) });
+        const baseFormat = mapFormat(scanned[0].type);
+        const correctedFormat = intelCorrectFormat(scanned[0].data, baseFormat);
+        onCodeResolved({ barcode: scanned[0].data, format: correctedFormat });
       } else {
-        const codes: DetectedCode[] = scanned.slice(0, 6).map((r) => ({
-          value: r.data,
-          format: mapFormat(r.type)
-        }));
+        const codes: DetectedCode[] = scanned.slice(0, 6).map((r) => {
+          const baseFormat = mapFormat(r.type);
+          const correctedFormat = intelCorrectFormat(r.data, baseFormat);
+          return {
+            value: r.data,
+            format: correctedFormat
+          };
+        });
         setMultiCodes(codes);
       }
     } catch {

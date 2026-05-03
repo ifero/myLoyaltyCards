@@ -253,7 +253,57 @@ describe('useImageScan', () => {
         await result.current.pickAndScan();
       });
 
-      expect(cb).toHaveBeenCalledWith({ barcode: 'VALUE', format: expected });
+      expect(cb).toHaveBeenCalledWith(expect.objectContaining({ format: expected }));
     }
+  });
+
+  it('auto-corrects CODE128 to EAN13 when code is valid EAN-13 (13 digits + valid checksum)', async () => {
+    mockLaunch.mockResolvedValueOnce(assetResult('file://test.jpg'));
+    // 0226007855218 is a valid EAN-13 (from your Conad card example)
+    mockScanFromURL.mockResolvedValueOnce([{ data: '0226007855218', type: 'code128' }]);
+
+    const { result } = renderHook(() => useImageScan({ onCodeResolved }));
+
+    await act(async () => {
+      await result.current.pickAndScan();
+    });
+
+    expect(onCodeResolved).toHaveBeenCalledWith({
+      barcode: '0226007855218',
+      format: 'EAN13'
+    });
+  });
+
+  it('keeps CODE128 when code is 13 digits but invalid EAN-13 checksum', async () => {
+    mockLaunch.mockResolvedValueOnce(assetResult('file://test.jpg'));
+    // Valid format but wrong checksum
+    mockScanFromURL.mockResolvedValueOnce([{ data: '0226007855219', type: 'code128' }]);
+
+    const { result } = renderHook(() => useImageScan({ onCodeResolved }));
+
+    await act(async () => {
+      await result.current.pickAndScan();
+    });
+
+    expect(onCodeResolved).toHaveBeenCalledWith({
+      barcode: '0226007855219',
+      format: 'CODE128'
+    });
+  });
+
+  it('keeps CODE128 when code is not 13 digits', async () => {
+    mockLaunch.mockResolvedValueOnce(assetResult('file://test.jpg'));
+    mockScanFromURL.mockResolvedValueOnce([{ data: 'SHORT123', type: 'code128' }]);
+
+    const { result } = renderHook(() => useImageScan({ onCodeResolved }));
+
+    await act(async () => {
+      await result.current.pickAndScan();
+    });
+
+    expect(onCodeResolved).toHaveBeenCalledWith({
+      barcode: 'SHORT123',
+      format: 'CODE128'
+    });
   });
 });

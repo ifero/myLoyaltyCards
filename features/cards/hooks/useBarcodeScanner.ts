@@ -24,6 +24,37 @@ const BARCODE_FORMAT_MAP: Record<string, BarcodeFormat> = {
 };
 
 /**
+ * Validate EAN-13 checksum
+ * EAN-13 uses a standard weighted sum calculation
+ */
+function isValidEAN13Checksum(code: string): boolean {
+  if (code.length !== 13) return false;
+  if (!/^\d+$/.test(code)) return false;
+
+  let sum = 0;
+  for (let i = 0; i < 12; i++) {
+    const digit = parseInt(code[i], 10);
+    const weight = i % 2 === 0 ? 1 : 3;
+    sum += digit * weight;
+  }
+
+  const checkDigit = (10 - (sum % 10)) % 10;
+  return checkDigit === parseInt(code[12], 10);
+}
+
+/**
+ * Auto-correct format when CODE128 is detected but looks like EAN-13
+ * This handles cases where the barcode was encoded as CODE128 but contains valid EAN-13 data
+ */
+function intelCorrectFormat(barcode: string, detectedFormat: BarcodeFormat): BarcodeFormat {
+  // If detected as CODE128, check if it's actually a valid EAN-13
+  if (detectedFormat === 'CODE128' && barcode.length === 13 && isValidEAN13Checksum(barcode)) {
+    return 'EAN13';
+  }
+  return detectedFormat;
+}
+
+/**
  * Map barcode format from expo-camera to our schema
  */
 function mapBarcodeFormat(expoFormat: string): BarcodeFormat {
@@ -83,11 +114,12 @@ export function useBarcodeScanner({ onScan, enabled = true }: UseBarcodeScannerO
     // Provide haptic feedback
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
 
-    // Map format and call onScan
-    const format = mapBarcodeFormat(event.type);
+    // Map format and apply intelligent correction
+    const baseFormat = mapBarcodeFormat(event.type);
+    const correctedFormat = intelCorrectFormat(event.data, baseFormat);
     onScan({
       barcode: event.data,
-      format
+      format: correctedFormat
     });
 
     // Reset scan state after a delay to allow for re-scanning if needed
