@@ -278,7 +278,7 @@ development_status:
   6-15-migration-banner-polish: drafted # follow-up from 6.14 review — L1/L2/L3
   6-16-user-profile-creation-on-signup: done # Sprint 13 — implementation and live local signup validated; awaiting review disposition
   6-17-design-otp-verification-screen: done # Sprint 13 — Figma OTP Verification page approved by Ifero on 2026-04-28; design dependency cleared
-  6-18-otp-email-verification-flow: drafted # Sprint 13 — 6-17 approved; local repo still has auth.email.enable_confirmations=false; production confirmation + email-template verification pending
+  6-18-otp-email-verification-flow: review # Sprint 13 — OTP verify flow implemented, full validation green, dev+QA subagent reviews approved on 2026-04-29
   epic-6-retrospective: optional
 
   # Epic 7: Cloud Synchronization
@@ -337,7 +337,7 @@ development_status:
 
   # Epic 15: Internationalisation & Public Presence
   epic-15: in-progress
-  15-1-github-pages-landing-page: review # Sprint 13 Wave 1 — local implementation, tests, dev review, and QA review complete; Italian copy approved, Pages config/live verification pending
+  15-1-github-pages-landing-page: done # Sprint 13 Wave 1 — local implementation, tests, dev review, and QA review complete; Italian copy approved, Pages config/live verification pending
   15-2-italian-language-in-app: backlog # Future sprint — i18next full app translation
   epic-15-retrospective: optional
 

@@ -64,6 +64,35 @@ const toAuthError = (err: unknown): AuthError => {
   return { message: 'An unexpected error occurred. Please try again.' };
 };
 
+const normalizeVerifyEmailOtpError = (error: AuthError): AuthError => {
+  const code = error.code?.toLowerCase();
+  const message = error.message.toLowerCase();
+
+  if (code?.includes('invalid')) {
+    return { ...error, code: 'invalid_otp' };
+  }
+
+  if (code?.includes('expired') || message.includes('expired')) {
+    return { ...error, code: 'expired_otp' };
+  }
+
+  if (
+    code?.includes('network') ||
+    code?.includes('fetch') ||
+    message.includes('network') ||
+    message.includes('failed to fetch') ||
+    message.includes('request failed')
+  ) {
+    return { ...error, code: 'network_error' };
+  }
+
+  if (message.includes('invalid')) {
+    return { ...error, code: 'invalid_otp' };
+  }
+
+  return { ...error, code: 'unknown_error' };
+};
+
 // ---------------------------------------------------------------------------
 // Auth operations
 // ---------------------------------------------------------------------------
@@ -171,6 +200,61 @@ export const signUp = async (
     }
 
     return { success: true, data: { user: data.user, session: data.session } };
+  } catch (err) {
+    return { success: false, error: toAuthError(err) };
+  }
+};
+
+/**
+ * Verify an email signup OTP and return the authenticated session.
+ */
+export const verifyEmailOtp = async (
+  email: string,
+  token: string
+): Promise<AuthResult<AuthSession>> => {
+  try {
+    const supabase = getSupabaseClient();
+    const { data, error } = await supabase.auth.verifyOtp({
+      email,
+      token,
+      type: 'signup'
+    });
+
+    if (error) {
+      return { success: false, error: normalizeVerifyEmailOtpError(toAuthError(error)) };
+    }
+
+    if (!data.user || !data.session) {
+      return {
+        success: false,
+        error: normalizeVerifyEmailOtpError({
+          message: 'Verification completed but no session was returned. Please try again.'
+        })
+      };
+    }
+
+    return { success: true, data: { user: data.user, session: data.session } };
+  } catch (err) {
+    return { success: false, error: normalizeVerifyEmailOtpError(toAuthError(err)) };
+  }
+};
+
+/**
+ * Resend the signup verification email OTP.
+ */
+export const resendVerificationEmail = async (email: string): Promise<AuthResult<void>> => {
+  try {
+    const supabase = getSupabaseClient();
+    const { error } = await supabase.auth.resend({
+      type: 'signup',
+      email
+    });
+
+    if (error) {
+      return { success: false, error: toAuthError(error) };
+    }
+
+    return { success: true, data: undefined };
   } catch (err) {
     return { success: false, error: toAuthError(err) };
   }

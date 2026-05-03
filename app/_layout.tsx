@@ -22,6 +22,10 @@ import { PRIMARY_COLORS } from '@/shared/theme/colors';
 
 import { isFirstLaunch } from '@/features/settings';
 
+export const unstable_settings = {
+  initialRouteName: 'index'
+};
+
 // Eagerly validate Supabase env vars so misconfigurations surface early.
 // Wrapped in try/catch to prevent a fatal crash when env vars are absent
 // (e.g. CI build missing EXPO_PUBLIC_SUPABASE_* secrets).
@@ -187,6 +191,12 @@ const RootLayoutContent = () => {
           name="create-account"
           options={{
             title: 'Create Account'
+          }}
+        />
+        <Stack.Screen
+          name="verify-email"
+          options={{
+            title: 'Verify Email'
           }}
         />
         <Stack.Screen
