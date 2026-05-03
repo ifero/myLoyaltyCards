@@ -1,0 +1,57 @@
+docs/sprint-artifacts/stories/6-18a-otp-verification-followup.md
+  4b012c6fefe7a647 1-158
+features/auth/__tests__/VerifyEmailScreen.test.tsx
+  h_806fb4fc1f8dfb 76-77,80,88,90-97,100,106,114,117,144,150,166,188,210
+  4b012c6fefe7a647 72,121,129,132
+supabase/templates/confirmation.html
+  4b012c6fefe7a647 21
+docs/sprint-artifacts/sprint-status.yaml
+  4b012c6fefe7a647 151,157,164,167-168,173,263
+shared/supabase/auth.test.ts
+  4b012c6fefe7a647 408,412-413,428,442,453,467
+features/auth/VerifyEmailScreen.tsx
+  h_806fb4fc1f8dfb 14,94,97-98,143,150,152-166,175-176,185,234,237,239-240,243,264,284,289-295,302-306,308-320
+  4b012c6fefe7a647 15,300
+shared/supabase/auth.ts
+  4b012c6fefe7a647 220
+supabase/config.toml
+  4b012c6fefe7a647 215
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.3.4",
+  "base_commit_sha": "5e17ae7e5a2cbc7d3e7b3d45ec147ddd4c8f5ddf",
+  "prompts": {
+    "4b012c6fefe7a647": {
+      "agent_id": {
+        "tool": "github-copilot",
+        "id": "82bb9752-0db9-4f32-8101-76ee4d18edec",
+        "model": "unknown"
+      },
+      "human_author": "Andrea Pacino",
+      "messages": [],
+      "total_additions": 1140,
+      "total_deletions": 275,
+      "accepted_lines": 900,
+      "overriden_lines": 0
+    },
+    "fe7411b1d750e5bb": {
+      "agent_id": {
+        "tool": "github-copilot",
+        "id": "0966da7d-07ad-411b-8442-47a1f87177da",
+        "model": "copilot/oswe-vscode-prime"
+      },
+      "human_author": "Andrea Pacino",
+      "messages": [],
+      "total_additions": 88,
+      "total_deletions": 1,
+      "accepted_lines": 0,
+      "overriden_lines": 1
+    }
+  },
+  "humans": {
+    "h_806fb4fc1f8dfb": {
+      "author": "Andrea Pacino"
+    }
+  }
+}
