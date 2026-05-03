@@ -8,7 +8,7 @@
 
 import { MaterialIcons } from '@expo/vector-icons';
 import { CameraView } from 'expo-camera';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
 import {
   View,
   Text,
@@ -16,8 +16,7 @@ import {
   Linking,
   StyleSheet,
   useWindowDimensions,
-  ActivityIndicator,
-  Modal
+  ActivityIndicator
 } from 'react-native';
 import Animated, {
   useSharedValue,
@@ -35,7 +34,6 @@ import { SPACING, TOUCH_TARGET } from '@/shared/theme/spacing';
 import { useBarcodeScanner, ScanResult } from '@/features/cards/hooks/useBarcodeScanner';
 
 import { FloatingBackButton } from './FloatingBackButton';
-import { ImageScanDebugScreen } from './ImageScanDebugScreen';
 import { NoCodeFoundBanner } from './NoCodeFoundBanner';
 
 interface ScannerOverlayProps {
@@ -191,7 +189,6 @@ export const ScannerOverlay: React.FC<ScannerOverlayProps> = ({
   const insets = useSafeAreaInsets();
   const { width: screenWidth } = useWindowDimensions();
   const viewfinderSize = screenWidth * VIEWFINDER_WIDTH_RATIO;
-  const [showDebug, setShowDebug] = useState(false);
 
   const {
     permission,
@@ -305,26 +302,6 @@ export const ScannerOverlay: React.FC<ScannerOverlayProps> = ({
         style={{ top: insets.top + SPACING.sm, left: insets.left + SPACING.md }}
       />
 
-      {/* Debug button (top right) */}
-      <Pressable
-        onPress={() => setShowDebug(true)}
-        style={{
-          position: 'absolute',
-          top: insets.top + SPACING.sm,
-          right: insets.right + SPACING.md,
-          width: TOUCH_TARGET.min,
-          height: TOUCH_TARGET.min,
-          justifyContent: 'center',
-          alignItems: 'center',
-          zIndex: 100
-        }}
-        testID="debug-button"
-        accessibilityLabel="Show scan debug information"
-        accessibilityRole="button"
-      >
-        <MaterialIcons name="bug-report" size={24} color="#FFEB3B" />
-      </Pressable>
-
       {/* Brand pill (if brand context) */}
       {brandPill && (
         <View
@@ -395,44 +372,6 @@ export const ScannerOverlay: React.FC<ScannerOverlayProps> = ({
           <MaterialIcons name="chevron-right" size={24} color="#FFFFFF" />
         </Pressable>
       </View>
-
-      {/* Debug Modal */}
-      <Modal
-        visible={showDebug}
-        animationType="slide"
-        onRequestClose={() => setShowDebug(false)}
-        testID="debug-modal"
-      >
-        <View style={{ flex: 1, backgroundColor: theme.background }}>
-          <View
-            style={{
-              flexDirection: 'row',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-              paddingHorizontal: SPACING.md,
-              paddingTop: insets.top + SPACING.md,
-              paddingBottom: SPACING.md
-            }}
-          >
-            <Text style={{ fontSize: 18, fontWeight: '600', color: theme.textPrimary }}>
-              Image Scan Debug
-            </Text>
-            <Pressable
-              onPress={() => setShowDebug(false)}
-              style={{
-                width: TOUCH_TARGET.min,
-                height: TOUCH_TARGET.min,
-                justifyContent: 'center',
-                alignItems: 'center'
-              }}
-              testID="close-debug-button"
-            >
-              <MaterialIcons name="close" size={24} color={theme.textPrimary} />
-            </Pressable>
-          </View>
-          <ImageScanDebugScreen />
-        </View>
-      </Modal>
     </View>
   );
 };
