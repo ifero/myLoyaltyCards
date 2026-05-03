@@ -9,7 +9,15 @@
 import { MaterialIcons } from '@expo/vector-icons';
 import { CameraView } from 'expo-camera';
 import React, { useEffect } from 'react';
-import { View, Text, Pressable, Linking, StyleSheet, useWindowDimensions } from 'react-native';
+import {
+  View,
+  Text,
+  Pressable,
+  Linking,
+  StyleSheet,
+  useWindowDimensions,
+  ActivityIndicator
+} from 'react-native';
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
@@ -26,6 +34,7 @@ import { SPACING, TOUCH_TARGET } from '@/shared/theme/spacing';
 import { useBarcodeScanner, ScanResult } from '@/features/cards/hooks/useBarcodeScanner';
 
 import { FloatingBackButton } from './FloatingBackButton';
+import { NoCodeFoundBanner } from './NoCodeFoundBanner';
 
 interface ScannerOverlayProps {
   onScan: (result: ScanResult) => void;
@@ -33,6 +42,15 @@ interface ScannerOverlayProps {
   onBack: () => void;
   brandPill?: React.ReactNode;
   testID?: string;
+  /** When provided, a 'Scan from image' row is shown in the bottom actions */
+  onImageScan?: () => void;
+  /** Shows a centered ActivityIndicator over the viewfinder while an image is being decoded */
+  isProcessingImage?: boolean;
+  /** Shows the NoCodeFoundBanner when true */
+  imageError?: boolean;
+  onImageErrorDismiss?: () => void;
+  onImageErrorRetry?: () => void;
+  onImageErrorManualEntry?: () => void;
 }
 
 const VIEWFINDER_WIDTH_RATIO = 0.7;
@@ -159,7 +177,13 @@ export const ScannerOverlay: React.FC<ScannerOverlayProps> = ({
   onManualEntry,
   onBack,
   brandPill,
-  testID = 'scanner-overlay'
+  testID = 'scanner-overlay',
+  onImageScan,
+  isProcessingImage = false,
+  imageError = false,
+  onImageErrorDismiss,
+  onImageErrorRetry,
+  onImageErrorManualEntry
 }) => {
   const { theme } = useTheme();
   const insets = useSafeAreaInsets();
@@ -299,8 +323,43 @@ export const ScannerOverlay: React.FC<ScannerOverlayProps> = ({
         <Text style={styles.instructionText}>Point camera at barcode</Text>
       </View>
 
-      {/* Bottom action: manual entry */}
+      {/* Processing indicator overlay */}
+      {isProcessingImage && (
+        <View style={styles.processingOverlay} testID="image-processing-indicator">
+          <ActivityIndicator size="large" color="#FFFFFF" />
+          <Text style={styles.processingText}>Scanning image…</Text>
+        </View>
+      )}
+
+      {/* No-code-found banner (between viewfinder and bottom actions) */}
+      {imageError && onImageErrorDismiss && (
+        <View style={styles.bannerContainer}>
+          <NoCodeFoundBanner
+            onDismiss={onImageErrorDismiss}
+            onRetry={onImageErrorRetry ?? onImageErrorDismiss}
+            onManualEntry={onImageErrorManualEntry ?? onManualEntry}
+          />
+        </View>
+      )}
+
+      {/* Bottom actions: scan from image (optional) + manual entry */}
       <View style={[styles.bottomActions, { paddingBottom: insets.bottom + SPACING.md }]}>
+        {onImageScan && (
+          <>
+            <Pressable
+              onPress={onImageScan}
+              style={styles.manualEntryRow}
+              accessibilityRole="button"
+              accessibilityLabel="Scan a barcode from a photo or screenshot"
+              testID="scan-from-image-row"
+            >
+              <MaterialIcons name="image" size={24} color="#FFFFFF" />
+              <Text style={styles.manualEntryText}>Scan from image</Text>
+              <MaterialIcons name="chevron-right" size={24} color="#FFFFFF" />
+            </Pressable>
+            <View style={styles.rowDivider} />
+          </>
+        )}
         <Pressable
           onPress={onManualEntry}
           style={styles.manualEntryRow}
@@ -364,6 +423,29 @@ const styles = StyleSheet.create({
     flex: 1,
     color: '#FFFFFF',
     fontSize: 16,
+    fontWeight: '500'
+  },
+  rowDivider: {
+    height: StyleSheet.hairlineWidth,
+    backgroundColor: 'rgba(255,255,255,0.25)',
+    marginVertical: SPACING.xs
+  },
+  bannerContainer: {
+    position: 'absolute',
+    bottom: 96,
+    left: 0,
+    right: 0
+  },
+  processingOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    justifyContent: 'center',
+    alignItems: 'center',
+    gap: 12,
+    zIndex: 20
+  },
+  processingText: {
+    color: '#FFFFFF',
+    fontSize: 15,
     fontWeight: '500'
   },
   centeredContent: {

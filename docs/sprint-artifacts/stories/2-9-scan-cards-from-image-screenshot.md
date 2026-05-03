@@ -7,7 +7,7 @@
 | **Story ID** | 2-9                                   |
 | **Epic**     | 2 - Card Management & Barcode Display |
 | **Sprint**   | Next sprint                           |
-| **Status**   | Backlog                               |
+| **Status**   | review                                |
 | **Priority** | High                                  |
 | **Estimate** | 3 points                              |
 | **Owners**   | PM: Ifero · Dev: — · QA: —            |
@@ -45,23 +45,71 @@ This feature extends the current scanner flow to support image import and detect
 
 ## Tasks
 
-- [ ] Add UI for "Scan from image" in the add-card flow.
-- [ ] Integrate an image decoding library or API for barcode/QR detection.
-- [ ] Map decoded results to the existing `ScanResult` structure.
-- [ ] Add selection UI for multiple detections.
-- [ ] Add regression tests covering image import and leading-zero preservation.
+- [x] Add UI for "Scan from image" in the add-card flow.
+- [x] Integrate an image decoding library or API for barcode/QR detection.
+- [x] Map decoded results to the existing `ScanResult` structure.
+- [x] Add selection UI for multiple detections.
+- [x] Add regression tests covering image import and leading-zero preservation.
 - [ ] Validate the feature on device and in relevant emulators.
+
+## Design
+
+UX design spec: [`docs/ux-designs/2-9-scan-from-image.md`](../../ux-designs/2-9-scan-from-image.md)
+
+**Resolved design questions (pre-dev):**
+
+- OQ-1 (decoder): Use `expo-camera`'s built-in `scanFromURLAsync` — natively implemented on iOS and Android, zero new deps, returns raw string values (AC3 satisfied).
+- OQ-2 (image resize): `maxWidth: 2048` / `maxHeight: 2048` in `launchImageLibraryAsync` call.
+- OQ-3 (sheet animation): Use `react-native-reanimated` already in the project.
+- OQ-5 (Android permissions): `expo-image-picker` plugin in `app.json` handles READ_MEDIA_IMAGES automatically.
+
+**New dependency required:** `expo-image-picker` (photo library picker, not yet installed).
 
 ## Dependencies
 
-- Image picker / file access permissions
-- Barcode/QR image decoding library or native API
+- `expo-image-picker` (new — photo library access)
+- `expo-camera`'s `scanFromURLAsync` (already installed — static image barcode decode)
 - Existing scan result routing and card setup flow
 
 ## Definition of Done
 
-- [ ] Users can scan from an image or screenshot.
-- [ ] Leading zeros are preserved in detected barcode values.
-- [ ] Multi-code images can be resolved by user selection.
-- [ ] No new workflow is required outside the existing add-card flow.
-- [ ] Tests cover the new image scanning path.
+- [x] Users can scan from an image or screenshot.
+- [x] Leading zeros are preserved in detected barcode values.
+- [x] Multi-code images can be resolved by user selection.
+- [x] No new workflow is required outside the existing add-card flow.
+- [x] Tests cover the new image scanning path.
+
+---
+
+## Dev Agent Record
+
+### Implementation Summary
+
+- **Branch:** `feature/2-9-scan-from-image`
+- **New files created:**
+  - `features/add-card/hooks/useImageScan.ts` — core image-scan hook wrapping `expo-image-picker` + `expo-camera`'s `scanFromURLAsync`
+  - `features/add-card/components/NoCodeFoundBanner.tsx` — 5-second auto-dismiss error banner
+  - `features/add-card/components/MultiCodePickerSheet.tsx` — bottom-sheet for selecting one of 2–6 detected codes
+- **Modified files:**
+  - `features/add-card/components/ScannerOverlay.tsx` — added `onImageScan`, `isProcessingImage`, `imageError`, and banner callback props; added processing overlay + NoCodeFoundBanner + "Scan from image" row
+  - `features/add-card/screens/BrandScannerScreen.tsx` — wired `useImageScan` hook; renders `MultiCodePickerSheet` as sibling to `ScannerOverlay`
+- **Test files:**
+  - `features/add-card/hooks/useImageScan.test.ts` (11 tests ✅)
+  - `features/add-card/components/NoCodeFoundBanner.test.tsx` (11 tests ✅)
+  - `features/add-card/components/MultiCodePickerSheet.test.tsx` (15 tests ✅)
+  - `features/add-card/components/ScannerOverlay.test.tsx` (26 tests ✅)
+  - `features/add-card/screens/BrandScannerScreen.test.tsx` (15 tests ✅)
+
+### Acceptance Criteria Checklist
+
+- [x] AC1: "Scan from image" row present in ScannerOverlay when `onImageScan` is provided
+- [x] AC2: `expo-image-picker` + `scanFromURLAsync` decode barcodes from photos
+- [x] AC3: Leading zeros preserved — raw string returned directly from scanner (covered by `useImageScan.test.ts`)
+- [x] AC4: `onCodeResolved({ value, format })` prefills existing `/add-card/setup` flow via `handleScan`
+- [x] AC5: 2–6 detected codes trigger `MultiCodePickerSheet`; user selection calls `onCodeResolved`
+- [x] AC6: 0 results → `showError` → `NoCodeFoundBanner` with retry, dismiss, manual-entry
+- [x] AC7: No new workflow; reuses `handleScan` → `router.push('/add-card/setup')`
+
+### Test Run
+
+Full suite: **1372 / 1372 passed** ✅
