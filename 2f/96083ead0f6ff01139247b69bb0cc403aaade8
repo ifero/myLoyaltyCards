@@ -1,0 +1,36 @@
+features/add-card/hooks/useImageScan.ts
+  fbac427c808acfac 98-104
+core/utils/normalizeBarcode.ts
+  fbac427c808acfac 5,7,15-20,29-31,69-71,80-84,90-95,97-98,101,113-115
+core/utils/normalizeBarcode.test.ts
+  fbac427c808acfac 93-145
+features/cards/hooks/useBarcodeScanner.test.ts
+  fbac427c808acfac 120-137
+docs/sprint-artifacts/stories/2-9-scan-cards-from-image-screenshot.md
+  fbac427c808acfac 95,120,148,150
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.3.4",
+  "base_commit_sha": "2f96083ead0f6ff01139247b69bb0cc403aaade8",
+  "prompts": {
+    "fbac427c808acfac": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "1c20bd9f-0227-4c84-9b00-7813d97e0790",
+        "model": "claude-opus-4-7"
+      },
+      "human_author": "Andrea Pacino",
+      "messages": [],
+      "total_additions": 1450,
+      "total_deletions": 18,
+      "accepted_lines": 1435,
+      "overriden_lines": 20
+    }
+  },
+  "humans": {
+    "h_806fb4fc1f8dfb": {
+      "author": "Andrea Pacino"
+    }
+  }
+}
