@@ -55,6 +55,14 @@
         {
           "photosPermission": "Allow $(PRODUCT_NAME) to access your photos to scan loyalty card barcodes from images."
         }
+      ],
+      [
+        "expo-build-properties",
+        {
+          "ios": {
+            "deploymentTarget": "18.0"
+          }
+        }
       ]
     ],
     "experiments": {

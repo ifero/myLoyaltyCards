@@ -4,8 +4,11 @@
  *
  * Manages the full image-scan flow:
  *   1. Launch system image picker (photo library)
- *   2. Decode all barcodes in the selected image via expo-camera's scanFromURLAsync
- *   3. Return state for single-code auto-resolve, multi-code selection, and error cases
+ *   2. Decode all barcodes in the selected image via @react-native-ml-kit/barcode-scanning
+ *   3. Normalize each detected barcode (UPC-A → EAN-13, CODE128-as-EAN-13, etc.)
+ *   4. Optionally apply a catalogue-driven expectedFormat hint to recover a
+ *      stripped EAN-13 leading zero
+ *   5. Return state for single-code auto-resolve, multi-code selection, and error cases
  */
 
 import BarcodeScanning, {
@@ -15,6 +18,7 @@ import * as ImagePicker from 'expo-image-picker';
 import { useState, useCallback } from 'react';
 
 import { BarcodeFormat } from '@/core/schemas';
+import { applyExpectedFormat, normalizeBarcode } from '@/core/utils';
 
 import { ScanResult } from '@/features/cards/hooks/useBarcodeScanner';
 
@@ -42,37 +46,6 @@ const MLKIT_FORMAT_MAP: Partial<Record<MlKitBarcodeFormat, BarcodeFormat>> = {
   [MlKitBarcodeFormat.UPC_A]: 'UPCA'
 };
 
-/**
- * Validate EAN-13 checksum
- * EAN-13 uses a standard weighted sum calculation
- */
-function isValidEAN13Checksum(code: string): boolean {
-  if (code.length !== 13) return false;
-  if (!/^\d+$/.test(code)) return false;
-
-  let sum = 0;
-  for (let i = 0; i < 12; i++) {
-    const digit = parseInt(code.charAt(i), 10);
-    const weight = i % 2 === 0 ? 1 : 3;
-    sum += digit * weight;
-  }
-
-  const checkDigit = (10 - (sum % 10)) % 10;
-  return checkDigit === parseInt(code.charAt(12), 10);
-}
-
-/**
- * Auto-correct format when CODE128 is detected but looks like EAN-13
- * This handles cases where the barcode was encoded as CODE128 but contains valid EAN-13 data
- */
-function intelCorrectFormat(barcode: string, detectedFormat: BarcodeFormat): BarcodeFormat {
-  // If detected as CODE128, check if it's actually a valid EAN-13
-  if (detectedFormat === 'CODE128' && barcode.length === 13 && isValidEAN13Checksum(barcode)) {
-    return 'EAN13';
-  }
-  return detectedFormat;
-}
-
 function mapFormat(rawFormat: string | number): BarcodeFormat {
   if (typeof rawFormat === 'number') {
     return MLKIT_FORMAT_MAP[rawFormat as MlKitBarcodeFormat] ?? 'CODE128';
@@ -89,6 +62,12 @@ export interface DetectedCode {
 
 interface UseImageScanOptions {
   onCodeResolved: (result: ScanResult) => void;
+  /**
+   * Optional catalogue-driven format hint. When provided as `EAN13` and the
+   * scanner returns 12 digits whose `0`-prefixed form has a valid checksum,
+   * the result is auto-promoted to EAN-13 with the leading zero restored.
+   */
+  expectedFormat?: BarcodeFormat;
 }
 
 export interface UseImageScanResult {
@@ -101,7 +80,10 @@ export interface UseImageScanResult {
   selectCode: (code: DetectedCode) => void;
 }
 
-export const useImageScan = ({ onCodeResolved }: UseImageScanOptions): UseImageScanResult => {
+export const useImageScan = ({
+  onCodeResolved,
+  expectedFormat
+}: UseImageScanOptions): UseImageScanResult => {
   const [isProcessing, setIsProcessing] = useState(false);
   const [showError, setShowError] = useState(false);
   const [multiCodes, setMultiCodes] = useState<DetectedCode[]>([]);
@@ -113,9 +95,12 @@ export const useImageScan = ({ onCodeResolved }: UseImageScanOptions): UseImageS
   const selectCode = useCallback(
     (code: DetectedCode) => {
       setMultiCodes([]);
-      onCodeResolved({ barcode: code.value, format: code.format });
+      // Selected codes were already normalized when added to multiCodes; the
+      // expectedFormat pass is idempotent so re-applying here is safe.
+      const final = applyExpectedFormat({ value: code.value, format: code.format }, expectedFormat);
+      onCodeResolved({ barcode: final.value, format: final.format });
     },
-    [onCodeResolved]
+    [onCodeResolved, expectedFormat]
   );
 
   const pickAndScan = useCallback(async () => {
@@ -145,18 +130,18 @@ export const useImageScan = ({ onCodeResolved }: UseImageScanOptions): UseImageS
         setShowError(true);
       } else if (scanned.length === 1) {
         const firstBarcode = scanned[0]!;
-        const barcodeValue = firstBarcode.value;
         const baseFormat = mapFormat(firstBarcode.format);
-        const correctedFormat = intelCorrectFormat(barcodeValue, baseFormat);
-        onCodeResolved({ barcode: barcodeValue, format: correctedFormat });
+        const canonical = normalizeBarcode(firstBarcode.value, baseFormat);
+        const final = applyExpectedFormat(canonical, expectedFormat);
+        onCodeResolved({ barcode: final.value, format: final.format });
       } else {
         const codes: DetectedCode[] = scanned.slice(0, 6).map((r) => {
-          const barcodeValue = r.value;
           const baseFormat = mapFormat(r.format);
-          const correctedFormat = intelCorrectFormat(barcodeValue, baseFormat);
+          const canonical = normalizeBarcode(r.value, baseFormat);
+          const final = applyExpectedFormat(canonical, expectedFormat);
           return {
-            value: barcodeValue,
-            format: correctedFormat
+            value: final.value,
+            format: final.format
           };
         });
         setMultiCodes(codes);
@@ -166,7 +151,7 @@ export const useImageScan = ({ onCodeResolved }: UseImageScanOptions): UseImageS
     } finally {
       setIsProcessing(false);
     }
-  }, [onCodeResolved]);
+  }, [onCodeResolved, expectedFormat]);
 
   return {
     isProcessing,

@@ -332,4 +332,79 @@ describe('useImageScan', () => {
       format: 'CODE128'
     });
   });
+
+  it('promotes UPC-A 12-digit to EAN-13 with leading zero (canonical)', async () => {
+    mockLaunch.mockResolvedValueOnce(assetResult('file://test.jpg'));
+    // ML Kit on iOS often returns this Conad barcode as UPC-A (12 digits, leading 0 stripped)
+    mockScanFromURL.mockResolvedValueOnce([
+      { value: '226007855218', format: MlKitBarcodeFormat.UPC_A }
+    ]);
+
+    const { result } = renderHook(() => useImageScan({ onCodeResolved }));
+
+    await act(async () => {
+      await result.current.pickAndScan();
+    });
+
+    expect(onCodeResolved).toHaveBeenCalledWith({
+      barcode: '0226007855218',
+      format: 'EAN13'
+    });
+  });
+
+  it('restores stripped EAN-13 leading zero when expectedFormat=EAN13 (catalogue hint)', async () => {
+    mockLaunch.mockResolvedValueOnce(assetResult('file://test.jpg'));
+    // Some scanners return CODE128 carrying 12 digits when the source is a leading-0 EAN-13
+    mockScanFromURL.mockResolvedValueOnce([
+      { value: '226007855218', format: MlKitBarcodeFormat.CODE_128 }
+    ]);
+
+    const { result } = renderHook(() => useImageScan({ onCodeResolved, expectedFormat: 'EAN13' }));
+
+    await act(async () => {
+      await result.current.pickAndScan();
+    });
+
+    expect(onCodeResolved).toHaveBeenCalledWith({
+      barcode: '0226007855218',
+      format: 'EAN13'
+    });
+  });
+
+  it('does not pad to EAN-13 when expectedFormat=EAN13 but checksum would be invalid', async () => {
+    mockLaunch.mockResolvedValueOnce(assetResult('file://test.jpg'));
+    mockScanFromURL.mockResolvedValueOnce([
+      { value: '226007855219', format: MlKitBarcodeFormat.CODE_128 }
+    ]);
+
+    const { result } = renderHook(() => useImageScan({ onCodeResolved, expectedFormat: 'EAN13' }));
+
+    await act(async () => {
+      await result.current.pickAndScan();
+    });
+
+    expect(onCodeResolved).toHaveBeenCalledWith({
+      barcode: '226007855219',
+      format: 'CODE128'
+    });
+  });
+
+  it('applies normalization to multi-code results too', async () => {
+    mockLaunch.mockResolvedValueOnce(assetResult('file://test.jpg'));
+    mockScanFromURL.mockResolvedValueOnce([
+      { value: '226007855218', format: MlKitBarcodeFormat.UPC_A },
+      { value: 'OTHER', format: MlKitBarcodeFormat.CODE_128 }
+    ]);
+
+    const { result } = renderHook(() => useImageScan({ onCodeResolved }));
+
+    await act(async () => {
+      await result.current.pickAndScan();
+    });
+
+    expect(result.current.multiCodes).toEqual([
+      { value: '0226007855218', format: 'EAN13' },
+      { value: 'OTHER', format: 'CODE128' }
+    ]);
+  });
 });

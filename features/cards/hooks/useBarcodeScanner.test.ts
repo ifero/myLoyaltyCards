@@ -117,6 +117,83 @@ describe('useBarcodeScanner', () => {
       }
     });
 
+    it('promotes UPC-A 12-digit to EAN-13 with leading zero (canonical)', async () => {
+      const { result } = renderHook(() => useBarcodeScanner({ onScan: mockOnScan }));
+
+      act(() => {
+        result.current.handleBarcodeScanned({
+          data: '226007855218',
+          type: 'upc_a'
+        });
+      });
+
+      await waitFor(() => {
+        expect(mockOnScan).toHaveBeenCalledWith({
+          barcode: '0226007855218',
+          format: 'EAN13'
+        });
+      });
+    });
+
+    it('promotes CODE128 carrying valid 13-digit EAN-13 to EAN-13', async () => {
+      const { result } = renderHook(() => useBarcodeScanner({ onScan: mockOnScan }));
+
+      act(() => {
+        result.current.handleBarcodeScanned({
+          data: '0226007855218',
+          type: 'code128'
+        });
+      });
+
+      await waitFor(() => {
+        expect(mockOnScan).toHaveBeenCalledWith({
+          barcode: '0226007855218',
+          format: 'EAN13'
+        });
+      });
+    });
+
+    it('restores stripped EAN-13 leading zero when expectedFormat=EAN13 (catalogue hint)', async () => {
+      const { result } = renderHook(() =>
+        useBarcodeScanner({ onScan: mockOnScan, expectedFormat: 'EAN13' })
+      );
+
+      act(() => {
+        // Scanner returned 12 digits as CODE128 — catalogue knows brand is EAN-13.
+        result.current.handleBarcodeScanned({
+          data: '226007855218',
+          type: 'code128'
+        });
+      });
+
+      await waitFor(() => {
+        expect(mockOnScan).toHaveBeenCalledWith({
+          barcode: '0226007855218',
+          format: 'EAN13'
+        });
+      });
+    });
+
+    it('does not pad to EAN-13 when expectedFormat=EAN13 but checksum would be invalid', async () => {
+      const { result } = renderHook(() =>
+        useBarcodeScanner({ onScan: mockOnScan, expectedFormat: 'EAN13' })
+      );
+
+      act(() => {
+        result.current.handleBarcodeScanned({
+          data: '226007855219',
+          type: 'code128'
+        });
+      });
+
+      await waitFor(() => {
+        expect(mockOnScan).toHaveBeenCalledWith({
+          barcode: '226007855219',
+          format: 'CODE128'
+        });
+      });
+    });
+
     it('prevents duplicate scans', async () => {
       const { result } = renderHook(() => useBarcodeScanner({ onScan: mockOnScan }));
 

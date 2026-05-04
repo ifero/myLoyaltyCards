@@ -27,6 +27,8 @@ import Animated, {
 } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { BarcodeFormat } from '@/core/schemas';
+
 import { Button } from '@/shared/components/ui/Button';
 import { useTheme } from '@/shared/theme';
 import { SPACING, TOUCH_TARGET } from '@/shared/theme/spacing';
@@ -51,6 +53,11 @@ interface ScannerOverlayProps {
   onImageErrorDismiss?: () => void;
   onImageErrorRetry?: () => void;
   onImageErrorManualEntry?: () => void;
+  /**
+   * Optional catalogue-driven format hint forwarded to the scanner hook so a
+   * stripped EAN-13 leading zero can be auto-restored.
+   */
+  expectedFormat?: BarcodeFormat;
 }
 
 const VIEWFINDER_WIDTH_RATIO = 0.7;
@@ -183,7 +190,8 @@ export const ScannerOverlay: React.FC<ScannerOverlayProps> = ({
   imageError = false,
   onImageErrorDismiss,
   onImageErrorRetry,
-  onImageErrorManualEntry
+  onImageErrorManualEntry,
+  expectedFormat
 }) => {
   const { theme } = useTheme();
   const insets = useSafeAreaInsets();
@@ -198,7 +206,7 @@ export const ScannerOverlay: React.FC<ScannerOverlayProps> = ({
     requestCameraPermission,
     reset,
     isReady
-  } = useBarcodeScanner({ onScan, enabled: true });
+  } = useBarcodeScanner({ onScan, enabled: true, expectedFormat });
 
   // Request permission on mount
   useEffect(() => {

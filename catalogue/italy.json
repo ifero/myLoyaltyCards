@@ -1,13 +1,12 @@
 {
-  "version": "2026-02-01",
+  "version": "2026-05-04",
   "brands": [
     {
       "id": "esselunga",
       "name": "Esselunga",
       "aliases": ["fidaty", "market", "grocery"],
       "logo": "esselunga",
-      "color": "#FFCC00",
-      "defaultFormat": "CODE128"
+      "color": "#FFCC00"
     },
     {
       "id": "conad",
@@ -15,7 +14,7 @@
       "aliases": ["supermarket", "carta insieme"],
       "logo": "conad",
       "color": "#DA291C",
-      "defaultFormat": "CODE128"
+      "defaultFormat": "EAN13"
     },
     {
       "id": "coop",
@@ -23,7 +22,7 @@
       "aliases": ["supercoop", "ipercoop", "socio"],
       "logo": "coop",
       "color": "#E2231A",
-      "defaultFormat": "CODE128"
+      "defaultFormat": "EAN13"
     },
     {
       "id": "carrefour",
@@ -46,40 +45,35 @@
       "name": "Eurospin",
       "aliases": ["discount", "market"],
       "logo": "eurospin",
-      "color": "#005596",
-      "defaultFormat": "CODE128"
+      "color": "#005596"
     },
     {
       "id": "pam",
       "name": "Pam",
       "aliases": ["panorama", "per te"],
       "logo": "pam",
-      "color": "#E30613",
-      "defaultFormat": "CODE128"
+      "color": "#E30613"
     },
     {
       "id": "despar",
       "name": "Despar",
       "aliases": ["interspar", "eurospar", "tribù"],
       "logo": "despar",
-      "color": "#007A33",
-      "defaultFormat": "CODE128"
+      "color": "#007A33"
     },
     {
       "id": "unieuro",
       "name": "Unieuro",
       "aliases": ["electronics", "tech", "club"],
       "logo": "unieuro",
-      "color": "#2D8BF0",
-      "defaultFormat": "CODE128"
+      "color": "#2D8BF0"
     },
     {
       "id": "mediaworld",
       "name": "MediaWorld",
       "aliases": ["mediamarkt", "tech", "club"],
       "logo": "mediaworld",
-      "color": "#DF0000",
-      "defaultFormat": "CODE128"
+      "color": "#DF0000"
     },
     {
       "id": "ikea",
@@ -102,8 +96,7 @@
       "name": "Bennet",
       "aliases": ["bennet club", "galimberti"],
       "logo": "bennet",
-      "color": "#E3000F",
-      "defaultFormat": "CODE128"
+      "color": "#E3000F"
     },
     {
       "id": "tigota",
@@ -118,24 +111,21 @@
       "name": "Sephora",
       "aliases": ["beauty", "makeup", "cosmetics"],
       "logo": "sephora",
-      "color": "#000000",
-      "defaultFormat": "CODE128"
+      "color": "#000000"
     },
     {
       "id": "douglas",
       "name": "Douglas",
       "aliases": ["beauty", "perfume"],
       "logo": "douglas",
-      "color": "#7BB4AE",
-      "defaultFormat": "CODE128"
+      "color": "#7BB4AE"
     },
     {
       "id": "coin",
       "name": "Coin",
       "aliases": ["coincard", "department"],
       "logo": "coin",
-      "color": "#000000",
-      "defaultFormat": "CODE128"
+      "color": "#000000"
     },
     {
       "id": "ovs",
@@ -150,8 +140,7 @@
       "name": "H&M",
       "aliases": ["fashion", "clothing", "member"],
       "logo": "hm",
-      "color": "#CD1125",
-      "defaultFormat": "CODE128"
+      "color": "#CD1125"
     },
     {
       "id": "zara",
