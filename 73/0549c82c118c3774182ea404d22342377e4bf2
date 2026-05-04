@@ -1,0 +1,69 @@
+features/add-card/hooks/useImageScan.test.ts
+  fbac427c808acfac 335-409
+targets/watch/Assets.xcassets/AppIcon.appiconset/Contents.json
+  fbac427c808acfac 5-7,12
+docs/sprint-artifacts/stories/2-9-scan-cards-from-image-screenshot.md
+  fbac427c808acfac 61-62,66-70,74-76,121-132,134-181
+.nvmrc
+  fbac427c808acfac 1
+features/add-card/components/ScannerOverlay.tsx
+  fbac427c808acfac 56-60,193-194,209
+app.json
+  fbac427c808acfac 58-65
+core/utils/index.ts
+  fbac427c808acfac 9-14
+features/add-card/hooks/useImageScan.ts
+  fbac427c808acfac 7-11,21,65-70,83-86,98-101,103,134-136,140-141,143-144,154
+core/utils/normalizeBarcode.test.ts
+  fbac427c808acfac 1-153
+core/utils/normalizeBarcode.ts
+  fbac427c808acfac 1-113
+features/add-card/screens/BrandScannerScreen.tsx
+  fbac427c808acfac 109,125
+features/cards/hooks/useBarcodeScanner.test.ts
+  fbac427c808acfac 120-196
+package.json
+  fbac427c808acfac 44,109-110
+catalogue/italy.json
+  fbac427c808acfac 2,9,17,25,48,55,62,69,76,99,114,121,128,143
+features/cards/hooks/useBarcodeScanner.ts
+  fbac427c808acfac 13,42-47,59-63,97,99-100,102-103
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.3.4",
+  "base_commit_sha": "730549c82c118c3774182ea404d22342377e4bf2",
+  "prompts": {
+    "ed3ff66f4fb8a303": {
+      "agent_id": {
+        "tool": "github-copilot",
+        "id": "2c48ef8f-09e2-4892-a90d-f7e018d20693",
+        "model": "copilot/claude-sonnet-4.6"
+      },
+      "human_author": "Andrea Pacino",
+      "messages": [],
+      "total_additions": 515,
+      "total_deletions": 0,
+      "accepted_lines": 1988,
+      "overriden_lines": 20
+    },
+    "fbac427c808acfac": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "1c20bd9f-0227-4c84-9b00-7813d97e0790",
+        "model": "claude-opus-4-7"
+      },
+      "human_author": "Andrea Pacino",
+      "messages": [],
+      "total_additions": 1642,
+      "total_deletions": 209,
+      "accepted_lines": 582,
+      "overriden_lines": 1
+    }
+  },
+  "humans": {
+    "h_806fb4fc1f8dfb": {
+      "author": "Andrea Pacino"
+    }
+  }
+}
