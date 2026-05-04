@@ -106,7 +106,7 @@ export const BrandScannerScreen: React.FC = () => {
     dismissError,
     dismissMultiPicker,
     selectCode
-  } = useImageScan({ onCodeResolved: handleScan });
+  } = useImageScan({ onCodeResolved: handleScan, expectedFormat: brand?.defaultFormat });
 
   return (
     <View style={{ flex: 1 }}>
@@ -122,6 +122,7 @@ export const BrandScannerScreen: React.FC = () => {
         onImageErrorDismiss={dismissError}
         onImageErrorRetry={pickAndScan}
         onImageErrorManualEntry={handleManualEntry}
+        expectedFormat={brand?.defaultFormat}
       />
       <MultiCodePickerSheet
         visible={multiCodes.length > 0}

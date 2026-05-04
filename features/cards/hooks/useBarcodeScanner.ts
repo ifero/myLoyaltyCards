@@ -10,6 +10,7 @@ import * as Haptics from 'expo-haptics';
 import { useState, useEffect, useRef } from 'react';
 
 import { BarcodeFormat } from '@/core/schemas';
+import { applyExpectedFormat, normalizeBarcode } from '@/core/utils';
 
 /**
  * Map expo-camera barcode types to our schema format
@@ -22,37 +23,6 @@ const BARCODE_FORMAT_MAP: Record<string, BarcodeFormat> = {
   code39: 'CODE39',
   upc_a: 'UPCA'
 };
-
-/**
- * Validate EAN-13 checksum
- * EAN-13 uses a standard weighted sum calculation
- */
-function isValidEAN13Checksum(code: string): boolean {
-  if (code.length !== 13) return false;
-  if (!/^\d+$/.test(code)) return false;
-
-  let sum = 0;
-  for (let i = 0; i < 12; i++) {
-    const digit = parseInt(code.charAt(i), 10);
-    const weight = i % 2 === 0 ? 1 : 3;
-    sum += digit * weight;
-  }
-
-  const checkDigit = (10 - (sum % 10)) % 10;
-  return checkDigit === parseInt(code.charAt(12), 10);
-}
-
-/**
- * Auto-correct format when CODE128 is detected but looks like EAN-13
- * This handles cases where the barcode was encoded as CODE128 but contains valid EAN-13 data
- */
-function intelCorrectFormat(barcode: string, detectedFormat: BarcodeFormat): BarcodeFormat {
-  // If detected as CODE128, check if it's actually a valid EAN-13
-  if (detectedFormat === 'CODE128' && barcode.length === 13 && isValidEAN13Checksum(barcode)) {
-    return 'EAN13';
-  }
-  return detectedFormat;
-}
 
 /**
  * Map barcode format from expo-camera to our schema
@@ -69,6 +39,12 @@ export interface ScanResult {
 interface UseBarcodeScannerOptions {
   onScan: (result: ScanResult) => void;
   enabled?: boolean;
+  /**
+   * Optional catalogue-driven format hint. When `EAN13` is supplied and the
+   * scanner returns 12 digits whose `0`-prefixed form has a valid checksum,
+   * the result is auto-promoted to EAN-13 with the leading zero restored.
+   */
+  expectedFormat?: BarcodeFormat;
 }
 
 /**
@@ -80,7 +56,11 @@ interface UseBarcodeScannerOptions {
  * - Haptic feedback on successful scan
  * - Error handling
  */
-export function useBarcodeScanner({ onScan, enabled = true }: UseBarcodeScannerOptions) {
+export function useBarcodeScanner({
+  onScan,
+  enabled = true,
+  expectedFormat
+}: UseBarcodeScannerOptions) {
   const [permission, requestPermission] = useCameraPermissions();
   const [hasScanned, setHasScanned] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -114,12 +94,13 @@ export function useBarcodeScanner({ onScan, enabled = true }: UseBarcodeScannerO
     // Provide haptic feedback
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
 
-    // Map format and apply intelligent correction
+    // Map format → canonical normalization → optional catalogue-driven hint
     const baseFormat = mapBarcodeFormat(event.type);
-    const correctedFormat = intelCorrectFormat(event.data, baseFormat);
+    const canonical = normalizeBarcode(event.data, baseFormat);
+    const final = applyExpectedFormat(canonical, expectedFormat);
     onScan({
-      barcode: event.data,
-      format: correctedFormat
+      barcode: final.value,
+      format: final.format
     });
 
     // Reset scan state after a delay to allow for re-scanning if needed

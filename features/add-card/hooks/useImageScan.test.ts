@@ -3,8 +3,10 @@
  * Story 2.9: Scan Cards from Image or Screenshot
  */
 
+import BarcodeScanning, {
+  BarcodeFormat as MlKitBarcodeFormat
+} from '@react-native-ml-kit/barcode-scanning';
 import { renderHook, act } from '@testing-library/react-native';
-import { scanFromURLAsync } from 'expo-camera';
 import * as ImagePicker from 'expo-image-picker';
 
 import { ScanResult } from '@/features/cards/hooks/useBarcodeScanner';
@@ -15,12 +17,23 @@ jest.mock('expo-image-picker', () => ({
   launchImageLibraryAsync: jest.fn()
 }));
 
-jest.mock('expo-camera', () => ({
-  scanFromURLAsync: jest.fn()
+jest.mock('@react-native-ml-kit/barcode-scanning', () => ({
+  __esModule: true,
+  default: {
+    scan: jest.fn()
+  },
+  BarcodeFormat: {
+    CODE_128: 1,
+    CODE_39: 2,
+    EAN_13: 32,
+    EAN_8: 64,
+    QR_CODE: 256,
+    UPC_A: 512
+  }
 }));
 
 const mockLaunch = ImagePicker.launchImageLibraryAsync as jest.Mock;
-const mockScanFromURL = scanFromURLAsync as jest.Mock;
+const mockScanFromURL = BarcodeScanning.scan as jest.Mock;
 
 const CANCELLED_RESULT: ImagePicker.ImagePickerResult = {
   canceled: true,
@@ -87,7 +100,9 @@ describe('useImageScan', () => {
 
   it('calls onCodeResolved with correct args when exactly 1 barcode found', async () => {
     mockLaunch.mockResolvedValueOnce(assetResult('file://test.jpg'));
-    mockScanFromURL.mockResolvedValueOnce([{ data: '1234567890128', type: 'ean13' }]);
+    mockScanFromURL.mockResolvedValueOnce([
+      { value: '1234567890128', format: MlKitBarcodeFormat.EAN_13 }
+    ]);
 
     const { result } = renderHook(() => useImageScan({ onCodeResolved }));
 
@@ -105,7 +120,9 @@ describe('useImageScan', () => {
 
   it('preserves leading zeros in barcode data (AC3)', async () => {
     mockLaunch.mockResolvedValueOnce(assetResult('file://test.jpg'));
-    mockScanFromURL.mockResolvedValueOnce([{ data: '0012345678901', type: 'ean13' }]);
+    mockScanFromURL.mockResolvedValueOnce([
+      { value: '0012345678901', format: MlKitBarcodeFormat.EAN_13 }
+    ]);
 
     const { result } = renderHook(() => useImageScan({ onCodeResolved }));
 
@@ -122,8 +139,8 @@ describe('useImageScan', () => {
   it('sets multiCodes when 2+ barcodes found', async () => {
     mockLaunch.mockResolvedValueOnce(assetResult('file://test.jpg'));
     mockScanFromURL.mockResolvedValueOnce([
-      { data: 'CODE-A', type: 'code128' },
-      { data: 'CODE-B', type: 'code39' }
+      { value: 'CODE-A', format: MlKitBarcodeFormat.CODE_128 },
+      { value: 'CODE-B', format: MlKitBarcodeFormat.CODE_39 }
     ]);
 
     const { result } = renderHook(() => useImageScan({ onCodeResolved }));
@@ -141,7 +158,10 @@ describe('useImageScan', () => {
   it('caps multiCodes at 6 when more than 6 barcodes present', async () => {
     mockLaunch.mockResolvedValueOnce(assetResult('file://test.jpg'));
     mockScanFromURL.mockResolvedValueOnce(
-      Array.from({ length: 9 }, (_, i) => ({ data: `CODE-${i}`, type: 'code128' }))
+      Array.from({ length: 9 }, (_, i) => ({
+        value: `CODE-${i}`,
+        format: MlKitBarcodeFormat.CODE_128
+      }))
     );
 
     const { result } = renderHook(() => useImageScan({ onCodeResolved }));
@@ -153,7 +173,7 @@ describe('useImageScan', () => {
     expect(result.current.multiCodes).toHaveLength(6);
   });
 
-  it('sets showError and clears isProcessing when scanFromURLAsync throws', async () => {
+  it('sets showError and clears isProcessing when BarcodeScanning.scan throws', async () => {
     mockLaunch.mockResolvedValueOnce(assetResult('file://test.jpg'));
     mockScanFromURL.mockRejectedValueOnce(new Error('Decode failed'));
 
@@ -190,8 +210,8 @@ describe('useImageScan', () => {
   it('dismissMultiPicker clears multiCodes', async () => {
     mockLaunch.mockResolvedValueOnce(assetResult('file://test.jpg'));
     mockScanFromURL.mockResolvedValueOnce([
-      { data: 'A', type: 'code128' },
-      { data: 'B', type: 'code128' }
+      { value: 'A', format: MlKitBarcodeFormat.CODE_128 },
+      { value: 'B', format: MlKitBarcodeFormat.CODE_128 }
     ]);
 
     const { result } = renderHook(() => useImageScan({ onCodeResolved }));
@@ -212,8 +232,8 @@ describe('useImageScan', () => {
   it('selectCode clears multiCodes and calls onCodeResolved', async () => {
     mockLaunch.mockResolvedValueOnce(assetResult('file://test.jpg'));
     mockScanFromURL.mockResolvedValueOnce([
-      { data: 'SELECTED', type: 'qr' },
-      { data: 'OTHER', type: 'code128' }
+      { value: 'SELECTED', format: MlKitBarcodeFormat.QR_CODE },
+      { value: 'OTHER', format: MlKitBarcodeFormat.CODE_128 }
     ]);
 
     const { result } = renderHook(() => useImageScan({ onCodeResolved }));
@@ -231,13 +251,13 @@ describe('useImageScan', () => {
   });
 
   it('maps all supported barcode format types correctly', async () => {
-    const formats: Array<{ type: string; expected: string }> = [
-      { type: 'code128', expected: 'CODE128' },
-      { type: 'ean13', expected: 'EAN13' },
-      { type: 'ean8', expected: 'EAN8' },
-      { type: 'qr', expected: 'QR' },
-      { type: 'code39', expected: 'CODE39' },
-      { type: 'upc_a', expected: 'UPCA' }
+    const formats: Array<{ type: MlKitBarcodeFormat; expected: string }> = [
+      { type: MlKitBarcodeFormat.CODE_128, expected: 'CODE128' },
+      { type: MlKitBarcodeFormat.EAN_13, expected: 'EAN13' },
+      { type: MlKitBarcodeFormat.EAN_8, expected: 'EAN8' },
+      { type: MlKitBarcodeFormat.QR_CODE, expected: 'QR' },
+      { type: MlKitBarcodeFormat.CODE_39, expected: 'CODE39' },
+      { type: MlKitBarcodeFormat.UPC_A, expected: 'UPCA' }
     ];
 
     for (const { type, expected } of formats) {
@@ -245,7 +265,7 @@ describe('useImageScan', () => {
       const cb = jest.fn();
 
       mockLaunch.mockResolvedValueOnce(assetResult('file://test.jpg'));
-      mockScanFromURL.mockResolvedValueOnce([{ data: 'VALUE', type }]);
+      mockScanFromURL.mockResolvedValueOnce([{ value: 'VALUE', format: type }]);
 
       const { result } = renderHook(() => useImageScan({ onCodeResolved: cb }));
 
@@ -260,7 +280,9 @@ describe('useImageScan', () => {
   it('auto-corrects CODE128 to EAN13 when code is valid EAN-13 (13 digits + valid checksum)', async () => {
     mockLaunch.mockResolvedValueOnce(assetResult('file://test.jpg'));
     // 0226007855218 is a valid EAN-13 (from your Conad card example)
-    mockScanFromURL.mockResolvedValueOnce([{ data: '0226007855218', type: 'code128' }]);
+    mockScanFromURL.mockResolvedValueOnce([
+      { value: '0226007855218', format: MlKitBarcodeFormat.CODE_128 }
+    ]);
 
     const { result } = renderHook(() => useImageScan({ onCodeResolved }));
 
@@ -277,7 +299,9 @@ describe('useImageScan', () => {
   it('keeps CODE128 when code is 13 digits but invalid EAN-13 checksum', async () => {
     mockLaunch.mockResolvedValueOnce(assetResult('file://test.jpg'));
     // Valid format but wrong checksum
-    mockScanFromURL.mockResolvedValueOnce([{ data: '0226007855219', type: 'code128' }]);
+    mockScanFromURL.mockResolvedValueOnce([
+      { value: '0226007855219', format: MlKitBarcodeFormat.CODE_128 }
+    ]);
 
     const { result } = renderHook(() => useImageScan({ onCodeResolved }));
 
@@ -293,7 +317,9 @@ describe('useImageScan', () => {
 
   it('keeps CODE128 when code is not 13 digits', async () => {
     mockLaunch.mockResolvedValueOnce(assetResult('file://test.jpg'));
-    mockScanFromURL.mockResolvedValueOnce([{ data: 'SHORT123', type: 'code128' }]);
+    mockScanFromURL.mockResolvedValueOnce([
+      { value: 'SHORT123', format: MlKitBarcodeFormat.CODE_128 }
+    ]);
 
     const { result } = renderHook(() => useImageScan({ onCodeResolved }));
 
@@ -305,5 +331,80 @@ describe('useImageScan', () => {
       barcode: 'SHORT123',
       format: 'CODE128'
     });
+  });
+
+  it('promotes UPC-A 12-digit to EAN-13 with leading zero (canonical)', async () => {
+    mockLaunch.mockResolvedValueOnce(assetResult('file://test.jpg'));
+    // ML Kit on iOS often returns this Conad barcode as UPC-A (12 digits, leading 0 stripped)
+    mockScanFromURL.mockResolvedValueOnce([
+      { value: '226007855218', format: MlKitBarcodeFormat.UPC_A }
+    ]);
+
+    const { result } = renderHook(() => useImageScan({ onCodeResolved }));
+
+    await act(async () => {
+      await result.current.pickAndScan();
+    });
+
+    expect(onCodeResolved).toHaveBeenCalledWith({
+      barcode: '0226007855218',
+      format: 'EAN13'
+    });
+  });
+
+  it('restores stripped EAN-13 leading zero when expectedFormat=EAN13 (catalogue hint)', async () => {
+    mockLaunch.mockResolvedValueOnce(assetResult('file://test.jpg'));
+    // Some scanners return CODE128 carrying 12 digits when the source is a leading-0 EAN-13
+    mockScanFromURL.mockResolvedValueOnce([
+      { value: '226007855218', format: MlKitBarcodeFormat.CODE_128 }
+    ]);
+
+    const { result } = renderHook(() => useImageScan({ onCodeResolved, expectedFormat: 'EAN13' }));
+
+    await act(async () => {
+      await result.current.pickAndScan();
+    });
+
+    expect(onCodeResolved).toHaveBeenCalledWith({
+      barcode: '0226007855218',
+      format: 'EAN13'
+    });
+  });
+
+  it('does not pad to EAN-13 when expectedFormat=EAN13 but checksum would be invalid', async () => {
+    mockLaunch.mockResolvedValueOnce(assetResult('file://test.jpg'));
+    mockScanFromURL.mockResolvedValueOnce([
+      { value: '226007855219', format: MlKitBarcodeFormat.CODE_128 }
+    ]);
+
+    const { result } = renderHook(() => useImageScan({ onCodeResolved, expectedFormat: 'EAN13' }));
+
+    await act(async () => {
+      await result.current.pickAndScan();
+    });
+
+    expect(onCodeResolved).toHaveBeenCalledWith({
+      barcode: '226007855219',
+      format: 'CODE128'
+    });
+  });
+
+  it('applies normalization to multi-code results too', async () => {
+    mockLaunch.mockResolvedValueOnce(assetResult('file://test.jpg'));
+    mockScanFromURL.mockResolvedValueOnce([
+      { value: '226007855218', format: MlKitBarcodeFormat.UPC_A },
+      { value: 'OTHER', format: MlKitBarcodeFormat.CODE_128 }
+    ]);
+
+    const { result } = renderHook(() => useImageScan({ onCodeResolved }));
+
+    await act(async () => {
+      await result.current.pickAndScan();
+    });
+
+    expect(result.current.multiCodes).toEqual([
+      { value: '0226007855218', format: 'EAN13' },
+      { value: 'OTHER', format: 'CODE128' }
+    ]);
   });
 });

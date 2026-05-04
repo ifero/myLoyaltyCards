@@ -34,12 +34,14 @@
     "@hookform/resolvers": "^5.2.2",
     "@react-native-async-storage/async-storage": "2.2.0",
     "@react-native-community/netinfo": "11.5.2",
+    "@react-native-ml-kit/barcode-scanning": "^2.0.0",
     "@react-native-picker/picker": "2.11.4",
     "@shopify/flash-list": "2.0.2",
     "@supabase/supabase-js": "^2.98.0",
     "burnt": "^0.13.0",
     "expo": "^55.0.19",
     "expo-brightness": "~55.0.13",
+    "expo-build-properties": "~55.0.13",
     "expo-camera": "~55.0.16",
     "expo-clipboard": "~55.0.13",
     "expo-constants": "~55.0.15",
@@ -104,7 +106,8 @@
   },
   "resolutions": {
     "string-length/strip-ansi": "6.0.1",
-    "jest-message-util/strip-ansi": "6.0.1"
+    "jest-message-util/strip-ansi": "6.0.1",
+    "string-width": "^4.2.3"
   },
   "private": true
 }
