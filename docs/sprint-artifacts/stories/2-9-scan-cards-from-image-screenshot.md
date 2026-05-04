@@ -92,7 +92,7 @@ UX design spec: [`docs/ux-designs/2-9-scan-from-image.md`](../../ux-designs/2-9-
 
 - **Branch:** `feature/2-9-scan-from-image`
 - **New files created:**
-  - `features/add-card/hooks/useImageScan.ts` — core image-scan hook wrapping `expo-image-picker` + `expo-camera`'s `scanFromURLAsync`
+  - `features/add-card/hooks/useImageScan.ts` — core image-scan hook wrapping `expo-image-picker` + `@react-native-ml-kit/barcode-scanning` (originally `expo-camera`'s `scanFromURLAsync`; replaced in `c81d26c` for cross-platform parity)
   - `features/add-card/components/NoCodeFoundBanner.tsx` — 5-second auto-dismiss error banner
   - `features/add-card/components/MultiCodePickerSheet.tsx` — bottom-sheet for selecting one of 2–6 detected codes
 - **Modified files:**
@@ -117,7 +117,7 @@ UX design spec: [`docs/ux-designs/2-9-scan-from-image.md`](../../ux-designs/2-9-
 
 ### Test Run
 
-Full suite: **1372 / 1372 passed** ✅
+Full suite at original story merge: **1372 / 1372 passed** ✅ (see Follow-up Fix below for post-iOS-hardening counts)
 
 ---
 
@@ -145,8 +145,9 @@ After the original story shipped, on-device iOS testing surfaced three problems 
 **EAN-13 leading-zero recovery (the real card-data fix)**
 
 - New shared util `core/utils/normalizeBarcode.ts`:
-  - `normalizeBarcode(value, detectedFormat)` — canonical, math-driven post-scan corrections that are always safe regardless of catalogue context:
+  - `normalizeBarcode(value, detectedFormat)` — canonical, math-driven post-scan corrections that are always safe regardless of catalogue context. Trims surrounding whitespace before applying any rule.
     - **UPC-A 12-digit → EAN-13 13-digit-with-leading-0** (gated by checksum). Mathematical equivalence: UPC-A and EAN-13 with country prefix `0` encode identical bar patterns; promoting all 12-digit UPC-A scans to EAN-13 is reversible and well-defined.
+    - **UPC-A 13-digit → EAN-13** (label-only). ML Kit on iOS sometimes returns the full 13-digit form but still labels `UPCA`; if the digits validate as EAN-13, just relabel.
     - CODE-128 carrying a 13-digit EAN-13 payload with a valid checksum → EAN-13 (lifted out of the previously-duplicated `intelCorrectFormat` in two hooks).
   - `applyExpectedFormat(current, expectedFormat)` — catalogue-driven hint. When `expectedFormat === 'EAN13'` and the current value is 12 digits whose `0`-prefixed form has a valid EAN-13 checksum, restore the leading zero. Checksum gate prevents corrupting genuine 12-digit non-EAN-13 numeric payloads.
   - `isValidEAN13Checksum` — exported for reuse and testing.

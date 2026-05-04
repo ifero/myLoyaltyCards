@@ -95,9 +95,13 @@ export const useImageScan = ({
   const selectCode = useCallback(
     (code: DetectedCode) => {
       setMultiCodes([]);
-      // Selected codes were already normalized when added to multiCodes; the
-      // expectedFormat pass is idempotent so re-applying here is safe.
-      const final = applyExpectedFormat({ value: code.value, format: code.format }, expectedFormat);
+      // Re-run the full normalize → expectedFormat pipeline. Multi-code entries
+      // are already normalized at the time they are pushed into state, but both
+      // passes are idempotent, and re-applying here keeps `selectCode` a single
+      // source of truth even if a future caller pushes raw values into
+      // `multiCodes`.
+      const canonical = normalizeBarcode(code.value, code.format);
+      const final = applyExpectedFormat(canonical, expectedFormat);
       onCodeResolved({ barcode: final.value, format: final.format });
     },
     [onCodeResolved, expectedFormat]

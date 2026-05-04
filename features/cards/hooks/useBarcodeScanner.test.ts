@@ -117,6 +117,24 @@ describe('useBarcodeScanner', () => {
       }
     });
 
+    it('preserves EAN-13 with leading zero through the format mapping loop', async () => {
+      const { result } = renderHook(() => useBarcodeScanner({ onScan: mockOnScan }));
+
+      act(() => {
+        result.current.handleBarcodeScanned({
+          data: '0226007855218',
+          type: 'ean13'
+        });
+      });
+
+      await waitFor(() => {
+        expect(mockOnScan).toHaveBeenCalledWith({
+          barcode: '0226007855218',
+          format: 'EAN13'
+        });
+      });
+    });
+
     it('promotes UPC-A 12-digit to EAN-13 with leading zero (canonical)', async () => {
       const { result } = renderHook(() => useBarcodeScanner({ onScan: mockOnScan }));
 

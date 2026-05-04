@@ -90,6 +90,59 @@ describe('normalizeBarcode (canonical)', () => {
       format: 'QR'
     });
   });
+
+  it('relabels UPC-A to EAN-13 when scanner returned full 13 digits with valid checksum', () => {
+    // ML Kit on iOS sometimes returns the full 13-digit form but still labels UPCA.
+    expect(normalizeBarcode('0226007855218', 'UPCA')).toEqual({
+      value: '0226007855218',
+      format: 'EAN13'
+    });
+  });
+
+  it('does not relabel UPC-A 13-digit when checksum is invalid', () => {
+    expect(normalizeBarcode('0226007855219', 'UPCA')).toEqual({
+      value: '0226007855219',
+      format: 'UPCA'
+    });
+  });
+
+  it('trims surrounding whitespace before applying rules', () => {
+    expect(normalizeBarcode('  226007855218\n', 'UPCA')).toEqual({
+      value: '0226007855218',
+      format: 'EAN13'
+    });
+  });
+
+  it('passes the empty string through unchanged', () => {
+    expect(normalizeBarcode('', 'CODE128')).toEqual({
+      value: '',
+      format: 'CODE128'
+    });
+  });
+
+  it('rejects values prefixed with + or - (regex requires pure digits)', () => {
+    expect(normalizeBarcode('+12345678901', 'UPCA')).toEqual({
+      value: '+12345678901',
+      format: 'UPCA'
+    });
+    expect(normalizeBarcode('-22600785521', 'UPCA')).toEqual({
+      value: '-22600785521',
+      format: 'UPCA'
+    });
+  });
+
+  it('passes EAN-8 through unchanged (not in scope of any rule)', () => {
+    expect(normalizeBarcode('12345670', 'EAN8')).toEqual({
+      value: '12345670',
+      format: 'EAN8'
+    });
+  });
+
+  it('is idempotent — passing canonical output back through is a no-op', () => {
+    const first = normalizeBarcode('226007855218', 'UPCA');
+    const second = normalizeBarcode(first.value, first.format);
+    expect(second).toEqual(first);
+  });
 });
 
 describe('applyExpectedFormat (catalogue-driven)', () => {
