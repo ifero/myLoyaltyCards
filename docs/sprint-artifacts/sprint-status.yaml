@@ -1,5 +1,5 @@
 # generated: 2026-01-03
-# updated: 2026-05-03
+# updated: 2026-05-24
 # project: myLoyaltyCards
 # tracking_system: file-system
 # story_location: docs/sprint-artifacts
@@ -35,7 +35,7 @@
 # - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
 
 generated: 2026-01-03
-updated: 2026-05-03
+updated: 2026-05-24
 project: myLoyaltyCards
 tracking_system: file-system
 story_location: docs/sprint-artifacts
@@ -148,29 +148,32 @@ last_sprint:
 current_sprint:
   number: 14
   name: 'Sprint 14: WatchOS Reliability, Italian In-App, and Household Collaboration Planning'
-  goal: 'Complete Apple Watch reliability work, finish incremental catalogue generation, enable Italian in-app readiness, begin household collaboration discovery, and repair the OTP verification regression from Story 6.18.'
+  goal: 'Complete Apple Watch reliability work, finish incremental catalogue generation, enable Italian in-app readiness, begin household collaboration discovery, repair the OTP verification regression from Story 6.18, and stage barcode readability bugfix tickets for phone and watch.'
   status: in-progress
   planning_date: 2026-05-03
   start_date: 2026-05-13
   end_date: 2026-05-26
   duration: 2 weeks
-  epics: [5, 15, 14, 6]
+  epics: [5, 15, 14, 6, 2]
   stories:
     - 5-7-create-watch-complication
     - 5-8-incremental-catalogue-generation
     - 2-9-scan-cards-from-image-screenshot
+    - 2-10-fix-barcode-qr-readability-padding
+    - 5-10-watch-barcode-legibility-list-density
     - 15-2-italian-language-in-app
     - 14-1-household-collaboration
     - 6-18a-otp-verification-followup
   waves:
     wave_1:
-      stories: [5-7, 5-8, 2-9, 15-2, 6-18a]
-      note: 'Primary implementation work on Apple Watch reliability, image-based scanning, Italian in-app readiness, and the OTP verification follow-up bugfix.'
+      stories: [5-7, 5-8, 2-9, 2-10, 5-10, 15-2, 6-18a]
+      note: 'Primary implementation work on Apple Watch reliability, image-based scanning, barcode readability bugfix planning, Italian in-app readiness, and the OTP verification follow-up bugfix.'
     wave_2:
       stories: [14-1]
       note: 'Begin household collaboration discovery and alignment once core sprint capacity is confirmed.'
   notes: |
     Sprint 14 has started. The focus is on completing Apple Watch reliability work, Italian in-app readiness, beginning household collaboration discovery, and absorbing the OTP verification follow-up bugfix discovered after Story 6.18 shipped.
+    On 2026-05-24, two additional bugfix planning stories were added and refined to ready-for-dev: Story 2.10 (phone barcode/QR readability + quiet-zone padding) and Story 5.10 (watch barcode legibility + list density polish).
     This sprint keeps scope tight while advancing the highest-value customer and platform work.
 
 next_sprint: null
@@ -204,6 +207,7 @@ development_status:
   2-7-edit-card: done
   2-8-delete-card: done
   2-9-scan-cards-from-image-screenshot: review
+  2-10-fix-barcode-qr-readability-padding: ready-for-dev
   epic-2-retrospective: optional
 
   # Epic 3: Italian Brand Catalogue
@@ -235,6 +239,7 @@ development_status:
   5-9-remove-userdefaults-fallback: done
   5-7-create-watch-complication: ready-for-dev
   5-8-incremental-catalogue-generation: ready-for-dev
+  5-10-watch-barcode-legibility-list-density: ready-for-dev
   epic-5-retrospective: optional
 
   # Epic 6: User Authentication & Privacy
