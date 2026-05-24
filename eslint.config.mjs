@@ -137,6 +137,7 @@ export default [
       'android/**',
       'ios/**',
       'watch-android/**',
+      'plugins/withMlkitAppleSiliconSimulator.js',
       '*.config.js',
       'targets/**/expo-target.config.js',
       '*.config.mjs',
