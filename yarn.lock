@@ -1861,11 +1861,6 @@
   resolved "https://registry.yarnpkg.com/@react-native-community/netinfo/-/netinfo-11.5.2.tgz#daf3bc1b5cf6e9fc6725600c9e95875b5e50e694"
   integrity sha512-/g0m65BtX9HU+bPiCH2517bOHpEIUsGrWFXDzi1a5nNKn5KujQgm04WhL7/OSXWKHyrT8VVtUoJA0XKRxueBpQ==
 
-"@react-native-ml-kit/barcode-scanning@^2.0.0":
-  version "2.0.0"
-  resolved "https://registry.yarnpkg.com/@react-native-ml-kit/barcode-scanning/-/barcode-scanning-2.0.0.tgz#fc4386b3411abf0930c9716d293fb42b8a7d049b"
-  integrity sha512-gCbxV6k/2IOYEw+GnMPbFWvURq0BDJYn6K4lOf5+gqr6L8bwH7CEMxnK8NA8J6aeNKDUh8OKDtZC0kL1gc9OWA==
-
 "@react-native-picker/picker@2.11.4":
   version "2.11.4"
   resolved "https://registry.yarnpkg.com/@react-native-picker/picker/-/picker-2.11.4.tgz#7fb09506ee00a82989125cc03e8495204c8afc01"
@@ -7501,6 +7496,11 @@ react-native-get-random-values@~1.11.0:
   integrity sha512-4BTbDbRmS7iPdhYLRcz3PGFIpFJBwNZg9g42iwa2P6FOv9vZj/xJc678RZXnLNZzd0qd7Q3CCF6Yd+CU2eoXKQ==
   dependencies:
     fast-base64-decode "^1.0.0"
+
+react-native-image-code-scanner@^1.1.3:
+  version "1.1.3"
+  resolved "https://registry.yarnpkg.com/react-native-image-code-scanner/-/react-native-image-code-scanner-1.1.3.tgz#ae89ae88a189b60cc0a9e3993c9907b570a28191"
+  integrity sha512-75ebKaOAoEm3juyAFt/7Up8pS/1HOy9YgMWP6BUgpRTDmGqVeE5QtAO4Eviby8oQjeoDge9VJXKwLChra/2Ahw==
 
 react-native-is-edge-to-edge@1.2.1:
   version "1.2.1"

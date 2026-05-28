@@ -47,7 +47,7 @@ jobs:
       - name: Set up Ruby
         uses: ruby/setup-ruby@v1
         with:
-          ruby-version: '3.2'
+          ruby-version: '4.0.5'
           bundler-cache: true
       - name: Build iOS TestFlight (RC)
         run: bundle exec fastlane ios beta
@@ -82,7 +82,7 @@ jobs:
       - name: Set up Ruby
         uses: ruby/setup-ruby@v1
         with:
-          ruby-version: '3.2'
+          ruby-version: '4.0.5'
           bundler-cache: true
       - name: Build Android Beta (RC)
         run: bundle exec fastlane android beta

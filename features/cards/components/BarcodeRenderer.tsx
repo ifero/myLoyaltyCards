@@ -18,6 +18,12 @@ import type { BarcodeFormat } from '@/core/schemas';
 
 /** Conversion ratio from pixels to millimeters (bwip-js uses mm) */
 const PX_TO_MM_RATIO = 10;
+const DEFAULT_LINEAR_WIDTH = 280;
+const DEFAULT_QR_SIZE = 220;
+const MIN_QR_SIZE = 220;
+const LINEAR_PADDING_WIDTH = 6;
+const LINEAR_PADDING_HEIGHT = 2;
+const QR_PADDING_SIZE = 4;
 
 /**
  * Props for BarcodeRenderer component
@@ -27,7 +33,7 @@ export interface BarcodeRendererProps {
   value: string;
   /** Barcode format type */
   format: BarcodeFormat;
-  /** Width of the barcode (default: 280 for linear, 200 for QR) */
+  /** Width of the barcode (default: 280 for linear, 220 for QR) */
   width?: number;
   /** Height of the barcode (default: 120 for linear, ignored for QR) */
   height?: number;
@@ -82,7 +88,9 @@ export const BarcodeRenderer = memo(function BarcodeRenderer({
   const [error, setError] = useState<boolean>(false);
 
   const isQR = format === 'QR';
-  const barcodeWidth = width ?? (isQR ? 200 : 280);
+  const barcodeWidth = isQR
+    ? Math.max(width ?? DEFAULT_QR_SIZE, MIN_QR_SIZE)
+    : (width ?? DEFAULT_LINEAR_WIDTH);
 
   // Memoize bwip-js options to avoid recreating on every render
   const bwipOptions = useMemo((): RenderOptions => {
@@ -99,7 +107,9 @@ export const BarcodeRenderer = memo(function BarcodeRenderer({
       barcolor: barColor,
       ...(backgroundColor !== 'transparent' && {
         backgroundcolor: hexToBwipColor(backgroundColor)
-      })
+      }),
+      paddingwidth: isQR ? QR_PADDING_SIZE : LINEAR_PADDING_WIDTH,
+      paddingheight: isQR ? QR_PADDING_SIZE : LINEAR_PADDING_HEIGHT
     };
 
     if (isQR) {

@@ -7,7 +7,7 @@
 | **Story ID** | 2-9                                   |
 | **Epic**     | 2 - Card Management & Barcode Display |
 | **Sprint**   | Next sprint                           |
-| **Status**   | review                                |
+| **Status**   | done                                  |
 | **Priority** | High                                  |
 | **Estimate** | 3 points                              |
 | **Owners**   | PM: Ifero · Dev: — · QA: —            |
@@ -58,7 +58,7 @@ UX design spec: [`docs/ux-designs/2-9-scan-from-image.md`](../../ux-designs/2-9-
 
 **Resolved design questions (pre-dev):**
 
-- OQ-1 (decoder): Originally planned to use `expo-camera`'s `scanFromURLAsync`. Replaced during impl with `@react-native-ml-kit/barcode-scanning` for cross-platform parity (commit `c81d26c`); see follow-up fix below for iOS-specific environment work.
+- OQ-1 (decoder): Originally planned to use `expo-camera`'s `scanFromURLAsync`. The current implementation uses `react-native-image-code-scanner`, which decodes gallery images with iOS Vision Framework and Android ML Kit.
 - OQ-2 (image resize): `quality: 1`, no resize — full-fidelity input gives the decoder more bytes to work with on hand-cropped or low-resolution screenshots.
 - OQ-3 (sheet animation): Use `react-native-reanimated` already in the project.
 - OQ-5 (Android permissions): `expo-image-picker` plugin in `app.json` handles READ_MEDIA_IMAGES automatically.
@@ -66,13 +66,13 @@ UX design spec: [`docs/ux-designs/2-9-scan-from-image.md`](../../ux-designs/2-9-
 **New dependencies required:**
 
 - `expo-image-picker` (photo library picker)
-- `@react-native-ml-kit/barcode-scanning` (cross-platform image barcode decoding)
-- `expo-build-properties` (sets iOS deployment target ≥ 18.0 required by ML Kit's prebuilt frameworks)
+- `react-native-image-code-scanner` (gallery image barcode decoding; iOS Vision Framework, Android ML Kit)
+- `expo-build-properties` (maintains the project's iOS deployment target)
 
 ## Dependencies
 
 - `expo-image-picker` (photo library access)
-- `@react-native-ml-kit/barcode-scanning` (image decode, both platforms)
+- `react-native-image-code-scanner` (image decode, iOS Vision Framework + Android ML Kit)
 - `expo-build-properties` (iOS deployment target)
 - Existing scan result routing and card setup flow
 
@@ -92,7 +92,7 @@ UX design spec: [`docs/ux-designs/2-9-scan-from-image.md`](../../ux-designs/2-9-
 
 - **Branch:** `feature/2-9-scan-from-image`
 - **New files created:**
-  - `features/add-card/hooks/useImageScan.ts` — core image-scan hook wrapping `expo-image-picker` + `@react-native-ml-kit/barcode-scanning` (originally `expo-camera`'s `scanFromURLAsync`; replaced in `c81d26c` for cross-platform parity)
+  - `features/add-card/hooks/useImageScan.ts` — core image-scan hook wrapping `expo-image-picker` + `react-native-image-code-scanner` (originally `expo-camera`'s `scanFromURLAsync`)
   - `features/add-card/components/NoCodeFoundBanner.tsx` — 5-second auto-dismiss error banner
   - `features/add-card/components/MultiCodePickerSheet.tsx` — bottom-sheet for selecting one of 2–6 detected codes
 - **Modified files:**
@@ -108,7 +108,7 @@ UX design spec: [`docs/ux-designs/2-9-scan-from-image.md`](../../ux-designs/2-9-
 ### Acceptance Criteria Checklist
 
 - [x] AC1: "Scan from image" row present in ScannerOverlay when `onImageScan` is provided
-- [x] AC2: `expo-image-picker` + `scanFromURLAsync` decode barcodes from photos
+- [x] AC2: `expo-image-picker` + `react-native-image-code-scanner` decode barcodes from photos
 - [x] AC3: Leading zeros preserved — raw string returned directly from scanner (covered by `useImageScan.test.ts`)
 - [x] AC4: `onCodeResolved({ value, format })` prefills existing `/add-card/setup` flow via `handleScan`
 - [x] AC5: 2–6 detected codes trigger `MultiCodePickerSheet`; user selection calls `onCodeResolved`
@@ -121,7 +121,7 @@ Full suite at original story merge: **1372 / 1372 passed** ✅ (see Follow-up Fi
 
 ---
 
-## Follow-up Fix: iOS image-scan hardening (`fix/2-9-ios-image-scan-mlkit`)
+## Follow-up Fix: image-scan migration away from ML Kit on iOS
 
 After the original story shipped, on-device iOS testing surfaced three problems that this branch addresses.
 
@@ -129,8 +129,8 @@ After the original story shipped, on-device iOS testing surfaced three problems 
 
 1. **iOS build failed with a CocoaPods deployment-target error.**
    `RNMLKitBarcodeScanning` requires iOS ≥ 15.5; the project defaulted to 15.1 because no `ios.deploymentTarget` was set in `Podfile.properties.json`.
-2. **iPhone 17 Pro / iOS 26.x simulators were filtered out of `xcodebuild`'s destination list.**
-   Root cause was _not_ CoreSimulator state — it was the prebuilt Google ML Kit frameworks (`MLImage 1.0.0-beta7`, `MLKitBarcodeScanning 7.0.0`) shipping a `.framework` (rather than `.xcframework`) whose `arm64` slice is `iOS-Device`-only. CocoaPods correctly auto-emits `EXCLUDED_ARCHS[sdk=iphonesimulator*] = arm64` in `Pods-myLoyaltyCards.*.xcconfig`, which forces the whole app to x86_64-sim and excludes every arm64-only iOS 26 simulator. **There is no config-side fix.** Apple Silicon simulator scanning is currently blocked on Google publishing an arm64-iOS-Simulator slice (or replacing the dep with Apple Vision / vision-camera). Workaround for development: run on a physical iPhone.
+2. **The original ML Kit package blocked Apple Silicon simulator builds on modern iOS runtimes.**
+   Root cause was _not_ CoreSimulator state — it was the prebuilt Google ML Kit frameworks (`MLImage 1.0.0-beta7`, `MLKitBarcodeScanning 7.0.0`) shipping a `.framework` (rather than `.xcframework`) whose `arm64` slice is `iOS-Device`-only. CocoaPods correctly auto-emits `EXCLUDED_ARCHS[sdk=iphonesimulator*] = arm64` in `Pods-myLoyaltyCards.*.xcconfig`, which excludes every arm64-only iOS 26 simulator. That package was removed from the image-scan path in favor of a Vision-backed iOS implementation.
 3. **ML Kit on iOS returned 12-digit `UPC-A` for Italian Conad EAN-13 cards**, dropping the leading `0`. Saved cards therefore couldn't be re-scanned by Conad's POS.
 
 ### Fixes shipped on this branch
@@ -141,6 +141,7 @@ After the original story shipped, on-device iOS testing surfaced three problems 
 - Enabled the new architecture (`expo.newArchEnabled: true` in `app.json`).
 - Set `ios.minimumOsVersion: "18.0"` in `app.json`'s `ios` block plus `expo-build-properties` plugin with `ios.deploymentTarget: "18.0"` so future `prebuild` calls produce a consistent target.
 - Added a `string-width: ^4.2.3` resolution in `package.json` to keep the codegen path's `cliui → string-width` `require()` chain on a CommonJS version (string-width@5+ is ESM-only and breaks RN codegen at install time).
+- Replaced `@react-native-ml-kit/barcode-scanning` with `react-native-image-code-scanner`, which uses Apple Vision Framework on iOS and removes the ML Kit-specific simulator-framework issue from the image-scan flow.
 
 **EAN-13 leading-zero recovery (the real card-data fix)**
 
@@ -171,7 +172,7 @@ After the original story shipped, on-device iOS testing surfaced three problems 
   - `features/add-card/screens/BrandScannerScreen.tsx` (pass `brand?.defaultFormat` to both scanner paths)
   - `catalogue/italy.json` (clean up CODE-128 defaults, bump version)
   - `app.json` (enable new arch, set iOS minimum, register `expo-build-properties` plugin)
-  - `package.json` + `yarn.lock` (add `expo-build-properties`, pin `string-width@^4`)
+  - `package.json` + `yarn.lock` (replace ML Kit image scanner with `react-native-image-code-scanner`, add `expo-build-properties`, pin `string-width@^4`)
 
 ### Test Run (post-fix)
 
@@ -179,4 +180,5 @@ Full suite: **1404 / 1404 passed** ✅ across 145 suites. Typecheck clean.
 
 ### Known limitations
 
-- Apple Silicon iOS simulators cannot run the app while Google ML Kit ships frameworks without an arm64-iOS-Simulator slice. Use a physical iPhone for now. Tracking item: re-evaluate when GoogleMLKit ≥ 9 podspec-side ships `.xcframework`, or migrate image-scan to Apple Vision / vision-camera.
+- Image scanning still requires a prebuilt development build; it does not run in Expo Go.
+- Barcode recognition should still be verified on both platforms because iOS and Android now use different native engines for static images (Vision on iOS, ML Kit on Android).

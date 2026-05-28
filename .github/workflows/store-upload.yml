@@ -51,7 +51,7 @@ jobs:
       - name: Set up Ruby
         uses: ruby/setup-ruby@v1
         with:
-          ruby-version: '3.2'
+          ruby-version: '4.0.5'
           bundler-cache: true
       - name: Upload iOS Release Build
         run: bundle exec fastlane ios upload_release
@@ -86,7 +86,7 @@ jobs:
       - name: Set up Ruby
         uses: ruby/setup-ruby@v1
         with:
-          ruby-version: '3.2'
+          ruby-version: '4.0.5'
           bundler-cache: true
       - name: Upload Android Release Build
         run: bundle exec fastlane android upload_release

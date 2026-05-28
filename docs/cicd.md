@@ -288,10 +288,22 @@ Note:
 
 fastlane match behavior:
 
+- Local Fastlane work now requires Ruby `4.0.5`. CI uses `ruby/setup-ruby` with the same version, `Gemfile` reads it from `.ruby-version`, and local Fastlane helpers expect that exact toolchain.
 - `match` is configured in `fastlane/Matchfile` and uses the certificate repository referenced there.
 - CI runs `match` in readonly mode via `readonly: is_ci`.
 - Local runs may use write mode if the developer has access to the certificate repo and the correct secrets.
 - The iOS `fastlane` lanes call `setup_ci` on macOS CI runners to create a temporary keychain before `match` runs.
+
+Local helper commands:
+
+- `yarn fastlane:match:bootstrap` verifies that a compatible Ruby is available, installs Bundler `2.7.2` if needed, and runs `bundle install`.
+- `yarn fastlane:match:fetch` installs Bundler `2.7.2` if needed, runs `bundle install`, and then syncs development, Ad Hoc, and App Store profiles for both the iOS app and watch target through the existing `ios fetch_certificates` lane.
+- `yarn fastlane:match:development -- --readonly`
+- `yarn fastlane:match:adhoc -- --force`
+- `yarn fastlane:match:appstore -- --readonly`
+- `yarn fastlane:match -- nuke distribution --skip-confirmation`
+
+The helper script is `scripts/fastlane-match.sh`. It derives both bundle identifiers from `fastlane/Appfile`, requires Ruby `4.0.5`, prefers a matching Homebrew Ruby automatically when the shell is still on macOS system Ruby, bootstraps Bundler `2.7.2`, and then runs the requested `fastlane match` command.
 
 CI environment variables used for `match` and signing:
 
@@ -318,7 +330,7 @@ Adding a new bundle ID in this repo:
 4. Run locally:
 
 ```bash
-bundle exec fastlane ios fetch_certificates
+yarn fastlane:match:fetch
 ```
 
 5. Confirm the new provisioning profile is committed to the certificate repository.
