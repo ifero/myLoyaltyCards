@@ -18,6 +18,9 @@ on:
       - 'app.json'
       - 'fastlane/Fastfile'
 
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: 'true'
+
 jobs:
   watchos-tests:
     name: watchOS (xcodebuild) tests
@@ -35,10 +38,10 @@ jobs:
         with:
           xcode-version: latest-stable
 
-      - name: Use Node.js 22
+      - name: Use Node.js 24
         uses: actions/setup-node@v4
         with:
-          node-version: '22'
+          node-version: '24'
           cache: 'yarn'
 
       - name: Cache node modules

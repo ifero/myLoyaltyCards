@@ -14,6 +14,9 @@ on:
       - 'android/**'
   workflow_dispatch:
 
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: 'true'
+
 jobs:
   android-adhoc:
     name: Android AdHoc Build
@@ -30,7 +33,7 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '22'
+          node-version: '24'
           cache: 'yarn'
       - name: Install dependencies
         run: yarn install --frozen-lockfile

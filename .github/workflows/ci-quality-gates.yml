@@ -6,6 +6,9 @@ on:
   push:
     branches: [main]
 
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: 'true'
+
 jobs:
   quality-gates:
     name: Quality gates (lint, typecheck, test, coverage)
@@ -19,10 +22,10 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Use Node.js 22
+      - name: Use Node.js 24
         uses: actions/setup-node@v4
         with:
-          node-version: '22'
+          node-version: '24'
           cache: 'yarn'
 
       - name: Cache node modules
