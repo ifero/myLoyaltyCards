@@ -8,7 +8,7 @@
 
 import { MaterialIcons } from '@expo/vector-icons';
 import { CameraView } from 'expo-camera';
-import React, { useEffect } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -197,16 +197,16 @@ export const ScannerOverlay: React.FC<ScannerOverlayProps> = ({
   const insets = useSafeAreaInsets();
   const { width: screenWidth } = useWindowDimensions();
   const viewfinderSize = screenWidth * VIEWFINDER_WIDTH_RATIO;
+  const [cameraMountError, setCameraMountError] = useState<string | null>(null);
 
-  const {
-    permission,
-    hasScanned,
-    error,
-    handleBarcodeScanned,
-    requestCameraPermission,
-    reset,
-    isReady
-  } = useBarcodeScanner({ onScan, enabled: true, expectedFormat });
+  const { permission, hasScanned, error, handleBarcodeScanned, requestCameraPermission, reset } =
+    useBarcodeScanner({ onScan, enabled: true, expectedFormat });
+
+  const effectiveCameraError = cameraMountError ?? error;
+
+  const handleCameraMountError = useCallback((event: { message: string }) => {
+    setCameraMountError(event.message || 'Unable to start the camera preview.');
+  }, []);
 
   // Request permission on mount
   useEffect(() => {
@@ -253,7 +253,7 @@ export const ScannerOverlay: React.FC<ScannerOverlayProps> = ({
   }
 
   // Error state
-  if (error && !isReady) {
+  if (effectiveCameraError) {
     return (
       <View testID={testID} style={[styles.container, { backgroundColor: theme.background }]}>
         <FloatingBackButton
@@ -263,11 +263,23 @@ export const ScannerOverlay: React.FC<ScannerOverlayProps> = ({
         <View style={styles.centeredContent}>
           <MaterialIcons name="error-outline" size={48} color={theme.error} />
           <Text style={[styles.permissionTitle, { color: theme.textPrimary }]}>Camera Error</Text>
-          <Text style={[styles.permissionBody, { color: theme.textSecondary }]}>{error}</Text>
+          <Text style={[styles.permissionBody, { color: theme.textSecondary }]}>
+            {effectiveCameraError}
+          </Text>
           <View style={styles.permissionActions}>
+            {onImageScan && (
+              <Button
+                variant="primary"
+                onPress={onImageScan}
+                testID="scan-from-image-fallback-button"
+              >
+                Scan from image
+              </Button>
+            )}
             <Button
-              variant="primary"
+              variant={onImageScan ? 'secondary' : 'primary'}
               onPress={() => {
+                setCameraMountError(null);
                 reset();
                 requestCameraPermission();
               }}
@@ -298,6 +310,7 @@ export const ScannerOverlay: React.FC<ScannerOverlayProps> = ({
         barcodeScannerSettings={{
           barcodeTypes: ['code128', 'ean13', 'ean8', 'qr', 'code39', 'upc_a']
         }}
+        onMountError={handleCameraMountError}
         onBarcodeScanned={hasScanned ? undefined : handleBarcodeScanned}
       />
 

@@ -63,8 +63,7 @@
             "deploymentTarget": "18.0"
           }
         }
-      ],
-      "./plugins/withMlkitAppleSiliconSimulator"
+      ]
     ],
     "experiments": {
       "typedRoutes": true

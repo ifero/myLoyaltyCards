@@ -3,9 +3,11 @@
  * Story 13.4: Restyle Add Card Flow (AC3)
  */
 
-import { render, screen, fireEvent } from '@testing-library/react-native';
+import { act, render, screen, fireEvent } from '@testing-library/react-native';
 
 import { ScannerOverlay } from './ScannerOverlay';
+
+const mockCameraView = jest.fn();
 
 // Mock theme
 jest.mock('@/shared/theme', () => ({
@@ -29,7 +31,14 @@ jest.mock('react-native-safe-area-context', () => ({
 
 // Mock expo-camera
 jest.mock('expo-camera', () => ({
-  CameraView: 'CameraView'
+  CameraView: (props: unknown) => {
+    mockCameraView(props);
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const React = require('react');
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const { View } = require('react-native');
+    return React.createElement(View, { testID: 'camera-view' });
+  }
 }));
 
 // Override reanimated mock to add Easing and withRepeat
@@ -74,6 +83,7 @@ describe('ScannerOverlay', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
+    mockCameraView.mockClear();
   });
 
   describe('camera ready state', () => {
@@ -108,6 +118,40 @@ describe('ScannerOverlay', () => {
       render(<ScannerOverlay {...defaultProps} />);
       expect(screen.getByTestId('manual-entry-row')).toBeTruthy();
       expect(screen.getByText('Enter card number manually')).toBeTruthy();
+    });
+
+    it('falls back to error UI when the camera preview fails to mount', () => {
+      const onImageScan = jest.fn();
+      render(<ScannerOverlay {...defaultProps} onImageScan={onImageScan} />);
+
+      const cameraProps = mockCameraView.mock.calls.at(-1)?.[0] as {
+        onMountError?: (event: { message: string }) => void;
+      };
+
+      act(() => {
+        cameraProps.onMountError?.({ message: 'Failed to start camera preview' });
+      });
+
+      expect(screen.getByText('Camera Error')).toBeTruthy();
+      expect(screen.getByText('Failed to start camera preview')).toBeTruthy();
+      expect(screen.getByTestId('scan-from-image-fallback-button')).toBeTruthy();
+      expect(screen.queryByTestId('camera-view')).toBeNull();
+    });
+
+    it('uses image scan from the fallback camera error UI', () => {
+      const onImageScan = jest.fn();
+      render(<ScannerOverlay {...defaultProps} onImageScan={onImageScan} />);
+
+      const cameraProps = mockCameraView.mock.calls.at(-1)?.[0] as {
+        onMountError?: (event: { message: string }) => void;
+      };
+
+      act(() => {
+        cameraProps.onMountError?.({ message: 'Failed to start camera preview' });
+      });
+
+      fireEvent.press(screen.getByTestId('scan-from-image-fallback-button'));
+      expect(onImageScan).toHaveBeenCalledTimes(1);
     });
 
     it('calls onBack when floating back button is pressed', () => {
