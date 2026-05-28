@@ -3,6 +3,17 @@ default_platform(:ios)
 app_identifier = CredentialsManager::AppfileConfig.try_fetch_value(:app_identifier)
 watch_identifier = "#{app_identifier}.watch"
 
+def matched_profile_mapping(*bundle_ids)
+  mapping = lane_context[Fastlane::Actions::SharedValues::MATCH_PROVISIONING_PROFILE_MAPPING] || {}
+
+  bundle_ids.each_with_object({}) do |bundle_id, profiles|
+    matched_profile = mapping[bundle_id]
+    UI.user_error!("Missing match provisioning profile for #{bundle_id}") unless matched_profile
+
+    profiles[bundle_id] = matched_profile
+  end
+end
+
 platform :ios do
   before_all do
     # Creates a temporary keychain for match on CI runners.
@@ -46,24 +57,26 @@ platform :ios do
       in_house: false
     )
 
-    # Sign iOS app
+    # Sign app + watch targets before updating Xcode settings so we can use the
+    # exact profile names resolved by match.
     match(type: "adhoc", app_identifier: app_identifier, readonly: is_ci)
+    match(type: "adhoc", app_identifier: watch_identifier, readonly: is_ci)
+    profile_mapping = matched_profile_mapping(app_identifier, watch_identifier)
+
     update_code_signing_settings(
       use_automatic_signing: false,
       path: "ios/myLoyaltyCards.xcodeproj",
       team_id: ENV['FASTLANE_TEAM_ID'],
-      profile_name: "match AdHoc #{app_identifier}",
+      profile_name: profile_mapping.fetch(app_identifier),
       code_sign_identity: "iPhone Distribution",
       targets: ["myLoyaltyCards"]
     )
 
-    # Sign watchOS app
-    match(type: "adhoc", app_identifier: watch_identifier, readonly: is_ci)
     update_code_signing_settings(
       use_automatic_signing: false,
       path: "ios/myLoyaltyCards.xcodeproj",
       team_id: ENV['FASTLANE_TEAM_ID'],
-      profile_name: "match AdHoc #{watch_identifier}",
+      profile_name: profile_mapping.fetch(watch_identifier),
       code_sign_identity: "iPhone Distribution",
       targets: ["watch"]
     )
@@ -80,6 +93,9 @@ platform :ios do
       workspace: "ios/myLoyaltyCards.xcworkspace",
       export_method: "ad-hoc",
       output_directory: "output",
+      export_options: {
+        provisioningProfiles: profile_mapping
+      },
       xcargs: "DEVELOPMENT_TEAM='#{ENV['FASTLANE_TEAM_ID']}'"
     )
   end
@@ -93,24 +109,24 @@ platform :ios do
       in_house: false
     )
 
-    # Sign iOS app
     match(type: "appstore", app_identifier: app_identifier, readonly: is_ci)
+    match(type: "appstore", app_identifier: watch_identifier, readonly: is_ci)
+    profile_mapping = matched_profile_mapping(app_identifier, watch_identifier)
+
     update_code_signing_settings(
       use_automatic_signing: false,
       path: "ios/myLoyaltyCards.xcodeproj",
       team_id: ENV['FASTLANE_TEAM_ID'],
-      profile_name: "match AppStore #{app_identifier}",
+      profile_name: profile_mapping.fetch(app_identifier),
       code_sign_identity: "iPhone Distribution",
       targets: ["myLoyaltyCards"]
     )
 
-    # Sign watchOS app
-    match(type: "appstore", app_identifier: watch_identifier, readonly: is_ci)
     update_code_signing_settings(
       use_automatic_signing: false,
       path: "ios/myLoyaltyCards.xcodeproj",
       team_id: ENV['FASTLANE_TEAM_ID'],
-      profile_name: "match AppStore #{watch_identifier}",
+      profile_name: profile_mapping.fetch(watch_identifier),
       code_sign_identity: "iPhone Distribution",
       targets: ["watch"]
     )
@@ -129,6 +145,9 @@ platform :ios do
       workspace: "ios/myLoyaltyCards.xcworkspace",
       export_method: "app-store",
       output_directory: "output",
+      export_options: {
+        provisioningProfiles: profile_mapping
+      },
       xcargs: "DEVELOPMENT_TEAM='#{ENV['FASTLANE_TEAM_ID']}'"
     )
     upload_to_testflight(
@@ -145,24 +164,24 @@ platform :ios do
       in_house: false
     )
 
-    # Sign iOS app
     match(type: "appstore", app_identifier: app_identifier, readonly: is_ci)
+    match(type: "appstore", app_identifier: watch_identifier, readonly: is_ci)
+    profile_mapping = matched_profile_mapping(app_identifier, watch_identifier)
+
     update_code_signing_settings(
       use_automatic_signing: false,
       path: "ios/myLoyaltyCards.xcodeproj",
       team_id: ENV['FASTLANE_TEAM_ID'],
-      profile_name: "match AppStore #{app_identifier}",
+      profile_name: profile_mapping.fetch(app_identifier),
       code_sign_identity: "iPhone Distribution",
       targets: ["myLoyaltyCards"]
     )
 
-    # Sign watchOS app
-    match(type: "appstore", app_identifier: watch_identifier, readonly: is_ci)
     update_code_signing_settings(
       use_automatic_signing: false,
       path: "ios/myLoyaltyCards.xcodeproj",
       team_id: ENV['FASTLANE_TEAM_ID'],
-      profile_name: "match AppStore #{watch_identifier}",
+      profile_name: profile_mapping.fetch(watch_identifier),
       code_sign_identity: "iPhone Distribution",
       targets: ["watch"]
     )
@@ -177,6 +196,9 @@ platform :ios do
       workspace: "ios/myLoyaltyCards.xcworkspace",
       export_method: "app-store",
       output_directory: "output",
+      export_options: {
+        provisioningProfiles: profile_mapping
+      },
       xcargs: "DEVELOPMENT_TEAM='#{ENV['FASTLANE_TEAM_ID']}'"
     )
     upload_to_app_store(
