@@ -7,7 +7,7 @@
 | **Story ID** | 2-10                                  |
 | **Epic**     | 2 - Card Management & Barcode Display |
 | **Sprint**   | 14                                    |
-| **Status**   | ready-for-dev                         |
+| **Status**   | in-progress                           |
 | **Priority** | High                                  |
 | **Estimate** | 3 points (Dev: 1-1.5d, QA: 0.5d)      |
 | **Owners**   | PM: Ifero · Dev: — · QA: —            |
@@ -60,10 +60,10 @@ This story is a focused bugfix and does not change card data model, routing, or 
 
 ## Tasks
 
-- [ ] Update phone barcode rendering defaults for scanner-safe quiet zones.
-- [ ] Ensure QR and linear sizing remain readable and unclipped at current UI sizes.
-- [ ] Confirm all phone barcode entry points use the same hardened renderer config.
-- [ ] Add/update tests for renderer options and dimensions.
+- [x] Update phone barcode rendering defaults for scanner-safe quiet zones.
+- [x] Ensure QR and linear sizing remain readable and unclipped at current UI sizes.
+- [x] Confirm all phone barcode entry points use the same hardened renderer config.
+- [x] Add/update tests for renderer options and dimensions.
 - [ ] Execute manual scanner validation matrix (QR + linear).
 - [ ] Capture validation evidence in story notes before moving to `review`.
 
@@ -96,3 +96,43 @@ This story is a focused bugfix and does not change card data model, routing, or 
 - [ ] Updated tests pass.
 - [ ] Manual validation evidence is attached to the story.
 - [ ] `sprint-status.yaml` keeps the story tracked as `ready-for-dev` until implementation starts.
+
+---
+
+## Dev Agent Record
+
+### Agent Model Used
+
+GPT-5.4
+
+### Debug Log References
+
+- 2026-05-24: Story scaffold extended because the draft lacked Dev Agent Record, File List, Change Log, and Status sections required for BMAD tracking.
+- 2026-05-24: Working branch created: `fix/2.10-barcode-qr-readability-padding`.
+- 2026-05-24: Hardened the shared phone renderer in `features/cards/components/BarcodeRenderer.tsx` with explicit bwip-js quiet-zone padding for linear and QR output plus a 220px minimum QR size.
+- 2026-05-24: Focused barcode validation passed via `yarn test BarcodeRenderer.test.tsx CardDetails.test.tsx FullscreenBarcode.test.tsx BarcodeFlash.test.tsx --runInBand`.
+- 2026-05-24: Real-device scanner validation is still pending because this session does not have device/scanner access.
+
+### Completion Notes List
+
+- Added explicit generator-level `paddingwidth` and `paddingheight` defaults for both linear and QR generation paths in the shared phone barcode renderer.
+- Enforced a scanner-safe minimum QR render size so phone surfaces passing narrower widths still generate a readable QR symbol without changing barcode data or format mapping.
+- Extended renderer regression coverage to lock quiet-zone options and QR dimension floors, then revalidated the `CardDetails`, `FullscreenBarcode`, `BarcodeFlash`, and `BarcodeRenderer` test slice successfully.
+- Manual QA evidence for TC-2-10-01, TC-2-10-02, TC-2-10-03, and TC-2-10-06 is still required before the story can move to `review`.
+
+### Change Log
+
+- 2026-05-24: Added BMAD tracking sections to the story so implementation status and remaining validation work can be recorded explicitly.
+- 2026-05-24: Hardened shared phone barcode rendering with explicit quiet-zone defaults and a 220px minimum QR size floor.
+- 2026-05-24: Added focused regression coverage for quiet-zone options and QR sizing, then validated the phone barcode component slice.
+
+### File List
+
+- `features/cards/components/BarcodeRenderer.tsx` — MODIFIED: Added explicit bwip-js quiet-zone defaults and enforced a scanner-safe minimum QR size.
+- `features/cards/components/BarcodeRenderer.test.tsx` — MODIFIED: Added regression coverage for quiet-zone options and QR size clamping.
+- `docs/sprint-artifacts/stories/2-10-fix-barcode-qr-readability-padding.md` — MODIFIED: Updated task tracking and implementation notes.
+- `docs/sprint-artifacts/sprint-status.yaml` — MODIFIED: Moved Story 2.10 from ready-for-dev to in-progress.
+
+## Status
+
+in-progress

@@ -207,7 +207,7 @@ development_status:
   2-7-edit-card: done
   2-8-delete-card: done
   2-9-scan-cards-from-image-screenshot: review
-  2-10-fix-barcode-qr-readability-padding: ready-for-dev
+  2-10-fix-barcode-qr-readability-padding: in-progress
   epic-2-retrospective: optional
 
   # Epic 3: Italian Brand Catalogue

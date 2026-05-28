@@ -171,6 +171,21 @@ describe('BarcodeRenderer', () => {
       expect(callArgs.backgroundcolor).toBeUndefined();
     });
 
+    it('should apply explicit quiet-zone padding for linear barcodes', async () => {
+      const { getByLabelText } = render(<BarcodeRenderer value="test" format="CODE128" />);
+
+      await waitFor(() => {
+        expect(getByLabelText('CODE128 barcode for test')).toBeTruthy();
+      });
+
+      expect(mockToDataURL).toHaveBeenCalledWith(
+        expect.objectContaining({
+          paddingwidth: 6,
+          paddingheight: 2
+        })
+      );
+    });
+
     it('should use default width of 280 for linear barcodes', async () => {
       const { getByLabelText } = render(<BarcodeRenderer value="test" format="CODE128" />);
 
@@ -215,7 +230,7 @@ describe('BarcodeRenderer', () => {
       );
     });
 
-    it('should use default width of 200 for QR codes', async () => {
+    it('should use the scanner-safe default width for QR codes', async () => {
       const { getByLabelText } = render(<BarcodeRenderer value="test" format="QR" />);
 
       await waitFor(() => {
@@ -224,7 +239,27 @@ describe('BarcodeRenderer', () => {
 
       expect(mockToDataURL).toHaveBeenCalledWith(
         expect.objectContaining({
-          width: 20 // 200 / 10 (converted to mm)
+          width: 22, // 220 / 10 (converted to mm)
+          height: 22,
+          paddingwidth: 4,
+          paddingheight: 4
+        })
+      );
+    });
+
+    it('should clamp QR codes to the minimum readable size', async () => {
+      const { getByLabelText } = render(<BarcodeRenderer value="test" format="QR" width={180} />);
+
+      await waitFor(() => {
+        expect(getByLabelText('QR barcode for test')).toBeTruthy();
+      });
+
+      expect(mockToDataURL).toHaveBeenCalledWith(
+        expect.objectContaining({
+          width: 22,
+          height: 22,
+          paddingwidth: 4,
+          paddingheight: 4
         })
       );
     });
@@ -239,7 +274,9 @@ describe('BarcodeRenderer', () => {
       expect(mockToDataURL).toHaveBeenCalledWith(
         expect.objectContaining({
           width: 30, // 300 / 10 (converted to mm)
-          height: 30 // QR codes use width for both dimensions
+          height: 30, // QR codes use width for both dimensions
+          paddingwidth: 4,
+          paddingheight: 4
         })
       );
     });
