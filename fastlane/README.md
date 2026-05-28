@@ -46,6 +46,14 @@ Build iOS AdHoc app
 
 Build and upload to TestFlight
 
+### ios upload_release
+
+```sh
+[bundle exec] fastlane ios upload_release
+```
+
+Build and upload to App Store Connect (release)
+
 ---
 
 ## Android
@@ -73,6 +81,14 @@ Build Android AdHoc app
 ```
 
 Build and upload to Play Console (beta)
+
+### android upload_release
+
+```sh
+[bundle exec] fastlane android upload_release
+```
+
+Build and upload to Play Store (release)
 
 ---
 
