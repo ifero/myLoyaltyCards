@@ -27,6 +27,8 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable @typescript-eslint/no-require-imports */
 
+import { toDataURL, type RenderOptions } from '@bwip-js/react-native';
+
 import type { LoyaltyCard } from './schemas';
 
 type Unsubscribe = () => void;
@@ -81,6 +83,7 @@ function getNativeModule(): NativeModule | null {
 export function __resetWatchConnectivityForTests(): void {
   cachedNative = undefined;
   latestSnapshot = null;
+  latestSourceCards = null;
   diagnosticsRegistered = false;
   for (const off of diagnosticsUnsubscribers) {
     try {
@@ -111,9 +114,42 @@ export interface WatchCardPayload {
   colorHex: string;
   barcodeValue: string;
   barcodeFormat: string;
+  barcodeImageBase64?: string | null;
   usageCount: number;
   lastUsedAt: string | null;
   createdAt: string;
+}
+
+const WATCH_QR_PIXEL_SIZE = 144;
+const WATCH_SNAPSHOT_MAX_BYTES = 48_000;
+
+async function buildWatchQRCodeBase64(card: LoyaltyCard): Promise<string | null> {
+  if (card.barcodeFormat !== 'QR') return null;
+
+  try {
+    const options: RenderOptions = {
+      bcid: 'qrcode',
+      text: card.barcode,
+      scale: 1,
+      width: WATCH_QR_PIXEL_SIZE / 10,
+      height: WATCH_QR_PIXEL_SIZE / 10,
+      includetext: false,
+      paddingwidth: 2,
+      paddingheight: 2,
+      backgroundcolor: 'FFFFFF',
+      barcolor: '000000'
+    };
+
+    const result = await toDataURL(options);
+    const uri = result?.uri;
+    if (typeof uri !== 'string' || uri.length === 0) return null;
+
+    const parts = uri.split(',', 2);
+    return parts.length === 2 ? (parts[1] ?? null) : uri;
+  } catch (err) {
+    console.warn('[watch-connectivity] failed to pre-render QR for watch:', err);
+    return null;
+  }
 }
 
 type WatchTransportValue =
@@ -128,8 +164,122 @@ type WatchTransportValue =
 // ---------------------------------------------------------------------------
 
 let latestSnapshot: WatchCardPayload[] | null = null;
+let latestSourceCards: LoyaltyCard[] | null = null;
 let diagnosticsRegistered = false;
 const diagnosticsUnsubscribers: Unsubscribe[] = [];
+
+function utf8ByteLength(value: string): number {
+  if (typeof TextEncoder !== 'undefined') {
+    return new TextEncoder().encode(value).length;
+  }
+
+  return encodeURIComponent(value).replace(/%[A-F\d]{2}/gi, 'x').length;
+}
+
+function snapshotEnvelopeSize(payload: WatchCardPayload[]): number {
+  return utf8ByteLength(JSON.stringify({ type: 'cards', payload }));
+}
+
+function toBaseWatchCardPayload(card: LoyaltyCard): WatchCardPayload {
+  return {
+    id: card.id,
+    name: card.name,
+    brandId: card.brandId,
+    colorHex: card.color,
+    barcodeValue: card.barcode,
+    barcodeFormat: card.barcodeFormat,
+    usageCount: card.usageCount ?? 0,
+    lastUsedAt: card.lastUsedAt ?? null,
+    createdAt: card.createdAt
+  };
+}
+
+async function buildSnapshotWithOptionalQRImages(
+  cards: LoyaltyCard[]
+): Promise<WatchCardPayload[]> {
+  const snapshot = cards.map(toBaseWatchCardPayload);
+
+  if (snapshotEnvelopeSize(snapshot) > WATCH_SNAPSHOT_MAX_BYTES) {
+    console.warn('[watch-connectivity] base watch snapshot exceeds payload budget');
+    return snapshot;
+  }
+
+  let canEmbedMoreQRImages = true;
+
+  for (const [index, card] of cards.entries()) {
+    if (!canEmbedMoreQRImages || card.barcodeFormat !== 'QR') {
+      continue;
+    }
+
+    const barcodeImageBase64 = await buildWatchQRCodeBase64(card);
+    if (!barcodeImageBase64) {
+      continue;
+    }
+
+    const basePayload = snapshot[index];
+    if (!basePayload) {
+      continue;
+    }
+
+    snapshot[index] = {
+      ...basePayload,
+      barcodeImageBase64
+    };
+
+    if (snapshotEnvelopeSize(snapshot) > WATCH_SNAPSHOT_MAX_BYTES) {
+      snapshot[index] = basePayload;
+      canEmbedMoreQRImages = false;
+      console.warn(
+        '[watch-connectivity] dropped QR image from watch snapshot to stay under payload budget'
+      );
+    }
+  }
+
+  return snapshot;
+}
+
+async function canSyncSnapshot(native: NativeModule): Promise<boolean> {
+  try {
+    if (typeof native.getIsPaired === 'function') {
+      const paired = await native.getIsPaired();
+      if (paired === false) return false;
+    }
+    if (typeof native.getIsWatchAppInstalled === 'function') {
+      const installed = await native.getIsWatchAppInstalled();
+      if (installed === false) return false;
+    }
+  } catch {
+    return true;
+  }
+
+  return true;
+}
+
+async function refreshLatestSnapshot(includeQRImages: boolean): Promise<WatchCardPayload[] | null> {
+  if (!latestSourceCards) {
+    latestSnapshot = null;
+    return null;
+  }
+
+  latestSnapshot = includeQRImages
+    ? await buildSnapshotWithOptionalQRImages(latestSourceCards)
+    : latestSourceCards.map(toBaseWatchCardPayload);
+  return latestSnapshot;
+}
+
+async function rebuildAndFlushLatestSnapshot(): Promise<boolean> {
+  const native = getNativeModule();
+  if (!native || !latestSourceCards) return false;
+
+  const canPush = await canSyncSnapshot(native);
+  await refreshLatestSnapshot(canPush);
+
+  if (!canPush) {
+    return false;
+  }
+
+  return flushSnapshot();
+}
 
 function isPlainObject(value: unknown): value is Record<string, unknown> {
   return Object.prototype.toString.call(value) === '[object Object]';
@@ -227,9 +377,10 @@ function ensureDiagnostics(native: NativeModule): void {
   for (const ev of ['reachability', 'paired', 'installed']) {
     const off = subscribe(native, ev, (value) => {
       console.info(`[watch-connectivity] ${ev}:`, value);
-      if (value === true && latestSnapshot) {
-        // best-effort re-push; flushSnapshot() re-checks paired+installed
-        void flushSnapshot();
+      if (value === true && latestSourceCards) {
+        // Rebuild the snapshot lazily so QR fallbacks are only generated when
+        // the watch can actually receive them.
+        void rebuildAndFlushLatestSnapshot();
       }
     });
     if (off) diagnosticsUnsubscribers.push(off);
@@ -345,20 +496,6 @@ export function syncCardToWatch(id: string, cardData: any): Promise<boolean> {
   return sendMessageToWatch({ type: 'syncCard', payload: { id, cardData } });
 }
 
-function toWatchCardPayload(card: LoyaltyCard): WatchCardPayload {
-  return {
-    id: card.id,
-    name: card.name,
-    brandId: card.brandId,
-    colorHex: card.color,
-    barcodeValue: card.barcode,
-    barcodeFormat: card.barcodeFormat,
-    usageCount: card.usageCount ?? 0,
-    lastUsedAt: card.lastUsedAt ?? null,
-    createdAt: card.createdAt
-  };
-}
-
 /**
  * Internal: try to push the cached `latestSnapshot` to the watch. Gates the
  * push on `getIsPaired() && getIsWatchAppInstalled()` so we don't waste
@@ -370,17 +507,14 @@ async function flushSnapshot(): Promise<boolean> {
   if (!native || !latestSnapshot) return false;
 
   // Gating: skip when the device says no watch is paired / app not installed.
-  try {
-    if (typeof native.getIsPaired === 'function') {
-      const paired = await native.getIsPaired();
-      if (paired === false) return false;
-    }
-    if (typeof native.getIsWatchAppInstalled === 'function') {
-      const installed = await native.getIsWatchAppInstalled();
-      if (installed === false) return false;
-    }
-  } catch {
-    /* If the gate-check API throws, fall through and try anyway. */
+  const canPush = await canSyncSnapshot(native);
+  if (!canPush) {
+    return false;
+  }
+
+  if (snapshotEnvelopeSize(latestSnapshot) > WATCH_SNAPSHOT_MAX_BYTES) {
+    console.warn('[watch-connectivity] skipped watch snapshot because payload exceeds budget');
+    return false;
   }
 
   const message = sanitizeWatchTransportObject({ type: 'cards', payload: latestSnapshot });
@@ -415,10 +549,21 @@ async function flushSnapshot(): Promise<boolean> {
  * `paired`, or `installed`.
  */
 export async function pushCardsToWatch(cards: LoyaltyCard[]): Promise<boolean> {
-  latestSnapshot = cards.map(toWatchCardPayload);
+  latestSourceCards = cards;
   const native = getNativeModule();
-  if (!native) return false;
+  if (!native) {
+    await refreshLatestSnapshot(false);
+    return false;
+  }
   ensureDiagnostics(native);
+
+  const canPush = await canSyncSnapshot(native);
+  await refreshLatestSnapshot(canPush);
+
+  if (!canPush) {
+    return false;
+  }
+
   return flushSnapshot();
 }
 
