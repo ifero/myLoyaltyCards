@@ -207,7 +207,7 @@ development_status:
   2-7-edit-card: done
   2-8-delete-card: done
   2-9-scan-cards-from-image-screenshot: done
-  2-10-fix-barcode-qr-readability-padding: in-progress
+  2-10-fix-barcode-qr-readability-padding: done
   epic-2-retrospective: optional
 
   # Epic 3: Italian Brand Catalogue
@@ -239,7 +239,7 @@ development_status:
   5-9-remove-userdefaults-fallback: done
   5-7-create-watch-complication: ready-for-dev
   5-8-incremental-catalogue-generation: ready-for-dev
-  5-10-watch-barcode-legibility-list-density: ready-for-dev
+  5-10-watch-barcode-legibility-list-density: review
   epic-5-retrospective: optional
 
   # Epic 6: User Authentication & Privacy

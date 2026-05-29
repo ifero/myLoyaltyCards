@@ -1,5 +1,9 @@
 import SwiftUI
 
+#if canImport(CoreImage)
+  import CoreImage
+#endif
+
 #if canImport(UIKit)
   import UIKit
 #endif
@@ -19,11 +23,9 @@ enum WatchBarcodeFormat: String {
 
 /// Helper to generate barcode images on the watch.
 ///
-/// NOTE: CoreImage-based barcode generation is not available on watchOS in this
-/// build — the CI-based renderer was removed.  This file currently returns a
-/// simple textual placeholder (barcode value) and logs a TODO for future work
-/// (implement a CoreGraphics renderer or fetch from phone/server).
 struct BarcodeGenerator {
+  private static let cacheVersion = "watch-barcode-v2"
+
   private static let uiImageCache: NSCache<NSString, UIImage> = {
     let c = NSCache<NSString, UIImage>()
     c.countLimit = 64  // keep a reasonable number of cached barcode images
@@ -33,15 +35,14 @@ struct BarcodeGenerator {
   }()
 
   /// Generates a barcode image for `value` using a watchOS-friendly
-  /// renderer. Supports EAN-13 and Code128 (Code Set B). Other formats fall
-  /// back to a textual placeholder. Image rendering is cached.
+  /// renderer. Supports EAN-13, Code128, and QR. Image rendering is cached.
   static func generateImage(value: String, formatString: String?, targetSize: CGSize) async
     -> Image?
   {
     let fmtKey = (formatString ?? "").trimmingCharacters(in: .whitespacesAndNewlines).uppercased()
     guard !fmtKey.isEmpty, let fmt = WatchBarcodeFormat(rawValue: fmtKey) else { return nil }
 
-    let key = "\(value)|\(fmtKey)|\(Int(targetSize.width))x\(Int(targetSize.height))" as NSString
+    let key = "\(cacheVersion)|\(value)|\(fmtKey)|\(Int(targetSize.width))x\(Int(targetSize.height))" as NSString
     if let cached = uiImageCache.object(forKey: key) {
       return Image(uiImage: cached)
     }
@@ -57,11 +58,12 @@ struct BarcodeGenerator {
       // pragmatic fallback: render as Code128 so scanners can still read it
       modules = encodeCode128(value: value)
     case .QR:
-      // QR is not implemented on-watch; keep textual placeholder for now.
-      let uiImage = renderPlaceholderImage(text: value, size: targetSize)
-      let cost = Int(targetSize.width * targetSize.height * deviceScale * 4)
-      uiImageCache.setObject(uiImage, forKey: key, cost: cost)
-      return Image(uiImage: uiImage)
+      if let uiImage = renderQRCodeImage(text: value, size: targetSize) {
+        cacheImage(uiImage, forKey: key, targetSize: targetSize)
+        return Image(uiImage: uiImage)
+      }
+
+      return nil
     }
 
     guard let mod = modules else { return nil }
@@ -82,8 +84,7 @@ struct BarcodeGenerator {
     }
 
     // Cache and return
-    let cost = Int(targetSize.width * targetSize.height * deviceScale * 4)
-    uiImageCache.setObject(uiImage, forKey: key, cost: cost)
+    cacheImage(uiImage, forKey: key, targetSize: targetSize)
     return Image(uiImage: uiImage)
   }
 
@@ -363,6 +364,80 @@ struct BarcodeGenerator {
   }
 
   // MARK: - Helpers
+
+  private static func cacheImage(
+    _ image: UIImage,
+    forKey key: NSString,
+    targetSize: CGSize
+  ) {
+    let cost = Int(targetSize.width * targetSize.height * deviceScale * 4)
+    uiImageCache.setObject(image, forKey: key, cost: cost)
+  }
+
+  private static func renderQRCodeImage(text: String, size: CGSize) -> UIImage? {
+    #if canImport(CoreImage)
+      guard let data = text.data(using: .utf8) else { return nil }
+      guard let filter = CIFilter(name: "CIQRCodeGenerator") else { return nil }
+
+      filter.setValue(data, forKey: "inputMessage")
+      filter.setValue("Q", forKey: "inputCorrectionLevel")
+
+      guard let outputImage = filter.outputImage else { return nil }
+
+      let qrExtent = outputImage.extent.integral
+      guard !qrExtent.isEmpty else { return nil }
+
+      let widthPx = max(1, Int(round(size.width * deviceScale)))
+      let heightPx = max(1, Int(round(size.height * deviceScale)))
+      let scale = max(
+        floor(min(CGFloat(widthPx) / qrExtent.width, CGFloat(heightPx) / qrExtent.height)),
+        1
+      )
+
+      let transformedImage = outputImage.transformed(
+        by: CGAffineTransform(scaleX: scale, y: scale)
+      )
+      let transformedExtent = transformedImage.extent.integral
+
+      let ciContext = CIContext(options: nil)
+      guard let qrImage = ciContext.createCGImage(transformedImage, from: transformedExtent) else {
+        return nil
+      }
+
+      let colorSpace = CGColorSpaceCreateDeviceRGB()
+      guard
+        let context = CGContext(
+          data: nil,
+          width: widthPx,
+          height: heightPx,
+          bitsPerComponent: 8,
+          bytesPerRow: 0,
+          space: colorSpace,
+          bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
+        )
+      else { return nil }
+
+      context.interpolationQuality = .none
+      context.setShouldAntialias(false)
+      context.setFillColor(UIColor.white.cgColor)
+      context.fill(CGRect(x: 0, y: 0, width: widthPx, height: heightPx))
+
+      let drawRect = CGRect(
+        x: max((widthPx - Int(transformedExtent.width)) / 2, 0),
+        y: max((heightPx - Int(transformedExtent.height)) / 2, 0),
+        width: Int(transformedExtent.width),
+        height: Int(transformedExtent.height)
+      )
+      context.draw(qrImage, in: drawRect)
+
+      guard let finalImage = context.makeImage() else { return nil }
+
+      return UIImage(cgImage: finalImage, scale: deviceScale, orientation: .up)
+    #else
+      return nil
+    #endif
+  }
+
   private static func renderPlaceholderImage(text: String, size: CGSize) -> UIImage {
     let scale = deviceScale
     let scaledSize = CGSize(width: max(1, size.width), height: max(1, size.height))
@@ -418,7 +493,7 @@ struct BarcodeGenerator {
     /// Test helper: check whether a generated image is present in the cache.
     static func isImageCached(value: String, formatString: String?, targetSize: CGSize) -> Bool {
       let fmtKey = (formatString ?? "").trimmingCharacters(in: .whitespacesAndNewlines).uppercased()
-      let key = "\(value)|\(fmtKey)|\(Int(targetSize.width))x\(Int(targetSize.height))" as NSString
+      let key = "\(cacheVersion)|\(value)|\(fmtKey)|\(Int(targetSize.width))x\(Int(targetSize.height))" as NSString
       return uiImageCache.object(forKey: key) != nil
     }
   #endif

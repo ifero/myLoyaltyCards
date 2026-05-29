@@ -7,76 +7,83 @@ struct BarcodeFlashView: View {
 
   @Environment(\.dismiss) private var dismiss
   @State private var barcodeImage: Image? = nil
-  @State private var isLoading: Bool = false
   @FocusState private var isFocused: Bool
   @State private var crownRotation: Double = 0.0
   @State private var crownTriggered: Bool = false
+  @State private var barcodeTargetSize: CGSize = CGSize(width: 156, height: 88)
+  @State private var renderedTargetSize: CGSize = .zero
 
-  /// Resolved display name: catalogue brand name or user-assigned card name
-  private var displayName: String {
-    if let brandId = card.brandId,
-      let brand = WatchBrands.all.first(where: { $0.id == brandId })
-    {
-      return brand.name ?? card.name
-    }
-    return card.name
-  }
-
-  /// Brand logo color for the header
-  private var logoColor: Color {
-    mapColor(hex: card.colorHex) ?? .gray
+  private var titleText: String {
+    WatchBarcodePresentation.title(for: card)
   }
 
   var body: some View {
     ZStack {
       Color.black.ignoresSafeArea()
 
-      VStack(spacing: 8) {
-        // Brand info header (Figma: centered, 16px logo + brand name, 14pt medium)
-        brandInfoHeader
+      GeometryReader { geometry in
+        let showsValueLabel = !(card.barcodeValue?.isEmpty ?? true)
+        let layout = WatchBarcodeLayoutMetrics.make(
+          containerSize: geometry.size,
+          formatString: card.barcodeFormat,
+          showsValueLabel: showsValueLabel
+        )
 
-        // White barcode box (Figma: rounded 8px, full width, centered)
-        GeometryReader { geometry in
-          let boxWidth = geometry.size.width
-          VStack(spacing: 4) {
-            Spacer(minLength: 8)
+        VStack(spacing: 0) {
+          Spacer(minLength: 0)
 
-            // Barcode image — maximized width
-            if let barcodeImage = barcodeImage {
-              barcodeImage
-                .resizable()
-                .interpolation(.none)
-                .scaledToFit()
-                .frame(maxWidth: boxWidth - 16)
-                .accessibilityIdentifier("barcode-image")
-                .accessibilityLabel("Barcode for \(card.name)")
-                .onTapGesture { dismiss() }
-            } else {
-              barcodePlaceholder
-            }
-
-            // Barcode number (Figma: 12pt monospaced, black)
-            if let value = card.barcodeValue, !value.isEmpty {
-              Text(value)
-                .font(.system(size: 12, weight: .medium, design: .monospaced))
-                .foregroundColor(.black)
-                .lineLimit(1)
-                .minimumScaleFactor(0.5)
-                .accessibilityIdentifier("barcode-number")
-            }
-
-            Spacer(minLength: 6)
+          if let barcodeImage = barcodeImage {
+            barcodeImage
+              .resizable()
+              .interpolation(.none)
+              .scaledToFit()
+              .frame(width: layout.barcodeSize.width, height: layout.barcodeSize.height)
+              .accessibilityIdentifier("barcode-image")
+              .accessibilityLabel("Barcode for \(titleText)")
+              .onTapGesture { dismiss() }
+          } else {
+            barcodePlaceholder(layout: layout)
           }
-          .frame(width: boxWidth)
-          .background(
-            RoundedRectangle(cornerRadius: 8)
-              .fill(Color.white)
-          )
+
+          if let value = card.barcodeValue, !value.isEmpty {
+            Text(value)
+              .font(
+                .system(
+                  size: layout.valueFontSize,
+                  weight: .medium,
+                  design: .monospaced
+                )
+              )
+              .foregroundColor(.black)
+              .lineLimit(1)
+              .minimumScaleFactor(0.5)
+              .padding(.top, layout.contentSpacing)
+              .padding(.horizontal, layout.valueHorizontalPadding)
+              .accessibilityIdentifier("barcode-number")
+          }
+
+          Spacer(minLength: 0)
         }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .padding(layout.boxInnerPadding)
+        .background(
+          RoundedRectangle(cornerRadius: layout.cornerRadius)
+            .fill(Color.white)
+        )
+        .onAppear {
+          updateBarcodeTargetSize(layout.barcodeSize)
+        }
+        .onChange(of: geometry.size) { _, newSize in
+          let updatedLayout = WatchBarcodeLayoutMetrics.make(
+            containerSize: newSize,
+            formatString: card.barcodeFormat,
+            showsValueLabel: showsValueLabel
+          )
+          updateBarcodeTargetSize(updatedLayout.barcodeSize)
+        }
+        .padding(.horizontal, layout.outerHorizontalPadding)
+        .padding(.vertical, layout.outerVerticalPadding)
       }
-      .padding(.horizontal, 8)
-      .padding(.top, 4)
-      .padding(.bottom, 8)
       .focusable(true)
       .focused($isFocused)
       .digitalCrownRotation(
@@ -92,27 +99,39 @@ struct BarcodeFlashView: View {
         }
       }
     }
-    .navigationTitle("")
+    .navigationTitle(titleText)
     .accessibilityIdentifier("barcode-view")
     .task(id: card.id) {
       // focus the view for crown events and play haptic
       isFocused = true
       WKInterfaceDevice.current().play(.success)
+    }
 
+    .task(id: "\(card.id)-\(Int(barcodeTargetSize.width))x\(Int(barcodeTargetSize.height))") {
       guard let value = card.barcodeValue, let format = card.barcodeFormat else { return }
-      guard barcodeImage == nil && !isLoading else { return }
-      isLoading = true
+      guard barcodeTargetSize.width > 0, barcodeTargetSize.height > 0 else { return }
+      guard barcodeImage == nil || renderedTargetSize != barcodeTargetSize else { return }
+
+      if format.trimmingCharacters(in: .whitespacesAndNewlines).uppercased() == WatchBarcodeFormat.QR.rawValue,
+        let syncedImage = syncedQRImage()
+      {
+        barcodeImage = syncedImage
+        renderedTargetSize = barcodeTargetSize
+        return
+      }
 
       let img = await BarcodeGenerator.generateImage(
-        value: value, formatString: format, targetSize: CGSize(width: 200, height: 120))
+        value: value, formatString: format, targetSize: barcodeTargetSize)
       if Task.isCancelled {
-        isLoading = false
         return
       }
       if let img = img {
         barcodeImage = img
+        renderedTargetSize = barcodeTargetSize
+      } else {
+        barcodeImage = nil
+        renderedTargetSize = .zero
       }
-      isLoading = false
     }
     .onDisappear {
       // reset focus so crown events don't leak to other screens
@@ -120,38 +139,32 @@ struct BarcodeFlashView: View {
     }
   }
 
-  // MARK: - Brand Info Header
+  private func updateBarcodeTargetSize(_ newSize: CGSize) {
+    let normalizedSize = CGSize(
+      width: max(newSize.width.rounded(.down), 1),
+      height: max(newSize.height.rounded(.down), 1)
+    )
 
-  private var brandInfoHeader: some View {
-    HStack(spacing: 6) {
-      // Small logo circle (Figma: 16×16)
-      Circle()
-        .fill(logoColor)
-        .frame(width: 16, height: 16)
-        .overlay(
-          Text(initials(from: displayName).prefix(1))
-            .font(.system(size: 8, weight: .bold))
-            .foregroundColor(shouldUseWhiteText(onBackgroundHex: card.colorHex ?? "") ? .white : .black)
-        )
-
-      // Brand name (Figma: 14pt medium, white)
-      Text(displayName)
-        .font(.system(size: 14, weight: .medium))
-        .foregroundColor(.white)
-        .lineLimit(1)
-        .truncationMode(.tail)
-        .accessibilityIdentifier("barcode-card-name")
-    }
-    .padding(.top, 4)
+    guard normalizedSize != barcodeTargetSize else { return }
+    barcodeTargetSize = normalizedSize
   }
 
-  // MARK: - Barcode Placeholder
+  private func syncedQRImage() -> Image? {
+    guard let base64 = card.barcodeImageBase64,
+      let data = Data(base64Encoded: base64),
+      let uiImage = UIImage(data: data)
+    else {
+      return nil
+    }
+
+    return Image(uiImage: uiImage)
+  }
 
   @ViewBuilder
-  private var barcodePlaceholder: some View {
+  private func barcodePlaceholder(layout: WatchBarcodeLayoutMetrics) -> some View {
     if let value = card.barcodeValue, !value.isEmpty {
       ZStack {
-        RoundedRectangle(cornerRadius: 4)
+        RoundedRectangle(cornerRadius: 6)
           .stroke(Color.black.opacity(0.3), lineWidth: 1)
 
         Text(value)
@@ -159,20 +172,20 @@ struct BarcodeFlashView: View {
           .foregroundColor(.black)
           .lineLimit(1)
           .minimumScaleFactor(0.5)
-          .padding(.horizontal, 6)
+          .padding(.horizontal, layout.valueHorizontalPadding)
       }
-      .frame(maxHeight: 80)
+      .frame(width: layout.barcodeSize.width, height: layout.barcodeSize.height)
       .accessibilityIdentifier("barcode-image")
-      .accessibilityLabel("Barcode value for \(card.name)")
+      .accessibilityLabel("Barcode value for \(titleText)")
       .onTapGesture { dismiss() }
     } else {
       Image(systemName: "barcode")
         .resizable()
         .scaledToFit()
         .foregroundColor(.black)
-        .frame(maxHeight: 80)
+        .frame(width: layout.barcodeSize.width, height: layout.barcodeSize.height)
         .accessibilityIdentifier("barcode-image")
-        .accessibilityLabel("Barcode for \(card.name)")
+        .accessibilityLabel("Barcode for \(titleText)")
         .onTapGesture { dismiss() }
     }
   }

@@ -1,6 +1,8 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable @typescript-eslint/no-require-imports */
 
+jest.mock('@bwip-js/react-native');
+
 const sampleCard = {
   id: 'c1',
   name: 'Card',
@@ -50,6 +52,9 @@ describe('watch-connectivity wrapper', () => {
   beforeEach(() => {
     consoleWarnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {});
     consoleInfoSpy = jest.spyOn(console, 'info').mockImplementation(() => {});
+
+    const bwip = require('@bwip-js/react-native');
+    bwip.__mockReset?.();
   });
 
   afterEach(() => {
@@ -350,6 +355,36 @@ describe('watch-connectivity wrapper', () => {
       expect(updateApplicationContext).not.toHaveBeenCalled();
     });
 
+    test('does not pre-render QR images when the watch cannot receive a snapshot', async () => {
+      const updateApplicationContext = jest.fn();
+      const getIsPaired = jest.fn().mockResolvedValue(false);
+      let mod: any = null;
+      jest.isolateModules(() => {
+        jest.doMock(
+          'react-native-watch-connectivity',
+          () => ({
+            updateApplicationContext,
+            getIsPaired,
+            watchEvents: makeEvents()
+          }),
+          { virtual: true }
+        );
+        mod = require('./watch-connectivity');
+      });
+
+      const qrCard = {
+        ...sampleCard,
+        barcode: '77390007776067105',
+        barcodeFormat: 'QR'
+      };
+
+      await expect(mod.pushCardsToWatch([qrCard])).resolves.toBe(false);
+
+      const bwip = require('@bwip-js/react-native');
+      expect(bwip.toDataURL).not.toHaveBeenCalled();
+      expect(updateApplicationContext).not.toHaveBeenCalled();
+    });
+
     test('skips push when getIsWatchAppInstalled resolves false', async () => {
       const updateApplicationContext = jest.fn();
       const getIsPaired = jest.fn().mockResolvedValue(true);
@@ -409,6 +444,98 @@ describe('watch-connectivity wrapper', () => {
       expect(payload.usageCount).toBe(0);
       expect(payload).not.toHaveProperty('brandId');
       expect(payload).not.toHaveProperty('lastUsedAt');
+    });
+
+    test('pre-renders QR cards to base64 for the watch payload', async () => {
+      const updateApplicationContext = jest.fn();
+      let mod: any = null;
+      jest.isolateModules(() => {
+        jest.doMock(
+          'react-native-watch-connectivity',
+          () => ({ updateApplicationContext, watchEvents: makeEvents() }),
+          { virtual: true }
+        );
+        mod = require('./watch-connectivity');
+      });
+
+      const qrCard = {
+        ...sampleCard,
+        barcode: '77390007776067105',
+        barcodeFormat: 'QR'
+      };
+
+      await expect(mod.pushCardsToWatch([qrCard])).resolves.toBe(true);
+
+      const bwip = require('@bwip-js/react-native');
+      expect(bwip.toDataURL).toHaveBeenCalledWith(
+        expect.objectContaining({
+          bcid: 'qrcode',
+          text: '77390007776067105',
+          includetext: false
+        })
+      );
+
+      const payload = updateApplicationContext.mock.calls[0]![0].payload[0];
+      expect(payload.barcodeImageBase64).toBe('mockImageData');
+    });
+
+    test('drops later QR images when embedding them would exceed the snapshot payload budget', async () => {
+      const updateApplicationContext = jest.fn();
+      let mod: any = null;
+      jest.isolateModules(() => {
+        jest.doMock(
+          'react-native-watch-connectivity',
+          () => ({ updateApplicationContext, watchEvents: makeEvents() }),
+          { virtual: true }
+        );
+        mod = require('./watch-connectivity');
+      });
+
+      const bwip = require('@bwip-js/react-native');
+      bwip.__mockToDataURL.mockResolvedValue({
+        uri: `data:image/png;base64,${'x'.repeat(30_000)}`,
+        width: 144,
+        height: 144
+      });
+
+      const qrCards = [
+        { ...sampleCard, id: 'qr-1', barcode: '111111', barcodeFormat: 'QR' },
+        { ...sampleCard, id: 'qr-2', barcode: '222222', barcodeFormat: 'QR' }
+      ];
+
+      await expect(mod.pushCardsToWatch(qrCards)).resolves.toBe(true);
+
+      const payload = updateApplicationContext.mock.calls[0]![0].payload;
+      expect(payload[0].barcodeImageBase64).toHaveLength(30_000);
+      expect(payload[1]).not.toHaveProperty('barcodeImageBase64');
+      expect(consoleWarnSpy).toHaveBeenCalledWith(
+        expect.stringContaining('dropped QR image from watch snapshot')
+      );
+    });
+
+    test('skips sending the snapshot when the base payload already exceeds the budget', async () => {
+      const updateApplicationContext = jest.fn();
+      let mod: any = null;
+      jest.isolateModules(() => {
+        jest.doMock(
+          'react-native-watch-connectivity',
+          () => ({ updateApplicationContext, watchEvents: makeEvents() }),
+          { virtual: true }
+        );
+        mod = require('./watch-connectivity');
+      });
+
+      const oversizedCard = {
+        ...sampleCard,
+        name: 'N'.repeat(50_000)
+      };
+
+      await expect(mod.pushCardsToWatch([oversizedCard])).resolves.toBe(false);
+
+      expect(updateApplicationContext).not.toHaveBeenCalled();
+      expect(consoleWarnSpy).toHaveBeenCalledWith(
+        expect.stringContaining('skipped watch snapshot because payload exceeds budget')
+      );
     });
   });
 

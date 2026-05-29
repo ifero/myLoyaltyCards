@@ -83,8 +83,8 @@ final class CardListUITests: XCTestCase {
     let barcodeView = app.otherElements["barcode-view"]
     // Enforce latency target: barcode must appear within 1s
     XCTAssertTrue(barcodeView.waitForExistence(timeout: 1))
-    let cardName = app.staticTexts["barcode-card-name"]
-    XCTAssertTrue(cardName.waitForExistence(timeout: 1))
+    let cardTitle = app.staticTexts["Esselunga"]
+    XCTAssertTrue(cardTitle.waitForExistence(timeout: 1))
 
     // Barcode image should be present (generated from card data)
     let barcodeImage = app.images["barcode-image"]

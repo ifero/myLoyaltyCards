@@ -11,6 +11,7 @@ struct WatchCard: Identifiable, Codable {
   // Optional barcode fields (may be absent for older persisted payloads)
   let barcodeValue: String?
   let barcodeFormat: String?  // values like "CODE128", "EAN13", "QR" etc.
+  let barcodeImageBase64: String?
   // Sorting fields are decoded when present and defaulted when absent so
   // older persisted payloads remain compatible.
   var usageCount: Int = 0
@@ -24,6 +25,7 @@ struct WatchCard: Identifiable, Codable {
     colorHex: String? = nil,
     barcodeValue: String? = nil,
     barcodeFormat: String? = nil,
+    barcodeImageBase64: String? = nil,
     usageCount: Int = 0,
     lastUsedAt: Date? = nil,
     createdAt: Date = Date()
@@ -34,13 +36,14 @@ struct WatchCard: Identifiable, Codable {
     self.colorHex = colorHex
     self.barcodeValue = barcodeValue
     self.barcodeFormat = barcodeFormat
+    self.barcodeImageBase64 = barcodeImageBase64
     self.usageCount = usageCount
     self.lastUsedAt = lastUsedAt
     self.createdAt = createdAt
   }
 
   enum CodingKeys: String, CodingKey {
-    case id, name, brandId, colorHex, barcodeValue, barcodeFormat, usageCount, lastUsedAt,
+    case id, name, brandId, colorHex, barcodeValue, barcodeFormat, barcodeImageBase64, usageCount, lastUsedAt,
       createdAt
   }
 
@@ -52,6 +55,7 @@ struct WatchCard: Identifiable, Codable {
     colorHex = try container.decodeIfPresent(String.self, forKey: .colorHex)
     barcodeValue = try container.decodeIfPresent(String.self, forKey: .barcodeValue)
     barcodeFormat = try container.decodeIfPresent(String.self, forKey: .barcodeFormat)
+    barcodeImageBase64 = try container.decodeIfPresent(String.self, forKey: .barcodeImageBase64)
     usageCount = try container.decodeIfPresent(Int.self, forKey: .usageCount) ?? 0
     lastUsedAt = try Self.decodeDateIfPresent(from: container, forKey: .lastUsedAt)
     createdAt = try Self.decodeDateIfPresent(from: container, forKey: .createdAt) ?? Date()
@@ -65,6 +69,7 @@ struct WatchCard: Identifiable, Codable {
     try container.encodeIfPresent(colorHex, forKey: .colorHex)
     try container.encodeIfPresent(barcodeValue, forKey: .barcodeValue)
     try container.encodeIfPresent(barcodeFormat, forKey: .barcodeFormat)
+    try container.encodeIfPresent(barcodeImageBase64, forKey: .barcodeImageBase64)
     try container.encode(usageCount, forKey: .usageCount)
     if let lastUsedAt {
       try container.encode(Self.encodeDate(lastUsedAt), forKey: .lastUsedAt)
@@ -183,6 +188,8 @@ final class CardStore: ObservableObject {
 struct CardRowView: View {
   let card: WatchCard
 
+  private let metrics = WatchCardRowLayoutMetrics.compact
+
   /// Resolved brand color hex string (from catalogue or user-selected).
   private var resolvedColorHex: String {
     if let brandId = card.brandId,
@@ -200,35 +207,34 @@ struct CardRowView: View {
   }
 
   var body: some View {
-    HStack(spacing: 12) {
-      // Vertical accent bar — brand color indicator (Figma: 6×32, 3px rounded)
+    HStack(spacing: metrics.rowSpacing) {
       RoundedRectangle(cornerRadius: 3)
         .fill(accentColor)
-        .frame(width: 6, height: 32)
+        .frame(width: metrics.accentWidth, height: metrics.accentHeight)
 
-      // Circular logo/avatar area (Figma: 36×36)
       logoView
-        .frame(width: 36, height: 36)
+        .frame(width: metrics.avatarSize, height: metrics.avatarSize)
         .clipShape(Circle())
 
-      // Card name (Figma: 20px medium, white, single line)
       Text(card.name)
-        .font(.system(size: 16, weight: .semibold))
+        .font(.system(size: 15, weight: .semibold))
         .foregroundColor(.white)
         .lineLimit(1)
+        .minimumScaleFactor(0.85)
         .truncationMode(.tail)
+        .layoutPriority(1)
 
       Spacer()
     }
-    .padding(.horizontal, 12)
-    .padding(.vertical, 16)
+    .padding(.horizontal, metrics.horizontalPadding)
+    .padding(.vertical, metrics.verticalPadding)
+    .frame(minHeight: metrics.minimumTapHeight)
     .background(
-      RoundedRectangle(cornerRadius: 16)
+      RoundedRectangle(cornerRadius: metrics.cornerRadius)
         .fill(Color(red: 28 / 255, green: 28 / 255, blue: 31 / 255)) // #1C1C1F
     )
     .overlay(
-      // Near-black brands get a subtle border for OLED contrast (AC3)
-      RoundedRectangle(cornerRadius: 16)
+      RoundedRectangle(cornerRadius: metrics.cornerRadius)
         .stroke(isNearBlack(hex: resolvedColorHex) ? Color.white.opacity(0.15) : Color.clear, lineWidth: 1)
     )
     .accessibilityElement(children: .combine)
@@ -246,7 +252,7 @@ struct CardRowView: View {
       ZStack {
         bgColor
         Text(initials(from: brand.name ?? brand.id))
-          .font(.system(size: 14, weight: .bold))
+          .font(.system(size: 12, weight: .bold))
           .foregroundColor(useWhite ? .white : .black)
       }
     } else {
@@ -257,7 +263,7 @@ struct CardRowView: View {
       ZStack {
         bgColor
         Text(initials(from: card.name))
-          .font(.system(size: 14, weight: .bold))
+          .font(.system(size: 12, weight: .bold))
           .foregroundColor(useWhite ? .white : .black)
       }
     }
@@ -278,7 +284,13 @@ struct CardListView: View {
     let entities: [WatchCard]
     if !persistedEntities.isEmpty {
       entities = persistedEntities.map { e in
-        WatchCard(
+        if let rawPayload = e.rawPayload,
+          let decoded = try? JSONDecoder().decode(WatchCard.self, from: rawPayload)
+        {
+          return decoded
+        }
+
+        return WatchCard(
           id: e.id,
           name: e.name,
           brandId: e.brandId,
@@ -309,7 +321,7 @@ struct CardListView: View {
           emptyState
         } else {
           ScrollView {
-            LazyVStack(spacing: 8) {
+            LazyVStack(spacing: 6) {
               ForEach(displayCards) { card in
                 NavigationLink(destination: BarcodeFlashView(card: card)) {
                   CardRowView(card: card)
@@ -318,7 +330,8 @@ struct CardListView: View {
                 .accessibilityIdentifier("card-row-\(card.id)")
               }
             }
-            .padding(.horizontal, 4)
+            .padding(.horizontal, 2)
+            .padding(.vertical, 2)
           }
         }
       }
