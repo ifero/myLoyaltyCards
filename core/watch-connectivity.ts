@@ -145,7 +145,7 @@ async function buildWatchQRCodeBase64(card: LoyaltyCard): Promise<string | null>
     if (typeof uri !== 'string' || uri.length === 0) return null;
 
     const parts = uri.split(',', 2);
-    return parts.length === 2 ? parts[1] : uri;
+    return parts.length === 2 ? (parts[1] ?? null) : uri;
   } catch (err) {
     console.warn('[watch-connectivity] failed to pre-render QR for watch:', err);
     return null;
@@ -216,13 +216,18 @@ async function buildSnapshotWithOptionalQRImages(
       continue;
     }
 
+    const basePayload = snapshot[index];
+    if (!basePayload) {
+      continue;
+    }
+
     snapshot[index] = {
-      ...snapshot[index],
+      ...basePayload,
       barcodeImageBase64
     };
 
     if (snapshotEnvelopeSize(snapshot) > WATCH_SNAPSHOT_MAX_BYTES) {
-      snapshot[index] = toBaseWatchCardPayload(card);
+      snapshot[index] = basePayload;
       canEmbedMoreQRImages = false;
       console.warn(
         '[watch-connectivity] dropped QR image from watch snapshot to stay under payload budget'
