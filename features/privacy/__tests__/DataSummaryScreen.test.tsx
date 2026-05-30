@@ -88,7 +88,7 @@ describe('DataSummaryScreen — authenticated user', () => {
     expect(screen.getByTestId('data-row-app')).toBeTruthy();
     expect(screen.getByTestId('data-row-location')).toBeTruthy();
     expect(screen.getByTestId('data-row-contacts')).toBeTruthy();
-    expect(screen.getByTestId('data-row-device-id')).toBeTruthy();
+    expect(screen.getByTestId('data-row-deviceid')).toBeTruthy();
   });
 
   it('renders column headers', () => {
