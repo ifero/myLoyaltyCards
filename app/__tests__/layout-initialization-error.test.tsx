@@ -10,7 +10,10 @@ import RootLayout from '../_layout';
 const mockInitializeDatabase = jest.fn();
 const mockGetAllCards = jest.fn().mockResolvedValue([]);
 const mockPushCardsToWatch = jest.fn().mockResolvedValue(undefined);
-const mockSubscribeToWatchMessages = jest.fn(() => jest.fn());
+const mockSubscribeToWatchMessages = jest.fn((listener?: unknown) => {
+  void listener;
+  return jest.fn();
+});
 const mockRouter = {
   replace: jest.fn(),
   back: jest.fn(),
