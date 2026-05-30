@@ -1,0 +1,13 @@
+"watch.app.name" = "myLoyaltyCards";
+"watch.cards.title" = "Carte";
+"watch.cards.empty.title" = "Nessuna carta";
+"watch.cards.empty.subtitle" = "Aggiungi carte sul tuo iPhone: si sincronizzano qui automaticamente.";
+"watch.cards.empty.accessibility" = "Nessuna carta. Aggiungi carte sul tuo iPhone, si sincronizzano qui automaticamente.";
+"watch.cards.fallback_name" = "Carta";
+"watch.card_row.accessibility_format" = "Carta, %@";
+"watch.debug.import_sample_cards" = "Importa carte di esempio";
+"watch.barcode.accessibility.image_format" = "Codice a barre per %@";
+"watch.barcode.accessibility.value_format" = "Valore codice a barre per %@";
+"watch.complication.accessibility.card_format" = "Carta fedelta: %@";
+"watch.complication.display_name" = "Carta fedelta";
+"watch.complication.description" = "Mostra la tua carta fedelta piu usata.";

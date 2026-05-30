@@ -4,7 +4,7 @@ import Foundation
 enum WatchBarcodePresentation {
   static func title(for card: WatchCard) -> String {
     let trimmedName = card.name.trimmingCharacters(in: .whitespacesAndNewlines)
-    return trimmedName.isEmpty ? "Card" : trimmedName
+    return trimmedName.isEmpty ? WatchL10n.string("watch.cards.fallback_name") : trimmedName
   }
 }
 

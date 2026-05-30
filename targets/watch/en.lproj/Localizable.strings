@@ -1,0 +1,13 @@
+"watch.app.name" = "myLoyaltyCards";
+"watch.cards.title" = "Cards";
+"watch.cards.empty.title" = "No cards yet";
+"watch.cards.empty.subtitle" = "Add cards on your iPhone - they sync here automatically.";
+"watch.cards.empty.accessibility" = "No cards yet. Add cards on your iPhone, they sync here automatically.";
+"watch.cards.fallback_name" = "Card";
+"watch.card_row.accessibility_format" = "Card, %@";
+"watch.debug.import_sample_cards" = "Import sample cards";
+"watch.barcode.accessibility.image_format" = "Barcode for %@";
+"watch.barcode.accessibility.value_format" = "Barcode value for %@";
+"watch.complication.accessibility.card_format" = "Loyalty card: %@";
+"watch.complication.display_name" = "Loyalty Card";
+"watch.complication.description" = "Shows your most-used loyalty card.";
