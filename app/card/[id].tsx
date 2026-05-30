@@ -12,6 +12,7 @@
 import { MaterialIcons } from '@expo/vector-icons';
 import { useLocalSearchParams, Stack, useFocusEffect, useRouter } from 'expo-router';
 import React, { useState, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import { View, Text, ActivityIndicator, Pressable } from 'react-native';
 
 import { getCardById } from '@/core/database';
@@ -27,6 +28,7 @@ import { CardDetails, useDeleteCard, useBrandLogo } from '@/features/cards';
 const CardDetailsScreen = () => {
   const { theme } = useTheme();
   const router = useRouter();
+  const { t } = useTranslation();
   const { id } = useLocalSearchParams<{ id: string }>();
 
   const [card, setCard] = useState<LoyaltyCard | null>(null);
@@ -53,7 +55,7 @@ const CardDetailsScreen = () => {
     useCallback(() => {
       const fetchCard = async () => {
         if (!id) {
-          setError('Invalid card ID');
+          setError(t('cards.details.invalidId'));
           setIsLoading(false);
           return;
         }
@@ -65,18 +67,18 @@ const CardDetailsScreen = () => {
             setCard(cardData);
             setError(null);
           } else {
-            setError('Card not found');
+            setError(t('cards.details.notFound'));
           }
         } catch (err) {
           console.error('Failed to fetch card:', err);
-          setError('Failed to load card details');
+          setError(t('cards.details.loadFailed'));
         } finally {
           setIsLoading(false);
         }
       };
 
       fetchCard();
-    }, [id])
+    }, [id, t])
   );
 
   /**
@@ -84,12 +86,12 @@ const CardDetailsScreen = () => {
    */
   const handleCopy = useCallback(() => {
     void showToast({
-      title: 'Copied to clipboard ✓',
+      title: t('cards.details.copiedToClipboard'),
       preset: 'done',
       haptic: 'success',
       duration: 2
     });
-  }, []);
+  }, [t]);
 
   // Loading state
   if (isLoading) {
@@ -97,7 +99,7 @@ const CardDetailsScreen = () => {
       <>
         <Stack.Screen
           options={{
-            title: 'Card Details'
+            title: t('navigation.cardDetails')
           }}
         />
         <View
@@ -120,7 +122,7 @@ const CardDetailsScreen = () => {
       <>
         <Stack.Screen
           options={{
-            title: 'Card Details'
+            title: t('navigation.cardDetails')
           }}
         />
         <View
@@ -140,7 +142,7 @@ const CardDetailsScreen = () => {
               marginBottom: SPACING.sm
             }}
           >
-            {error || 'Card not found'}
+            {error || t('cards.details.notFound')}
           </Text>
           <Text
             style={{
@@ -149,7 +151,7 @@ const CardDetailsScreen = () => {
               textAlign: 'center'
             }}
           >
-            The card you're looking for doesn't exist or has been deleted.
+            {t('cards.details.missingDescription')}
           </Text>
         </View>
       </>
@@ -178,7 +180,7 @@ const CardDetailsScreen = () => {
             <Pressable
               onPress={() => router.back()}
               accessibilityRole="button"
-              accessibilityLabel="Go back"
+              accessibilityLabel={t('cards.details.backAccessibilityLabel')}
               hitSlop={8}
             >
               <MaterialIcons name="chevron-left" size={28} color={headerTextColor} />

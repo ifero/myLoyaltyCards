@@ -10,6 +10,7 @@
 import { MaterialIcons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import React, { useCallback, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { View, StyleSheet, Pressable, AccessibilityInfo, Text } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -24,12 +25,13 @@ import { useBrandSearch } from '../hooks/useBrandSearch';
 
 export const CardTypeSelectionScreen: React.FC = () => {
   const { theme } = useTheme();
+  const { t } = useTranslation();
   const { query, setQuery, isSearching, popularBrands, allBrands, filteredBrands, clearSearch } =
     useBrandSearch();
 
   useEffect(() => {
-    AccessibilityInfo.announceForAccessibility?.('Card type selection screen');
-  }, []);
+    AccessibilityInfo.announceForAccessibility?.(t('addCard.selection.screenAnnouncement'));
+  }, [t]);
 
   const handleBrandPress = useCallback((brand: CatalogueBrand) => {
     router.push({
@@ -62,12 +64,14 @@ export const CardTypeSelectionScreen: React.FC = () => {
           onPress={handleBackPress}
           style={styles.backButton}
           accessibilityRole="button"
-          accessibilityLabel="Go back"
+          accessibilityLabel={t('addCard.selection.backAccessibilityLabel')}
           testID="back-button"
         >
           <MaterialIcons name="chevron-left" size={28} color={theme.textPrimary} />
         </Pressable>
-        <Text style={[styles.headerTitle, { color: theme.textPrimary }]}>Add Card</Text>
+        <Text style={[styles.headerTitle, { color: theme.textPrimary }]}>
+          {t('addCard.selection.heading')}
+        </Text>
         <View style={styles.headerSpacer} />
       </View>
 

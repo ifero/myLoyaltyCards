@@ -1,6 +1,7 @@
 import { MaterialIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { AccessibilityInfo, Pressable, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -14,6 +15,7 @@ import { useModeSelection } from '../hooks/useModeSelection';
 
 const ModeSelectionScreen = () => {
   const { theme, typography } = useTheme();
+  const { t } = useTranslation();
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const { selectLocalMode, selectCloudMode } = useModeSelection();
@@ -27,8 +29,8 @@ const ModeSelectionScreen = () => {
   }, [router]);
 
   React.useEffect(() => {
-    AccessibilityInfo.announceForAccessibility?.('Mode selection screen');
-  }, []);
+    AccessibilityInfo.announceForAccessibility?.(t('onboarding.modeSelection.screenAnnouncement'));
+  }, [t]);
 
   return (
     <View testID="mode-selection-screen" style={{ flex: 1, backgroundColor: theme.background }}>
@@ -47,7 +49,7 @@ const ModeSelectionScreen = () => {
           testID="mode-selection-back"
           onPress={() => router.back()}
           accessibilityRole="button"
-          accessibilityLabel="Go back"
+          accessibilityLabel={t('onboarding.modeSelection.backAccessibilityLabel')}
           style={{ width: 44, height: 44, alignItems: 'center', justifyContent: 'center' }}
         >
           <MaterialIcons name="chevron-left" size={28} color={theme.primary} />
@@ -62,7 +64,7 @@ const ModeSelectionScreen = () => {
             fontWeight: '600'
           }}
         >
-          Get Started
+          {t('onboarding.modeSelection.title')}
         </Text>
       </View>
 
@@ -77,7 +79,7 @@ const ModeSelectionScreen = () => {
             fontWeight: '700'
           }}
         >
-          How would you like{`\n`}to use the app?
+          {t('onboarding.modeSelection.heading')}
         </Text>
 
         <Text
@@ -89,16 +91,16 @@ const ModeSelectionScreen = () => {
             lineHeight: typography.footnote.lineHeight
           }}
         >
-          You can always change this later in Settings.
+          {t('onboarding.modeSelection.subtitle')}
         </Text>
 
         <View style={{ marginTop: 28, gap: 16 }}>
           <ModeOptionCard
             testID="mode-option-local"
             icon="smartphone"
-            title="Keep cards on this device"
-            subtitle="Fast and private. Your cards stay right here."
-            eyebrow="You can create an account later"
+            title={t('onboarding.modeSelection.localTitle')}
+            subtitle={t('onboarding.modeSelection.localSubtitle')}
+            eyebrow={t('onboarding.modeSelection.localEyebrow')}
             recommended
             onPress={selectLocalMode}
           />
@@ -106,9 +108,9 @@ const ModeSelectionScreen = () => {
           <ModeOptionCard
             testID="mode-option-cloud"
             icon="cloud-upload"
-            title="Sync across all devices"
-            subtitle="Create a free account to back up and access your cards everywhere."
-            eyebrow="Free forever"
+            title={t('onboarding.modeSelection.cloudTitle')}
+            subtitle={t('onboarding.modeSelection.cloudSubtitle')}
+            eyebrow={t('onboarding.modeSelection.cloudEyebrow')}
             onPress={selectCloudMode}
           />
         </View>
@@ -122,7 +124,7 @@ const ModeSelectionScreen = () => {
             lineHeight: 18
           }}
         >
-          Your data is always yours. Export or import your cards anytime from Settings.
+          {t('onboarding.modeSelection.footer')}
         </Text>
 
         <Pressable
@@ -130,7 +132,7 @@ const ModeSelectionScreen = () => {
           testID="mode-selection-whats-difference"
           onPress={() => setModalVisible(true)}
           accessibilityRole="button"
-          accessibilityLabel="What is the difference between storage options?"
+          accessibilityLabel={t('onboarding.modeSelection.whatsDifferenceAccessibilityLabel')}
           style={{ marginTop: 4, minHeight: 44, alignItems: 'center', justifyContent: 'center' }}
         >
           <Text
@@ -141,7 +143,7 @@ const ModeSelectionScreen = () => {
               fontWeight: '500'
             }}
           >
-            What&apos;s the difference?
+            {t('onboarding.modeSelection.whatsDifference')}
           </Text>
         </Pressable>
       </View>

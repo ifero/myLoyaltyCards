@@ -5,6 +5,9 @@
 
 import { render, screen } from '@testing-library/react-native';
 import React from 'react';
+import { act } from 'react';
+
+import { changeAppLanguage } from '@/shared/i18n';
 
 import { PRIVACY_POLICY_VERSION } from '@/assets/legal/privacy-policy';
 
@@ -26,6 +29,12 @@ jest.mock('@/shared/theme', () => ({
 }));
 
 describe('PrivacyPolicyScreen', () => {
+  beforeEach(async () => {
+    await act(async () => {
+      await changeAppLanguage('en');
+    });
+  });
+
   it('renders the privacy policy screen container', () => {
     render(<PrivacyPolicyScreen />);
     expect(screen.getByTestId('privacy-policy-screen')).toBeTruthy();
@@ -58,5 +67,18 @@ describe('PrivacyPolicyScreen', () => {
   it('has proper accessibility labels', () => {
     render(<PrivacyPolicyScreen />);
     expect(screen.getByLabelText('Privacy Policy')).toBeTruthy();
+  });
+
+  it('renders the Italian policy when app language is Italian', async () => {
+    await act(async () => {
+      await changeAppLanguage('it');
+    });
+
+    render(<PrivacyPolicyScreen />);
+
+    expect(screen.getByText('Informativa sulla privacy')).toBeTruthy();
+    expect(screen.getByText(/Dati che raccogliamo/)).toBeTruthy();
+    expect(screen.getByText(/I tuoi diritti/)).toBeTruthy();
+    expect(screen.getByLabelText('Informativa sulla privacy')).toBeTruthy();
   });
 });

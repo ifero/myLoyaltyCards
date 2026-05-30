@@ -15,6 +15,7 @@ import * as Clipboard from 'expo-clipboard';
 import * as Haptics from 'expo-haptics';
 import { useRouter } from 'expo-router';
 import React, { useCallback, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   View,
   Text,
@@ -57,22 +58,11 @@ interface CardDetailsProps {
 }
 
 /**
- * Human-readable color names
- */
-const COLOR_LABELS: Record<string, string> = {
-  blue: 'Blue',
-  red: 'Red',
-  green: 'Green',
-  orange: 'Orange',
-  grey: 'Grey'
-};
-
-/**
  * Format date for display (e.g., "Jan 7, 2026")
  */
-const formatDate = (isoString: string): string => {
+const formatDate = (isoString: string, locale: string): string => {
   const date = new Date(isoString);
-  return date.toLocaleDateString('en-US', {
+  return date.toLocaleDateString(locale, {
     month: 'short',
     day: 'numeric',
     year: 'numeric'
@@ -95,11 +85,22 @@ export const CardDetails: React.FC<CardDetailsProps> = ({
 }) => {
   const { theme } = useTheme();
   const router = useRouter();
+  const { t, i18n } = useTranslation();
   const insets = useSafeAreaInsets();
   const { height: viewportHeight } = useWindowDimensions();
   const [fullscreenVisible, setFullscreenVisible] = useState(false);
   const [heroHeight, setHeroHeight] = useState(200);
+  const [isBarcodePressed, setIsBarcodePressed] = useState(false);
+  const [isDeletePressed, setIsDeletePressed] = useState(false);
   const isPastHeroRef = useRef(false);
+  const locale = i18n.language?.startsWith('it') ? 'it-IT' : 'en-US';
+  const colorLabels: Record<string, string> = {
+    blue: t('cards.colors.blue'),
+    red: t('cards.colors.red'),
+    green: t('cards.colors.green'),
+    orange: t('cards.colors.orange'),
+    grey: t('cards.colors.grey')
+  };
 
   /**
    * Track scroll position for header condensing (AC5)
@@ -137,9 +138,9 @@ export const CardDetails: React.FC<CardDetailsProps> = ({
       onCopy?.();
     } catch (error) {
       console.error('Failed to copy barcode:', error);
-      Alert.alert('Error', 'Failed to copy barcode to clipboard');
+      Alert.alert(t('cards.details.copyFailedTitle'), t('cards.details.copyFailedMessage'));
     }
-  }, [card.barcode, onCopy]);
+  }, [card.barcode, onCopy, t]);
 
   /**
    * Open fullscreen barcode overlay
@@ -167,12 +168,12 @@ export const CardDetails: React.FC<CardDetailsProps> = ({
    */
   const handleDeleteCard = useCallback(() => {
     Alert.alert(
-      'Delete Card?',
-      `Are you sure you want to delete "${card.name}"? This action cannot be undone.`,
+      t('cards.details.deleteConfirmTitle'),
+      t('cards.details.deleteConfirmBody', { name: card.name }),
       [
-        { text: 'Cancel', style: 'cancel' },
+        { text: t('common.actions.cancel'), style: 'cancel' },
         {
-          text: 'Delete',
+          text: t('common.actions.delete'),
           style: 'destructive',
           onPress: () => {
             onDelete?.();
@@ -181,7 +182,7 @@ export const CardDetails: React.FC<CardDetailsProps> = ({
       ],
       { cancelable: true }
     );
-  }, [card.name, onDelete]);
+  }, [card.name, onDelete, t]);
 
   return (
     <>
@@ -206,10 +207,12 @@ export const CardDetails: React.FC<CardDetailsProps> = ({
         <View style={styles.barcodeSection}>
           <Pressable
             onPress={handleOpenFullscreen}
-            style={({ pressed }) => [styles.barcodeCard, pressed && styles.pressed]}
+            onPressIn={() => setIsBarcodePressed(true)}
+            onPressOut={() => setIsBarcodePressed(false)}
+            style={[styles.barcodeCard, isBarcodePressed && styles.pressed]}
             accessibilityRole="button"
-            accessibilityLabel="View full screen barcode"
-            accessibilityHint="Opens the barcode in full screen for scanning"
+            accessibilityLabel={t('cards.details.viewFullscreenAccessibilityLabel')}
+            accessibilityHint={t('cards.details.viewFullscreenHint')}
             testID="card-details-barcode-preview"
           >
             <BarcodeRenderer
@@ -229,13 +232,15 @@ export const CardDetails: React.FC<CardDetailsProps> = ({
           </Text>
 
           {/* Tap to enlarge hint */}
-          <Text style={[styles.barcodeHint, { color: theme.textTertiary }]}>Tap to enlarge</Text>
+          <Text style={[styles.barcodeHint, { color: theme.textTertiary }]}>
+            {t('cards.details.tapToEnlarge')}
+          </Text>
 
           {/* Brightness hint (AC7) */}
           <View style={styles.brightnessHint} testID="card-details-brightness-hint">
             <MaterialIcons name="light-mode" size={20} color={theme.textSecondary} />
             <Text style={[styles.brightnessText, { color: theme.textSecondary }]}>
-              Increase brightness for scanning
+              {t('cards.details.brightnessHint')}
             </Text>
           </View>
         </View>
@@ -247,10 +252,10 @@ export const CardDetails: React.FC<CardDetailsProps> = ({
         >
           {/* Barcode Number - Copyable */}
           <DetailRow
-            label="Number"
+            label={t('cards.details.numberLabel')}
             value={card.barcode}
             onPress={handleCopyBarcode}
-            accessibilityHint="Double tap to copy barcode number"
+            accessibilityHint={t('cards.details.copyAccessibilityHint')}
             rightElement={<MaterialIcons name="content-copy" size={20} color={theme.primary} />}
             testID="card-details-barcode-number"
           />
@@ -258,12 +263,14 @@ export const CardDetails: React.FC<CardDetailsProps> = ({
           {/* Color — ONLY for custom cards (AC3) */}
           {card.brandId === null && (
             <DetailRow
-              label="Color"
-              value={COLOR_LABELS[card.color] || card.color}
+              label={t('cards.details.colorLabel')}
+              value={colorLabels[card.color] || card.color}
               rightElement={
                 <View
                   style={[styles.colorDot, { backgroundColor: CARD_COLORS[card.color] }]}
-                  accessibilityLabel={`${COLOR_LABELS[card.color]} color`}
+                  accessibilityLabel={t('cards.details.colorAccessibilityLabel', {
+                    color: colorLabels[card.color] || card.color
+                  })}
                 />
               }
               testID="card-details-color"
@@ -272,8 +279,8 @@ export const CardDetails: React.FC<CardDetailsProps> = ({
 
           {/* Date Added */}
           <DetailRow
-            label="Added"
-            value={formatDate(card.createdAt)}
+            label={t('cards.details.addedLabel')}
+            value={formatDate(card.createdAt, locale)}
             style={{ borderBottomWidth: 0 }}
             testID="card-details-date"
           />
@@ -281,12 +288,14 @@ export const CardDetails: React.FC<CardDetailsProps> = ({
 
         {/* Manage Actions Section (AC4) */}
         <View style={styles.manageSection} testID="card-details-manage-section">
-          <Text style={[styles.sectionHeader, { color: theme.textSecondary }]}>Manage</Text>
+          <Text style={[styles.sectionHeader, { color: theme.textSecondary }]}>
+            {t('cards.details.manageSection')}
+          </Text>
 
           {/* Edit Card Row */}
           <ActionRow
             prefix={<MaterialIcons name="edit" size={24} color={theme.primary} />}
-            label="Edit card"
+            label={t('cards.details.editAction')}
             onPress={handleEditCard}
             disabled={isDeleting}
             testID="card-details-edit-row"
@@ -298,15 +307,21 @@ export const CardDetails: React.FC<CardDetailsProps> = ({
           {/* Delete Card Row — destructive, no chevron */}
           <Pressable
             onPress={handleDeleteCard}
+            onPressIn={() => setIsDeletePressed(true)}
+            onPressOut={() => setIsDeletePressed(false)}
             disabled={isDeleting}
             accessibilityRole="button"
-            accessibilityLabel={isDeleting ? 'Deleting card' : 'Delete card'}
+            accessibilityLabel={
+              isDeleting
+                ? t('cards.details.deletingAccessibilityLabel')
+                : t('cards.details.deleteAccessibilityLabel')
+            }
             accessibilityState={{ disabled: isDeleting }}
             testID="card-details-delete-row"
-            style={({ pressed }) => [
+            style={[
               styles.deleteRow,
               {
-                backgroundColor: pressed ? theme.surfaceElevated : theme.surface,
+                backgroundColor: isDeletePressed ? theme.surfaceElevated : theme.surface,
                 borderColor: theme.border,
                 opacity: isDeleting ? 0.6 : 1
               }
@@ -315,7 +330,7 @@ export const CardDetails: React.FC<CardDetailsProps> = ({
             <View style={styles.deleteRowContent}>
               <MaterialIcons name="delete" size={24} color={theme.error} />
               <Text style={[styles.deleteText, { color: theme.error }]}>
-                {isDeleting ? 'Deleting...' : 'Delete card'}
+                {isDeleting ? t('cards.details.deleting') : t('cards.details.deleteAction')}
               </Text>
             </View>
           </Pressable>

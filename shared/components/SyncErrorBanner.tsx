@@ -5,6 +5,7 @@
  * Uses design-system tokens. Matches Figma: "Sync Error — Light/Dark".
  */
 import { MaterialIcons } from '@expo/vector-icons';
+import { useTranslation } from 'react-i18next';
 import { Pressable, Text, View } from 'react-native';
 import Animated, { FadeIn, FadeOut } from 'react-native-reanimated';
 
@@ -20,6 +21,7 @@ type SyncErrorBannerProps = {
 };
 
 export const SyncErrorBanner = ({ message, onRetry, onDismiss }: SyncErrorBannerProps) => {
+  const { t } = useTranslation();
   const { theme, isDark } = useTheme();
 
   if (!message) {
@@ -62,8 +64,8 @@ export const SyncErrorBanner = ({ message, onRetry, onDismiss }: SyncErrorBanner
         <Pressable
           testID="sync-error-retry-button"
           onPress={onRetry}
-          accessibilityLabel="Retry cloud sync"
-          accessibilityHint="Attempts to sync your cards to the cloud again"
+          accessibilityLabel={t('syncUi.errorBanner.retryA11yLabel')}
+          accessibilityHint={t('syncUi.errorBanner.retryA11yHint')}
           accessibilityRole="button"
           className="ml-2 items-center justify-center rounded-lg px-3 py-1"
           style={{
@@ -79,15 +81,15 @@ export const SyncErrorBanner = ({ message, onRetry, onDismiss }: SyncErrorBanner
               fontWeight: '500'
             }}
           >
-            Retry
+            {t('syncUi.errorBanner.retryButton')}
           </Text>
         </Pressable>
 
         <Pressable
           testID="sync-error-dismiss-button"
           onPress={onDismiss}
-          accessibilityLabel="Dismiss sync error"
-          accessibilityHint="Hides the error message"
+          accessibilityLabel={t('syncUi.errorBanner.dismissA11yLabel')}
+          accessibilityHint={t('syncUi.errorBanner.dismissA11yHint')}
           accessibilityRole="button"
           className="ml-2 items-center justify-center"
           style={{ minWidth: TOUCH_TARGET.min, minHeight: TOUCH_TARGET.min }}

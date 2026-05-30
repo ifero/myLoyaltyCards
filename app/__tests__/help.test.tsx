@@ -4,7 +4,10 @@
  */
 
 import { render, fireEvent, waitFor } from '@testing-library/react-native';
+import { act } from 'react';
 import { Alert, Linking } from 'react-native';
+
+import { changeAppLanguage } from '@/shared/i18n';
 
 import docsHelpItems from '../../docs/help.json';
 import bundledHelpItems from '../../features/help/help-data.json';
@@ -26,9 +29,26 @@ jest.mock('@/shared/theme', () => ({
 }));
 
 describe('HelpScreen — Story 4.3', () => {
+  beforeEach(async () => {
+    await act(async () => {
+      await changeAppLanguage('en');
+    });
+  });
+
   it('renders the Help & FAQ title', () => {
     const { getByText } = render(<HelpScreen />);
     expect(getByText('Help & FAQ')).toBeTruthy();
+  });
+
+  it('renders translated FAQ copy when language is Italian', async () => {
+    await act(async () => {
+      await changeAppLanguage('it');
+    });
+
+    const { getByText } = render(<HelpScreen />);
+
+    expect(getByText('Aiuto e FAQ')).toBeTruthy();
+    expect(getByText('Come posso aggiungere la mia prima carta?')).toBeTruthy();
   });
 
   it('filters FAQs by search query', () => {

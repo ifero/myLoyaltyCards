@@ -1,9 +1,13 @@
-import type { ThemePreference as CoreThemePreference } from '@/core/settings/settings-repository';
+import type {
+  LanguagePreference as CoreLanguagePreference,
+  ThemePreference as CoreThemePreference
+} from '@/core/settings/settings-repository';
 
 export type ThemePreference = CoreThemePreference;
+export type LanguagePreference = CoreLanguagePreference;
 
 export type LanguageOption = {
-  code: string;
+  code: LanguagePreference;
   name: string;
 };
 

@@ -1,5 +1,6 @@
 import { MaterialIcons } from '@expo/vector-icons';
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { AccessibilityInfo, findNodeHandle, Modal, Pressable, Text, View } from 'react-native';
 
 import { Button } from '@/shared/components/ui/Button';
@@ -23,6 +24,7 @@ export const InfoTooltipModal = ({
   testID
 }: InfoTooltipModalProps) => {
   const { theme } = useTheme();
+  const { t } = useTranslation();
   const closeButtonRef = React.useRef<React.ElementRef<typeof Pressable>>(null);
 
   const handleClose = React.useCallback(() => {
@@ -40,7 +42,7 @@ export const InfoTooltipModal = ({
 
   React.useEffect(() => {
     if (visible) {
-      AccessibilityInfo.announceForAccessibility?.('Storage options info opened');
+      AccessibilityInfo.announceForAccessibility?.(t('onboarding.infoTooltip.openedAnnouncement'));
 
       setTimeout(() => {
         const handle = findNodeHandle(closeButtonRef.current);
@@ -49,7 +51,7 @@ export const InfoTooltipModal = ({
         }
       }, 50);
     }
-  }, [visible]);
+  }, [t, visible]);
 
   return (
     <Modal
@@ -80,7 +82,7 @@ export const InfoTooltipModal = ({
           testID={testID ? `${testID}-content` : 'info-tooltip-content'}
           onPress={STOP_PROPAGATION}
           accessibilityViewIsModal
-          accessibilityLabel="Storage options information"
+          accessibilityLabel={t('onboarding.infoTooltip.accessibilityLabel')}
           importantForAccessibility="yes"
           style={{
             borderRadius: 20,
@@ -95,7 +97,7 @@ export const InfoTooltipModal = ({
               testID="info-tooltip-close"
               onPress={handleClose}
               accessibilityRole="button"
-              accessibilityLabel="Close information"
+              accessibilityLabel={t('onboarding.infoTooltip.closeAccessibilityLabel')}
               style={{ width: 44, height: 44, alignItems: 'center', justifyContent: 'center' }}
             >
               <MaterialIcons name="close" size={20} color={theme.textSecondary} />
@@ -113,7 +115,7 @@ export const InfoTooltipModal = ({
               backgroundColor: `${theme.primary}1A`
             }}
           >
-            <Text style={{ color: theme.primary, fontSize: 24, fontWeight: '600' }}>i</Text>
+            <MaterialIcons name="info-outline" size={24} color={theme.primary} />
           </View>
 
           <Text
@@ -126,19 +128,16 @@ export const InfoTooltipModal = ({
               fontWeight: '600'
             }}
           >
-            What&apos;s the difference?
+            {t('onboarding.infoTooltip.heading')}
           </Text>
 
           <Text style={{ marginTop: 10, color: theme.textSecondary, fontSize: 14, lineHeight: 20 }}>
-            Keep cards on this device stores your loyalty cards only on this phone. It&apos;s fast,
-            private, and works offline. Sync across all devices creates a free account so your cards
-            are backed up and available on any device you sign in to. You can switch anytime from
-            Settings.
+            {t('onboarding.infoTooltip.body')}
           </Text>
 
           <View style={{ marginTop: 18 }}>
             <Button variant="primary" onPress={handleClose} testID="info-tooltip-got-it">
-              Got it
+              {t('onboarding.infoTooltip.button')}
             </Button>
           </View>
         </Pressable>

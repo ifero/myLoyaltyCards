@@ -9,6 +9,7 @@
 
 import { MaterialIcons } from '@expo/vector-icons';
 import React, { useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { View, Text, Pressable, FlatList, StyleSheet, Modal } from 'react-native';
 import Animated, {
   useSharedValue,
@@ -24,16 +25,6 @@ import { TYPOGRAPHY } from '@/shared/theme/typography';
 
 import { DetectedCode } from '../hooks/useImageScan';
 
-const FORMAT_DISPLAY_NAMES: Record<string, string> = {
-  CODE128: 'Code 128',
-  EAN13: 'EAN-13',
-  EAN8: 'EAN-8',
-  QR: 'QR Code',
-  CODE39: 'Code 39',
-  UPCA: 'UPC-A',
-  DATAMATRIX: 'Data Matrix'
-};
-
 const SHEET_ANIM_MS = 220;
 
 interface MultiCodePickerSheetProps {
@@ -48,6 +39,8 @@ interface CodeRowProps {
   code: DetectedCode;
   index: number;
   onPress: () => void;
+  accessibilityLabel: string;
+  displayFormat: string;
   borderColor: string;
   textPrimary: string;
   textSecondary: string;
@@ -60,6 +53,8 @@ const CodeRow: React.FC<CodeRowProps> = ({
   code,
   index,
   onPress,
+  accessibilityLabel,
+  displayFormat,
   borderColor,
   textPrimary,
   textSecondary,
@@ -69,7 +64,6 @@ const CodeRow: React.FC<CodeRowProps> = ({
 }) => {
   const [pressed, setPressed] = React.useState(false);
   const isQR = code.format === 'QR';
-  const displayFormat = FORMAT_DISPLAY_NAMES[code.format] ?? 'Barcode';
   const truncatedValue = code.value.length > 28 ? `${code.value.slice(0, 28)}…` : code.value;
 
   return (
@@ -78,7 +72,7 @@ const CodeRow: React.FC<CodeRowProps> = ({
       onPressIn={() => setPressed(true)}
       onPressOut={() => setPressed(false)}
       accessibilityRole="button"
-      accessibilityLabel={`${displayFormat}, code ${code.value}`}
+      accessibilityLabel={accessibilityLabel}
       testID={`code-row-${index}`}
       style={[
         styles.codeRow,
@@ -109,7 +103,17 @@ export const MultiCodePickerSheet: React.FC<MultiCodePickerSheetProps> = ({
   testID = 'multi-code-picker-sheet'
 }) => {
   const { theme } = useTheme();
+  const { t } = useTranslation();
   const insets = useSafeAreaInsets();
+  const formatDisplayNames: Record<string, string> = {
+    CODE128: t('addCard.multiCode.formats.CODE128'),
+    EAN13: t('addCard.multiCode.formats.EAN13'),
+    EAN8: t('addCard.multiCode.formats.EAN8'),
+    QR: t('addCard.multiCode.formats.QR'),
+    CODE39: t('addCard.multiCode.formats.CODE39'),
+    UPCA: t('addCard.multiCode.formats.UPCA'),
+    DATAMATRIX: t('addCard.multiCode.formats.DATAMATRIX')
+  };
 
   const translateY = useSharedValue(400);
 
@@ -138,7 +142,7 @@ export const MultiCodePickerSheet: React.FC<MultiCodePickerSheetProps> = ({
       <Pressable
         onPress={onDismiss}
         testID="multi-code-scrim"
-        accessibilityLabel="Dismiss barcode picker"
+        accessibilityLabel={t('addCard.multiCode.dismissAccessibilityLabel')}
         style={styles.scrim}
       />
 
@@ -152,18 +156,18 @@ export const MultiCodePickerSheet: React.FC<MultiCodePickerSheetProps> = ({
           <View
             testID="multi-code-drag-handle"
             accessibilityRole="adjustable"
-            accessibilityLabel="Drag down to dismiss"
-            accessibilityHint="Swipe down to close"
+            accessibilityLabel={t('addCard.multiCode.dragDismissAccessibilityLabel')}
+            accessibilityHint={t('addCard.multiCode.dragDismissHint')}
             style={[styles.dragHandle, { backgroundColor: theme.border }]}
           />
         </View>
 
         {/* Title + subtitle */}
         <Text accessibilityRole="header" style={[styles.sheetTitle, { color: theme.textPrimary }]}>
-          Multiple barcodes found
+          {t('addCard.multiCode.title')}
         </Text>
         <Text style={[styles.sheetSubtitle, { color: theme.textSecondary }]}>
-          Tap the one that matches your loyalty card
+          {t('addCard.multiCode.subtitle')}
         </Text>
 
         {/* Code list */}
@@ -176,6 +180,8 @@ export const MultiCodePickerSheet: React.FC<MultiCodePickerSheetProps> = ({
               code={item}
               index={index}
               onPress={() => onSelect(item)}
+              accessibilityLabel={`${formatDisplayNames[item.format] ?? 'Barcode'}, code ${item.value}`}
+              displayFormat={formatDisplayNames[item.format] ?? 'Barcode'}
               borderColor={theme.border}
               textPrimary={theme.textPrimary}
               textSecondary={theme.textSecondary}
@@ -191,11 +197,13 @@ export const MultiCodePickerSheet: React.FC<MultiCodePickerSheetProps> = ({
         <Pressable
           onPress={onDismiss}
           accessibilityRole="button"
-          accessibilityLabel="Cancel, dismiss barcode picker"
+          accessibilityLabel={t('addCard.multiCode.cancelAccessibilityLabel')}
           testID="multi-code-cancel"
           style={[styles.cancelButton, { paddingBottom: Math.max(insets.bottom, SPACING.md) }]}
         >
-          <Text style={[styles.cancelText, { color: theme.error }]}>Cancel</Text>
+          <Text style={[styles.cancelText, { color: theme.error }]}>
+            {t('common.actions.cancel')}
+          </Text>
         </Pressable>
       </Animated.View>
     </Modal>

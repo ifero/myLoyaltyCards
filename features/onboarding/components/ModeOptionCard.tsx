@@ -1,5 +1,6 @@
 import { MaterialIcons } from '@expo/vector-icons';
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { Pressable, Text, View } from 'react-native';
 
 import { useTheme } from '@/shared/theme';
@@ -28,6 +29,7 @@ export const ModeOptionCard = ({
   testID
 }: ModeOptionCardProps) => {
   const { theme } = useTheme();
+  const { t } = useTranslation();
   const [pressed, setPressed] = React.useState(false);
 
   return (
@@ -37,8 +39,8 @@ export const ModeOptionCard = ({
       onPressIn={() => setPressed(true)}
       onPressOut={() => setPressed(false)}
       accessibilityRole="button"
-      accessibilityLabel={`${title}. ${subtitle}${recommended ? '. Recommended option.' : ''}`}
-      accessibilityHint="Double tap to select this storage option"
+      accessibilityLabel={`${title}. ${subtitle}${recommended ? t('onboarding.modeOption.recommendedAccessibilitySuffix') : ''}`}
+      accessibilityHint={t('onboarding.modeOption.accessibilityHint')}
       style={{
         minHeight: TOUCH_TARGET.min,
         borderRadius: 16,
@@ -89,7 +91,7 @@ export const ModeOptionCard = ({
             }}
           >
             <Text style={{ color: NEUTRAL_COLORS.white, fontSize: 12, fontWeight: '500' }}>
-              Recommended
+              {t('onboarding.modeOption.recommended')}
             </Text>
           </View>
         </View>

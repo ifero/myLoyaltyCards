@@ -2,6 +2,7 @@ import { MaterialCommunityIcons, MaterialIcons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Pressable, Text, View } from 'react-native';
 
 import { Button } from '@/shared/components/ui';
@@ -15,6 +16,7 @@ type GuestModeBannerProps = {
 
 export const GuestModeBanner = ({ isGuestMode }: GuestModeBannerProps) => {
   const { theme, typography, spacing, touchTarget, isDark } = useTheme();
+  const { t } = useTranslation();
   const spacingXs = spacing?.xs ?? 4;
   const spacingSm = spacing?.sm ?? 8;
   const spacingMd = spacing?.md ?? 16;
@@ -88,7 +90,7 @@ export const GuestModeBanner = ({ isGuestMode }: GuestModeBannerProps) => {
           testID="guest-mode-banner-dismiss-button"
           onPress={dismiss}
           accessibilityRole="button"
-          accessibilityLabel="Dismiss banner"
+          accessibilityLabel={t('auth.guestBanner.dismissA11y')}
           style={{
             position: 'absolute',
             top: spacingSm,
@@ -120,7 +122,7 @@ export const GuestModeBanner = ({ isGuestMode }: GuestModeBannerProps) => {
                 fontWeight: '600'
               }}
             >
-              Protect your cards
+              {t('auth.guestBanner.title')}
             </Text>
             <Text
               style={{
@@ -130,7 +132,7 @@ export const GuestModeBanner = ({ isGuestMode }: GuestModeBannerProps) => {
                 lineHeight: footnoteLineHeight
               }}
             >
-              Create a free account to back up your cards and access them on all your devices
+              {t('auth.guestBanner.body')}
             </Text>
           </View>
         </View>
@@ -141,9 +143,9 @@ export const GuestModeBanner = ({ isGuestMode }: GuestModeBannerProps) => {
               testID="guest-mode-banner-create-account"
               variant="primary"
               onPress={() => router.push('/create-account')}
-              accessibilityLabel="Create account"
+              accessibilityLabel={t('common.actions.createAccount')}
             >
-              Create Account
+              {t('common.actions.createAccount')}
             </Button>
           </View>
           <View>
@@ -151,9 +153,9 @@ export const GuestModeBanner = ({ isGuestMode }: GuestModeBannerProps) => {
               testID="guest-mode-banner-sign-in"
               variant="secondary"
               onPress={() => router.push('/sign-in')}
-              accessibilityLabel="Sign in"
+              accessibilityLabel={t('common.actions.signIn')}
             >
-              Sign In
+              {t('common.actions.signIn')}
             </Button>
           </View>
         </View>

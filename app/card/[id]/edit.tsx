@@ -13,6 +13,7 @@
 
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useEffect, useState, useCallback, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import { View, Text, ActivityIndicator, Alert, BackHandler } from 'react-native';
 
 import { getCardById } from '@/core/database';
@@ -27,6 +28,7 @@ import { useEditCard } from '@/features/cards/hooks/useEditCard';
 const EditCardScreen = () => {
   const { theme } = useTheme();
   const router = useRouter();
+  const { t } = useTranslation();
   const { id } = useLocalSearchParams<{ id: string }>();
 
   const [card, setCard] = useState<LoyaltyCard | null>(null);
@@ -44,7 +46,7 @@ const EditCardScreen = () => {
   useEffect(() => {
     const fetchCard = async () => {
       if (!id) {
-        setError('Invalid card ID');
+        setError(t('cards.edit.invalidId'));
         setIsLoading(false);
         return;
       }
@@ -54,18 +56,18 @@ const EditCardScreen = () => {
         if (cardData) {
           setCard(cardData);
         } else {
-          setError('Card not found');
+          setError(t('cards.edit.notFound'));
         }
       } catch (err) {
         console.error('Failed to fetch card:', err);
-        setError('Failed to load card details');
+        setError(t('cards.edit.loadFailed'));
       } finally {
         setIsLoading(false);
       }
     };
 
     fetchCard();
-  }, [id]);
+  }, [id, t]);
 
   /**
    * Handle form dirty state changes
@@ -78,15 +80,15 @@ const EditCardScreen = () => {
    * Show discard confirmation dialog (AC10)
    */
   const showDiscardConfirmation = useCallback(() => {
-    Alert.alert('Discard changes?', 'You have unsaved changes that will be lost.', [
-      { text: 'Keep Editing', style: 'cancel' },
+    Alert.alert(t('cards.edit.discardTitle'), t('cards.edit.discardBody'), [
+      { text: t('cards.edit.keepEditing'), style: 'cancel' },
       {
-        text: 'Discard',
+        text: t('cards.edit.discard'),
         style: 'destructive',
         onPress: () => router.back()
       }
     ]);
-  }, [router]);
+  }, [router, t]);
 
   /**
    * Handle back navigation with discard confirmation
@@ -119,8 +121,8 @@ const EditCardScreen = () => {
       <>
         <Stack.Screen
           options={{
-            title: 'Edit Card',
-            headerBackTitle: 'Cancel'
+            title: t('cards.edit.title'),
+            headerBackTitle: t('cards.edit.cancel')
           }}
         />
         <View
@@ -143,7 +145,7 @@ const EditCardScreen = () => {
       <>
         <Stack.Screen
           options={{
-            title: 'Edit Card'
+            title: t('cards.edit.title')
           }}
         />
         <View
@@ -163,7 +165,7 @@ const EditCardScreen = () => {
               marginBottom: SPACING.sm
             }}
           >
-            {error || 'Card not found'}
+            {error || t('cards.edit.notFound')}
           </Text>
           <Text
             style={{
@@ -172,7 +174,7 @@ const EditCardScreen = () => {
               textAlign: 'center'
             }}
           >
-            The card you're trying to edit doesn't exist or has been deleted.
+            {t('cards.edit.missingDescription')}
           </Text>
         </View>
       </>
@@ -184,8 +186,8 @@ const EditCardScreen = () => {
     <>
       <Stack.Screen
         options={{
-          title: 'Edit Card',
-          headerBackTitle: 'Cancel'
+          title: t('cards.edit.title'),
+          headerBackTitle: t('cards.edit.cancel')
         }}
       />
       <View style={{ flex: 1, backgroundColor: theme.background }}>
@@ -197,7 +199,7 @@ const EditCardScreen = () => {
             color: card.color
           }}
           onSubmit={handleSubmit}
-          submitLabel="Save"
+          submitLabel={t('cards.edit.save')}
           isLoading={isUpdating}
           onDirtyChange={handleDirtyChange}
           focusNameOnMount={false}

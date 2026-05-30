@@ -8,6 +8,7 @@
 
 import { MaterialIcons } from '@expo/vector-icons';
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { View, StyleSheet } from 'react-native';
 
 import { ActionRow } from '@/shared/components/ui';
@@ -25,6 +26,7 @@ export const OtherCardRow: React.FC<OtherCardRowProps> = ({
   testID = 'other-card-row'
 }) => {
   const { theme } = useTheme();
+  const { t } = useTranslation();
 
   const leading = (
     <View style={[styles.circle, { backgroundColor: theme.border }]}>
@@ -39,11 +41,11 @@ export const OtherCardRow: React.FC<OtherCardRowProps> = ({
         testID={testID}
         variant="plain"
         prefix={leading}
-        label="Other card"
-        subtitle="Add a custom loyalty card"
+        label={t('addCard.otherCard.label')}
+        subtitle={t('addCard.otherCard.subtitle')}
         onPress={onPress}
         showBottomBorder={false}
-        accessibilityLabel="Other card. Add a custom loyalty card"
+        accessibilityLabel={t('addCard.otherCard.accessibilityLabel')}
       />
       <View style={[styles.separator, { backgroundColor: theme.border }]} />
     </View>

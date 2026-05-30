@@ -1,5 +1,6 @@
 import { MaterialIcons } from '@expo/vector-icons';
 import React, { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Text, TextInput, View } from 'react-native';
 
 import { BottomSheet, Button } from '@/shared/components/ui';
@@ -21,6 +22,7 @@ export const DeleteAccountSheet = ({
   onClose
 }: DeleteAccountSheetProps) => {
   const { theme } = useTheme();
+  const { t } = useTranslation();
   const [step, setStep] = useState<1 | 2>(1);
   const [confirmationText, setConfirmationText] = useState('');
 
@@ -31,7 +33,8 @@ export const DeleteAccountSheet = ({
     }
   }, [visible]);
 
-  const canDelete = confirmationText === 'DELETE';
+  const confirmKeyword = t('settings.deleteAccountSheet.confirmKeyword');
+  const canDelete = confirmationText === confirmKeyword;
 
   return (
     <BottomSheet visible={visible} onClose={onClose} testID="delete-account-sheet">
@@ -42,7 +45,7 @@ export const DeleteAccountSheet = ({
             <Text
               style={{ marginTop: 12, color: theme.textPrimary, fontSize: 30, fontWeight: '600' }}
             >
-              Delete Account?
+              {t('settings.deleteAccountSheet.step1Title')}
             </Text>
             <Text
               style={{
@@ -53,34 +56,33 @@ export const DeleteAccountSheet = ({
                 lineHeight: 20
               }}
             >
-              This will permanently delete your account and all synced data. Cards stored locally on
-              this device will remain.
+              {t('settings.deleteAccountSheet.step1Body')}
             </Text>
           </View>
           <View style={{ marginTop: 16, gap: 10 }}>
             <Button testID="delete-cancel-step1" variant="secondary" onPress={onClose}>
-              Cancel
+              {t('common.actions.cancel')}
             </Button>
             <Button testID="delete-continue-step1" variant="destructive" onPress={() => setStep(2)}>
-              Continue
+              {t('common.actions.continue')}
             </Button>
           </View>
         </View>
       ) : (
         <View>
           <Text style={{ color: theme.textPrimary, fontSize: 28, fontWeight: '600' }}>
-            Confirm Account Deletion
+            {t('settings.deleteAccountSheet.step2Title')}
           </Text>
           <Text style={{ marginTop: 8, color: theme.textSecondary, fontSize: 14, lineHeight: 20 }}>
-            Type DELETE to confirm permanent account deletion.
+            {t('settings.deleteAccountSheet.step2Body')}
           </Text>
           <TextInput
             testID="delete-confirm-input"
             value={confirmationText}
             onChangeText={setConfirmationText}
             autoCapitalize="characters"
-            accessibilityLabel="Type DELETE to confirm"
-            accessibilityHint="Type DELETE to enable account deletion"
+            accessibilityLabel={t('settings.deleteAccountSheet.confirmInputLabel')}
+            accessibilityHint={t('settings.deleteAccountSheet.confirmInputHint')}
             editable={!isLoading}
             style={{
               marginTop: 12,
@@ -96,7 +98,7 @@ export const DeleteAccountSheet = ({
           />
           <View style={{ marginTop: 14, gap: 10 }}>
             <Button testID="delete-cancel-step2" variant="secondary" onPress={onClose}>
-              Cancel
+              {t('common.actions.cancel')}
             </Button>
             <Button
               testID="delete-confirm-step2"
@@ -105,7 +107,7 @@ export const DeleteAccountSheet = ({
               disabled={!canDelete || isLoading}
               loading={isLoading}
             >
-              Delete
+              {t('common.actions.delete')}
             </Button>
             {error ? (
               <Text

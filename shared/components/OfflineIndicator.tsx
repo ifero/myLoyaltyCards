@@ -10,6 +10,7 @@
  * SyncStatusContainer). This component does NOT read useNetworkStatus.
  */
 import { MaterialIcons } from '@expo/vector-icons';
+import { useTranslation } from 'react-i18next';
 import { Text, View } from 'react-native';
 import Animated, { FadeIn, FadeOut } from 'react-native-reanimated';
 
@@ -22,6 +23,7 @@ type OfflineIndicatorProps = {
 };
 
 export const OfflineIndicator = ({ isOffline, pendingChangeCount }: OfflineIndicatorProps) => {
+  const { t } = useTranslation();
   const { isDark } = useTheme();
 
   if (!isOffline || pendingChangeCount <= 0) {
@@ -32,10 +34,7 @@ export const OfflineIndicator = ({ isOffline, pendingChangeCount }: OfflineIndic
   const backgroundColor = SYNC_TOKENS.offlineBg[mode];
   const textColor = SYNC_TOKENS.offlineText[mode];
 
-  const message =
-    pendingChangeCount === 1
-      ? 'Offline \u2022 1 change will sync when online'
-      : `Offline \u2022 ${pendingChangeCount} changes will sync when online`;
+  const message = t('syncUi.offline.message', { count: pendingChangeCount });
 
   return (
     <Animated.View entering={FadeIn.duration(300)} exiting={FadeOut.duration(200)}>

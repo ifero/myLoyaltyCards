@@ -9,6 +9,7 @@
 
 import { useRouter } from 'expo-router';
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { View, Text, StyleSheet, Platform } from 'react-native';
 import Svg, { Rect, Circle, G } from 'react-native-svg';
 
@@ -57,6 +58,7 @@ const WalletIllustration: React.FC<{ primary: string }> = ({ primary }) => (
  */
 export const EmptyState: React.FC = () => {
   const { theme, isDark } = useTheme();
+  const { t } = useTranslation();
   const router = useRouter();
 
   const handleAddCard = () => {
@@ -66,18 +68,21 @@ export const EmptyState: React.FC = () => {
   return (
     <View style={styles.container} accessibilityRole="none">
       {/* Wallet illustration */}
-      <View style={styles.illustrationContainer} accessibilityLabel="Wallet illustration">
+      <View
+        style={styles.illustrationContainer}
+        accessibilityLabel={t('cards.home.emptyStateIllustrationAccessibilityLabel')}
+      >
         <WalletIllustration primary={theme.primary} />
       </View>
 
       {/* Title */}
       <Text style={[styles.title, { color: theme.textPrimary }]} accessibilityRole="header">
-        No cards yet
+        {t('cards.home.emptyStateTitle')}
       </Text>
 
       {/* Subtitle */}
       <Text style={[styles.subtitle, { color: theme.textTertiary }]}>
-        {'Add your first loyalty card and\nnever miss rewards at checkout'}
+        {t('cards.home.emptyStateSubtitle')}
       </Text>
 
       {/* CTA Button with glow */}
@@ -98,7 +103,7 @@ export const EmptyState: React.FC = () => {
         ]}
       >
         <Button variant="primary" onPress={handleAddCard} testID="empty-state-cta">
-          + Add Your First Card
+          {t('cards.home.emptyStateCta')}
         </Button>
       </View>
     </View>

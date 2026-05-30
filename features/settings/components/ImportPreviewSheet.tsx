@@ -1,5 +1,6 @@
 import { MaterialIcons } from '@expo/vector-icons';
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { Text, View } from 'react-native';
 
 import { BottomSheet, Button } from '@/shared/components/ui';
@@ -29,6 +30,7 @@ export const ImportPreviewSheet = ({
   onClose
 }: ImportPreviewSheetProps) => {
   const { theme } = useTheme();
+  const { t } = useTranslation();
 
   return (
     <BottomSheet visible={visible} onClose={onClose} testID="import-preview-sheet">
@@ -43,7 +45,7 @@ export const ImportPreviewSheet = ({
             textAlign: 'center'
           }}
         >
-          Import Cards
+          {t('settings.import.previewTitle')}
         </Text>
       </View>
 
@@ -64,21 +66,21 @@ export const ImportPreviewSheet = ({
             {fileName}
           </Text>
           <Text style={{ color: theme.textSecondary, fontSize: 13, marginTop: 2 }}>
-            {`${totalCards} card${totalCards === 1 ? '' : 's'} found`}
+            {t('settings.import.totalCardsFound', { count: totalCards })}
           </Text>
         </View>
       </View>
 
       <View style={{ marginTop: 16, gap: 2 }}>
         <Text style={{ color: theme.textSecondary, fontSize: 14, textAlign: 'center' }}>
-          {`${newCardsCount} new card${newCardsCount === 1 ? '' : 's'} will be added.`}
+          {t('settings.import.newCardsAdded', { count: newCardsCount })}
         </Text>
         <Text style={{ color: theme.textSecondary, fontSize: 14, textAlign: 'center' }}>
-          {`${duplicateCount} duplicate${duplicateCount === 1 ? '' : 's'} will be skipped.`}
+          {t('settings.import.duplicatesSkipped', { count: duplicateCount })}
         </Text>
         {invalidCount > 0 ? (
           <Text style={{ color: theme.textSecondary, fontSize: 14, textAlign: 'center' }}>
-            {`${invalidCount} invalid entr${invalidCount === 1 ? 'y' : 'ies'} will be skipped.`}
+            {t('settings.import.invalidEntriesSkipped', { count: invalidCount })}
           </Text>
         ) : null}
       </View>
@@ -92,10 +94,10 @@ export const ImportPreviewSheet = ({
           disabled={newCardsCount === 0}
           size="large"
         >
-          Import
+          {t('common.actions.import')}
         </Button>
         <Button testID="import-preview-cancel" variant="tertiary" onPress={onClose}>
-          Cancel
+          {t('common.actions.cancel')}
         </Button>
       </View>
     </BottomSheet>

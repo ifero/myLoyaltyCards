@@ -1,0 +1,97 @@
+[
+  {
+    "id": "1",
+    "question": "Come posso aggiungere la mia prima carta?",
+    "answer": "Tocca Aggiungi carta nella schermata principale. Se non hai ancora carte, nella home compare la guida alla prima carta.",
+    "steps": [
+      "Apri la schermata principale",
+      "Tocca Aggiungi carta",
+      "Scegli Scansiona codice a barre o Aggiungi manualmente"
+    ],
+    "tags": ["aggiungi", "prima-volta", "onboarding"]
+  },
+  {
+    "id": "2",
+    "question": "Come posso scansionare un codice a barre?",
+    "answer": "Assicurati che il codice a barre sia ben illuminato e centrato nell'inquadratura.",
+    "steps": [
+      "Dalla schermata principale tocca Aggiungi carta",
+      "Seleziona Scansiona codice a barre",
+      "Allinea il codice a barre all'interno del riquadro"
+    ],
+    "tags": ["scansione", "codice-a-barre"]
+  },
+  {
+    "id": "3",
+    "question": "Perché la fotocamera non funziona?",
+    "answer": "Per scansionare i codici a barre è necessario consentire l'accesso alla fotocamera.",
+    "steps": [
+      "Apri le Impostazioni del dispositivo",
+      "Vai su myLoyaltyCards > Fotocamera",
+      "Abilita l'accesso alla fotocamera"
+    ],
+    "tags": ["fotocamera", "permessi", "risoluzione-problemi"]
+  },
+  {
+    "id": "4",
+    "question": "I miei dati sono privati?",
+    "answer": "Le tue carte sono archiviate localmente sul tuo dispositivo.",
+    "steps": [
+      "Accediamo alla fotocamera solo quando scegli di scansionare",
+      "Nessun utilizzo della fotocamera in background"
+    ],
+    "tags": ["privacy", "sicurezza"]
+  },
+  {
+    "id": "5",
+    "question": "Come posso contattare il supporto o inviare feedback?",
+    "answer": "Usa Aiuto e FAQ per accedere alle opzioni di supporto.",
+    "steps": ["Apri Aiuto e FAQ", "Tocca Contatta supporto o Invia feedback"],
+    "tags": ["supporto", "feedback"]
+  },
+  {
+    "id": "6",
+    "question": "Come posso importare un file di backup JSON?",
+    "answer": "Apri Impostazioni > Dati > Importa dati e seleziona un file JSON esportato in precedenza da MyLoyaltyCards.",
+    "steps": [
+      "Apri Impostazioni",
+      "Nella sezione Dati tocca Importa dati",
+      "Seleziona il backup JSON esportato",
+      "Controlla l'anteprima e conferma Importa"
+    ],
+    "tags": ["importa", "backup", "json", "impostazioni"]
+  },
+  {
+    "id": "7",
+    "question": "Quale struttura JSON è richiesta per l'importazione?",
+    "answer": "Il file deve essere un payload di esportazione di MyLoyaltyCards con i campi di metadati e un array cards. Ogni carta deve includere gli stessi campi usati dall'app per il ripristino, come id, name, barcode, barcodeFormat, brandId, color, preferiti, contatori di utilizzo e timestamp.",
+    "steps": [
+      "Usa Esporta dati dalle Impostazioni per generare un backup valido",
+      "Non rinominare o rimuovere manualmente i campi del payload",
+      "Mantieni cardCount allineato al numero di elementi presenti in cards"
+    ],
+    "tags": ["importa", "esporta", "json", "schema", "ripristino"]
+  },
+  {
+    "id": "8",
+    "question": "Perché l'importazione JSON non riesce?",
+    "answer": "L'importazione fallisce quando il file è corrotto, malformato o non rispetta più la struttura del payload esportato. L'app verifica l'integrità del JSON prima di scrivere qualsiasi dato nel database.",
+    "steps": [
+      "Verifica che il file sia un JSON valido",
+      "Conferma che sia stato esportato da MyLoyaltyCards",
+      "Se hai modificato il file manualmente, esporta un nuovo backup e riprova"
+    ],
+    "tags": ["importa", "json", "risoluzione-problemi", "corrotto"]
+  },
+  {
+    "id": "9",
+    "question": "Cosa succede ai duplicati o alle voci non valide durante l'importazione?",
+    "answer": "Le carte già presenti con lo stesso codice a barre e lo stesso programma/brand vengono saltate. Se alcune voci sono non valide ma il file è altrimenti corretto, l'app importa le carte valide e segnala quante voci non valide sono state ignorate.",
+    "steps": [
+      "Controlla i conteggi nell'anteprima di importazione",
+      "Conferma Importa per aggiungere solo nuove carte valide",
+      "Verifica il messaggio finale con duplicati e voci non valide saltati"
+    ],
+    "tags": ["importa", "duplicati", "validazione", "json"]
+  }
+]

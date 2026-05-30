@@ -1,6 +1,7 @@
 import { MaterialIcons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Pressable, Text, TextInput, View } from 'react-native';
 
 import { isValidEmail } from '@/core/auth/validation';
@@ -14,10 +15,6 @@ import { AuthLink, AuthScreenLayout, ErrorBanner } from './components';
 const OTP_LENGTH = 8;
 const OTP_INPUT_MAX_LENGTH = OTP_LENGTH * 2;
 const RESEND_COOLDOWN_MS = 60_000;
-const VERIFY_UNAVAILABLE_MESSAGE =
-  "Couldn't verify right now. Check your connection and try again.";
-const RESEND_FAILURE_MESSAGE = "Couldn't resend code. Try again.";
-const RESEND_SUCCESS_MESSAGE = 'Code resent. Enter the newest code from your email.';
 const resendCooldownExpiryByFlow = new Map<string, number>();
 
 const getSingleParam = (value: string | string[] | undefined): string | undefined =>
@@ -83,6 +80,7 @@ const StatusNotice = ({ message, tone, boxed = false }: StatusNoticeProps) => {
 
 const VerifyEmailScreen = () => {
   const { theme, spacing, typography, touchTarget } = useTheme();
+  const { t } = useTranslation();
   const router = useRouter();
   const params = useLocalSearchParams<{ email?: string | string[]; sentAt?: string | string[] }>();
 
@@ -196,33 +194,33 @@ const VerifyEmailScreen = () => {
 
         if (!result.success) {
           if (result.error.code === 'invalid_otp') {
-            setOtpErrorMessage('Incorrect code. Please try again.');
+            setOtpErrorMessage(t('auth.verifyEmail.incorrectCode'));
             return;
           }
 
           if (result.error.code === 'expired_otp') {
             const nextCooldownExpiresAt = Date.now();
-            setOtpErrorMessage('This code has expired. Please request a new one.');
+            setOtpErrorMessage(t('auth.verifyEmail.expiredCode'));
             resendCooldownExpiryByFlow.set(cooldownFlowKey, nextCooldownExpiresAt);
             setCooldownExpiresAt(nextCooldownExpiresAt);
             setNow(nextCooldownExpiresAt);
             return;
           }
 
-          setBannerErrorMessage(VERIFY_UNAVAILABLE_MESSAGE);
+          setBannerErrorMessage(t('auth.verifyEmail.verifyUnavailable'));
           return;
         }
 
         router.dismissTo('/');
         router.replace('/');
       } catch {
-        setBannerErrorMessage(VERIFY_UNAVAILABLE_MESSAGE);
+        setBannerErrorMessage(t('auth.verifyEmail.verifyUnavailable'));
       } finally {
         isVerifyingRef.current = false;
         setLoading(false);
       }
     },
-    [clearFeedback, cooldownFlowKey, email, isEmailParamValid, loading, router]
+    [clearFeedback, cooldownFlowKey, email, isEmailParamValid, loading, router, t]
   );
 
   const handleOtpChange = useCallback(
@@ -255,23 +253,23 @@ const VerifyEmailScreen = () => {
       const result = await resendVerificationEmail(email);
 
       if (!result.success) {
-        setBannerErrorMessage(RESEND_FAILURE_MESSAGE);
+        setBannerErrorMessage(t('auth.verifyEmail.resendFailure'));
         return;
       }
 
       const nextCooldownExpiresAt = Date.now() + RESEND_COOLDOWN_MS;
       resendCooldownExpiryByFlow.set(cooldownFlowKey, nextCooldownExpiresAt);
       setOtpValue('');
-      setSuccessMessage(RESEND_SUCCESS_MESSAGE);
+      setSuccessMessage(t('auth.verifyEmail.resendSuccess'));
       setCooldownExpiresAt(nextCooldownExpiresAt);
       setNow(Date.now());
       focusInput();
     } catch {
-      setBannerErrorMessage(RESEND_FAILURE_MESSAGE);
+      setBannerErrorMessage(t('auth.verifyEmail.resendFailure'));
     } finally {
       setLoading(false);
     }
-  }, [clearFeedback, cooldownFlowKey, email, focusInput, isEmailParamValid, resendDisabled]);
+  }, [clearFeedback, cooldownFlowKey, email, focusInput, isEmailParamValid, resendDisabled, t]);
 
   if (!isEmailParamValid) {
     return null;
@@ -280,8 +278,8 @@ const VerifyEmailScreen = () => {
   return (
     <AuthScreenLayout
       testID="verify-email-screen"
-      heading="Verify your email"
-      subtitle={`We sent an 8-digit code to ${email}`}
+      heading={t('auth.verifyEmail.heading')}
+      subtitle={t('auth.verifyEmail.subtitle', { email })}
       headingTestID="verify-email-title"
       subtitleTestID="verify-email-subtitle"
     >
@@ -299,10 +297,10 @@ const VerifyEmailScreen = () => {
           autoComplete="one-time-code"
           maxLength={OTP_INPUT_MAX_LENGTH}
           selectTextOnFocus
-          placeholder="8-digit code"
+          placeholder={t('auth.placeholders.verificationCode')}
           placeholderTextColor={theme.textTertiary}
-          accessibilityLabel="8-digit verification code"
-          accessibilityHint="Enter the 8-digit code from your email"
+          accessibilityLabel={t('auth.accessibility.verificationCodeLabel')}
+          accessibilityHint={t('auth.accessibility.verificationCodeHint')}
           accessibilityState={{ disabled: loading }}
           style={{
             minHeight: 52,
@@ -330,9 +328,9 @@ const VerifyEmailScreen = () => {
           onPress={() => void handleVerify(otpValue)}
           loading={loading}
           disabled={!isOtpComplete}
-          accessibilityLabel="Confirm"
+          accessibilityLabel={t('auth.accessibility.confirmCode')}
         >
-          Confirm
+          {t('auth.verifyEmail.confirm')}
         </Button>
 
         <Pressable
@@ -341,7 +339,9 @@ const VerifyEmailScreen = () => {
           disabled={resendDisabled}
           accessibilityRole="button"
           accessibilityLabel={
-            resendDisabled ? `Resend in ${formatCooldown(remainingSeconds)}` : 'Resend code'
+            resendDisabled
+              ? t('auth.verifyEmail.resendIn', { time: formatCooldown(remainingSeconds) })
+              : t('auth.verifyEmail.resendCode')
           }
           accessibilityState={{ disabled: resendDisabled, busy: loading }}
           style={{
@@ -358,7 +358,9 @@ const VerifyEmailScreen = () => {
               fontWeight: '600'
             }}
           >
-            {resendDisabled ? `Resend in ${formatCooldown(remainingSeconds)}` : 'Resend code'}
+            {resendDisabled
+              ? t('auth.verifyEmail.resendIn', { time: formatCooldown(remainingSeconds) })
+              : t('auth.verifyEmail.resendCode')}
           </Text>
         </Pressable>
 
@@ -369,15 +371,15 @@ const VerifyEmailScreen = () => {
 
         <AuthLink
           testID="wrong-email-link"
-          prefixText="Wrong email?"
-          actionText="Go back"
+          prefixText={t('auth.verifyEmail.wrongEmail')}
+          actionText={t('auth.verifyEmail.goBack')}
           onPress={() =>
             router.replace({
               pathname: '/create-account',
               params: { email }
             })
           }
-          accessibilityLabel="Wrong email? Go back"
+          accessibilityLabel={t('auth.accessibility.wrongEmailGoBack')}
         />
       </View>
     </AuthScreenLayout>

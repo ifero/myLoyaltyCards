@@ -15,6 +15,7 @@
 import * as Clipboard from 'expo-clipboard';
 import * as Haptics from 'expo-haptics';
 import React, { useCallback, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Dimensions, Platform, Pressable, StatusBar, StyleSheet, Text, View } from 'react-native';
 import { Gesture, GestureDetector, GestureHandlerRootView } from 'react-native-gesture-handler';
 import Animated, {
@@ -54,6 +55,7 @@ const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
  */
 export function BarcodeFlash({ card, onDismiss }: BarcodeFlashProps) {
   const { maximize, restore } = useBrightness();
+  const { t } = useTranslation();
 
   // Animation values
   const opacity = useSharedValue(0);
@@ -131,8 +133,8 @@ export function BarcodeFlash({ card, onDismiss }: BarcodeFlashProps) {
           <Pressable
             style={styles.pressable}
             onPress={handleDismiss}
-            accessibilityLabel="Dismiss barcode overlay"
-            accessibilityHint="Tap anywhere to close"
+            accessibilityLabel={t('cards.flash.dismissOverlayA11yLabel')}
+            accessibilityHint={t('cards.flash.dismissOverlayA11yHint')}
             accessibilityRole="button"
           >
             <View style={styles.content}>
@@ -156,8 +158,11 @@ export function BarcodeFlash({ card, onDismiss }: BarcodeFlashProps) {
               {/* Barcode Number (copyable) */}
               <Pressable
                 onLongPress={handleCopyBarcode}
-                accessibilityLabel={`Barcode number: ${card.barcode}. Long press to copy.`}
-                accessibilityHint="Long press to copy barcode to clipboard"
+                accessibilityLabel={t('cards.flash.barcodeValueA11yLabel', {
+                  title: card.name,
+                  value: card.barcode
+                })}
+                accessibilityHint={t('cards.flash.copyHint')}
                 accessibilityRole="text"
               >
                 <Text style={styles.barcodeNumber} selectable>
@@ -166,7 +171,7 @@ export function BarcodeFlash({ card, onDismiss }: BarcodeFlashProps) {
               </Pressable>
 
               {/* Hint text */}
-              <Text style={styles.hintText}>Tap anywhere to close</Text>
+              <Text style={styles.hintText}>{t('cards.flash.tapToClose')}</Text>
             </View>
           </Pressable>
         </Animated.View>

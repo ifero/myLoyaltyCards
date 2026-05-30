@@ -3,6 +3,7 @@ import tseslint from '@typescript-eslint/eslint-plugin';
 import tsParser from '@typescript-eslint/parser';
 import importPlugin from 'eslint-plugin-import';
 import boundariesPlugin from 'eslint-plugin-boundaries';
+import i18nextPlugin from 'eslint-plugin-i18next';
 
 export default [
   eslint.configs.recommended,
@@ -20,6 +21,7 @@ export default [
       '@typescript-eslint': tseslint,
       import: importPlugin,
       boundaries: boundariesPlugin,
+      i18next: i18nextPlugin,
     },
     settings: {
       'import/resolver': {
@@ -123,6 +125,35 @@ export default [
           alphabetize: {
             order: 'asc',
             caseInsensitive: true,
+          },
+        },
+      ],
+    },
+  },
+  {
+    files: ['**/*.tsx'],
+    ignores: ['**/*.test.tsx', '**/*.spec.tsx', '**/__tests__/**'],
+    rules: {
+      // Prevent hardcoded user-facing copy in JSX markup and text-like props.
+      'i18next/no-literal-string': [
+        'warn',
+        {
+          mode: 'jsx-only',
+          'jsx-attributes': {
+            include: [
+              'accessibilityLabel',
+              'accessibilityHint',
+              'placeholder',
+              'title',
+              'label',
+              'subtitle',
+              'heading',
+              'message',
+              'description',
+              'actionText',
+              'prefixText',
+              'suffixText',
+            ],
           },
         },
       ],

@@ -8,6 +8,7 @@
 
 import { MaterialIcons } from '@expo/vector-icons';
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Modal, Pressable, Text, View, StyleSheet } from 'react-native';
 
 import { useTheme } from '@/shared/theme';
@@ -42,6 +43,7 @@ export const SortFilterRow: React.FC<SortFilterRowProps> = ({
   testID = 'sort-filter-row'
 }) => {
   const { theme, isDark } = useTheme();
+  const { t } = useTranslation();
   const [menuVisible, setMenuVisible] = useState(false);
 
   const handleSelect = (option: SortOption) => {
@@ -49,7 +51,7 @@ export const SortFilterRow: React.FC<SortFilterRowProps> = ({
     setMenuVisible(false);
   };
 
-  const cardCountText = cardCount === 1 ? '1 loyalty card' : `${cardCount} loyalty cards`;
+  const cardCountText = t('cards.sort.count', { count: cardCount });
 
   return (
     <View testID={testID} style={styles.container}>
@@ -65,8 +67,8 @@ export const SortFilterRow: React.FC<SortFilterRowProps> = ({
         testID={`${testID}-sort-button`}
         onPress={() => setMenuVisible(true)}
         accessibilityRole="button"
-        accessibilityLabel={`Sort by ${sortLabel}`}
-        accessibilityHint="Opens sort options"
+        accessibilityLabel={t('cards.sort.buttonAccessibilityLabel', { label: sortLabel })}
+        accessibilityHint={t('cards.sort.buttonHint')}
         style={styles.sortButton}
       >
         <Text style={[styles.sortText, { color: theme.primary }]}>{sortLabel}</Text>

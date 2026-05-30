@@ -1,5 +1,6 @@
 import { useRouter } from 'expo-router';
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { Pressable, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -13,6 +14,7 @@ import { FannedCardIllustration } from '../components/FannedCardIllustration';
 
 const WelcomeScreen = () => {
   const { theme, typography } = useTheme();
+  const { t } = useTranslation();
   const insets = useSafeAreaInsets();
   const router = useRouter();
 
@@ -32,7 +34,7 @@ const WelcomeScreen = () => {
         paddingBottom: insets.bottom + 24,
         paddingHorizontal: 24
       }}
-      accessibilityLabel="Welcome to myLoyaltyCards"
+      accessibilityLabel={t('onboarding.welcome.screenLabel')}
     >
       <View style={{ alignItems: 'center' }}>
         <BrandedIcon testID="welcome-branded-icon" size={100} iconSize={34} />
@@ -49,7 +51,7 @@ const WelcomeScreen = () => {
             fontWeight: typography.title1.fontWeight
           }}
         >
-          My Loyalty Cards
+          {t('onboarding.welcome.title')}
         </Text>
 
         <Text
@@ -62,7 +64,7 @@ const WelcomeScreen = () => {
             lineHeight: 22
           }}
         >
-          Your loyalty cards, always with you
+          {t('onboarding.welcome.subtitle')}
         </Text>
 
         <View style={{ marginTop: 44 }}>
@@ -77,15 +79,15 @@ const WelcomeScreen = () => {
           onPress={() => router.push('/onboarding/mode-selection')}
           testID="welcome-get-started"
         >
-          Get Started
+          {t('onboarding.welcome.getStarted')}
         </Button>
 
         <Pressable
           testID="welcome-sign-in"
           onPress={() => router.push('/sign-in')}
           accessibilityRole="button"
-          accessibilityLabel="I already have an account. Sign In"
-          accessibilityHint="Navigates to the sign in screen"
+          accessibilityLabel={t('onboarding.welcome.existingAccountAccessibilityLabel')}
+          accessibilityHint={t('onboarding.welcome.existingAccountHint')}
           style={{
             marginTop: 18,
             minHeight: 44,
@@ -94,7 +96,7 @@ const WelcomeScreen = () => {
           }}
         >
           <Text style={{ color: theme.link, fontSize: 15, fontWeight: '500', textAlign: 'center' }}>
-            I already have an account
+            {t('onboarding.welcome.existingAccount')}
           </Text>
         </Pressable>
       </View>

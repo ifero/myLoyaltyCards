@@ -12,6 +12,7 @@
 
 import { toDataURL, type DataURL, type RenderOptions } from '@bwip-js/react-native';
 import React, { memo, useEffect, useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Image, PixelRatio, type ViewStyle, View } from 'react-native';
 
 import type { BarcodeFormat } from '@/core/schemas';
@@ -84,6 +85,7 @@ export const BarcodeRenderer = memo(function BarcodeRenderer({
   backgroundColor = '#FFFFFF',
   containerStyle
 }: BarcodeRendererProps) {
+  const { t } = useTranslation();
   const [source, setSource] = useState<DataURL | null>(null);
   const [error, setError] = useState<boolean>(false);
 
@@ -159,7 +161,9 @@ export const BarcodeRenderer = memo(function BarcodeRenderer({
           alignItems: 'center',
           justifyContent: 'center'
         }}
-        accessibilityLabel={error ? 'Invalid barcode' : 'Loading barcode'}
+        accessibilityLabel={
+          error ? t('cards.barcodeRenderer.invalidA11y') : t('cards.barcodeRenderer.loadingA11y')
+        }
         accessibilityRole="image"
       />
     );
@@ -168,7 +172,7 @@ export const BarcodeRenderer = memo(function BarcodeRenderer({
   return (
     <View
       style={[{ backgroundColor, paddingHorizontal: 16 }, containerStyle]}
-      accessibilityLabel={`${format} barcode for ${value}`}
+      accessibilityLabel={t('cards.barcodeRenderer.imageA11yLabel', { format, value })}
       accessibilityRole="image"
     >
       <Image

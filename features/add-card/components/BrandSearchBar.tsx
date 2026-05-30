@@ -9,6 +9,7 @@
 
 import { MaterialIcons } from '@expo/vector-icons';
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { TextInput, View, Pressable, StyleSheet } from 'react-native';
 
 import { useTheme } from '@/shared/theme';
@@ -28,6 +29,7 @@ export const BrandSearchBar: React.FC<BrandSearchBarProps> = ({
   testID = 'brand-search-bar'
 }) => {
   const { theme } = useTheme();
+  const { t } = useTranslation();
   const hasText = value.length > 0;
 
   return (
@@ -46,14 +48,14 @@ export const BrandSearchBar: React.FC<BrandSearchBarProps> = ({
         testID={`${testID}-input`}
         value={value}
         onChangeText={onChangeText}
-        placeholder="Search by name"
+        placeholder={t('addCard.search.placeholder')}
         placeholderTextColor={theme.textTertiary}
         style={[styles.input, { color: theme.textPrimary }]}
         autoCapitalize="none"
         autoCorrect={false}
         returnKeyType="search"
         accessibilityRole="search"
-        accessibilityLabel="Search brands by name"
+        accessibilityLabel={t('addCard.search.accessibilityLabel')}
       />
       {hasText && (
         <Pressable
@@ -61,7 +63,7 @@ export const BrandSearchBar: React.FC<BrandSearchBarProps> = ({
           onPress={onClear}
           hitSlop={8}
           accessibilityRole="button"
-          accessibilityLabel="Clear search"
+          accessibilityLabel={t('addCard.search.clearAccessibilityLabel')}
           style={styles.clearButton}
         >
           <MaterialIcons name="close" size={20} color={theme.textSecondary} />

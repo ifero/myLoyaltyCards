@@ -9,6 +9,7 @@
 
 import { router, useLocalSearchParams } from 'expo-router';
 import React, { useCallback, useEffect, useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import { AccessibilityInfo, View } from 'react-native';
 
 import { CatalogueRepository } from '@/core/catalogue/catalogue-repository';
@@ -31,12 +32,13 @@ type ScanParams = {
 };
 
 export const BrandScannerScreen: React.FC = () => {
+  const { t } = useTranslation();
   const params = useLocalSearchParams<ScanParams>();
   const shouldReturnToSetup = params.returnToSetup === 'true';
 
   useEffect(() => {
-    AccessibilityInfo.announceForAccessibility?.('Barcode scanner screen');
-  }, []);
+    AccessibilityInfo.announceForAccessibility?.(t('addCard.scanner.screenAnnouncement'));
+  }, [t]);
 
   // Reconstruct brand from params (or look up from catalogue)
   const brand = useMemo<CatalogueBrand | undefined>(() => {

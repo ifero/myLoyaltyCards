@@ -9,6 +9,7 @@
 import { FlashList } from '@shopify/flash-list';
 import { useFocusEffect } from 'expo-router';
 import React, { useCallback, useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   View,
   Text,
@@ -54,6 +55,7 @@ const GUTTER = 16;
  */
 export const CardList: React.FC<{ highlightCardId?: string | null }> = ({ highlightCardId }) => {
   const { theme } = useTheme();
+  const { t } = useTranslation();
   const { cards, isLoading, error, refetch } = useCards();
   const { forceSync } = useCloudSync();
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -88,11 +90,11 @@ export const CardList: React.FC<{ highlightCardId?: string | null }> = ({ highli
     () => (
       <View style={styles.noResults}>
         <Text style={[styles.noResultsText, { color: theme.textSecondary }]}>
-          No cards matching &quot;{searchQuery}&quot;
+          {t('cards.home.noResults', { query: searchQuery })}
         </Text>
       </View>
     ),
-    [searchQuery, theme.textSecondary]
+    [searchQuery, t, theme.textSecondary]
   );
 
   const renderItem = useCallback(
@@ -138,7 +140,7 @@ export const CardList: React.FC<{ highlightCardId?: string | null }> = ({ highli
       >
         <CardTile card={cards[0]!} enlarged highlighted={cards[0]!.id === highlightCardId} />
         <Text style={[styles.singleCardTip, { color: theme.textTertiary }]}>
-          Tap + to add more cards to your wallet
+          {t('cards.home.singleCardTip')}
         </Text>
       </ScrollView>
     );

@@ -1,5 +1,6 @@
 import { MaterialIcons } from '@expo/vector-icons';
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Pressable } from 'react-native';
 
 import { TextField } from '@/shared/components/ui';
@@ -31,6 +32,7 @@ export const PasswordInput = ({
   autoComplete = 'password'
 }: PasswordInputProps) => {
   const { theme, touchTarget } = useTheme();
+  const { t } = useTranslation();
   const [isVisible, setIsVisible] = useState(false);
 
   return (
@@ -54,7 +56,9 @@ export const PasswordInput = ({
           testID={`${testID}-toggle`}
           onPress={() => setIsVisible((previous) => !previous)}
           accessibilityRole="button"
-          accessibilityLabel={isVisible ? 'Hide password' : 'Show password'}
+          accessibilityLabel={
+            isVisible ? t('auth.passwordInput.hide') : t('auth.passwordInput.show')
+          }
           style={{
             minWidth: touchTarget.min,
             minHeight: touchTarget.min,

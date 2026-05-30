@@ -63,7 +63,8 @@
             "deploymentTarget": "18.0"
           }
         }
-      ]
+      ],
+      "expo-localization"
     ],
     "experiments": {
       "typedRoutes": true

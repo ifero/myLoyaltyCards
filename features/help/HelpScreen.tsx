@@ -1,20 +1,44 @@
 import { useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Alert, Linking, Pressable, ScrollView, Text, TextInput, View } from 'react-native';
 
 import { useTheme } from '@/shared/theme';
 
-import docHelpItems from './help-data.json';
-import { fallbackHelpItems, type HelpItem } from './help-fallback';
+import docHelpItemsIt from './help-data.it.json';
+import docHelpItemsEn from './help-data.json';
+import { fallbackHelpItemsEn, fallbackHelpItemsIt, type HelpItem } from './help-fallback';
 
-const sourceHelpItems =
-  Array.isArray(docHelpItems) && docHelpItems.length > 0 ? docHelpItems : fallbackHelpItems;
+type HelpLanguageCode = 'en' | 'it';
+
+const resolveHelpLanguage = (language: string): HelpLanguageCode =>
+  language.toLowerCase().startsWith('it') ? 'it' : 'en';
+
+const sourceHelpItemsByLanguage: Record<HelpLanguageCode, HelpItem[]> = {
+  en:
+    Array.isArray(docHelpItemsEn) && docHelpItemsEn.length > 0
+      ? docHelpItemsEn
+      : fallbackHelpItemsEn,
+  it:
+    Array.isArray(docHelpItemsIt) && docHelpItemsIt.length > 0
+      ? docHelpItemsIt
+      : fallbackHelpItemsIt
+};
+
+const fallbackHelpItemsByLanguage: Record<HelpLanguageCode, HelpItem[]> = {
+  en: fallbackHelpItemsEn,
+  it: fallbackHelpItemsIt
+};
 
 type HelpScreenProps = {
   itemsOverride?: HelpItem[];
 };
 
 const HelpScreen = ({ itemsOverride }: HelpScreenProps) => {
+  const { t, i18n } = useTranslation();
   const { theme } = useTheme();
+  const language = resolveHelpLanguage(i18n.language);
+  const sourceHelpItems = sourceHelpItemsByLanguage[language];
+  const fallbackHelpItems = fallbackHelpItemsByLanguage[language];
   const resolvedItems = itemsOverride ?? sourceHelpItems;
   const displayItems = resolvedItems.length > 0 ? resolvedItems : fallbackHelpItems;
   const [query, setQuery] = useState('');
@@ -41,12 +65,12 @@ const HelpScreen = ({ itemsOverride }: HelpScreenProps) => {
     try {
       const supported = await Linking.canOpenURL(url);
       if (!supported) {
-        Alert.alert('Unable to open', fallbackMessage);
+        Alert.alert(t('help.openFailedTitle'), fallbackMessage);
         return;
       }
       await Linking.openURL(url);
     } catch {
-      Alert.alert('Unable to open', fallbackMessage);
+      Alert.alert(t('help.openFailedTitle'), fallbackMessage);
     }
   };
 
@@ -63,18 +87,18 @@ const HelpScreen = ({ itemsOverride }: HelpScreenProps) => {
         style={{ color: theme.textPrimary }}
         accessibilityRole="header"
       >
-        Help & FAQ
+        {t('help.title')}
       </Text>
 
       <Text className="mb-6 text-base" style={{ color: theme.textSecondary }}>
-        Find quick answers and troubleshooting steps.
+        {t('help.subtitle')}
       </Text>
 
       <TextInput
         testID="help-search"
         value={query}
         onChangeText={setQuery}
-        placeholder="Search help"
+        placeholder={t('help.searchPlaceholder')}
         placeholderTextColor={theme.textSecondary}
         className="mb-6 rounded-xl px-4 py-3 text-base"
         style={{
@@ -127,30 +151,24 @@ const HelpScreen = ({ itemsOverride }: HelpScreenProps) => {
         <Pressable
           testID="help-contact-support"
           accessibilityRole="button"
-          accessibilityLabel="Contact support"
+          accessibilityLabel={t('help.contactSupportA11y')}
           onPress={() =>
-            openExternal(
-              'mailto:support@myloyaltycards.app',
-              'No email app available. Please try again later.'
-            )
+            openExternal('mailto:support@myloyaltycards.app', t('help.contactSupportUnavailable'))
           }
           className="items-center justify-center rounded-xl px-4 py-3"
           style={{
             backgroundColor: theme.primary
           }}
         >
-          <Text className="text-sm font-semibold text-white">Contact Support</Text>
+          <Text className="text-sm font-semibold text-white">{t('help.contactSupport')}</Text>
         </Pressable>
 
         <Pressable
           testID="help-submit-feedback"
           accessibilityRole="button"
-          accessibilityLabel="Submit feedback"
+          accessibilityLabel={t('help.submitFeedbackA11y')}
           onPress={() =>
-            openExternal(
-              'https://myloyaltycards.app/feedback',
-              'Feedback page unavailable. Please try again later.'
-            )
+            openExternal('https://myloyaltycards.app/feedback', t('help.submitFeedbackUnavailable'))
           }
           className="items-center justify-center rounded-xl px-4 py-3"
           style={{
@@ -160,7 +178,7 @@ const HelpScreen = ({ itemsOverride }: HelpScreenProps) => {
           }}
         >
           <Text className="text-sm font-semibold" style={{ color: theme.textPrimary }}>
-            Submit Feedback
+            {t('help.submitFeedback')}
           </Text>
         </Pressable>
       </View>

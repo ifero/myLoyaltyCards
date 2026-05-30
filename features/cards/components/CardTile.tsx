@@ -10,6 +10,7 @@
 
 import { useRouter } from 'expo-router';
 import React, { useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { View, Text, Pressable, StyleSheet, Platform } from 'react-native';
 import Animated, {
   useSharedValue,
@@ -75,6 +76,7 @@ export const CardTile: React.FC<CardTileProps> = ({
   highlighted = false
 }) => {
   const { theme, isDark } = useTheme();
+  const { t } = useTranslation();
   const router = useRouter();
   const brand = useBrandLogo(card.brandId);
 
@@ -122,7 +124,7 @@ export const CardTile: React.FC<CardTileProps> = ({
       style={({ pressed }) => [pressed && styles.pressed]}
       accessibilityRole="button"
       accessibilityLabel={card.name}
-      accessibilityHint="Opens card details"
+      accessibilityHint={t('cards.home.cardTileAccessibilityHint')}
     >
       {/* Tile */}
       <Animated.View

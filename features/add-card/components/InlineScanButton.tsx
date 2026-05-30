@@ -8,6 +8,7 @@
 
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Pressable, StyleSheet } from 'react-native';
 
 import { useTheme } from '@/shared/theme';
@@ -23,6 +24,7 @@ export const InlineScanButton: React.FC<InlineScanButtonProps> = ({
   testID = 'inline-scan-button'
 }) => {
   const { theme } = useTheme();
+  const { t } = useTranslation();
   const [isPressed, setIsPressed] = useState(false);
 
   return (
@@ -33,7 +35,7 @@ export const InlineScanButton: React.FC<InlineScanButtonProps> = ({
       onPressOut={() => setIsPressed(false)}
       style={[styles.button, { opacity: isPressed ? 0.6 : 1 }]}
       accessibilityRole="button"
-      accessibilityLabel="Scan barcode with camera"
+      accessibilityLabel={t('addCard.setup.inlineScanAccessibilityLabel')}
       hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
     >
       <MaterialCommunityIcons name="barcode-scan" size={24} color={theme.primary} />

@@ -8,6 +8,7 @@
 
 import { MaterialIcons } from '@expo/vector-icons';
 import React, { useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   TextInput,
   View,
@@ -42,6 +43,7 @@ export const SearchBar: React.FC<SearchBarProps> = ({
   testID = 'search-bar'
 }) => {
   const { theme, isDark } = useTheme();
+  const { t } = useTranslation();
   const inputRef = useRef<TextInputType>(null);
   const hasValue = value.length > 0;
 
@@ -68,10 +70,10 @@ export const SearchBar: React.FC<SearchBarProps> = ({
         testID={`${testID}-input`}
         value={value}
         onChangeText={onChangeText}
-        placeholder="Search loyalty cards"
+        placeholder={t('cards.home.searchPlaceholder')}
         placeholderTextColor={theme.textTertiary}
         style={[styles.input, { color: theme.textPrimary }]}
-        accessibilityLabel="Search loyalty cards"
+        accessibilityLabel={t('cards.home.searchAccessibilityLabel')}
         returnKeyType="search"
         autoCorrect={false}
         autoCapitalize="none"
@@ -80,7 +82,7 @@ export const SearchBar: React.FC<SearchBarProps> = ({
         <Pressable
           testID={`${testID}-clear`}
           onPress={handleClear}
-          accessibilityLabel="Clear search"
+          accessibilityLabel={t('cards.home.clearSearchAccessibilityLabel')}
           accessibilityRole="button"
           hitSlop={8}
           style={styles.clearButton}

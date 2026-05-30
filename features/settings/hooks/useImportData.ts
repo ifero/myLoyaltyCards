@@ -1,6 +1,7 @@
 import * as DocumentPicker from 'expo-document-picker';
 import { File } from 'expo-file-system';
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 
 import {
   analyzeImportPayload,
@@ -17,8 +18,9 @@ type UseImportDataOptions = {
 };
 
 type ImportErrorState = {
-  title: 'Invalid File' | 'No Card Data' | 'Import Failed';
+  title: string;
   message: string;
+  variant: 'invalid' | 'empty';
 };
 
 export const useImportData = ({
@@ -26,6 +28,7 @@ export const useImportData = ({
   onImportSuccess,
   onSyncRequested
 }: UseImportDataOptions) => {
+  const { t } = useTranslation();
   const [preview, setPreview] = useState<ImportPreview | null>(null);
   const [errorState, setErrorState] = useState<ImportErrorState | null>(null);
   const [isPreparing, setIsPreparing] = useState(false);
@@ -33,6 +36,12 @@ export const useImportData = ({
 
   const closePreview = () => setPreview(null);
   const closeError = () => setErrorState(null);
+
+  const getAnalysisMessage = (title: 'No Card Data' | 'Invalid File') => {
+    return title === 'No Card Data'
+      ? t('settings.import.noCardDataMessage')
+      : t('settings.import.invalidFileMessage');
+  };
 
   const pickImportFile = async () => {
     setIsPreparing(true);
@@ -51,7 +60,11 @@ export const useImportData = ({
 
       const asset = result.assets[0];
       if (!asset) {
-        setErrorState({ title: 'Invalid File', message: 'No file was selected.' });
+        setErrorState({
+          title: t('settings.import.invalidFileTitle'),
+          message: t('settings.import.noFileSelected'),
+          variant: 'invalid'
+        });
         return;
       }
 
@@ -65,12 +78,20 @@ export const useImportData = ({
       }
 
       setErrorState({
-        title: analysis.title,
-        message: analysis.message
+        title:
+          analysis.title === 'No Card Data'
+            ? t('settings.import.noCardDataTitle')
+            : t('settings.import.invalidFileTitle'),
+        message: getAnalysisMessage(analysis.title),
+        variant: analysis.title === 'No Card Data' ? 'empty' : 'invalid'
       });
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'Unable to read the selected file.';
-      setErrorState({ title: 'Invalid File', message });
+      console.error('[useImportData] Failed to read import file', error);
+      setErrorState({
+        title: t('settings.import.invalidFileTitle'),
+        message: t('settings.import.unreadableFile'),
+        variant: 'invalid'
+      });
     } finally {
       setIsPreparing(false);
     }
@@ -95,27 +116,28 @@ export const useImportData = ({
       const messageParts: string[] = [];
 
       if (result.importedCount > 0) {
-        messageParts.push(
-          `${result.importedCount} card${result.importedCount === 1 ? '' : 's'} imported successfully`
-        );
+        messageParts.push(t('settings.import.toastImported', { count: result.importedCount }));
       } else {
-        messageParts.push('No new cards were imported');
+        messageParts.push(t('settings.import.toastNoNewCards'));
       }
 
       if (result.duplicateCount > 0) {
         messageParts.push(
-          `${result.duplicateCount} duplicate${result.duplicateCount === 1 ? '' : 's'} skipped`
+          t('settings.import.toastDuplicatesSkipped', { count: result.duplicateCount })
         );
       }
 
       if (result.invalidCount > 0) {
         messageParts.push(
-          `${result.invalidCount} invalid entr${result.invalidCount === 1 ? 'y' : 'ies'} skipped`
+          t('settings.import.toastInvalidEntriesSkipped', { count: result.invalidCount })
         );
       }
 
       await showToast({
-        title: result.importedCount > 0 ? 'Import complete' : 'Import finished',
+        title:
+          result.importedCount > 0
+            ? t('settings.import.toastCompleteTitle')
+            : t('settings.import.toastFinishedTitle'),
         message: messageParts.join(' • '),
         preset: 'done'
       });
@@ -124,8 +146,12 @@ export const useImportData = ({
         void onSyncRequested();
       }
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'Import failed';
-      setErrorState({ title: 'Import Failed', message });
+      console.error('[useImportData] Failed to import cards', error);
+      setErrorState({
+        title: t('settings.import.failedTitle'),
+        message: t('settings.import.failedMessage'),
+        variant: 'invalid'
+      });
     } finally {
       setIsImporting(false);
     }

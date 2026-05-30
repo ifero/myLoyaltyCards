@@ -1,5 +1,6 @@
 import { MaterialIcons } from '@expo/vector-icons';
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { Pressable, Text, View } from 'react-native';
 
 import { BottomSheet } from '@/shared/components/ui';
@@ -15,12 +16,6 @@ type ThemePickerSheetProps = {
   onClose: () => void;
 };
 
-const OPTIONS: Array<{ key: ThemePreference; label: string }> = [
-  { key: 'light', label: 'Light' },
-  { key: 'dark', label: 'Dark' },
-  { key: 'system', label: 'System' }
-];
-
 export const ThemePickerSheet = ({
   visible,
   selectedTheme,
@@ -28,17 +23,23 @@ export const ThemePickerSheet = ({
   onClose
 }: ThemePickerSheetProps) => {
   const { theme } = useTheme();
+  const { t } = useTranslation();
+  const options: Array<{ key: ThemePreference; label: string }> = [
+    { key: 'light', label: t('common.theme.light') },
+    { key: 'dark', label: t('common.theme.dark') },
+    { key: 'system', label: t('common.theme.system') }
+  ];
 
   return (
     <BottomSheet
       visible={visible}
       onClose={onClose}
-      title="Theme"
+      title={t('settings.theme.pickerTitle')}
       testID="theme-picker-sheet"
-      accessibilityLabel="Theme Picker"
+      accessibilityLabel={t('settings.theme.pickerAccessibilityLabel')}
     >
       <View style={{ flexDirection: 'row', gap: 12 }}>
-        {OPTIONS.map((option) => {
+        {options.map((option) => {
           const isSelected = option.key === selectedTheme;
 
           return (
@@ -47,7 +48,9 @@ export const ThemePickerSheet = ({
               testID={`theme-option-${option.key}`}
               onPress={() => onSelect(option.key)}
               accessibilityRole="button"
-              accessibilityLabel={`${option.label} theme`}
+              accessibilityLabel={t('settings.theme.optionAccessibilityLabel', {
+                name: option.label
+              })}
               style={{ width: 101 }}
             >
               <View
@@ -98,7 +101,7 @@ export const ThemePickerSheet = ({
         })}
       </View>
       <Text style={{ marginTop: 10, color: theme.textSecondary, fontSize: 13 }}>
-        System uses your device&apos;s appearance setting
+        {t('settings.theme.systemDescription')}
       </Text>
     </BottomSheet>
   );

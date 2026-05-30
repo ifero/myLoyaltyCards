@@ -7,6 +7,7 @@
  */
 import { MaterialIcons } from '@expo/vector-icons';
 import { useEffect, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Text, View } from 'react-native';
 import Animated, {
   FadeIn,
@@ -32,6 +33,7 @@ type SyncIndicatorProps = {
 const AUTO_DISMISS_MS = 2500;
 
 export const SyncIndicator = ({ syncState, onSuccessDismissed }: SyncIndicatorProps) => {
+  const { t } = useTranslation();
   const { isDark } = useTheme();
   const rotation = useSharedValue(0);
   const reducedMotion = useReducedMotion();
@@ -90,7 +92,9 @@ export const SyncIndicator = ({ syncState, onSuccessDismissed }: SyncIndicatorPr
       exiting={FadeOut.duration(300)}
       testID="sync-indicator"
       accessibilityLiveRegion="polite"
-      accessibilityLabel={isSyncing ? 'Syncing cards' : 'Cards synced'}
+      accessibilityLabel={
+        isSyncing ? t('syncUi.syncIndicator.syncingA11y') : t('syncUi.syncIndicator.successA11y')
+      }
     >
       <View
         className="mx-4 mb-2 flex-row items-center rounded-xl px-3 py-2"
@@ -118,7 +122,9 @@ export const SyncIndicator = ({ syncState, onSuccessDismissed }: SyncIndicatorPr
             lineHeight: 16
           }}
         >
-          {isSyncing ? 'Syncing cards…' : 'All changes synced'}
+          {isSyncing
+            ? t('syncUi.syncIndicator.syncingMessage')
+            : t('syncUi.syncIndicator.successMessage')}
         </Text>
       </View>
     </Animated.View>

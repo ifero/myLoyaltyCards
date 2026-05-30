@@ -185,7 +185,7 @@ describe('useDeleteCard', () => {
         await result.current.deleteCard();
       });
 
-      expect(result.current.error).toBe(errorMessage);
+      expect(result.current.error).toBe('Failed to delete card');
     });
 
     it('returns false on failure', async () => {

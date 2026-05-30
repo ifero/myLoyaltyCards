@@ -14,6 +14,7 @@
 import * as Haptics from 'expo-haptics';
 import { router } from 'expo-router';
 import { useCallback, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 
 import { deleteCard as deleteCardFromDb } from '@/core/database';
 import { addPendingDeletion, markDirty } from '@/core/sync';
@@ -48,11 +49,12 @@ export interface UseDeleteCardReturn {
 export function useDeleteCard(cardId: string): UseDeleteCardReturn {
   const [isDeleting, setIsDeleting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const { t } = useTranslation();
   const { isAuthenticated } = useAuthState();
 
   const deleteCard = useCallback(async (): Promise<boolean> => {
     if (!cardId) {
-      setError('Invalid card ID');
+      setError(t('cards.delete.invalidId'));
       return false;
     }
 
@@ -78,7 +80,7 @@ export function useDeleteCard(cardId: string): UseDeleteCardReturn {
 
       // Success feedback - toast
       await showToast({
-        title: 'Card deleted',
+        title: t('cards.delete.successTitle'),
         preset: 'done',
         haptic: 'success',
         duration: 2
@@ -90,12 +92,12 @@ export function useDeleteCard(cardId: string): UseDeleteCardReturn {
       return true;
     } catch (err) {
       console.error('Failed to delete card:', err);
-      const errorMessage = err instanceof Error ? err.message : 'Failed to delete card';
+      const errorMessage = t('cards.delete.failedMessage');
       setError(errorMessage);
 
       // Error feedback - toast
       await showToast({
-        title: 'Failed to delete card',
+        title: t('cards.delete.failedTitle'),
         preset: 'error',
         haptic: 'error',
         duration: 3
@@ -104,7 +106,7 @@ export function useDeleteCard(cardId: string): UseDeleteCardReturn {
       setIsDeleting(false); // Only reset loading state on failure (success unmounts)
       return false;
     }
-  }, [cardId, isAuthenticated]);
+  }, [cardId, isAuthenticated, t]);
 
   return {
     deleteCard,

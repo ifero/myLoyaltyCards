@@ -9,6 +9,7 @@
 
 import { MaterialIcons } from '@expo/vector-icons';
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Pressable, StyleSheet, ViewStyle } from 'react-native';
 
 import { TOUCH_TARGET } from '@/shared/theme/spacing';
@@ -26,6 +27,7 @@ export const FloatingBackButton: React.FC<FloatingBackButtonProps> = ({
   style,
   testID = 'floating-back-button'
 }) => {
+  const { t } = useTranslation();
   const [isPressed, setIsPressed] = useState(false);
 
   return (
@@ -35,7 +37,7 @@ export const FloatingBackButton: React.FC<FloatingBackButtonProps> = ({
       onPressIn={() => setIsPressed(true)}
       onPressOut={() => setIsPressed(false)}
       accessibilityRole="button"
-      accessibilityLabel="Go back"
+      accessibilityLabel={t('addCard.scanner.floatingBackAccessibilityLabel')}
       style={[styles.button, style, { opacity: isPressed ? 0.7 : 1 }]}
       hitSlop={8}
     >

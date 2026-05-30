@@ -5,8 +5,10 @@
  * Full-screen camera viewfinder with barcode detection overlay.
  */
 
+import { MaterialIcons } from '@expo/vector-icons';
 import { CameraView } from 'expo-camera';
 import { useEffect, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import { View, Text, Pressable, Alert, Linking, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -33,6 +35,7 @@ interface BarcodeScannerProps {
  */
 export function BarcodeScanner({ onScan, onManualEntry, onError }: BarcodeScannerProps) {
   const { theme } = useTheme();
+  const { t } = useTranslation();
   const {
     permission,
     hasScanned,
@@ -51,16 +54,16 @@ export function BarcodeScanner({ onScan, onManualEntry, onError }: BarcodeScanne
    */
   const handlePermissionDenied = () => {
     Alert.alert(
-      'Camera Access Needed',
-      'Camera access is needed to scan barcodes.\n\nYou can enable it in Settings, or enter the barcode manually.',
+      t('addCard.scanner.cameraAccessTitle'),
+      t('addCard.scanner.cameraAccessBody'),
       [
         {
-          text: 'Enter Manually',
+          text: t('addCard.scanner.manualEntry'),
           style: 'cancel',
           onPress: onManualEntry
         },
         {
-          text: 'Open Settings',
+          text: t('common.actions.openSettings'),
           onPress: async () => {
             await Linking.openSettings();
           }
@@ -75,9 +78,9 @@ export function BarcodeScanner({ onScan, onManualEntry, onError }: BarcodeScanne
     const granted = await requestCameraPermission();
     if (!granted) {
       handlePermissionDenied();
-      onError?.('Camera permission denied');
+      onError?.(t('addCard.scanner.cameraPermissionDeniedError'));
     }
-  }, [requestCameraPermission, onError]);
+  }, [onError, requestCameraPermission, t]);
 
   // Request permission on mount when permission status is null
   useEffect(() => {
@@ -94,7 +97,7 @@ export function BarcodeScanner({ onScan, onManualEntry, onError }: BarcodeScanne
         className="flex-1 items-center justify-center"
         style={{ backgroundColor: theme.background }}
       >
-        <Text style={{ color: theme.textPrimary }}>Checking camera permission...</Text>
+        <Text style={{ color: theme.textPrimary }}>{t('addCard.scanner.checkingPermission')}</Text>
       </SafeAreaView>
     );
   }
@@ -107,16 +110,20 @@ export function BarcodeScanner({ onScan, onManualEntry, onError }: BarcodeScanne
         style={{ backgroundColor: theme.background }}
       >
         <View className="items-center">
-          <Text className="mb-2 text-6xl">📷</Text>
+          <MaterialIcons
+            name="photo-camera"
+            size={48}
+            color={theme.textSecondary}
+            style={{ marginBottom: 8 }}
+          />
           <Text
             className="mb-1 text-center text-xl font-semibold"
             style={{ color: theme.textPrimary }}
           >
-            Camera Access Needed
+            {t('addCard.scanner.cameraAccessTitle')}
           </Text>
           <Text className="mb-6 text-center text-sm" style={{ color: theme.textSecondary }}>
-            Camera access is needed to scan barcodes.{'\n'}You can enable it in Settings, or enter
-            the barcode manually.
+            {t('addCard.scanner.cameraAccessBody')}
           </Text>
           <View className="w-full gap-3">
             <Pressable
@@ -126,9 +133,11 @@ export function BarcodeScanner({ onScan, onManualEntry, onError }: BarcodeScanne
               className="h-12 items-center justify-center rounded-lg"
               style={{ backgroundColor: theme.primary }}
               accessibilityRole="button"
-              accessibilityLabel="Open Settings"
+              accessibilityLabel={t('common.actions.openSettings')}
             >
-              <Text className="text-base font-semibold text-white">Open Settings</Text>
+              <Text className="text-base font-semibold text-white">
+                {t('common.actions.openSettings')}
+              </Text>
             </Pressable>
             <Pressable
               onPress={onManualEntry}
@@ -138,10 +147,10 @@ export function BarcodeScanner({ onScan, onManualEntry, onError }: BarcodeScanne
                 backgroundColor: theme.surface
               }}
               accessibilityRole="button"
-              accessibilityLabel="Enter Manually"
+              accessibilityLabel={t('addCard.scanner.manualEntryAccessibilityLabel')}
             >
               <Text className="text-base font-semibold" style={{ color: theme.textPrimary }}>
-                Enter Manually
+                {t('addCard.scanner.manualEntry')}
               </Text>
             </Pressable>
           </View>
@@ -158,15 +167,20 @@ export function BarcodeScanner({ onScan, onManualEntry, onError }: BarcodeScanne
         style={{ backgroundColor: theme.background }}
       >
         <View className="items-center">
-          <Text className="mb-2 text-6xl">⚠️</Text>
+          <MaterialIcons
+            name="error-outline"
+            size={48}
+            color={theme.error}
+            style={{ marginBottom: 8 }}
+          />
           <Text
             className="mb-1 text-center text-xl font-semibold"
             style={{ color: theme.textPrimary }}
           >
-            Camera Error
+            {t('addCard.scanner.cameraErrorTitle')}
           </Text>
           <Text className="mb-6 text-center text-sm" style={{ color: theme.textSecondary }}>
-            {error || 'Camera error. Please try again.'}
+            {error || t('addCard.scanner.cameraErrorFallback')}
           </Text>
           <View className="w-full gap-3">
             <Pressable
@@ -177,9 +191,11 @@ export function BarcodeScanner({ onScan, onManualEntry, onError }: BarcodeScanne
               className="h-12 items-center justify-center rounded-lg"
               style={{ backgroundColor: theme.primary }}
               accessibilityRole="button"
-              accessibilityLabel="Retry"
+              accessibilityLabel={t('common.actions.retry')}
             >
-              <Text className="text-base font-semibold text-white">Retry</Text>
+              <Text className="text-base font-semibold text-white">
+                {t('common.actions.retry')}
+              </Text>
             </Pressable>
             <Pressable
               onPress={onManualEntry}
@@ -189,10 +205,10 @@ export function BarcodeScanner({ onScan, onManualEntry, onError }: BarcodeScanne
                 backgroundColor: theme.surface
               }}
               accessibilityRole="button"
-              accessibilityLabel="Enter Manually"
+              accessibilityLabel={t('addCard.scanner.manualEntryAccessibilityLabel')}
             >
               <Text className="text-base font-semibold" style={{ color: theme.textPrimary }}>
-                Enter Manually
+                {t('addCard.scanner.manualEntry')}
               </Text>
             </Pressable>
           </View>
@@ -246,7 +262,7 @@ export function BarcodeScanner({ onScan, onManualEntry, onError }: BarcodeScanne
                 textShadowRadius: 3
               }}
             >
-              Point camera at barcode
+              {t('addCard.scanner.instruction')}
             </Text>
           </View>
         </View>
@@ -261,9 +277,11 @@ export function BarcodeScanner({ onScan, onManualEntry, onError }: BarcodeScanne
               backgroundColor: 'rgba(255, 255, 255, 0.1)'
             }}
             accessibilityRole="button"
-            accessibilityLabel="Enter Manually"
+            accessibilityLabel={t('addCard.scanner.manualEntryAccessibilityLabel')}
           >
-            <Text className="text-base font-semibold text-white">Enter Manually</Text>
+            <Text className="text-base font-semibold text-white">
+              {t('addCard.scanner.manualEntry')}
+            </Text>
           </Pressable>
         </View>
       </View>

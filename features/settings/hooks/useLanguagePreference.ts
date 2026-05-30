@@ -1,36 +1,65 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
+import { AccessibilityInfo } from 'react-native';
+
+import { changeAppLanguage, resolveLanguagePreference } from '@/shared/i18n';
 
 import {
   getLanguagePreference,
-  setLanguagePreference
+  setLanguagePreference,
+  type LanguagePreference
 } from '@/features/settings/settings-repository';
 
 import type { LanguageOption } from '../types';
 
-const SUPPORTED_LANGUAGES: LanguageOption[] = [{ code: 'en', name: 'English' }];
-
 export const useLanguagePreference = () => {
-  const [languageCode, setLanguageCode] = useState(() => getLanguagePreference());
+  const { t } = useTranslation();
+  const [languageCode, setLanguageCode] = useState<LanguagePreference>(() =>
+    getLanguagePreference()
+  );
   const [isLanguagePickerOpen, setIsLanguagePickerOpen] = useState(false);
 
-  const currentLanguage =
-    SUPPORTED_LANGUAGES.find((language) => language.code === languageCode) ??
-    SUPPORTED_LANGUAGES[0];
-  const resolvedLanguage = currentLanguage ?? { code: 'en', name: 'English' };
+  const supportedLanguages = useMemo<LanguageOption[]>(() => {
+    return [
+      { code: 'system', name: t('common.system') },
+      { code: 'en', name: t('common.english') },
+      { code: 'it', name: t('common.italian') }
+    ];
+  }, [t]);
+
+  const resolvedCode = resolveLanguagePreference(languageCode);
+  const fallbackLanguage = supportedLanguages.find((language) => language.code === 'en') ?? {
+    code: 'en' as const,
+    name: t('common.english')
+  };
+  const resolvedLanguage =
+    supportedLanguages.find((language) => language.code === resolvedCode) ?? fallbackLanguage;
+
+  const languageName =
+    languageCode === 'system'
+      ? t('settings.language.systemValue', { language: resolvedLanguage.name })
+      : resolvedLanguage.name;
 
   const openLanguagePicker = () => setIsLanguagePickerOpen(true);
   const closeLanguagePicker = () => setIsLanguagePickerOpen(false);
 
-  const selectLanguage = (code: string) => {
+  const selectLanguage = (code: LanguagePreference) => {
+    const selectedLabel =
+      supportedLanguages.find((language) => language.code === code)?.name ?? t('common.english');
+
     setLanguageCode(code);
     setLanguagePreference(code);
+    void changeAppLanguage(code);
+    AccessibilityInfo.announceForAccessibility?.(
+      t('settings.language.selectedAnnouncement', { language: selectedLabel })
+    );
     closeLanguagePicker();
   };
 
   return {
     languageCode,
-    languageName: resolvedLanguage.name,
-    supportedLanguages: SUPPORTED_LANGUAGES,
+    languageName,
+    supportedLanguages,
     isLanguagePickerOpen,
     openLanguagePicker,
     closeLanguagePicker,
