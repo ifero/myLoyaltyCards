@@ -8,6 +8,7 @@
  */
 
 import React, { useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import { View, Text, SectionList, StyleSheet } from 'react-native';
 
 import { useTheme } from '@/shared/theme';
@@ -46,6 +47,7 @@ export const BrandList: React.FC<BrandListProps> = ({
   testID = 'brand-list'
 }) => {
   const { theme } = useTheme();
+  const { t } = useTranslation();
 
   const sections: BrandListSection[] = useMemo(() => {
     if (isSearching) {
@@ -55,12 +57,12 @@ export const BrandList: React.FC<BrandListProps> = ({
       }));
       // Always show "Other card" option when searching
       items.push({ type: 'other-card' as const });
-      return [{ title: 'RESULTS', data: items }];
+      return [{ title: t('addCard.list.results'), data: items }];
     }
 
     return [
       {
-        title: 'POPULAR CARDS',
+        title: t('addCard.list.popularCards'),
         data: popularBrands.map((brand) => ({ type: 'brand' as const, brand }))
       },
       {
@@ -68,11 +70,11 @@ export const BrandList: React.FC<BrandListProps> = ({
         data: [{ type: 'other-card' as const }]
       },
       {
-        title: 'ALL CARDS',
+        title: t('addCard.list.allCards'),
         data: allBrands.map((brand) => ({ type: 'brand' as const, brand }))
       }
     ];
-  }, [isSearching, filteredBrands, popularBrands, allBrands]);
+  }, [allBrands, filteredBrands, isSearching, popularBrands, t]);
 
   const renderItem = ({
     item,
@@ -103,7 +105,9 @@ export const BrandList: React.FC<BrandListProps> = ({
     if (!section.title) return null;
     return (
       <View style={[styles.sectionHeader, { backgroundColor: theme.background }]}>
-        <Text style={[styles.sectionTitle, { color: theme.textSecondary }]}>{section.title}</Text>
+        <Text style={[styles.sectionTitle, { color: theme.textSecondary }]}>
+          {section.title.toUpperCase()}
+        </Text>
       </View>
     );
   };
@@ -114,7 +118,9 @@ export const BrandList: React.FC<BrandListProps> = ({
     if (filteredBrands.length === 0) {
       return (
         <View style={styles.emptyContainer}>
-          <Text style={[styles.emptyText, { color: theme.textSecondary }]}>No cards found</Text>
+          <Text style={[styles.emptyText, { color: theme.textSecondary }]}>
+            {t('addCard.list.noCardsFound')}
+          </Text>
         </View>
       );
     }
@@ -122,7 +128,7 @@ export const BrandList: React.FC<BrandListProps> = ({
     return (
       <View style={styles.footerContainer}>
         <Text style={[styles.footerText, { color: theme.textTertiary }]}>
-          Showing results matching &quot;{query}&quot;
+          {t('addCard.list.showingResults', { query })}
         </Text>
       </View>
     );

@@ -39,7 +39,7 @@ struct BarcodeFlashView: View {
               .scaledToFit()
               .frame(width: layout.barcodeSize.width, height: layout.barcodeSize.height)
               .accessibilityIdentifier("barcode-image")
-              .accessibilityLabel("Barcode for \(titleText)")
+              .accessibilityLabel(WatchL10n.format("watch.barcode.accessibility.image_format", titleText))
               .onTapGesture { dismiss() }
           } else {
             barcodePlaceholder(layout: layout)
@@ -176,7 +176,7 @@ struct BarcodeFlashView: View {
       }
       .frame(width: layout.barcodeSize.width, height: layout.barcodeSize.height)
       .accessibilityIdentifier("barcode-image")
-      .accessibilityLabel("Barcode value for \(titleText)")
+      .accessibilityLabel(WatchL10n.format("watch.barcode.accessibility.value_format", titleText))
       .onTapGesture { dismiss() }
     } else {
       Image(systemName: "barcode")
@@ -185,7 +185,7 @@ struct BarcodeFlashView: View {
         .foregroundColor(.black)
         .frame(width: layout.barcodeSize.width, height: layout.barcodeSize.height)
         .accessibilityIdentifier("barcode-image")
-        .accessibilityLabel("Barcode for \(titleText)")
+        .accessibilityLabel(WatchL10n.format("watch.barcode.accessibility.image_format", titleText))
         .onTapGesture { dismiss() }
     }
   }

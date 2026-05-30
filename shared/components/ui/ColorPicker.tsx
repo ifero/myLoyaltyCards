@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { Pressable, View } from 'react-native';
 
 import { CARD_COLORS, useTheme } from '@/shared/theme';
@@ -16,6 +17,14 @@ const palette: ColorKey[] = ['blue', 'red', 'green', 'orange', 'grey'];
 
 export const ColorPicker = ({ value, onChange, testID }: ColorPickerProps) => {
   const { theme } = useTheme();
+  const { t } = useTranslation();
+  const colorNames: Record<ColorKey, string> = {
+    blue: t('cards.colors.blue'),
+    red: t('cards.colors.red'),
+    green: t('cards.colors.green'),
+    orange: t('cards.colors.orange'),
+    grey: t('cards.colors.grey')
+  };
 
   return (
     <View testID={testID} className="flex-row items-center gap-3">
@@ -28,6 +37,10 @@ export const ColorPicker = ({ value, onChange, testID }: ColorPickerProps) => {
             testID={`${testID}-${color}`}
             accessibilityRole="button"
             accessibilityState={{ selected }}
+            accessibilityLabel={t('cards.colors.accessibilityLabel', {
+              color: colorNames[color],
+              selected: selected ? t('cards.colors.selectedSuffix') : ''
+            })}
             onPress={() => onChange(color)}
             style={{
               width: TOUCH_TARGET.min,

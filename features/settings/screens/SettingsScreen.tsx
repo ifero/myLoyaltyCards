@@ -1,6 +1,7 @@
 import Constants from 'expo-constants';
 import { useRouter } from 'expo-router';
 import { useEffect, useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { ScrollView, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -33,6 +34,7 @@ import { useThemePreference } from '../hooks/useThemePreference';
 
 const SettingsScreen = () => {
   const { theme } = useTheme();
+  const { t } = useTranslation();
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { isAuthenticated } = useAuthState();
@@ -134,7 +136,7 @@ const SettingsScreen = () => {
       const result = await signOut();
 
       if (!result.success) {
-        setSignOutError(result.error.message);
+        setSignOutError(t('settings.account.signOutError'));
         return;
       }
 
@@ -147,8 +149,8 @@ const SettingsScreen = () => {
       setIsSignOutSheetOpen(false);
       router.replace('/');
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'Unable to sign out';
-      setSignOutError(message);
+      console.error('[SettingsScreen] Failed to sign out', error);
+      setSignOutError(t('settings.account.signOutError'));
     } finally {
       setIsSigningOut(false);
     }
@@ -162,7 +164,7 @@ const SettingsScreen = () => {
       const result = await deleteAccount();
 
       if (!result.success) {
-        setDeleteError(result.error.message);
+        setDeleteError(t('settings.account.deleteError'));
         return;
       }
 
@@ -173,11 +175,11 @@ const SettingsScreen = () => {
       }
 
       setIsDeleteSheetOpen(false);
-      await showToast({ title: 'Account deleted', preset: 'done' });
+      await showToast({ title: t('settings.account.accountDeleted'), preset: 'done' });
       router.replace('/');
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'Unable to delete account';
-      setDeleteError(message);
+      console.error('[SettingsScreen] Failed to delete account', error);
+      setDeleteError(t('settings.account.deleteError'));
     } finally {
       setIsDeleting(false);
     }
@@ -197,7 +199,7 @@ const SettingsScreen = () => {
       >
         {isAuthenticated ? (
           <AccountSection
-            email={email || 'Signed in user'}
+            email={email || t('settings.account.fallbackEmail')}
             onSignOut={() => setIsSignOutSheetOpen(true)}
             onDeleteAccount={() => setIsDeleteSheetOpen(true)}
           />
@@ -277,9 +279,9 @@ const SettingsScreen = () => {
 
       <ImportErrorSheet
         visible={errorState !== null}
-        title={errorState?.title ?? 'Invalid File'}
+        title={errorState?.title ?? t('settings.import.invalidFileTitle')}
         message={errorState?.message ?? ''}
-        variant={errorState?.title === 'No Card Data' ? 'empty' : 'invalid'}
+        variant={errorState?.variant ?? 'invalid'}
         onClose={closeError}
       />
 

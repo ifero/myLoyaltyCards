@@ -11,6 +11,7 @@
 
 import { useRouter } from 'expo-router';
 import { useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { ActivityIndicator, Pressable, ScrollView, Text, View } from 'react-native';
 
 import { useAuthState } from '@/shared/supabase/useAuthState';
@@ -21,18 +22,49 @@ import { useTheme } from '@/shared/theme';
 // ---------------------------------------------------------------------------
 
 type DataRow = {
-  category: string;
-  detail: string;
+  id: string;
+  categoryKey: string;
+  detailKey: string;
   collected: boolean;
 };
 
 const DATA_ROWS: DataRow[] = [
-  { category: 'Account', detail: 'Email address', collected: true },
-  { category: 'Cards', detail: 'Card names, barcodes, timestamps', collected: true },
-  { category: 'App', detail: 'App version, locale (for catalogue)', collected: true },
-  { category: 'Location', detail: 'Not collected', collected: false },
-  { category: 'Contacts', detail: 'Not collected', collected: false },
-  { category: 'Device ID', detail: 'Not collected', collected: false }
+  {
+    id: 'account',
+    categoryKey: 'privacy.dataSummary.rows.account.category',
+    detailKey: 'privacy.dataSummary.rows.account.detail',
+    collected: true
+  },
+  {
+    id: 'cards',
+    categoryKey: 'privacy.dataSummary.rows.cards.category',
+    detailKey: 'privacy.dataSummary.rows.cards.detail',
+    collected: true
+  },
+  {
+    id: 'app',
+    categoryKey: 'privacy.dataSummary.rows.app.category',
+    detailKey: 'privacy.dataSummary.rows.app.detail',
+    collected: true
+  },
+  {
+    id: 'location',
+    categoryKey: 'privacy.dataSummary.rows.location.category',
+    detailKey: 'privacy.dataSummary.rows.location.detail',
+    collected: false
+  },
+  {
+    id: 'contacts',
+    categoryKey: 'privacy.dataSummary.rows.contacts.category',
+    detailKey: 'privacy.dataSummary.rows.contacts.detail',
+    collected: false
+  },
+  {
+    id: 'deviceId',
+    categoryKey: 'privacy.dataSummary.rows.deviceId.category',
+    detailKey: 'privacy.dataSummary.rows.deviceId.detail',
+    collected: false
+  }
 ];
 
 // ---------------------------------------------------------------------------
@@ -41,6 +73,7 @@ const DATA_ROWS: DataRow[] = [
 
 const DataSummaryScreen = () => {
   const { theme } = useTheme();
+  const { t } = useTranslation();
   const { authState } = useAuthState();
   const router = useRouter();
 
@@ -72,7 +105,7 @@ const DataSummaryScreen = () => {
       className="flex-1 px-6 pb-8 pt-6"
       style={{ backgroundColor: theme.background }}
       contentContainerStyle={{ paddingBottom: 40 }}
-      accessibilityLabel="What We Collect"
+      accessibilityLabel={t('privacy.dataSummary.title')}
     >
       {/* Title */}
       <Text
@@ -81,11 +114,10 @@ const DataSummaryScreen = () => {
         className="mb-2 text-2xl font-bold"
         style={{ color: theme.textPrimary }}
       >
-        What We Collect
+        {t('privacy.dataSummary.title')}
       </Text>
       <Text className="mb-6 text-sm leading-5" style={{ color: theme.textSecondary }}>
-        This is a summary of the data myLoyaltyCards collects when you have an account. Guest users
-        have no cloud data — everything stays on device.
+        {t('privacy.dataSummary.description')}
       </Text>
 
       {/* Data table */}
@@ -97,18 +129,18 @@ const DataSummaryScreen = () => {
         {/* Header row */}
         <View className="flex-row border-b px-4 py-3" style={{ borderColor: theme.border }}>
           <Text className="flex-1 text-sm font-semibold" style={{ color: theme.textPrimary }}>
-            Category
+            {t('privacy.dataSummary.table.categoryHeader')}
           </Text>
           <Text className="flex-[2] text-sm font-semibold" style={{ color: theme.textPrimary }}>
-            Data Collected
+            {t('privacy.dataSummary.table.dataCollectedHeader')}
           </Text>
         </View>
 
         {/* Data rows */}
         {DATA_ROWS.map((row, idx) => (
           <View
-            key={row.category}
-            testID={`data-row-${row.category.toLowerCase().replace(/\s/g, '-')}`}
+            key={row.id}
+            testID={`data-row-${row.id.toLowerCase().replace(/\s/g, '-')}`}
             className={`flex-row px-4 py-3 ${idx < DATA_ROWS.length - 1 ? 'border-b' : ''}`}
             style={{ borderColor: theme.border }}
           >
@@ -116,13 +148,13 @@ const DataSummaryScreen = () => {
               className="flex-1 text-sm"
               style={{ color: row.collected ? theme.textPrimary : theme.textSecondary }}
             >
-              {row.category}
+              {t(row.categoryKey)}
             </Text>
             <Text
               className="flex-[2] text-sm"
               style={{ color: row.collected ? theme.textPrimary : theme.textSecondary }}
             >
-              {row.detail}
+              {t(row.detailKey)}
             </Text>
           </View>
         ))}
@@ -132,8 +164,8 @@ const DataSummaryScreen = () => {
       <Pressable
         testID="download-data-placeholder"
         accessibilityRole="button"
-        accessibilityLabel="Download My Data"
-        accessibilityHint="This feature is not yet available"
+        accessibilityLabel={t('privacy.dataSummary.downloadButtonA11yLabel')}
+        accessibilityHint={t('privacy.dataSummary.downloadButtonA11yHint')}
         disabled
         className="mb-4 items-center justify-center rounded-xl"
         style={{
@@ -143,12 +175,12 @@ const DataSummaryScreen = () => {
         }}
       >
         <Text className="text-sm font-semibold" style={{ color: theme.textSecondary }}>
-          Download My Data (coming soon)
+          {t('privacy.dataSummary.downloadButton')}
         </Text>
       </Pressable>
 
       <Text className="text-center text-xs" style={{ color: theme.textSecondary }}>
-        Data export will be available in a future update.
+        {t('privacy.dataSummary.downloadFooter')}
       </Text>
     </ScrollView>
   );

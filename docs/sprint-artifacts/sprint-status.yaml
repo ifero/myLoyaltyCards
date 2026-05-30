@@ -239,7 +239,7 @@ development_status:
   5-9-remove-userdefaults-fallback: done
   5-7-create-watch-complication: ready-for-dev
   5-8-incremental-catalogue-generation: ready-for-dev
-  5-10-watch-barcode-legibility-list-density: review
+  5-10-watch-barcode-legibility-list-density: done
   epic-5-retrospective: optional
 
   # Epic 6: User Authentication & Privacy
@@ -325,7 +325,7 @@ development_status:
   # Epic 15: Internationalisation & Public Presence
   epic-15: in-progress
   15-1-github-pages-landing-page: done # Sprint 13 Wave 1 — local implementation, tests, dev review, and QA review complete; Italian copy approved, Pages config/live verification pending
-  15-2-italian-language-in-app: ready-for-dev # Next sprint Italian localization work
+  15-2-italian-language-in-app: done # Story implemented; localized app + watch copy completed, validated, and pushed for PR review
   epic-15-retrospective: optional
 
   # Epic 11: CI/CD & Quality Gates

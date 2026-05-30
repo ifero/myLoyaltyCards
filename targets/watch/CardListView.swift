@@ -238,7 +238,7 @@ struct CardRowView: View {
         .stroke(isNearBlack(hex: resolvedColorHex) ? Color.white.opacity(0.15) : Color.clear, lineWidth: 1)
     )
     .accessibilityElement(children: .combine)
-    .accessibilityLabel("Card, \(card.name)")
+    .accessibilityLabel(WatchL10n.format("watch.card_row.accessibility_format", card.name))
   }
 
   @ViewBuilder
@@ -335,14 +335,14 @@ struct CardListView: View {
           }
         }
       }
-      .navigationTitle("Cards")
+      .navigationTitle(WatchL10n.string("watch.cards.title"))
     }
     #if DEBUG
       .toolbar {
         // use a watch-safe placement for the debug import button
         ToolbarItem(placement: .automatic) {
           Button(action: importSampleCards) {
-            Text("Import sample cards")
+            Text(WatchL10n.string("watch.debug.import_sample_cards"))
           }
           .accessibilityIdentifier("import-sample-cards")
         }
@@ -369,12 +369,12 @@ struct CardListView: View {
         .accessibilityHidden(true)
 
       VStack(spacing: 8) {
-        Text("No cards yet")
+        Text(WatchL10n.string("watch.cards.empty.title"))
           .font(.headline)
           .foregroundColor(.white)
           .accessibilityIdentifier("empty-state-title")
 
-        Text("Add cards on your iPhone — they sync here automatically.")
+        Text(WatchL10n.string("watch.cards.empty.subtitle"))
           .font(.footnote)
           .foregroundColor(.white.opacity(0.6))
           .multilineTextAlignment(.center)
@@ -384,7 +384,7 @@ struct CardListView: View {
     .padding(.horizontal, 12)
     .frame(maxWidth: .infinity, maxHeight: .infinity)
     .accessibilityElement(children: .combine)
-    .accessibilityLabel("No cards yet. Add cards on your iPhone, they sync here automatically.")
+    .accessibilityLabel(WatchL10n.string("watch.cards.empty.accessibility"))
   }
 
   #if DEBUG

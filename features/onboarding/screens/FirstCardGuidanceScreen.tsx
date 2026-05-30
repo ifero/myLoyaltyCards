@@ -1,6 +1,7 @@
 import { MaterialIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { AccessibilityInfo, Pressable, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -14,6 +15,7 @@ import { useOnboardingFlow } from '../hooks/useOnboardingFlow';
 
 const FirstCardGuidanceScreen = () => {
   const { theme, typography } = useTheme();
+  const { t } = useTranslation();
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const { completeAndGoToAddCard } = useOnboardingFlow();
@@ -25,8 +27,10 @@ const FirstCardGuidanceScreen = () => {
   }, [router]);
 
   React.useEffect(() => {
-    AccessibilityInfo.announceForAccessibility?.('Add your first card screen');
-  }, []);
+    AccessibilityInfo.announceForAccessibility?.(
+      t('onboarding.firstCardGuidance.screenAnnouncement')
+    );
+  }, [t]);
 
   return (
     <View
@@ -47,7 +51,7 @@ const FirstCardGuidanceScreen = () => {
         <Pressable
           testID="first-card-guidance-header-add"
           accessibilityRole="button"
-          accessibilityLabel="Add card"
+          accessibilityLabel={t('onboarding.firstCardGuidance.addCardAccessibilityLabel')}
           onPress={completeAndGoToAddCard}
           style={{ width: 44, height: 44, alignItems: 'center', justifyContent: 'center' }}
         >
@@ -64,13 +68,13 @@ const FirstCardGuidanceScreen = () => {
             fontWeight: '600'
           }}
         >
-          My Loyalty Cards
+          {t('onboarding.firstCardGuidance.title')}
         </Text>
 
         <Pressable
           testID="first-card-guidance-header-settings"
           accessibilityRole="button"
-          accessibilityLabel="Settings"
+          accessibilityLabel={t('onboarding.firstCardGuidance.settingsAccessibilityLabel')}
           onPress={() => router.push('/settings')}
           style={{ width: 44, height: 44, alignItems: 'center', justifyContent: 'center' }}
         >
@@ -100,7 +104,7 @@ const FirstCardGuidanceScreen = () => {
               fontWeight: typography.title2.fontWeight
             }}
           >
-            No cards yet
+            {t('onboarding.firstCardGuidance.heading')}
           </Text>
 
           <Text
@@ -113,7 +117,7 @@ const FirstCardGuidanceScreen = () => {
               marginHorizontal: 12
             }}
           >
-            Add your first loyalty card to get started.{`\n`}It only takes a few seconds!
+            {t('onboarding.firstCardGuidance.subtitle')}
           </Text>
         </View>
 
@@ -124,18 +128,18 @@ const FirstCardGuidanceScreen = () => {
             onPress={completeAndGoToAddCard}
             testID="first-card-guidance-cta"
           >
-            Add Your First Card
+            {t('onboarding.firstCardGuidance.cta')}
           </Button>
 
           <Pressable
             testID="first-card-guidance-secondary"
             accessibilityRole="button"
-            accessibilityLabel="Browse the catalogue"
+            accessibilityLabel={t('onboarding.firstCardGuidance.browseCatalogueAccessibilityLabel')}
             onPress={() => router.push('/')}
             style={{ marginTop: 10, minHeight: 44, alignItems: 'center', justifyContent: 'center' }}
           >
             <Text style={{ color: theme.link, fontSize: 15, fontWeight: '500' }}>
-              Browse the catalogue
+              {t('onboarding.firstCardGuidance.browseCatalogue')}
             </Text>
           </Pressable>
         </View>

@@ -8,6 +8,7 @@
  */
 
 import { useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import { ScrollView, Text, View } from 'react-native';
 
 import { useTheme } from '@/shared/theme';
@@ -17,6 +18,11 @@ import {
   PRIVACY_POLICY_LAST_UPDATED,
   PRIVACY_POLICY_VERSION
 } from '@/assets/legal/privacy-policy';
+import {
+  PRIVACY_POLICY_CONTENT_IT,
+  PRIVACY_POLICY_LAST_UPDATED_LABEL_IT,
+  PRIVACY_POLICY_TITLE_IT
+} from '@/assets/legal/privacy-policy.it';
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -36,8 +42,7 @@ const renderPolicyContent = (content: string, textColor: string, headingColor: s
     const trimmed = line.trim();
 
     // Skip the title line (rendered separately) and blank lines
-    if (idx === 0 && trimmed === 'Privacy Policy') return null;
-    if (idx === 1 && trimmed.startsWith('Last updated:')) return null;
+    if (idx === 0 || idx === 1) return null;
     if (trimmed === '') return <View key={`sp-${idx}`} className="h-3" />;
 
     // Section headers → bold
@@ -76,11 +81,18 @@ const renderPolicyContent = (content: string, textColor: string, headingColor: s
 // ---------------------------------------------------------------------------
 
 const PrivacyPolicyScreen = () => {
+  const { t, i18n } = useTranslation();
   const { theme } = useTheme();
+  const isItalian = i18n.language.toLowerCase().startsWith('it');
+  const policyTitle = isItalian ? PRIVACY_POLICY_TITLE_IT : t('privacy.title');
+  const policyLastUpdatedLabel = isItalian
+    ? PRIVACY_POLICY_LAST_UPDATED_LABEL_IT
+    : t('privacy.lastUpdated');
+  const policyContent = isItalian ? PRIVACY_POLICY_CONTENT_IT : PRIVACY_POLICY_CONTENT;
 
   const policyBody = useMemo(
-    () => renderPolicyContent(PRIVACY_POLICY_CONTENT, theme.textPrimary, theme.textPrimary),
-    [theme.textPrimary]
+    () => renderPolicyContent(policyContent, theme.textPrimary, theme.textPrimary),
+    [policyContent, theme.textPrimary]
   );
 
   return (
@@ -89,7 +101,7 @@ const PrivacyPolicyScreen = () => {
       className="flex-1 px-6 pb-8 pt-6"
       style={{ backgroundColor: theme.background }}
       contentContainerStyle={{ paddingBottom: 40 }}
-      accessibilityLabel="Privacy Policy"
+      accessibilityLabel={policyTitle}
     >
       {/* Title */}
       <Text
@@ -97,12 +109,13 @@ const PrivacyPolicyScreen = () => {
         className="mb-1 text-2xl font-bold"
         style={{ color: theme.textPrimary }}
       >
-        Privacy Policy
+        {policyTitle}
       </Text>
 
       {/* Meta */}
       <Text className="mb-6 text-xs" style={{ color: theme.textSecondary }}>
-        Version {PRIVACY_POLICY_VERSION} · Last updated: {PRIVACY_POLICY_LAST_UPDATED}
+        {t('privacy.version', { version: PRIVACY_POLICY_VERSION })} · {policyLastUpdatedLabel}:{' '}
+        {PRIVACY_POLICY_LAST_UPDATED}
       </Text>
 
       {/* Policy body */}

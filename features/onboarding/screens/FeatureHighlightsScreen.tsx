@@ -1,6 +1,7 @@
 import { MaterialIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   AccessibilityInfo,
   FlatList,
@@ -27,35 +28,35 @@ type Slide = {
   description: string;
 };
 
-const slides: Slide[] = [
-  {
-    id: 'all-cards',
-    title: 'All your cards in one place',
-    description:
-      'Store every loyalty card digitally. No more digging through your wallet at the checkout.'
-  },
-  {
-    id: 'scan-or-manual',
-    title: 'Scan or add manually',
-    description:
-      'Point your camera at any barcode, or type the number in. Either way, it takes seconds.'
-  },
-  {
-    id: 'your-data',
-    title: 'Your data, your rules',
-    description:
-      'Export and import your cards anytime. No lock-in, no hidden fees. Your cards belong to you.'
-  }
-];
-
 const FeatureHighlightsScreen = () => {
   const { theme } = useTheme();
+  const { t } = useTranslation();
   const insets = useSafeAreaInsets();
   const { width: windowWidth } = useWindowDimensions();
   const slideWidth = Math.max(1, windowWidth);
   const router = useRouter();
   const flatListRef = React.useRef<FlatList<Slide>>(null);
   const { currentIndex, next, goTo, isLast, total } = useHighlightPagination();
+  const slides = React.useMemo<Slide[]>(
+    () => [
+      {
+        id: 'all-cards',
+        title: t('onboarding.highlights.allCardsTitle'),
+        description: t('onboarding.highlights.allCardsDescription')
+      },
+      {
+        id: 'scan-or-manual',
+        title: t('onboarding.highlights.scanOrManualTitle'),
+        description: t('onboarding.highlights.scanOrManualDescription')
+      },
+      {
+        id: 'your-data',
+        title: t('onboarding.highlights.yourDataTitle'),
+        description: t('onboarding.highlights.yourDataDescription')
+      }
+    ],
+    [t]
+  );
 
   React.useEffect(() => {
     if (!isFirstLaunch()) {
@@ -64,8 +65,8 @@ const FeatureHighlightsScreen = () => {
   }, [router]);
 
   React.useEffect(() => {
-    AccessibilityInfo.announceForAccessibility?.('Feature highlights');
-  }, []);
+    AccessibilityInfo.announceForAccessibility?.(t('onboarding.highlights.screenAnnouncement'));
+  }, [t]);
 
   const finishOnboarding = () => {
     completeFirstLaunch();
@@ -189,18 +190,20 @@ const FeatureHighlightsScreen = () => {
         <Pressable
           testID="highlights-skip"
           accessibilityRole="button"
-          accessibilityLabel="Skip feature highlights"
+          accessibilityLabel={t('onboarding.highlights.skipAccessibilityLabel')}
           onPress={finishOnboarding}
           style={{ minHeight: 44, minWidth: 44, justifyContent: 'center', paddingHorizontal: 2 }}
         >
-          <Text style={{ color: theme.link, fontSize: 14, fontWeight: '500' }}>Skip</Text>
+          <Text style={{ color: theme.link, fontSize: 14, fontWeight: '500' }}>
+            {t('onboarding.highlights.skip')}
+          </Text>
         </Pressable>
       </View>
 
       <View
         style={{ flex: 1 }}
         accessibilityRole="adjustable"
-        accessibilityHint="Swipe left or right to move through feature highlights"
+        accessibilityHint={t('onboarding.highlights.swipeAccessibilityHint')}
       >
         <FlatList
           ref={flatListRef}
@@ -227,7 +230,7 @@ const FeatureHighlightsScreen = () => {
         <PaginationDots total={total} current={currentIndex} testID="pagination-dots" />
         <View style={{ marginTop: 20 }}>
           <Button variant="primary" onPress={handleNext} testID="highlight-next-button">
-            {isLast ? "Let's go!" : 'Next'}
+            {isLast ? t('onboarding.highlights.letsGo') : t('onboarding.highlights.next')}
           </Button>
         </View>
       </View>

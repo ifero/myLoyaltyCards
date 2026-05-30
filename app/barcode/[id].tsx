@@ -13,6 +13,7 @@
 
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { ActivityIndicator, Text, View } from 'react-native';
 
 import { getCardById } from '@/core/database';
@@ -28,6 +29,7 @@ import { BarcodeFlash } from '@/features/cards/components/BarcodeFlash';
  */
 export default function BarcodeFlashScreen() {
   const router = useRouter();
+  const { t } = useTranslation();
   const { id } = useLocalSearchParams<{ id: string }>();
 
   const [card, setCard] = useState<LoyaltyCard | null>(null);
@@ -38,7 +40,7 @@ export default function BarcodeFlashScreen() {
   useEffect(() => {
     async function loadCard() {
       if (!id) {
-        setError('Card ID is required');
+        setError(t('cards.details.invalidId'));
         setIsLoading(false);
         return;
       }
@@ -48,18 +50,18 @@ export default function BarcodeFlashScreen() {
         if (loadedCard) {
           setCard(loadedCard);
         } else {
-          setError('Card not found');
+          setError(t('cards.details.notFound'));
         }
       } catch (err) {
         console.error('Failed to load card:', err);
-        setError('Failed to load card');
+        setError(t('cards.details.loadFailed'));
       } finally {
         setIsLoading(false);
       }
     }
 
     loadCard();
-  }, [id]);
+  }, [id, t]);
 
   // Handle dismiss
   const handleDismiss = () => {
@@ -80,10 +82,10 @@ export default function BarcodeFlashScreen() {
     return (
       <View className="flex-1 items-center justify-center bg-white p-4">
         <Text className="text-center text-lg font-semibold text-red-500">
-          {error || 'Card not found'}
+          {error || t('cards.details.notFound')}
         </Text>
         <Text className="mt-4 text-center text-base text-gray-600" onPress={handleDismiss}>
-          Tap to go back
+          {t('auth.verifyEmail.goBack')}
         </Text>
       </View>
     );

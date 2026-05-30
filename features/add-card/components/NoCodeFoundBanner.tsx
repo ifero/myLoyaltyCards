@@ -8,6 +8,7 @@
 
 import { MaterialIcons } from '@expo/vector-icons';
 import React, { useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { View, Text, Pressable, StyleSheet } from 'react-native';
 
 import { useTheme } from '@/shared/theme';
@@ -30,6 +31,7 @@ export const NoCodeFoundBanner: React.FC<NoCodeFoundBannerProps> = ({
   testID = 'no-code-found-banner'
 }) => {
   const { theme } = useTheme();
+  const { t } = useTranslation();
 
   useEffect(() => {
     const timer = setTimeout(onDismiss, AUTO_DISMISS_MS);
@@ -40,17 +42,17 @@ export const NoCodeFoundBanner: React.FC<NoCodeFoundBannerProps> = ({
     <View
       testID={testID}
       accessibilityLiveRegion="polite"
-      accessibilityLabel="No barcode found in this image"
+      accessibilityLabel={t('addCard.noCodeFound.message')}
       style={styles.container}
     >
       {/* Header row: icon + message + close */}
       <View style={styles.headerRow}>
         <MaterialIcons name="warning-amber" size={20} color={theme.warning} />
-        <Text style={styles.message}>No barcode found in this image</Text>
+        <Text style={styles.message}>{t('addCard.noCodeFound.message')}</Text>
         <Pressable
           onPress={onDismiss}
           accessibilityRole="button"
-          accessibilityLabel="Dismiss error message"
+          accessibilityLabel={t('addCard.noCodeFound.dismissAccessibilityLabel')}
           testID="banner-close"
           hitSlop={8}
         >
@@ -63,20 +65,24 @@ export const NoCodeFoundBanner: React.FC<NoCodeFoundBannerProps> = ({
         <Pressable
           onPress={onRetry}
           accessibilityRole="button"
-          accessibilityLabel="Try scanning a different image"
+          accessibilityLabel={t('addCard.noCodeFound.retryAccessibilityLabel')}
           testID="banner-retry-image"
           style={styles.actionLink}
         >
-          <Text style={[styles.actionText, { color: theme.primary }]}>Try another image</Text>
+          <Text style={[styles.actionText, { color: theme.primary }]}>
+            {t('addCard.noCodeFound.retry')}
+          </Text>
         </Pressable>
         <Pressable
           onPress={onManualEntry}
           accessibilityRole="button"
-          accessibilityLabel="Enter the card number manually"
+          accessibilityLabel={t('addCard.noCodeFound.manualEntryAccessibilityLabel')}
           testID="banner-manual-entry"
           style={styles.actionLink}
         >
-          <Text style={[styles.actionText, { color: theme.primary }]}>Enter manually</Text>
+          <Text style={[styles.actionText, { color: theme.primary }]}>
+            {t('addCard.noCodeFound.manualEntry')}
+          </Text>
         </Pressable>
       </View>
     </View>

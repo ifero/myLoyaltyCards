@@ -1,5 +1,6 @@
 import { MaterialIcons } from '@expo/vector-icons';
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { Text, View } from 'react-native';
 
 import { BottomSheet, Button } from '@/shared/components/ui';
@@ -12,13 +13,14 @@ type ExportEmptyStateSheetProps = {
 
 export const ExportEmptyStateSheet = ({ visible, onClose }: ExportEmptyStateSheetProps) => {
   const { theme } = useTheme();
+  const { t } = useTranslation();
 
   return (
     <BottomSheet visible={visible} onClose={onClose} testID="export-empty-sheet">
       <View style={{ alignItems: 'center' }}>
         <MaterialIcons name="file-download" size={40} color={theme.primary} />
         <Text style={{ marginTop: 12, color: theme.textPrimary, fontSize: 30, fontWeight: '600' }}>
-          Nothing to Export
+          {t('settings.export.emptyTitle')}
         </Text>
         <Text
           style={{
@@ -29,12 +31,12 @@ export const ExportEmptyStateSheet = ({ visible, onClose }: ExportEmptyStateShee
             lineHeight: 20
           }}
         >
-          You don&apos;t have any cards yet. Add your first card to export your data.
+          {t('settings.export.emptyBody')}
         </Text>
       </View>
       <View style={{ marginTop: 16 }}>
         <Button testID="export-empty-close" variant="primary" onPress={onClose}>
-          OK
+          {t('common.actions.ok')}
         </Button>
       </View>
     </BottomSheet>

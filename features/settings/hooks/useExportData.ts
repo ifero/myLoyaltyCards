@@ -2,6 +2,7 @@ import Constants from 'expo-constants';
 import { File, Paths } from 'expo-file-system';
 import * as Sharing from 'expo-sharing';
 import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 
 import { getAllCards, getCardCount } from '@/core/database/card-repository';
 import { createExportPayload } from '@/core/settings/importCards';
@@ -9,6 +10,7 @@ import { createExportPayload } from '@/core/settings/importCards';
 import { showToast } from '@/shared/toast';
 
 export const useExportData = () => {
+  const { t } = useTranslation();
   const [cardCount, setCardCount] = useState(0);
   const [isExporting, setIsExporting] = useState(false);
   const [exportError, setExportError] = useState<string | null>(null);
@@ -43,7 +45,7 @@ export const useExportData = () => {
         } else {
           await Sharing.shareAsync(file.uri, {
             mimeType: 'application/json',
-            dialogTitle: 'Export cards'
+            dialogTitle: t('settings.export.shareDialogTitle')
           });
         }
       } catch (error) {
@@ -52,20 +54,19 @@ export const useExportData = () => {
       }
 
       await showToast({
-        title: 'Export complete',
-        message: shareFailed
-          ? 'Backup saved locally in Files. Sharing is unavailable in this environment.'
-          : undefined,
+        title: t('settings.export.successTitle'),
+        message: shareFailed ? t('settings.export.localBackupMessage') : undefined,
         preset: 'done'
       });
 
       await refreshCardCount();
       return true;
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'Export failed';
+      console.error('[useExportData] Export failed', error);
+      const message = t('settings.export.failedMessage');
       setExportError(message);
       await showToast({
-        title: 'Export failed',
+        title: t('settings.export.failedTitle'),
         message,
         preset: 'error'
       });

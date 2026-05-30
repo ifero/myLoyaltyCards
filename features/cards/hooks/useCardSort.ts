@@ -8,18 +8,13 @@
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useCallback, useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 
 import { LoyaltyCard } from '@/core/schemas';
 
 export type SortOption = 'frequent' | 'recent' | 'az';
 
 const STORAGE_KEY = '@myLoyaltyCards/sortPreference';
-
-const SORT_LABELS: Record<SortOption, string> = {
-  frequent: 'Frequently used',
-  recent: 'Recently added',
-  az: 'A-Z'
-};
 
 interface UseCardSortResult {
   /** Current sort option */
@@ -31,7 +26,7 @@ interface UseCardSortResult {
   /** Human-readable label for current sort option */
   sortLabel: string;
   /** All available sort labels */
-  sortLabels: typeof SORT_LABELS;
+  sortLabels: Record<SortOption, string>;
 }
 
 const sortByFrequent = (a: LoyaltyCard, b: LoyaltyCard): number => {
@@ -60,6 +55,12 @@ const sortByAZ = (a: LoyaltyCard, b: LoyaltyCard): number =>
  */
 export const useCardSort = (): UseCardSortResult => {
   const [sortOption, setSortOptionState] = useState<SortOption>('frequent');
+  const { t } = useTranslation();
+  const sortLabels: Record<SortOption, string> = {
+    frequent: t('cards.sort.frequent'),
+    recent: t('cards.sort.recent'),
+    az: t('cards.sort.az')
+  };
 
   // Load persisted preference on mount
   useEffect(() => {
@@ -106,7 +107,7 @@ export const useCardSort = (): UseCardSortResult => {
     sortOption,
     setSortOption,
     sortCards,
-    sortLabel: SORT_LABELS[sortOption],
-    sortLabels: SORT_LABELS
+    sortLabel: sortLabels[sortOption],
+    sortLabels
   };
 };

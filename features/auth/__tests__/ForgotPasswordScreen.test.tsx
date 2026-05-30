@@ -96,4 +96,59 @@ describe('ForgotPasswordScreen', () => {
       expect(screen.getByTestId('forgot-password-confirmation')).toBeTruthy();
     });
   });
+
+  it('shows a mapped network error instead of the raw backend message', async () => {
+    mockRequestPasswordReset.mockResolvedValue({
+      success: false,
+      error: { message: 'Network request failed' }
+    });
+
+    render(<ForgotPasswordScreen />);
+
+    fireEvent.changeText(screen.getByTestId('email-input'), 'test@example.com');
+    fireEvent.press(screen.getByTestId('send-reset-button'));
+
+    await waitFor(() => {
+      expect(screen.getByTestId('server-error')).toBeTruthy();
+      expect(
+        screen.getByText('Unable to connect. Check your internet and try again.')
+      ).toBeTruthy();
+    });
+  });
+
+  it('shows generic translated error when send-reset throws unexpectedly', async () => {
+    mockRequestPasswordReset.mockRejectedValue(new Error('Unexpected failure'));
+
+    render(<ForgotPasswordScreen />);
+
+    fireEvent.changeText(screen.getByTestId('email-input'), 'test@example.com');
+    fireEvent.press(screen.getByTestId('send-reset-button'));
+
+    await waitFor(() => {
+      expect(screen.getByTestId('server-error')).toBeTruthy();
+      expect(screen.getByText('An unexpected error occurred. Please try again.')).toBeTruthy();
+    });
+  });
+
+  it('shows generic translated error when try-again throws unexpectedly', async () => {
+    mockRequestPasswordReset
+      .mockResolvedValueOnce({ success: true, data: undefined })
+      .mockRejectedValueOnce(new Error('Unexpected failure'));
+
+    render(<ForgotPasswordScreen />);
+
+    fireEvent.changeText(screen.getByTestId('email-input'), 'test@example.com');
+    fireEvent.press(screen.getByTestId('send-reset-button'));
+
+    await waitFor(() => {
+      expect(screen.getByTestId('forgot-password-confirmation')).toBeTruthy();
+    });
+
+    fireEvent.press(screen.getByTestId('try-again-button'));
+
+    await waitFor(() => {
+      expect(screen.getByTestId('server-error')).toBeTruthy();
+      expect(screen.getByText('An unexpected error occurred. Please try again.')).toBeTruthy();
+    });
+  });
 });

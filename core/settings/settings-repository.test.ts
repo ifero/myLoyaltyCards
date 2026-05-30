@@ -80,14 +80,23 @@ describe('settings-repository', () => {
     expect(Storage.setItemSync).toHaveBeenCalledWith('theme_preference', 'dark');
   });
 
-  test('language preference defaults to en and supports persistence', () => {
+  test('language preference defaults to system and supports persistence', () => {
     (Storage.getItemSync as jest.Mock).mockReturnValueOnce(null);
+    expect(getLanguagePreference()).toBe('system');
+
+    (Storage.getItemSync as jest.Mock).mockReturnValueOnce('en');
     expect(getLanguagePreference()).toBe('en');
 
     (Storage.getItemSync as jest.Mock).mockReturnValueOnce('it');
     expect(getLanguagePreference()).toBe('it');
 
-    setLanguagePreference('en');
-    expect(Storage.setItemSync).toHaveBeenCalledWith('language_preference', 'en');
+    (Storage.getItemSync as jest.Mock).mockReturnValueOnce('system');
+    expect(getLanguagePreference()).toBe('system');
+
+    (Storage.getItemSync as jest.Mock).mockReturnValueOnce('unexpected');
+    expect(getLanguagePreference()).toBe('system');
+
+    setLanguagePreference('it');
+    expect(Storage.setItemSync).toHaveBeenCalledWith('language_preference', 'it');
   });
 });

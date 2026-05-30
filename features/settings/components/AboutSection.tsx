@@ -1,5 +1,6 @@
 import { MaterialIcons } from '@expo/vector-icons';
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 
 import { ActionRow } from '@/shared/components/ui';
 import { useTheme } from '@/shared/theme';
@@ -20,15 +21,16 @@ export const AboutSection = ({
   onPrivacyPress
 }: AboutSectionProps) => {
   const { theme } = useTheme();
+  const { t } = useTranslation();
 
   return (
-    <SettingsSection title="About">
+    <SettingsSection title={t('settings.sections.about')}>
       <ActionRow
         testID="settings-app-version-row"
         variant="plain"
         noPaddingHorizontal
         prefix={<MaterialIcons name="info-outline" size={24} color={theme.primary} />}
-        label="App Version"
+        label={t('settings.about.appVersion')}
         value={appVersion}
         disabled
         showChevron={false}
@@ -39,7 +41,7 @@ export const AboutSection = ({
         variant="plain"
         noPaddingHorizontal
         prefix={<MaterialIcons name="menu-book" size={24} color={theme.primary} />}
-        label="Catalogue"
+        label={t('settings.about.catalogue')}
         value={catalogueVersion}
         disabled
         showChevron={false}
@@ -50,7 +52,7 @@ export const AboutSection = ({
         variant="plain"
         noPaddingHorizontal
         prefix={<MaterialIcons name="help-outline" size={24} color={theme.primary} />}
-        label="Help & FAQ"
+        label={t('settings.about.helpFaq')}
         onPress={onHelpPress}
       />
       <ActionRow
@@ -58,7 +60,7 @@ export const AboutSection = ({
         variant="plain"
         noPaddingHorizontal
         prefix={<MaterialIcons name="policy" size={24} color={theme.primary} />}
-        label="Privacy Policy"
+        label={t('settings.about.privacyPolicy')}
         onPress={onPrivacyPress}
       />
     </SettingsSection>

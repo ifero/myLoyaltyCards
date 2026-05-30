@@ -1,5 +1,6 @@
 import { MaterialIcons } from '@expo/vector-icons';
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { Text, View } from 'react-native';
 
 import { BottomSheet, Button } from '@/shared/components/ui';
@@ -21,13 +22,14 @@ export const SignOutSheet = ({
   onClose
 }: SignOutSheetProps) => {
   const { theme } = useTheme();
+  const { t } = useTranslation();
 
   return (
     <BottomSheet visible={visible} onClose={onClose} testID="signout-sheet">
       <View style={{ alignItems: 'center' }}>
         <MaterialIcons name="logout" size={40} color={theme.primary} />
         <Text style={{ marginTop: 12, color: theme.textPrimary, fontSize: 30, fontWeight: '600' }}>
-          Sign Out?
+          {t('settings.signOutSheet.title')}
         </Text>
         <Text
           style={{
@@ -38,12 +40,12 @@ export const SignOutSheet = ({
             lineHeight: 20
           }}
         >
-          You will return to guest mode. Your cards will remain on this device.
+          {t('settings.signOutSheet.body')}
         </Text>
       </View>
       <View style={{ marginTop: 16, gap: 10 }}>
         <Button testID="signout-cancel" variant="secondary" onPress={onClose}>
-          Cancel
+          {t('common.actions.cancel')}
         </Button>
         <Button
           testID="signout-confirm"
@@ -51,7 +53,7 @@ export const SignOutSheet = ({
           onPress={onConfirm}
           loading={isLoading}
         >
-          Sign Out
+          {t('common.actions.signOut')}
         </Button>
         {error ? (
           <Text

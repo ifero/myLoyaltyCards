@@ -8,6 +8,7 @@
 import * as Haptics from 'expo-haptics';
 import { router } from 'expo-router';
 import { useCallback, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { v4 as uuidv4 } from 'uuid';
 
 import { insertCard } from '@/core/database';
@@ -48,6 +49,7 @@ interface UseAddCardReturn {
 export function useAddCard(): UseAddCardReturn {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const { t } = useTranslation();
   const { isAuthenticated } = useAuthState();
 
   const addCard = useCallback(
@@ -82,7 +84,7 @@ export function useAddCard(): UseAddCardReturn {
         // Success feedback per AC7
         await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
         await showToast({
-          title: 'Card added',
+          title: t('cards.add.successTitle'),
           preset: 'done'
         });
 
@@ -92,15 +94,15 @@ export function useAddCard(): UseAddCardReturn {
           params: { newCardId: card.id, newCardName: card.name }
         });
       } catch (err) {
-        const message = err instanceof Error ? err.message : 'Failed to add card';
+        const message = t('cards.add.failedMessage');
         setError(message);
 
-        console.error(message);
+        console.error('[useAddCard] Failed to add card', err);
 
         // Error feedback
         await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
         await showToast({
-          title: 'Error',
+          title: t('cards.add.errorTitle'),
           message,
           preset: 'error'
         });
@@ -108,7 +110,7 @@ export function useAddCard(): UseAddCardReturn {
         setIsLoading(false);
       }
     },
-    [isAuthenticated]
+    [isAuthenticated, t]
   );
 
   return { addCard, isLoading, error };

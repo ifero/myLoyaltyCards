@@ -8,6 +8,7 @@
  * Matches Figma: "Conflict — Light" / "Conflict — Dark".
  */
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Modal, Pressable, ScrollView, Text, View } from 'react-native';
 
 import { Button } from '@/shared/components/ui/Button';
@@ -22,11 +23,17 @@ import { ConflictComparisonCard } from './ConflictComparisonCard';
 const KeepBothButton = ({
   testID,
   onPress,
-  tintColor
+  tintColor,
+  label,
+  accessibilityLabel,
+  accessibilityHint
 }: {
   testID: string;
   onPress: () => void;
   tintColor: string;
+  label: string;
+  accessibilityLabel: string;
+  accessibilityHint: string;
 }) => {
   const [pressed, setPressed] = useState(false);
 
@@ -38,15 +45,15 @@ const KeepBothButton = ({
         onPressIn={() => setPressed(true)}
         onPressOut={() => setPressed(false)}
         accessibilityRole="button"
-        accessibilityLabel="Keep both versions"
-        accessibilityHint="Creates a copy so both versions are saved"
+        accessibilityLabel={accessibilityLabel}
+        accessibilityHint={accessibilityHint}
         className="items-center justify-center rounded-xl"
         style={{
           minHeight: TOUCH_TARGET.min,
           opacity: pressed ? 0.7 : 1
         }}
       >
-        <Text style={{ color: tintColor, fontWeight: '600', fontSize: 16 }}>Keep both</Text>
+        <Text style={{ color: tintColor, fontWeight: '600', fontSize: 16 }}>{label}</Text>
       </Pressable>
     </View>
   );
@@ -71,6 +78,7 @@ export const ConflictResolutionModal = ({
   onKeepBoth,
   onDecideLater
 }: ConflictResolutionModalProps) => {
+  const { t } = useTranslation();
   const { theme, isDark } = useTheme();
   const [pressedDecideLater, setPressedDecideLater] = useState(false);
 
@@ -99,7 +107,7 @@ export const ConflictResolutionModal = ({
         <View
           testID="conflict-modal-content"
           accessibilityViewIsModal
-          accessibilityLabel="Resolve sync conflict"
+          accessibilityLabel={t('syncUi.conflict.modal.accessibilityLabel')}
           className="mx-4 mb-8 rounded-2xl px-5 pb-5 pt-6"
           style={{ backgroundColor: modalBg, maxHeight: '85%' }}
         >
@@ -115,7 +123,7 @@ export const ConflictResolutionModal = ({
                 textAlign: 'center'
               }}
             >
-              Resolve sync conflict
+              {t('syncUi.conflict.modal.title')}
             </Text>
 
             {/* Subtitle */}
@@ -129,21 +137,20 @@ export const ConflictResolutionModal = ({
                 lineHeight: 18
               }}
             >
-              This card was modified on both this device and the cloud.
-              {'\n'}Choose which version to keep.
+              {t('syncUi.conflict.modal.subtitle')}
             </Text>
 
             {/* Comparison cards — side by side */}
             <View className="mb-5 flex-row" style={{ gap: 10 }}>
               <ConflictComparisonCard
                 testID="conflict-local-card"
-                label="This device"
+                label={t('syncUi.conflict.modal.localLabel')}
                 icon="smartphone"
                 data={localCard}
               />
               <ConflictComparisonCard
                 testID="conflict-cloud-card"
-                label="Cloud"
+                label={t('syncUi.conflict.modal.cloudLabel')}
                 icon="cloud"
                 data={cloudCard}
               />
@@ -155,26 +162,29 @@ export const ConflictResolutionModal = ({
                 testID="conflict-keep-local-button"
                 variant="primary"
                 onPress={onKeepLocal}
-                accessibilityLabel="Keep local version"
-                accessibilityHint="Replaces cloud version with local data"
+                accessibilityLabel={t('syncUi.conflict.modal.keepLocalA11yLabel')}
+                accessibilityHint={t('syncUi.conflict.modal.keepLocalA11yHint')}
               >
-                Keep local
+                {t('syncUi.conflict.modal.keepLocal')}
               </Button>
 
               <Button
                 testID="conflict-keep-cloud-button"
                 variant="secondary"
                 onPress={onKeepCloud}
-                accessibilityLabel="Keep cloud version"
-                accessibilityHint="Replaces local data with cloud version"
+                accessibilityLabel={t('syncUi.conflict.modal.keepCloudA11yLabel')}
+                accessibilityHint={t('syncUi.conflict.modal.keepCloudA11yHint')}
               >
-                Keep cloud
+                {t('syncUi.conflict.modal.keepCloud')}
               </Button>
 
               <KeepBothButton
                 testID="conflict-keep-both-button"
                 onPress={onKeepBoth}
                 tintColor={successTint}
+                label={t('syncUi.conflict.modal.keepBoth')}
+                accessibilityLabel={t('syncUi.conflict.modal.keepBothA11yLabel')}
+                accessibilityHint={t('syncUi.conflict.modal.keepBothA11yHint')}
               />
             </View>
 
@@ -185,8 +195,8 @@ export const ConflictResolutionModal = ({
               onPressIn={() => setPressedDecideLater(true)}
               onPressOut={() => setPressedDecideLater(false)}
               accessibilityRole="button"
-              accessibilityLabel="Decide later"
-              accessibilityHint="Closes the dialog without resolving the conflict"
+              accessibilityLabel={t('syncUi.conflict.modal.decideLaterA11yLabel')}
+              accessibilityHint={t('syncUi.conflict.modal.decideLaterA11yHint')}
               className="mt-4 items-center justify-center self-center"
               style={{
                 minHeight: TOUCH_TARGET.min,
@@ -201,7 +211,7 @@ export const ConflictResolutionModal = ({
                   fontWeight: '500'
                 }}
               >
-                Decide later
+                {t('syncUi.conflict.modal.decideLater')}
               </Text>
             </Pressable>
           </ScrollView>

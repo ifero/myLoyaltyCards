@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { Text, View } from 'react-native';
 
 import { useTheme } from '@/shared/theme';
@@ -35,13 +36,19 @@ export const PasswordStrengthIndicator = ({
   }
 
   const { theme, typography, spacing } = useTheme();
+  const { t } = useTranslation();
   const strength = getPasswordStrength(password);
 
   const width = strength === 'weak' ? '33%' : strength === 'fair' ? '66%' : '100%';
   const color =
     strength === 'weak' ? theme.error : strength === 'fair' ? theme.warning : theme.success;
 
-  const label = strength === 'weak' ? 'Weak' : strength === 'fair' ? 'Fair' : 'Strong';
+  const label =
+    strength === 'weak'
+      ? t('auth.passwordStrength.weak')
+      : strength === 'fair'
+        ? t('auth.passwordStrength.fair')
+        : t('auth.passwordStrength.strong');
 
   return (
     <View

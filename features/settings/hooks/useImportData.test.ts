@@ -47,7 +47,8 @@ describe('useImportData', () => {
 
     expect(result.current.errorState).toEqual({
       title: 'Invalid File',
-      message: 'No file was selected.'
+      message: 'No file was selected.',
+      variant: 'invalid'
     });
   });
 
@@ -85,7 +86,8 @@ describe('useImportData', () => {
 
     expect(result.current.errorState).toEqual({
       title: 'Invalid File',
-      message: "This file doesn't contain valid card data. Please select a different file."
+      message: "This file doesn't contain valid card data. Please select a different file.",
+      variant: 'invalid'
     });
   });
 
@@ -222,7 +224,8 @@ describe('useImportData', () => {
 
     expect(result.current.errorState).toEqual({
       title: 'Import Failed',
-      message: 'database locked'
+      message: 'Import failed',
+      variant: 'invalid'
     });
   });
 });

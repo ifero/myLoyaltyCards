@@ -1,5 +1,6 @@
 import { MaterialIcons } from '@expo/vector-icons';
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { Text, View } from 'react-native';
 
 import { BottomSheet, Button } from '@/shared/components/ui';
@@ -21,6 +22,7 @@ export const ImportErrorSheet = ({
   onClose
 }: ImportErrorSheetProps) => {
   const { theme } = useTheme();
+  const { t } = useTranslation();
   const isInvalid = variant === 'invalid';
 
   return (
@@ -75,7 +77,7 @@ export const ImportErrorSheet = ({
 
       <View style={{ marginTop: 18 }}>
         <Button testID="import-error-ok" variant="primary" onPress={onClose} size="large">
-          OK
+          {t('common.actions.ok')}
         </Button>
       </View>
     </BottomSheet>

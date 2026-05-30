@@ -1,5 +1,6 @@
 import { MaterialCommunityIcons, MaterialIcons } from '@expo/vector-icons';
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 
 import { ActionRow } from '@/shared/components/ui';
 import { useTheme } from '@/shared/theme';
@@ -24,16 +25,17 @@ export const DataManagementSection = ({
   onSyncPress
 }: DataManagementSectionProps) => {
   const { theme } = useTheme();
+  const { t } = useTranslation();
 
   return (
-    <SettingsSection title="Data">
+    <SettingsSection title={t('settings.sections.data')}>
       <ActionRow
         testID="settings-export-row"
         variant="plain"
         noPaddingHorizontal
         prefix={<MaterialIcons name="file-download" size={24} color={theme.primary} />}
-        label="Export Data"
-        value="JSON"
+        label={t('settings.data.exportData')}
+        value={t('settings.data.format')}
         onPress={onExportPress}
       />
       <ActionRow
@@ -41,8 +43,8 @@ export const DataManagementSection = ({
         variant="plain"
         noPaddingHorizontal
         prefix={<MaterialIcons name="file-upload" size={24} color={theme.primary} />}
-        label="Import Data"
-        value="JSON"
+        label={t('settings.data.importData')}
+        value={t('settings.data.format')}
         onPress={onImportPress}
       />
       {isAuthenticated ? (
@@ -53,7 +55,7 @@ export const DataManagementSection = ({
           prefix={
             <MaterialCommunityIcons name="cloud-sync-outline" size={24} color={theme.primary} />
           }
-          label="Sync"
+          label={t('common.actions.sync')}
           value={syncLabel}
           showChevron={false}
           isLoading={isSyncing}

@@ -54,7 +54,7 @@ struct CardComplicationSmallView: View {
     Image(systemName: "creditcard.fill")
       .font(.title3)
       .foregroundColor(.white)
-      .accessibilityLabel("myLoyaltyCards")
+      .accessibilityLabel(WatchL10n.string("watch.app.name"))
   }
 }
 
@@ -72,12 +72,12 @@ struct CardComplicationMediumView: View {
           .foregroundColor(.white)
           .lineLimit(1)
       }
-      .accessibilityLabel("Loyalty card: \(name)")
+      .accessibilityLabel(WatchL10n.format("watch.complication.accessibility.card_format", name))
     } else {
       Image(systemName: "creditcard.fill")
         .font(.title3)
         .foregroundColor(.white)
-        .accessibilityLabel("myLoyaltyCards")
+        .accessibilityLabel(WatchL10n.string("watch.app.name"))
     }
   }
 }
@@ -109,8 +109,8 @@ struct MyLoyaltyCardsComplication: Widget {
       CardComplicationEntryView(entry: entry)
         .containerBackground(.black, for: .widget)
     }
-    .configurationDisplayName("Loyalty Card")
-    .description("Shows your most-used loyalty card.")
+    .configurationDisplayName(WatchL10n.string("watch.complication.display_name"))
+    .description(WatchL10n.string("watch.complication.description"))
     .supportedFamilies([
       .accessoryCircular,
       .accessoryRectangular,

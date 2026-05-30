@@ -87,7 +87,7 @@ describe('BarcodeScanner', () => {
 
       expect(screen.getByText('Camera Access Needed')).toBeTruthy();
       expect(screen.getByText('Open Settings')).toBeTruthy();
-      expect(screen.getByText('Enter Manually')).toBeTruthy();
+      expect(screen.getByText('Enter card number manually')).toBeTruthy();
     });
 
     it('opens settings when "Open Settings" is pressed', async () => {
@@ -103,12 +103,12 @@ describe('BarcodeScanner', () => {
       });
     });
 
-    it('calls onManualEntry when "Enter Manually" is pressed from permission denied state', () => {
+    it('calls onManualEntry when manual-entry action is pressed from permission denied state', () => {
       mockUseCameraPermissions.mockReturnValue([{ granted: false }, mockRequestPermission]);
 
       render(<BarcodeScanner onScan={mockOnScan} onManualEntry={mockOnManualEntry} />);
 
-      const manualEntryButton = screen.getByText('Enter Manually');
+      const manualEntryButton = screen.getByText('Enter card number manually');
       fireEvent.press(manualEntryButton);
 
       expect(mockOnManualEntry).toHaveBeenCalled();
@@ -122,7 +122,7 @@ describe('BarcodeScanner', () => {
       render(<BarcodeScanner onScan={mockOnScan} onManualEntry={mockOnManualEntry} />);
 
       expect(screen.getByText('Point camera at barcode')).toBeTruthy();
-      expect(screen.getByText('Enter Manually')).toBeTruthy();
+      expect(screen.getByText('Enter card number manually')).toBeTruthy();
     });
 
     it('shows manual entry button in camera view', () => {
@@ -130,7 +130,7 @@ describe('BarcodeScanner', () => {
 
       render(<BarcodeScanner onScan={mockOnScan} onManualEntry={mockOnManualEntry} />);
 
-      const manualEntryButton = screen.getByText('Enter Manually');
+      const manualEntryButton = screen.getByText('Enter card number manually');
       expect(manualEntryButton).toBeTruthy();
     });
 
@@ -139,7 +139,7 @@ describe('BarcodeScanner', () => {
 
       render(<BarcodeScanner onScan={mockOnScan} onManualEntry={mockOnManualEntry} />);
 
-      const manualEntryButton = screen.getByText('Enter Manually');
+      const manualEntryButton = screen.getByText('Enter card number manually');
       fireEvent.press(manualEntryButton);
 
       expect(mockOnManualEntry).toHaveBeenCalled();
@@ -184,7 +184,7 @@ describe('BarcodeScanner', () => {
 
       render(<BarcodeScanner onScan={mockOnScan} onManualEntry={mockOnManualEntry} />);
 
-      const manualEntryButton = screen.getByLabelText('Enter Manually');
+      const manualEntryButton = screen.getByLabelText('Enter card number manually');
       expect(manualEntryButton).toBeTruthy();
     });
   });

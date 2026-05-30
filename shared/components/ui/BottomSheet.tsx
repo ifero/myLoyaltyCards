@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   AccessibilityInfo,
   Modal,
@@ -31,27 +32,34 @@ export const BottomSheet = ({
   testID,
   accessibilityLabel
 }: BottomSheetProps) => {
+  const { t } = useTranslation();
   const { theme } = useTheme();
   const insets = useSafeAreaInsets();
   const previousVisibleRef = React.useRef<boolean | null>(null);
 
   React.useEffect(() => {
-    const label = accessibilityLabel ?? title ?? 'Bottom sheet';
+    const label = accessibilityLabel ?? title ?? t('sharedUi.bottomSheet.fallbackLabel');
     const previousVisible = previousVisibleRef.current;
 
     if (previousVisible === null) {
       previousVisibleRef.current = visible;
       if (visible) {
-        AccessibilityInfo.announceForAccessibility?.(`${label} opened`);
+        AccessibilityInfo.announceForAccessibility?.(
+          t('sharedUi.bottomSheet.openedAnnouncement', { label })
+        );
       }
       return;
     }
 
     if (previousVisible !== visible) {
-      AccessibilityInfo.announceForAccessibility?.(visible ? `${label} opened` : `${label} closed`);
+      AccessibilityInfo.announceForAccessibility?.(
+        visible
+          ? t('sharedUi.bottomSheet.openedAnnouncement', { label })
+          : t('sharedUi.bottomSheet.closedAnnouncement', { label })
+      );
       previousVisibleRef.current = visible;
     }
-  }, [accessibilityLabel, title, visible]);
+  }, [accessibilityLabel, t, title, visible]);
 
   const stopPropagation = (event: GestureResponderEvent) => {
     event.stopPropagation();
@@ -59,7 +67,7 @@ export const BottomSheet = ({
 
   const accessibilityProps: AccessibilityProps = {
     accessibilityViewIsModal: true,
-    accessibilityLabel: accessibilityLabel ?? title
+    accessibilityLabel: accessibilityLabel ?? title ?? t('sharedUi.bottomSheet.fallbackLabel')
   };
 
   return (

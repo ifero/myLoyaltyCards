@@ -7,6 +7,7 @@
  * Uses CardShell-like container styling with semantic tokens.
  */
 import { MaterialIcons } from '@expo/vector-icons';
+import { useTranslation } from 'react-i18next';
 import { Platform, Text, View } from 'react-native';
 
 import { useTheme } from '@/shared/theme';
@@ -26,6 +27,7 @@ export const ConflictComparisonCard = ({
   data,
   testID
 }: ConflictComparisonCardProps) => {
+  const { t } = useTranslation();
   const { theme, isDark } = useTheme();
 
   const mode = isDark ? 'dark' : 'light';
@@ -39,7 +41,12 @@ export const ConflictComparisonCard = ({
   return (
     <View
       testID={testID}
-      accessibilityLabel={`${label}: ${data.name}, barcode ending ${data.barcodeTail}, updated ${data.updatedAt}`}
+      accessibilityLabel={t('syncUi.conflict.comparisonCard.a11yLabel', {
+        label,
+        name: data.name,
+        barcodeTail: data.barcodeTail,
+        updatedAt: data.updatedAt
+      })}
       className="flex-1 rounded-xl p-3"
       style={{ backgroundColor: cardBg }}
     >
@@ -79,7 +86,7 @@ export const ConflictComparisonCard = ({
       {data.points != null && (
         <View className="mb-1 flex-row items-center">
           <Text testID={`${testID}-points-label`} style={{ color: labelColor, fontSize: 11 }}>
-            Points:{' '}
+            {`${t('syncUi.conflict.comparisonCard.pointsLabel')} `}
           </Text>
           <Text
             testID={`${testID}-points`}
@@ -97,7 +104,7 @@ export const ConflictComparisonCard = ({
       {/* Barcode tail */}
       <View className="mb-1 flex-row items-center">
         <Text testID={`${testID}-barcode-label`} style={{ color: labelColor, fontSize: 11 }}>
-          Barcode:{' '}
+          {`${t('syncUi.conflict.comparisonCard.barcodeLabel')} `}
         </Text>
         <Text
           testID={`${testID}-barcode`}
@@ -121,7 +128,7 @@ export const ConflictComparisonCard = ({
           marginTop: 4
         }}
       >
-        Updated: {data.updatedAt}
+        {t('syncUi.conflict.comparisonCard.updatedPrefix')} {data.updatedAt}
       </Text>
     </View>
   );

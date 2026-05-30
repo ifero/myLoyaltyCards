@@ -1,6 +1,7 @@
 import { MaterialIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useCallback, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Pressable, View } from 'react-native';
 
 import { isValidEmail } from '@/core/auth/validation';
@@ -13,6 +14,7 @@ import { AuthLink, AuthScreenLayout, ErrorBanner } from './components';
 
 const ForgotPasswordScreen = () => {
   const { theme, spacing, touchTarget } = useTheme();
+  const { t } = useTranslation();
   const router = useRouter();
 
   const [email, setEmail] = useState('');
@@ -21,18 +23,35 @@ const ForgotPasswordScreen = () => {
   const [submitted, setSubmitted] = useState(false);
   const [fieldErrors, setFieldErrors] = useState<{ email?: string }>({});
 
+  const mapForgotPasswordErrorMessage = useCallback(
+    (message?: string) => {
+      const normalizedMessage = message?.toLowerCase() ?? '';
+
+      if (
+        normalizedMessage.includes('network') ||
+        normalizedMessage.includes('failed to fetch') ||
+        normalizedMessage.includes('request failed')
+      ) {
+        return t('auth.forgotPassword.networkError');
+      }
+
+      return t('auth.forgotPassword.genericError');
+    },
+    [t]
+  );
+
   const validate = useCallback(() => {
     const errors: { email?: string } = {};
 
     if (!email.trim()) {
-      errors.email = 'Email is required.';
+      errors.email = t('auth.validation.emailRequired');
     } else if (!isValidEmail(email)) {
-      errors.email = 'Please enter a valid email address';
+      errors.email = t('auth.validation.emailInvalid');
     }
 
     setFieldErrors(errors);
     return Object.keys(errors).length === 0;
-  }, [email]);
+  }, [email, t]);
 
   const handleSendReset = useCallback(async () => {
     setError(null);
@@ -47,17 +66,17 @@ const ForgotPasswordScreen = () => {
       const result = await requestPasswordReset(email.trim());
 
       if (!result.success) {
-        setError(result.error.message);
+        setError(mapForgotPasswordErrorMessage(result.error.message));
         return;
       }
 
       setSubmitted(true);
     } catch {
-      setError('An unexpected error occurred. Please try again.');
+      setError(t('auth.forgotPassword.genericError'));
     } finally {
       setLoading(false);
     }
-  }, [email, validate]);
+  }, [email, mapForgotPasswordErrorMessage, t, validate]);
 
   const handleTryAgain = useCallback(async () => {
     setError(null);
@@ -68,23 +87,23 @@ const ForgotPasswordScreen = () => {
 
       if (!result.success) {
         setSubmitted(false);
-        setError(result.error.message);
+        setError(mapForgotPasswordErrorMessage(result.error.message));
       }
     } catch {
       setSubmitted(false);
-      setError('An unexpected error occurred. Please try again.');
+      setError(t('auth.forgotPassword.genericError'));
     } finally {
       setLoading(false);
     }
-  }, [email]);
+  }, [email, mapForgotPasswordErrorMessage, t]);
 
   if (submitted) {
     return (
       <AuthScreenLayout
         testID="forgot-password-confirmation"
-        heading="Check your email"
+        heading={t('auth.forgotPassword.confirmationHeading')}
         headingTestID="confirmation-title"
-        subtitle="If an account exists for that email, we've sent a reset link. Check your inbox and spam folder."
+        subtitle={t('auth.forgotPassword.confirmationSubtitle')}
         subtitleTestID="confirmation-subtitle"
         showAppIcon={false}
       >
@@ -95,16 +114,16 @@ const ForgotPasswordScreen = () => {
 
           <AuthLink
             testID="try-again-button"
-            actionText="Try again"
+            actionText={t('auth.forgotPassword.tryAgain')}
             onPress={handleTryAgain}
-            accessibilityLabel="Try again"
+            accessibilityLabel={t('auth.forgotPassword.tryAgain')}
           />
 
           <AuthLink
             testID="back-to-sign-in-button"
-            actionText="Back to Sign In"
+            actionText={t('auth.forgotPassword.backToSignIn')}
             onPress={() => router.push('/sign-in')}
-            accessibilityLabel="Back to Sign In"
+            accessibilityLabel={t('auth.accessibility.backToSignIn')}
           />
         </View>
       </AuthScreenLayout>
@@ -114,9 +133,9 @@ const ForgotPasswordScreen = () => {
   return (
     <AuthScreenLayout
       testID="forgot-password-screen"
-      heading="Forgot Password?"
+      heading={t('auth.forgotPassword.heading')}
       headingTestID="forgot-password-title"
-      subtitle="No worries. Enter your email and we'll send you a reset link."
+      subtitle={t('auth.forgotPassword.subtitle')}
       subtitleTestID="forgot-password-subtitle"
       centerContent
       showAppIcon={false}
@@ -124,7 +143,7 @@ const ForgotPasswordScreen = () => {
         <Pressable
           testID="forgot-password-back-chevron"
           accessibilityRole="button"
-          accessibilityLabel="Back"
+          accessibilityLabel={t('auth.accessibility.back')}
           onPress={() => router.back()}
           style={{
             minHeight: touchTarget.min,
@@ -143,7 +162,7 @@ const ForgotPasswordScreen = () => {
 
         <TextField
           testID="email-input"
-          label="Email"
+          label={t('auth.fields.email')}
           value={email}
           onChangeText={(value) => {
             setEmail(value);
@@ -151,13 +170,13 @@ const ForgotPasswordScreen = () => {
               setFieldErrors({});
             }
           }}
-          placeholder="you@example.com"
+          placeholder={t('auth.placeholders.email')}
           keyboardType="email-address"
           autoCapitalize="none"
           autoComplete="email"
           autoCorrect={false}
-          accessibilityLabel="Email"
-          accessibilityHint="Enter your email address to receive a reset link"
+          accessibilityLabel={t('auth.fields.email')}
+          accessibilityHint={t('auth.accessibility.forgotPasswordEmailHint')}
           error={fieldErrors.email}
         />
 
@@ -167,16 +186,16 @@ const ForgotPasswordScreen = () => {
           size="large"
           onPress={handleSendReset}
           loading={loading}
-          accessibilityLabel="Send Reset Link"
+          accessibilityLabel={t('auth.accessibility.sendResetLink')}
         >
-          Send Reset Link
+          {t('auth.forgotPassword.sendResetLink')}
         </Button>
 
         <AuthLink
           testID="back-to-sign-in-link"
-          actionText="Back to Sign In"
+          actionText={t('auth.forgotPassword.backToSignIn')}
           onPress={() => router.push('/sign-in')}
-          accessibilityLabel="Back to Sign In"
+          accessibilityLabel={t('auth.accessibility.backToSignIn')}
         />
       </View>
     </AuthScreenLayout>

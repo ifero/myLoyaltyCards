@@ -203,7 +203,7 @@ describe('useAddCard', () => {
         await result.current.addCard(mockCardInput);
       });
 
-      expect(result.current.error).toBe(errorMessage);
+      expect(result.current.error).toBe('Failed to add card');
     });
 
     it('triggers error haptic on failure', async () => {
@@ -232,7 +232,7 @@ describe('useAddCard', () => {
 
       expect(Burnt.toast).toHaveBeenCalledWith({
         title: 'Error',
-        message: errorMessage,
+        message: 'Failed to add card',
         preset: 'error'
       });
     });

@@ -1,5 +1,6 @@
 import { MaterialIcons } from '@expo/vector-icons';
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { Pressable, Text, View } from 'react-native';
 
 import { BottomSheet } from '@/shared/components/ui';
@@ -11,7 +12,7 @@ type LanguagePickerSheetProps = {
   visible: boolean;
   currentCode: string;
   options: LanguageOption[];
-  onSelect: (code: string) => void;
+  onSelect: (code: LanguageOption['code']) => void;
   onClose: () => void;
 };
 
@@ -23,14 +24,15 @@ export const LanguagePickerSheet = ({
   onClose
 }: LanguagePickerSheetProps) => {
   const { theme } = useTheme();
+  const { t } = useTranslation();
 
   return (
     <BottomSheet
       visible={visible}
       onClose={onClose}
-      title="Language"
+      title={t('settings.language.picker.title')}
       testID="language-picker-sheet"
-      accessibilityLabel="Language Picker"
+      accessibilityLabel={t('settings.language.picker.accessibilityLabel')}
     >
       <View>
         {options.map((option, index) => {
@@ -42,7 +44,9 @@ export const LanguagePickerSheet = ({
               testID={`language-option-${option.code}`}
               onPress={() => onSelect(option.code)}
               accessibilityRole="button"
-              accessibilityLabel={`${option.name} language`}
+              accessibilityLabel={t('settings.language.picker.optionAccessibilityLabel', {
+                name: option.name
+              })}
               style={{
                 minHeight: 48,
                 borderBottomWidth: index === options.length - 1 ? 0 : 1,

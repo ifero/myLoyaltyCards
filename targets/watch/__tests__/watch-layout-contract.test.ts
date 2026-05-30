@@ -49,7 +49,9 @@ describe('watch layout contract', () => {
     const barcodeView = fs.readFileSync(barcodeViewPath, 'utf8');
     const layout = fs.readFileSync(layoutPath, 'utf8');
 
-    expect(layout).toContain('return trimmedName.isEmpty ? "Card" : trimmedName');
+    expect(layout).toContain(
+      'return trimmedName.isEmpty ? WatchL10n.string("watch.cards.fallback_name") : trimmedName'
+    );
     expect(barcodeView).toContain('.navigationTitle(titleText)');
     expect(barcodeView).not.toContain('.navigationTitle("")');
   });
@@ -70,9 +72,13 @@ describe('watch layout contract', () => {
     const cardListView = fs.readFileSync(cardListViewPath, 'utf8');
 
     expect(cardListView).toContain('.frame(minHeight: metrics.minimumTapHeight)');
-    expect(cardListView).toContain('.accessibilityLabel("Card, \\(card.name)")');
+    expect(cardListView).toContain(
+      '.accessibilityLabel(WatchL10n.format("watch.card_row.accessibility_format", card.name))'
+    );
     expect(barcodeView).toContain('.accessibilityIdentifier("barcode-view")');
-    expect(barcodeView).toContain('.accessibilityLabel("Barcode for \\(titleText)")');
+    expect(barcodeView).toContain(
+      '.accessibilityLabel(WatchL10n.format("watch.barcode.accessibility.image_format", titleText))'
+    );
   });
 
   it('routes QR cards through the native QR renderer instead of the placeholder path', () => {

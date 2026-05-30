@@ -162,4 +162,43 @@ describe('CreateAccountScreen', () => {
       });
     });
   });
+
+  it('shows a mapped account-exists error instead of the backend message', async () => {
+    mockSignUp.mockResolvedValue({
+      success: false,
+      error: { code: 'user_already_exists', message: 'User already registered' }
+    });
+
+    render(<CreateAccountScreen />);
+
+    fireEvent.changeText(screen.getByTestId('email-input'), 'test@example.com');
+    fireEvent.changeText(screen.getByTestId('password-input'), 'Password1');
+    fireEvent.changeText(screen.getByTestId('confirm-password-input'), 'Password1');
+    fireEvent.press(screen.getByTestId('consent-checkbox-toggle'));
+    fireEvent.press(screen.getByTestId('register-button'));
+
+    await waitFor(() => {
+      expect(screen.getByTestId('server-error')).toBeTruthy();
+      expect(
+        screen.getByText('An account with this email already exists. Sign in instead.')
+      ).toBeTruthy();
+    });
+  });
+
+  it('shows generic translated error when sign-up throws unexpectedly', async () => {
+    mockSignUp.mockRejectedValue(new Error('Unexpected failure'));
+
+    render(<CreateAccountScreen />);
+
+    fireEvent.changeText(screen.getByTestId('email-input'), 'test@example.com');
+    fireEvent.changeText(screen.getByTestId('password-input'), 'Password1');
+    fireEvent.changeText(screen.getByTestId('confirm-password-input'), 'Password1');
+    fireEvent.press(screen.getByTestId('consent-checkbox-toggle'));
+    fireEvent.press(screen.getByTestId('register-button'));
+
+    await waitFor(() => {
+      expect(screen.getByTestId('server-error')).toBeTruthy();
+      expect(screen.getByText('An unexpected error occurred. Please try again.')).toBeTruthy();
+    });
+  });
 });

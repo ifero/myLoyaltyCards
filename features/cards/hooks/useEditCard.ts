@@ -8,6 +8,7 @@
 import * as Haptics from 'expo-haptics';
 import { router } from 'expo-router';
 import { useCallback, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 
 import { updateCard as updateCardInDb, getCardById } from '@/core/database';
 import { LoyaltyCard, BarcodeFormat, CardColor } from '@/core/schemas';
@@ -44,6 +45,7 @@ interface UseEditCardReturn {
 export function useEditCard(): UseEditCardReturn {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const { t } = useTranslation();
   const { isAuthenticated } = useAuthState();
 
   const editCard = useCallback(
@@ -82,22 +84,22 @@ export function useEditCard(): UseEditCardReturn {
         // Success feedback per AC9
         await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
         await showToast({
-          title: 'Card saved',
+          title: t('cards.edit.savedTitle'),
           preset: 'done'
         });
 
         // Navigate back to card details
         router.back();
       } catch (err) {
-        const message = err instanceof Error ? err.message : 'Failed to update card';
+        const message = t('cards.edit.failedMessage');
         setError(message);
 
-        console.error(message);
+        console.error('[useEditCard] Failed to update card', err);
 
         // Error feedback
         await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
         await showToast({
-          title: 'Error',
+          title: t('cards.edit.errorTitle'),
           message,
           preset: 'error'
         });
@@ -105,7 +107,7 @@ export function useEditCard(): UseEditCardReturn {
         setIsLoading(false);
       }
     },
-    [isAuthenticated]
+    [isAuthenticated, t]
   );
 
   return { editCard, isLoading, error };

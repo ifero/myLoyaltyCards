@@ -1,5 +1,6 @@
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Text, View } from 'react-native';
 
 import { isValidEmail, isValidPassword } from '@/core/auth/validation';
@@ -20,6 +21,7 @@ import {
 
 const CreateAccountScreen = () => {
   const { theme, spacing, typography } = useTheme();
+  const { t } = useTranslation();
   const router = useRouter();
   const params = useLocalSearchParams<{ email?: string | string[] }>();
   const prefilledEmail = Array.isArray(params.email)
@@ -41,17 +43,45 @@ const CreateAccountScreen = () => {
     consent?: string;
   }>({});
 
-  const validateEmailField = useCallback((value: string) => {
-    if (!value.trim()) {
-      return 'Email is required.';
-    }
+  const validateEmailField = useCallback(
+    (value: string) => {
+      if (!value.trim()) {
+        return t('auth.validation.emailRequired');
+      }
 
-    if (!isValidEmail(value)) {
-      return 'Please enter a valid email address';
-    }
+      if (!isValidEmail(value)) {
+        return t('auth.validation.emailInvalid');
+      }
 
-    return undefined;
-  }, []);
+      return undefined;
+    },
+    [t]
+  );
+
+  const mapCreateAccountErrorMessage = useCallback(
+    (code?: string, message?: string) => {
+      const normalizedMessage = message?.toLowerCase() ?? '';
+
+      if (
+        code === 'user_already_exists' ||
+        normalizedMessage.includes('already registered') ||
+        normalizedMessage.includes('already been registered')
+      ) {
+        return t('auth.createAccount.accountExists');
+      }
+
+      if (
+        normalizedMessage.includes('network') ||
+        normalizedMessage.includes('failed to fetch') ||
+        normalizedMessage.includes('request failed')
+      ) {
+        return t('auth.createAccount.networkError');
+      }
+
+      return t('auth.createAccount.genericError');
+    },
+    [t]
+  );
 
   useEffect(() => {
     setEmail(prefilledEmail);
@@ -73,24 +103,24 @@ const CreateAccountScreen = () => {
     }
 
     if (!password) {
-      errors.password = 'Password is required.';
+      errors.password = t('auth.validation.passwordRequired');
     } else if (!isValidPassword(password)) {
-      errors.password = 'Min 8 characters, at least one letter and one number.';
+      errors.password = t('auth.validation.passwordRule');
     }
 
     if (!confirmPassword) {
-      errors.confirmPassword = 'Please confirm your password.';
+      errors.confirmPassword = t('auth.validation.confirmPasswordRequired');
     } else if (password !== confirmPassword) {
-      errors.confirmPassword = 'Passwords do not match.';
+      errors.confirmPassword = t('auth.validation.passwordsMismatch');
     }
 
     if (!consent) {
-      errors.consent = 'You must agree to the Privacy Policy.';
+      errors.consent = t('auth.validation.consentRequired');
     }
 
     setFieldErrors(errors);
     return Object.keys(errors).length === 0;
-  }, [confirmPassword, consent, email, fieldErrors, password, validateEmailField]);
+  }, [confirmPassword, consent, email, fieldErrors, password, t, validateEmailField]);
 
   const handleRegister = useCallback(async () => {
     setError(null);
@@ -106,7 +136,7 @@ const CreateAccountScreen = () => {
       const result = await signUp(trimmedEmail, password);
 
       if (!result.success) {
-        setError(result.error.message);
+        setError(mapCreateAccountErrorMessage(result.error.code, result.error.message));
         return;
       }
 
@@ -124,24 +154,24 @@ const CreateAccountScreen = () => {
         });
       }
     } catch {
-      setError('An unexpected error occurred. Please try again.');
+      setError(t('auth.createAccount.genericError'));
     } finally {
       setLoading(false);
     }
-  }, [email, password, router, validate]);
+  }, [email, mapCreateAccountErrorMessage, password, router, t, validate]);
 
   return (
     <AuthScreenLayout
       testID="create-account-screen"
-      heading="Create Account"
-      subtitle="Join My Loyalty Cards"
+      heading={t('auth.createAccount.heading')}
+      subtitle={t('auth.createAccount.subtitle')}
       headingTestID="create-account-title"
       subtitleTestID="create-account-subtitle"
     >
       <View className="w-full" style={{ gap: spacing.md }}>
         <TextField
           testID="email-input"
-          label="Email"
+          label={t('auth.fields.email')}
           value={email}
           onChangeText={(value) => {
             setEmail(value);
@@ -149,13 +179,13 @@ const CreateAccountScreen = () => {
               setFieldErrors((previous) => ({ ...previous, email: undefined }));
             }
           }}
-          placeholder="you@example.com"
+          placeholder={t('auth.placeholders.email')}
           keyboardType="email-address"
           autoCapitalize="none"
           autoComplete="email"
           autoCorrect={false}
-          accessibilityLabel="Email"
-          accessibilityHint="Enter your email address"
+          accessibilityLabel={t('auth.fields.email')}
+          accessibilityHint={t('auth.accessibility.emailHint')}
           onBlur={() => {
             setEmailTouched(true);
             const emailError = validateEmailField(email);
@@ -167,7 +197,7 @@ const CreateAccountScreen = () => {
         <View>
           <PasswordInput
             testID="password-input"
-            label="Password"
+            label={t('auth.fields.password')}
             value={password}
             onChangeText={(value) => {
               setPassword(value);
@@ -175,9 +205,9 @@ const CreateAccountScreen = () => {
                 setFieldErrors((previous) => ({ ...previous, password: undefined }));
               }
             }}
-            placeholder="Min 8 chars, 1 letter, 1 number"
+            placeholder={t('auth.placeholders.newPassword')}
             autoComplete="new-password"
-            accessibilityHint="Minimum 8 characters with at least one letter and one number"
+            accessibilityHint={t('auth.accessibility.passwordRuleHint')}
             error={fieldErrors.password}
           />
           {password.trim().length > 0 ? <PasswordStrengthIndicator password={password} /> : null}
@@ -185,7 +215,7 @@ const CreateAccountScreen = () => {
 
         <PasswordInput
           testID="confirm-password-input"
-          label="Confirm Password"
+          label={t('auth.fields.confirmPassword')}
           value={confirmPassword}
           onChangeText={(value) => {
             setConfirmPassword(value);
@@ -193,9 +223,9 @@ const CreateAccountScreen = () => {
               setFieldErrors((previous) => ({ ...previous, confirmPassword: undefined }));
             }
           }}
-          placeholder="Re-enter your password"
+          placeholder={t('auth.placeholders.confirmPassword')}
           autoComplete="new-password"
-          accessibilityHint="Re-enter your password to confirm"
+          accessibilityHint={t('auth.accessibility.confirmPasswordHint')}
           error={fieldErrors.confirmPassword}
         />
 
@@ -208,7 +238,7 @@ const CreateAccountScreen = () => {
             marginTop: -spacing.sm
           }}
         >
-          Password must be at least 8 characters with at least one letter and one number.
+          {t('auth.createAccount.passwordRequirements')}
         </Text>
 
         <View>
@@ -237,17 +267,17 @@ const CreateAccountScreen = () => {
           onPress={handleRegister}
           loading={loading}
           disabled={!consent}
-          accessibilityLabel="Create Account"
+          accessibilityLabel={t('common.actions.createAccount')}
         >
-          Create Account
+          {t('auth.createAccount.button')}
         </Button>
 
         <AuthLink
           testID="sign-in-link"
-          prefixText="Already have an account?"
-          actionText="Sign in"
+          prefixText={t('auth.createAccount.alreadyHaveAccount')}
+          actionText={t('auth.createAccount.signInAction')}
           onPress={() => router.push('/sign-in')}
-          accessibilityLabel="Sign in"
+          accessibilityLabel={t('common.actions.signIn')}
         />
       </View>
     </AuthScreenLayout>

@@ -9,6 +9,7 @@
 import { MaterialIcons } from '@expo/vector-icons';
 import { CameraView } from 'expo-camera';
 import React, { useCallback, useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   View,
   Text,
@@ -194,6 +195,7 @@ export const ScannerOverlay: React.FC<ScannerOverlayProps> = ({
   expectedFormat
 }) => {
   const { theme } = useTheme();
+  const { t } = useTranslation();
   const insets = useSafeAreaInsets();
   const { width: screenWidth } = useWindowDimensions();
   const viewfinderSize = screenWidth * VIEWFINDER_WIDTH_RATIO;
@@ -204,9 +206,12 @@ export const ScannerOverlay: React.FC<ScannerOverlayProps> = ({
 
   const effectiveCameraError = cameraMountError ?? error;
 
-  const handleCameraMountError = useCallback((event: { message: string }) => {
-    setCameraMountError(event.message || 'Unable to start the camera preview.');
-  }, []);
+  const handleCameraMountError = useCallback(
+    (event: { message: string }) => {
+      setCameraMountError(event.message || t('addCard.scanner.cameraStartError'));
+    },
+    [t]
+  );
 
   // Request permission on mount
   useEffect(() => {
@@ -229,11 +234,10 @@ export const ScannerOverlay: React.FC<ScannerOverlayProps> = ({
             style={[styles.permissionTitle, { color: theme.textPrimary }]}
             accessibilityRole="header"
           >
-            Camera Access Needed
+            {t('addCard.scanner.cameraAccessTitle')}
           </Text>
           <Text style={[styles.permissionBody, { color: theme.textSecondary }]}>
-            Camera access is needed to scan barcodes.{'\n'}You can enable it in Settings, or enter
-            the barcode manually.
+            {t('addCard.scanner.cameraAccessBody')}
           </Text>
           <View style={styles.permissionActions}>
             <Button
@@ -241,10 +245,10 @@ export const ScannerOverlay: React.FC<ScannerOverlayProps> = ({
               onPress={() => Linking.openSettings()}
               testID="open-settings-button"
             >
-              Open Settings
+              {t('common.actions.openSettings')}
             </Button>
             <Button variant="secondary" onPress={onManualEntry} testID="manual-entry-button">
-              Enter Manually
+              {t('addCard.scanner.manualEntry')}
             </Button>
           </View>
         </View>
@@ -262,7 +266,9 @@ export const ScannerOverlay: React.FC<ScannerOverlayProps> = ({
         />
         <View style={styles.centeredContent}>
           <MaterialIcons name="error-outline" size={48} color={theme.error} />
-          <Text style={[styles.permissionTitle, { color: theme.textPrimary }]}>Camera Error</Text>
+          <Text style={[styles.permissionTitle, { color: theme.textPrimary }]}>
+            {t('addCard.scanner.cameraErrorTitle')}
+          </Text>
           <Text style={[styles.permissionBody, { color: theme.textSecondary }]}>
             {effectiveCameraError}
           </Text>
@@ -273,7 +279,7 @@ export const ScannerOverlay: React.FC<ScannerOverlayProps> = ({
                 onPress={onImageScan}
                 testID="scan-from-image-fallback-button"
               >
-                Scan from image
+                {t('addCard.scanner.scanFromImage')}
               </Button>
             )}
             <Button
@@ -285,14 +291,14 @@ export const ScannerOverlay: React.FC<ScannerOverlayProps> = ({
               }}
               testID="retry-button"
             >
-              Retry
+              {t('common.actions.retry')}
             </Button>
             <Button
               variant="secondary"
               onPress={onManualEntry}
               testID="manual-entry-fallback-button"
             >
-              Enter Manually
+              {t('addCard.scanner.manualEntry')}
             </Button>
           </View>
         </View>
@@ -341,14 +347,14 @@ export const ScannerOverlay: React.FC<ScannerOverlayProps> = ({
           <ViewfinderCorners size={viewfinderSize} />
           <ScanLine viewfinderSize={viewfinderSize} />
         </View>
-        <Text style={styles.instructionText}>Point camera at barcode</Text>
+        <Text style={styles.instructionText}>{t('addCard.scanner.instruction')}</Text>
       </View>
 
       {/* Processing indicator overlay */}
       {isProcessingImage && (
         <View style={styles.processingOverlay} testID="image-processing-indicator">
           <ActivityIndicator size="large" color="#FFFFFF" />
-          <Text style={styles.processingText}>Scanning image…</Text>
+          <Text style={styles.processingText}>{t('addCard.scanner.processingImage')}</Text>
         </View>
       )}
 
@@ -371,11 +377,11 @@ export const ScannerOverlay: React.FC<ScannerOverlayProps> = ({
               onPress={onImageScan}
               style={styles.manualEntryRow}
               accessibilityRole="button"
-              accessibilityLabel="Scan a barcode from a photo or screenshot"
+              accessibilityLabel={t('addCard.scanner.scanFromImageAccessibilityLabel')}
               testID="scan-from-image-row"
             >
               <MaterialIcons name="image" size={24} color="#FFFFFF" />
-              <Text style={styles.manualEntryText}>Scan from image</Text>
+              <Text style={styles.manualEntryText}>{t('addCard.scanner.scanFromImage')}</Text>
               <MaterialIcons name="chevron-right" size={24} color="#FFFFFF" />
             </Pressable>
             <View style={styles.rowDivider} />
@@ -385,11 +391,11 @@ export const ScannerOverlay: React.FC<ScannerOverlayProps> = ({
           onPress={onManualEntry}
           style={styles.manualEntryRow}
           accessibilityRole="button"
-          accessibilityLabel="Enter card number manually"
+          accessibilityLabel={t('addCard.scanner.manualEntryAccessibilityLabel')}
           testID="manual-entry-row"
         >
           <MaterialIcons name="keyboard" size={24} color="#FFFFFF" />
-          <Text style={styles.manualEntryText}>Enter card number manually</Text>
+          <Text style={styles.manualEntryText}>{t('addCard.scanner.manualEntry')}</Text>
           <MaterialIcons name="chevron-right" size={24} color="#FFFFFF" />
         </Pressable>
       </View>

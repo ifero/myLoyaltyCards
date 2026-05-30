@@ -1,5 +1,6 @@
 import { useRouter } from 'expo-router';
 import { useCallback, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Pressable, Text, View } from 'react-native';
 
 import { isValidEmail } from '@/core/auth/validation';
@@ -10,32 +11,9 @@ import { useTheme } from '@/shared/theme';
 
 import { AuthLink, AuthScreenLayout, ErrorBanner, PasswordInput } from './components';
 
-const mapSignInErrorMessage = (code?: string, message?: string) => {
-  if (code === 'invalid_credentials') {
-    return 'Incorrect email or password. Please try again.';
-  }
-
-  if (code === 'email_not_confirmed') {
-    return 'Please verify your email address first.';
-  }
-
-  if (message?.toLowerCase().includes('invalid login credentials')) {
-    return 'Incorrect email or password. Please try again.';
-  }
-
-  if (message?.toLowerCase().includes('network')) {
-    return 'Unable to connect. Check your internet and try again.';
-  }
-
-  if (message?.trim()) {
-    return message;
-  }
-
-  return 'Something went wrong. Please try again.';
-};
-
 const SignInScreen = () => {
   const { theme, spacing, touchTarget } = useTheme();
+  const { t } = useTranslation();
   const router = useRouter();
 
   const [email, setEmail] = useState('');
@@ -48,22 +26,49 @@ const SignInScreen = () => {
     password?: string;
   }>({});
 
+  const mapSignInErrorMessage = useCallback(
+    (code?: string, message?: string) => {
+      if (code === 'invalid_credentials') {
+        return t('auth.signIn.incorrectCredentials');
+      }
+
+      if (code === 'email_not_confirmed') {
+        return t('auth.signIn.emailNotConfirmed');
+      }
+
+      if (message?.toLowerCase().includes('invalid login credentials')) {
+        return t('auth.signIn.incorrectCredentials');
+      }
+
+      if (message?.toLowerCase().includes('network')) {
+        return t('auth.signIn.networkError');
+      }
+
+      if (message?.toLowerCase().includes('failed to fetch')) {
+        return t('auth.signIn.networkError');
+      }
+
+      return t('auth.signIn.genericError');
+    },
+    [t]
+  );
+
   const validate = useCallback(() => {
     const errors: { email?: string; password?: string } = {};
 
     if (!email.trim()) {
-      errors.email = 'Email is required.';
+      errors.email = t('auth.validation.emailRequired');
     } else if (!isValidEmail(email)) {
-      errors.email = 'Please enter a valid email address';
+      errors.email = t('auth.validation.emailInvalid');
     }
 
     if (!password) {
-      errors.password = 'Password is required.';
+      errors.password = t('auth.validation.passwordRequired');
     }
 
     setFieldErrors(errors);
     return Object.keys(errors).length === 0;
-  }, [email, password]);
+  }, [email, password, t]);
 
   const handleSignIn = useCallback(async () => {
     setError(null);
@@ -84,19 +89,19 @@ const SignInScreen = () => {
 
       router.replace('/');
     } catch {
-      setError('Unable to connect. Check your internet and try again.');
+      setError(t('auth.signIn.networkError'));
     } finally {
       setLoading(false);
     }
-  }, [email, password, router, validate]);
+  }, [email, mapSignInErrorMessage, password, router, t, validate]);
 
   const hasFormError = Boolean(error);
 
   return (
     <AuthScreenLayout
       testID="sign-in-screen"
-      heading="Welcome Back"
-      subtitle="Sign in to sync your loyalty cards across devices"
+      heading={t('auth.signIn.heading')}
+      subtitle={t('auth.signIn.subtitle')}
       headingTestID="sign-in-title"
       subtitleTestID="sign-in-subtitle"
     >
@@ -105,7 +110,7 @@ const SignInScreen = () => {
 
         <TextField
           testID="email-input"
-          label="Email"
+          label={t('auth.fields.email')}
           value={email}
           onChangeText={(value) => {
             setEmail(value);
@@ -116,20 +121,20 @@ const SignInScreen = () => {
               setError(null);
             }
           }}
-          placeholder="you@example.com"
+          placeholder={t('auth.placeholders.email')}
           keyboardType="email-address"
           autoCapitalize="none"
           autoComplete="email"
           autoCorrect={false}
-          accessibilityLabel="Email"
-          accessibilityHint="Enter your email address"
+          accessibilityLabel={t('auth.fields.email')}
+          accessibilityHint={t('auth.accessibility.emailHint')}
           error={fieldErrors.email}
           hasError={hasFormError}
         />
 
         <PasswordInput
           testID="password-input"
-          label="Password"
+          label={t('auth.fields.password')}
           value={password}
           onChangeText={(value) => {
             setPassword(value);
@@ -140,9 +145,9 @@ const SignInScreen = () => {
               setError(null);
             }
           }}
-          placeholder="Your password"
+          placeholder={t('auth.placeholders.password')}
           autoComplete="current-password"
-          accessibilityHint="Enter your password"
+          accessibilityHint={t('auth.accessibility.passwordHint')}
           error={fieldErrors.password}
           hasError={hasFormError}
         />
@@ -151,7 +156,7 @@ const SignInScreen = () => {
           testID="forgot-password-link"
           onPress={() => router.push('/forgot-password')}
           accessibilityRole="button"
-          accessibilityLabel="Forgot password"
+          accessibilityLabel={t('auth.accessibility.forgotPassword')}
           style={{
             alignSelf: 'flex-end',
             minHeight: touchTarget.min,
@@ -159,7 +164,9 @@ const SignInScreen = () => {
             minWidth: touchTarget.min
           }}
         >
-          <Text style={{ color: theme.link, fontWeight: '600' }}>Forgot password?</Text>
+          <Text style={{ color: theme.link, fontWeight: '600' }}>
+            {t('auth.signIn.forgotPassword')}
+          </Text>
         </Pressable>
 
         <Button
@@ -168,17 +175,17 @@ const SignInScreen = () => {
           size="large"
           onPress={handleSignIn}
           loading={loading}
-          accessibilityLabel="Sign In"
+          accessibilityLabel={t('common.actions.signIn')}
         >
-          Sign In
+          {t('auth.signIn.button')}
         </Button>
 
         <AuthLink
           testID="create-account-link"
-          prefixText="Don't have an account?"
-          actionText="Create one"
+          prefixText={t('auth.signIn.noAccountPrefix')}
+          actionText={t('auth.signIn.noAccountAction')}
           onPress={() => router.push('/create-account')}
-          accessibilityLabel="Create one"
+          accessibilityLabel={t('auth.signIn.noAccountAction')}
         />
       </View>
     </AuthScreenLayout>

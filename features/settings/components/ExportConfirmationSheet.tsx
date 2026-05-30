@@ -1,5 +1,6 @@
 import { MaterialIcons } from '@expo/vector-icons';
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { Text, View } from 'react-native';
 
 import { BottomSheet, Button } from '@/shared/components/ui';
@@ -23,13 +24,14 @@ export const ExportConfirmationSheet = ({
   onClose
 }: ExportConfirmationSheetProps) => {
   const { theme } = useTheme();
+  const { t } = useTranslation();
 
   return (
     <BottomSheet visible={visible} onClose={onClose} testID="export-confirmation-sheet">
       <View style={{ alignItems: 'center' }}>
         <MaterialIcons name="file-download" size={40} color={theme.primary} />
         <Text style={{ marginTop: 12, color: theme.textPrimary, fontSize: 30, fontWeight: '600' }}>
-          Export Your Cards
+          {t('settings.export.confirmTitle')}
         </Text>
         <Text
           style={{
@@ -40,7 +42,7 @@ export const ExportConfirmationSheet = ({
             lineHeight: 20
           }}
         >
-          {`All ${cardCount} cards will be exported as a JSON file that you can save or share.`}
+          {t('settings.export.confirmBody', { count: cardCount })}
         </Text>
       </View>
       <View style={{ marginTop: 16, gap: 10 }}>
@@ -50,10 +52,10 @@ export const ExportConfirmationSheet = ({
           onPress={onExport}
           loading={isExporting}
         >
-          Export
+          {t('common.actions.export')}
         </Button>
         <Button testID="export-cancel-button" variant="tertiary" onPress={onClose}>
-          Cancel
+          {t('common.actions.cancel')}
         </Button>
         {exportError ? (
           <Text

@@ -9,6 +9,7 @@
  */
 
 import { MaterialIcons } from '@expo/vector-icons';
+import { useTranslation } from 'react-i18next';
 import { ActivityIndicator, Pressable, Text, View } from 'react-native';
 
 import { useTheme } from '@/shared/theme';
@@ -35,6 +36,7 @@ type MigrationBannerProps = {
 
 const MigrationBanner = ({ status, message, onRetry, onDismiss }: MigrationBannerProps) => {
   const { theme } = useTheme();
+  const { t } = useTranslation();
 
   if (status === 'idle' || !message) return null;
 
@@ -77,12 +79,12 @@ const MigrationBanner = ({ status, message, onRetry, onDismiss }: MigrationBanne
         <Pressable
           testID="migration-retry-button"
           onPress={onRetry}
-          accessibilityLabel="Retry card backup"
+          accessibilityLabel={t('auth.migrationBanner.retryA11yLabel')}
           accessibilityRole="button"
           className="ml-2 rounded-md px-3 py-1"
           style={{ backgroundColor: theme.error }}
         >
-          <Text className="text-xs font-semibold text-white">Retry</Text>
+          <Text className="text-xs font-semibold text-white">{t('common.actions.retry')}</Text>
         </Pressable>
       )}
 
@@ -90,7 +92,7 @@ const MigrationBanner = ({ status, message, onRetry, onDismiss }: MigrationBanne
         <Pressable
           testID="migration-dismiss-button"
           onPress={onDismiss}
-          accessibilityLabel="Dismiss"
+          accessibilityLabel={t('auth.migrationBanner.dismissA11yLabel')}
           accessibilityRole="button"
           className="ml-2 px-1"
         >

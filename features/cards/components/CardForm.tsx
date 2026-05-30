@@ -9,8 +9,9 @@
  */
 
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useEffect, useRef } from 'react';
+import { useEffect, useMemo, useRef } from 'react';
 import { useForm, Controller } from 'react-hook-form';
+import { useTranslation } from 'react-i18next';
 import {
   View,
   Text,
@@ -23,7 +24,7 @@ import {
 import * as z from 'zod';
 
 import { barcodeFormatSchema, cardColorSchema } from '@/core/schemas';
-import { inferBarcodeFormat, getBarcodeFormatDescription } from '@/core/utils';
+import { inferBarcodeFormat } from '@/core/utils';
 
 import { useTheme } from '@/shared/theme';
 
@@ -34,18 +35,16 @@ import { ColorPicker } from './ColorPicker';
  * Note: Defaults are handled via useForm defaultValues, not zod defaults
  * to ensure proper type compatibility with react-hook-form
  */
-const cardFormSchema = z.object({
-  name: z
-    .string()
-    .min(1, 'Card name is required')
-    .max(50, 'Card name must be 50 characters or less'),
-  barcode: z.string().min(1, 'Barcode number is required'),
-  barcodeFormat: barcodeFormatSchema,
-  color: cardColorSchema,
-  brandId: z.string().optional() // Story 3.3: Optional brand ID
-});
+const createCardFormSchema = (t: (key: string) => string) =>
+  z.object({
+    name: z.string().min(1, t('cards.form.nameRequired')).max(50, t('cards.form.nameMax')),
+    barcode: z.string().min(1, t('cards.form.barcodeRequired')),
+    barcodeFormat: barcodeFormatSchema,
+    color: cardColorSchema,
+    brandId: z.string().optional() // Story 3.3: Optional brand ID
+  });
 
-export type CardFormInput = z.infer<typeof cardFormSchema>;
+export type CardFormInput = z.infer<ReturnType<typeof createCardFormSchema>>;
 
 interface CardFormProps {
   defaultValues?: Partial<CardFormInput>;
@@ -79,7 +78,20 @@ export const CardForm = ({
   focusNameOnMount = true
 }: CardFormProps) => {
   const { theme } = useTheme();
+  const { t } = useTranslation();
   const nameInputRef = useRef<TextInput>(null);
+  const cardFormSchema = useMemo(() => createCardFormSchema(t), [t]);
+  const barcodeFormatLabels = useMemo(
+    () => ({
+      CODE128: t('cards.form.barcodeFormat.CODE128'),
+      EAN13: t('cards.form.barcodeFormat.EAN13'),
+      EAN8: t('cards.form.barcodeFormat.EAN8'),
+      QR: t('cards.form.barcodeFormat.QR'),
+      CODE39: t('cards.form.barcodeFormat.CODE39'),
+      UPCA: t('cards.form.barcodeFormat.UPCA')
+    }),
+    [t]
+  );
 
   const {
     control,
@@ -151,7 +163,7 @@ export const CardForm = ({
         {/* Card Name Field - AC2, AC3 */}
         <View className="mb-4 mt-4">
           <View className="mb-1 flex-row items-center justify-between">
-            <Text className="text-xs text-gray-500">Card Name</Text>
+            <Text className="text-xs text-gray-500">{t('cards.form.nameLabel')}</Text>
             <Text className="text-xs text-gray-400">{nameLength}/50</Text>
           </View>
           <Controller
@@ -163,11 +175,11 @@ export const CardForm = ({
                 value={value}
                 onChangeText={onChange}
                 onBlur={onBlur}
-                placeholder="Enter card name"
+                placeholder={t('cards.form.namePlaceholder')}
                 placeholderTextColor={theme.textSecondary}
                 maxLength={50}
                 testID="card-name-input"
-                accessibilityLabel="Card name"
+                accessibilityLabel={t('cards.form.nameAccessibilityLabel')}
                 className="rounded-lg border px-3 py-3"
                 style={{
                   borderColor: errors.name ? '#EF4444' : theme.border,
@@ -186,7 +198,7 @@ export const CardForm = ({
 
         {/* Barcode Number Field - AC4 */}
         <View className="mb-4">
-          <Text className="mb-1 text-xs text-gray-500">Barcode Number</Text>
+          <Text className="mb-1 text-xs text-gray-500">{t('cards.form.barcodeLabel')}</Text>
           <Controller
             control={control}
             name="barcode"
@@ -195,11 +207,11 @@ export const CardForm = ({
                 value={value}
                 onChangeText={onChange}
                 onBlur={onBlur}
-                placeholder="Enter barcode number"
+                placeholder={t('cards.form.barcodePlaceholder')}
                 placeholderTextColor={theme.textSecondary}
                 keyboardType="number-pad"
                 testID="barcode-input"
-                accessibilityLabel="Barcode number"
+                accessibilityLabel={t('cards.form.barcodeAccessibilityLabel')}
                 className="rounded-lg border px-3 py-3"
                 style={{
                   borderColor: errors.barcode ? '#EF4444' : theme.border,
@@ -218,7 +230,7 @@ export const CardForm = ({
 
         {/* Barcode Format Display - AC5 (Auto-detected) */}
         <View className="mb-4" testID="format-display">
-          <Text className="mb-1 text-xs text-gray-500">Barcode Format (Auto-detected)</Text>
+          <Text className="mb-1 text-xs text-gray-500">{t('cards.form.barcodeFormatLabel')}</Text>
           <View
             className="rounded-lg border px-3 py-3"
             style={{
@@ -226,9 +238,7 @@ export const CardForm = ({
               backgroundColor: theme.surface
             }}
           >
-            <Text style={{ color: theme.textPrimary }}>
-              {getBarcodeFormatDescription(barcodeFormat)}
-            </Text>
+            <Text style={{ color: theme.textPrimary }}>{barcodeFormatLabels[barcodeFormat]}</Text>
           </View>
         </View>
 
@@ -258,7 +268,7 @@ export const CardForm = ({
           }}
         >
           <Text className="text-base font-semibold text-white">
-            {isLoading ? 'Saving...' : submitLabel}
+            {isLoading ? t('cards.form.saving') : submitLabel}
           </Text>
         </Pressable>
       </ScrollView>

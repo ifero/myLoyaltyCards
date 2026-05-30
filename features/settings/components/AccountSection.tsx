@@ -1,5 +1,6 @@
 import { MaterialIcons } from '@expo/vector-icons';
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { Text, View } from 'react-native';
 
 import { ActionRow } from '@/shared/components/ui';
@@ -13,6 +14,7 @@ type AccountSectionProps = {
 
 export const AccountSection = ({ email, onSignOut, onDeleteAccount }: AccountSectionProps) => {
   const { theme } = useTheme();
+  const { t } = useTranslation();
 
   return (
     <View style={{ gap: 16 }}>
@@ -50,9 +52,13 @@ export const AccountSection = ({ email, onSignOut, onDeleteAccount }: AccountSec
             {email}
           </Text>
           <View style={{ marginTop: 2, flexDirection: 'row', alignItems: 'center', gap: 5 }}>
-            <Text style={{ color: theme.textSecondary, fontSize: 13 }}>Signed in</Text>
+            <Text style={{ color: theme.textSecondary, fontSize: 13 }}>
+              {t('settings.account.signedIn')}
+            </Text>
             <MaterialIcons name="circle" size={8} color={theme.success} />
-            <Text style={{ color: theme.success, fontSize: 13 }}>Synced</Text>
+            <Text style={{ color: theme.success, fontSize: 13 }}>
+              {t('settings.account.synced')}
+            </Text>
           </View>
         </View>
       </View>
@@ -61,18 +67,18 @@ export const AccountSection = ({ email, onSignOut, onDeleteAccount }: AccountSec
         testID="settings-signout-row"
         variant="plain"
         prefix={<MaterialIcons name="logout" size={24} color={theme.primary} />}
-        label="Sign Out"
-        accessibilityLabel="Sign Out"
+        label={t('common.actions.signOut')}
+        accessibilityLabel={t('settings.account.signOutA11y')}
         onPress={onSignOut}
       />
       <ActionRow
         testID="settings-delete-row"
         variant="plain"
         prefix={<MaterialIcons name="delete-outline" size={24} color={theme.error} />}
-        label="Delete Account"
+        label={t('settings.account.deleteAccount')}
         onPress={onDeleteAccount}
         destructive
-        accessibilityLabel="Delete Account, destructive action"
+        accessibilityLabel={t('settings.account.deleteAccountA11y')}
       />
     </View>
   );

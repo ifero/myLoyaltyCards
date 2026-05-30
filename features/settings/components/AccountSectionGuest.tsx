@@ -1,5 +1,6 @@
 import { MaterialIcons } from '@expo/vector-icons';
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { Text, View } from 'react-native';
 
 import { Button } from '@/shared/components/ui';
@@ -12,6 +13,7 @@ type AccountSectionGuestProps = {
 
 export const AccountSectionGuest = ({ onCreateAccount, onSignIn }: AccountSectionGuestProps) => {
   const { theme } = useTheme();
+  const { t } = useTranslation();
 
   return (
     <View
@@ -26,11 +28,11 @@ export const AccountSectionGuest = ({ onCreateAccount, onSignIn }: AccountSectio
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
         <MaterialIcons name="verified-user" size={36} color={theme.primary} />
         <Text style={{ color: theme.textPrimary, fontSize: 16, fontWeight: '500', flex: 1 }}>
-          Not signed in yet
+          {t('settings.account.guestTitle')}
         </Text>
       </View>
       <Text style={{ color: theme.textSecondary, fontSize: 14, marginTop: 10, lineHeight: 20 }}>
-        Sign in or create an account to back up your cards and sync across devices.
+        {t('settings.account.guestBody')}
       </Text>
       <View style={{ marginTop: 12, flexDirection: 'row', gap: 8 }}>
         <View style={{ flex: 1 }}>
@@ -39,12 +41,12 @@ export const AccountSectionGuest = ({ onCreateAccount, onSignIn }: AccountSectio
             variant="primary"
             onPress={onCreateAccount}
           >
-            Create Account
+            {t('common.actions.createAccount')}
           </Button>
         </View>
         <View style={{ width: 115 }}>
           <Button testID="settings-sign-in-button" variant="secondary" onPress={onSignIn}>
-            Sign In
+            {t('common.actions.signIn')}
           </Button>
         </View>
       </View>

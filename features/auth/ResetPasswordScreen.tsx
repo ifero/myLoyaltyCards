@@ -1,5 +1,6 @@
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { ActivityIndicator, Text, View } from 'react-native';
 
 import { isValidPassword } from '@/core/auth/validation';
@@ -37,6 +38,7 @@ const parseHashFragment = (url: string): Record<string, string> => {
 
 const ResetPasswordScreen = () => {
   const { theme, typography, spacing } = useTheme();
+  const { t } = useTranslation();
   const router = useRouter();
 
   const params = useLocalSearchParams<{
@@ -61,6 +63,60 @@ const ResetPasswordScreen = () => {
     confirmPassword?: string;
   }>({});
 
+  const mapResetPasswordSessionError = useCallback(
+    (message?: string) => {
+      const normalizedMessage = message?.toLowerCase() ?? '';
+
+      if (normalizedMessage.includes('expired')) {
+        return t('auth.resetPassword.expiredLink');
+      }
+
+      if (
+        normalizedMessage.includes('invalid') ||
+        normalizedMessage.includes('otp') ||
+        normalizedMessage.includes('token')
+      ) {
+        return t('auth.resetPassword.invalidLink');
+      }
+
+      if (
+        normalizedMessage.includes('network') ||
+        normalizedMessage.includes('failed to fetch') ||
+        normalizedMessage.includes('request failed')
+      ) {
+        return t('auth.resetPassword.networkError');
+      }
+
+      return t('auth.resetPassword.verifyFailed');
+    },
+    [t]
+  );
+
+  const mapResetPasswordUpdateError = useCallback(
+    (message?: string) => {
+      const normalizedMessage = message?.toLowerCase() ?? '';
+
+      if (
+        normalizedMessage.includes('network') ||
+        normalizedMessage.includes('failed to fetch') ||
+        normalizedMessage.includes('request failed')
+      ) {
+        return t('auth.resetPassword.networkError');
+      }
+
+      if (normalizedMessage.includes('expired')) {
+        return t('auth.resetPassword.expiredLink');
+      }
+
+      if (normalizedMessage.includes('invalid')) {
+        return t('auth.resetPassword.invalidLink');
+      }
+
+      return t('auth.resetPassword.genericError');
+    },
+    [t]
+  );
+
   useEffect(() => {
     return () => {
       if (redirectTimerRef.current) {
@@ -72,7 +128,7 @@ const ResetPasswordScreen = () => {
   useEffect(() => {
     const establishSession = async () => {
       if (params.error_description) {
-        setSessionError(params.error_description);
+        setSessionError(mapResetPasswordSessionError(params.error_description));
         return;
       }
 
@@ -85,7 +141,7 @@ const ResetPasswordScreen = () => {
           if (initialUrl) {
             const hashParams = parseHashFragment(initialUrl);
             if (hashParams.error_description) {
-              setSessionError(hashParams.error_description);
+              setSessionError(mapResetPasswordSessionError(hashParams.error_description));
               return;
             }
 
@@ -98,7 +154,7 @@ const ResetPasswordScreen = () => {
       }
 
       if (!accessToken || !refreshToken) {
-        setSessionError('Invalid or expired reset link. Please request a new one.');
+        setSessionError(t('auth.resetPassword.invalidLink'));
         return;
       }
 
@@ -110,37 +166,43 @@ const ResetPasswordScreen = () => {
         });
 
         if (sessionSetupError) {
-          setSessionError('This reset link has expired. Please request a new one.');
+          setSessionError(t('auth.resetPassword.expiredLink'));
           return;
         }
 
         setSessionReady(true);
       } catch {
-        setSessionError('Failed to verify reset link. Please try again.');
+        setSessionError(t('auth.resetPassword.verifyFailed'));
       }
     };
 
     establishSession();
-  }, [params.access_token, params.error_description, params.refresh_token]);
+  }, [
+    mapResetPasswordSessionError,
+    params.access_token,
+    params.error_description,
+    params.refresh_token,
+    t
+  ]);
 
   const validate = useCallback(() => {
     const errors: { password?: string; confirmPassword?: string } = {};
 
     if (!password) {
-      errors.password = 'Password is required.';
+      errors.password = t('auth.validation.passwordRequired');
     } else if (!isValidPassword(password)) {
-      errors.password = 'Min 8 characters, at least one letter and one number.';
+      errors.password = t('auth.validation.passwordRule');
     }
 
     if (!confirmPassword) {
-      errors.confirmPassword = 'Please confirm your password.';
+      errors.confirmPassword = t('auth.validation.confirmPasswordRequired');
     } else if (password !== confirmPassword) {
-      errors.confirmPassword = 'Passwords do not match.';
+      errors.confirmPassword = t('auth.validation.passwordsMismatch');
     }
 
     setFieldErrors(errors);
     return Object.keys(errors).length === 0;
-  }, [confirmPassword, password]);
+  }, [confirmPassword, password, t]);
 
   const handleUpdatePassword = useCallback(async () => {
     setError(null);
@@ -155,7 +217,7 @@ const ResetPasswordScreen = () => {
       const result = await updatePassword(password);
 
       if (!result.success) {
-        setError(result.error.message);
+        setError(mapResetPasswordUpdateError(result.error.message));
         return;
       }
 
@@ -164,17 +226,17 @@ const ResetPasswordScreen = () => {
         router.replace('/');
       }, 1500);
     } catch {
-      setError('An unexpected error occurred. Please try again.');
+      setError(t('auth.resetPassword.genericError'));
     } finally {
       setLoading(false);
     }
-  }, [password, router, validate]);
+  }, [mapResetPasswordUpdateError, password, router, t, validate]);
 
   if (sessionError) {
     return (
       <AuthScreenLayout
         testID="reset-password-error"
-        heading="Reset Link Invalid"
+        heading={t('auth.resetPassword.errorHeading')}
         showAppIcon={false}
       >
         <View className="w-full" style={{ gap: spacing.md }}>
@@ -184,9 +246,9 @@ const ResetPasswordScreen = () => {
             variant="primary"
             size="large"
             onPress={() => router.replace('/forgot-password')}
-            accessibilityLabel="Request a new reset link"
+            accessibilityLabel={t('auth.accessibility.requestNewLink')}
           >
-            Request New Link
+            {t('auth.resetPassword.requestNewLink')}
           </Button>
         </View>
       </AuthScreenLayout>
@@ -201,7 +263,9 @@ const ResetPasswordScreen = () => {
         style={{ backgroundColor: theme.background }}
       >
         <ActivityIndicator testID="session-loading-indicator" size="large" color={theme.primary} />
-        <Text style={{ color: theme.textSecondary, marginTop: 16 }}>Verifying reset link…</Text>
+        <Text style={{ color: theme.textSecondary, marginTop: 16 }}>
+          {t('auth.resetPassword.verifyingLink')}
+        </Text>
       </View>
     );
   }
@@ -210,11 +274,11 @@ const ResetPasswordScreen = () => {
     return (
       <AuthScreenLayout
         testID="reset-password-success"
-        heading="Password Updated!"
+        heading={t('auth.resetPassword.successHeading')}
         showAppIcon={false}
       >
         <Text style={{ color: theme.textSecondary, textAlign: 'center' }}>
-          Redirecting to home…
+          {t('auth.resetPassword.redirectingHome')}
         </Text>
       </AuthScreenLayout>
     );
@@ -223,9 +287,9 @@ const ResetPasswordScreen = () => {
   return (
     <AuthScreenLayout
       testID="reset-password-screen"
-      heading="Set New Password"
+      heading={t('auth.resetPassword.heading')}
       headingTestID="reset-password-title"
-      subtitle="Choose a strong new password for your account."
+      subtitle={t('auth.resetPassword.subtitle')}
       subtitleTestID="reset-password-subtitle"
     >
       <View className="w-full" style={{ gap: spacing.md }}>
@@ -234,7 +298,7 @@ const ResetPasswordScreen = () => {
         <View>
           <PasswordInput
             testID="password-input"
-            label="New Password"
+            label={t('auth.fields.newPassword')}
             value={password}
             onChangeText={(value) => {
               setPassword(value);
@@ -242,9 +306,9 @@ const ResetPasswordScreen = () => {
                 setFieldErrors((previous) => ({ ...previous, password: undefined }));
               }
             }}
-            placeholder="Min 8 chars, 1 letter, 1 number"
+            placeholder={t('auth.placeholders.newPassword')}
             autoComplete="new-password"
-            accessibilityHint="Minimum 8 characters with at least one letter and one number"
+            accessibilityHint={t('auth.accessibility.passwordRuleHint')}
             error={fieldErrors.password}
           />
           <PasswordStrengthIndicator password={password} />
@@ -252,7 +316,7 @@ const ResetPasswordScreen = () => {
 
         <PasswordInput
           testID="confirm-password-input"
-          label="Confirm Password"
+          label={t('auth.fields.confirmPassword')}
           value={confirmPassword}
           onChangeText={(value) => {
             setConfirmPassword(value);
@@ -260,9 +324,9 @@ const ResetPasswordScreen = () => {
               setFieldErrors((previous) => ({ ...previous, confirmPassword: undefined }));
             }
           }}
-          placeholder="Re-enter your new password"
+          placeholder={t('auth.placeholders.confirmNewPassword')}
           autoComplete="new-password"
-          accessibilityHint="Re-enter your new password to confirm"
+          accessibilityHint={t('auth.accessibility.confirmNewPasswordHint')}
           error={fieldErrors.confirmPassword}
         />
 
@@ -274,7 +338,7 @@ const ResetPasswordScreen = () => {
             lineHeight: typography.caption1.lineHeight
           }}
         >
-          Password must be at least 8 characters with at least one letter and one number.
+          {t('auth.createAccount.passwordRequirements')}
         </Text>
 
         <Button
@@ -283,9 +347,9 @@ const ResetPasswordScreen = () => {
           size="large"
           onPress={handleUpdatePassword}
           loading={loading}
-          accessibilityLabel="Update Password"
+          accessibilityLabel={t('auth.resetPassword.button')}
         >
-          Update Password
+          {t('auth.resetPassword.button')}
         </Button>
       </View>
     </AuthScreenLayout>

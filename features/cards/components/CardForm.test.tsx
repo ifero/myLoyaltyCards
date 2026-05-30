@@ -133,7 +133,7 @@ describe('CardForm', () => {
 
       // Grey should be selected (has checkmark)
       const greyOption = screen.getByTestId('color-option-grey');
-      expect(greyOption).toHaveTextContent('✓');
+      expect(greyOption).toHaveTextContent('check');
     });
 
     it('accepts custom default values', () => {

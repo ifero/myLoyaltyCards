@@ -1,5 +1,6 @@
 import { MaterialIcons } from '@expo/vector-icons';
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 
 import { ActionRow } from '@/shared/components/ui';
 import { useTheme } from '@/shared/theme';
@@ -20,15 +21,16 @@ export const PreferencesSection = ({
   onLanguagePress
 }: PreferencesSectionProps) => {
   const { theme } = useTheme();
+  const { t } = useTranslation();
 
   return (
-    <SettingsSection title="Preferences">
+    <SettingsSection title={t('settings.sections.preferences')}>
       <ActionRow
         testID="settings-theme-row"
         variant="plain"
         noPaddingHorizontal
         prefix={<MaterialIcons name="brightness-6" size={24} color={theme.primary} />}
-        label="Theme"
+        label={t('settings.preferences.themeLabel')}
         value={themeLabel}
         onPress={onThemePress}
       />
@@ -37,7 +39,7 @@ export const PreferencesSection = ({
         variant="plain"
         noPaddingHorizontal
         prefix={<MaterialIcons name="language" size={24} color={theme.primary} />}
-        label="Language"
+        label={t('settings.preferences.languageLabel')}
         value={languageName}
         onPress={onLanguagePress}
       />

@@ -35,14 +35,14 @@ describe('ColorPicker', () => {
       render(<ColorPicker value="blue" onChange={mockOnChange} />);
 
       const blueOption = screen.getByTestId('color-option-blue');
-      expect(blueOption).toHaveTextContent('✓');
+      expect(blueOption).toHaveTextContent('check');
     });
 
     it('does not show checkmark on unselected colors', () => {
       render(<ColorPicker value="blue" onChange={mockOnChange} />);
 
       const redOption = screen.getByTestId('color-option-red');
-      expect(redOption).not.toHaveTextContent('✓');
+      expect(redOption).not.toHaveTextContent('check');
     });
   });
 

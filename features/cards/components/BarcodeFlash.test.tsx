@@ -162,7 +162,9 @@ describe('BarcodeFlash', () => {
     it('should have barcode number with accessibility label', () => {
       const { getByLabelText } = render(<BarcodeFlash card={mockCard} onDismiss={mockOnDismiss} />);
 
-      expect(getByLabelText('Barcode number: 1234567890123. Long press to copy.')).toBeTruthy();
+      expect(
+        getByLabelText('Barcode number for Test Store Card: 1234567890123. Long press to copy.')
+      ).toBeTruthy();
     });
 
     it('should have card name as header', () => {

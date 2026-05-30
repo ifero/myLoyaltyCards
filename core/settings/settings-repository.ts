@@ -17,6 +17,7 @@ const KEYS = {
 } as const;
 
 export type ThemePreference = 'light' | 'dark' | 'system';
+export type LanguagePreference = 'en' | 'it' | 'system';
 
 /**
  * Check whether this is the user's first launch.
@@ -87,15 +88,21 @@ export const setThemePreference = (value: ThemePreference): void => {
 
 /**
  * Get persisted language preference.
- * Defaults to English.
+ * Defaults to system locale detection.
  */
-export const getLanguagePreference = (): string => {
-  return Storage.getItemSync(KEYS.LANGUAGE_PREFERENCE) ?? 'en';
+export const getLanguagePreference = (): LanguagePreference => {
+  const value = Storage.getItemSync(KEYS.LANGUAGE_PREFERENCE);
+
+  if (value === 'en' || value === 'it' || value === 'system') {
+    return value;
+  }
+
+  return 'system';
 };
 
 /**
  * Persist language preference.
  */
-export const setLanguagePreference = (value: string): void => {
+export const setLanguagePreference = (value: LanguagePreference): void => {
   Storage.setItemSync(KEYS.LANGUAGE_PREFERENCE, value);
 };

@@ -1,10 +1,12 @@
 import 'react-native-get-random-values'; // Must be imported before uuid
 import '../global.css';
+import '@/shared/i18n';
 import { MaterialIcons } from '@expo/vector-icons';
 import { Stack, useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import * as Updates from 'expo-updates';
 import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { ActivityIndicator, Pressable, Text, View } from 'react-native';
 
 import { getOrCreateGuestSessionId } from '@/core/auth/guest-session-repository';
@@ -45,11 +47,12 @@ try {
 const HeaderRight = () => {
   const router = useRouter();
   const { theme } = useTheme();
+  const { t } = useTranslation();
 
   return (
     <Pressable
       onPress={() => router.push('/settings')}
-      accessibilityLabel="Go to settings"
+      accessibilityLabel={t('navigation.settings')}
       accessibilityRole="button"
       className="h-11 w-11 items-center justify-center"
     >
@@ -65,11 +68,12 @@ const HeaderRight = () => {
 const HeaderLeft = () => {
   const router = useRouter();
   const { theme } = useTheme();
+  const { t } = useTranslation();
 
   return (
     <Pressable
       onPress={() => router.push('/add-card')}
-      accessibilityLabel="Add new card"
+      accessibilityLabel={t('navigation.addCard')}
       accessibilityRole="button"
       className="h-11 w-11 items-center justify-center"
     >
@@ -81,6 +85,7 @@ const HeaderLeft = () => {
 const RootLayoutContent = () => {
   const { isDark, theme } = useTheme();
   const router = useRouter();
+  const { t } = useTranslation();
 
   useEffect(() => {
     if (isFirstLaunch()) {
@@ -97,7 +102,7 @@ const RootLayoutContent = () => {
             canGoBack ? (
               <Pressable
                 onPress={() => router.back()}
-                accessibilityLabel="Go back"
+                accessibilityLabel={t('addCard.selection.backAccessibilityLabel')}
                 accessibilityRole="button"
                 className="h-11 w-11 items-center justify-center"
               >
@@ -118,7 +123,7 @@ const RootLayoutContent = () => {
         <Stack.Screen
           name="index"
           options={{
-            title: 'myLoyaltyCards',
+            title: t('navigation.home'),
             headerLeft: () => <HeaderLeft />,
             headerRight: () => <HeaderRight />
           }}
@@ -126,7 +131,7 @@ const RootLayoutContent = () => {
         <Stack.Screen
           name="welcome"
           options={{
-            title: 'Welcome',
+            title: t('navigation.welcome'),
             headerShown: false,
             animation: 'fade'
           }}
@@ -134,34 +139,34 @@ const RootLayoutContent = () => {
         <Stack.Screen
           name="onboarding/mode-selection"
           options={{
-            title: 'Get Started',
+            title: t('navigation.getStarted'),
             headerShown: false
           }}
         />
         <Stack.Screen
           name="onboarding/highlights"
           options={{
-            title: 'Highlights',
+            title: t('navigation.highlights'),
             headerShown: false
           }}
         />
         <Stack.Screen
           name="add-card"
           options={{
-            title: 'Add Card',
+            title: t('navigation.addCard'),
             headerShown: false
           }}
         />
         <Stack.Screen
           name="settings"
           options={{
-            title: 'Settings'
+            title: t('navigation.settings')
           }}
         />
         <Stack.Screen
           name="scan"
           options={{
-            title: 'Scan Barcode',
+            title: t('navigation.scanBarcode'),
             presentation: 'fullScreenModal',
             headerShown: false
           }}
@@ -169,7 +174,7 @@ const RootLayoutContent = () => {
         <Stack.Screen
           name="barcode/[id]"
           options={{
-            title: 'Barcode',
+            title: t('navigation.barcode'),
             presentation: 'fullScreenModal',
             headerShown: false,
             animation: 'fade'
@@ -178,49 +183,49 @@ const RootLayoutContent = () => {
         <Stack.Screen
           name="card/[id]"
           options={{
-            title: 'Card Details'
+            title: t('navigation.cardDetails')
           }}
         />
         <Stack.Screen
           name="card/[id]/edit"
           options={{
-            title: 'Edit Card'
+            title: t('navigation.editCard')
           }}
         />
         <Stack.Screen
           name="create-account"
           options={{
-            title: 'Create Account'
+            title: t('navigation.createAccount')
           }}
         />
         <Stack.Screen
           name="verify-email"
           options={{
-            title: 'Verify Email'
+            title: t('navigation.verifyEmail')
           }}
         />
         <Stack.Screen
           name="sign-in"
           options={{
-            title: 'Sign In'
+            title: t('navigation.signIn')
           }}
         />
         <Stack.Screen
           name="forgot-password"
           options={{
-            title: 'Forgot Password'
+            title: t('navigation.forgotPassword')
           }}
         />
         <Stack.Screen
           name="reset-password"
           options={{
-            title: 'Reset Password'
+            title: t('navigation.resetPassword')
           }}
         />
         <Stack.Screen
           name="data-summary"
           options={{
-            title: 'What We Collect'
+            title: t('navigation.whatWeCollect')
           }}
         />
       </Stack>
@@ -230,6 +235,7 @@ const RootLayoutContent = () => {
 };
 
 const RootLayout = () => {
+  const { t } = useTranslation();
   const [isReady, setIsReady] = useState(false);
   const [dbError, setDbError] = useState<string | null>(null);
 
@@ -267,7 +273,7 @@ const RootLayout = () => {
         setIsReady(true);
       } catch (error) {
         console.error('App initialization failed:', error);
-        setDbError(error instanceof Error ? error.message : 'Initialization failed');
+        setDbError(t('common.errors.initializationFailed'));
       }
     };
 
@@ -304,7 +310,7 @@ const RootLayout = () => {
   if (dbError) {
     return (
       <View className="flex-1 items-center justify-center bg-neutral-900">
-        <Text className="text-lg text-red-500">Database Error</Text>
+        <Text className="text-lg text-red-500">{t('common.errors.databaseErrorTitle')}</Text>
         <Text className="mt-2 text-neutral-400">{dbError}</Text>
       </View>
     );

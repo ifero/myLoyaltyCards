@@ -8,5 +8,6 @@ export {
   getThemePreference,
   setThemePreference,
   getLanguagePreference,
-  setLanguagePreference
+  setLanguagePreference,
+  type LanguagePreference
 } from '@/core/settings/settings-repository';

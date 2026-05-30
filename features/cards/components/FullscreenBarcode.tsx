@@ -14,6 +14,7 @@ import { MaterialIcons } from '@expo/vector-icons';
 import * as Clipboard from 'expo-clipboard';
 import * as Haptics from 'expo-haptics';
 import React, { useCallback, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   Modal,
   Platform,
@@ -48,6 +49,7 @@ export const FullscreenBarcode: React.FC<FullscreenBarcodeProps> = ({
 }) => {
   const { width: screenWidth } = useWindowDimensions();
   const { maximize, restore } = useBrightness();
+  const { t } = useTranslation();
 
   useEffect(() => {
     if (visible) {
@@ -89,7 +91,7 @@ export const FullscreenBarcode: React.FC<FullscreenBarcodeProps> = ({
           onPress={onClose}
           style={styles.closeButton}
           accessibilityRole="button"
-          accessibilityLabel="Close fullscreen barcode"
+          accessibilityLabel={t('cards.details.fullscreenCloseAccessibilityLabel')}
           testID="fullscreen-barcode-close"
           hitSlop={8}
         >
@@ -118,8 +120,10 @@ export const FullscreenBarcode: React.FC<FullscreenBarcodeProps> = ({
           <Pressable
             onPress={handleCopyBarcode}
             accessibilityRole="button"
-            accessibilityLabel={`Barcode: ${card.barcode}. Tap to copy.`}
-            accessibilityHint="Tap to copy barcode to clipboard"
+            accessibilityLabel={t('cards.details.fullscreenNumberAccessibilityLabel', {
+              barcode: card.barcode
+            })}
+            accessibilityHint={t('cards.details.fullscreenNumberHint')}
             testID="fullscreen-barcode-number"
           >
             <Text style={styles.barcodeNumber}>{formatBarcodeNumber(card.barcode)}</Text>
@@ -128,7 +132,7 @@ export const FullscreenBarcode: React.FC<FullscreenBarcodeProps> = ({
           {/* Brightness Hint */}
           <View style={styles.brightnessHint} testID="fullscreen-barcode-brightness-hint">
             <MaterialIcons name="light-mode" size={20} color="#9CA3AF" />
-            <Text style={styles.brightnessText}>Increase brightness for scanning</Text>
+            <Text style={styles.brightnessText}>{t('cards.details.brightnessHint')}</Text>
           </View>
         </View>
       </View>

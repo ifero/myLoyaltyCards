@@ -12,6 +12,7 @@
 import { MaterialIcons } from '@expo/vector-icons';
 import { router, useLocalSearchParams } from 'expo-router';
 import React, { useState, useCallback, useMemo, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   View,
   Text,
@@ -75,15 +76,19 @@ const BrandHeader: React.FC<{ brand: CatalogueBrand }> = ({ brand }) => {
 
 export const CardSetupScreen: React.FC = () => {
   const { theme } = useTheme();
+  const { t } = useTranslation();
   const params = useLocalSearchParams<SetupParams>();
   const { addCard, isLoading } = useAddCard();
 
   const mode = params.mode ?? 'custom';
 
   useEffect(() => {
-    const announcement = mode === 'catalogue' ? 'Card setup screen' : 'New card screen';
+    const announcement =
+      mode === 'catalogue'
+        ? t('addCard.setup.catalogueAnnouncement')
+        : t('addCard.setup.customAnnouncement');
     AccessibilityInfo.announceForAccessibility?.(announcement);
-  }, [mode]);
+  }, [mode, t]);
 
   // Resolve brand for catalogue mode
   const brand = useMemo<CatalogueBrand | undefined>(() => {
@@ -114,7 +119,7 @@ export const CardSetupScreen: React.FC = () => {
     if (mode === 'custom') {
       const trimmedName = storeName.trim();
       if (!trimmedName) {
-        setStoreNameError('Store name is required');
+        setStoreNameError(t('addCard.setup.storeNameRequired'));
         return;
       }
       setStoreNameError('');
@@ -133,7 +138,7 @@ export const CardSetupScreen: React.FC = () => {
 
     // Pop entire add-card stack and go home
     // The useAddCard hook already navigates to '/'
-  }, [mode, storeName, cardNumber, color, barcodeFormat, brand, addCard]);
+  }, [mode, storeName, cardNumber, color, barcodeFormat, brand, addCard, t]);
 
   const handleBack = useCallback(() => {
     router.back();
@@ -168,7 +173,7 @@ export const CardSetupScreen: React.FC = () => {
             onPress={handleBack}
             style={styles.backButton}
             accessibilityRole="button"
-            accessibilityLabel="Go back"
+            accessibilityLabel={t('addCard.selection.backAccessibilityLabel')}
             testID="setup-back-button"
           >
             <MaterialIcons name="chevron-left" size={28} color={theme.textPrimary} />
@@ -177,7 +182,9 @@ export const CardSetupScreen: React.FC = () => {
             style={[styles.headerTitle, { color: theme.textPrimary }]}
             accessibilityRole="header"
           >
-            {mode === 'catalogue' ? 'Card Setup' : 'New Card'}
+            {mode === 'catalogue'
+              ? t('addCard.setup.catalogueHeading')
+              : t('addCard.setup.customHeading')}
           </Text>
           <View style={styles.headerSpacer} />
         </View>
@@ -194,13 +201,13 @@ export const CardSetupScreen: React.FC = () => {
             {/* Custom mode: Store name */}
             {mode === 'custom' && (
               <TextField
-                label="Store name"
+                label={t('addCard.setup.storeNameLabel')}
                 value={storeName}
                 onChangeText={(text) => {
                   setStoreName(text);
                   if (storeNameError) setStoreNameError('');
                 }}
-                placeholder="Enter store name"
+                placeholder={t('addCard.setup.storeNamePlaceholder')}
                 error={storeNameError}
                 testID="store-name-field"
               />
@@ -210,10 +217,10 @@ export const CardSetupScreen: React.FC = () => {
             <View style={styles.cardNumberRow}>
               <View style={styles.cardNumberField}>
                 <TextField
-                  label="Card number"
+                  label={t('addCard.setup.cardNumberLabel')}
                   value={cardNumber}
                   onChangeText={setCardNumber}
-                  placeholder="Enter or scan card number"
+                  placeholder={t('addCard.setup.cardNumberPlaceholder')}
                   testID="card-number-field"
                 />
               </View>
@@ -227,7 +234,9 @@ export const CardSetupScreen: React.FC = () => {
             {/* Custom mode: Color picker */}
             {mode === 'custom' && (
               <View style={styles.colorSection}>
-                <Text style={[styles.colorLabel, { color: theme.textPrimary }]}>Card color</Text>
+                <Text style={[styles.colorLabel, { color: theme.textPrimary }]}>
+                  {t('addCard.setup.colorLabel')}
+                </Text>
                 <ColorPicker value={color} onChange={setColor} testID="color-picker" />
               </View>
             )}
@@ -243,7 +252,7 @@ export const CardSetupScreen: React.FC = () => {
             disabled={isLoading}
             testID="done-button"
           >
-            Done
+            {t('common.actions.done')}
           </Button>
         </View>
       </KeyboardAvoidingView>

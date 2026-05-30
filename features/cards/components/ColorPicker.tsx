@@ -6,6 +6,8 @@
  * Shows visual selection with checkmark overlay.
  */
 
+import { MaterialIcons } from '@expo/vector-icons';
+import { useTranslation } from 'react-i18next';
 import { Pressable, View, Text } from 'react-native';
 
 import { CardColor, CARD_COLOR_KEYS } from '@/core/schemas';
@@ -19,17 +21,6 @@ interface ColorPickerProps {
 }
 
 /**
- * Color display names for accessibility
- */
-const COLOR_NAMES: Record<CardColor, string> = {
-  blue: 'Blue',
-  red: 'Red',
-  green: 'Green',
-  orange: 'Orange',
-  grey: 'Grey',
-};
-
-/**
  * ColorPicker - 5-color selection component
  *
  * Per AC6:
@@ -38,9 +29,18 @@ const COLOR_NAMES: Record<CardColor, string> = {
  * - Touch target: 44px diameter
  */
 export function ColorPicker({ value, onChange, testID }: ColorPickerProps) {
+  const { t } = useTranslation();
+  const colorNames: Record<CardColor, string> = {
+    blue: t('cards.colors.blue'),
+    red: t('cards.colors.red'),
+    green: t('cards.colors.green'),
+    orange: t('cards.colors.orange'),
+    grey: t('cards.colors.grey')
+  };
+
   return (
     <View testID={testID}>
-      <Text className="text-xs mb-2 text-gray-500">Card Color</Text>
+      <Text className="mb-2 text-xs text-gray-500">{t('addCard.setup.colorLabel')}</Text>
       <View className="flex-row gap-2">
         {CARD_COLOR_KEYS.map((color) => {
           const isSelected = value === color;
@@ -51,19 +51,20 @@ export function ColorPicker({ value, onChange, testID }: ColorPickerProps) {
               key={color}
               onPress={() => onChange(color)}
               accessibilityRole="button"
-              accessibilityLabel={`${COLOR_NAMES[color]} color${isSelected ? ', selected' : ''}`}
+              accessibilityLabel={t('cards.colors.accessibilityLabel', {
+                color: colorNames[color],
+                selected: isSelected ? t('cards.colors.selectedSuffix') : ''
+              })}
               accessibilityState={{ selected: isSelected }}
               testID={`color-option-${color}`}
-              className="w-11 h-11 rounded-full items-center justify-center"
+              className="h-11 w-11 items-center justify-center rounded-full"
               style={{
                 backgroundColor: colorHex,
                 borderWidth: isSelected ? 2 : 0,
-                borderColor: 'white',
+                borderColor: 'white'
               }}
             >
-              {isSelected && (
-                <Text className="text-white text-lg font-bold">✓</Text>
-              )}
+              {isSelected && <MaterialIcons name="check" size={18} color="#FFFFFF" />}
             </Pressable>
           );
         })}

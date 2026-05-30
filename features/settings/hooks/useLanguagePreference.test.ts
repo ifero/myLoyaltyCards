@@ -21,16 +21,20 @@ describe('useLanguagePreference', () => {
 
     expect(result.current.languageCode).toBe('en');
     expect(result.current.languageName).toBe('English');
-    expect(result.current.supportedLanguages).toEqual([{ code: 'en', name: 'English' }]);
+    expect(result.current.supportedLanguages).toEqual([
+      { code: 'system', name: 'System' },
+      { code: 'en', name: 'English' },
+      { code: 'it', name: 'Italian' }
+    ]);
   });
 
   it('updates and persists selected language', () => {
     const { result } = renderHook(() => useLanguagePreference());
 
     act(() => {
-      result.current.selectLanguage('en');
+      result.current.selectLanguage('it');
     });
 
-    expect(mockSetLanguagePreference).toHaveBeenCalledWith('en');
+    expect(mockSetLanguagePreference).toHaveBeenCalledWith('it');
   });
 });

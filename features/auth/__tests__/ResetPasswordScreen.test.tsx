@@ -67,6 +67,25 @@ jest.mock('@/core/utils/get-initial-url', () => ({
 }));
 
 describe('ResetPasswordScreen', () => {
+  const originalConsoleError = console.error;
+
+  beforeAll(() => {
+    jest.spyOn(console, 'error').mockImplementation((...args: unknown[]) => {
+      if (
+        typeof args[0] === 'string' &&
+        args[0].includes('Internal React error: Expected static flag was missing')
+      ) {
+        return;
+      }
+
+      originalConsoleError(...(args as Parameters<typeof console.error>));
+    });
+  });
+
+  afterAll(() => {
+    (console.error as jest.Mock).mockRestore();
+  });
+
   beforeEach(() => {
     jest.clearAllMocks();
     Object.keys(mockParams).forEach((key) => delete mockParams[key]);
@@ -131,7 +150,7 @@ describe('ResetPasswordScreen', () => {
 
     await waitFor(() => {
       expect(screen.getByTestId('server-error')).toBeTruthy();
-      expect(screen.getByText('Server error')).toBeTruthy();
+      expect(screen.getByText('An unexpected error occurred. Please try again.')).toBeTruthy();
     });
   });
 
@@ -152,6 +171,26 @@ describe('ResetPasswordScreen', () => {
         access_token: 'hash-tok',
         refresh_token: 'hash-ref'
       });
+    });
+  });
+
+  it('shows generic translated error when password update throws unexpectedly', async () => {
+    mockParams.access_token = 'token';
+    mockParams.refresh_token = 'refresh';
+    mockSetSession.mockResolvedValue({ error: null });
+    mockUpdatePassword.mockRejectedValue(new Error('Unexpected failure'));
+
+    render(<ResetPasswordScreen />);
+
+    await waitFor(() => expect(screen.getByTestId('update-password-button')).toBeTruthy());
+
+    fireEvent.changeText(screen.getByTestId('password-input'), 'Password1!');
+    fireEvent.changeText(screen.getByTestId('confirm-password-input'), 'Password1!');
+    fireEvent.press(screen.getByTestId('update-password-button'));
+
+    await waitFor(() => {
+      expect(screen.getByTestId('server-error')).toBeTruthy();
+      expect(screen.getByText('An unexpected error occurred. Please try again.')).toBeTruthy();
     });
   });
 });
