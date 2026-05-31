@@ -1,5 +1,5 @@
 {
-  "version": "2026-05-04",
+  "version": "2026-05-31",
   "brands": [
     {
       "id": "esselunga",
@@ -149,6 +149,223 @@
       "logo": "zara",
       "color": "#000000",
       "defaultFormat": "QR"
+    },
+    {
+      "id": "deco",
+      "name": "Decò",
+      "aliases": ["supermarket", "grocery", "deco"],
+      "logo": "deco",
+      "color": "#D71920"
+    },
+    {
+      "id": "uniclub",
+      "name": "UniClub",
+      "aliases": ["loyalty", "rewards", "catalog"],
+      "logo": "uniclub",
+      "color": "#F28C00"
+    },
+    {
+      "id": "desigual",
+      "name": "Desigual",
+      "aliases": ["fashion", "clothing", "spain"],
+      "logo": "desigual",
+      "color": "#000000"
+    },
+    {
+      "id": "blukids",
+      "name": "Blukids",
+      "aliases": ["kids", "fashion", "children"],
+      "logo": "blukids",
+      "color": "#0057B8"
+    },
+    {
+      "id": "original-marines",
+      "name": "Original Marines",
+      "aliases": ["kids", "fashion", "children"],
+      "logo": "original-marines",
+      "color": "#0B3A82"
+    },
+    {
+      "id": "euronics",
+      "name": "Euronics",
+      "aliases": ["electronics", "tech", "appliances"],
+      "logo": "euronics",
+      "color": "#003B8E"
+    },
+    {
+      "id": "toys-center",
+      "name": "Toys Center",
+      "aliases": ["toys", "kids", "games"],
+      "logo": "toys-center",
+      "color": "#E30613"
+    },
+    {
+      "id": "prenatal",
+      "name": "Prenatal",
+      "aliases": ["baby", "kids", "maternity"],
+      "logo": "prenatal",
+      "color": "#E5007D"
+    },
+    {
+      "id": "demma",
+      "name": "Demma",
+      "aliases": ["retail", "brand", "demma"],
+      "logo": "demma",
+      "color": "#118E9E"
+    },
+    {
+      "id": "camaieu",
+      "name": "Camaieu",
+      "aliases": ["fashion", "clothing", "women"],
+      "logo": "camaieu",
+      "color": "#E5007D"
+    },
+    {
+      "id": "intimissimi",
+      "name": "Intimissimi",
+      "aliases": ["lingerie", "fashion", "underwear"],
+      "logo": "intimissimi",
+      "color": "#000000"
+    },
+    {
+      "id": "motivi",
+      "name": "Motivi",
+      "aliases": ["fashion", "clothing", "women"],
+      "logo": "motivi",
+      "color": "#111111"
+    },
+    {
+      "id": "acqua-e-sapone",
+      "name": "Acqua e Sapone",
+      "aliases": ["beauty", "clean", "home"],
+      "logo": "acqua-e-sapone",
+      "color": "#00A7E1"
+    },
+    {
+      "id": "crai",
+      "name": "CRAI",
+      "aliases": ["supermarket", "grocery", "market"],
+      "logo": "crai",
+      "color": "#D71920"
+    },
+    {
+      "id": "lotteria-degli-scontrini",
+      "name": "Lotteria degli scontrini",
+      "aliases": ["government", "fiscal", "lottery"],
+      "logo": "lotteria-degli-scontrini",
+      "color": "#1D4F91"
+    },
+    {
+      "id": "old-wild-west",
+      "name": "Old Wild West",
+      "aliases": ["restaurant", "burger", "food"],
+      "logo": "old-wild-west",
+      "color": "#6B3F1D"
+    },
+    {
+      "id": "oltre",
+      "name": "Oltre",
+      "aliases": ["fashion", "clothing", "women"],
+      "logo": "oltre",
+      "color": "#111111"
+    },
+    {
+      "id": "pandora",
+      "name": "Pandora",
+      "aliases": ["jewelry", "fashion", "charms"],
+      "logo": "pandora",
+      "color": "#224099"
+    },
+    {
+      "id": "rinascente",
+      "name": "Rinascente",
+      "aliases": ["department", "fashion", "luxury"],
+      "logo": "rinascente",
+      "color": "#000000"
+    },
+    {
+      "id": "stroili",
+      "name": "Stroili",
+      "aliases": ["jewelry", "fashion", "oro"],
+      "logo": "stroili",
+      "color": "#B08A3C"
+    },
+    {
+      "id": "penny-market",
+      "name": "Penny Market",
+      "aliases": ["supermarket", "discount", "grocery"],
+      "logo": "penny-market",
+      "color": "#D71920"
+    },
+    {
+      "id": "pitta-rosso",
+      "name": "Pitta Rosso",
+      "aliases": ["shoes", "fashion", "footwear"],
+      "logo": "pitta-rosso",
+      "color": "#E30613"
+    },
+    {
+      "id": "il-gigante",
+      "name": "Il Gigante",
+      "aliases": ["supermarket", "grocery", "market"],
+      "logo": "il-gigante",
+      "color": "#005AA9"
+    },
+    {
+      "id": "md",
+      "name": "MD",
+      "aliases": ["supermarket", "discount", "grocery"],
+      "logo": "md",
+      "color": "#E30613"
+    },
+    {
+      "id": "burger-king",
+      "name": "Burger King",
+      "aliases": ["restaurant", "fast food", "burger"],
+      "logo": "burger-king",
+      "color": "#D62300"
+    },
+    {
+      "id": "ido",
+      "name": "iDO",
+      "aliases": ["kids", "fashion", "children"],
+      "logo": "ido",
+      "color": "#0057A4"
+    },
+    {
+      "id": "piazza-italia",
+      "name": "Piazza Italia",
+      "aliases": ["fashion", "clothing", "retail"],
+      "logo": "piazza-italia",
+      "color": "#004A93"
+    },
+    {
+      "id": "tommy-hilfiger",
+      "name": "Tommy Hilfiger",
+      "aliases": ["fashion", "clothing", "premium"],
+      "logo": "tommy-hilfiger",
+      "color": "#0A1F44"
+    },
+    {
+      "id": "calzedonia",
+      "name": "Calzedonia",
+      "aliases": ["hosiery", "fashion", "lingerie"],
+      "logo": "calzedonia",
+      "color": "#8E1B2F"
+    },
+    {
+      "id": "calliope",
+      "name": "Calliope",
+      "aliases": ["fashion", "clothing", "retail"],
+      "logo": "calliope",
+      "color": "#000000"
+    },
+    {
+      "id": "jysk",
+      "name": "JYSK",
+      "aliases": ["home", "furniture", "house"],
+      "logo": "jysk",
+      "color": "#004A98"
     }
   ]
 }
