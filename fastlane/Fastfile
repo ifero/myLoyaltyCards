@@ -211,6 +211,9 @@ platform :ios do
 end
 
 platform :android do
+  package_name = ENV['ANDROID_PACKAGE_NAME'] || CredentialsManager::AppfileConfig.try_fetch_value(:package_name)
+  json_key_data = ENV['PLAY_STORE_API_KEY']
+
   desc "Build Android Dev app"
   lane :build_dev do
     gradle(task: "assembleDebug", project_dir: "android")
@@ -225,41 +228,73 @@ platform :android do
       task: "assembleRelease",
       project_dir: "android",
       properties: {
-        "android.injected.version.code" => version_code
+        "android.injected.version.code" => version_code,
+        "android.injected.signing.store.file" => ENV['ANDROID_KEYSTORE_PATH'],
+        "android.injected.signing.store.password" => ENV['ANDROID_KEYSTORE_PASSWORD'],
+        "android.injected.signing.key.alias" => ENV['ANDROID_KEY_ALIAS'],
+        "android.injected.signing.key.password" => ENV['ANDROID_KEY_PASSWORD']
       }
     )
   end
 
   desc "Build and upload to Play Console (beta)"
   lane :beta do
+    UI.user_error!("Missing ANDROID_PACKAGE_NAME") unless package_name
+    UI.user_error!("Missing PLAY_STORE_API_KEY") unless json_key_data
+
     # Retrieve last versionCode from Play Console and increment
     last_version_code = google_play_track_version_codes(
-      package_name: ENV['ANDROID_PACKAGE_NAME'],
-      track: 'beta'
-    ).max || 1
-    gradle(
-      task: "assembleRelease",
-      project_dir: "android",
-      properties: {
-        "android.injected.version.code" => last_version_code + 1
-      }
-    )
-  end
-
-  desc "Build and upload to Play Store (release)"
-  lane :upload_release do
-    last_version_code = google_play_track_version_codes(
-      package_name: ENV['ANDROID_PACKAGE_NAME'],
-      track: 'production'
+      package_name: package_name,
+      track: 'beta',
+      json_key_data: json_key_data
     ).max || 1
     gradle(
       task: "bundleRelease",
       project_dir: "android",
       properties: {
-        "android.injected.version.code" => last_version_code + 1
+        "android.injected.version.code" => last_version_code + 1,
+        "android.injected.signing.store.file" => ENV['ANDROID_KEYSTORE_PATH'],
+        "android.injected.signing.store.password" => ENV['ANDROID_KEYSTORE_PASSWORD'],
+        "android.injected.signing.key.alias" => ENV['ANDROID_KEY_ALIAS'],
+        "android.injected.signing.key.password" => ENV['ANDROID_KEY_PASSWORD']
       }
     )
     upload_to_play_store(
+      package_name: package_name,
+      json_key_data: json_key_data,
+      track: "beta",
+      aab: "android/app/build/outputs/bundle/release/app-release.aab",
+      skip_upload_metadata: true,
+      skip_upload_changelogs: true,
+      skip_upload_images: true,
+      skip_upload_screenshots: true
+    )
+  end
+
+  desc "Build and upload to Play Store (release)"
+  lane :upload_release do
+    UI.user_error!("Missing ANDROID_PACKAGE_NAME") unless package_name
+    UI.user_error!("Missing PLAY_STORE_API_KEY") unless json_key_data
+
+    last_version_code = google_play_track_version_codes(
+      package_name: package_name,
+      track: 'production',
+      json_key_data: json_key_data
+    ).max || 1
+    gradle(
+      task: "bundleRelease",
+      project_dir: "android",
+      properties: {
+        "android.injected.version.code" => last_version_code + 1,
+        "android.injected.signing.store.file" => ENV['ANDROID_KEYSTORE_PATH'],
+        "android.injected.signing.store.password" => ENV['ANDROID_KEYSTORE_PASSWORD'],
+        "android.injected.signing.key.alias" => ENV['ANDROID_KEY_ALIAS'],
+        "android.injected.signing.key.password" => ENV['ANDROID_KEY_PASSWORD']
+      }
+    )
+    upload_to_play_store(
+      package_name: package_name,
+      json_key_data: json_key_data,
       track: "production",
       aab: "android/app/build/outputs/bundle/release/app-release.aab",
       skip_upload_metadata: true,

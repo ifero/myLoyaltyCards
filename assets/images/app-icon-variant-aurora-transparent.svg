@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" role="img" aria-label="myLoyaltyCards aurora transparent foreground">
+  <defs>
+    <linearGradient id="wallet" x1="250" y1="310" x2="780" y2="760" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#FFFFFF"/>
+      <stop offset="1" stop-color="#EAF2FF"/>
+    </linearGradient>
+    <filter id="shadow" x="190" y="190" width="650" height="620" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+      <feDropShadow dx="0" dy="24" stdDeviation="18" flood-color="#082A67" flood-opacity="0.30"/>
+    </filter>
+  </defs>
+
+  <g filter="url(#shadow)">
+    <rect x="244" y="304" width="536" height="396" rx="96" fill="url(#wallet)"/>
+    <rect x="244" y="304" width="536" height="396" rx="96" fill="none" stroke="#C7DBFF" stroke-width="10"/>
+  </g>
+
+  <rect x="296" y="246" width="432" height="108" rx="46" fill="#D9E9FF"/>
+  <rect x="320" y="420" width="392" height="30" rx="15" fill="#B4CBF7" fill-opacity="0.70"/>
+  <rect x="320" y="474" width="306" height="30" rx="15" fill="#B4CBF7" fill-opacity="0.55"/>
+
+  <circle cx="690" cy="564" r="34" fill="#FFD54F"/>
+  <circle cx="754" cy="328" r="18" fill="#E53935" fill-opacity="0.88"/>
+</svg>

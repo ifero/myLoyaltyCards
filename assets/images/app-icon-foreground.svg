@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" role="img" aria-label="myLoyaltyCards adaptive icon foreground">
+  <defs>
+    <linearGradient id="walletGradient" x1="286" y1="336" x2="738" y2="730" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#FFFFFF" stop-opacity="0.98"/>
+      <stop offset="1" stop-color="#E9F1FF" stop-opacity="0.95"/>
+    </linearGradient>
+    <filter id="walletShadow" x="224" y="220" width="576" height="576" color-interpolation-filters="sRGB" filterUnits="userSpaceOnUse">
+      <feDropShadow dx="0" dy="16" stdDeviation="14" flood-color="#0B2B63" flood-opacity="0.24"/>
+    </filter>
+  </defs>
+
+  <g filter="url(#walletShadow)">
+    <rect x="276" y="332" width="472" height="348" rx="82" fill="url(#walletGradient)"/>
+    <rect x="276" y="332" width="472" height="348" rx="82" fill="none" stroke="#C9DCFF" stroke-width="10"/>
+  </g>
+
+  <rect x="324" y="278" width="374" height="92" rx="40" fill="#D9E9FF"/>
+  <rect x="344" y="440" width="334" height="24" rx="12" fill="#B4CBF7" fill-opacity="0.65"/>
+  <rect x="344" y="484" width="258" height="24" rx="12" fill="#B4CBF7" fill-opacity="0.52"/>
+
+  <circle cx="656" cy="566" r="30" fill="#FFD54F"/>
+  <circle cx="722" cy="348" r="16" fill="#E2231A" fill-opacity="0.8"/>
+</svg>

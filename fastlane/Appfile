@@ -1,2 +1,3 @@
 app_identifier("com.iferoporefi.myloyaltycards")
 apple_id("andreapacino@me.com")
+package_name("com.iferoporefi.myloyaltycards")

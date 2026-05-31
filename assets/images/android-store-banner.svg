@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 500" role="img" aria-label="myLoyaltyCards Android store banner">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1024" y2="500" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#1A73E8"/>
+      <stop offset="1" stop-color="#0D47A1"/>
+    </linearGradient>
+    <linearGradient id="wallet" x1="590" y1="120" x2="890" y2="390" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#FFFFFF"/>
+      <stop offset="1" stop-color="#EAF2FF"/>
+    </linearGradient>
+    <filter id="shadow" x="520" y="90" width="410" height="360" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+      <feDropShadow dx="0" dy="16" stdDeviation="12" flood-color="#082A67" flood-opacity="0.28"/>
+    </filter>
+  </defs>
+
+  <rect width="1024" height="500" rx="36" fill="url(#bg)"/>
+  <circle cx="130" cy="108" r="90" fill="#8CC0FF" fill-opacity="0.20"/>
+  <circle cx="928" cy="430" r="100" fill="#7BAFFF" fill-opacity="0.18"/>
+
+  <text x="72" y="196" fill="#FFFFFF" font-size="72" font-family="Avenir Next, SF Pro Display, Arial" font-weight="700">myLoyaltyCards</text>
+  <text x="72" y="252" fill="#DDEBFF" font-size="34" font-family="Avenir Next, SF Pro Display, Arial" font-weight="500">All your loyalty cards, one wallet.</text>
+
+  <g filter="url(#shadow)">
+    <rect x="560" y="130" width="320" height="236" rx="58" fill="url(#wallet)"/>
+    <rect x="560" y="130" width="320" height="236" rx="58" fill="none" stroke="#C7DBFF" stroke-width="8"/>
+  </g>
+  <rect x="590" y="96" width="260" height="64" rx="28" fill="#D9E9FF"/>
+  <rect x="604" y="202" width="236" height="18" rx="9" fill="#B4CBF7" fill-opacity="0.72"/>
+  <rect x="604" y="236" width="186" height="18" rx="9" fill="#B4CBF7" fill-opacity="0.56"/>
+  <circle cx="826" cy="286" r="21" fill="#FFD54F"/>
+  <circle cx="868" cy="146" r="11" fill="#E53935" fill-opacity="0.88"/>
+</svg>

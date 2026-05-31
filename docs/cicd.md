@@ -162,7 +162,7 @@ Triggers:
 Jobs:
 
 - `ios-testflight-beta` builds and uploads the iOS app to TestFlight using `bundle exec fastlane ios beta`
-- `android-beta` builds the Android beta artifact using `bundle exec fastlane android beta`; it does not currently upload to Play Console.
+- `android-beta` builds and uploads the Android AAB to the Play Console beta track using `bundle exec fastlane android beta`.
 
 Notes:
 
@@ -318,6 +318,11 @@ CI environment variables used for `match` and signing:
 For Android uploads, the CI secrets are:
 
 - `ANDROID_PACKAGE_NAME`
+- `PLAY_STORE_API_KEY` (service account JSON content)
+- `ANDROID_KEYSTORE_BASE64`
+- `ANDROID_KEYSTORE_PASSWORD`
+- `ANDROID_KEY_ALIAS`
+- `ANDROID_KEY_PASSWORD`
 - `PLAY_STORE_API_KEY`
 - `EXPO_PUBLIC_SUPABASE_URL`
 - `EXPO_PUBLIC_SUPABASE_KEY`
