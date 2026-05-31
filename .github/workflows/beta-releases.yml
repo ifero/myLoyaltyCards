@@ -95,5 +95,14 @@ jobs:
         with:
           ruby-version: '4.0.5'
           bundler-cache: true
+      - name: Tune Gradle memory for CI
+        run: |
+          mkdir -p "$HOME/.gradle"
+          cat > "$HOME/.gradle/gradle.properties" <<'EOF'
+          org.gradle.jvmargs=-Xmx4096m -XX:MaxMetaspaceSize=1536m -Dfile.encoding=UTF-8
+          kotlin.daemon.jvmargs=-Xmx2048m,-XX:MaxMetaspaceSize=768m
+          org.gradle.workers.max=2
+          org.gradle.daemon=false
+          EOF
       - name: Build Android Beta (RC)
         run: bundle exec fastlane android beta
