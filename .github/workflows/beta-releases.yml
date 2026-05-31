@@ -84,12 +84,12 @@ jobs:
         run: |
           echo "EXPO_PUBLIC_SUPABASE_URL=${{ secrets.EXPO_PUBLIC_SUPABASE_URL }}" >> .env
           echo "EXPO_PUBLIC_SUPABASE_KEY=${{ secrets.EXPO_PUBLIC_SUPABASE_KEY }}" >> .env
+      - name: Prebuild native projects
+        run: npx expo prebuild --platform android
       - name: Decode Android release keystore
         run: |
           mkdir -p "$(dirname "$ANDROID_KEYSTORE_PATH")"
           echo "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" | base64 --decode > "$ANDROID_KEYSTORE_PATH"
-      - name: Prebuild native projects
-        run: npx expo prebuild --platform android
       - name: Set up Ruby
         uses: ruby/setup-ruby@v1
         with:
