@@ -61,7 +61,7 @@ jobs:
           mkdir -p "$HOME/.gradle"
           cat > "$HOME/.gradle/gradle.properties" <<'EOF'
           org.gradle.jvmargs=-Xmx4096m -XX:MaxMetaspaceSize=1536m -Dfile.encoding=UTF-8
-          kotlin.daemon.jvmargs=-Xmx2048m,-XX:MaxMetaspaceSize=768m
+          kotlin.daemon.jvmargs=-Xmx2048m -XX:MaxMetaspaceSize=768m
           org.gradle.workers.max=2
           org.gradle.daemon=false
           EOF

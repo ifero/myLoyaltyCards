@@ -56,7 +56,7 @@ jobs:
         run: bundle exec fastlane ios beta
 
   android-beta:
-    name: Build Android Beta (RC)
+    name: Build Android Alpha (RC)
     runs-on: ubuntu-latest
     env:
       ANDROID_PACKAGE_NAME: ${{ secrets.ANDROID_PACKAGE_NAME }}
@@ -100,9 +100,9 @@ jobs:
           mkdir -p "$HOME/.gradle"
           cat > "$HOME/.gradle/gradle.properties" <<'EOF'
           org.gradle.jvmargs=-Xmx4096m -XX:MaxMetaspaceSize=1536m -Dfile.encoding=UTF-8
-          kotlin.daemon.jvmargs=-Xmx2048m,-XX:MaxMetaspaceSize=768m
+          kotlin.daemon.jvmargs=-Xmx2048m -XX:MaxMetaspaceSize=768m
           org.gradle.workers.max=2
           org.gradle.daemon=false
           EOF
-      - name: Build Android Beta (RC)
+      - name: Build Android Alpha (RC)
         run: bundle exec fastlane android beta
