@@ -7,7 +7,7 @@
 | **Story ID** | 5-8                        |
 | **Epic**     | 5 - Apple Watch App        |
 | **Sprint**   | Next sprint                |
-| **Status**   | Ready for dev              |
+| **Status**   | Review                     |
 | **Priority** | Medium                     |
 | **Estimate** | 3 points (1–2 days)        |
 | **Owners**   | PM: Ifero · Dev: — · QA: — |
@@ -34,12 +34,13 @@ As a developer I want the watch catalogue code generator to run incrementally so
 
 ## Implementation Tasks
 
-- [ ] Add deterministic input hashing to the catalogue generator.
-- [ ] Add `watch-ios/xcfilelists/generate-catalogue-inputs.xcfilelist` and `...-outputs.xcfilelist` for build-phase incremental skip.
-- [ ] Update `watch-ios/Scripts/generate-catalogue.swift` (or a wrapper) to short-circuit when inputs are unchanged and still write the generated file when inputs change.
-- [ ] Add `yarn check:catalogue-generated` to compare generated output with the committed artifact.
-- [ ] Add unit and integration tests for input hashing, regeneration on change, and stale-output detection.
-- [ ] Add CI coverage for the `check:catalogue-generated` job.
+- [x] Add deterministic input hashing to the catalogue generator.
+- [x] Add `watch-ios/xcfilelists/generate-catalogue-inputs.xcfilelist` and `...-outputs.xcfilelist` for build-phase incremental skip.
+- [x] Update `watch-ios/Scripts/generate-catalogue.swift` (or a wrapper) to short-circuit when inputs are unchanged and still write the generated file when inputs change.
+- [x] Add `yarn check:catalogue-generated` to compare generated output with the committed artifact.
+- [x] Add unit and integration tests for input hashing, regeneration on change, and stale-output detection.
+- [x] Add CI coverage for the `check:catalogue-generated` job.
+- [x] Open PR for code review: https://github.com/ifero/myLoyaltyCards/pull/117
 
 ## Definition of Done
 
