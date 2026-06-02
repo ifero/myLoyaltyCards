@@ -56,7 +56,8 @@ expo-env.d.ts
 package-lock.json
 
 # WatchOS (targets/watch — source managed by @bacons/apple-targets)
-targets/watch/Generated
+targets/watch/Generated/*
+!targets/watch/Generated/Brands.swift
 targets/watch/generated.entitlements
 
 # WatchOS build artifacts (watch-ios/ — only Scripts/, Tests/, UITests/ are source)
