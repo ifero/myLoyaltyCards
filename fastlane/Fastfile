@@ -263,6 +263,7 @@ platform :android do
       package_name: package_name,
       json_key_data: json_key_data,
       track: "alpha",
+      release_status: "draft",
       aab: "android/app/build/outputs/bundle/release/app-release.aab",
       skip_upload_metadata: true,
       skip_upload_changelogs: true,
