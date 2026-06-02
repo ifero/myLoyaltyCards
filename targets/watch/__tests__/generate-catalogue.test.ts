@@ -15,14 +15,14 @@ const generatedFile = path.join(generatedDir, 'Brands.swift');
 const cataloguePath = path.join(repoRoot, 'catalogue', 'italy.json');
 
 const runGenerator = (env?: Record<string, string | undefined>) => {
-  execFileSync('swift', [scriptPath], {
+  return execFileSync('xcrun', ['--sdk', 'macosx', 'swift', scriptPath], {
     cwd: repoRoot,
     env: {
       ...process.env,
       ...env
     },
     stdio: 'pipe'
-  });
+  }).toString('utf8');
 };
 
 describe('watchOS catalogue generation', () => {
@@ -44,6 +44,69 @@ describe('watchOS catalogue generation', () => {
       expect(generated).toContain(`id: "${brand.id}"`);
       expect(generated).toContain(`logoUrl: "assets/images/brands/${brand.logo}.svg"`);
     }
+  });
+
+  it('skips regeneration when inputs are unchanged', () => {
+    runGenerator();
+    const firstContents = fs.readFileSync(generatedFile, 'utf8');
+
+    const secondOutput = runGenerator();
+    expect(secondOutput).toContain('Inputs unchanged; skipping catalogue generation.');
+
+    const secondContents = fs.readFileSync(generatedFile, 'utf8');
+    expect(secondContents).toBe(firstContents);
+  });
+
+  it('regenerates when the catalogue input changes', () => {
+    runGenerator();
+    const beforeContents = fs.readFileSync(generatedFile, 'utf8');
+
+    const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'watch-catalogue-'));
+    const customCataloguePath = path.join(tempDir, 'catalogue.json');
+    const fixture = {
+      version: '2026-02-13',
+      brands: [
+        {
+          id: 'brand-special',
+          logo: 'demo',
+          name: 'Special Brand',
+          aliases: ['Special']
+        }
+      ]
+    };
+
+    fs.writeFileSync(customCataloguePath, JSON.stringify(fixture), 'utf8');
+
+    runGenerator({ CATALOGUE_JSON_PATH: customCataloguePath });
+    const afterContents = fs.readFileSync(generatedFile, 'utf8');
+
+    expect(afterContents).not.toBe(beforeContents);
+    expect(afterContents).toContain('id: "brand-special"');
+    expect(afterContents).toContain('logoUrl: "assets/images/brands/demo.svg"');
+  });
+
+  it('fails check mode when the committed generated output is stale', () => {
+    fs.mkdirSync(generatedDir, { recursive: true });
+    fs.writeFileSync(generatedFile, '// STALE', 'utf8');
+
+    let thrown: Error | null = null;
+    try {
+      runGenerator({ CATALOGUE_GENERATOR_CHECK: '1' });
+    } catch (error) {
+      thrown = error as Error;
+    }
+
+    expect(thrown).not.toBeNull();
+    expect(thrown).toHaveProperty('status', 1);
+    const nodeError = thrown as { stderr?: Buffer; message?: string };
+    const errorOutput = nodeError.stderr?.toString() || nodeError.message || '';
+    expect(errorOutput).toContain('Generated catalogue differs from committed Brands.swift');
+  });
+
+  it('passes check mode when the generated output is up to date', () => {
+    runGenerator();
+    const output = runGenerator({ CATALOGUE_GENERATOR_CHECK: '1' });
+    expect(output).toContain('Generated catalogue is up to date.');
   });
 
   // NOTE: The 'configures Xcode build integration' test was removed because the Xcode project

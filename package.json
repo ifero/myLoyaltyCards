@@ -23,6 +23,7 @@
     "test:watchos": "yarn watch:build",
     "test:all": "yarn test && yarn test:watchos",
     "watch:catalogue:generate": "xcrun --sdk macosx swift watch-ios/Scripts/generate-catalogue.swift",
+    "check:catalogue-generated": "xcrun --sdk macosx swift watch-ios/Scripts/generate-catalogue.swift --check",
     "watch:prebuild": "npx expo prebuild --clean --platform ios",
     "prewatch:build": "node scripts/ensure-expo-sqlite-vendor-files.mjs && yarn watch:catalogue:generate",
     "watch:build": "./scripts/watch-build.sh",

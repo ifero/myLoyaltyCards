@@ -71,6 +71,11 @@ jobs:
       - name: Generate watchOS catalogue (Brands.swift)
         run: xcrun --sdk macosx swift watch-ios/Scripts/generate-catalogue.swift
 
+      - name: Check generated watchOS catalogue
+        run: yarn check:catalogue-generated
+        env:
+          CI: true
+
       - name: Build watchOS target (xcodebuild)
         run: yarn watch:build:ci
         env:
