@@ -1,0 +1,78 @@
+name: Mark story done after merge
+
+# When a PR is merged, this reads the story it references and commits the status
+# update (sprint-status.yaml + the story file) straight to the default branch.
+# The commit is tagged [skip ci] so it does not re-trigger any pipelines.
+# Works for fork PRs too, since the commit lands on the base repo's branch.
+
+on:
+  pull_request:
+    types: [closed]
+
+permissions:
+  contents: write # push the status commit to the default branch
+  pull-requests: write # comment on the merged PR
+
+# Serialize so concurrent merges don't race on the default branch.
+concurrency:
+  group: mark-story-done-after-merge
+  cancel-in-progress: false
+
+jobs:
+  mark-done:
+    if: github.event.pull_request.merged == true
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout default branch
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.base.ref }}
+          # GITHUB_TOKEN is enough for an unprotected default branch. If the branch
+          # is protected against direct pushes, provide a STORY_BOT_TOKEN secret
+          # (PAT or App token) that is allowed to bypass the rule.
+          token: ${{ secrets.STORY_BOT_TOKEN || secrets.GITHUB_TOKEN }}
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+
+      - name: Mark story done in sprint-status & story file
+        env:
+          PR_TITLE: ${{ github.event.pull_request.title }}
+          PR_BODY: ${{ github.event.pull_request.body }}
+        run: node scripts/mark-story-done.mjs
+
+      - name: Commit & push status update
+        id: commit
+        run: |
+          if [ -z "$(git status --porcelain -- docs/sprint-artifacts)" ]; then
+            echo "No story status changes to commit."
+            echo "committed=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add docs/sprint-artifacts/sprint-status.yaml docs/sprint-artifacts/stories
+          git commit -m "chore(sprint): mark story done after merge [skip ci]"
+          git push origin "HEAD:${{ github.event.pull_request.base.ref }}"
+          echo "committed=true" >> "$GITHUB_OUTPUT"
+
+      - name: Comment on PR
+        if: always()
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR: ${{ github.event.pull_request.number }}
+          OUTCOME: ${{ steps.commit.outcome }}
+          COMMITTED: ${{ steps.commit.outputs.committed }}
+        run: |
+          if [ "$OUTCOME" = "success" ] && [ "$COMMITTED" = "true" ]; then
+            gh pr comment "$PR" \
+              --body "✅ Story marked **done** on \`${{ github.event.pull_request.base.ref }}\` (\`sprint-status.yaml\` + story file) in a \`[skip ci]\` follow-up commit."
+          elif [ "$OUTCOME" = "success" ]; then
+            gh pr comment "$PR" \
+              --body "ℹ️ No story status change applied — either it was already \`done\`, or no story could be matched. Link a \`docs/sprint-artifacts/stories/<id>.md\` story in the PR body or end the title with \`(Story X.Y)\`."
+          else
+            gh pr comment "$PR" \
+              --body "⚠️ Could not push the story status update to \`${{ github.event.pull_request.base.ref }}\`. If the branch is protected against direct pushes, add a \`STORY_BOT_TOKEN\` secret allowed to bypass it. See the workflow run logs."
+          fi
