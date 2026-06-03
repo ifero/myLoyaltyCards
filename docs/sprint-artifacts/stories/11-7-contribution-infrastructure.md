@@ -1,7 +1,7 @@
 # Story 11-7: Open-Source Contribution Infrastructure & Story-Status Automation
 
 **Epic:** 11 — CI/CD & Quality Gates
-**Status:** review
+**Status:** done
 **Sprint:** 14
 **Priority:** Low — developer-experience / open-source readiness follow-up
 **Type:** Follow-up (added after Epic 11 closed; `epic-11` remains `done`, same pattern as Story 1-6 under Epic 1)

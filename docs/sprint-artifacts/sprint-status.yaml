@@ -340,7 +340,7 @@ development_status:
   11-4-rollback-on-failed-deploy: cancelled # rollback doesn't apply to mobile app store binaries
   11-5-document-cicd-pipeline: done # depends on 11-6
   11-6-watchos-testflight-pipeline: done # embed watchOS in iOS build via @bacons/apple-targets
-  11-7-contribution-infrastructure: review # Sprint 14 follow-up — open-source docs, GitHub templates & story-status automation (epic-11 stays done)
+  11-7-contribution-infrastructure: done # Sprint 14 follow-up — open-source docs, GitHub templates & story-status automation (epic-11 stays done)
   epic-11-retrospective: done
 
   # Epic 12: App-Wide Design Overhaul (Figma) ✅ COMPLETE
