@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: 📖 Read the Contributing Guide first
+    url: https://github.com/ifero/myLoyaltyCards/blob/main/CONTRIBUTING.md
+    about: This project is spec-first (BMAD SDD). See how features, fixes, and catalogue entries flow before opening an issue.
+  - name: 💬 Questions & Discussions
+    url: https://github.com/ifero/myLoyaltyCards/discussions
+    about: Have a question or want to discuss an idea before it becomes a feature request? Start here.

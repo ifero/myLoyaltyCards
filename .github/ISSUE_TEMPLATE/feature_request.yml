@@ -1,0 +1,65 @@
+name: 💡 Feature Request
+description: Suggest an idea or improvement.
+title: '[Feature]: '
+labels: ['enhancement', 'needs-triage']
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for sharing an idea! 💡
+
+        ℹ️ **How features work here:** myLoyaltyCards is spec-first (BMAD SDD). New capabilities enter through **planning** (PRD / epic) before a story is created and implemented — so this request is the start of a conversation, **not** a direct PR. See the [Contributing Guide](https://github.com/ifero/myLoyaltyCards/blob/main/CONTRIBUTING.md#the-bmad-sdd-methodology).
+
+  - type: checkboxes
+    id: preflight
+    attributes:
+      label: Pre-flight checks
+      options:
+        - label: I searched existing issues and discussions and this isn't already proposed.
+          required: true
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: What problem does this solve?
+      description: Focus on the user problem / job-to-be-done, not the implementation.
+      placeholder: "When I'm at the checkout, I can't ..."
+    validations:
+      required: true
+
+  - type: textarea
+    id: solution
+    attributes:
+      label: Proposed solution
+      description: What would you like to happen?
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+    validations:
+      required: false
+
+  - type: dropdown
+    id: platform
+    attributes:
+      label: Which platform(s) would this affect?
+      multiple: true
+      options:
+        - iOS (phone)
+        - Android (phone)
+        - Apple Watch (watchOS)
+        - Wear OS (planned)
+        - All / cross-platform
+    validations:
+      required: false
+
+  - type: textarea
+    id: mockups
+    attributes:
+      label: Mockups / screenshots / references
+      description: Drag & drop any sketches, screenshots, or links that illustrate the idea.
+    validations:
+      required: false
