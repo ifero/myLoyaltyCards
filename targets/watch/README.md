@@ -121,5 +121,8 @@ The watchOS app is **automatically embedded** in the iOS archive. No separate bu
 
 - **Companion-only**: no card creation or editing on watch
 - **Sync**: the iPhone publishes the full card list via `WCSession.updateApplicationContext` (last-write-wins snapshot). `WatchSessionManager` (in this folder) activates `WCSession`, receives the snapshot, and upserts into SwiftData — `CardListView`'s `@Query` then renders it. No App Group is needed because everything goes through `WatchConnectivity`.
+- **Complication support**: implemented with ClockKit in `ComplicationProvider.swift` using `CLKComplicationFamilyCircularSmall` and `CLKComplicationFamilyModularLarge`. Tap opens the watch app to the default card list flow.
+- **Complication fallback**: when no synced cards exist, the complication shows a localized "No cards" state and continues refreshing on the hourly timeline cadence.
+- **Watch face limitations**: only faces exposing Circular Small or Modular Large slots will show this complication family set.
 - **No React Native**: the watch app is pure Swift/SwiftUI; the `@bacons/apple-targets` plugin just handles Xcode project generation
-- **Future targets**: adding watch complications or other Apple targets follows the same pattern — create `targets/<name>/expo-target.config.js` and add source files
+- **Future targets**: adding additional Apple targets follows the same pattern — create `targets/<name>/expo-target.config.js` and add source files

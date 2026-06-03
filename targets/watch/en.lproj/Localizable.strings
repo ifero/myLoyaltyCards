@@ -4,6 +4,7 @@
 "watch.cards.empty.subtitle" = "Add cards on your iPhone - they sync here automatically.";
 "watch.cards.empty.accessibility" = "No cards yet. Add cards on your iPhone, they sync here automatically.";
 "watch.cards.fallback_name" = "Card";
+"watch.cards.unavailable" = "Card unavailable";
 "watch.card_row.accessibility_format" = "Card, %@";
 "watch.debug.import_sample_cards" = "Import sample cards";
 "watch.barcode.accessibility.image_format" = "Barcode for %@";
@@ -11,3 +12,7 @@
 "watch.complication.accessibility.card_format" = "Loyalty card: %@";
 "watch.complication.display_name" = "Loyalty Card";
 "watch.complication.description" = "Shows your most-used loyalty card.";
+"watch.complication.no_cards" = "No cards";
+"watch.complication.no_cards.short" = "--";
+"watch.complication.status.ready" = "Ready to scan";
+"watch.complication.status.no_cards" = "Sync cards from iPhone";

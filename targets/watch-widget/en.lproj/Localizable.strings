@@ -1,0 +1,12 @@
+"watch.widget.complication.entry.open_app.title" = "Open app";
+"watch.widget.complication.entry.open_app.subtitle" = "myLoyaltyCards";
+"watch.widget.complication.entry.choose_card.title" = "Choose card";
+"watch.widget.complication.entry.choose_card.subtitle" = "Edit complication to choose a card";
+"watch.widget.complication.entry.sync.subtitle" = "Sync cards from iPhone";
+"watch.widget.complication.entry.unavailable.title" = "Card unavailable";
+"watch.widget.complication.entry.unavailable.subtitle" = "Choose another card";
+"watch.widget.complication.entry.selected.subtitle" = "Selected card";
+"watch.widget.complication.inline.open" = "Open myLoyaltyCards";
+"watch.widget.complication.inline.card_format" = "Card: %@";
+"watch.widget.complication.recommendation.open_app" = "Open app";
+"watch.widget.complication.recommendation.show_format" = "Show %@";
