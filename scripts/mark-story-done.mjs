@@ -17,13 +17,13 @@
 //   node scripts/mark-story-done.mjs "Story 5.9"     # by reference
 //   DRY_RUN=1 node scripts/mark-story-done.mjs 5-9    # preview only
 
-import { readFileSync, writeFileSync, existsSync, readdirSync } from 'node:fs';
+import { readFileSync, writeFileSync, existsSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { resolveStorySlugs, STORIES_DIR } from './lib/story-refs.mjs';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const SPRINT_STATUS = join(ROOT, 'docs/sprint-artifacts/sprint-status.yaml');
-const STORIES_DIR = join(ROOT, 'docs/sprint-artifacts/stories');
 const DRY_RUN = process.env.DRY_RUN === '1' || process.env.DRY_RUN === 'true';
 
 const log = (...a) => console.log('[mark-story-done]', ...a);
@@ -35,45 +35,6 @@ const write = (file, contents) => {
     return;
   }
   writeFileSync(file, contents);
-};
-
-const listStories = () =>
-  existsSync(STORIES_DIR) ? readdirSync(STORIES_DIR).filter((f) => f.endsWith('.md')) : [];
-
-const findStoryByPrefix = (prefix) => {
-  const files = listStories();
-  if (files.includes(`${prefix}.md`)) return prefix;
-  const hit = files.find((f) => f.startsWith(`${prefix}-`));
-  return hit ? hit.replace(/\.md$/, '') : null;
-};
-
-const resolveSlugs = (text) => {
-  const slugs = new Set();
-  const trimmed = text.trim();
-
-  // 0) exact slug passed directly
-  if (
-    /^[A-Za-z0-9][A-Za-z0-9._-]*$/.test(trimmed) &&
-    existsSync(join(STORIES_DIR, `${trimmed}.md`))
-  ) {
-    return [trimmed];
-  }
-
-  // 1) explicit story-file paths: stories/<slug>.md
-  const pathRe = /stories\/([A-Za-z0-9][A-Za-z0-9._-]*?)\.md/g;
-  let m;
-  while ((m = pathRe.exec(text))) slugs.add(m[1]);
-
-  // 2) fall back to a "Story X.Y" / "X-Y" reference resolved against the stories dir
-  if (slugs.size === 0) {
-    const numRe = /(?:story\s+)?(\d+)[.-](\d+[a-z]?)/gi;
-    while ((m = numRe.exec(text))) {
-      const found = findStoryByPrefix(`${m[1]}-${m[2]}`);
-      if (found) slugs.add(found);
-    }
-  }
-
-  return [...slugs];
 };
 
 const markStoryFile = (slug) => {
@@ -121,7 +82,7 @@ const input =
   process.argv.slice(2).join(' ').trim() ||
   `${process.env.PR_TITLE ?? ''}\n${process.env.PR_BODY ?? ''}`;
 
-const slugs = resolveSlugs(input);
+const slugs = resolveStorySlugs(input);
 
 if (slugs.length === 0) {
   log('No story reference found in input — nothing to do.');
