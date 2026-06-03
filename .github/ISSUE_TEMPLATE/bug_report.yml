@@ -1,0 +1,94 @@
+name: 🐛 Bug Report
+description: Report something that isn't working so we can fix it.
+title: '[Bug]: '
+labels: ['bug', 'needs-triage']
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to report a bug! 🙏
+        Please search [existing issues](https://github.com/ifero/myLoyaltyCards/issues) first to avoid duplicates.
+
+  - type: checkboxes
+    id: preflight
+    attributes:
+      label: Pre-flight checks
+      options:
+        - label: I searched existing issues and this is not a duplicate.
+          required: true
+        - label: I can reproduce this on the latest version of the app.
+          required: false
+
+  - type: dropdown
+    id: platform
+    attributes:
+      label: Platform(s)
+      description: Where does the bug happen?
+      multiple: true
+      options:
+        - iOS (phone)
+        - Android (phone)
+        - Apple Watch (watchOS)
+        - Other / not sure
+    validations:
+      required: true
+
+  - type: input
+    id: app-version
+    attributes:
+      label: App version
+      placeholder: e.g. 1.0.0
+    validations:
+      required: true
+
+  - type: input
+    id: device-os
+    attributes:
+      label: Device & OS version
+      placeholder: e.g. iPhone 15 Pro · iOS 18.2 — Apple Watch Series 9 · watchOS 11
+    validations:
+      required: false
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: What did you expect to happen?
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: What actually happened?
+    validations:
+      required: true
+
+  - type: textarea
+    id: repro
+    attributes:
+      label: Steps to reproduce
+      value: |
+        1.
+        2.
+        3.
+    validations:
+      required: true
+
+  - type: textarea
+    id: media
+    attributes:
+      label: Screenshots / screen recording
+      description: |
+        Drag & drop images or videos here — they help a lot.
+        📍 For Apple Watch sync issues, Console.app logs from a physical device are especially valuable (watch sync must be verified on a real device, not just by code review).
+    validations:
+      required: false
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Relevant logs
+      description: Paste any console output or stack traces.
+      render: shell
+    validations:
+      required: false

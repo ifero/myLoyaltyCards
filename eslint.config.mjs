@@ -160,6 +160,18 @@ export default [
     },
   },
   {
+    // Node scripts (build/CI tooling): the Node runtime provides process, console,
+    // etc. Mirror the TS rule choice and let the runtime/types handle undefined refs.
+    files: ['scripts/**/*.{mjs,js}'],
+    languageOptions: {
+      ecmaVersion: 'latest',
+      sourceType: 'module',
+    },
+    rules: {
+      'no-undef': 'off',
+    },
+  },
+  {
     ignores: [
       'node_modules/**',
       '.expo/**',

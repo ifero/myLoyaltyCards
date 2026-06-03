@@ -1,5 +1,5 @@
 # generated: 2026-01-03
-# updated: 2026-05-24
+# updated: 2026-06-04
 # project: myLoyaltyCards
 # tracking_system: file-system
 # story_location: docs/sprint-artifacts
@@ -35,7 +35,7 @@
 # - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
 
 generated: 2026-01-03
-updated: 2026-05-24
+updated: 2026-06-04
 project: myLoyaltyCards
 tracking_system: file-system
 story_location: docs/sprint-artifacts
@@ -164,6 +164,7 @@ current_sprint:
     - 15-2-italian-language-in-app
     - 14-1-household-collaboration
     - 6-18a-otp-verification-followup
+    - 11-7-contribution-infrastructure
   waves:
     wave_1:
       stories: [5-7, 5-8, 2-9, 2-10, 5-10, 15-2, 6-18a]
@@ -171,6 +172,9 @@ current_sprint:
     wave_2:
       stories: [14-1]
       note: 'Begin household collaboration discovery and alignment once core sprint capacity is confirmed.'
+    wave_3:
+      stories: [11-7]
+      note: 'Developer-experience follow-up: open-source contribution docs (README, CONTRIBUTING, LICENSE), GitHub PR/issue templates, and merge-time story-status automation. Maps to NFR-M3 and NFR-M5.'
   notes: |
     Sprint 14 has started. The focus is on completing Apple Watch reliability work, Italian in-app readiness, beginning household collaboration discovery, and absorbing the OTP verification follow-up bugfix discovered after Story 6.18 shipped.
     On 2026-05-24, two additional bugfix planning stories were added and refined to ready-for-dev: Story 2.10 (phone barcode/QR readability + quiet-zone padding) and Story 5.10 (watch barcode legibility + list density polish).
@@ -336,6 +340,7 @@ development_status:
   11-4-rollback-on-failed-deploy: cancelled # rollback doesn't apply to mobile app store binaries
   11-5-document-cicd-pipeline: done # depends on 11-6
   11-6-watchos-testflight-pipeline: done # embed watchOS in iOS build via @bacons/apple-targets
+  11-7-contribution-infrastructure: review # Sprint 14 follow-up — open-source docs, GitHub templates & story-status automation (epic-11 stays done)
   epic-11-retrospective: done
 
   # Epic 12: App-Wide Design Overhaul (Figma) ✅ COMPLETE

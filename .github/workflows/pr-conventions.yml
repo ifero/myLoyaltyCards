@@ -1,0 +1,34 @@
+name: PR conventions
+
+# Fails the PR if it doesn't follow the machine-checkable rules in CONTRIBUTING.md:
+# Conventional Commit title, branch naming, and a spec-first story reference for
+# code changes (docs:/chore: titles and catalogue PRs are exempt).
+
+on:
+  pull_request:
+    types: [opened, edited, synchronize, reopened, ready_for_review]
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    # Skip drafts and bot PRs (e.g. Dependabot).
+    if: github.event.pull_request.draft == false && github.event.pull_request.user.type != 'Bot'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+
+      - name: Validate PR against CONTRIBUTING rules
+        env:
+          PR_TITLE: ${{ github.event.pull_request.title }}
+          PR_BODY: ${{ github.event.pull_request.body }}
+          HEAD_REF: ${{ github.head_ref }}
+          PR_LABELS: ${{ join(github.event.pull_request.labels.*.name, ',') }}
+        run: node scripts/check-pr-conventions.mjs
