@@ -50,6 +50,11 @@ This work directly satisfies **NFR-M3** (_"project structure must be organized f
 - [x] On PR **merge**, the story referenced by the PR is set to `done` in **both** `sprint-status.yaml` and the story file, committed to the default branch with `[skip ci]`.
 - [x] Backed by `scripts/mark-story-done.mjs` (resolves the story from the PR body path or a `(Story X.Y)` title; idempotent; supports `DRY_RUN=1`) and `.github/workflows/mark-story-done.yml`.
 
+### AC6: CI enforces the contribution rules
+
+- [x] A CI check fails any PR that violates the machine-checkable CONTRIBUTING rules: a non-Conventional-Commit title, an off-convention branch name, or a code change with no story reference (`docs:`/`chore:` titles and catalogue PRs are exempt).
+- [x] Implemented as `scripts/check-pr-conventions.mjs` (sharing the story resolver in `scripts/lib/story-refs.mjs`) and run by `.github/workflows/pr-conventions.yml`.
+
 ## Tasks / Subtasks
 
 - [x] **T1 (AC1):** Rewrite `README.md`.
@@ -57,6 +62,7 @@ This work directly satisfies **NFR-M3** (_"project structure must be organized f
 - [x] **T3 (AC3):** Add `LICENSE` (MIT) and link it from the README.
 - [x] **T4 (AC4):** Add the PR template, three issue forms, and `config.yml`; create the labels.
 - [x] **T5 (AC5):** Add `scripts/mark-story-done.mjs` + `.github/workflows/mark-story-done.yml`; verify with a dry-run and a real run + revert.
+- [x] **T6 (AC6):** Extract the shared story resolver (`scripts/lib/story-refs.mjs`), add `scripts/check-pr-conventions.mjs` and `.github/workflows/pr-conventions.yml`; verify pass/fail scenarios locally.
 
 ## Tech Notes
 

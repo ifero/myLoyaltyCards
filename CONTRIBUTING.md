@@ -236,11 +236,14 @@ feat(watch): render barcode complication on the watch face (Story 5.9)
 
 Quality is enforced at three levels. **All must pass — bypassing them is forbidden.**
 
-| Gate           | When                      | What runs                                                 |
-| -------------- | ------------------------- | --------------------------------------------------------- |
-| **pre-commit** | `git commit`              | `lint-staged` → ESLint `--fix` + Prettier on staged files |
-| **pre-push**   | `git push`                | `yarn typecheck` → `yarn lint` → `yarn test`              |
-| **CI**         | every PR & push to `main` | `lint` → `typecheck` → `test:coverage` (+ watchOS tests)  |
+| Gate                    | When                      | What runs                                                                            |
+| ----------------------- | ------------------------- | ------------------------------------------------------------------------------------ |
+| **pre-commit**          | `git commit`              | `lint-staged` → ESLint `--fix` + Prettier on staged files                            |
+| **pre-push**            | `git push`                | `yarn typecheck` → `yarn lint` → `yarn test`                                         |
+| **CI — quality**        | every PR & push to `main` | `lint` → `typecheck` → `test:coverage` (+ watchOS tests)                             |
+| **CI — PR conventions** | every PR                  | Conventional-Commit title, branch naming, and spec-first story link (see note below) |
+
+The **PR conventions** check ([`pr-conventions.yml`](.github/workflows/pr-conventions.yml)) fails the PR if the title isn't a Conventional Commit, the branch doesn't use an allowed prefix, or a **code change** references no story. `docs:`/`chore:` titles and catalogue PRs are exempt from the story requirement.
 
 🚫 **`--no-verify` is strictly forbidden** for both `git commit` and `git push`. If a hook fails:
 
