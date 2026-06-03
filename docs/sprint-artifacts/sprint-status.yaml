@@ -241,8 +241,8 @@ development_status:
   5-6-sync-cards-from-phone: done
   5-6a-watch-connectivity-payload-hardening: done # Sprint 13 — review completed, validation passed
   5-9-remove-userdefaults-fallback: done
-  5-7-create-watch-complication: ready-for-dev
-  5-8-incremental-catalogue-generation: review # PR 117 opened; implementation complete, awaiting code review
+  5-7-create-watch-complication: review
+  5-8-incremental-catalogue-generation: done # PR 117 opened; implementation complete, awaiting code review
   5-10-watch-barcode-legibility-list-density: done
   epic-5-retrospective: optional
 
