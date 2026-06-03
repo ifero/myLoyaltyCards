@@ -4,6 +4,17 @@
   <dict>
     <key>CFBundleDisplayName</key>
     <string>myLoyaltyCards</string>
+    <key>CFBundleURLTypes</key>
+    <array>
+      <dict>
+        <key>CFBundleURLName</key>
+        <string>com.iferoporefi.myloyaltycards.watch</string>
+        <key>CFBundleURLSchemes</key>
+        <array>
+          <string>myloyaltycards</string>
+        </array>
+      </dict>
+    </array>
     <key>CFBundleIcons</key>
     <dict>
       <key>CFBundlePrimaryIcon</key>

@@ -2,7 +2,6 @@ import Foundation
 import OSLog
 import SwiftData
 import WatchConnectivity
-import WidgetKit
 
 private let log = Logger(subsystem: "com.iferoporefi.myloyaltycards.watch", category: "WCSession")
 
@@ -138,6 +137,11 @@ final class WatchSessionManager: NSObject, WCSessionDelegate {
   }
 
   private func decodeArray(_ array: [Any]) -> [WatchCard]? {
+    if array.isEmpty {
+      // Empty snapshots are valid and should clear stale watch data.
+      return []
+    }
+
     var result: [WatchCard] = []
     for item in array {
       if let dict = item as? [String: Any], let card = decodeOne(dict) {
@@ -209,6 +213,20 @@ final class WatchSessionManager: NSObject, WCSessionDelegate {
     }
 
     try? context.save()
-    WidgetCenter.shared.reloadAllTimelines()
+    ComplicationSharedState.persistCards(cards)
+
+    let topCardName = cards
+      .sorted {
+        if $0.usageCount != $1.usageCount { return $0.usageCount > $1.usageCount }
+        if let lhsLast = $0.lastUsedAt, let rhsLast = $1.lastUsedAt, lhsLast != rhsLast {
+          return lhsLast > rhsLast
+        }
+        return $0.createdAt > $1.createdAt
+      }
+      .first?
+      .name
+
+    ComplicationSharedState.persistTopCardName(topCardName)
+    ComplicationReloader.reloadAllActiveComplications()
   }
 }
