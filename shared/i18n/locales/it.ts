@@ -90,18 +90,6 @@ export const it = {
       body: 'Conserva le carte su questo dispositivo salva le tue carte fedeltà solo su questo telefono. È veloce, privata e funziona offline. Sincronizza su tutti i dispositivi crea un account gratuito così le tue carte vengono salvate e sono disponibili su qualsiasi dispositivo su cui accedi. Puoi cambiare in qualsiasi momento dalle Impostazioni.',
       button: 'Capito'
     },
-    firstCardGuidance: {
-      screenAnnouncement: 'Schermata aggiungi la tua prima carta',
-      addCardAccessibilityLabel: 'Aggiungi carta',
-      settingsAccessibilityLabel: 'Impostazioni',
-      title: 'My Loyalty Cards',
-      heading: 'Nessuna carta ancora',
-      subtitle:
-        'Aggiungi la tua prima carta fedeltà per iniziare.\nCi vogliono solo pochi secondi!',
-      cta: 'Aggiungi la tua prima carta',
-      browseCatalogueAccessibilityLabel: 'Sfoglia il catalogo',
-      browseCatalogue: 'Sfoglia il catalogo'
-    },
     highlights: {
       screenAnnouncement: "Punti salienti dell'app",
       skipAccessibilityLabel: "Salta i punti salienti dell'app",

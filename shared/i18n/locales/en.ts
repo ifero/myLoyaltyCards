@@ -89,17 +89,6 @@ export const en = {
       body: "Keep cards on this device stores your loyalty cards only on this phone. It's fast, private, and works offline. Sync across all devices creates a free account so your cards are backed up and available on any device you sign in to. You can switch anytime from Settings.",
       button: 'Got it'
     },
-    firstCardGuidance: {
-      screenAnnouncement: 'Add your first card screen',
-      addCardAccessibilityLabel: 'Add card',
-      settingsAccessibilityLabel: 'Settings',
-      title: 'My Loyalty Cards',
-      heading: 'No cards yet',
-      subtitle: 'Add your first loyalty card to get started.\nIt only takes a few seconds!',
-      cta: 'Add Your First Card',
-      browseCatalogueAccessibilityLabel: 'Browse the catalogue',
-      browseCatalogue: 'Browse the catalogue'
-    },
     highlights: {
       screenAnnouncement: 'Feature highlights',
       skipAccessibilityLabel: 'Skip feature highlights',
