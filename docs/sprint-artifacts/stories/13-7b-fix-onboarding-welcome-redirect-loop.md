@@ -2,7 +2,7 @@
 
 **Epic:** 13 - UI Implementation
 **Type:** Bug Fix (regression follow-up to Story 13.7)
-**Status:** review
+**Status:** done
 
 ## Story
 

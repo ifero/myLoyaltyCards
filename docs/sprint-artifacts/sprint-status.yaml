@@ -373,7 +373,7 @@ development_status:
   13-6-implement-settings-screen: done # implementation complete, QA approved, dev review loop in progress
   13-7-restyle-onboarding: done # maps to 12-7
   13-7a-import-data-from-json: done # implementation complete locally; QA + dev review approved, awaiting stakeholder approval
-  13-7b-fix-onboarding-welcome-redirect-loop: review # Sprint 14 — regression follow-up: auth-aware welcome gate so account/sign-in users aren't trapped on welcome; removes dead FirstCardGuidanceScreen (introduced by 13-7)
+  13-7b-fix-onboarding-welcome-redirect-loop: done # Sprint 14 — regression follow-up: auth-aware welcome gate so account/sign-in users aren't trapped on welcome; removes dead FirstCardGuidanceScreen (introduced by 13-7)
   13-8-restyle-sync-indicators: done # QA + dev review approved, PR created 2026-04-11
   13-9-update-apple-watch-ui: done # maps to 12-9, PR #97 merged 2026-04-11
   13-10-fix-dark-mode-system-preference: done # Sprint 13 — tests green, dev + QA approved, stakeholder approved push/PR
