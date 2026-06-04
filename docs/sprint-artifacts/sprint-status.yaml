@@ -376,3 +376,31 @@ development_status:
   13-10-fix-dark-mode-system-preference: done # Sprint 13 — tests green, dev + QA approved, stakeholder approved push/PR
   epic-13-completed: ~
   epic-13-retrospective: done # completed 2026-04-11
+
+  # ============================================
+  # NEW EPICS — backlog (drafted in party mode 2026-06-04, not yet sprinted)
+  # ============================================
+
+  # Epic 16: Platform & Tech Debt (standing bucket)
+  # Goal: Durable home for cross-cutting platform, foundation, and tech-debt work
+  #       that doesn't map to a feature epic. Accumulates stories over time —
+  #       deliberately NOT a single-story epic (rescoped from "Styling Migration"
+  #       in party mode 2026-06-04 to avoid the single-story-epic smell).
+  # First story (16-1): migrate styling engine NativeWind/Tailwind → react-native-unistyles
+  #   — faster, type-safe styling unified with shared/theme tokens; zero visual regression;
+  #   ~31 className files; shared/theme preserved. Ships ATOMICALLY (no partial release).
+  epic-16: backlog
+  16-1-migrate-nativewind-to-unistyles: drafted # drafted in party mode 2026-06-04; ONE atomic story (decided NOT to split — solo dev, no partial release). Open decisions for refinement: incremental dev approach + Unistyles v3 plugin coexistence. NOT yet sprinted.
+  epic-16-retrospective: optional
+
+  # Epic 17: Apple Wallet Pass Support — FEASIBILITY-FIRST
+  # Status: PARKED for future refinement (decision: ifero, party mode 2026-06-04).
+  # A spike must answer the following before any build story is written:
+  #   - Pass signing requires a Pass Type ID + certificate (Apple Dev account); signing belongs server-side / EAS API route, not in the app.
+  #   - In Expo: needs a config plugin + native module wrapping PKAddPassesViewController (no first-party support).
+  #   - Generate GENERIC passes only (cannot mint trademarked brand passes) — App Store review risk to validate.
+  #   - PassKit barcode formats (QR, PDF417, Aztec, Code128) fit loyalty cards well.
+  #   - Likely touches entitlements (kept near-empty by project convention).
+  epic-17: backlog
+  17-1-spike-apple-wallet-feasibility: backlog # PARKED — full story NOT yet drafted; spike to be written during a future refinement
+  epic-17-retrospective: optional
