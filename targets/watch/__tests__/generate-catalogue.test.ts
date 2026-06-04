@@ -10,16 +10,20 @@ type Brand = {
 
 const repoRoot = path.resolve(__dirname, '../../..');
 const scriptPath = path.join(repoRoot, 'watch-ios', 'Scripts', 'generate-catalogue.swift');
-const generatedDir = path.join(repoRoot, 'targets', 'watch', 'Generated');
-const generatedFile = path.join(generatedDir, 'Brands.swift');
 const cataloguePath = path.join(repoRoot, 'catalogue', 'italy.json');
+
+// Each test generates into a throwaway temp directory via CATALOGUE_OUTPUT_PATH so the tracked
+// targets/watch/Generated/Brands.swift is never mutated by the suite.
+let generatedDir: string;
+let generatedFile: string;
 
 const runGenerator = (env?: Record<string, string | undefined>) => {
   return execFileSync('xcrun', ['--sdk', 'macosx', 'swift', scriptPath], {
     cwd: repoRoot,
     env: {
       ...process.env,
-      ...env
+      ...env,
+      CATALOGUE_OUTPUT_PATH: generatedFile
     },
     stdio: 'pipe'
   }).toString('utf8');
@@ -27,6 +31,11 @@ const runGenerator = (env?: Record<string, string | undefined>) => {
 
 describe('watchOS catalogue generation', () => {
   beforeEach(() => {
+    generatedDir = fs.mkdtempSync(path.join(os.tmpdir(), 'watch-generated-'));
+    generatedFile = path.join(generatedDir, 'Brands.swift');
+  });
+
+  afterEach(() => {
     fs.rmSync(generatedDir, { recursive: true, force: true });
   });
 
@@ -86,7 +95,6 @@ describe('watchOS catalogue generation', () => {
   });
 
   it('fails check mode when the committed generated output is stale', () => {
-    fs.mkdirSync(generatedDir, { recursive: true });
     fs.writeFileSync(generatedFile, '// STALE', 'utf8');
 
     let thrown: Error | null = null;

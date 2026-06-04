@@ -54,7 +54,27 @@ func optionalLiteral(_ value: String?) -> String {
   return "\"\(swiftStringLiteral(value))\""
 }
 
-func resolvePaths() throws -> (catalogueURL: URL, outputURL: URL, hashURL: URL, scriptURL: URL) {
+func resolveEnvPath(_ value: String, relativeTo repoRoot: URL) -> URL {
+  if value.hasPrefix("/") {
+    return URL(fileURLWithPath: value)
+  }
+  return repoRoot.appendingPathComponent(value)
+}
+
+/// Expresses `url` relative to `repoRoot` when it lives inside the repo, otherwise returns
+/// the absolute path. Keeps the generated `Source:` comment reproducible across checkout
+/// locations instead of baking in a machine-specific absolute path.
+func repoRelativePath(for url: URL, repoRoot: URL) -> String {
+  let target = url.standardizedFileURL.path
+  let root = repoRoot.standardizedFileURL.path
+  let prefix = root.hasSuffix("/") ? root : root + "/"
+  if target.hasPrefix(prefix) {
+    return String(target.dropFirst(prefix.count))
+  }
+  return target
+}
+
+func resolvePaths() throws -> (catalogueURL: URL, outputURL: URL, hashURL: URL, scriptURL: URL, repoRoot: URL) {
   guard let scriptPath = CommandLine.arguments.first else {
     throw GeneratorError.missingScriptPath
   }
@@ -69,21 +89,25 @@ func resolvePaths() throws -> (catalogueURL: URL, outputURL: URL, hashURL: URL, 
   }
 
   let environment = ProcessInfo.processInfo.environment
-  let catalogueURL: URL
 
+  let catalogueURL: URL
   if let overridePath = environment["CATALOGUE_JSON_PATH"], overridePath.isEmpty == false {
-    if overridePath.hasPrefix("/") {
-      catalogueURL = URL(fileURLWithPath: overridePath)
-    } else {
-      catalogueURL = repoRoot.appendingPathComponent(overridePath)
-    }
+    catalogueURL = resolveEnvPath(overridePath, relativeTo: repoRoot)
   } else {
     catalogueURL = repoRoot.appendingPathComponent("catalogue/italy.json")
   }
 
-  let outputURL = repoRoot.appendingPathComponent("targets/watch/Generated/Brands.swift")
+  // CATALOGUE_OUTPUT_PATH lets callers (notably the Jest test suite) redirect generation to a
+  // throwaway path so the tracked targets/watch/Generated/Brands.swift is never mutated.
+  let outputURL: URL
+  if let overridePath = environment["CATALOGUE_OUTPUT_PATH"], overridePath.isEmpty == false {
+    outputURL = resolveEnvPath(overridePath, relativeTo: repoRoot)
+  } else {
+    outputURL = repoRoot.appendingPathComponent("targets/watch/Generated/Brands.swift")
+  }
+
   let hashURL = outputURL.deletingLastPathComponent().appendingPathComponent(".catalogue-inputs.sha256")
-  return (catalogueURL, outputURL, hashURL, scriptURL)
+  return (catalogueURL, outputURL, hashURL, scriptURL, repoRoot)
 }
 
 func computeSHA256(for urls: [URL]) throws -> String {
@@ -139,19 +163,20 @@ func generateSource(from catalogue: CatalogueData, sourcePath: String) -> String
     """
 }
 
-func runGenerator(catalogueURL: URL, outputURL: URL, hashURL: URL, scriptURL: URL, checkMode: Bool) throws {
+func runGenerator(catalogueURL: URL, outputURL: URL, hashURL: URL, scriptURL: URL, repoRoot: URL, checkMode: Bool) throws {
   let catalogueData = try Data(contentsOf: catalogueURL)
   let decoder = JSONDecoder()
   let catalogue = try decoder.decode(CatalogueData.self, from: catalogueData)
 
   let inputHash = try computeSHA256(for: [catalogueURL, scriptURL])
+  let sourcePath = repoRelativePath(for: catalogueURL, repoRoot: repoRoot)
 
   if checkMode {
     guard FileManager.default.fileExists(atPath: outputURL.path) else {
       throw GeneratorError.missingCommittedOutput
     }
 
-    let generatedSource = generateSource(from: catalogue, sourcePath: catalogueURL.path)
+    let generatedSource = generateSource(from: catalogue, sourcePath: sourcePath)
     let existingSource = try String(contentsOf: outputURL, encoding: .utf8)
 
     if generatedSource == existingSource {
@@ -167,7 +192,7 @@ func runGenerator(catalogueURL: URL, outputURL: URL, hashURL: URL, scriptURL: UR
   let shouldGenerate = storedHash != inputHash || !FileManager.default.fileExists(atPath: outputURL.path)
 
   if shouldGenerate {
-    let source = generateSource(from: catalogue, sourcePath: catalogueURL.path)
+    let source = generateSource(from: catalogue, sourcePath: sourcePath)
     try FileManager.default.createDirectory(at: outputURL.deletingLastPathComponent(), withIntermediateDirectories: true)
     try source.write(to: outputURL, atomically: true, encoding: .utf8)
     try writeStoredHash(inputHash, to: hashURL)
@@ -178,10 +203,10 @@ func runGenerator(catalogueURL: URL, outputURL: URL, hashURL: URL, scriptURL: UR
 }
 
 do {
-  let (catalogueURL, outputURL, hashURL, scriptURL) = try resolvePaths()
+  let (catalogueURL, outputURL, hashURL, scriptURL, repoRoot) = try resolvePaths()
   let environment = ProcessInfo.processInfo.environment
   let checkMode = environment["CATALOGUE_GENERATOR_CHECK"] == "1" || CommandLine.arguments.contains("--check")
-  try runGenerator(catalogueURL: catalogueURL, outputURL: outputURL, hashURL: hashURL, scriptURL: scriptURL, checkMode: checkMode)
+  try runGenerator(catalogueURL: catalogueURL, outputURL: outputURL, hashURL: hashURL, scriptURL: scriptURL, repoRoot: repoRoot, checkMode: checkMode)
 } catch {
   fputs("error: \(error.localizedDescription)\n", stderr)
   exit(1)
