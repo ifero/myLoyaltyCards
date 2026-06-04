@@ -191,3 +191,73 @@ describe('watch complication contract', () => {
     expect(it).toContain('"watch.cards.unavailable" = "Carta non disponibile";');
   });
 });
+
+describe('watch complication brand color + open-app icon', () => {
+  const widgetSwift = fs.readFileSync(watchWidgetSwiftPath, 'utf8');
+  const provider = fs.readFileSync(complicationPath, 'utf8');
+  const widgetDir = path.join(repoRoot, 'targets', 'watch-widget');
+  const palettePath = path.join(widgetDir, 'WidgetCardPalette.swift');
+  const assetsDir = path.join(widgetDir, 'Assets.xcassets');
+
+  it('plumbs per-card colorHex from the provider snapshot into the widget entry', () => {
+    // Provider persists the color in the shared App Group snapshot.
+    expect(provider).toContain('let colorHex: String?');
+    expect(provider).toContain(
+      'ComplicationCardSnapshot(id: $0.id, name: $0.name, brandId: $0.brandId, colorHex: $0.colorHex)'
+    );
+    // Widget decodes it and carries it onto the timeline entry.
+    expect(widgetSwift).toContain('let colorHex: String?');
+    expect(widgetSwift).toContain('colorHex: selectedCard.colorHex');
+  });
+
+  it('renders the selected card brand on its own relative background color', () => {
+    expect(fs.existsSync(palettePath)).toBe(true);
+    const palette = fs.readFileSync(palettePath, 'utf8');
+    expect(palette).toContain('enum WidgetCardPalette');
+    // Resolves every palette key the phone sends, plus raw hex.
+    for (const key of ['blue', 'red', 'green', 'orange', 'grey']) {
+      expect(palette).toContain(`"${key}"`);
+    }
+    // Palette hexes must equal the app's canonical CARD_COLORS so the
+    // complication background is the same color shown inside the app.
+    for (const hex of ['#1A73E8', '#E2231A', '#16A34A', '#F59E0B', '#64748B']) {
+      expect(palette).toContain(hex);
+    }
+    // The widget paints the card color as the container background and keeps
+    // the brand logo legible on a chip.
+    expect(widgetSwift).toContain('WidgetCardPalette.color(for: entry.colorHex)');
+    expect(widgetSwift).toContain('.containerBackground(for: .widget)');
+    expect(widgetSwift).toContain('BrandLogoCatalog.assetName(for: entry.brandId)');
+  });
+
+  it('gives near-white brand logos a dark chip so they stay visible', () => {
+    const catalog = fs.readFileSync(path.join(widgetDir, 'BrandLogoCatalog.swift'), 'utf8');
+    expect(catalog).toContain('static func prefersDarkBacking(for brandId: String?) -> Bool');
+    // Logos whose artwork is near-white would disappear on the default white chip.
+    for (const lightBrand of ['coop', 'intimissimi', 'stroili', 'conad', 'tigota']) {
+      expect(catalog).toContain(`"${lightBrand}"`);
+    }
+    expect(widgetSwift).toContain('BrandLogoCatalog.prefersDarkBacking(for: entry.brandId)');
+  });
+
+  it('shows the open-app glyph from a real, non-placeholder asset', () => {
+    expect(widgetSwift).toContain('Image("OpenAppIcon")');
+    // The empty, name-colliding AppIcon imageset must not be referenced.
+    expect(widgetSwift).not.toContain('Image("AppIcon")');
+    const openAppDir = path.join(assetsDir, 'OpenAppIcon.imageset');
+    expect(fs.existsSync(path.join(openAppDir, 'Contents.json'))).toBe(true);
+    expect(fs.existsSync(path.join(assetsDir, 'AppIcon.imageset'))).toBe(false);
+    // Guard against regressing to the flat-color placeholder (<1 KB). A real
+    // rendered icon is several KB.
+    const at3x = fs.statSync(path.join(openAppDir, 'open-app-icon@3x.png')).size;
+    expect(at3x).toBeGreaterThan(3000);
+  });
+
+  it('keeps the widget asset catalog well-formed (valid colorset Contents.json)', () => {
+    for (const set of ['$widgetBackground.colorset', 'AccentColor.colorset']) {
+      const contents = path.join(assetsDir, set, 'Contents.json');
+      expect(fs.existsSync(contents)).toBe(true);
+      expect(() => JSON.parse(fs.readFileSync(contents, 'utf8'))).not.toThrow();
+    }
+  });
+});

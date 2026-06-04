@@ -5,6 +5,9 @@ struct ComplicationCardSnapshot: Codable, Sendable {
   let id: String
   let name: String
   let brandId: String?
+  /// Per-card color: a palette key ("red"/"blue"/"green"/"orange"/"grey")
+  /// or a "#RRGGBB" hex string. The widget resolves it into a background tint.
+  let colorHex: String?
 }
 
 enum ComplicationSharedState {
@@ -38,7 +41,7 @@ enum ComplicationSharedState {
     }
 
     let snapshots = cards.map {
-      ComplicationCardSnapshot(id: $0.id, name: $0.name, brandId: $0.brandId)
+      ComplicationCardSnapshot(id: $0.id, name: $0.name, brandId: $0.brandId, colorHex: $0.colorHex)
     }
 
     guard let encoded = try? JSONEncoder().encode(snapshots) else {

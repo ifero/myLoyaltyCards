@@ -7,6 +7,9 @@ private struct WatchWidgetCardSnapshot: Codable, Hashable, Sendable {
   let id: String
   let name: String
   let brandId: String?
+  /// Palette key ("red"/"blue"/…) or "#RRGGBB" hex written by the watch app.
+  /// Optional so snapshots persisted before this field decode cleanly.
+  let colorHex: String?
 }
 
 private enum WatchWidgetSharedState {
@@ -101,6 +104,7 @@ struct WatchComplicationEntry: TimelineEntry {
   let hasCards: Bool
   let selectedCardId: String?
   let brandId: String?
+  let colorHex: String?
 
   var deepLinkURL: URL? {
     if mode == .selectedCard, let selectedCardId, !selectedCardId.isEmpty {
@@ -136,9 +140,10 @@ struct WatchComplicationTimelineProvider: AppIntentTimelineProvider {
       title: "Esselunga",
       subtitle: WatchWidgetL10n.string("watch.widget.complication.entry.selected.subtitle"),
       shortLabel: "ES",
-        hasCards: true,
-        selectedCardId: "preview-card",
-        brandId: "esselunga"
+      hasCards: true,
+      selectedCardId: "preview-card",
+      brandId: "esselunga",
+      colorHex: "orange"
     )
   }
 
@@ -177,7 +182,8 @@ struct WatchComplicationTimelineProvider: AppIntentTimelineProvider {
         shortLabel: "APP",
         hasCards: state.hasCards,
         selectedCardId: nil,
-        brandId: nil
+        brandId: nil,
+        colorHex: nil
       )
     }
 
@@ -192,7 +198,8 @@ struct WatchComplicationTimelineProvider: AppIntentTimelineProvider {
         shortLabel: "??",
         hasCards: state.hasCards,
         selectedCardId: nil,
-        brandId: nil
+        brandId: nil,
+        colorHex: nil
       )
     }
 
@@ -209,7 +216,8 @@ struct WatchComplicationTimelineProvider: AppIntentTimelineProvider {
         shortLabel: "--",
         hasCards: state.hasCards,
         selectedCardId: nil,
-        brandId: nil
+        brandId: nil,
+        colorHex: nil
       )
     }
 
@@ -219,9 +227,10 @@ struct WatchComplicationTimelineProvider: AppIntentTimelineProvider {
       title: selectedCard.name,
       subtitle: WatchWidgetL10n.string("watch.widget.complication.entry.selected.subtitle"),
       shortLabel: shortLabel(from: selectedCard.name),
-        hasCards: true,
-        selectedCardId: selectedCard.id,
-        brandId: selectedCard.brandId
+      hasCards: true,
+      selectedCardId: selectedCard.id,
+      brandId: selectedCard.brandId,
+      colorHex: selectedCard.colorHex
     )
   }
 
@@ -248,27 +257,56 @@ struct WatchComplicationEntryView: View {
   var body: some View {
     Group {
       switch family {
-      case .accessoryCircular:
+      case .accessoryCircular, .accessoryCorner:
         circularContent
       case .accessoryInline:
         inlineContent
-      case .accessoryRectangular, .accessoryCorner:
+      case .accessoryRectangular:
         rectangularContent
       default:
         rectangularContent
       }
     }
-    .modifier(WatchComplicationBackground())
+    .containerBackground(for: .widget) {
+      widgetBackground
+    }
     .widgetURL(entry.deepLinkURL)
   }
+
+  // MARK: - Colors
+
+  /// The selected card's resolved background color, or nil for open-app /
+  /// brandless-without-color states.
+  private var cardColor: Color? {
+    guard entry.mode == .selectedCard else { return nil }
+    return WidgetCardPalette.color(for: entry.colorHex)
+  }
+
+  /// Fills the whole complication with the card's color so the brand reads on
+  /// its own background; falls back to a neutral system material otherwise.
+  @ViewBuilder
+  private var widgetBackground: some View {
+    if let cardColor {
+      cardColor
+    } else {
+      Rectangle().fill(.fill.tertiary)
+    }
+  }
+
+  /// Legible text color for labels drawn on `widgetBackground`.
+  private var contentForeground: Color {
+    guard cardColor != nil else { return .primary }
+    return WidgetCardPalette.prefersWhiteForeground(for: entry.colorHex) ? .white : .black
+  }
+
+  // MARK: - Family layouts
 
   private var circularContent: some View {
     Group {
       if entry.mode == .openApp {
-        openAppIcon
-          .padding(3)
+        openAppIcon.padding(3)
       } else {
-        circularSelectedCardIcon
+        cardGlyphCircular.padding(2)
       }
     }
   }
@@ -284,10 +322,9 @@ struct WatchComplicationEntryView: View {
   private var rectangularContent: some View {
     HStack(spacing: 6) {
       if entry.mode == .openApp {
-        openAppIcon
-          .frame(width: 20, height: 20)
+        openAppIcon.frame(width: 22, height: 22)
       } else {
-        rectangularSelectedCardIcon
+        cardGlyphRectangular.frame(width: 24, height: 24)
       }
 
       VStack(alignment: .leading, spacing: 2) {
@@ -296,99 +333,70 @@ struct WatchComplicationEntryView: View {
           .lineLimit(1)
         Text(entry.title)
           .font(.caption)
+          .fontWeight(.semibold)
           .lineLimit(1)
       }
       Spacer(minLength: 0)
     }
+    .foregroundStyle(contentForeground)
   }
 
+  // MARK: - Glyphs
+
+  /// Light brand logos (e.g. Coop) are near-white and vanish on a white chip,
+  /// so they get a dark chip instead. Everything else uses a white chip so
+  /// multi-color and dark logos stay legible regardless of the card color.
+  private var chipIsDark: Bool {
+    BrandLogoCatalog.prefersDarkBacking(for: entry.brandId)
+  }
+
+  private var chipColor: Color {
+    chipIsDark ? Color(hex: "#1C1C1F") : .white
+  }
+
+  /// The brand logo on a contrast-safe chip, or the card's initials when there
+  /// is no catalogue logo. Always legible on the colored background behind it.
   @ViewBuilder
-  private var circularSelectedCardIcon: some View {
-    if let brandLogoAssetName = BrandLogoCatalog.assetName(for: entry.brandId) {
-      ZStack {
-        Circle()
-          .fill(Color.white.opacity(0.92))
-        Image(brandLogoAssetName)
-          .resizable()
-          .renderingMode(.original)
-          .scaledToFit()
-          .padding(3)
-      }
-    } else {
-      ZStack {
-        Circle()
-          .fill(circularBadgeColor)
-        appIconFallback
-      }
+  private var cardGlyphRectangular: some View {
+    ZStack {
+      RoundedRectangle(cornerRadius: 5, style: .continuous)
+        .fill(chipColor)
+      brandLogoOrInitials(logoPadding: 2)
     }
   }
 
   @ViewBuilder
-  private var rectangularSelectedCardIcon: some View {
-    if let brandLogoAssetName = BrandLogoCatalog.assetName(for: entry.brandId) {
-      ZStack {
-        RoundedRectangle(cornerRadius: 4, style: .continuous)
-          .fill(Color.white.opacity(0.92))
-        Image(brandLogoAssetName)
-          .resizable()
-          .renderingMode(.original)
-          .scaledToFit()
-          .padding(2)
-      }
-      .frame(width: 20, height: 20)
-    } else {
-      ZStack {
-        RoundedRectangle(cornerRadius: 4, style: .continuous)
-          .fill(Color.white.opacity(0.92))
-          .frame(width: 20, height: 20)
-        Image("AppIcon")
-          .resizable()
-          .renderingMode(.original)
-          .scaledToFit()
-          .padding(2)
-      }
+  private var cardGlyphCircular: some View {
+    ZStack {
+      Circle().fill(chipColor)
+      brandLogoOrInitials(logoPadding: 4)
     }
   }
 
-  private var circularBadgeColor: Color {
-    let hash = abs(entry.title.hashValue)
-    let hue = Double(hash % 360) / 360.0
-    return Color(hue: hue, saturation: 0.65, brightness: 0.85)
+  @ViewBuilder
+  private func brandLogoOrInitials(logoPadding: CGFloat) -> some View {
+    if let brandLogoAssetName = BrandLogoCatalog.assetName(for: entry.brandId) {
+      Image(brandLogoAssetName)
+        .resizable()
+        .renderingMode(.original)
+        .scaledToFit()
+        .padding(logoPadding)
+    } else {
+      Text(entry.shortLabel)
+        .font(.system(size: 12, weight: .bold))
+        .minimumScaleFactor(0.6)
+        .lineLimit(1)
+        .foregroundStyle(chipIsDark ? .white : (cardColor ?? .black))
+        .padding(logoPadding)
+    }
   }
 
   private var openAppIcon: some View {
-    Image("AppIcon")
+    Image("OpenAppIcon")
       .resizable()
       .renderingMode(.original)
       .scaledToFit()
-      .clipShape(RoundedRectangle(cornerRadius: 4, style: .continuous))
-  }
-
-  private var appIconFallback: some View {
-    Image("AppIcon")
-      .resizable()
-      .renderingMode(.original)
-      .scaledToFit()
-      .padding(3)
-  }
-}
-
-private struct WatchComplicationBackground: ViewModifier {
-  func body(content: Content) -> some View {
-    if #available(watchOS 10.0, *) {
-      content.containerBackground(.fill.tertiary, for: .widget)
-    } else {
-      content.padding().background()
-    }
-  }
-}
-
-private extension WidgetFamily {
-  var isCorner: Bool {
-    if #available(watchOS 10.0, *) {
-      return self == .accessoryCorner
-    }
-    return false
+      .clipShape(RoundedRectangle(cornerRadius: 5, style: .continuous))
   }
 }
 
