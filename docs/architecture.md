@@ -1134,14 +1134,14 @@ test('barcode round-trip for all formats', () => {
 
 - Build scripts read `/catalogue/italy.json` at compile time
 - Generate native-compatible code (not runtime JSON parsing)
-- watchOS: Generates `Brands.swift` (struct with static data)
+- watchOS: Generates `Brands.swift` (brand catalogue) and `BrandLogoCatalog.generated.swift` (widget logo + dark-chip sets, derived from the bundled `BrandLogo-*` imagesets)
 - Wear OS: Generates `Brands.kt` (data class with static data)
 - Generated files are in `.gitignore` (never committed)
 
 **Build Script Locations:**
 
 ```
-watch-ios/Scripts/generate-catalogue.swift   # Reads JSON → Brands.swift
+watch-ios/Scripts/generate-catalogue.swift   # Reads JSON + logo assets → Brands.swift + BrandLogoCatalog.generated.swift
 watch-android/scripts/generate-catalogue.kts # Reads JSON → Brands.kt
 ```
 

@@ -233,9 +233,16 @@ describe('watch complication brand color + open-app icon', () => {
   it('gives near-white brand logos a dark chip so they stay visible', () => {
     const catalog = fs.readFileSync(path.join(widgetDir, 'BrandLogoCatalog.swift'), 'utf8');
     expect(catalog).toContain('static func prefersDarkBacking(for brandId: String?) -> Bool');
-    // Logos whose artwork is near-white would disappear on the default white chip.
+    // The light-logo set is generated from rendered luminance into the committed
+    // BrandLogoCatalog.generated.swift. Logos whose artwork is near-white must
+    // appear there so the widget gives them a dark chip instead of letting them
+    // disappear on the default white chip.
+    const generatedCatalog = fs.readFileSync(
+      path.join(widgetDir, 'Generated', 'BrandLogoCatalog.generated.swift'),
+      'utf8'
+    );
     for (const lightBrand of ['coop', 'intimissimi', 'stroili', 'conad', 'tigota']) {
-      expect(catalog).toContain(`"${lightBrand}"`);
+      expect(generatedCatalog).toContain(`"${lightBrand}"`);
     }
     expect(widgetSwift).toContain('BrandLogoCatalog.prefersDarkBacking(for: entry.brandId)');
   });

@@ -1,71 +1,12 @@
 import Foundation
 
+/// Resolves a card's brand id to its widget logo asset and decides whether that
+/// logo needs a dark chip to stay legible. The underlying brand-id sets
+/// (`knownBrandIds`, `lightLogoBrandIds`) are generated from the catalogue and
+/// the bundled `BrandLogo-*` imagesets — see `BrandLogoCatalog.generated.swift`
+/// and `watch-ios/Scripts/generate-catalogue.swift` — so they cannot silently
+/// drift from the assets that actually ship.
 enum BrandLogoCatalog {
-  private static let knownBrandIds: Set<String> = [
-    "acqua-e-sapone",
-    "bennet",
-    "blukids",
-    "burger-king",
-    "calliope",
-    "calzedonia",
-    "camaieu",
-    "carrefour",
-    "coin",
-    "conad",
-    "coop",
-    "crai",
-    "decathlon",
-    "deco",
-    "demma",
-    "desigual",
-    "despar",
-    "douglas",
-    "esselunga",
-    "euronics",
-    "eurospin",
-    "hm",
-    "ido",
-    "ikea",
-    "il-gigante",
-    "intimissimi",
-    "jysk",
-    "lidl",
-    "lotteria-degli-scontrini",
-    "md",
-    "mediaworld",
-    "motivi",
-    "old-wild-west",
-    "oltre",
-    "original-marines",
-    "ovs",
-    "pam",
-    "pandora",
-    "penny-market",
-    "piazza-italia",
-    "pitta-rosso",
-    "prenatal",
-    "rinascente",
-    "sephora",
-    "stroili",
-    "tigota",
-    "tommy-hilfiger",
-    "toys-center",
-    "uniclub",
-    "unieuro",
-    "zara",
-  ]
-
-  /// Brand logos whose artwork is predominantly white / very light. On the
-  /// default white chip they would disappear, so the widget gives them a dark
-  /// backing instead. Derived from the rendered logo luminance.
-  private static let lightLogoBrandIds: Set<String> = [
-    "conad",
-    "coop",
-    "intimissimi",
-    "stroili",
-    "tigota",
-  ]
-
   static func assetName(for brandId: String?) -> String? {
     guard let normalizedBrandId = normalized(brandId) else {
       return nil
@@ -81,7 +22,7 @@ enum BrandLogoCatalog {
       return false
     }
 
-    return lightLogoBrandIds.contains(normalizedBrandId)
+    return BrandLogoCatalogData.lightLogoBrandIds.contains(normalizedBrandId)
   }
 
   private static func normalized(_ brandId: String?) -> String? {
@@ -90,7 +31,7 @@ enum BrandLogoCatalog {
         .trimmingCharacters(in: .whitespacesAndNewlines)
         .lowercased(),
       !normalizedBrandId.isEmpty,
-      knownBrandIds.contains(normalizedBrandId)
+      BrandLogoCatalogData.knownBrandIds.contains(normalizedBrandId)
     else {
       return nil
     }
