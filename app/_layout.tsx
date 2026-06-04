@@ -22,7 +22,7 @@ import { getSupabaseClient } from '@/shared/supabase/client';
 import { ThemeProvider, useTheme } from '@/shared/theme';
 import { PRIMARY_COLORS } from '@/shared/theme/colors';
 
-import { isFirstLaunch } from '@/features/settings';
+import { completeFirstLaunch, isFirstLaunch } from '@/features/settings';
 
 export const unstable_settings = {
   initialRouteName: 'index'
@@ -82,16 +82,37 @@ const HeaderLeft = () => {
   );
 };
 
-const RootLayoutContent = () => {
+const RootLayoutContent = ({ isAuthenticated }: { isAuthenticated: boolean }) => {
   const { isDark, theme } = useTheme();
   const router = useRouter();
   const { t } = useTranslation();
 
+  // Onboarding/welcome gate.
+  //
+  // The welcome screen must only appear for genuinely new, signed-out users.
+  // A signed-in user must NEVER be bounced here — including one whose session
+  // was silently restored from the Keychain after a reinstall (the first-launch
+  // flag lives in expo-sqlite/kv-store, which a reinstall wipes, while the
+  // Supabase session survives in SecureStore). For those users we also clear
+  // the flag so later cold starts skip the gate too.
+  //
+  // Regression guard (testers stuck in a welcome loop): the routed-onboarding
+  // refactor only cleared `first_launch` on the local-mode highlights path, so
+  // account-creation / sign-in users never cleared it and got redirected here
+  // on every launch. Gating on auth state fixes every path at once instead of
+  // relying on each completion screen to remember to call completeFirstLaunch.
   useEffect(() => {
+    if (isAuthenticated) {
+      if (isFirstLaunch()) {
+        completeFirstLaunch();
+      }
+      return;
+    }
+
     if (isFirstLaunch()) {
       router.replace('/welcome');
     }
-  }, [router]);
+  }, [router, isAuthenticated]);
 
   return (
     <>
@@ -238,6 +259,7 @@ const RootLayout = () => {
   const { t } = useTranslation();
   const [isReady, setIsReady] = useState(false);
   const [dbError, setDbError] = useState<string | null>(null);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   useEffect(() => {
     const initializeApp = async () => {
@@ -268,6 +290,17 @@ const RootLayout = () => {
             'Guest session initialization failed (continuing without persistent guest ID):',
             error
           );
+        }
+
+        // Resolve whether a persisted Supabase session exists BEFORE showing any
+        // UI, so the welcome gate (RootLayoutContent) never flashes or bounces an
+        // already signed-in user. Best-effort: env-misconfig / no session → treat
+        // as signed-out and fall through to the normal first-launch flow.
+        try {
+          const { data } = await getSupabaseClient().auth.getSession();
+          setIsAuthenticated(Boolean(data.session));
+        } catch (error) {
+          console.warn('Initial session check failed (treating as signed-out):', error);
         }
 
         setIsReady(true);
@@ -326,7 +359,7 @@ const RootLayout = () => {
 
   return (
     <ThemeProvider>
-      <RootLayoutContent />
+      <RootLayoutContent isAuthenticated={isAuthenticated} />
     </ThemeProvider>
   );
 };

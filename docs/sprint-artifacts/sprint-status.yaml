@@ -165,9 +165,10 @@ current_sprint:
     - 14-1-household-collaboration
     - 6-18a-otp-verification-followup
     - 11-7-contribution-infrastructure
+    - 13-7b-fix-onboarding-welcome-redirect-loop
   waves:
     wave_1:
-      stories: [5-7, 5-8, 2-9, 2-10, 5-10, 15-2, 6-18a]
+      stories: [5-7, 5-8, 2-9, 2-10, 5-10, 15-2, 6-18a, 13-7b]
       note: 'Primary implementation work on Apple Watch reliability, image-based scanning, barcode readability bugfix planning, Italian in-app readiness, and the OTP verification follow-up bugfix.'
     wave_2:
       stories: [14-1]
@@ -178,6 +179,7 @@ current_sprint:
   notes: |
     Sprint 14 has started. The focus is on completing Apple Watch reliability work, Italian in-app readiness, beginning household collaboration discovery, and absorbing the OTP verification follow-up bugfix discovered after Story 6.18 shipped.
     On 2026-05-24, two additional bugfix planning stories were added and refined to ready-for-dev: Story 2.10 (phone barcode/QR readability + quiet-zone padding) and Story 5.10 (watch barcode legibility + list density polish).
+    On 2026-06-04, Story 13.7b was added as a regression follow-up after two testers reported being returned to the welcome screen on every launch: the Story 13.7 routed-onboarding refactor only cleared the first-launch flag on the local-mode path, so account-creation and sign-in users were trapped. The fix makes the welcome gate auth-aware and removes the dead FirstCardGuidanceScreen left over from 13.7.
     This sprint keeps scope tight while advancing the highest-value customer and platform work.
 
 next_sprint: null
@@ -371,6 +373,7 @@ development_status:
   13-6-implement-settings-screen: done # implementation complete, QA approved, dev review loop in progress
   13-7-restyle-onboarding: done # maps to 12-7
   13-7a-import-data-from-json: done # implementation complete locally; QA + dev review approved, awaiting stakeholder approval
+  13-7b-fix-onboarding-welcome-redirect-loop: review # Sprint 14 — regression follow-up: auth-aware welcome gate so account/sign-in users aren't trapped on welcome; removes dead FirstCardGuidanceScreen (introduced by 13-7)
   13-8-restyle-sync-indicators: done # QA + dev review approved, PR created 2026-04-11
   13-9-update-apple-watch-ui: done # maps to 12-9, PR #97 merged 2026-04-11
   13-10-fix-dark-mode-system-preference: done # Sprint 13 — tests green, dev + QA approved, stakeholder approved push/PR
