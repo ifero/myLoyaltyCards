@@ -39,7 +39,9 @@ struct WatchComplicationEntryView: View {
         Text(WatchWidgetL10n.string("watch.widget.complication.inline.open"))
       case .accessoryRectangular:
         HStack(spacing: 6) {
-          appIcon.frame(width: 24, height: 24)
+          iconImage
+            .frame(width: 24, height: 24)
+            .clipShape(RoundedRectangle(cornerRadius: 5, style: .continuous))
           Text(WatchWidgetL10n.string("watch.widget.complication.entry.open_app.title"))
             .font(.caption)
             .fontWeight(.semibold)
@@ -47,7 +49,9 @@ struct WatchComplicationEntryView: View {
           Spacer(minLength: 0)
         }
       default:
-        appIcon.padding(2)
+        // Fill the slot edge-to-edge so the icon covers the whole circle; the
+        // system masks accessoryCircular/Corner to its own shape.
+        iconImage
       }
     }
     .containerBackground(.fill.tertiary, for: .widget)
@@ -58,13 +62,12 @@ struct WatchComplicationEntryView: View {
   /// bitmap fails with `imageTooLarge` and the slot renders grey). Falls back to
   /// a card SF Symbol if the asset can't be loaded.
   @ViewBuilder
-  private var appIcon: some View {
+  private var iconImage: some View {
     if let icon = ComplicationImage.make("OpenAppIcon") {
       icon
         .resizable()
         .renderingMode(.original)
         .scaledToFit()
-        .clipShape(RoundedRectangle(cornerRadius: 5, style: .continuous))
     } else {
       Image(systemName: "creditcard.fill")
         .resizable()
