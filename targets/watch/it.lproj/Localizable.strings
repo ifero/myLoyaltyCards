@@ -4,6 +4,7 @@
 "watch.cards.empty.subtitle" = "Aggiungi carte sul tuo iPhone: si sincronizzano qui automaticamente.";
 "watch.cards.empty.accessibility" = "Nessuna carta. Aggiungi carte sul tuo iPhone, si sincronizzano qui automaticamente.";
 "watch.cards.fallback_name" = "Carta";
+"watch.cards.unavailable" = "Carta non disponibile";
 "watch.card_row.accessibility_format" = "Carta, %@";
 "watch.debug.import_sample_cards" = "Importa carte di esempio";
 "watch.barcode.accessibility.image_format" = "Codice a barre per %@";
@@ -11,3 +12,7 @@
 "watch.complication.accessibility.card_format" = "Carta fedelta: %@";
 "watch.complication.display_name" = "Carta fedelta";
 "watch.complication.description" = "Mostra la tua carta fedelta piu usata.";
+"watch.complication.no_cards" = "Nessuna carta";
+"watch.complication.no_cards.short" = "--";
+"watch.complication.status.ready" = "Pronta per la scansione";
+"watch.complication.status.no_cards" = "Sincronizza le carte da iPhone";

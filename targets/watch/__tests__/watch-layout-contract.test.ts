@@ -60,7 +60,9 @@ describe('watch layout contract', () => {
     const barcodeView = fs.readFileSync(barcodeViewPath, 'utf8');
     const cardListView = fs.readFileSync(cardListViewPath, 'utf8');
 
-    expect(cardListView).toContain('NavigationLink(destination: BarcodeFlashView(card: card))');
+    expect(cardListView).toContain('NavigationLink(value: WatchCardRoute(cardId: card.id))');
+    expect(cardListView).toContain('.navigationDestination(for: WatchCardRoute.self) { route in');
+    expect(cardListView).toContain('BarcodeFlashView(card: card)');
     expect(barcodeView).toContain('.onTapGesture { dismiss() }');
     expect(barcodeView).toContain('.digitalCrownRotation(');
     expect(barcodeView).toContain('crownTriggered = true');

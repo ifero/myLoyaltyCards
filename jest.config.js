@@ -15,7 +15,10 @@ module.exports = {
     '\\.svg$': '<rootDir>/__mocks__/svgMock.js'
   },
   testMatch: ['**/*.test.[jt]s?(x)'],
-  testPathIgnorePatterns: ['/node_modules/', 'babel.config.test.js', 'targets/watch/'],
+  testPathIgnorePatterns: ['/node_modules/', '/.claude/', 'babel.config.test.js', 'targets/watch/'],
+  // Nested Claude Code worktrees (.claude/worktrees/*) are full repo copies; their
+  // duplicate package.json/modules otherwise crash Jest with Haste name collisions.
+  modulePathIgnorePatterns: ['/.claude/'],
   collectCoverageFrom: [
     'features/**/*.{ts,tsx}',
     'core/**/*.{ts,tsx}',

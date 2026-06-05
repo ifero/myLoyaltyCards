@@ -60,6 +60,10 @@ targets/watch/Generated/*
 !targets/watch/Generated/Brands.swift
 targets/watch/generated.entitlements
 
+# WatchOS widget (targets/watch-widget — generated brand-logo catalog is tracked)
+targets/watch-widget/Generated/*
+!targets/watch-widget/Generated/BrandLogoCatalog.generated.swift
+
 # WatchOS build artifacts (watch-ios/ — only Scripts/, Tests/, UITests/ are source)
 watch-ios/.derivedData/
 watch-ios/Generated/

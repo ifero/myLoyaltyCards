@@ -318,7 +318,7 @@ Expanding the brand catalogue is the easiest and most-welcomed way to contribute
    ```bash
    yarn watch:catalogue:generate
    ```
-   CI runs `yarn check:catalogue-generated` to ensure the generated watch catalogue matches the source — commit the regenerated output.
+   This also regenerates the watch complication's brand-logo catalog (`targets/watch-widget/Generated/BrandLogoCatalog.generated.swift`) from the bundled logo assets. CI runs `yarn check:catalogue-generated` to ensure the generated watch sources match the source — commit the regenerated output.
 4. Run `yarn lint && yarn test` (catalogue files have tests, e.g. `catalogue/italy.test.ts`).
 5. Open a PR titled `feat(catalogue): add <brand> to <country>`. Catalogue-only PRs are lighter-weight and usually don't need a full story, but please reference an issue if one exists.
 

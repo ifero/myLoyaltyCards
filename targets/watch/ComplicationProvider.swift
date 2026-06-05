@@ -1,149 +1,61 @@
-import SwiftData
-import SwiftUI
+import Foundation
 import WidgetKit
 
-// MARK: - Timeline Entry
-
-struct CardComplicationEntry: TimelineEntry {
-  let date: Date
-  let cardName: String?
+struct ComplicationCardSnapshot: Codable, Sendable {
+  let id: String
+  let name: String
+  let brandId: String?
+  /// Per-card color: a palette key ("red"/"blue"/"green"/"orange"/"grey")
+  /// or a "#RRGGBB" hex string. The widget resolves it into a background tint.
+  let colorHex: String?
 }
 
-// MARK: - Timeline Provider
+enum ComplicationSharedState {
+  static let suiteName = "group.com.iferoporefi.myloyaltycards.watch-complication"
+  static let topCardNameKey = "watch.complication.topCardName"
+  static let hasCardsKey = "watch.complication.hasCards"
+  static let updatedAtKey = "watch.complication.updatedAt"
+  static let cardsKey = "watch.complication.cards"
 
-struct CardComplicationProvider: TimelineProvider {
-  func placeholder(in context: Context) -> CardComplicationEntry {
-    CardComplicationEntry(date: Date(), cardName: "Esselunga")
-  }
+  static func persistTopCardName(_ topCardName: String?) {
+    let defaults = UserDefaults(suiteName: suiteName) ?? .standard
+    let normalizedName = topCardName?.trimmingCharacters(in: .whitespacesAndNewlines)
+    let hasCards = (normalizedName?.isEmpty == false)
 
-  func getSnapshot(in context: Context, completion: @escaping (CardComplicationEntry) -> Void) {
-    let entry = CardComplicationEntry(date: Date(), cardName: mostUsedCardName())
-    completion(entry)
-  }
+    defaults.set(hasCards, forKey: hasCardsKey)
+    defaults.set(Date().timeIntervalSince1970, forKey: updatedAtKey)
 
-  func getTimeline(in context: Context, completion: @escaping (Timeline<CardComplicationEntry>) -> Void) {
-    let cardName = mostUsedCardName()
-    let entry = CardComplicationEntry(date: Date(), cardName: cardName)
-    // Refresh in 1 hour or when explicitly triggered via WidgetCenter.shared.reloadAllTimelines()
-    let nextUpdate = Calendar.current.date(byAdding: .hour, value: 1, to: Date()) ?? Date()
-    let timeline = Timeline(entries: [entry], policy: .after(nextUpdate))
-    completion(timeline)
-  }
-
-  /// Query the most-used card from SwiftData (sorted by usageCount descending).
-  private func mostUsedCardName() -> String? {
-    guard
-      let container = try? ModelContainer(for: WatchCardEntity.self),
-      let cards = try? ModelContext(container).fetch(
-        FetchDescriptor<WatchCardEntity>(
-          sortBy: [SortDescriptor(\WatchCardEntity.usageCount, order: .reverse)]
-        )
-      ),
-      let topCard = cards.first
-    else {
-      return nil
-    }
-    return topCard.name
-  }
-}
-
-// MARK: - Complication Views
-
-struct CardComplicationSmallView: View {
-  var body: some View {
-    Image(systemName: "creditcard.fill")
-      .font(.title3)
-      .foregroundColor(.white)
-      .accessibilityLabel(WatchL10n.string("watch.app.name"))
-  }
-}
-
-struct CardComplicationMediumView: View {
-  let entry: CardComplicationEntry
-
-  var body: some View {
-    if let name = entry.cardName {
-      HStack(spacing: 4) {
-        Image(systemName: "creditcard.fill")
-          .font(.caption)
-          .foregroundColor(.white)
-        Text(name)
-          .font(.system(size: 14, weight: .medium))
-          .foregroundColor(.white)
-          .lineLimit(1)
-      }
-      .accessibilityLabel(WatchL10n.format("watch.complication.accessibility.card_format", name))
+    if let normalizedName, !normalizedName.isEmpty {
+      defaults.set(normalizedName, forKey: topCardNameKey)
     } else {
-      Image(systemName: "creditcard.fill")
-        .font(.title3)
-        .foregroundColor(.white)
-        .accessibilityLabel(WatchL10n.string("watch.app.name"))
+      defaults.removeObject(forKey: topCardNameKey)
     }
   }
-}
 
-/// Dispatches the correct complication view based on the widget family.
-struct CardComplicationEntryView: View {
-  @Environment(\.widgetFamily) var family
-  let entry: CardComplicationEntry
+  static func persistCards(_ cards: [WatchCard]) {
+    let defaults = UserDefaults(suiteName: suiteName) ?? .standard
 
-  var body: some View {
-    switch family {
-    case .accessoryCircular:
-      CardComplicationSmallView()
-    case .accessoryRectangular, .accessoryInline:
-      CardComplicationMediumView(entry: entry)
-    default:
-      CardComplicationMediumView(entry: entry)
+    if cards.isEmpty {
+      defaults.removeObject(forKey: cardsKey)
+      return
     }
-  }
-}
 
-// MARK: - Widget Definition
-
-struct MyLoyaltyCardsComplication: Widget {
-  let kind: String = "MyLoyaltyCardsComplication"
-
-  var body: some WidgetConfiguration {
-    StaticConfiguration(kind: kind, provider: CardComplicationProvider()) { entry in
-      CardComplicationEntryView(entry: entry)
-        .containerBackground(.black, for: .widget)
+    let snapshots = cards.map {
+      ComplicationCardSnapshot(id: $0.id, name: $0.name, brandId: $0.brandId, colorHex: $0.colorHex)
     }
-    .configurationDisplayName(WatchL10n.string("watch.complication.display_name"))
-    .description(WatchL10n.string("watch.complication.description"))
-    .supportedFamilies([
-      .accessoryCircular,
-      .accessoryRectangular,
-      .accessoryInline,
-    ])
+
+    guard let encoded = try? JSONEncoder().encode(snapshots) else {
+      return
+    }
+
+    defaults.set(encoded, forKey: cardsKey)
   }
 }
 
-// MARK: - Widget Bundle
-// ⚠️ KNOWN LIMITATION: This complication requires a separate Widget Extension target
-// to appear on watch faces. The @main annotation is commented out because including
-// it in the main app target conflicts with MyLoyaltyCardsWatchApp.swift's @main.
-// To activate: create a Widget Extension target in Xcode, move this file there,
-// and uncomment @main below. Tracked for follow-up implementation.
-// @main
-struct MyLoyaltyCardsWidgetBundle: WidgetBundle {
-  var body: some Widget {
-    MyLoyaltyCardsComplication()
+enum ComplicationReloader {
+  static let widgetKind = "MyLoyaltyCardsWatchComplication"
+
+  static func reloadAllActiveComplications() {
+    WidgetCenter.shared.reloadTimelines(ofKind: widgetKind)
   }
-}
-
-// MARK: - Previews
-
-#Preview("Circular", as: .accessoryCircular) {
-  MyLoyaltyCardsComplication()
-} timeline: {
-  CardComplicationEntry(date: Date(), cardName: "Esselunga")
-  CardComplicationEntry(date: Date(), cardName: nil)
-}
-
-#Preview("Rectangular", as: .accessoryRectangular) {
-  MyLoyaltyCardsComplication()
-} timeline: {
-  CardComplicationEntry(date: Date(), cardName: "Esselunga")
-  CardComplicationEntry(date: Date(), cardName: nil)
 }

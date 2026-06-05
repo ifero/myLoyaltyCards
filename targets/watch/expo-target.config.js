@@ -6,5 +6,7 @@ module.exports = {
   deploymentTarget: '10.0',
   icon: './AppIcon.png',
   frameworks: ['SwiftUI', 'SwiftData', 'WatchConnectivity', 'WidgetKit'],
-  entitlements: {},
+  entitlements: {
+    'com.apple.security.application-groups': ['group.com.iferoporefi.myloyaltycards.watch-complication'],
+  },
 };

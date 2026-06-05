@@ -1,6 +1,6 @@
+import Foundation
 import SwiftData
 import SwiftUI
-import WidgetKit
 
 // Simple watch-side card model (read-only snapshot for display)
 struct WatchCard: Identifiable, Codable {
@@ -175,9 +175,22 @@ final class CardStore: ObservableObject {
 
     try? modelContext.save()
     UserDefaults.standard.removeObject(forKey: "watch.cards")
+    ComplicationSharedState.persistCards(decoded)
 
-    // Reload complications so they reflect the migrated data
-    WidgetCenter.shared.reloadAllTimelines()
+    let topCardName = decoded
+      .sorted {
+        if $0.usageCount != $1.usageCount { return $0.usageCount > $1.usageCount }
+        if let lhsLast = $0.lastUsedAt, let rhsLast = $1.lastUsedAt, lhsLast != rhsLast {
+          return lhsLast > rhsLast
+        }
+        return $0.createdAt > $1.createdAt
+      }
+      .first?
+      .name
+
+    ComplicationSharedState.persistTopCardName(topCardName)
+
+    ComplicationReloader.reloadAllActiveComplications()
   }
 }
 
@@ -190,11 +203,28 @@ struct CardRowView: View {
 
   private let metrics = WatchCardRowLayoutMetrics.compact
 
+  private func normalizedBrandId(_ brandId: String?) -> String? {
+    guard let brandId = brandId?
+      .trimmingCharacters(in: .whitespacesAndNewlines),
+      !brandId.isEmpty
+    else {
+      return nil
+    }
+
+    return brandId.lowercased()
+  }
+
+  private var resolvedBrand: WatchBrand? {
+    guard let brandId = normalizedBrandId(card.brandId) else {
+      return nil
+    }
+
+    return WatchBrands.all.first(where: { $0.id == brandId })
+  }
+
   /// Resolved brand color hex string (from catalogue or user-selected).
   private var resolvedColorHex: String {
-    if let brandId = card.brandId,
-      let brand = WatchBrands.all.first(where: { $0.id == brandId })
-    {
+    if let brand = resolvedBrand {
       // Use a deterministic hex from the brand id hash when no explicit color exists
       return card.colorHex ?? "#\(String(format: "%06X", abs(brand.id.hashValue) % 0xFFFFFF))"
     }
@@ -243,9 +273,7 @@ struct CardRowView: View {
 
   @ViewBuilder
   private var logoView: some View {
-    if let brandId = card.brandId,
-      let brand = WatchBrands.all.first(where: { $0.id == brandId })
-    {
+    if let brand = resolvedBrand {
       // Catalogue brand — initials on brand-colored circle
       let bgColor = accentColor
       let useWhite = shouldUseWhiteText(onBackgroundHex: resolvedColorHex)
@@ -270,10 +298,37 @@ struct CardRowView: View {
   }
 }
 
+private struct WatchCardRoute: Hashable {
+  let cardId: String
+}
+
+private enum WatchComplicationDeepLink {
+  static let scheme = "myloyaltycards"
+  static let cardHost = "watch-card"
+  static let cardIdQueryItem = "id"
+
+  static func cardId(from url: URL) -> String? {
+    guard
+      url.scheme?.lowercased() == scheme,
+      url.host?.lowercased() == cardHost,
+      let components = URLComponents(url: url, resolvingAgainstBaseURL: false),
+      let cardId = components.queryItems?.first(where: { $0.name == cardIdQueryItem })?.value?
+        .trimmingCharacters(in: .whitespacesAndNewlines),
+      !cardId.isEmpty
+    else {
+      return nil
+    }
+
+    return cardId
+  }
+}
+
 struct CardListView: View {
   @Environment(\.modelContext) private var modelContext
   @Query private var persistedEntities: [WatchCardEntity]
   @StateObject private var store: CardStore
+  @State private var navigationPath: [WatchCardRoute] = []
+  @State private var pendingDeepLinkCardId: String?
 
   init(store: CardStore = CardStore()) {
     _store = StateObject(wrappedValue: store)
@@ -315,7 +370,7 @@ struct CardListView: View {
   }
 
   var body: some View {
-    NavigationStack {
+    NavigationStack(path: $navigationPath) {
       Group {
         if displayCards.isEmpty {
           emptyState
@@ -323,7 +378,7 @@ struct CardListView: View {
           ScrollView {
             LazyVStack(spacing: 6) {
               ForEach(displayCards) { card in
-                NavigationLink(destination: BarcodeFlashView(card: card)) {
+                NavigationLink(value: WatchCardRoute(cardId: card.id)) {
                   CardRowView(card: card)
                 }
                 .buttonStyle(.plain)
@@ -336,6 +391,17 @@ struct CardListView: View {
         }
       }
       .navigationTitle(WatchL10n.string("watch.cards.title"))
+      .navigationDestination(for: WatchCardRoute.self) { route in
+        if let card = displayCards.first(where: { $0.id == route.cardId }) {
+          BarcodeFlashView(card: card)
+        } else {
+          Text(WatchL10n.string("watch.cards.unavailable"))
+            .font(.footnote)
+            .foregroundColor(.white.opacity(0.7))
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .background(Color.black)
+        }
+      }
     }
     #if DEBUG
       .toolbar {
@@ -358,6 +424,30 @@ struct CardListView: View {
 
       // existing behavior: store still used as fallback for UI tests or older builds
     }
+    .onOpenURL { url in
+      guard let cardId = WatchComplicationDeepLink.cardId(from: url) else {
+        return
+      }
+
+      openCardRouteIfAvailable(cardId)
+    }
+    .onChange(of: displayCards.map(\.id)) { _ in
+      guard let pendingDeepLinkCardId else {
+        return
+      }
+
+      openCardRouteIfAvailable(pendingDeepLinkCardId)
+    }
+  }
+
+  private func openCardRouteIfAvailable(_ cardId: String) {
+    guard displayCards.contains(where: { $0.id == cardId }) else {
+      pendingDeepLinkCardId = cardId
+      return
+    }
+
+    pendingDeepLinkCardId = nil
+    navigationPath = [WatchCardRoute(cardId: cardId)]
   }
 
   private var emptyState: some View {
