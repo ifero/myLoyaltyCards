@@ -174,6 +174,9 @@ export default [
   {
     ignores: [
       'node_modules/**',
+      // Nested Claude Code worktrees (gitignored) are full repo copies; linting
+      // them errors because their files aren't part of ./tsconfig.json's project.
+      '.claude/**',
       '.expo/**',
       'dist/**',
       'web-build/**',
