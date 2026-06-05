@@ -2,6 +2,10 @@ default_platform(:ios)
 
 app_identifier = CredentialsManager::AppfileConfig.try_fetch_value(:app_identifier)
 watch_identifier = "#{app_identifier}.watch"
+# The watch complication is a WidgetKit extension embedded in the watch app. It
+# carries the App Groups entitlement, so it needs its own explicit App ID and
+# match profile (a wildcard App ID can't hold App Groups).
+widget_identifier = "#{watch_identifier}.widget"
 
 def matched_profile_mapping(*bundle_ids)
   mapping = lane_context[Fastlane::Actions::SharedValues::MATCH_PROVISIONING_PROFILE_MAPPING] || {}
@@ -21,9 +25,40 @@ platform :ios do
     setup_ci if is_ci
   end
 
+  # Resolves match profiles for the iOS app, the watch app, and the watch
+  # widget extension, applies manual code-signing to each target, and returns
+  # the bundle-id => profile-name mapping for build_app's export options.
+  # All distribution lanes go through here so a target can never be forgotten.
+  private_lane :apply_distribution_signing do |options|
+    targets_by_identifier = {
+      app_identifier => "myLoyaltyCards",
+      watch_identifier => "watch",
+      widget_identifier => "watchwidget"
+    }
+
+    targets_by_identifier.each_key do |bundle_id|
+      match(type: options[:match_type], app_identifier: bundle_id, readonly: is_ci)
+    end
+
+    profile_mapping = matched_profile_mapping(*targets_by_identifier.keys)
+
+    targets_by_identifier.each do |bundle_id, target_name|
+      update_code_signing_settings(
+        use_automatic_signing: false,
+        path: "ios/myLoyaltyCards.xcodeproj",
+        team_id: ENV['FASTLANE_TEAM_ID'],
+        profile_name: profile_mapping.fetch(bundle_id),
+        code_sign_identity: "iPhone Distribution",
+        targets: [target_name]
+      )
+    end
+
+    profile_mapping
+  end
+
   desc "Fetch certificates (appstore, adhoc, development)"
   lane :fetch_certificates do
-    [app_identifier, watch_identifier].each do |id|
+    [app_identifier, watch_identifier, widget_identifier].each do |id|
       match(
         type: 'development',
         app_identifier: id
@@ -57,29 +92,9 @@ platform :ios do
       in_house: false
     )
 
-    # Sign app + watch targets before updating Xcode settings so we can use the
-    # exact profile names resolved by match.
-    match(type: "adhoc", app_identifier: app_identifier, readonly: is_ci)
-    match(type: "adhoc", app_identifier: watch_identifier, readonly: is_ci)
-    profile_mapping = matched_profile_mapping(app_identifier, watch_identifier)
-
-    update_code_signing_settings(
-      use_automatic_signing: false,
-      path: "ios/myLoyaltyCards.xcodeproj",
-      team_id: ENV['FASTLANE_TEAM_ID'],
-      profile_name: profile_mapping.fetch(app_identifier),
-      code_sign_identity: "iPhone Distribution",
-      targets: ["myLoyaltyCards"]
-    )
-
-    update_code_signing_settings(
-      use_automatic_signing: false,
-      path: "ios/myLoyaltyCards.xcodeproj",
-      team_id: ENV['FASTLANE_TEAM_ID'],
-      profile_name: profile_mapping.fetch(watch_identifier),
-      code_sign_identity: "iPhone Distribution",
-      targets: ["watch"]
-    )
+    # Sign the iOS app, watch app, and watch widget extension, then export with
+    # the exact profile names resolved by match.
+    profile_mapping = apply_distribution_signing(match_type: "adhoc")
 
     # Use CI run number for a guaranteed-unique, ever-increasing build number.
     # Falls back to Unix timestamp when running locally.
@@ -109,27 +124,7 @@ platform :ios do
       in_house: false
     )
 
-    match(type: "appstore", app_identifier: app_identifier, readonly: is_ci)
-    match(type: "appstore", app_identifier: watch_identifier, readonly: is_ci)
-    profile_mapping = matched_profile_mapping(app_identifier, watch_identifier)
-
-    update_code_signing_settings(
-      use_automatic_signing: false,
-      path: "ios/myLoyaltyCards.xcodeproj",
-      team_id: ENV['FASTLANE_TEAM_ID'],
-      profile_name: profile_mapping.fetch(app_identifier),
-      code_sign_identity: "iPhone Distribution",
-      targets: ["myLoyaltyCards"]
-    )
-
-    update_code_signing_settings(
-      use_automatic_signing: false,
-      path: "ios/myLoyaltyCards.xcodeproj",
-      team_id: ENV['FASTLANE_TEAM_ID'],
-      profile_name: profile_mapping.fetch(watch_identifier),
-      code_sign_identity: "iPhone Distribution",
-      targets: ["watch"]
-    )
+    profile_mapping = apply_distribution_signing(match_type: "appstore")
 
     # Retrieve last build number from TestFlight and increment
     last_build = latest_testflight_build_number(
@@ -164,27 +159,7 @@ platform :ios do
       in_house: false
     )
 
-    match(type: "appstore", app_identifier: app_identifier, readonly: is_ci)
-    match(type: "appstore", app_identifier: watch_identifier, readonly: is_ci)
-    profile_mapping = matched_profile_mapping(app_identifier, watch_identifier)
-
-    update_code_signing_settings(
-      use_automatic_signing: false,
-      path: "ios/myLoyaltyCards.xcodeproj",
-      team_id: ENV['FASTLANE_TEAM_ID'],
-      profile_name: profile_mapping.fetch(app_identifier),
-      code_sign_identity: "iPhone Distribution",
-      targets: ["myLoyaltyCards"]
-    )
-
-    update_code_signing_settings(
-      use_automatic_signing: false,
-      path: "ios/myLoyaltyCards.xcodeproj",
-      team_id: ENV['FASTLANE_TEAM_ID'],
-      profile_name: profile_mapping.fetch(watch_identifier),
-      code_sign_identity: "iPhone Distribution",
-      targets: ["watch"]
-    )
+    profile_mapping = apply_distribution_signing(match_type: "appstore")
 
     build_number = ENV['GITHUB_RUN_NUMBER'] || Time.now.to_i.to_s
     increment_build_number(
