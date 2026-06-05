@@ -10,26 +10,11 @@ const watchWidgetConfigPath = path.join(
   'watch-widget',
   'expo-target.config.js'
 );
-const watchWidgetSwiftPath = path.join(
-  repoRoot,
-  'targets',
-  'watch-widget',
-  'WatchComplicationWidget.swift'
-);
-const watchWidgetEnLprojPath = path.join(
-  repoRoot,
-  'targets',
-  'watch-widget',
-  'en.lproj',
-  'Localizable.strings'
-);
-const watchWidgetItLprojPath = path.join(
-  repoRoot,
-  'targets',
-  'watch-widget',
-  'it.lproj',
-  'Localizable.strings'
-);
+const widgetDir = path.join(repoRoot, 'targets', 'watch-widget');
+const watchWidgetSwiftPath = path.join(widgetDir, 'WatchComplicationWidget.swift');
+const assetsDir = path.join(widgetDir, 'Assets.xcassets');
+const watchWidgetEnLprojPath = path.join(widgetDir, 'en.lproj', 'Localizable.strings');
+const watchWidgetItLprojPath = path.join(widgetDir, 'it.lproj', 'Localizable.strings');
 const watchInfoPath = path.join(repoRoot, 'targets', 'watch', 'Info.plist');
 const watchSessionPath = path.join(repoRoot, 'targets', 'watch', 'WatchSessionManager.swift');
 const cardListViewPath = path.join(repoRoot, 'targets', 'watch', 'CardListView.swift');
@@ -76,14 +61,9 @@ describe('watch complication contract', () => {
     const session = fs.readFileSync(watchSessionPath, 'utf8');
     const cardList = fs.readFileSync(cardListViewPath, 'utf8');
 
-    expect(source).toContain('enum ComplicationReloader');
     expect(source).toContain('WidgetCenter.shared.reloadTimelines(ofKind: widgetKind)');
     expect(session).toContain('ComplicationReloader.reloadAllActiveComplications()');
     expect(cardList).toContain('ComplicationReloader.reloadAllActiveComplications()');
-    expect(source).toContain('enum ComplicationSharedState');
-    expect(source).toContain('persistTopCardName');
-    expect(session).toContain('ComplicationSharedState.persistTopCardName(topCardName)');
-    expect(cardList).toContain('ComplicationSharedState.persistTopCardName(topCardName)');
   });
 
   it('treats empty phone snapshots as valid so stale cards are removed', () => {
@@ -112,7 +92,7 @@ describe('watch complication contract', () => {
     expect(config).toContain('group.com.iferoporefi.myloyaltycards.watch-complication');
   });
 
-  it('declares a dedicated watch-widget extension for watch face visibility', () => {
+  it('declares a dedicated watch-widget extension as a static open-app complication', () => {
     const config = fs.readFileSync(watchWidgetConfigPath, 'utf8');
     const source = fs.readFileSync(watchWidgetSwiftPath, 'utf8');
 
@@ -120,65 +100,58 @@ describe('watch complication contract', () => {
     expect(config).toContain('group.com.iferoporefi.myloyaltycards.watch-complication');
     expect(source).toContain('@main');
     expect(source).toContain('WidgetBundle');
+    expect(source).toContain('StaticConfiguration(');
     expect(source).toContain('.supportedFamilies([');
     expect(source).toContain('.accessoryCircular');
     expect(source).toContain('.accessoryRectangular');
     expect(source).toContain('.accessoryInline');
+    // It is intentionally a non-configurable, no-card complication now.
+    expect(source).not.toContain('AppIntentConfiguration');
+    expect(source).not.toContain('selectedCard');
+    expect(source).not.toContain('import ClockKit');
   });
 
-  it('routes selected-card complication taps to the exact deep-linked card', () => {
+  it('opens the app when the complication is tapped', () => {
     const source = fs.readFileSync(watchWidgetSwiftPath, 'utf8');
-    const cardList = fs.readFileSync(cardListViewPath, 'utf8');
 
-    expect(source).toContain('components.scheme = "myloyaltycards"');
-    expect(source).toContain('components.host = "watch-card"');
-    expect(source).toContain('URLQueryItem(name: "id", value: selectedCardId)');
-    expect(source).toContain('.widgetURL(entry.deepLinkURL)');
-
-    expect(cardList).toContain('url.scheme?.lowercased() == scheme');
-    expect(cardList).toContain('url.host?.lowercased() == cardHost');
-    expect(cardList).toContain(
-      'components.queryItems?.first(where: { $0.name == cardIdQueryItem })?.value'
-    );
-    expect(cardList).toContain('.onOpenURL { url in');
-    expect(cardList).toContain('openCardRouteIfAvailable(cardId)');
-    expect(cardList).toContain('navigationPath = [WatchCardRoute(cardId: cardId)]');
+    expect(source).toContain('.widgetURL(URL(string: "myloyaltycards://watch"))');
   });
 
-  it('localizes watch-widget selected-card fallback text in English and Italian', () => {
+  it('shows the real watch app icon, downsampled to avoid WidgetKit imageTooLarge', () => {
+    const source = fs.readFileSync(watchWidgetSwiftPath, 'utf8');
+    const helper = fs.readFileSync(path.join(widgetDir, 'ComplicationImage.swift'), 'utf8');
+
+    expect(source).toContain('ComplicationImage.make("OpenAppIcon")');
+    // The empty, name-colliding AppIcon imageset must not be referenced.
+    expect(source).not.toContain('Image("AppIcon")');
+    // Bitmaps are downsampled (full-size art fails WidgetKit archiving → grey).
+    expect(helper).toContain('CGImageSourceCreateThumbnailAtIndex');
+    expect(fs.existsSync(path.join(assetsDir, 'OpenAppIcon.imageset', 'Contents.json'))).toBe(true);
+    expect(fs.existsSync(path.join(assetsDir, 'AppIcon.imageset'))).toBe(false);
+  });
+
+  it('localizes the open-app complication text in English and Italian', () => {
     const source = fs.readFileSync(watchWidgetSwiftPath, 'utf8');
     const en = fs.readFileSync(watchWidgetEnLprojPath, 'utf8');
     const it = fs.readFileSync(watchWidgetItLprojPath, 'utf8');
 
-    const keyedStrings = [
-      'watch.widget.complication.entry.choose_card.title',
-      'watch.widget.complication.entry.choose_card.subtitle',
-      'watch.widget.complication.entry.unavailable.title',
-      'watch.widget.complication.entry.unavailable.subtitle',
-      'watch.widget.complication.entry.sync.subtitle',
-      'watch.widget.complication.entry.selected.subtitle',
-      'watch.widget.complication.inline.open'
-    ];
-
-    for (const key of keyedStrings) {
+    for (const key of [
+      'watch.widget.complication.inline.open',
+      'watch.widget.complication.entry.open_app.title',
+      'watch.widget.complication.entry.open_app.subtitle'
+    ]) {
       expect(source).toContain(`WatchWidgetL10n.string("${key}")`);
       expect(en).toContain(`"${key}" =`);
       expect(it).toContain(`"${key}" =`);
     }
+  });
 
-    expect(source).toContain('@Parameter(title: "Action", default: .openApp)');
-    expect(source).toContain('var mode: WatchComplicationMode');
-    expect(source).toContain('func results() async throws -> [WatchCardChoiceEntity]');
-    expect(source).toContain(
-      'func recommendations() -> [AppIntentRecommendation<WatchComplicationConfigurationIntent>]'
-    );
-    expect(source).toContain('[]');
-
-    expect(source).toContain(
-      'WatchWidgetL10n.format("watch.widget.complication.inline.card_format", entry.title)'
-    );
-    expect(en).toContain('"watch.widget.complication.inline.card_format" =');
-    expect(it).toContain('"watch.widget.complication.inline.card_format" =');
+  it('keeps the widget asset catalog well-formed (valid colorset Contents.json)', () => {
+    for (const set of ['$widgetBackground.colorset', 'AccentColor.colorset']) {
+      const contents = path.join(assetsDir, set, 'Contents.json');
+      expect(fs.existsSync(contents)).toBe(true);
+      expect(() => JSON.parse(fs.readFileSync(contents, 'utf8'))).not.toThrow();
+    }
   });
 
   it('localizes watch app deep-link unavailable text in English and Italian', () => {
@@ -189,82 +162,5 @@ describe('watch complication contract', () => {
     expect(cardList).toContain('WatchL10n.string("watch.cards.unavailable")');
     expect(en).toContain('"watch.cards.unavailable" = "Card unavailable";');
     expect(it).toContain('"watch.cards.unavailable" = "Carta non disponibile";');
-  });
-});
-
-describe('watch complication brand color + open-app icon', () => {
-  const widgetSwift = fs.readFileSync(watchWidgetSwiftPath, 'utf8');
-  const provider = fs.readFileSync(complicationPath, 'utf8');
-  const widgetDir = path.join(repoRoot, 'targets', 'watch-widget');
-  const palettePath = path.join(widgetDir, 'WidgetCardPalette.swift');
-  const assetsDir = path.join(widgetDir, 'Assets.xcassets');
-
-  it('plumbs per-card colorHex from the provider snapshot into the widget entry', () => {
-    // Provider persists the color in the shared App Group snapshot.
-    expect(provider).toContain('let colorHex: String?');
-    expect(provider).toContain(
-      'ComplicationCardSnapshot(id: $0.id, name: $0.name, brandId: $0.brandId, colorHex: $0.colorHex)'
-    );
-    // Widget decodes it and carries it onto the timeline entry.
-    expect(widgetSwift).toContain('let colorHex: String?');
-    expect(widgetSwift).toContain('colorHex: selectedCard.colorHex');
-  });
-
-  it('renders the selected card brand on its own relative background color', () => {
-    expect(fs.existsSync(palettePath)).toBe(true);
-    const palette = fs.readFileSync(palettePath, 'utf8');
-    expect(palette).toContain('enum WidgetCardPalette');
-    // Resolves every palette key the phone sends, plus raw hex.
-    for (const key of ['blue', 'red', 'green', 'orange', 'grey']) {
-      expect(palette).toContain(`"${key}"`);
-    }
-    // Palette hexes must equal the app's canonical CARD_COLORS so the
-    // complication background is the same color shown inside the app.
-    for (const hex of ['#1A73E8', '#E2231A', '#16A34A', '#F59E0B', '#64748B']) {
-      expect(palette).toContain(hex);
-    }
-    // The widget paints the card color as the container background and keeps
-    // the brand logo legible on a chip.
-    expect(widgetSwift).toContain('WidgetCardPalette.color(for: entry.colorHex)');
-    expect(widgetSwift).toContain('.containerBackground(for: .widget)');
-    expect(widgetSwift).toContain('BrandLogoCatalog.assetName(for: entry.brandId)');
-  });
-
-  it('gives near-white brand logos a dark chip so they stay visible', () => {
-    const catalog = fs.readFileSync(path.join(widgetDir, 'BrandLogoCatalog.swift'), 'utf8');
-    expect(catalog).toContain('static func prefersDarkBacking(for brandId: String?) -> Bool');
-    // The light-logo set is generated from rendered luminance into the committed
-    // BrandLogoCatalog.generated.swift. Logos whose artwork is near-white must
-    // appear there so the widget gives them a dark chip instead of letting them
-    // disappear on the default white chip.
-    const generatedCatalog = fs.readFileSync(
-      path.join(widgetDir, 'Generated', 'BrandLogoCatalog.generated.swift'),
-      'utf8'
-    );
-    for (const lightBrand of ['coop', 'intimissimi', 'stroili', 'conad', 'tigota']) {
-      expect(generatedCatalog).toContain(`"${lightBrand}"`);
-    }
-    expect(widgetSwift).toContain('BrandLogoCatalog.prefersDarkBacking(for: entry.brandId)');
-  });
-
-  it('shows the open-app glyph from a real, non-placeholder asset', () => {
-    expect(widgetSwift).toContain('Image("OpenAppIcon")');
-    // The empty, name-colliding AppIcon imageset must not be referenced.
-    expect(widgetSwift).not.toContain('Image("AppIcon")');
-    const openAppDir = path.join(assetsDir, 'OpenAppIcon.imageset');
-    expect(fs.existsSync(path.join(openAppDir, 'Contents.json'))).toBe(true);
-    expect(fs.existsSync(path.join(assetsDir, 'AppIcon.imageset'))).toBe(false);
-    // Guard against regressing to the flat-color placeholder (<1 KB). A real
-    // rendered icon is several KB.
-    const at3x = fs.statSync(path.join(openAppDir, 'open-app-icon@3x.png')).size;
-    expect(at3x).toBeGreaterThan(3000);
-  });
-
-  it('keeps the widget asset catalog well-formed (valid colorset Contents.json)', () => {
-    for (const set of ['$widgetBackground.colorset', 'AccentColor.colorset']) {
-      const contents = path.join(assetsDir, set, 'Contents.json');
-      expect(fs.existsSync(contents)).toBe(true);
-      expect(() => JSON.parse(fs.readFileSync(contents, 'utf8'))).not.toThrow();
-    }
   });
 });
