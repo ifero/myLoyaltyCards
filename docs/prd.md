@@ -726,13 +726,27 @@ Despite solo developer resource constraint, MVP includes complete feature set fo
 - Usage pattern learning for smarter sorting
 - Card sharing within community
 
-**Household Collaboration:**
+**Household Collaboration (Epic 14):**
 
-- Household entity for member registration, shared data, and visibility controls
-- Shared shopping lists across household members
-- Shared bill tracking, expense splitting, and paid/unpaid status
-- Optional household-visible cards with per-card privacy settings
-- Household membership roles, onboarding, and sync conflict handling
+Epic 14 is split into two phases. Bill splitting is explicitly out of scope.
+
+_Phase A — Single user (no account required):_
+
+- Card sharing via deeplink: encode card data as base64 payload, share via native share sheet, recipient imports card on tap; "Copy card code" plain-text fallback for when the app is not installed
+- Shopping list: single-user local list (add, tick, delete); persists in SQLite; cloud-migrateable schema from day one
+
+_Phase B — Household (cloud account required):_
+
+- Household membership: create or join a household (max 6 members); owner + member roles; invite via short-lived token (48h expiry, single-use); local-mode users see an upgrade prompt
+- Household card sharing: per-card explicit opt-in visibility to household members; no default sharing; card snapshot stored server-side; owner attribution shown to members
+- Household shopping list sync: Phase A list gains household sync via Supabase Realtime; last-write-wins conflict resolution; offline queue with flush on reconnect
+
+_Key decisions recorded (2026-06-05):_
+
+- Deeplink HTTPS fallback: silent failure accepted for MVP; "Copy card code" plain-text fallback mitigates this
+- Household ownership transfer: two-prompt flow on owner account deletion (nominate successor + shared card disposition); personal cards deleted with account (GDPR)
+- Max household members: 6 (owner + 5), enforced server-side
+- Bill splitting: descoped from Epic 14; may be revisited as a separate epic
 
 **User Experience Enhancements:**
 

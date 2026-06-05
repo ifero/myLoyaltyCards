@@ -162,7 +162,7 @@ current_sprint:
     - 2-10-fix-barcode-qr-readability-padding
     - 5-10-watch-barcode-legibility-list-density
     - 15-2-italian-language-in-app
-    - 14-1-household-collaboration
+    - 14-1-household-collaboration-scoping
     - 6-18a-otp-verification-followup
     - 11-7-contribution-infrastructure
     - 13-7b-fix-onboarding-welcome-redirect-loop
@@ -321,11 +321,13 @@ development_status:
 
   # Epic 14: Household Collaboration
   epic-14: in-progress
-  14-1-create-household-membership: ready-for-dev
-  14-2-share-household-shopping-list: backlog
-  14-3-share-household-bills: backlog
-  14-4-share-household-cards: backlog
-  14-5-household-sync-conflict-resolution: backlog
+  14-1-household-collaboration-scoping: review
+  14-2-card-sharing-deeplink: backlog
+  14-3-shopping-list-single-user: backlog
+  14-4-household-membership: backlog
+  14-5a-household-cards-ux-design: backlog
+  14-5-household-card-sharing: backlog
+  14-6-household-shopping-list-sync: backlog
   epic-14-retrospective: optional
 
   # Epic 15: Internationalisation & Public Presence
