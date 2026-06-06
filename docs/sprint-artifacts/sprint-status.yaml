@@ -44,112 +44,10 @@ story_location: docs/sprint-artifacts
 # LAST SPRINT (completed)
 # ============================================
 last_sprint:
-  number: 13
-  name: 'Sprint 13: Auth Fixes, OTP Verification & Landing Page'
-  goal: 'Resolve three real-device bugs (dark mode, user profile, OTP auth), ship GitHub Pages landing page (EN + IT), and lay groundwork for Italian in-app (Epic 15)'
-  start_date: 2026-04-29
-  end_date: 2026-05-12
-  status: completed
-  duration: 2 weeks
-  epics: [13, 6, 15, 5]
-  stories:
-    - 13-10-fix-dark-mode-system-preference # Wave 1 (parallel)
-    - 6-16-user-profile-creation-on-signup # Wave 1 (parallel)
-    - 6-17-design-otp-verification-screen # Wave 1 (parallel) — BLOCKS 6-18
-    - 15-1-github-pages-landing-page # Wave 1 (parallel) — fully independent
-    - 5-6a-watch-connectivity-payload-hardening # Wave 1 bugfix follow-up from Apple Watch device validation
-    - 6-18-otp-email-verification-flow # Wave 2 — depends on 6-17 approval
-  notes: |
-    Sprint 13 closed successfully on 2026-05-03.
-    Summary:
-      - Delivered a mixed-epic sprint spanning Epics 13, 6, 15, and 5.
-      - Completed dark mode system preference fix, OTP verification flow, GitHub Pages landing page, and Apple Watch payload hardening.
-      - Achieved strong cross-epic coordination with design gating for 6-17 → 6-18 and real-device validation follow-up for 5-6a.
-    Retrospective lessons:
-      - Maintain sprint-level review checkpoints when multiple epics are active in the same sprint.
-      - Keep dependency gates explicit for design-to-implementation handoffs.
-      - Track device-specific follow-up work as separate bugfix stories after major epic delivery.
-    Action items:
-      1. Plan Sprint 14 with a focused backlog for Apple Watch roadmap (`5-7`, `5-8`) and Epic 15 internationalisation (`15-2`).
-      2. Carry remaining `epic-5` backlog items and `15-2` into Sprint 14 planning.
-      3. Capture technical debt discovered during this sprint in next sprint planning notes.
-  notes_sprint14_planning: |
-    Sprint 14 planned in party mode on 2026-05-03.
-    Primary Sprint 14 goals are Apple Watch reliability, Italian localization, and household collaboration discovery.
-    Core dependencies include watch complication validation, incremental catalogue generation, image-based scanning, and Italian copy approval.
-  decisions:
-    - id: DEC-S12-001
-      date: 2026-04-11
-      title: 'Prioritize TestFlight delivery for real-device testing'
-      context: |
-        Epic 13 delivered full UI implementation. ifero needs to test the complete app
-        on real devices (iPhone + Apple Watch) to validate before any further feature work.
-        iOS TestFlight pipeline already exists (Fastlane ios beta + beta-releases.yml).
-        watchOS companion has CI tests but no build/upload pipeline.
-      decision: |
-        Sprint 12 focuses on CI/CD completion + adding watchOS TestFlight pipeline.
-        One new story (11-6) added to Epic 11 for Fastlane watchOS → TestFlight.
-        iOS can ship immediately by tagging an RC (v*.*.*-rc.*).
-      consequences: |
-        - Feature work (Epic 9, 10) deferred until real-device testing completes
-        - watchOS needs Fastlane lane + GHA workflow (signing, scheme, upload)
-        - May surface real-device bugs that weren't caught in simulator
-      status: approved
-    - id: DEC-S10-001
-      date: 2026-03-28
-      title: 'Create Epic 13 (UI Implementation) as separate epic from Epic 12 (Design)'
-      context: |
-        The full app UI/UX overhaul requires two distinct phases:
-        1. Design phase (Figma deliverables) — creative team
-        2. Implementation phase (code changes) — dev team
-        Mixing design and implementation in one epic would blur accountability and sprint tracking.
-      decision: |
-        Epic 12 = Design deliverables in Figma (Sprint 10, design-only).
-        Epic 13 = Code implementation of approved designs (Sprint 11+).
-        Epic 13 stories are PLACEHOLDERS — full detail written only after ifero approves Epic 12 Figma designs.
-        Review gate between epics: designs must be approved before any implementation begins.
-      consequences: |
-        - Epic 8 (Settings & Preferences) is absorbed into Epic 13 (story 13-6 covers settings implementation).
-        - Epic 8 stories (8-1 through 8-5) will NOT be implemented separately.
-        - Epic 13 story specs will reference specific Figma frames for pixel-accurate implementation.
-        - Sprint 11 planning is blocked until Epic 12 review is complete.
-      status: approved
-    - id: DEC-S11-001
-      date: 2026-04-01
-      title: 'Include icon cleanup blockers as Sprint 11 Wave 1 items'
-      context: |
-        Epic 12 retro identified that stories 12-1 through 12-4 and the Figma design system page
-        still reference FontAwesome instead of MI/MCI. Story 13-1 implements from these specs.
-      decision: |
-        Add two blocker tickets (12-icon-doc-cleanup, 12-figma-icon-update) as Sprint 11 items
-        in Wave 1, blocking 13-1. Keeps all work visible in one sprint backlog.
-      consequences: |
-        - Wave 1 is sequential: cleanup → cleanup → 13-1
-        - No "pre-sprint" invisible work
-        - Sprint velocity reflects all actual effort
-      status: approved
-    - id: DEC-S11-002
-      date: 2026-04-01
-      title: 'Story 13-7a depends on 13-6 (not parallel in Wave 3)'
-      context: |
-        Import Data from JSON (13-7a) needs the settings screen scaffold from 13-6.
-        Running them in parallel would create integration conflicts.
-      decision: |
-        13-7a moves to Wave 3b, starting only after 13-6 completes.
-        Wave 3 runs 13-5, 13-6, 13-7 in parallel. 13-7a follows.
-      consequences: |
-        - Slight serialization in Wave 3 area
-        - Cleaner integration, no rework
-      status: approved
-
-# ============================================
-# CURRENT SPRINT
-# ============================================
-current_sprint:
   number: 14
   name: 'Sprint 14: WatchOS Reliability, Italian In-App, and Household Collaboration Planning'
   goal: 'Complete Apple Watch reliability work, finish incremental catalogue generation, enable Italian in-app readiness, begin household collaboration discovery, repair the OTP verification regression from Story 6.18, and stage barcode readability bugfix tickets for phone and watch.'
-  status: in-progress
+  status: completed
   planning_date: 2026-05-03
   start_date: 2026-05-13
   end_date: 2026-05-26
@@ -177,14 +75,73 @@ current_sprint:
       stories: [11-7]
       note: 'Developer-experience follow-up: open-source contribution docs (README, CONTRIBUTING, LICENSE), GitHub PR/issue templates, and merge-time story-status automation. Maps to NFR-M3 and NFR-M5.'
   notes: |
-    Sprint 14 has started. The focus is on completing Apple Watch reliability work, Italian in-app readiness, beginning household collaboration discovery, and absorbing the OTP verification follow-up bugfix discovered after Story 6.18 shipped.
-    On 2026-05-24, two additional bugfix planning stories were added and refined to ready-for-dev: Story 2.10 (phone barcode/QR readability + quiet-zone padding) and Story 5.10 (watch barcode legibility + list density polish).
-    On 2026-06-04, Story 13.7b was added as a regression follow-up after two testers reported being returned to the welcome screen on every launch: the Story 13.7 routed-onboarding refactor only cleared the first-launch flag on the local-mode path, so account-creation and sign-in users were trapped. The fix makes the welcome gate auth-aware and removes the dead FirstCardGuidanceScreen left over from 13.7.
-    This sprint keeps scope tight while advancing the highest-value customer and platform work.
+    Sprint 14 closed successfully on 2026-05-26. 10/10 stories done (14-1 updated to done post-sprint).
+    Summary:
+      - Delivered a wide-scope sprint spanning Epics 2, 5, 6, 14, and 15.
+      - Apple Watch epic (Epic 5) fully wrapped: 5-7, 5-8, and 5-10 all landed.
+      - Italian localization (15-2) shipped cleanly.
+      - Household collaboration scoping (14-1) completed — Epic 14 Phase A ready to implement.
+      - OTP verification follow-up bugfix (6-18a) resolved the 8-digit OTP + single-field regression.
+      - Unplanned regression fix (13-7b) absorbed without derailing the sprint.
+  retrospective: |
+    Retrospective completed 2026-06-06.
+    Delivery: 10/10 stories done across 5 epics (14-1 updated to done post-sprint).
+    What went well:
+      - Strong throughput across a wide scope (Watch, localization, barcode, OTP, infra).
+      - Apple Watch epic (Epic 5) fully wrapped: 5-7, 5-8, and 5-10 all landed.
+      - Italian localization (15-2) shipped cleanly.
+      - Unplanned regression fix (13-7b, added 2026-06-04) absorbed without derailing the sprint.
+    What could have gone better:
+      - Story 5-7 (Watch Complication): agent started on deprecated ClockKit instead of current
+        WidgetKit. Had to pivot mid-story, still ended up delivering a generic complication rather
+        than the specific one intended. Rework loop caused significant frustration.
+    Action items for Sprint 15:
+      1. Mandatory API currency check: before any story touching Apple platform APIs (Watch,
+         WidgetKit, PassKit, etc.), verify the current API via Context7 or official docs.
+         Non-negotiable — goes in story acceptance criteria.
+      2. Spike-first for Watch/native APIs: no full implementation without a validated proof of
+         concept on device first.
+      3. Backlog a follow-up story in Epic 5 to replace the generic complication with the
+         specific complication originally intended in 5-7.
+
+# ============================================
+# CURRENT SPRINT
+# ============================================
+current_sprint:
+  number: 15
+  name: 'Sprint 15: Smart Card Sorting'
+  goal: 'Complete Epic 9 — activate usage tracking and favourites, implement the smart sorting algorithm, and sync card order to Apple Watch.'
+  status: planning
+  planning_date: 2026-06-06
+  start_date: 2026-06-09
+  end_date: 2026-06-20
+  duration: 2 weeks
+  epics: [9]
+  stories:
+    - 9-1-track-card-usage
+    - 9-2-mark-card-as-favorite
+    - 9-3-implement-sorting-algorithm
+    - 9-4-sync-sorting-to-watch
+  waves:
+    wave_1:
+      stories: [9-1, 9-2]
+      note: 'Parallel — independent. Activate usage tracking (usageCount + lastUsedAt on card display) and favourites (isFavorite toggle + visual indicator). Schema fields already exist from Epic 2.'
+    wave_2:
+      stories: [9-3]
+      note: 'Depends on Wave 1. Implement sorting algorithm: favourites first → frequency → recency → alphabetical. Applies to phone card list.'
+    wave_3:
+      stories: [9-4]
+      note: 'Depends on Wave 2. Sync sort order and usage data (usageCount, lastUsedAt, isFavorite) to Apple Watch.'
+  notes: |
+    Sprint 15 planned on 2026-06-06 following Sprint 14 retrospective.
+    Focus is entirely on Epic 9 (Smart Card Sorting) — a focused single-epic sprint to deliver
+    a high-value UX improvement using schema fields already in place since Epic 2.
+    Epic 14 (Household Collaboration) deferred: Phase A (deeplink sharing + shopping list)
+    requires dedicated UX/UI design work before implementation begins.
+    Decision: Epic 9 first because schema is ready, Watch integration is unblocked (Epic 5 done),
+    and the feature directly improves daily usability for all existing users.
 
 next_sprint: null
-
-# Future sprint details will be planned after Sprint 14 completion.
 
 development_status:
   # ============================================
@@ -302,11 +259,11 @@ development_status:
   # ============================================
 
   # Epic 9: Smart Card Sorting
-  epic-9: backlog
-  9-1-track-card-usage: backlog
-  9-2-mark-card-as-favorite: backlog
-  9-3-implement-sorting-algorithm: backlog
-  9-4-sync-sorting-to-watch: backlog
+  epic-9: in-progress
+  9-1-track-card-usage: ready-for-dev
+  9-2-mark-card-as-favorite: ready-for-dev
+  9-3-implement-sorting-algorithm: ready-for-dev
+  9-4-sync-sorting-to-watch: ready-for-dev
   epic-9-retrospective: optional
 
   # Epic 10: Wear OS App
@@ -321,7 +278,7 @@ development_status:
 
   # Epic 14: Household Collaboration
   epic-14: in-progress
-  14-1-household-collaboration-scoping: review
+  14-1-household-collaboration-scoping: done
   14-2-card-sharing-deeplink: backlog
   14-3-shopping-list-single-user: backlog
   14-4-household-membership: backlog
