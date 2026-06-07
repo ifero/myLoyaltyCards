@@ -260,7 +260,7 @@ development_status:
 
   # Epic 9: Smart Card Sorting
   epic-9: in-progress
-  9-1-track-card-usage: review
+  9-1-track-card-usage: done
   9-2-mark-card-as-favorite: ready-for-dev
   9-3-implement-sorting-algorithm: ready-for-dev
   9-4-sync-sorting-to-watch: ready-for-dev
