@@ -8,8 +8,9 @@
  * Card name displayed below tile.
  */
 
+import { MaterialIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { View, Text, Pressable, StyleSheet, Platform } from 'react-native';
 import Animated, {
@@ -79,6 +80,7 @@ export const CardTile: React.FC<CardTileProps> = ({
   const { t } = useTranslation();
   const router = useRouter();
   const brand = useBrandLogo(card.brandId);
+  const [isPressed, setIsPressed] = useState(false);
 
   // Highlight animation: green border fades out after 2 seconds
   const highlightOpacity = useSharedValue(highlighted ? 1 : 0);
@@ -121,7 +123,9 @@ export const CardTile: React.FC<CardTileProps> = ({
   return (
     <Pressable
       onPress={handlePress}
-      style={({ pressed }) => [pressed && styles.pressed]}
+      onPressIn={() => setIsPressed(true)}
+      onPressOut={() => setIsPressed(false)}
+      style={isPressed ? styles.pressed : undefined}
       accessibilityRole="button"
       accessibilityLabel={card.name}
       accessibilityHint={t('cards.home.cardTileAccessibilityHint')}
@@ -158,6 +162,14 @@ export const CardTile: React.FC<CardTileProps> = ({
             <Text style={[styles.avatarText, { color: foregroundColor }]}>{firstLetter}</Text>
           </View>
         )}
+
+        {/* Favourite badge (Story 9.2 — AC2): shown only when pinned. White plate
+            keeps the amber star legible on any tile colour, incl. light/yellow brands. */}
+        {card.isFavorite && (
+          <View style={styles.favouriteBadge} testID="favourite-badge">
+            <MaterialIcons name="star" size={16} color={theme.warning} />
+          </View>
+        )}
       </Animated.View>
 
       {/* Card name below tile */}
@@ -175,6 +187,17 @@ export const CardTile: React.FC<CardTileProps> = ({
 const styles = StyleSheet.create({
   pressed: {
     opacity: 0.7
+  },
+  favouriteBadge: {
+    position: 'absolute',
+    top: 6,
+    right: 6,
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    backgroundColor: 'rgba(255, 255, 255, 0.95)',
+    alignItems: 'center',
+    justifyContent: 'center'
   },
   tileContainer: {
     justifyContent: 'center',

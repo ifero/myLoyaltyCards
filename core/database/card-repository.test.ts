@@ -10,7 +10,8 @@ import {
   batchUpsertCards,
   deleteAllCards,
   getCardCount,
-  incrementUsageCount
+  incrementUsageCount,
+  toggleFavorite
 } from './card-repository';
 import { LoyaltyCard } from '../schemas';
 import * as databaseModule from './database';
@@ -267,6 +268,64 @@ describe('card-repository', () => {
       const db = makeDb([sampleRow]);
       const spy = jest.spyOn(databaseModule, 'getDatabase').mockReturnValue(db);
       await incrementUsageCount('1');
+      expect(spy).toHaveBeenCalled();
+      expect(db.runAsync).toHaveBeenCalled();
+    });
+  });
+
+  describe('toggleFavorite (Story 9.2)', () => {
+    test('issues a single atomic UPDATE that flips is_favorite and stamps updated_at (AC1)', async () => {
+      const db = makeDb();
+      await toggleFavorite('1', db);
+
+      expect(db.runAsync).toHaveBeenCalledTimes(1);
+      const [sql, params] = (db.runAsync as jest.Mock).mock.calls[0];
+      expect(sql).toContain('is_favorite = NOT is_favorite');
+      expect(sql).toContain('updated_at = ?');
+      expect(sql).toContain('WHERE id = ?');
+
+      // params: [updated_at, id] — the NOT flip needs no bind parameter
+      expect(params).toHaveLength(2);
+      const ISO_8601_UTC = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/;
+      expect(params[0]).toMatch(ISO_8601_UTC);
+      expect(params[1]).toBe('1');
+    });
+
+    test('uses NOT is_favorite so one statement toggles both directions (AC1)', async () => {
+      // The DB performs the flip; the identical statement turns false→true and
+      // true→false, so the single statement covers both transitions.
+      const db = makeDb();
+      await toggleFavorite('1', db);
+      await toggleFavorite('1', db);
+
+      expect(db.runAsync).toHaveBeenCalledTimes(2);
+      (db.runAsync as jest.Mock).mock.calls.forEach(([sql]) => {
+        expect(sql).toContain('is_favorite = NOT is_favorite');
+      });
+    });
+
+    test('does not use a transaction (single atomic UPDATE)', async () => {
+      const db = makeDb();
+      await toggleFavorite('1', db);
+      expect(db.withTransactionAsync).not.toHaveBeenCalled();
+    });
+
+    test('pushes snapshot to watch after the update (AC5)', async () => {
+      const db = makeDb([sampleRow]);
+      await toggleFavorite('1', db);
+      // pushSnapshotToWatch reads all cards via getAllAsync
+      expect(db.getAllAsync).toHaveBeenCalled();
+    });
+
+    test('silently no-ops for unknown id — no throw (AC1)', async () => {
+      const db = makeDb();
+      await expect(toggleFavorite('does-not-exist', db)).resolves.toBeUndefined();
+    });
+
+    test('uses default getDatabase when no db supplied (AC4)', async () => {
+      const db = makeDb([sampleRow]);
+      const spy = jest.spyOn(databaseModule, 'getDatabase').mockReturnValue(db);
+      await toggleFavorite('1');
       expect(spy).toHaveBeenCalled();
       expect(db.runAsync).toHaveBeenCalled();
     });

@@ -89,7 +89,8 @@ describe('CardTile', () => {
         textSecondary: '#66666B',
         border: '#E5E5EB',
         borderStrong: '#8F8F94',
-        surfaceElevated: '#F5F5F5'
+        surfaceElevated: '#F5F5F5',
+        warning: '#D97706'
       },
       isDark: false
     });
@@ -175,7 +176,8 @@ describe('CardTile', () => {
           textSecondary: '#D9D9DE',
           border: '#38383A',
           borderStrong: '#66666B',
-          surfaceElevated: '#2C2C2E'
+          surfaceElevated: '#2C2C2E',
+          warning: '#F59E0B'
         },
         isDark: true
       });
@@ -204,6 +206,16 @@ describe('CardTile', () => {
       fireEvent.press(tile);
       expect(mockPush).toHaveBeenCalledWith('/card/1');
     });
+
+    it('handles pressIn/pressOut for pressed styling without crashing (Story 9.2 Pressable refactor)', () => {
+      render(<CardTile card={mockCard} />);
+      const tile = screen.getByLabelText('Test Store');
+      expect(() => {
+        fireEvent(tile, 'pressIn');
+        fireEvent(tile, 'pressOut');
+      }).not.toThrow();
+      expect(screen.getByText('Test Store')).toBeTruthy();
+    });
   });
 
   describe('Accessibility — AC9', () => {
@@ -224,6 +236,18 @@ describe('CardTile', () => {
     it('renders without crashing when highlighted is true', () => {
       const { toJSON } = render(<CardTile card={mockCard} highlighted />);
       expect(toJSON()).toBeTruthy();
+    });
+  });
+
+  describe('Favourite badge — Story 9.2 (AC2, AC3)', () => {
+    it('renders the favourite badge when isFavorite is true (AC2)', () => {
+      render(<CardTile card={{ ...mockCard, isFavorite: true }} />);
+      expect(screen.getByTestId('favourite-badge')).toBeTruthy();
+    });
+
+    it('does not render the favourite badge when isFavorite is false (AC3)', () => {
+      render(<CardTile card={{ ...mockCard, isFavorite: false }} />);
+      expect(screen.queryByTestId('favourite-badge')).toBeNull();
     });
   });
 

@@ -266,6 +266,31 @@ export async function incrementUsageCount(
 }
 
 /**
+ * Toggle a card's favourite flag and stamp updated_at.
+ * Story 9.2: Mark Card as Favorite
+ *
+ * Atomic single-statement UPDATE (SQLite guarantees statement atomicity, so no
+ * transaction is needed). `NOT is_favorite` flips the stored 0/1 in either
+ * direction. Unknown ids affect 0 rows and silently no-op. Pushes the updated
+ * snapshot to the Watch (AC5), matching every other write function. The bumped
+ * updated_at is what existing delta sync picks up to propagate to cloud (AC4).
+ */
+export async function toggleFavorite(
+  id: string,
+  db: SQLiteDatabase = getDatabase()
+): Promise<void> {
+  const now = new Date().toISOString();
+  await db.runAsync(
+    `UPDATE loyalty_cards
+      SET is_favorite = NOT is_favorite,
+          updated_at = ?
+      WHERE id = ?`,
+    [now, id]
+  );
+  await pushSnapshotToWatch(db);
+}
+
+/**
  * Get the count of cards in the database
  */
 export async function getCardCount(db: SQLiteDatabase = getDatabase()): Promise<number> {

@@ -611,6 +611,8 @@ export const it = {
       loadFailed: 'Impossibile caricare i dettagli della carta',
       missingDescription: 'La carta che stai cercando non esiste o è stata eliminata.',
       backAccessibilityLabel: 'Torna indietro',
+      favoriteAccessibilityLabel: 'Aggiungi ai preferiti',
+      unfavoriteAccessibilityLabel: 'Rimuovi dai preferiti',
       viewFullscreenAccessibilityLabel: 'Mostra il codice a barre a schermo intero',
       viewFullscreenHint: 'Apre il codice a barre a schermo intero per la scansione',
       tapToEnlarge: 'Tocca per ingrandire',
