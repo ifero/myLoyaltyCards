@@ -21,5 +21,6 @@ export {
   upsertCard,
   batchUpsertCards,
   deleteAllCards,
-  getCardCount
+  getCardCount,
+  incrementUsageCount
 } from './card-repository';

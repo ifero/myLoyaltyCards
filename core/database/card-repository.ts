@@ -242,6 +242,30 @@ export async function batchUpsertCards(
 }
 
 /**
+ * Increment a card's usage count and stamp its last-used time.
+ * Story 9.1: Track Card Usage
+ *
+ * Atomic single-statement UPDATE (SQLite guarantees statement atomicity, so no
+ * transaction is needed). Unknown ids affect 0 rows and silently no-op. Pushes
+ * the updated snapshot to the Watch, matching every other write function.
+ */
+export async function incrementUsageCount(
+  id: string,
+  db: SQLiteDatabase = getDatabase()
+): Promise<void> {
+  const now = new Date().toISOString();
+  await db.runAsync(
+    `UPDATE loyalty_cards
+      SET usage_count = usage_count + 1,
+          last_used_at = ?,
+          updated_at = ?
+      WHERE id = ?`,
+    [now, now, id]
+  );
+  await pushSnapshotToWatch(db);
+}
+
+/**
  * Get the count of cards in the database
  */
 export async function getCardCount(db: SQLiteDatabase = getDatabase()): Promise<number> {
