@@ -54,6 +54,7 @@ export { useBrandLogo } from './hooks/useBrandLogo';
 export { useCardSearch } from './hooks/useCardSearch';
 export { useCardSort } from './hooks/useCardSort';
 export type { SortOption } from './hooks/useCardSort';
+export { useTrackCardUsage } from './hooks/useTrackCardUsage';
 
 // Repositories
 export { CatalogueRepository, catalogueRepository } from './repositories/catalogue-repository';

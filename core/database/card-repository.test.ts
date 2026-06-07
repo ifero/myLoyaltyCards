@@ -9,7 +9,8 @@ import {
   upsertCard,
   batchUpsertCards,
   deleteAllCards,
-  getCardCount
+  getCardCount,
+  incrementUsageCount
 } from './card-repository';
 import { LoyaltyCard } from '../schemas';
 import * as databaseModule from './database';
@@ -210,6 +211,65 @@ describe('card-repository', () => {
     expect(spy).toHaveBeenCalled();
     expect(db.withTransactionAsync).toHaveBeenCalled();
     expect(db.runAsync).toHaveBeenCalledTimes(1);
+  });
+
+  describe('incrementUsageCount (Story 9.1)', () => {
+    test('increments usage_count by 1 and sets last_used_at + updated_at (AC1)', async () => {
+      const db = makeDb();
+      await incrementUsageCount('1', db);
+
+      expect(db.runAsync).toHaveBeenCalledTimes(1);
+      const [sql, params] = (db.runAsync as jest.Mock).mock.calls[0];
+      expect(sql).toContain('usage_count = usage_count + 1');
+      expect(sql).toContain('last_used_at = ?');
+      expect(sql).toContain('updated_at = ?');
+      expect(sql).toContain('WHERE id = ?');
+
+      // params: [last_used_at, updated_at, id] — timestamps equal, id last
+      expect(params).toHaveLength(3);
+      // AC1: value must be a real UTC ISO-8601 timestamp, not just any string
+      const ISO_8601_UTC = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/;
+      expect(params[0]).toMatch(ISO_8601_UTC);
+      expect(params[0]).toBe(params[1]); // both columns stamped identically
+      expect(params[2]).toBe('1');
+    });
+
+    test('calling twice issues two atomic increment statements (AC2)', async () => {
+      const db = makeDb();
+      await incrementUsageCount('1', db);
+      await incrementUsageCount('1', db);
+
+      expect(db.runAsync).toHaveBeenCalledTimes(2);
+      (db.runAsync as jest.Mock).mock.calls.forEach(([sql]) => {
+        expect(sql).toContain('usage_count = usage_count + 1');
+      });
+    });
+
+    test('does not use a transaction (single atomic UPDATE)', async () => {
+      const db = makeDb();
+      await incrementUsageCount('1', db);
+      expect(db.withTransactionAsync).not.toHaveBeenCalled();
+    });
+
+    test('pushes snapshot to watch after the update (AC3)', async () => {
+      const db = makeDb([sampleRow]);
+      await incrementUsageCount('1', db);
+      // pushSnapshotToWatch reads all cards via getAllAsync
+      expect(db.getAllAsync).toHaveBeenCalled();
+    });
+
+    test('silently no-ops for unknown id — no throw (AC5)', async () => {
+      const db = makeDb();
+      await expect(incrementUsageCount('does-not-exist', db)).resolves.toBeUndefined();
+    });
+
+    test('uses default getDatabase when no db supplied (AC4)', async () => {
+      const db = makeDb([sampleRow]);
+      const spy = jest.spyOn(databaseModule, 'getDatabase').mockReturnValue(db);
+      await incrementUsageCount('1');
+      expect(spy).toHaveBeenCalled();
+      expect(db.runAsync).toHaveBeenCalled();
+    });
   });
 
   test('batchUpsertCards passes correct SQL parameters including boolean mapping', async () => {

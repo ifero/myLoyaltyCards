@@ -23,7 +23,7 @@ import { getContrastForeground } from '@/shared/theme/luminance';
 import { SPACING } from '@/shared/theme/spacing';
 import { showToast } from '@/shared/toast';
 
-import { CardDetails, useDeleteCard, useBrandLogo } from '@/features/cards';
+import { CardDetails, useDeleteCard, useBrandLogo, useTrackCardUsage } from '@/features/cards';
 
 const CardDetailsScreen = () => {
   const { theme } = useTheme();
@@ -40,6 +40,9 @@ const CardDetailsScreen = () => {
 
   // Resolve brand data — MUST be called before any early returns (Rules of Hooks)
   const brand = useBrandLogo(card?.brandId ?? null);
+
+  // Track a usage event each time this card's detail screen gains focus (Story 9.1)
+  useTrackCardUsage(id ?? '');
 
   // Scroll-aware condensing state (AC5) — hooks MUST be before early returns
   const [isHeaderCondensed, setIsHeaderCondensed] = useState(false);
