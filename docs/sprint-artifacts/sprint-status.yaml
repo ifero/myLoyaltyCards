@@ -354,6 +354,10 @@ development_status:
   epic-16: backlog
   16-1-migrate-nativewind-to-unistyles: drafted # drafted in party mode 2026-06-04; ONE atomic story (decided NOT to split — solo dev, no partial release). Open decisions for refinement: incremental dev approach + Unistyles v3 plugin coexistence. NOT yet sprinted.
   16-2-implement-logger-sentry-wrapper: done # follow-up from Story 9.2 code review (2026-06-07): docs prescribe a logger/Sentry wrapper but features/ uses console.* directly, so prod error reporting never fires. Implement wrapper + migrate call sites project-wide. Story file drafted.
+  16-3-design-contribution-workflow: backlog # design-in-code (party mode 2026-06-08): CONTRIBUTING-DESIGN.md + design label/issue template + PR-conventions exemption + Figma demotion + docs/design/ home. Engine-agnostic. Answers "contribute UX via PRs". NOT yet sprinted.
+  16-4-design-tokens-dtcg-style-dictionary: backlog # promote shared/theme tokens to portable DTCG JSON + Style Dictionary generating tokens.generated.ts; keep catalogue/statusBar/TAILWIND_* hand-authored. Engine-agnostic. NOT yet sprinted.
+  16-5-component-gallery-storybook-chromatic: backlog # web Storybook (react-native-web) + Chromatic (free OSS) for visual component PR review. BLOCKED BY 16-1 (styling engine). NOT yet sprinted.
+  16-6-stand-up-penpot-design-space: backlog # FOLLOW-UP (requested): open no-seat-limit Penpot as ideation surface; repo stays canonical. TRIGGER: real visual designers want in. NOT yet sprinted.
   epic-16-retrospective: optional
 
   # Epic 17: Apple Wallet Pass Support — FEASIBILITY-FIRST
