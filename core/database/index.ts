@@ -22,5 +22,6 @@ export {
   batchUpsertCards,
   deleteAllCards,
   getCardCount,
-  incrementUsageCount
+  incrementUsageCount,
+  toggleFavorite
 } from './card-repository';

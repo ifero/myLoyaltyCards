@@ -607,6 +607,8 @@ export const en = {
       loadFailed: 'Failed to load card details',
       missingDescription: "The card you're looking for doesn't exist or has been deleted.",
       backAccessibilityLabel: 'Go back',
+      favoriteAccessibilityLabel: 'Add to favorites',
+      unfavoriteAccessibilityLabel: 'Remove from favorites',
       viewFullscreenAccessibilityLabel: 'View full screen barcode',
       viewFullscreenHint: 'Opens the barcode in full screen for scanning',
       tapToEnlarge: 'Tap to enlarge',

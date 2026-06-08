@@ -23,7 +23,13 @@ import { getContrastForeground } from '@/shared/theme/luminance';
 import { SPACING } from '@/shared/theme/spacing';
 import { showToast } from '@/shared/toast';
 
-import { CardDetails, useDeleteCard, useBrandLogo, useTrackCardUsage } from '@/features/cards';
+import {
+  CardDetails,
+  useDeleteCard,
+  useBrandLogo,
+  useTrackCardUsage,
+  useToggleFavorite
+} from '@/features/cards';
 
 const CardDetailsScreen = () => {
   const { theme } = useTheme();
@@ -43,6 +49,15 @@ const CardDetailsScreen = () => {
 
   // Track a usage event each time this card's detail screen gains focus (Story 9.1)
   useTrackCardUsage(id ?? '');
+
+  // Toggle favourite with optimistic update — setCard reflects the new state in
+  // the header star instantly and rolls back on write failure (Story 9.2).
+  // isPending disables the control briefly so a rapid double-tap can't desync
+  // the optimistic UI from the persisted value.
+  const { toggle: handleToggleFavorite, isPending: isFavoritePending } = useToggleFavorite(
+    card,
+    setCard
+  );
 
   // Scroll-aware condensing state (AC5) — hooks MUST be before early returns
   const [isHeaderCondensed, setIsHeaderCondensed] = useState(false);
@@ -187,6 +202,27 @@ const CardDetailsScreen = () => {
               hitSlop={8}
             >
               <MaterialIcons name="chevron-left" size={28} color={headerTextColor} />
+            </Pressable>
+          ),
+          headerRight: () => (
+            <Pressable
+              onPress={handleToggleFavorite}
+              disabled={isFavoritePending}
+              accessibilityRole="button"
+              accessibilityLabel={
+                card.isFavorite
+                  ? t('cards.details.unfavoriteAccessibilityLabel')
+                  : t('cards.details.favoriteAccessibilityLabel')
+              }
+              accessibilityState={{ disabled: isFavoritePending }}
+              hitSlop={8}
+              testID="favourite-toggle"
+            >
+              <MaterialIcons
+                name={card.isFavorite ? 'star' : 'star-border'}
+                size={26}
+                color={card.isFavorite ? theme.warning : headerTextColor}
+              />
             </Pressable>
           )
         }}

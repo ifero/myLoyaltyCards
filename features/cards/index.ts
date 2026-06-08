@@ -55,6 +55,8 @@ export { useCardSearch } from './hooks/useCardSearch';
 export { useCardSort } from './hooks/useCardSort';
 export type { SortOption } from './hooks/useCardSort';
 export { useTrackCardUsage } from './hooks/useTrackCardUsage';
+export { useToggleFavorite } from './hooks/useToggleFavorite';
+export type { UseToggleFavoriteReturn } from './hooks/useToggleFavorite';
 
 // Repositories
 export { CatalogueRepository, catalogueRepository } from './repositories/catalogue-repository';
