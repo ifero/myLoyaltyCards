@@ -71,7 +71,7 @@ jobs:
               --body "✅ Story marked **done** on \`${{ github.event.pull_request.base.ref }}\` (\`sprint-status.yaml\` + story file) in a \`[skip ci]\` follow-up commit."
           elif [ "$OUTCOME" = "success" ]; then
             gh pr comment "$PR" \
-              --body "ℹ️ No story status change applied — either it was already \`done\`, or no story could be matched. Link a \`docs/sprint-artifacts/stories/<id>.md\` story in the PR body or end the title with \`(Story X.Y)\`."
+              --body "ℹ️ No story status change applied — the referenced story wasn't in \`review\` (its story file must read \`Status: review\`), it was already \`done\`, or no story could be matched. Move the story to \`review\` first, or link a \`docs/sprint-artifacts/stories/<id>.md\` story in the PR body / end the title with \`(Story X.Y)\`."
           else
             gh pr comment "$PR" \
               --body "⚠️ Could not push the story status update to \`${{ github.event.pull_request.base.ref }}\`. If the branch is protected against direct pushes, add a \`STORY_BOT_TOKEN\` secret allowed to bypass it. See the workflow run logs."

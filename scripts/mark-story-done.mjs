@@ -1,7 +1,13 @@
 #!/usr/bin/env node
 // Marks the story referenced by a PR as "done" in BOTH:
 //   - docs/sprint-artifacts/sprint-status.yaml   (the development_status map)
-//   - docs/sprint-artifacts/stories/<slug>.md    (the "**Status:**" line)
+//   - docs/sprint-artifacts/stories/<slug>.md    (the "Status:" line)
+//
+// GATE: a story is only advanced to "done" when its story file currently reads
+// "Status: review". Any other status (backlog/drafted/ready-for-dev/in-progress)
+// is left untouched — a merged PR that merely references a non-review story must
+// not complete it. The story .md is the source of truth (sprint-status.yaml never
+// holds "review"; it is the OUTPUT of this script, not the gate).
 //
 // Story reference resolution (first that matches wins):
 //   0. An exact slug passed as an arg (e.g. "5-9-edit-card").
@@ -29,12 +35,24 @@ const DRY_RUN = process.env.DRY_RUN === '1' || process.env.DRY_RUN === 'true';
 const log = (...a) => console.log('[mark-story-done]', ...a);
 const escapeRe = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
+// A story is only advanced to "done" from this status (read off the story file).
+const REQUIRED_STATUS = 'review';
+
 const write = (file, contents) => {
   if (DRY_RUN) {
     log(`(dry-run) would write ${file}`);
     return;
   }
   writeFileSync(file, contents);
+};
+
+// Current status token from the story file's "Status:" line (plain or **bold**),
+// or null if the file or the line is missing.
+const readStoryFileStatus = (slug) => {
+  const file = join(STORIES_DIR, `${slug}.md`);
+  if (!existsSync(file)) return null;
+  const m = readFileSync(file, 'utf8').match(/^(?:\*\*Status:\*\*|Status:)[ \t]*(\S+)/m);
+  return m ? m[1] : null;
 };
 
 const markStoryFile = (slug) => {
@@ -44,9 +62,13 @@ const markStoryFile = (slug) => {
     return false;
   }
   const before = readFileSync(file, 'utf8');
-  const after = before.replace(/^\*\*Status:\*\*.*$/m, '**Status:** done');
+  // Match "Status: <x>" (plain or legacy **bold**); set to done, keep label + tail.
+  const after = before.replace(
+    /^(\*\*Status:\*\*|Status:)([ \t]*)\S+(.*)$/m,
+    (_m, label, gap, tail) => `${label}${gap}done${tail}`
+  );
   if (after === before) {
-    log(`• story file unchanged (already done or no "**Status:**" line): ${slug}.md`);
+    log(`• story file unchanged (already done or no "Status:" line): ${slug}.md`);
     return false;
   }
   write(file, after);
@@ -93,6 +115,14 @@ log(`Resolved story slug(s): ${slugs.join(', ')}`);
 
 let changed = false;
 for (const slug of slugs) {
+  // Gate: only advance a story to "done" if its story file says "review".
+  const status = readStoryFileStatus(slug);
+  if (status !== REQUIRED_STATUS) {
+    log(
+      `• skip ${slug}: story status is "${status ?? 'unknown'}", not "${REQUIRED_STATUS}" — leaving unchanged`
+    );
+    continue;
+  }
   const storyChanged = markStoryFile(slug);
   const statusChanged = markSprintStatus(slug);
   changed = changed || storyChanged || statusChanged;

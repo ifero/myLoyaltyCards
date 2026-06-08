@@ -353,7 +353,7 @@ development_status:
   #   ~31 className files; shared/theme preserved. Ships ATOMICALLY (no partial release).
   epic-16: backlog
   16-1-migrate-nativewind-to-unistyles: drafted # drafted in party mode 2026-06-04; ONE atomic story (decided NOT to split — solo dev, no partial release). Open decisions for refinement: incremental dev approach + Unistyles v3 plugin coexistence. NOT yet sprinted.
-  16-2-implement-logger-sentry-wrapper: done # follow-up from Story 9.2 code review (2026-06-07): docs prescribe a logger/Sentry wrapper but features/ uses console.* directly, so prod error reporting never fires. Implement wrapper + migrate call sites project-wide. Story file drafted.
+  16-2-implement-logger-sentry-wrapper: drafted # follow-up from Story 9.2 code review (2026-06-07): docs prescribe a logger/Sentry wrapper but features/ uses console.* directly, so prod error reporting never fires. Implement wrapper + migrate call sites project-wide. Story file drafted.
   epic-16-retrospective: optional
 
   # Epic 17: Apple Wallet Pass Support — FEASIBILITY-FIRST
