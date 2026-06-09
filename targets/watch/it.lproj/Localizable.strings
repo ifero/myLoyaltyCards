@@ -6,6 +6,7 @@
 "watch.cards.fallback_name" = "Carta";
 "watch.cards.unavailable" = "Carta non disponibile";
 "watch.card_row.accessibility_format" = "Carta, %@";
+"watch.card_row.favorite_accessibility_format" = "Carta preferita, %@";
 "watch.debug.import_sample_cards" = "Importa carte di esempio";
 "watch.barcode.accessibility.image_format" = "Codice a barre per %@";
 "watch.barcode.accessibility.value_format" = "Valore codice a barre per %@";

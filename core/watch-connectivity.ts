@@ -118,6 +118,7 @@ export interface WatchCardPayload {
   usageCount: number;
   lastUsedAt: string | null;
   createdAt: string;
+  isFavorite: boolean;
 }
 
 const WATCH_QR_PIXEL_SIZE = 144;
@@ -190,7 +191,8 @@ function toBaseWatchCardPayload(card: LoyaltyCard): WatchCardPayload {
     barcodeFormat: card.barcodeFormat,
     usageCount: card.usageCount ?? 0,
     lastUsedAt: card.lastUsedAt ?? null,
-    createdAt: card.createdAt
+    createdAt: card.createdAt,
+    isFavorite: card.isFavorite
   };
 }
 

@@ -187,6 +187,7 @@ final class WatchSessionManager: NSObject, WCSessionDelegate {
         entity.usageCount = card.usageCount
         entity.lastUsedAt = card.lastUsedAt
         entity.createdAt = card.createdAt
+        entity.isFavorite = card.isFavorite
         entity.updatedAt = Date()
         entity.rawPayload = raw
       } else {
@@ -197,7 +198,7 @@ final class WatchSessionManager: NSObject, WCSessionDelegate {
           barcodeFormat: card.barcodeFormat ?? "CODE128",
           brandId: card.brandId,
           color: card.colorHex ?? "grey",
-          isFavorite: false,
+          isFavorite: card.isFavorite,
           lastUsedAt: card.lastUsedAt,
           usageCount: card.usageCount,
           createdAt: card.createdAt,
@@ -215,16 +216,7 @@ final class WatchSessionManager: NSObject, WCSessionDelegate {
     try? context.save()
     ComplicationSharedState.persistCards(cards)
 
-    let topCardName = cards
-      .sorted {
-        if $0.usageCount != $1.usageCount { return $0.usageCount > $1.usageCount }
-        if let lhsLast = $0.lastUsedAt, let rhsLast = $1.lastUsedAt, lhsLast != rhsLast {
-          return lhsLast > rhsLast
-        }
-        return $0.createdAt > $1.createdAt
-      }
-      .first?
-      .name
+    let topCardName = WatchCard.sortedForDisplay(cards).first?.name
 
     ComplicationSharedState.persistTopCardName(topCardName)
     ComplicationReloader.reloadAllActiveComplications()
