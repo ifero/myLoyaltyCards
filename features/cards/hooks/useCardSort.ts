@@ -29,29 +29,44 @@ interface UseCardSortResult {
   sortLabels: Record<SortOption, string>;
 }
 
+/**
+ * Pins favourites above non-favourites. Returns 0 when both cards share the same
+ * favourite state, letting the caller fall through to its own ordering.
+ */
+const compareFavoriteFirst = (a: LoyaltyCard, b: LoyaltyCard): number =>
+  a.isFavorite === b.isFavorite ? 0 : a.isFavorite ? -1 : 1;
+
 const sortByFrequent = (a: LoyaltyCard, b: LoyaltyCard): number => {
-  // Primary: usageCount descending
+  // Tier 0: favourites always first
+  const favorite = compareFavoriteFirst(a, b);
+  if (favorite !== 0) return favorite;
+  // Tier 1: usageCount descending
   if (a.usageCount !== b.usageCount) return b.usageCount - a.usageCount;
-  // Tiebreaker: lastUsedAt descending (most recent first)
+  // Tier 2: lastUsedAt descending (most recent first)
   if (a.lastUsedAt && b.lastUsedAt) return b.lastUsedAt.localeCompare(a.lastUsedAt);
   if (a.lastUsedAt) return -1;
   if (b.lastUsedAt) return 1;
-  // Final fallback: recently added
+  // Tier 3: createdAt descending (fallback)
   return b.createdAt.localeCompare(a.createdAt);
 };
 
+// "Recently added" is an explicit chronological order — favourites are NOT pinned.
 const sortByRecent = (a: LoyaltyCard, b: LoyaltyCard): number =>
   b.createdAt.localeCompare(a.createdAt);
 
-const sortByAZ = (a: LoyaltyCard, b: LoyaltyCard): number =>
-  a.name.localeCompare(b.name, undefined, { sensitivity: 'base' });
+const sortByAZ = (a: LoyaltyCard, b: LoyaltyCard): number => {
+  // Favourites stay pinned to the top, then names sort alphabetically within each group
+  const favorite = compareFavoriteFirst(a, b);
+  if (favorite !== 0) return favorite;
+  return a.name.localeCompare(b.name, undefined, { sensitivity: 'base' });
+};
 
 /**
  * Hook for sorting loyalty cards with persistent preference.
  *
- * - "Frequently used": sorts by usageCount desc → lastUsedAt desc → createdAt desc
- * - "Recently added": sorts by createdAt desc
- * - "A-Z": sorts by name (locale-aware, case-insensitive)
+ * - "Frequently used": sorts by isFavorite first → usageCount desc → lastUsedAt desc → createdAt desc
+ * - "Recently added": sorts by createdAt desc (favourites are NOT pinned)
+ * - "A-Z": sorts by isFavorite first → name (locale-aware, case-insensitive)
  */
 export const useCardSort = (): UseCardSortResult => {
   const [sortOption, setSortOptionState] = useState<SortOption>('frequent');

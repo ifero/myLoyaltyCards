@@ -138,6 +138,63 @@ describe('useCardSort', () => {
     });
   });
 
+  describe('sortCards — favourites tier (Story 9.3)', () => {
+    it('sorts favourites above non-favourites regardless of usageCount (AC1, AC2)', () => {
+      const favCards = [
+        makeCard({ id: '1', name: 'Alpha', isFavorite: false, usageCount: 100 }),
+        makeCard({ id: '2', name: 'Beta', isFavorite: true, usageCount: 0 })
+      ];
+
+      const { result } = renderHook(() => useCardSort());
+      const sorted = result.current.sortCards(favCards);
+
+      // Beta is favourite → wins despite zero usage vs Alpha's 100
+      expect(sorted.map((c) => c.id)).toEqual(['2', '1']);
+    });
+
+    it('orders the favourites block (by usageCount) ahead of the non-favourites block in a mixed list (AC1, AC2)', () => {
+      const mixed = [
+        makeCard({ id: 'nf-hi', isFavorite: false, usageCount: 100 }),
+        makeCard({ id: 'fav-lo', isFavorite: true, usageCount: 1 }),
+        makeCard({ id: 'nf-lo', isFavorite: false, usageCount: 5 }),
+        makeCard({ id: 'fav-hi', isFavorite: true, usageCount: 9 })
+      ];
+
+      const { result } = renderHook(() => useCardSort());
+      const sorted = result.current.sortCards(mixed);
+
+      // Favourites first, ordered by usageCount (9 > 1), then non-favourites by usageCount
+      // (100 > 5). The favourite with usageCount 1 still outranks the non-favourite with 100.
+      expect(sorted.map((c) => c.id)).toEqual(['fav-hi', 'fav-lo', 'nf-hi', 'nf-lo']);
+    });
+
+    it('keeps the favourite "usual store" card in the top 3 of a 10-card list (AC3)', () => {
+      const tenCards = [
+        // User-designated favourite with only moderate usage — must still surface near the top.
+        makeCard({ id: 'primary', isFavorite: true, usageCount: 12 }),
+        makeCard({ id: 'c2', usageCount: 30 }),
+        makeCard({ id: 'c3', usageCount: 25 }),
+        makeCard({ id: 'c4', usageCount: 20 }),
+        makeCard({ id: 'c5', usageCount: 15 }),
+        makeCard({ id: 'c6', usageCount: 10 }),
+        makeCard({ id: 'c7', usageCount: 8 }),
+        makeCard({ id: 'c8', usageCount: 5 }),
+        makeCard({ id: 'c9', usageCount: 2 }),
+        makeCard({ id: 'c10', usageCount: 0 })
+      ];
+
+      const { result } = renderHook(() => useCardSort());
+      const top3 = result.current
+        .sortCards(tenCards)
+        .slice(0, 3)
+        .map((c) => c.id);
+
+      // AC3: the relevant card (the favourite "usual store" card) lands in the top 3 — the
+      // favourite leads via Tier 0, then the two highest-usage non-favourites follow.
+      expect(top3).toEqual(['primary', 'c2', 'c3']);
+    });
+  });
+
   describe('sortCards — recent', () => {
     it('sorts by createdAt descending', () => {
       const { result } = renderHook(() => useCardSort());
@@ -148,6 +205,33 @@ describe('useCardSort', () => {
 
       const sorted = result.current.sortCards(cards);
       expect(sorted.map((c) => c.name)).toEqual(['Delta', 'Charlie', 'Bravo', 'Alpha']);
+    });
+
+    it('ignores isFavorite — favourite-first rule does not apply (AC4)', () => {
+      const recentCards = [
+        makeCard({
+          id: '1',
+          name: 'Old',
+          isFavorite: true,
+          createdAt: '2026-01-01T00:00:00Z'
+        }),
+        makeCard({
+          id: '2',
+          name: 'New',
+          isFavorite: false,
+          createdAt: '2026-02-01T00:00:00Z'
+        })
+      ];
+
+      const { result } = renderHook(() => useCardSort());
+
+      act(() => {
+        result.current.setSortOption('recent');
+      });
+
+      const sorted = result.current.sortCards(recentCards);
+      // New created later → first, despite Old being favourite
+      expect(sorted.map((c) => c.name)).toEqual(['New', 'Old']);
     });
   });
 
@@ -161,6 +245,25 @@ describe('useCardSort', () => {
 
       const sorted = result.current.sortCards(cards);
       expect(sorted.map((c) => c.name)).toEqual(['Alpha', 'Bravo', 'Charlie', 'Delta']);
+    });
+
+    it('pins favourites to the top, then sorts alphabetically within each group (AC4)', () => {
+      const azCards = [
+        makeCard({ id: '1', name: 'Apple', isFavorite: false }),
+        makeCard({ id: '2', name: 'Zebra', isFavorite: true }),
+        makeCard({ id: '3', name: 'Mango', isFavorite: true }),
+        makeCard({ id: '4', name: 'Banana', isFavorite: false })
+      ];
+
+      const { result } = renderHook(() => useCardSort());
+
+      act(() => {
+        result.current.setSortOption('az');
+      });
+
+      const sorted = result.current.sortCards(azCards);
+      // Favourites first, alphabetical (Mango, Zebra); then non-favourites, alphabetical (Apple, Banana)
+      expect(sorted.map((c) => c.name)).toEqual(['Mango', 'Zebra', 'Apple', 'Banana']);
     });
   });
 
