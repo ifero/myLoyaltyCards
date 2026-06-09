@@ -157,7 +157,7 @@ describe('useCards', () => {
       expect(result.current.cards).toEqual([mockCards[0]]);
     });
 
-    it('sets loading state during refetch', async () => {
+    it('keeps isLoading false during a refetch so the list is not unmounted (Story 9.3, AC6)', async () => {
       (cardRepository.getAllCards as jest.Mock).mockResolvedValue(mockCards);
 
       const { result } = renderHook(() => useCards());
@@ -166,7 +166,7 @@ describe('useCards', () => {
         expect(result.current.isLoading).toBe(false);
       });
 
-      // Mock delayed response
+      // Mock delayed response for the refetch
       let resolvePromise: (value: LoyaltyCard[]) => void;
       const delayedPromise = new Promise<LoyaltyCard[]>((resolve) => {
         resolvePromise = resolve;
@@ -177,17 +177,17 @@ describe('useCards', () => {
         result.current.refetch();
       });
 
-      // Should be loading during refetch
-      expect(result.current.isLoading).toBe(true);
+      // After the initial load, a focus refetch must NOT flip isLoading back to
+      // true — otherwise CardList swaps the FlashList for a spinner, remounts it,
+      // and the scroll position resets to the top. Data updates in place instead.
+      expect(result.current.isLoading).toBe(false);
 
       await act(async () => {
         resolvePromise!(mockCards);
         await delayedPromise;
       });
 
-      await waitFor(() => {
-        expect(result.current.isLoading).toBe(false);
-      });
+      expect(result.current.isLoading).toBe(false);
     });
 
     it('clears error on successful refetch', async () => {

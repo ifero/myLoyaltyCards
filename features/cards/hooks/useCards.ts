@@ -6,7 +6,7 @@
  * Orders cards by creation date (newest first) per AC3.
  */
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 
 import { getAllCards } from '@/core/database';
 import { LoyaltyCard } from '@/core/schemas';
@@ -36,10 +36,17 @@ export function useCards(): UseCardsResult {
   const [cards, setCards] = useState<LoyaltyCard[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const hasLoadedRef = useRef(false);
 
   const fetchCards = useCallback(async () => {
     try {
-      setIsLoading(true);
+      // Only drive the full-screen loading state on the FIRST load. Subsequent
+      // refetches (e.g. CardList's useFocusEffect on back-navigation) update the
+      // data in place, so CardList keeps its FlashList mounted and preserves the
+      // user's scroll position instead of remounting at the top. (Story 9.3, AC6)
+      if (!hasLoadedRef.current) {
+        setIsLoading(true);
+      }
       setError(null);
       // getAllCards returns cards ordered by createdAt DESC (newest first) per AC3
       const fetchedCards = await getAllCards();
@@ -47,6 +54,7 @@ export function useCards(): UseCardsResult {
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load cards');
     } finally {
+      hasLoadedRef.current = true;
       setIsLoading(false);
     }
   }, []);
@@ -59,7 +67,6 @@ export function useCards(): UseCardsResult {
     cards,
     isLoading,
     error,
-    refetch: fetchCards,
+    refetch: fetchCards
   };
 }
-
