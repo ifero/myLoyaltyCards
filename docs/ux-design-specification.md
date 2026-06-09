@@ -296,6 +296,7 @@ Ensuring the 'Top-Card Win' happens every time Marco goes shopping.
 1.  **Recency:** Using a card automatically moves it to the #1 position in the list.
 2.  **Manual Pinning:** Users can long-press a card in the **Soft Sage Grid** (Phone) to 'Pin' it to the top.
 3.  **Visual Feedback:** Pinned cards show a subtle 'Pin' icon + color accent (Double-Encoding).
+4.  **Per-Surface Selectable Sort (Watch + Phone):** Both surfaces expose a user-selectable, persisted sort — **Frequently used / Recently added / A–Z**. The phone defaults to _Frequently used_; the **watch defaults to A–Z** and persists its own choice **independently** (decision 2026-06-09). Favourites surface with a **filled amber star** on both surfaces — see Components §5–§6. _(The legacy 'Pin icon' wording above predates Story 9.2, which shipped a **star** badge on the phone.)_
 
 ### Journey Patterns & Optimization
 
@@ -336,6 +337,26 @@ Ensuring the 'Top-Card Win' happens every time Marco goes shopping.
 
 - **Purpose:** Rapid data entry with automatic save.
 - **Design:** Viewfinder + success indicator + auto-save trigger on barcode detection.
+
+#### 5. The Watch Sort Control
+
+- **Purpose:** Let the user choose how the watch list is ordered — without stealing space from the glanceable card stack.
+- **Entry point:** A single **toolbar button** (top-trailing) on the watch card list — SF Symbol `arrow.up.arrow.down` in the app key/tint color. _(HIG: toolbars surface frequently-used commands; a top glyph keeps the vertical stack uncluttered. The bottom-right "More"/ellipsis is the HIG **overflow** pattern — rejected here: we have exactly one action, so a direct sort glyph reads clearer.)_
+- **Presentation:** Tapping opens a **compact selection sheet** — a native `List` of three rows: **Frequently used**, **Recently added**, **A–Z** (HIG "nest a picker in a list" pattern for sort/filter/view-switching). The active mode is **double-encoded**: a trailing `checkmark` (tint color) **and** a semibold tint-color label — never color alone.
+- **Behavior:** Tap a row → set the mode, **dismiss immediately**, list re-orders with a brief animation. **Default = A–Z**; the choice is **watch-local and persisted**, independent of the phone (decision 2026-06-09). Ordering semantics mirror the phone's `useCardSort` exactly (favourite-first rules included).
+- **Carbon Utility styling:** Pure OLED-black sheet, high-contrast white labels, hairline separators, tint accent only on the active row + checkmark. No per-row icons, no heavy chrome.
+- **Legibility (40mm → 49mm Ultra):** Full-width rows ≥44pt tall, body-size single-line labels (short — no truncation), Digital-Crown scrollable. Localized `en` / `it`.
+- **Accessibility:** Button labeled "Sort"; each row announces its selected state to VoiceOver; honors Dynamic Type.
+- **API currency (Story 9.5 AC6):** Current SwiftUI `toolbar` + `sheet` + `List` (watchOS 10+) — verify non-deprecated at implementation (Sprint 14 retro action item).
+
+#### 6. The Watch Favourite Badge
+
+- **Purpose:** Show _why_ a card sits near the top — the favourite tier is invisible on the watch today (device-verified gap, change proposal 2026-06-09).
+- **Symbol & color:** SF Symbol **`star.fill`** in **amber/warning**, matching the phone's filled amber star (`MaterialIcons "star"`, 16pt, `theme.warning`). One favourite language across both surfaces.
+- **Legibility plate:** Mirror the phone's treatment — a subtle contrasting plate/stroke behind the star so it stays legible where a card shows a bright brand colour; on pure Carbon-black rows the amber already pops.
+- **Placement & size:** Top-trailing corner of the Carbon Watch Card row, ~14–16pt glyph scaled to row height, safe-inset from the edge — never overlapping the brand mark.
+- **Double-encoding:** Star (shape + position) **and** sort order together explain the ranking; favourites pin first in _Frequently used_ and _A–Z_ (not in _Recently added_).
+- **Accessibility:** VoiceOver appends "Favourite" to the card label; meaning is never conveyed by color alone.
 
 ### Component Implementation Strategy
 
