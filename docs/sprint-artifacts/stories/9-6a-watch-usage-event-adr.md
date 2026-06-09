@@ -1,6 +1,6 @@
 # Story 9.6a: Watch Usage-Event Architecture (Spike / ADR) [Enabling]
 
-Status: review
+Status: done
 
 > Drafted 2026-06-09 via `correct-course` (`sprint-artifacts/sprint-change-proposal-2026-06-09.md`).
 > **Owner:** Architect. **Gates:** none to start; its output gates Story 9.6.
