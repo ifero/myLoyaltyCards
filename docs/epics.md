@@ -263,7 +263,7 @@ This document provides the complete epic and story breakdown for myLoyaltyCards,
 - ARCH-17: iOS ↔ watchOS sync via WatchConnectivity framework (no throttling)
 - ARCH-18: Android ↔ Wear OS sync via Wearable Data Layer API (Phase 2)
 - ARCH-19: Sync Message Protocol with version field and typed messages (CARDS_UPDATED, CARD_ADDED, etc.)
-- ARCH-20: Watch is READ-ONLY for MVP (editing only happens on phone)
+- ARCH-20: Watch is READ-ONLY for card data (create/edit/delete/favourite only on phone); usage events (`CARD_USED`, card-opened) are permitted and applied commutatively on the phone — refined by ADR-2026-06-09-001 (2026-06-09)
 
 **From Architecture - Infrastructure:**
 
@@ -1005,7 +1005,7 @@ _Example brands: Esselunga, Conad, Coop, Carrefour, Lidl, Eurospin, Pam, Despar,
 
 **Technical Notes:**
 
-- Watch is READ-ONLY for MVP (card editing only on phone)
+- Watch is READ-ONLY for card data (card editing only on phone); usage events permitted, applied commutatively on phone (ADR-2026-06-09-001)
 - Card list order matches phone (newest first / alphabetical)
 - Sync protocol uses versioned messages (CARDS_UPDATED, CARD_ADDED, etc.)
 
@@ -1977,13 +1977,13 @@ _Added 2026-06-09 via correct-course. Depends on the 9.6a ADR + PM scope confirm
 **Technical Notes:**
 
 - Same sync protocol as watchOS (versioned messages)
-- Watch is READ-ONLY for card data (consistent with watchOS). A usage-event channel (card-opened → phone) is **proposed** for Epic 9 Story 9.6, pending the Story 9.6a ADR — Wear OS will mirror whatever that ADR ratifies. _(Updated 2026-06-09 via correct-course.)_
+- Watch is READ-ONLY for card data (consistent with watchOS). A usage-event channel (`CARD_USED`, card-opened → phone) is **ratified** for Epic 9 Story 9.6 by **ADR-2026-06-09-001** (Accepted 2026-06-09) — Wear OS mirrors it via the Wearable Data Layer (`MessageClient`/`DataClient`): same `{ id, usedAt }` payload + commutative reconciliation (`usageCount += 1`, `lastUsedAt = max`). _(Updated 2026-06-09 via correct-course; ratified 2026-06-09.)_
 
 **Parity scope added 2026-06-09 (correct-course — mirror the watchOS Epic 9 changes):**
 
 - Per-surface selectable sort (Frequently used / Recently added / A‑Z), persisted independently (mirror Story 9.5)
 - Favourite (pin) indicator on rows (mirror Story 9.4 / C3)
-- Usage-event emission for card opens (mirror Story 9.6, pending the 9.6a ADR)
+- Usage-event emission for card opens (mirror Story 9.6, per ADR-2026-06-09-001 — Accepted)
 
 **Enabling Note:** Stories 10.1–10.2 are enabling tasks required for the Wear OS experience.
 

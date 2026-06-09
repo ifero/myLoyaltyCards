@@ -1,6 +1,6 @@
 # ADR-2026-06-09-001: Watch usage events (refine "watch read-only")
 
-- **Status:** **Proposed** — pending PM scope confirmation (crosses the "watch read-only **for MVP**" line) and Architect ratification. Deliverable of Story **9.6a**; gates Story **9.6**.
+- **Status:** **Accepted** — ratified 2026-06-09 by Winston (Architect); PM scope confirmed 2026-06-09 (ifero). Folded into `architecture.md` as `ADR-2026-06-09-001`. Deliverable of Story **9.6a**; **unblocks** Story **9.6**.
 - **Date:** 2026-06-09
 - **Drivers:** ifero (stakeholder), `correct-course` (`sprint-artifacts/sprint-change-proposal-2026-06-09.md`)
 - **Supersedes wording of:** ARCH-20 ("Watch is READ-ONLY for MVP") — _refines_, does not remove.
@@ -26,8 +26,14 @@ Key insight: **usage is not card-data editing.** It is an append-only, **commuta
 2. **Add one versioned message, watch → phone:**
 
    ```jsonc
-   { "version": 1, "type": "CARD_USED", "payload": { "id": "<uuid>", "usedAt": "<ISO-8601 UTC>" } }
+   {
+     "version": 1,
+     "type": "CARD_USED",
+     "payload": { "id": "<uuid>", "usedAt": "<ISO-8601 UTC, millisecond precision>" }
+   }
    ```
+
+   > **Ratification note (precision, 2026-06-09):** `usedAt` MUST carry **millisecond** precision (e.g. `2026-06-09T12:34:56.789Z`). The dedup event id (Decision 4) is `"<cardId>:<usedAt>"`, so sub-second resolution is precisely what guarantees two genuinely-distinct opens of the same card cannot collapse into one. Second-resolution timestamps are non-conformant.
 
 3. **Phone reconciliation (conflict-free):** on receiving `CARD_USED`, reuse the Story 9.1 usage path:
    - `usageCount = usageCount + 1`
@@ -51,6 +57,8 @@ Key insight: **usage is not card-data editing.** It is an append-only, **commuta
 - **Risk:** low, contingent on the dedup window being sized so legitimately-distinct opens (same card, different second) are not merged — `usedAt` at millisecond precision plus `cardId` makes collisions effectively impossible.
 
 ## Docs to update on ratification (Story 9.6 "docs" task)
+
+> ✅ **Applied 2026-06-09 at ratification** (Architect) — all 7 references reworded + `CARD_USED` added to both documented `SyncMessage` unions (architecture.md & project_context.md). The code-level `sync.ts` schema change remains Story 9.6's implementation task. The `epics.md:1922` row had already advanced to ~line 1980 via the correct-course and is now flipped from "proposed" to "ratified."
 
 Reword consistently (data-vs-usage) at all 7 references, and add `CARD_USED` to the documented message types:
 
@@ -76,7 +84,13 @@ Also add `CARD_USED` to the `SyncMessage` type list in `docs/project_context.md`
 
 Before implementation (Story 9.6), verify current/non-deprecated WatchConnectivity delivery APIs via Context7 / official docs — likely `transferUserInfo` (queued, guaranteed, survives relaunch) over `sendMessage` (requires reachability). Confirm `react-native-watch-connectivity` exposes the receive side on the phone.
 
+**Verified at ratification (2026-06-09, Architect):**
+
+- ✅ **`WCSession.transferUserInfo(_:)` is current / non-deprecated** ([Apple docs](https://developer.apple.com/documentation/watchconnectivity/wcsession/1615671-transferuserinfo)). Queues dictionaries, delivers FIFO, and **continues even if the app is suspended — queued until the counterpart launches**; received via `session(_:didReceiveUserInfo:)`. Correct primitive for the offline-queue requirement. `sendMessage` (reachability-gated) and `updateApplicationContext` (latest-state-only, would lose discrete counts) are correctly rejected.
+- ✅ **`react-native-watch-connectivity` v2.0.0** (current) exposes the phone-side receive as `watchEvents.on('user-info', cb)`, emitting an **array that includes user-info received before the RN app initialised** — relaunch-queued events arrive as a batch; the handler MUST iterate and dedup by event id.
+- ⚠️ **Implementation constraint (Story 9.6):** the **watchOS Simulator does not support `transferUserInfo(_:)`** — this path MUST be validated on a **physical phone+watch pair** (reinforces the Sprint 14 retro "spike-first on device"). Story 9.6 AC6 stays binding for the precise version check at build time.
+
 ## Sign-off
 
-- [ ] **PM** — confirms pulling usage past the "read-only-for-MVP" line is in scope.
-- [ ] **Architect** — ratifies the design; flips Status → Accepted; folds into `architecture.md` as `ADR-2026-06-09-001`.
+- [x] **PM** — confirmed 2026-06-09 (ifero): pulling usage past the "read-only-for-MVP" line is in scope.
+- [x] **Architect** — ratified 2026-06-09 (Winston): design validated (commutativity + dedup + offline + API currency); `usedAt` tightened to ms precision; Status → Accepted; folded into `architecture.md` as `ADR-2026-06-09-001`; read-only wording refined across all 7 references.

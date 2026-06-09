@@ -1015,21 +1015,33 @@ async function syncWithWatch(cards: LoyaltyCard[]) {
 ```typescript
 type SyncMessage = {
   version: number;
-  type: 'CARDS_UPDATED' | 'CARD_ADDED' | 'CARD_DELETED' | 'REQUEST_FULL_SYNC' | 'SYNC_COMPLETE';
+  // All phone → watch, EXCEPT CARD_USED which is watch → phone (usage telemetry). See ADR-2026-06-09-001.
+  type:
+    | 'CARDS_UPDATED'
+    | 'CARD_ADDED'
+    | 'CARD_DELETED'
+    | 'REQUEST_FULL_SYNC'
+    | 'SYNC_COMPLETE'
+    | 'CARD_USED';
   payload: unknown;
 };
+
+// CARD_USED (watch → phone) — usage event, NOT a card-data edit (ADR-2026-06-09-001):
+//   payload: { id: string; usedAt: string /* ISO-8601 UTC, millisecond precision */ }
+//   Phone applies commutatively: usageCount += 1; lastUsedAt = max(lastUsedAt, usedAt).
+//   Dedup by stable event id "<id>:<usedAt>". Delivered via transferUserInfo (queued). Implemented in Story 9.6.
 
 // Watch MUST handle unknown versions gracefully:
 // - If version > supported: Log warning, ignore, request full sync
 // - Never crash on unknown message format
 ```
 
-**Watch App Editing Policy (MVP):**
+**Watch App Editing Policy** _(refined by [ADR-2026-06-09-001](adr-2026-06-09-watch-usage-events.md), 2026-06-09):_
 
-- Watch is READ-ONLY for MVP
-- Card editing only happens on phone
-- Prevents sync conflicts entirely
-- Add field-level merge in v2 if user feedback requires it
+- Watch is **READ-ONLY for card _data_** — create/edit/delete/favourite happen only on the phone.
+- The watch **MAY emit usage events** (`CARD_USED`, card-opened); the phone applies them as **commutative** updates (`usageCount += 1`, `lastUsedAt = max`), so no card-data edit conflict is introduced.
+- This preserves the original "prevents sync conflicts" guarantee: usage is an append-only commutative signal, disjoint from the user-editable card-data surface.
+- Add field-level merge for card _data_ in v2 only if user feedback requires it.
 
 ### Error & Loading Patterns
 

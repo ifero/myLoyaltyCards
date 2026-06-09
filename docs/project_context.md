@@ -234,16 +234,19 @@ if (currentVersion === 0) {
 
 - **No throttling:** Immediate sync on changes
 - **Retry:** 3 attempts with exponential backoff
-- **Watch is READ-ONLY** for MVP (prevents conflicts)
+- **Watch is READ-ONLY for card _data_** (create/edit/delete/favourite only on phone); it MAY emit `CARD_USED` usage events, applied commutatively on the phone — no edit conflict (ADR-2026-06-09-001)
 
 ### Message Versioning
 
 ```typescript
 type SyncMessage = {
   version: number; // Always include
-  type: 'CARDS_UPDATED' | 'CARD_ADDED' | 'CARD_DELETED' | 'REQUEST_FULL_SYNC';
+  // CARD_USED is watch → phone (usage telemetry); all others phone → watch. See ADR-2026-06-09-001.
+  type: 'CARDS_UPDATED' | 'CARD_ADDED' | 'CARD_DELETED' | 'REQUEST_FULL_SYNC' | 'CARD_USED';
   payload: unknown;
 };
+// CARD_USED payload: { id: string; usedAt: string /* ISO-8601 UTC, ms precision */ }; phone applies
+// usageCount += 1, lastUsedAt = max; dedup by "<id>:<usedAt>". Implemented in Story 9.6.
 ```
 
 ---
@@ -321,7 +324,7 @@ test-fixtures/
 
 ### Watch App Rules
 
-- Watch is **READ-ONLY** for MVP
+- Watch is **READ-ONLY for card _data_** — usage events (`CARD_USED`) permitted, applied commutatively on phone (ADR-2026-06-09-001)
 - Handle unknown message versions gracefully (request full sync)
 - Store dates as strings, parse only for display
 
