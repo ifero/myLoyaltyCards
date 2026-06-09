@@ -75,12 +75,36 @@ describe('watch layout contract', () => {
 
     expect(cardListView).toContain('.frame(minHeight: metrics.minimumTapHeight)');
     expect(cardListView).toContain(
-      '.accessibilityLabel(WatchL10n.format("watch.card_row.accessibility_format", card.name))'
+      '.accessibilityLabel(WatchL10n.format(cardRowAccessibilityKey(isFavorite: card.isFavorite), card.name))'
     );
     expect(barcodeView).toContain('.accessibilityIdentifier("barcode-view")');
     expect(barcodeView).toContain(
       '.accessibilityLabel(WatchL10n.format("watch.barcode.accessibility.image_format", titleText))'
     );
+  });
+
+  it('renders a favourite badge on the watch row and announces it to VoiceOver (Story 9.4 / C3)', () => {
+    const cardListView = fs.readFileSync(cardListViewPath, 'utf8');
+    const enStrings = fs.readFileSync(
+      path.join(repoRoot, 'targets', 'watch', 'en.lproj', 'Localizable.strings'),
+      'utf8'
+    );
+    const itStrings = fs.readFileSync(
+      path.join(repoRoot, 'targets', 'watch', 'it.lproj', 'Localizable.strings'),
+      'utf8'
+    );
+
+    // Badge is rendered only for favourites
+    expect(cardListView).toContain('if card.isFavorite {');
+    expect(cardListView).toContain('Image(systemName: "star.fill")');
+
+    // Favourite-aware accessibility label is driven by the testable key helper
+    expect(cardListView).toContain('func cardRowAccessibilityKey(isFavorite: Bool) -> String');
+    expect(cardListView).toContain('"watch.card_row.favorite_accessibility_format"');
+
+    // The favourite label key is localised in BOTH bundles (cross-file coupling)
+    expect(enStrings).toContain('"watch.card_row.favorite_accessibility_format"');
+    expect(itStrings).toContain('"watch.card_row.favorite_accessibility_format"');
   });
 
   it('routes QR cards through the native QR renderer instead of the placeholder path', () => {

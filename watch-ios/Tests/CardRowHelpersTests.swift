@@ -159,13 +159,7 @@ final class CardRowHelpersTests: XCTestCase {
       WatchCard(id: "2", name: "High", brandId: nil, colorHex: nil, barcodeValue: nil, barcodeFormat: nil, usageCount: 10, lastUsedAt: nil, createdAt: Date()),
       WatchCard(id: "3", name: "Mid", brandId: nil, colorHex: nil, barcodeValue: nil, barcodeFormat: nil, usageCount: 5, lastUsedAt: nil, createdAt: Date()),
     ]
-    let sorted = cards.sorted { a, b in
-      if a.usageCount != b.usageCount { return a.usageCount > b.usageCount }
-      if let aLast = a.lastUsedAt, let bLast = b.lastUsedAt, aLast != bLast {
-        return aLast > bLast
-      }
-      return a.createdAt > b.createdAt
-    }
+    let sorted = WatchCard.sortedForDisplay(cards)
     XCTAssertEqual(sorted.map(\.name), ["High", "Mid", "Low"])
   }
 
@@ -176,13 +170,7 @@ final class CardRowHelpersTests: XCTestCase {
       WatchCard(id: "1", name: "Earlier", brandId: nil, colorHex: nil, barcodeValue: nil, barcodeFormat: nil, usageCount: 5, lastUsedAt: earlier, createdAt: now),
       WatchCard(id: "2", name: "Later", brandId: nil, colorHex: nil, barcodeValue: nil, barcodeFormat: nil, usageCount: 5, lastUsedAt: now, createdAt: earlier),
     ]
-    let sorted = cards.sorted { a, b in
-      if a.usageCount != b.usageCount { return a.usageCount > b.usageCount }
-      if let aLast = a.lastUsedAt, let bLast = b.lastUsedAt, aLast != bLast {
-        return aLast > bLast
-      }
-      return a.createdAt > b.createdAt
-    }
+    let sorted = WatchCard.sortedForDisplay(cards)
     XCTAssertEqual(sorted.map(\.name), ["Later", "Earlier"])
   }
 
@@ -193,13 +181,7 @@ final class CardRowHelpersTests: XCTestCase {
       WatchCard(id: "1", name: "Older", brandId: nil, colorHex: nil, barcodeValue: nil, barcodeFormat: nil, usageCount: 0, lastUsedAt: nil, createdAt: earlier),
       WatchCard(id: "2", name: "Newer", brandId: nil, colorHex: nil, barcodeValue: nil, barcodeFormat: nil, usageCount: 0, lastUsedAt: nil, createdAt: now),
     ]
-    let sorted = cards.sorted { a, b in
-      if a.usageCount != b.usageCount { return a.usageCount > b.usageCount }
-      if let aLast = a.lastUsedAt, let bLast = b.lastUsedAt, aLast != bLast {
-        return aLast > bLast
-      }
-      return a.createdAt > b.createdAt
-    }
+    let sorted = WatchCard.sortedForDisplay(cards)
     XCTAssertEqual(sorted.map(\.name), ["Newer", "Older"])
   }
 
@@ -215,5 +197,19 @@ final class CardRowHelpersTests: XCTestCase {
     // Custom card with no brandId should fall back to mapColor from colorHex
     let color = mapColor(hex: "#ff4d4d")
     XCTAssertNotNil(color)
+  }
+
+  // MARK: - Favourite badge accessibility (Story 9.4 / C3)
+
+  func test_cardRowAccessibilityKey_favorite_usesFavouriteKey() throws {
+    XCTAssertEqual(
+      cardRowAccessibilityKey(isFavorite: true),
+      "watch.card_row.favorite_accessibility_format")
+  }
+
+  func test_cardRowAccessibilityKey_nonFavorite_usesDefaultKey() throws {
+    XCTAssertEqual(
+      cardRowAccessibilityKey(isFavorite: false),
+      "watch.card_row.accessibility_format")
   }
 }
