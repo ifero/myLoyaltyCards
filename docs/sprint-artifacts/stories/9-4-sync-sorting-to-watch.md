@@ -1,6 +1,6 @@
 # Story 9.4: Sync Sorting to Watch
 
-Status: review
+Status: done
 
 ## Story
 

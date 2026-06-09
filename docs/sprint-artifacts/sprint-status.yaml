@@ -263,7 +263,7 @@ development_status:
   9-1-track-card-usage: done
   9-2-mark-card-as-favorite: done # design signed off 2026-06-07 (Figma frame approved); impl + code review + QA complete; awaiting stakeholder commit approval
   9-3-implement-sorting-algorithm: done
-  9-4-sync-sorting-to-watch: in-progress # C3 favourite-badge implemented; code review + QA approved (2026-06-09); story.md at "review" — awaiting stakeholder approval to commit/PR
+  9-4-sync-sorting-to-watch: done # C3 favourite-badge implemented; code review + QA approved (2026-06-09); story.md at "review" — awaiting stakeholder approval to commit/PR
   9-5-selectable-watch-sort: drafted # correct-course 2026-06-09 — port phone sort modes (frequent/recent/az) to watch, default A-Z, independent persisted pref; gates: PRD FR25 + UX picker
   9-6a-watch-usage-event-adr: drafted # correct-course 2026-06-09 — Architect ADR: watch→phone usage-event channel + read-only refinement; gates 9-6; ADR produced 2026-06-09
   9-6-count-watch-card-opens: drafted # correct-course 2026-06-09 — watch card open increments usageCount/lastUsedAt (commutative); depends on 9-6a ADR + PM scope confirm
