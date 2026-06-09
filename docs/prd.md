@@ -896,6 +896,10 @@ _Key decisions recorded (2026-06-05):_
 - **FR22:** The system can display most recently used cards at the top of the list
 - **FR23:** Users can pin favorite cards to remain at the top regardless of usage
 - **FR24:** The system can apply alphabetical sorting as a fallback for unused cards
+- **FR75:** Users can select the card sort mode (Frequently used / Recently added / A–Z) on each surface (phone, watch); the selection persists per surface.
+- **FR76:** Card usage (`usageCount`, `lastUsedAt`) is recorded whenever a card's barcode is displayed on any surface, including the watch.
+
+> **Note (FR75/FR76):** Numbered 75/76 as the next free IDs — the 2026-06-09 correct-course proposal labelled these "FR25/FR26", but those are already assigned (guest mode / create account). They sit in this section topically despite the non-contiguous numbers. The **watch defaults to A–Z**, an intentional divergence from FR22's most-recent-first default (a watch-local, glanceable choice; see UX spec §3.3 + Components §5–§6, and ADR-2026-06-09-001 for the FR76 usage-event channel).
 
 ### User Authentication & Account Management
 

@@ -1,9 +1,9 @@
 # Story 9.5: Selectable Watch Sort
 
-Status: drafted
+Status: ready-for-dev
 
 > Drafted 2026-06-09 via `correct-course` (`sprint-artifacts/sprint-change-proposal-2026-06-09.md`).
-> **Gates before `ready-for-dev`:** PRD **FR75** (PM — _renumbered from the proposal's erroneous "FR25", which is already "guest mode"; PRD currently runs to FR74_) + UX watch-picker spec (UX). Depends on Story 9.4.
+> ✅ **Gates cleared 2026-06-10 → `ready-for-dev`:** PRD **FR75/FR76** added (PM) + UX watch-picker & favourite-badge spec merged (PR #130). Depends on Story 9.4 (done). _(FR75 renumbered from the proposal's erroneous "FR25"; see PRD note.)_
 
 ## Story
 
