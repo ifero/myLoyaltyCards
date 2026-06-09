@@ -74,3 +74,6 @@ watch-ios/MyLoyaltyCardsWatch.xcodeproj/xcuserdata/
 # Fastlane
 bundler/
 fastlane/.env.default
+
+# Claude Code local (personal) settings
+.claude/settings.local.json

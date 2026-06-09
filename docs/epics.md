@@ -1892,6 +1892,64 @@ _Example brands: Esselunga, Conad, Coop, Carrefour, Lidl, Eurospin, Pam, Despar,
 **When** the watch syncs
 **Then** the watch card list uses the same sort order
 **And** usage data (usageCount, lastUsedAt, isFavorite) syncs to the watch
+**And** favourite cards show a star/pin indicator on the watch _(AC added 2026-06-09 — C3 folded in via correct-course; see `sprint-artifacts/sprint-change-proposal-2026-06-09.md`)_
+
+---
+
+### Story 9.5: Selectable Watch Sort
+
+_Added 2026-06-09 via correct-course (`sprint-artifacts/sprint-change-proposal-2026-06-09.md`)._
+
+**As a** user,
+**I want** to choose how my cards are sorted on the Watch,
+**So that** the order matches how I think about my cards.
+
+**Acceptance Criteria:**
+
+**Given** I am on the Watch card list
+**When** I open the sort control (toolbar button → picker)
+**Then** I can choose Frequently used / Recently added / A‑Z (the same modes as the phone)
+**And** the default is A‑Z
+**And** my choice persists on the Watch across launches, independently of the phone's selected mode
+
+**Dependencies:** Story 9.4. **Needs:** PRD FR25, UX watch-picker spec.
+
+---
+
+### Story 9.6a: Watch Usage-Event Architecture (Spike / ADR) [Enabling]
+
+_Added 2026-06-09 via correct-course. Gates Story 9.6 (spike-first per Sprint 14 retro)._
+
+**As an** architect,
+**I want** a validated design for watch→phone usage events,
+**So that** counting watch card opens never reintroduces edit conflicts.
+
+**Acceptance Criteria:**
+
+**Given** the watch read-only-for-data invariant
+**When** the ADR is produced
+**Then** it specifies a `CARD_USED` (watch → phone) message in the versioned sync protocol
+**And** proves conflict-free reconciliation (commutative usageCount increments; lastUsedAt = max)
+**And** refines the "watch read-only" wording to "read-only for card data; usage events permitted"
+**And** confirms Wear OS (Epic 10) can adopt the same protocol
+
+---
+
+### Story 9.6: Count Card Opens on the Watch
+
+_Added 2026-06-09 via correct-course. Depends on the 9.6a ADR + PM scope confirmation._
+
+**As a** user,
+**I want** opening a card on my Watch to count toward usage,
+**So that** "most used" is accurate on both Watch and phone.
+
+**Acceptance Criteria:**
+
+**Given** I open a card on the Watch
+**When** the phone is (or becomes) reachable
+**Then** the phone increments that card's usageCount and updates lastUsedAt
+**And** events queue offline on the Watch and flush on reachability
+**And** the Watch remains read-only for card data (no create/edit/delete/favourite from the watch)
 
 ---
 
@@ -1919,7 +1977,13 @@ _Example brands: Esselunga, Conad, Coop, Carrefour, Lidl, Eurospin, Pam, Despar,
 **Technical Notes:**
 
 - Same sync protocol as watchOS (versioned messages)
-- Watch is READ-ONLY (consistent with watchOS behavior)
+- Watch is READ-ONLY for card data (consistent with watchOS). A usage-event channel (card-opened → phone) is **proposed** for Epic 9 Story 9.6, pending the Story 9.6a ADR — Wear OS will mirror whatever that ADR ratifies. _(Updated 2026-06-09 via correct-course.)_
+
+**Parity scope added 2026-06-09 (correct-course — mirror the watchOS Epic 9 changes):**
+
+- Per-surface selectable sort (Frequently used / Recently added / A‑Z), persisted independently (mirror Story 9.5)
+- Favourite (pin) indicator on rows (mirror Story 9.4 / C3)
+- Usage-event emission for card opens (mirror Story 9.6, pending the 9.6a ADR)
 
 **Enabling Note:** Stories 10.1–10.2 are enabling tasks required for the Wear OS experience.
 

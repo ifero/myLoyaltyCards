@@ -17,6 +17,7 @@ struct WatchCard: Identifiable, Codable {
   var usageCount: Int = 0
   var lastUsedAt: Date? = nil
   var createdAt: Date = Date()
+  var isFavorite: Bool = false
 
   init(
     id: String,
@@ -28,7 +29,8 @@ struct WatchCard: Identifiable, Codable {
     barcodeImageBase64: String? = nil,
     usageCount: Int = 0,
     lastUsedAt: Date? = nil,
-    createdAt: Date = Date()
+    createdAt: Date = Date(),
+    isFavorite: Bool = false
   ) {
     self.id = id
     self.name = name
@@ -40,11 +42,12 @@ struct WatchCard: Identifiable, Codable {
     self.usageCount = usageCount
     self.lastUsedAt = lastUsedAt
     self.createdAt = createdAt
+    self.isFavorite = isFavorite
   }
 
   enum CodingKeys: String, CodingKey {
     case id, name, brandId, colorHex, barcodeValue, barcodeFormat, barcodeImageBase64, usageCount, lastUsedAt,
-      createdAt
+      createdAt, isFavorite
   }
 
   init(from decoder: Decoder) throws {
@@ -59,6 +62,7 @@ struct WatchCard: Identifiable, Codable {
     usageCount = try container.decodeIfPresent(Int.self, forKey: .usageCount) ?? 0
     lastUsedAt = try Self.decodeDateIfPresent(from: container, forKey: .lastUsedAt)
     createdAt = try Self.decodeDateIfPresent(from: container, forKey: .createdAt) ?? Date()
+    isFavorite = try container.decodeIfPresent(Bool.self, forKey: .isFavorite) ?? false
   }
 
   func encode(to encoder: Encoder) throws {
@@ -75,6 +79,7 @@ struct WatchCard: Identifiable, Codable {
       try container.encode(Self.encodeDate(lastUsedAt), forKey: .lastUsedAt)
     }
     try container.encode(Self.encodeDate(createdAt), forKey: .createdAt)
+    try container.encode(isFavorite, forKey: .isFavorite)
   }
 
   private static func decodeDateIfPresent(
@@ -115,6 +120,23 @@ struct WatchCard: Identifiable, Codable {
     formatter.formatOptions = [.withInternetDateTime]
     return formatter
   }()
+}
+
+extension WatchCard {
+  /// Shared ordering for every Watch surface that ranks cards (the card list and
+  /// the complication "top card"): favourites first → usageCount desc →
+  /// lastUsedAt desc → createdAt desc. Single source of truth so the surfaces
+  /// can never drift apart.
+  static func sortedForDisplay(_ cards: [WatchCard]) -> [WatchCard] {
+    cards.sorted { a, b in
+      if a.isFavorite != b.isFavorite { return a.isFavorite }
+      if a.usageCount != b.usageCount { return a.usageCount > b.usageCount }
+      if let aLast = a.lastUsedAt, let bLast = b.lastUsedAt, aLast != bLast {
+        return aLast > bLast
+      }
+      return a.createdAt > b.createdAt
+    }
+  }
 }
 
 final class CardStore: ObservableObject {
@@ -163,7 +185,7 @@ final class CardStore: ObservableObject {
         barcodeFormat: c.barcodeFormat ?? "CODE128",
         brandId: c.brandId,
         color: c.colorHex ?? "grey",
-        isFavorite: false,
+        isFavorite: c.isFavorite,
         lastUsedAt: c.lastUsedAt,
         usageCount: c.usageCount,
         createdAt: c.createdAt,
@@ -177,16 +199,7 @@ final class CardStore: ObservableObject {
     UserDefaults.standard.removeObject(forKey: "watch.cards")
     ComplicationSharedState.persistCards(decoded)
 
-    let topCardName = decoded
-      .sorted {
-        if $0.usageCount != $1.usageCount { return $0.usageCount > $1.usageCount }
-        if let lhsLast = $0.lastUsedAt, let rhsLast = $1.lastUsedAt, lhsLast != rhsLast {
-          return lhsLast > rhsLast
-        }
-        return $0.createdAt > $1.createdAt
-      }
-      .first?
-      .name
+    let topCardName = WatchCard.sortedForDisplay(decoded).first?.name
 
     ComplicationSharedState.persistTopCardName(topCardName)
 
@@ -197,6 +210,15 @@ final class CardStore: ObservableObject {
 // MARK: - Helpers moved to ColorHelpers.swift
 // initials(from:), mapColor(hex:), parseHexColor(_:), contrast helpers
 // are now in ColorHelpers.swift for reusability and testability.
+
+/// Localization key for a card row's accessibility label. Favourites get a
+/// distinct key so VoiceOver announces the pinned state. Extracted so the
+/// favourite-vs-not branch is unit-testable without rendering the SwiftUI view.
+func cardRowAccessibilityKey(isFavorite: Bool) -> String {
+  isFavorite
+    ? "watch.card_row.favorite_accessibility_format"
+    : "watch.card_row.accessibility_format"
+}
 
 struct CardRowView: View {
   let card: WatchCard
@@ -255,6 +277,13 @@ struct CardRowView: View {
         .layoutPriority(1)
 
       Spacer()
+
+      if card.isFavorite {
+        Image(systemName: "star.fill")
+          .font(.system(size: 13))
+          .foregroundColor(.yellow)
+          .accessibilityHidden(true)
+      }
     }
     .padding(.horizontal, metrics.horizontalPadding)
     .padding(.vertical, metrics.verticalPadding)
@@ -268,7 +297,7 @@ struct CardRowView: View {
         .stroke(isNearBlack(hex: resolvedColorHex) ? Color.white.opacity(0.15) : Color.clear, lineWidth: 1)
     )
     .accessibilityElement(children: .combine)
-    .accessibilityLabel(WatchL10n.format("watch.card_row.accessibility_format", card.name))
+    .accessibilityLabel(WatchL10n.format(cardRowAccessibilityKey(isFavorite: card.isFavorite), card.name))
   }
 
   @ViewBuilder
@@ -334,7 +363,7 @@ struct CardListView: View {
     _store = StateObject(wrappedValue: store)
   }
 
-  /// Cards sorted by usageCount desc → lastUsedAt desc → createdAt desc.
+  /// Cards sorted by isFavorite first → usageCount desc → lastUsedAt desc → createdAt desc.
   private var displayCards: [WatchCard] {
     let entities: [WatchCard]
     if !persistedEntities.isEmpty {
@@ -354,19 +383,14 @@ struct CardListView: View {
           barcodeFormat: e.barcodeFormat,
           usageCount: e.usageCount,
           lastUsedAt: e.lastUsedAt,
-          createdAt: e.createdAt
+          createdAt: e.createdAt,
+          isFavorite: e.isFavorite
         )
       }
     } else {
       entities = store.cards
     }
-    return entities.sorted { a, b in
-      if a.usageCount != b.usageCount { return a.usageCount > b.usageCount }
-      if let aLast = a.lastUsedAt, let bLast = b.lastUsedAt, aLast != bLast {
-        return aLast > bLast
-      }
-      return a.createdAt > b.createdAt
-    }
+    return WatchCard.sortedForDisplay(entities)
   }
 
   var body: some View {
@@ -482,7 +506,7 @@ struct CardListView: View {
       let sample: [WatchCard] = [
         WatchCard(
           id: "1", name: "Esselunga", brandId: "brand-special", colorHex: "#1e90ff",
-          barcodeValue: "5901234123457", barcodeFormat: "EAN13"),
+          barcodeValue: "5901234123457", barcodeFormat: "EAN13", isFavorite: true),
         WatchCard(
           id: "2", name: "Local Bakery", brandId: nil, colorHex: "#ff6b6b",
           barcodeValue: "012345678905", barcodeFormat: "UPCA"),
@@ -519,7 +543,7 @@ struct CardListView_Previews: PreviewProvider {
       CardListViewMock(cards: [
         WatchCard(
           id: "1", name: "Esselunga", brandId: "brand-special", colorHex: "#1e90ff",
-          barcodeValue: "5901234123457", barcodeFormat: "EAN13"),
+          barcodeValue: "5901234123457", barcodeFormat: "EAN13", isFavorite: true),
         WatchCard(
           id: "2", name: "Local Bakery", brandId: nil, colorHex: "#ff6b6b",
           barcodeValue: "012345678905", barcodeFormat: "UPCA"),

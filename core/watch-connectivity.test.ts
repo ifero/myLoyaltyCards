@@ -24,7 +24,8 @@ const expectedCardPayload = {
   barcodeValue: '123',
   barcodeFormat: 'CODE128',
   usageCount: 0,
-  createdAt: '2026-01-01T00:00:00.000Z'
+  createdAt: '2026-01-01T00:00:00.000Z',
+  isFavorite: false
 };
 
 /** Build an EventEmitter-like mock for `watchEvents`. */
@@ -444,6 +445,24 @@ describe('watch-connectivity wrapper', () => {
       expect(payload.usageCount).toBe(0);
       expect(payload).not.toHaveProperty('brandId');
       expect(payload).not.toHaveProperty('lastUsedAt');
+    });
+
+    test('forwards the card isFavorite flag into the watch payload', async () => {
+      const updateApplicationContext = jest.fn();
+      let mod: any = null;
+      jest.isolateModules(() => {
+        jest.doMock(
+          'react-native-watch-connectivity',
+          () => ({ updateApplicationContext, watchEvents: makeEvents() }),
+          { virtual: true }
+        );
+        mod = require('./watch-connectivity');
+      });
+
+      const favouriteCard = { ...sampleCard, isFavorite: true };
+      await mod.pushCardsToWatch([favouriteCard]);
+      const payload = updateApplicationContext.mock.calls[0]![0].payload[0];
+      expect(payload.isFavorite).toBe(true);
     });
 
     test('pre-renders QR cards to base64 for the watch payload', async () => {

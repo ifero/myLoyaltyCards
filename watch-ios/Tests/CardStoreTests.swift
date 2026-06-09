@@ -152,7 +152,8 @@ final class CardStoreTests: XCTestCase {
     let cards = [
       WatchCard(
         id: "m1", name: "Migrated", brandId: nil, colorHex: "#ff6b6b", barcodeValue: "12345",
-        barcodeFormat: "QR", usageCount: 6, lastUsedAt: lastUsedAt, createdAt: createdAt)
+        barcodeFormat: "QR", usageCount: 6, lastUsedAt: lastUsedAt, createdAt: createdAt,
+        isFavorite: true)
     ]
     let data = try JSONEncoder().encode(cards)
     UserDefaults.standard.set(data, forKey: "watch.cards")
@@ -173,6 +174,7 @@ final class CardStoreTests: XCTestCase {
     XCTAssertEqual(results.first?.usageCount, 6)
     XCTAssertEqual(results.first?.lastUsedAt, lastUsedAt)
     XCTAssertEqual(results.first?.createdAt, createdAt)
+    XCTAssertTrue(try XCTUnwrap(results.first).isFavorite)
     XCTAssertNil(UserDefaults.standard.data(forKey: "watch.cards"))
   }
 
@@ -230,6 +232,219 @@ final class CardStoreTests: XCTestCase {
     XCTAssertEqual(results.first?.usageCount, 5)
     XCTAssertEqual(results.first?.lastUsedAt, refreshedLastUsedAt)
     XCTAssertEqual(results.first?.createdAt, refreshedCreatedAt)
+  }
+
+  func test_watchCard_decodesIsFavorite_fromPhonePayload() throws {
+    let payload = """
+      {
+        "id": "fav-1",
+        "name": "Favourite Card",
+        "colorHex": "#1e90ff",
+        "barcodeValue": "1234567890",
+        "barcodeFormat": "CODE128",
+        "isFavorite": true
+      }
+      """.data(using: .utf8)!
+
+    let decoded = try JSONDecoder().decode(WatchCard.self, from: payload)
+
+    XCTAssertTrue(decoded.isFavorite)
+  }
+
+  func test_watchCard_defaultsIsFavorite_whenAbsent() throws {
+    // Backward compat: payloads minted before Story 9.4 omit isFavorite entirely.
+    let payload = """
+      {
+        "id": "legacy-fav",
+        "name": "Legacy Card",
+        "colorHex": "#ff6b6b",
+        "barcodeValue": "12345",
+        "barcodeFormat": "QR"
+      }
+      """.data(using: .utf8)!
+
+    let decoded = try JSONDecoder().decode(WatchCard.self, from: payload)
+
+    XCTAssertFalse(decoded.isFavorite)
+  }
+
+  func test_watchCard_encodesIsFavorite_intoPayload() throws {
+    let card = WatchCard(
+      id: "enc-fav",
+      name: "Encoded Favourite",
+      brandId: nil,
+      colorHex: "#1e90ff",
+      barcodeValue: "1234567890",
+      barcodeFormat: "CODE128",
+      isFavorite: true
+    )
+
+    let data = try JSONEncoder().encode(card)
+    let json = try XCTUnwrap(JSONSerialization.jsonObject(with: data) as? [String: Any])
+
+    XCTAssertEqual(json["isFavorite"] as? Bool, true)
+  }
+
+  @MainActor
+  func test_watchSessionManager_upsert_updatesIsFavorite_onExistingEntity() throws {
+    let container = try ModelContainer(
+      for: WatchCardEntity.self, configurations: ModelConfiguration(isStoredInMemoryOnly: true))
+    let context = ModelContext(container)
+
+    let existing = WatchCardEntity(
+      id: "fav-upsert-1",
+      name: "Card",
+      barcode: "111111",
+      barcodeFormat: "QR",
+      brandId: nil,
+      color: "#ff0000",
+      isFavorite: false,
+      lastUsedAt: nil,
+      usageCount: 0,
+      createdAt: Date(),
+      updatedAt: Date(),
+      rawPayload: nil
+    )
+    context.insert(existing)
+    try context.save()
+
+    WatchSessionManager.upsert(
+      cards: [
+        WatchCard(
+          id: "fav-upsert-1",
+          name: "Card",
+          brandId: nil,
+          colorHex: "#ff0000",
+          barcodeValue: "111111",
+          barcodeFormat: "QR",
+          isFavorite: true
+        )
+      ],
+      in: context
+    )
+
+    let results = try context.fetch(FetchDescriptor<WatchCardEntity>())
+    XCTAssertEqual(results.count, 1)
+    XCTAssertTrue(try XCTUnwrap(results.first).isFavorite)
+  }
+
+  @MainActor
+  func test_watchSessionManager_upsert_clearsIsFavorite_onExistingEntity() throws {
+    // Un-favouriting on the phone must propagate to the Watch entity (true → false).
+    let container = try ModelContainer(
+      for: WatchCardEntity.self, configurations: ModelConfiguration(isStoredInMemoryOnly: true))
+    let context = ModelContext(container)
+
+    let existing = WatchCardEntity(
+      id: "unfav-1",
+      name: "Card",
+      barcode: "111111",
+      barcodeFormat: "QR",
+      brandId: nil,
+      color: "#ff0000",
+      isFavorite: true,
+      lastUsedAt: nil,
+      usageCount: 0,
+      createdAt: Date(),
+      updatedAt: Date(),
+      rawPayload: nil
+    )
+    context.insert(existing)
+    try context.save()
+
+    WatchSessionManager.upsert(
+      cards: [
+        WatchCard(
+          id: "unfav-1",
+          name: "Card",
+          brandId: nil,
+          colorHex: "#ff0000",
+          barcodeValue: "111111",
+          barcodeFormat: "QR",
+          isFavorite: false
+        )
+      ],
+      in: context
+    )
+
+    let results = try context.fetch(FetchDescriptor<WatchCardEntity>())
+    XCTAssertEqual(results.count, 1)
+    XCTAssertFalse(try XCTUnwrap(results.first).isFavorite)
+  }
+
+  /// Upserts `cards` into a fresh in-memory store and returns the complication
+  /// "top card" name produced by the shared `sortedForDisplay` ordering.
+  @MainActor
+  private func topCardName(afterUpserting cards: [WatchCard]) throws -> String? {
+    let suite = try XCTUnwrap(UserDefaults(suiteName: ComplicationSharedState.suiteName))
+    suite.removeObject(forKey: ComplicationSharedState.topCardNameKey)
+
+    let container = try ModelContainer(
+      for: WatchCardEntity.self, configurations: ModelConfiguration(isStoredInMemoryOnly: true))
+    WatchSessionManager.upsert(cards: cards, in: ModelContext(container))
+
+    return suite.string(forKey: ComplicationSharedState.topCardNameKey)
+  }
+
+  @MainActor
+  func test_watchSessionManager_upsert_topCard_prioritisesFavorite_overUsage() throws {
+    // Integration: the upsert path feeds the shared sort into the complication's
+    // persisted top-card name. A non-favourite with high usage must NOT outrank a
+    // favourite with low usage.
+    let top = try topCardName(afterUpserting: [
+      WatchCard(
+        id: "frequent", name: "Frequent", brandId: nil, colorHex: "#1e90ff",
+        barcodeValue: "111", barcodeFormat: "CODE128", usageCount: 50, isFavorite: false),
+      WatchCard(
+        id: "favourite", name: "Favourite", brandId: nil, colorHex: "#ff6b6b",
+        barcodeValue: "222", barcodeFormat: "CODE128", usageCount: 1, isFavorite: true),
+    ])
+
+    XCTAssertEqual(top, "Favourite")
+  }
+
+  func test_sortedForDisplay_appliesFullTierOrdering() throws {
+    let formatter = makeISO8601Formatter()
+    let oldCreated = try XCTUnwrap(formatter.date(from: "2026-01-01T00:00:00.000Z"))
+    let newCreated = try XCTUnwrap(formatter.date(from: "2026-03-01T00:00:00.000Z"))
+    let oldUsed = try XCTUnwrap(formatter.date(from: "2026-02-01T00:00:00.000Z"))
+    let newUsed = try XCTUnwrap(formatter.date(from: "2026-04-01T00:00:00.000Z"))
+
+    // Deliberately unsorted input that forces every tier to decide at least one pair:
+    //  tier 0 isFavorite: "fav" wins outright (despite usage 0)
+    //  tier 1 usageCount: "hiusage" leads the non-favourites
+    //  tier 2 lastUsedAt:  "fresh" beats "stale" (same usage, more recent use)
+    //  tier 3 createdAt:   "midcreated" beats "oldest" (same usage, no lastUsedAt)
+    let cards = [
+      WatchCard(
+        id: "stale", name: "Stale", brandId: nil, colorHex: "#111", barcodeValue: "1",
+        barcodeFormat: "CODE128", usageCount: 3, lastUsedAt: oldUsed, createdAt: newCreated,
+        isFavorite: false),
+      WatchCard(
+        id: "fav", name: "Fav", brandId: nil, colorHex: "#222", barcodeValue: "2",
+        barcodeFormat: "CODE128", usageCount: 0, lastUsedAt: nil, createdAt: oldCreated,
+        isFavorite: true),
+      WatchCard(
+        id: "fresh", name: "Fresh", brandId: nil, colorHex: "#333", barcodeValue: "3",
+        barcodeFormat: "CODE128", usageCount: 3, lastUsedAt: newUsed, createdAt: oldCreated,
+        isFavorite: false),
+      WatchCard(
+        id: "oldest", name: "Oldest", brandId: nil, colorHex: "#444", barcodeValue: "4",
+        barcodeFormat: "CODE128", usageCount: 0, lastUsedAt: nil, createdAt: oldCreated,
+        isFavorite: false),
+      WatchCard(
+        id: "midcreated", name: "MidCreated", brandId: nil, colorHex: "#555", barcodeValue: "5",
+        barcodeFormat: "CODE128", usageCount: 0, lastUsedAt: nil, createdAt: newCreated,
+        isFavorite: false),
+      WatchCard(
+        id: "hiusage", name: "HiUsage", brandId: nil, colorHex: "#666", barcodeValue: "6",
+        barcodeFormat: "CODE128", usageCount: 10, lastUsedAt: nil, createdAt: newCreated,
+        isFavorite: false),
+    ]
+
+    let ordered = WatchCard.sortedForDisplay(cards).map(\.id)
+
+    XCTAssertEqual(ordered, ["fav", "hiusage", "fresh", "stale", "midcreated", "oldest"])
   }
 
   func test_readOnly_preventsCardModification() throws {

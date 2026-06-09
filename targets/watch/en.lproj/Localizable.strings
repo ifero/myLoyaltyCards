@@ -6,6 +6,7 @@
 "watch.cards.fallback_name" = "Card";
 "watch.cards.unavailable" = "Card unavailable";
 "watch.card_row.accessibility_format" = "Card, %@";
+"watch.card_row.favorite_accessibility_format" = "Favourite card, %@";
 "watch.debug.import_sample_cards" = "Import sample cards";
 "watch.barcode.accessibility.image_format" = "Barcode for %@";
 "watch.barcode.accessibility.value_format" = "Barcode value for %@";
