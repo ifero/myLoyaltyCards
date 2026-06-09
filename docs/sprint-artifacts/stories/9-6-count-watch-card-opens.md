@@ -1,9 +1,9 @@
 # Story 9.6: Count Card Opens on the Watch
 
-Status: drafted
+Status: ready-for-dev
 
 > Drafted 2026-06-09 via `correct-course` (`sprint-artifacts/sprint-change-proposal-2026-06-09.md`).
-> **Gates before `ready-for-dev`:** Story **9.6a ADR** accepted + **PM** confirmation that this is in scope (it crosses the "watch read-only **for MVP**" line). Depends on Story 9.4.
+> ✅ **Gates cleared 2026-06-09 → `ready-for-dev`:** [ADR-2026-06-09-001](../../adr-2026-06-09-watch-usage-events.md) **Accepted** (Architect) + PM scope confirmed (ifero). Depends on Story 9.4 (done). Relates to PRD **FR76** (usage recorded on every display surface, incl. watch).
 
 ## Story
 
@@ -55,7 +55,12 @@ so that "most used / recently used" sorting is accurate on both the Watch and th
 
 ## Dev Notes
 
-- **Do not start before 9.6a is accepted** — the message shape, conflict strategy, and offline/idempotency rules come from the ADR.
+- **9.6a ADR is now Accepted** ([ADR-2026-06-09-001](../../adr-2026-06-09-watch-usage-events.md)) — implement to its finalized contract:
+  - **Message:** `{ version: 1, type: "CARD_USED", payload: { id, usedAt } }`, watch → phone. `usedAt` = ISO-8601 UTC at **millisecond** precision (required for dedup correctness).
+  - **Dedup event id** `"<cardId>:<usedAt>"`; phone applies each unique id **once**: `usageCount += 1`, `lastUsedAt = max(lastUsedAt, usedAt)`.
+  - **Transport:** `transferUserInfo` (queued / guaranteed / survives relaunch) — **not** `sendMessage` (reachability-gated). Phone receives via `watchEvents.on('user-info', …)`, which delivers a **batch** (incl. pre-launch events) → iterate + dedup; size/persist the dedup window so a late retransmit can't slip past it.
+  - **⚠️ Validate on a physical phone+watch pair** — the watchOS Simulator does **not** support `transferUserInfo` (satisfies AC6 / Sprint 14 retro at build time).
+- **Watch→phone channel already exists** (`requestCards` in `core/watch-connectivity.ts`) — `CARD_USED` extends that direction; no new transport plumbing class.
 - **Reuse the phone usage path** from Story 9.1 (done) for the actual increment so phone and watch opens are counted identically.
 - **Shared counter is the whole point:** because `usageCount`/`lastUsedAt` are shared, fixing the watch gap also corrects the phone's frequency/recency sort (the original observation that triggered this work).
 - **Wear OS (Epic 10):** mirror the same protocol once built (parity scope added to Epic 10 on 2026-06-09).

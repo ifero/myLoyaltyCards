@@ -1,10 +1,11 @@
 # Story 9.6a: Watch Usage-Event Architecture (Spike / ADR) [Enabling]
 
-Status: drafted
+Status: review
 
 > Drafted 2026-06-09 via `correct-course` (`sprint-artifacts/sprint-change-proposal-2026-06-09.md`).
 > **Owner:** Architect. **Gates:** none to start; its output gates Story 9.6.
 > Honours Sprint 14 retro: "Spike-first for Watch/native APIs" + "Mandatory API-currency check."
+> **PM scope confirmed 2026-06-09 (ifero)** — usage-counting (C2) is in scope; watch stays read-only for card data. Status → `ready-for-dev`; ready for the **Architect** to ratify the Proposed ADR (flip → Accepted), fold into `architecture.md` as `ADR-2026-06-09-001`, and apply the read-only wording refinement across the 7 references.
 
 ## Story
 
@@ -24,8 +25,8 @@ so that counting watch card opens (Story 9.6) never reintroduces the card-edit c
 3. **Given** the watch may be offline / phone unreachable
    **Then** the ADR defines **offline behaviour** (queue on watch, flush on reachability, idempotency/dedup strategy)
 
-4. **Given** the "watch read-only" rule lives in 7 places (CONTRIBUTING, project_context ×2, architecture, epics ×3)
-   **Then** the ADR specifies the exact refined wording — _"read-only for card data; usage events permitted"_ — and lists every file/line to update
+4. **Given** the "watch read-only" rule lives in 7 places (CONTRIBUTING, project*context ×2, architecture, epics ×3)
+   **Then** the ADR specifies the exact refined wording — *"read-only for card data; usage events permitted"\_ — and lists every file/line to update
 
 5. **Given** Epic 10 (Wear OS) must stay consistent
    **Then** the ADR confirms the same protocol/strategy is adoptable on Wear OS (Wearable Data Layer)
@@ -34,13 +35,13 @@ so that counting watch card opens (Story 9.6) never reintroduces the card-edit c
 
 ## Tasks / Subtasks
 
-- [ ] Review current `react-native-watch-connectivity` + WatchConnectivity capabilities for watch→phone delivery (guaranteed vs best-effort); verify API currency (AC: 1, 6)
-- [ ] Design the `CARD_USED` message + the phone-side handler that applies commutative increments (AC: 1, 2)
-- [ ] Define offline queue + flush + dedup/idempotency (AC: 3)
-- [ ] Specify the read-only wording refinement + the exact edit list across the 7 references (AC: 4)
-- [ ] Confirm Wear OS adoptability (AC: 5)
-- [ ] Write the ADR to `docs/architecture/adr/` (or `docs/`); get **PM** confirmation that pulling usage past the "read-only-for-MVP" line is in scope
-- [ ] On acceptance, mark 9.6 `ready-for-dev`
+- [x] Review current `react-native-watch-connectivity` + WatchConnectivity capabilities for watch→phone delivery (guaranteed vs best-effort); verify API currency (AC: 1, 6) — ✅ `transferUserInfo` (queued, survives relaunch); RN `watchEvents.on('user-info')` batch receive; Simulator-unsupported
+- [x] Design the `CARD_USED` message + the phone-side handler that applies commutative increments (AC: 1, 2)
+- [x] Define offline queue + flush + dedup/idempotency (AC: 3) — dedup id `"<cardId>:<usedAt>"`, ms-precision `usedAt`
+- [x] Specify the read-only wording refinement + the exact edit list across the 7 references (AC: 4) — ✅ all 7 applied 2026-06-09
+- [x] Confirm Wear OS adoptability (AC: 5) — ✅ Wearable Data Layer (`MessageClient`/`DataClient`), same shape + reconciliation
+- [x] Write the ADR to `docs/architecture/adr/` (or `docs/`); get **PM** confirmation that pulling usage past the "read-only-for-MVP" line is in scope — ✅ ADR ratified; PM confirmed 2026-06-09
+- [x] On acceptance, mark 9.6 `ready-for-dev` — ✅ done 2026-06-09
 
 ## Dev Notes
 
@@ -64,14 +65,22 @@ claude-opus-4-8 (Amelia) — initial ADR draft via correct-course
 
 ### Completion Notes List
 
-- **ADR draft produced 2026-06-09** → [`docs/adr-2026-06-09-watch-usage-events.md`](../../adr-2026-06-09-watch-usage-events.md), Status **Proposed**. Covers the `CARD_USED` message, the commutative conflict-safety argument, offline/dedup, the read-only refinement + exact 7-reference edit list, Wear OS consistency, and an API-currency note. **Awaiting PM scope confirmation + Architect ratification** before 9.6 goes `ready-for-dev`.
+- **ADR draft produced 2026-06-09** → [`docs/adr-2026-06-09-watch-usage-events.md`](../../adr-2026-06-09-watch-usage-events.md), Status **Proposed**. Covers the `CARD_USED` message, the commutative conflict-safety argument, offline/dedup, the read-only refinement + exact 7-reference edit list, Wear OS consistency, and an API-currency note. **PM scope confirmation received 2026-06-09 (ifero). Awaiting Architect ratification** (Status Proposed → Accepted) before 9.6 goes `ready-for-dev`.
+- **ADR ratified 2026-06-09 (Winston, Architect).** Status → **Accepted**. Validated commutativity + dedup (tightened `usedAt` → ms precision), offline via `transferUserInfo` (verified current; Simulator-unsupported → physical-device test in 9.6), and Wear OS adoptability (Wearable Data Layer). Folded into `architecture.md` as `ADR-2026-06-09-001`; read-only wording refined across all **7 references** (CONTRIBUTING ×1, project_context ×2, architecture ×1, epics ×3); `CARD_USED` added to both documented `SyncMessage` unions. **Story 9.6 unblocked → `ready-for-dev`.**
 
 ### File List
 
-- `docs/adr-2026-06-09-watch-usage-events.md` (new — Proposed ADR)
+- `docs/adr-2026-06-09-watch-usage-events.md` (ADR — now **Accepted**)
+- `docs/architecture.md` (SyncMessage union + `CARD_USED` + Watch Editing Policy → ADR-2026-06-09-001)
+- `docs/project_context.md` (Sync Patterns + Message Versioning + Watch App Rules)
+- `CONTRIBUTING.md` (watch read-only wording)
+- `docs/epics.md` (ARCH-20 + Epic 5 note + Epic 10 Wear OS parity)
+- `docs/sprint-artifacts/stories/9-6-count-watch-card-opens.md` (gate cleared → ready-for-dev + ADR specifics in Dev Notes)
 
 ## Change Log
 
-| Date       | Version | Description                          | Author       |
-| ---------- | ------- | ------------------------------------ | ------------ |
-| 2026-06-09 | 0.1     | Drafted via correct-course (C2 gate) | Amelia (dev) |
+| Date       | Version | Description                                                                                                                             | Author         |
+| ---------- | ------- | --------------------------------------------------------------------------------------------------------------------------------------- | -------------- |
+| 2026-06-09 | 0.1     | Drafted via correct-course (C2 gate)                                                                                                    | Amelia (dev)   |
+| 2026-06-09 | 0.2     | PM scope confirmed (ifero); status drafted → ready-for-dev; routed to Architect for ADR ratification                                    | Bob (SM)       |
+| 2026-06-09 | 0.3     | ADR ratified → Accepted; folded into architecture.md; 7 read-only refs refined; `CARD_USED` added; 9.6 → ready-for-dev; status → review | Winston (Arch) |

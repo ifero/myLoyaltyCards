@@ -267,7 +267,7 @@ The authoritative rules are in [`docs/project_context.md`](docs/project_context.
 - **Client-side UUIDs**, **ISO-8601 UTC** date strings, **all JSON fields present** (`null`, never omitted).
 - **Transactional DB writes** (`withTransactionAsync`); use the `logger` wrapper, not `console.log`.
 - **Tests co-located** with source; cross-platform fixtures live in `test-fixtures/`.
-- **Apple Watch is read-only** — never add mutation paths to the watch.
+- **Apple Watch is read-only for card _data_** — never add card create/edit/delete/favourite paths to the watch. (It MAY emit `CARD_USED` usage events, which the phone applies commutatively — usage telemetry is not a card-data mutation. See ADR-2026-06-09-001.)
 - **UI:** respect safe-area insets for edge controls; avoid `Pressable` `style={({pressed}) => …}` callbacks (use `onPressIn`/`onPressOut` + state) — see `AGENTS.md` for the rationale.
 
 Run `yarn lint` and `yarn typecheck` to catch most violations automatically.

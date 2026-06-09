@@ -3,7 +3,7 @@
 Status: drafted
 
 > Drafted 2026-06-09 via `correct-course` (`sprint-artifacts/sprint-change-proposal-2026-06-09.md`).
-> **Gates before `ready-for-dev`:** PRD **FR25** (PM) + UX watch-picker spec (UX). Depends on Story 9.4.
+> **Gates before `ready-for-dev`:** PRD **FR75** (PM — _renumbered from the proposal's erroneous "FR25", which is already "guest mode"; PRD currently runs to FR74_) + UX watch-picker spec (UX). Depends on Story 9.4.
 
 ## Story
 
@@ -62,7 +62,7 @@ so that the order matches how I think about my cards (not just a fixed algorithm
 - **Phone reference (do not re-invent):** `features/cards/hooks/useCardSort.ts` (Story 13.2) defines the three modes, their comparators, and persisted-preference pattern (`AsyncStorage` key `@myLoyaltyCards/sortPreference`, default `frequent`). Mirror the _semantics_; the watch keeps its **own** preference with an **A‑Z** default (decision 2026-06-09).
 - **Reuse:** `WatchCard.sortedForDisplay(_:)` already implements `frequent`. Add the other two variants beside it so all watch surfaces share one source of truth.
 - **Watch contract tests** (`targets/watch/__tests__/`) run in CI via `watchos-tests.yml` and are **excluded** by the default `yarn test` — run them with `jest --testPathPattern='targets/watch/__tests__' --testPathIgnorePatterns='/node_modules/' --modulePathIgnorePatterns='/node_modules/'`.
-- **Open product input:** exact picker affordance (sheet vs inline list vs Digital Crown) → UX. PRD FR25 must land first.
+- **Open product input:** exact picker affordance (sheet vs inline list vs Digital Crown) → UX. PRD **FR75** (selectable per-surface sort, persisted) must land first.
 
 ### References
 
