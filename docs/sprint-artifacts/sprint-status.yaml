@@ -266,7 +266,7 @@ development_status:
   9-4-sync-sorting-to-watch: done # C3 favourite-badge implemented; code review + QA approved (2026-06-09); story.md at "review" — awaiting stakeholder approval to commit/PR
   9-5-selectable-watch-sort: done # 2026-06-10: impl complete on feature/9-5-selectable-watch-sort; dev-subagent code review (2 rounds → 0 comments) + QA (sonnet) approved. story.md at "review" — awaiting stakeholder approval to commit/PR.
   9-6a-watch-usage-event-adr: done # 2026-06-09: ADR-2026-06-09-001 RATIFIED → Accepted (Architect); 7 read-only refs refined + CARD_USED documented. Story .md at "review" (auto-flips to done on merge). Unblocked 9-6.
-  9-6-count-watch-card-opens: ready-for-dev # 2026-06-09: gates cleared — ADR-2026-06-09-001 Accepted + PM scope confirmed. Implement CARD_USED per ADR (transferUserInfo; ms-precision usedAt; dedup "<id>:<usedAt>"). Relates PRD FR76.
+  9-6-count-watch-card-opens: review # 2026-06-10: impl complete on feature/9-6-count-watch-card-opens — CARD_USED per ADR-2026-06-09-001. Code review (opus) + QA (opus) both APPROVED 0 findings round 1. All gates green (1503 tests, coverage ≥80%, watch build OK). Awaiting stakeholder approval to commit/PR. ⚠️ transferUserInfo needs physical-pair validation.
   epic-9-retrospective: optional
 
   # Epic 10: Wear OS App
