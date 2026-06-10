@@ -1,6 +1,6 @@
 # Story 9.5: Selectable Watch Sort
 
-Status: review
+Status: done
 
 > Drafted 2026-06-09 via `correct-course` (`sprint-artifacts/sprint-change-proposal-2026-06-09.md`).
 > ✅ **Gates cleared 2026-06-10 → `ready-for-dev`:** PRD **FR75/FR76** added (PM) + UX watch-picker & favourite-badge spec merged (PR #130). Depends on Story 9.4 (done). _(FR75 renumbered from the proposal's erroneous "FR25"; see PRD note.)_
