@@ -1,6 +1,6 @@
 # Story 9.6: Count Card Opens on the Watch
 
-Status: review
+Status: done
 
 > Drafted 2026-06-09 via `correct-course` (`sprint-artifacts/sprint-change-proposal-2026-06-09.md`).
 > ✅ **Gates cleared 2026-06-09 → `ready-for-dev`:** [ADR-2026-06-09-001](../../adr-2026-06-09-watch-usage-events.md) **Accepted** (Architect) + PM scope confirmed (ifero). Depends on Story 9.4 (done). Relates to PRD **FR76** (usage recorded on every display surface, incl. watch).
