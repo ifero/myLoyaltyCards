@@ -122,19 +122,85 @@ struct WatchCard: Identifiable, Codable {
   }()
 }
 
+/// User-selectable ordering for the Watch card list. Cases mirror the phone's
+/// `useCardSort` (`features/cards/hooks/useCardSort.ts`) so the two surfaces share
+/// one vocabulary. The watch persists its own choice — default `.az` — independently
+/// of the phone (decision 2026-06-09). Declaration order is the picker row order.
+enum WatchSortMode: String, CaseIterable, Identifiable {
+  case frequent
+  case recent
+  case az
+
+  var id: String { rawValue }
+
+  /// UserDefaults key backing the watch-local `@AppStorage` preference. Watch-only:
+  /// never written to card data, so the read-only watch rule (ADR-2026-06-09-001) holds.
+  static let storageKey = "watch.sortMode"
+
+  /// Default on a fresh install with no saved preference (AC3).
+  static let defaultMode: WatchSortMode = .az
+
+  /// Localized label key for this mode (resolved via `WatchL10n`).
+  var localizationKey: String {
+    switch self {
+    case .frequent: return "watch.sort.frequent"
+    case .recent: return "watch.sort.recent"
+    case .az: return "watch.sort.az"
+    }
+  }
+}
+
 extension WatchCard {
   /// Shared ordering for every Watch surface that ranks cards (the card list and
   /// the complication "top card"): favourites first → usageCount desc →
   /// lastUsedAt desc → createdAt desc. Single source of truth so the surfaces
-  /// can never drift apart.
+  /// can never drift apart. This is the `.frequent` mode.
   static func sortedForDisplay(_ cards: [WatchCard]) -> [WatchCard] {
     cards.sorted { a, b in
       if a.isFavorite != b.isFavorite { return a.isFavorite }
       if a.usageCount != b.usageCount { return a.usageCount > b.usageCount }
-      if let aLast = a.lastUsedAt, let bLast = b.lastUsedAt, aLast != bLast {
+      // lastUsedAt desc — and a card that has been used outranks one that never has,
+      // even at equal usageCount (mirrors useCardSort.ts: `if (a.lastUsedAt) return -1;
+      // if (b.lastUsedAt) return 1;`). The earlier both-present-only check skipped this.
+      switch (a.lastUsedAt, b.lastUsedAt) {
+      case let (aLast?, bLast?) where aLast != bLast:
         return aLast > bLast
+      case (.some, .none):
+        return true
+      case (.none, .some):
+        return false
+      default:
+        break
       }
       return a.createdAt > b.createdAt
+    }
+  }
+
+  /// Orders `cards` for the user-selected `mode`, mirroring the phone's `useCardSort`
+  /// semantics exactly so the two surfaces never drift:
+  /// - `.frequent`: favourites first → usageCount desc → lastUsedAt desc → createdAt desc
+  /// - `.recent`:   createdAt desc (favourites are **not** pinned)
+  /// - `.az`:       favourites first → name (locale-aware, case- & diacritic-insensitive)
+  ///
+  /// Swift's `sorted(by:)` is stable (Swift 5+), matching the phone's stable `Array.sort`.
+  static func sorted(_ cards: [WatchCard], by mode: WatchSortMode) -> [WatchCard] {
+    switch mode {
+    case .frequent:
+      return sortedForDisplay(cards)
+    case .recent:
+      return cards.sorted { $0.createdAt > $1.createdAt }
+    case .az:
+      return cards.sorted { a, b in
+        if a.isFavorite != b.isFavorite { return a.isFavorite }
+        // Locale-aware, case- AND diacritic-insensitive to mirror the phone's
+        // localeCompare(…, { sensitivity: 'base' }) exactly (Italian-first audience).
+        return a.name.compare(
+          b.name,
+          options: [.caseInsensitive, .diacriticInsensitive],
+          range: nil,
+          locale: .current
+        ) == .orderedAscending
+      }
     }
   }
 }
@@ -358,12 +424,16 @@ struct CardListView: View {
   @StateObject private var store: CardStore
   @State private var navigationPath: [WatchCardRoute] = []
   @State private var pendingDeepLinkCardId: String?
+  // Watch-local, persisted sort preference (default A-Z), independent of the phone (AC3, AC4).
+  @AppStorage(WatchSortMode.storageKey) private var sortMode: WatchSortMode = WatchSortMode.defaultMode
+  @State private var showSortSheet = false
 
   init(store: CardStore = CardStore()) {
     _store = StateObject(wrappedValue: store)
   }
 
-  /// Cards sorted by isFavorite first → usageCount desc → lastUsedAt desc → createdAt desc.
+  /// Cards ordered by the user-selected `sortMode` (default A-Z). Ordering semantics
+  /// mirror the phone's `useCardSort`; see `WatchCard.sorted(_:by:)`.
   private var displayCards: [WatchCard] {
     let entities: [WatchCard]
     if !persistedEntities.isEmpty {
@@ -390,7 +460,7 @@ struct CardListView: View {
     } else {
       entities = store.cards
     }
-    return WatchCard.sortedForDisplay(entities)
+    return WatchCard.sorted(entities, by: sortMode)
   }
 
   var body: some View {
@@ -411,6 +481,7 @@ struct CardListView: View {
             }
             .padding(.horizontal, 2)
             .padding(.vertical, 2)
+            .animation(.default, value: sortMode)
           }
         }
       }
@@ -426,18 +497,35 @@ struct CardListView: View {
             .background(Color.black)
         }
       }
-    }
-    #if DEBUG
       .toolbar {
-        // use a watch-safe placement for the debug import button
-        ToolbarItem(placement: .automatic) {
-          Button(action: importSampleCards) {
-            Text(WatchL10n.string("watch.debug.import_sample_cards"))
+        if !displayCards.isEmpty {
+          ToolbarItem(placement: .topBarTrailing) {
+            Button {
+              showSortSheet = true
+            } label: {
+              Image(systemName: "arrow.up.arrow.down")
+            }
+            .accessibilityLabel(WatchL10n.string("watch.sort.title"))
+            .accessibilityIdentifier("sort-button")
           }
-          .accessibilityIdentifier("import-sample-cards")
         }
+        #if DEBUG
+          // DEBUG-only seeder; shown only on the empty state (its actual purpose) so it never
+          // crowds the sort control once cards are present. Compiled out of Release entirely.
+          if displayCards.isEmpty {
+            ToolbarItem(placement: .topBarLeading) {
+              Button(action: importSampleCards) {
+                Text(WatchL10n.string("watch.debug.import_sample_cards"))
+              }
+              .accessibilityIdentifier("import-sample-cards")
+            }
+          }
+        #endif
       }
-    #endif
+      .sheet(isPresented: $showSortSheet) {
+        WatchSortPickerView(selection: $sortMode)
+      }
+    }
     .background(Color.black)
     .scrollContentBackground(.hidden)
     .onAppear {
@@ -455,7 +543,7 @@ struct CardListView: View {
 
       openCardRouteIfAvailable(cardId)
     }
-    .onChange(of: displayCards.map(\.id)) { _ in
+    .onChange(of: displayCards.map(\.id)) { _, _ in
       guard let pendingDeepLinkCardId else {
         return
       }
@@ -524,6 +612,52 @@ struct CardListView: View {
       WKInterfaceDevice.current().play(.success)
     }
   #endif
+}
+
+/// Compact watch sort picker presented as a sheet from the card list toolbar (Story 9.5,
+/// UX spec §5). A Carbon-styled `List` of the three `WatchSortMode` rows; the active row is
+/// double-encoded — semibold tint label + trailing checkmark + a VoiceOver "selected" trait,
+/// never colour alone. Tapping a row sets the mode and dismisses immediately so the list
+/// re-orders (AC1, AC2, AC5).
+struct WatchSortPickerView: View {
+  @Binding var selection: WatchSortMode
+  @Environment(\.dismiss) private var dismiss
+
+  var body: some View {
+    NavigationStack {
+      List {
+        ForEach(WatchSortMode.allCases) { mode in
+          let isSelected = selection == mode
+          Button {
+            selection = mode
+            dismiss()
+          } label: {
+            HStack(spacing: 8) {
+              Text(WatchL10n.string(mode.localizationKey))
+                .font(.body)
+                .fontWeight(isSelected ? .semibold : .regular)
+                .foregroundStyle(isSelected ? Color.accentColor : Color.white)
+                .lineLimit(1)
+              Spacer()
+              if isSelected {
+                Image(systemName: "checkmark")
+                  .foregroundStyle(Color.accentColor)
+                  .accessibilityHidden(true)
+              }
+            }
+            .frame(minHeight: 44)
+            .contentShape(Rectangle())
+          }
+          .listRowBackground(Color.black)
+          .accessibilityAddTraits(isSelected ? .isSelected : [])
+        }
+      }
+      .listStyle(.plain)
+      .scrollContentBackground(.hidden)
+      .background(Color.black)
+      .navigationTitle(WatchL10n.string("watch.sort.title"))
+    }
+  }
 }
 
 struct CardListView_Previews: PreviewProvider {

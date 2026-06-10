@@ -217,4 +217,74 @@ describe('watch layout contract', () => {
     expect(compactRowHeight).toBeGreaterThanOrEqual(44);
     expect(compactVisibleRows).toBeGreaterThanOrEqual(baselineVisibleRows + 1);
   });
+
+  it('exposes a selectable watch sort model with phone-mirrored variants (Story 9.5)', () => {
+    const cardListView = fs.readFileSync(cardListViewPath, 'utf8');
+
+    // The three modes mirror the phone's useCardSort SortOption union.
+    expect(cardListView).toContain('enum WatchSortMode: String, CaseIterable, Identifiable {');
+    expect(cardListView).toContain('case frequent');
+    expect(cardListView).toContain('case recent');
+    expect(cardListView).toContain('case az');
+
+    // Watch-local persistence key + A-Z default (AC3, AC4).
+    expect(cardListView).toContain('static let storageKey = "watch.sortMode"');
+    expect(cardListView).toContain('static let defaultMode: WatchSortMode = .az');
+
+    // A single comparator entry point; `.frequent` reuses the shared sortedForDisplay so the
+    // complication "top card" can never drift from the list (AC2).
+    expect(cardListView).toContain(
+      'static func sorted(_ cards: [WatchCard], by mode: WatchSortMode) -> [WatchCard]'
+    );
+    expect(cardListView).toContain('return sortedForDisplay(cards)');
+    expect(cardListView).toContain('cards.sorted { $0.createdAt > $1.createdAt }');
+    // A-Z mirrors the phone's localeCompare(sensitivity:'base') — case- AND diacritic-insensitive.
+    expect(cardListView).toContain('options: [.caseInsensitive, .diacriticInsensitive]');
+
+    // The list is driven by the selected mode, not the fixed frequent ordering (AC2, AC5).
+    expect(cardListView).toContain('return WatchCard.sorted(entities, by: sortMode)');
+  });
+
+  it('presents a sort control: toolbar button → picker sheet, double-encoded active row (Story 9.5)', () => {
+    const cardListView = fs.readFileSync(cardListViewPath, 'utf8');
+    const enStrings = fs.readFileSync(
+      path.join(repoRoot, 'targets', 'watch', 'en.lproj', 'Localizable.strings'),
+      'utf8'
+    );
+    const itStrings = fs.readFileSync(
+      path.join(repoRoot, 'targets', 'watch', 'it.lproj', 'Localizable.strings'),
+      'utf8'
+    );
+
+    // Watch-local persisted preference, default A-Z (AC3, AC4).
+    expect(cardListView).toContain(
+      '@AppStorage(WatchSortMode.storageKey) private var sortMode: WatchSortMode = WatchSortMode.defaultMode'
+    );
+
+    // Entry point: a top-trailing toolbar button with the sort glyph (UX spec §5, AC1).
+    expect(cardListView).toContain('ToolbarItem(placement: .topBarTrailing)');
+    expect(cardListView).toContain('Image(systemName: "arrow.up.arrow.down")');
+    expect(cardListView).toContain('.accessibilityLabel(WatchL10n.string("watch.sort.title"))');
+
+    // Presentation: a sheet hosting the picker (AC1).
+    expect(cardListView).toContain('.sheet(isPresented: $showSortSheet)');
+    expect(cardListView).toContain('WatchSortPickerView(selection: $sortMode)');
+    expect(cardListView).toContain('struct WatchSortPickerView: View {');
+
+    // Active row is double-encoded: checkmark + VoiceOver "selected" trait, never colour alone.
+    expect(cardListView).toContain('Image(systemName: "checkmark")');
+    expect(cardListView).toContain('.accessibilityAddTraits(isSelected ? .isSelected : [])');
+
+    // Mode labels + control title are localised in BOTH bundles (cross-file coupling).
+    for (const key of [
+      'watch.sort.title',
+      'watch.sort.frequent',
+      'watch.sort.recent',
+      'watch.sort.az'
+    ]) {
+      expect(cardListView).toContain(`"${key}"`);
+      expect(enStrings).toContain(`"${key}" =`);
+      expect(itStrings).toContain(`"${key}" =`);
+    }
+  });
 });

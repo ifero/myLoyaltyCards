@@ -5,6 +5,10 @@
 "watch.cards.empty.accessibility" = "Nessuna carta. Aggiungi carte sul tuo iPhone, si sincronizzano qui automaticamente.";
 "watch.cards.fallback_name" = "Carta";
 "watch.cards.unavailable" = "Carta non disponibile";
+"watch.sort.title" = "Ordina";
+"watch.sort.frequent" = "Piu usate";
+"watch.sort.recent" = "Aggiunte di recente";
+"watch.sort.az" = "A-Z";
 "watch.card_row.accessibility_format" = "Carta, %@";
 "watch.card_row.favorite_accessibility_format" = "Carta preferita, %@";
 "watch.debug.import_sample_cards" = "Importa carte di esempio";
