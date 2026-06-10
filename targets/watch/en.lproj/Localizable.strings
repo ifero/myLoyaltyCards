@@ -5,6 +5,10 @@
 "watch.cards.empty.accessibility" = "No cards yet. Add cards on your iPhone, they sync here automatically.";
 "watch.cards.fallback_name" = "Card";
 "watch.cards.unavailable" = "Card unavailable";
+"watch.sort.title" = "Sort";
+"watch.sort.frequent" = "Frequently used";
+"watch.sort.recent" = "Recently added";
+"watch.sort.az" = "A-Z";
 "watch.card_row.accessibility_format" = "Card, %@";
 "watch.card_row.favorite_accessibility_format" = "Favourite card, %@";
 "watch.debug.import_sample_cards" = "Import sample cards";

@@ -7,6 +7,9 @@ final class CardStoreTests: XCTestCase {
   override func setUp() {
     super.setUp()
     UserDefaults.standard.removeObject(forKey: "watch.cards")
+    // Guard against a prior test's UITEST_CARDS env override leaking into UserDefaults-backed
+    // tests (setenv is process-global); every test starts from a clean slate regardless of order.
+    unsetenv("UITEST_CARDS")
   }
 
   private func makeISO8601Formatter() -> ISO8601DateFormatter {
@@ -447,23 +450,164 @@ final class CardStoreTests: XCTestCase {
     XCTAssertEqual(ordered, ["fav", "hiusage", "fresh", "stale", "midcreated", "oldest"])
   }
 
-  func test_readOnly_preventsCardModification() throws {
-    let store = CardStore()
-    let originalCards = [
+  // MARK: - Story 9.5: selectable watch sort (WatchSortMode)
+
+  func test_sorted_byFrequent_matchesSortedForDisplay() throws {
+    // `.frequent` must stay identical to the shared ordering the complication relies on.
+    let formatter = makeISO8601Formatter()
+    let created = try XCTUnwrap(formatter.date(from: "2026-01-01T00:00:00.000Z"))
+    let cards = [
       WatchCard(
-        id: "r1", name: "ReadOnly", brandId: nil, colorHex: "#1e90ff", barcodeValue: nil,
+        id: "a", name: "Beta", brandId: nil, colorHex: "#1", barcodeValue: "1",
+        barcodeFormat: "CODE128", usageCount: 2, lastUsedAt: nil, createdAt: created,
+        isFavorite: false),
+      WatchCard(
+        id: "b", name: "Alpha", brandId: nil, colorHex: "#2", barcodeValue: "2",
+        barcodeFormat: "CODE128", usageCount: 9, lastUsedAt: nil, createdAt: created,
+        isFavorite: false),
+      WatchCard(
+        id: "c", name: "Gamma", brandId: nil, colorHex: "#3", barcodeValue: "3",
+        barcodeFormat: "CODE128", usageCount: 0, lastUsedAt: nil, createdAt: created,
+        isFavorite: true),
+    ]
+
+    XCTAssertEqual(
+      WatchCard.sorted(cards, by: .frequent).map(\.id),
+      WatchCard.sortedForDisplay(cards).map(\.id))
+  }
+
+  func test_sorted_byFrequent_usedCardOutranksNeverUsed_atSameUsageCount() throws {
+    // Mixed-nil lastUsedAt at equal usageCount: a card that has been used must outrank one
+    // that never has, regardless of createdAt — mirrors phone `sortByFrequent` (AC2).
+    let formatter = makeISO8601Formatter()
+    let jan = try XCTUnwrap(formatter.date(from: "2026-01-01T00:00:00.000Z"))
+    let jun = try XCTUnwrap(formatter.date(from: "2026-06-01T00:00:00.000Z"))
+    let cards = [
+      WatchCard(
+        id: "never-used", name: "B", brandId: nil, colorHex: "#1", barcodeValue: "1",
+        barcodeFormat: "CODE128", usageCount: 5, lastUsedAt: nil, createdAt: jun,
+        isFavorite: false),
+      WatchCard(
+        id: "was-used", name: "A", brandId: nil, colorHex: "#2", barcodeValue: "2",
+        barcodeFormat: "CODE128", usageCount: 5, lastUsedAt: jun, createdAt: jan,
+        isFavorite: false),
+    ]
+
+    XCTAssertEqual(WatchCard.sorted(cards, by: .frequent).map(\.id), ["was-used", "never-used"])
+  }
+
+  func test_sorted_byRecent_ordersByCreatedAtDescending_withoutFavouritePin() throws {
+    let formatter = makeISO8601Formatter()
+    let jan = try XCTUnwrap(formatter.date(from: "2026-01-01T00:00:00.000Z"))
+    let feb = try XCTUnwrap(formatter.date(from: "2026-02-01T00:00:00.000Z"))
+    let mar = try XCTUnwrap(formatter.date(from: "2026-03-01T00:00:00.000Z"))
+
+    // A high-usage favourite created earliest must NOT be pinned in `.recent` —
+    // recency is pure createdAt-descending chronology (matches phone `sortByRecent`).
+    let cards = [
+      WatchCard(
+        id: "old-fav", name: "OldFav", brandId: nil, colorHex: "#1", barcodeValue: "1",
+        barcodeFormat: "CODE128", usageCount: 99, lastUsedAt: nil, createdAt: jan,
+        isFavorite: true),
+      WatchCard(
+        id: "mid", name: "Mid", brandId: nil, colorHex: "#2", barcodeValue: "2",
+        barcodeFormat: "CODE128", usageCount: 0, lastUsedAt: nil, createdAt: feb,
+        isFavorite: false),
+      WatchCard(
+        id: "new", name: "New", brandId: nil, colorHex: "#3", barcodeValue: "3",
+        barcodeFormat: "CODE128", usageCount: 0, lastUsedAt: nil, createdAt: mar,
+        isFavorite: false),
+    ]
+
+    XCTAssertEqual(WatchCard.sorted(cards, by: .recent).map(\.id), ["new", "mid", "old-fav"])
+  }
+
+  func test_sorted_byAZ_ordersByNameCaseInsensitive_withFavouritesFirst() throws {
+    let cards = [
+      WatchCard(
+        id: "banana", name: "banana", brandId: nil, colorHex: "#1", barcodeValue: "1",
+        barcodeFormat: "CODE128", isFavorite: false),
+      WatchCard(
+        id: "Apple", name: "Apple", brandId: nil, colorHex: "#2", barcodeValue: "2",
+        barcodeFormat: "CODE128", isFavorite: false),
+      WatchCard(
+        id: "cherry-fav", name: "cherry", brandId: nil, colorHex: "#3", barcodeValue: "3",
+        barcodeFormat: "CODE128", isFavorite: true),
+    ]
+
+    // Favourite "cherry" pins first; remaining names sort case-insensitively (Apple < banana).
+    XCTAssertEqual(WatchCard.sorted(cards, by: .az).map(\.id), ["cherry-fav", "Apple", "banana"])
+  }
+
+  func test_sorted_byAZ_isDiacriticInsensitive_mirroringPhone() throws {
+    // Phone uses localeCompare(sensitivity:'base'): accents do not change ordering.
+    // "Èlite" must sort as if "Elite" — between "Acme" (A) and "Zeta" (Z).
+    let cards = [
+      WatchCard(
+        id: "zeta", name: "Zeta", brandId: nil, colorHex: "#1", barcodeValue: "1",
+        barcodeFormat: "CODE128", isFavorite: false),
+      WatchCard(
+        id: "elite-accent", name: "Èlite", brandId: nil, colorHex: "#2", barcodeValue: "2",
+        barcodeFormat: "CODE128", isFavorite: false),
+      WatchCard(
+        id: "acme", name: "Acme", brandId: nil, colorHex: "#3", barcodeValue: "3",
+        barcodeFormat: "CODE128", isFavorite: false),
+    ]
+
+    XCTAssertEqual(WatchCard.sorted(cards, by: .az).map(\.id), ["acme", "elite-accent", "zeta"])
+  }
+
+  func test_watchSortMode_defaultIsAZ() {
+    // Fresh install with no saved preference → A-Z (AC3).
+    XCTAssertEqual(WatchSortMode.defaultMode, .az)
+  }
+
+  func test_watchSortMode_allCases_matchPickerRowOrder() {
+    // Declaration order is the picker row order (UX spec §5): Frequently used → Recently added → A-Z.
+    XCTAssertEqual(WatchSortMode.allCases, [.frequent, .recent, .az])
+  }
+
+  func test_watchSortMode_persistsRawValueThroughUserDefaults() throws {
+    // Mirrors how @AppStorage(WatchSortMode.storageKey) reads/writes the watch-local
+    // preference (AC4): absent → caller default; a stored rawValue round-trips back.
+    let defaults = UserDefaults.standard
+    defaults.removeObject(forKey: WatchSortMode.storageKey)
+    defer { defaults.removeObject(forKey: WatchSortMode.storageKey) }
+
+    XCTAssertNil(defaults.string(forKey: WatchSortMode.storageKey))
+
+    defaults.set(WatchSortMode.recent.rawValue, forKey: WatchSortMode.storageKey)
+    let restored = defaults.string(forKey: WatchSortMode.storageKey)
+      .flatMap(WatchSortMode.init(rawValue:))
+    XCTAssertEqual(restored, .recent)
+  }
+
+  func test_readOnly_localCardEdits_doNotPersistAcrossReload() throws {
+    // Apple Watch is read-only for card data (ADR-2026-06-09-001): the in-memory store is a
+    // display snapshot of phone-synced data. The store has no write-back path, so a local edit
+    // must not persist — a freshly loaded store still reflects only the synced snapshot.
+    let synced = [
+      WatchCard(
+        id: "r1", name: "Synced", brandId: nil, colorHex: "#1e90ff", barcodeValue: nil,
         barcodeFormat: nil)
     ]
-    store.cards = originalCards
-    // Simula un tentativo di modifica (che dovrebbe essere ignorato)
-    // In una vera app, la UI non espone azioni di modifica, ma qui simuliamo una chiamata diretta
-    // Proviamo a cambiare il nome della card
-    var modified = store.cards
-    modified[0] = WatchCard(
-      id: "r1", name: "MODIFIED", brandId: nil, colorHex: "#1e90ff", barcodeValue: nil,
-      barcodeFormat: nil)
-    // Non aggiorniamo store.cards: la logica read-only è a livello di UI e modello
-    // Verifica che la store rimanga invariata
-    XCTAssertEqual(store.cards[0].name, "ReadOnly")
+    UserDefaults.standard.set(try JSONEncoder().encode(synced), forKey: "watch.cards")
+    defer { UserDefaults.standard.removeObject(forKey: "watch.cards") }
+
+    let store = CardStore()
+    XCTAssertEqual(store.cards.map(\.name), ["Synced"])
+
+    // Simulate a local mutation attempt. The watch UI exposes no edit path; poking the in-memory
+    // array directly proves even that cannot leak into the persistent store.
+    store.cards = [
+      WatchCard(
+        id: "r1", name: "Edited locally", brandId: nil, colorHex: "#1e90ff", barcodeValue: nil,
+        barcodeFormat: nil)
+    ]
+
+    // A brand-new store re-reads persistence: the edit never wrote back, so the snapshot is
+    // unchanged. Were a card-data write-back path ever introduced, this assertion would fail.
+    let reloaded = CardStore()
+    XCTAssertEqual(reloaded.cards.map(\.name), ["Synced"])
   }
 }
