@@ -11,11 +11,14 @@ import { ActivityIndicator, Pressable, Text, View } from 'react-native';
 
 import { getOrCreateGuestSessionId } from '@/core/auth/guest-session-repository';
 import { initializeDatabase } from '@/core/database';
-import { getAllCards } from '@/core/database/card-repository';
+import { applyWatchUsageEvents, getAllCards } from '@/core/database/card-repository';
 import {
+  parseWatchUsageEvent,
   pushCardsToWatch,
   subscribeToWatchMessages,
-  WatchMessage
+  subscribeToWatchUserInfo,
+  WatchMessage,
+  WatchUsageEvent
 } from '@/core/watch-connectivity';
 
 import { getSupabaseClient } from '@/shared/supabase/client';
@@ -311,6 +314,7 @@ const RootLayout = () => {
     };
 
     let unsubscribe: (() => void) | undefined;
+    let unsubscribeUserInfo: (() => void) | undefined;
 
     initializeApp().then(() => {
       // Push an initial snapshot so the watch converges on launch, even if no
@@ -334,9 +338,31 @@ const RootLayout = () => {
       } catch {
         // ignore if native module missing
       }
+
+      try {
+        // Watch CARD_USED usage events (Story 9.6, ADR-2026-06-09-001).
+        // Subscribed after initializeApp so the DB is ready even for the
+        // batch of events the OS queued while the app wasn't running.
+        // applyWatchUsageEvents dedups and re-syncs the snapshot itself.
+        unsubscribeUserInfo = subscribeToWatchUserInfo(async (events) => {
+          try {
+            const usageEvents = events
+              .map(parseWatchUsageEvent)
+              .filter((event): event is WatchUsageEvent => event !== null);
+            if (usageEvents.length > 0) {
+              await applyWatchUsageEvents(usageEvents);
+            }
+          } catch (e) {
+            console.warn('Watch usage event handler error:', e);
+          }
+        });
+      } catch {
+        // ignore if native module missing
+      }
     });
     return () => {
       if (typeof unsubscribe === 'function') unsubscribe();
+      if (typeof unsubscribeUserInfo === 'function') unsubscribeUserInfo();
     };
   }, []);
 

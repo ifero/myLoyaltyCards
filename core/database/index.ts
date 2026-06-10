@@ -23,5 +23,6 @@ export {
   deleteAllCards,
   getCardCount,
   incrementUsageCount,
-  toggleFavorite
+  toggleFavorite,
+  applyWatchUsageEvents
 } from './card-repository';

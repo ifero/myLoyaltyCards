@@ -53,4 +53,29 @@ describe('migrations', () => {
     // Should set DB version at the end
     expect(db.execAsync).toHaveBeenCalledWith(`PRAGMA user_version = ${DB_VERSION}`);
   });
+
+  // Story 9.6: watch_usage_events dedup table (migration v2)
+
+  test('DB_VERSION is 2', () => {
+    expect(DB_VERSION).toBe(2);
+  });
+
+  test('fresh install (version 0) creates the watch_usage_events table', async () => {
+    const db = makeDb(0);
+    await migrations.runMigrations(db as unknown as SQLiteDatabase);
+    const createdDedupTable = db.execAsync.mock.calls.some(
+      (c) => typeof c[0] === 'string' && c[0].includes('watch_usage_events')
+    );
+    expect(createdDedupTable).toBe(true);
+  });
+
+  test('upgrade from v1 creates the watch_usage_events table and bumps version', async () => {
+    const db = makeDb(1);
+    await migrations.runMigrations(db as unknown as SQLiteDatabase);
+    const createdDedupTable = db.execAsync.mock.calls.some(
+      (c) => typeof c[0] === 'string' && c[0].includes('watch_usage_events')
+    );
+    expect(createdDedupTable).toBe(true);
+    expect(db.execAsync).toHaveBeenCalledWith('PRAGMA user_version = 2');
+  });
 });

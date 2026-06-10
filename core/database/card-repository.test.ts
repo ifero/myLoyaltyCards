@@ -1,6 +1,7 @@
 import { SQLiteDatabase } from 'expo-sqlite';
 
 import {
+  applyWatchUsageEvents,
   getAllCards,
   getCardById,
   insertCard,
@@ -350,5 +351,107 @@ describe('card-repository', () => {
       card.createdAt,
       card.updatedAt
     ]);
+  });
+
+  describe('applyWatchUsageEvents (Story 9.6)', () => {
+    /**
+     * Changes-aware mock: the production code branches on
+     * `runAsync(...).changes` (0 = duplicate event / unknown card), which the
+     * shared makeDb mock (resolves undefined) cannot express.
+     */
+    const makeUsageDb = (changesByCall: number[] = []) => {
+      let call = 0;
+      return {
+        getAllAsync: jest.fn().mockResolvedValue([]),
+        getFirstAsync: jest.fn().mockResolvedValue(null),
+        runAsync: jest.fn().mockImplementation(async () => ({
+          changes: changesByCall[call++] ?? 1,
+          lastInsertRowId: 0
+        })),
+        withTransactionAsync: jest.fn(
+          async (fn: (...args: unknown[]) => Promise<unknown>) => await fn()
+        )
+      } as unknown as SQLiteDatabase;
+    };
+
+    const event = { id: 'c1', usedAt: '2026-06-09T10:00:00.123Z' };
+
+    test('wraps the batch in a transaction (project DB-write rule)', async () => {
+      const db = makeUsageDb();
+      await applyWatchUsageEvents([event], db);
+      expect(db.withTransactionAsync).toHaveBeenCalledTimes(1);
+    });
+
+    test('records the event id then applies the commutative update (AC1, AC2)', async () => {
+      const db = makeUsageDb();
+      await applyWatchUsageEvents([event], db);
+
+      const calls = (db.runAsync as jest.Mock).mock.calls;
+      // 1: dedup insert, 2: card update, 3: prune
+      expect(calls).toHaveLength(3);
+
+      const [insertSql, insertParams] = calls[0];
+      expect(insertSql).toContain('INSERT OR IGNORE INTO watch_usage_events');
+      expect(insertParams[0]).toBe('c1:2026-06-09T10:00:00.123Z'); // "<cardId>:<usedAt>"
+
+      const [updateSql, updateParams] = calls[1];
+      expect(updateSql).toContain('usage_count = usage_count + 1');
+      expect(updateSql).toContain('CASE');
+      expect(updateSql).toContain('last_used_at < ?');
+      expect(updateSql).toContain('updated_at = ?');
+      expect(updateParams).toEqual([
+        event.usedAt,
+        event.usedAt,
+        expect.stringMatching(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/),
+        'c1'
+      ]);
+
+      const [pruneSql] = calls[2];
+      expect(pruneSql).toContain('DELETE FROM watch_usage_events');
+    });
+
+    test('skips the card update when the event id was already seen (AC3)', async () => {
+      const db = makeUsageDb([0]); // dedup insert reports a conflict
+      const applied = await applyWatchUsageEvents([event], db);
+
+      expect(applied).toBe(0);
+      const sqls = (db.runAsync as jest.Mock).mock.calls.map(([sql]) => sql as string);
+      expect(sqls.some((sql) => sql.includes('usage_count'))).toBe(false);
+    });
+
+    test('pushes one snapshot per batch with applied events (AC5)', async () => {
+      const db = makeUsageDb();
+      await applyWatchUsageEvents([event, { id: 'c2', usedAt: '2026-06-09T11:00:00.456Z' }], db);
+      // pushSnapshotToWatch reads all cards exactly once for the whole batch
+      expect(db.getAllAsync).toHaveBeenCalledTimes(1);
+    });
+
+    test('does not push a snapshot when nothing was applied', async () => {
+      const db = makeUsageDb([0]);
+      await applyWatchUsageEvents([event], db);
+      expect(db.getAllAsync).not.toHaveBeenCalled();
+    });
+
+    test('returns 0 and runs no SQL for an empty batch', async () => {
+      const db = makeUsageDb();
+      expect(await applyWatchUsageEvents([], db)).toBe(0);
+      expect(db.runAsync).not.toHaveBeenCalled();
+      expect(db.withTransactionAsync).not.toHaveBeenCalled();
+    });
+
+    test('counts only events that mutated a card row (unknown card → 0)', async () => {
+      // insert succeeds (new event id) but the UPDATE matches no row
+      const db = makeUsageDb([1, 0, 1]);
+      const applied = await applyWatchUsageEvents([{ id: 'ghost', usedAt: event.usedAt }], db);
+      expect(applied).toBe(0);
+    });
+
+    test('uses default getDatabase when no db supplied', async () => {
+      const db = makeUsageDb();
+      const spy = jest.spyOn(databaseModule, 'getDatabase').mockReturnValue(db);
+      await applyWatchUsageEvents([event]);
+      expect(spy).toHaveBeenCalled();
+      expect(db.runAsync).toHaveBeenCalled();
+    });
   });
 });

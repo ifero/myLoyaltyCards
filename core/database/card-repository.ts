@@ -9,7 +9,7 @@
 import { SQLiteDatabase } from 'expo-sqlite';
 
 import { LoyaltyCard, BarcodeFormat, CardColor } from '../schemas';
-import { pushCardsToWatch } from '../watch-connectivity';
+import { pushCardsToWatch, type WatchUsageEvent } from '../watch-connectivity';
 import { getDatabase } from './database';
 
 async function pushSnapshotToWatch(db: SQLiteDatabase): Promise<void> {
@@ -288,6 +288,79 @@ export async function toggleFavorite(
     [now, id]
   );
   await pushSnapshotToWatch(db);
+}
+
+/**
+ * How long applied watch-usage event ids are retained for dedup. Retransmits
+ * arrive promptly after the next app launch (the library re-delivers its
+ * native queue on subscribe), so 30 days is generous headroom while keeping
+ * the ledger bounded per ADR-2026-06-09-001.
+ */
+const WATCH_USAGE_EVENT_RETENTION_MS = 30 * 24 * 60 * 60 * 1000;
+
+/**
+ * Apply a batch of watch CARD_USED events (Story 9.6, ADR-2026-06-09-001).
+ *
+ * Delivery is at-least-once (`transferUserInfo` retransmits after relaunch),
+ * so each event id `"<cardId>:<usedAt>"` is applied exactly once: the
+ * INSERT OR IGNORE into the persisted `watch_usage_events` ledger decides
+ * first sight, and only then does the card row change. Reconciliation is
+ * conflict-free by construction — `usage_count += 1` is commutative and
+ * `last_used_at` takes max(current, usedAt), comparing ms-precision ISO-8601
+ * UTC strings (lexicographic order == chronological order). `updated_at` is
+ * bumped so delta sync propagates the change to the cloud, as in
+ * `incrementUsageCount` (Story 9.1) — with one deliberate difference: the
+ * phone path stamps `last_used_at = now`, while watch events take
+ * `max(current, usedAt)` so late or out-of-order delivery stays idempotent.
+ *
+ * Pushes ONE refreshed snapshot to the watch when anything changed (AC5).
+ * Returns the number of events that mutated a card row.
+ */
+export async function applyWatchUsageEvents(
+  events: WatchUsageEvent[],
+  db: SQLiteDatabase = getDatabase()
+): Promise<number> {
+  if (events.length === 0) return 0;
+
+  const now = new Date();
+  const nowIso = now.toISOString();
+  const pruneBefore = new Date(now.getTime() - WATCH_USAGE_EVENT_RETENTION_MS).toISOString();
+  let appliedCount = 0;
+
+  await db.withTransactionAsync(async () => {
+    for (const event of events) {
+      const eventId = `${event.id}:${event.usedAt}`;
+      const inserted = await db.runAsync(
+        'INSERT OR IGNORE INTO watch_usage_events (event_id, applied_at) VALUES (?, ?)',
+        [eventId, nowIso]
+      );
+      if ((inserted?.changes ?? 0) === 0) {
+        continue; // already applied — duplicate/retransmit (AC3)
+      }
+
+      const updated = await db.runAsync(
+        `UPDATE loyalty_cards
+          SET usage_count = usage_count + 1,
+              last_used_at = CASE
+                WHEN last_used_at IS NULL OR last_used_at < ? THEN ?
+                ELSE last_used_at
+              END,
+              updated_at = ?
+          WHERE id = ?`,
+        [event.usedAt, event.usedAt, nowIso, event.id]
+      );
+      if ((updated?.changes ?? 0) > 0) {
+        appliedCount += 1;
+      }
+    }
+
+    await db.runAsync('DELETE FROM watch_usage_events WHERE applied_at < ?', [pruneBefore]);
+  });
+
+  if (appliedCount > 0) {
+    await pushSnapshotToWatch(db);
+  }
+  return appliedCount;
 }
 
 /**

@@ -28,6 +28,7 @@
 /* eslint-disable @typescript-eslint/no-require-imports */
 
 import { toDataURL, type RenderOptions } from '@bwip-js/react-native';
+import * as z from 'zod';
 
 import type { LoyaltyCard } from './schemas';
 
@@ -101,7 +102,49 @@ export type WatchMessage =
   | { type: 'cards'; payload: WatchCardPayload[] }
   | { type: 'syncCard'; payload: { id: string; cardData: any } }
   | { type: 'ack'; payload?: { id?: string } }
+  | { version: 1; type: 'CARD_USED'; payload: { id: string; usedAt: string } }
   | { type: string; payload?: any };
+
+// ---------------------------------------------------------------------------
+// CARD_USED usage events (Story 9.6, ADR-2026-06-09-001)
+// ---------------------------------------------------------------------------
+
+/**
+ * `usedAt` must be ISO-8601 UTC at millisecond precision: the dedup event id
+ * is `"<cardId>:<usedAt>"`, so sub-second resolution is what guarantees two
+ * genuinely-distinct opens of the same card cannot collapse into one id.
+ * Second-resolution timestamps are non-conformant per the ADR.
+ */
+const MS_PRECISION_UTC_TIMESTAMP = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/;
+
+const watchUsageEventMessageSchema = z.object({
+  version: z.literal(1),
+  type: z.literal('CARD_USED'),
+  payload: z.object({
+    id: z.string().min(1),
+    usedAt: z
+      .string()
+      .regex(MS_PRECISION_UTC_TIMESTAMP)
+      .refine((value) => !Number.isNaN(Date.parse(value)))
+  })
+});
+
+export interface WatchUsageEvent {
+  id: string;
+  usedAt: string;
+}
+
+/**
+ * Validate a raw watch → phone user-info item as a v1 CARD_USED event.
+ * Anything non-conformant (unknown type, unknown version, malformed or
+ * second-precision timestamp) returns `null` — unknown messages are ignored
+ * gracefully rather than half-applied, and no card-data mutation can ever be
+ * smuggled through this channel.
+ */
+export function parseWatchUsageEvent(raw: unknown): WatchUsageEvent | null {
+  const result = watchUsageEventMessageSchema.safeParse(raw);
+  return result.success ? result.data.payload : null;
+}
 
 /**
  * Shape sent over the wire to the watch. Field names match the watch-side
@@ -490,6 +533,25 @@ export function subscribeToWatchMessages(handler: (msg: WatchMessage) => void): 
   };
 }
 
+/**
+ * Subscribe to `user-info` deliveries from the watch — the transport that
+ * carries CARD_USED usage events (Story 9.6). `transferUserInfo` payloads are
+ * OS-queued on the watch, so the library delivers them as a *batch* array on
+ * subscription (including events received before the RN app initialised) and
+ * as single-item arrays afterwards. The handler always receives an array;
+ * each item must still be validated via `parseWatchUsageEvent`.
+ */
+export function subscribeToWatchUserInfo(handler: (events: unknown[]) => void): Unsubscribe {
+  const native = getNativeModule();
+  if (!native) return () => {};
+  ensureDiagnostics(native);
+
+  const off = subscribe(native, 'user-info', (payload) => {
+    handler(Array.isArray(payload) ? payload : [payload]);
+  });
+  return off ?? (() => {});
+}
+
 export function requestCardsFromPhone(): Promise<boolean> {
   return sendMessageToWatch({ type: 'requestCards' });
 }
@@ -573,6 +635,8 @@ export default {
   isWatchConnectivityAvailable,
   sendMessageToWatch,
   subscribeToWatchMessages,
+  subscribeToWatchUserInfo,
+  parseWatchUsageEvent,
   requestCardsFromPhone,
   syncCardToWatch,
   pushCardsToWatch,

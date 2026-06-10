@@ -665,4 +665,186 @@ describe('watch-connectivity wrapper', () => {
       });
     });
   });
+
+  // Story 9.6 (ADR-2026-06-09-001): inbound CARD_USED usage events
+  describe('parseWatchUsageEvent', () => {
+    const loadModule = () => {
+      let mod: any = null;
+      jest.isolateModules(() => {
+        jest.doMock('react-native-watch-connectivity', () => ({}), { virtual: true });
+        mod = require('./watch-connectivity');
+      });
+      return mod;
+    };
+
+    const validEvent = {
+      version: 1,
+      type: 'CARD_USED',
+      payload: { id: 'card-1', usedAt: '2026-06-09T12:34:56.789Z' }
+    };
+
+    test('accepts a conformant v1 CARD_USED event', () => {
+      const mod = loadModule();
+      expect(mod.parseWatchUsageEvent(validEvent)).toEqual({
+        id: 'card-1',
+        usedAt: '2026-06-09T12:34:56.789Z'
+      });
+    });
+
+    test('rejects unknown message types', () => {
+      const mod = loadModule();
+      expect(mod.parseWatchUsageEvent({ ...validEvent, type: 'CARD_DELETED' })).toBeNull();
+      expect(mod.parseWatchUsageEvent({ ...validEvent, type: 'requestCards' })).toBeNull();
+    });
+
+    test('rejects unknown versions (graceful forward-compat)', () => {
+      const mod = loadModule();
+      expect(mod.parseWatchUsageEvent({ ...validEvent, version: 2 })).toBeNull();
+      expect(mod.parseWatchUsageEvent({ ...validEvent, version: undefined })).toBeNull();
+    });
+
+    test('rejects missing or empty card id', () => {
+      const mod = loadModule();
+      expect(
+        mod.parseWatchUsageEvent({ ...validEvent, payload: { usedAt: validEvent.payload.usedAt } })
+      ).toBeNull();
+      expect(
+        mod.parseWatchUsageEvent({
+          ...validEvent,
+          payload: { id: '', usedAt: validEvent.payload.usedAt }
+        })
+      ).toBeNull();
+    });
+
+    test('rejects second-precision usedAt (ADR requires milliseconds)', () => {
+      const mod = loadModule();
+      expect(
+        mod.parseWatchUsageEvent({
+          ...validEvent,
+          payload: { id: 'card-1', usedAt: '2026-06-09T12:34:56Z' }
+        })
+      ).toBeNull();
+    });
+
+    test('rejects non-UTC offsets and non-date strings', () => {
+      const mod = loadModule();
+      expect(
+        mod.parseWatchUsageEvent({
+          ...validEvent,
+          payload: { id: 'card-1', usedAt: '2026-06-09T12:34:56.789+02:00' }
+        })
+      ).toBeNull();
+      expect(
+        mod.parseWatchUsageEvent({
+          ...validEvent,
+          payload: { id: 'card-1', usedAt: 'not-a-date' }
+        })
+      ).toBeNull();
+    });
+
+    test('rejects calendar-impossible timestamps that pass the shape regex', () => {
+      const mod = loadModule();
+      expect(
+        mod.parseWatchUsageEvent({
+          ...validEvent,
+          payload: { id: 'card-1', usedAt: '2026-13-45T99:99:99.999Z' }
+        })
+      ).toBeNull();
+    });
+
+    test('rejects non-object payloads', () => {
+      const mod = loadModule();
+      expect(mod.parseWatchUsageEvent(null)).toBeNull();
+      expect(mod.parseWatchUsageEvent(undefined)).toBeNull();
+      expect(mod.parseWatchUsageEvent('CARD_USED')).toBeNull();
+      expect(mod.parseWatchUsageEvent(42)).toBeNull();
+    });
+  });
+
+  describe('subscribeToWatchUserInfo', () => {
+    test('returns a noop unsubscribe when the native module is missing', () => {
+      let mod: any = null;
+      jest.isolateModules(() => {
+        jest.doMock('react-native-watch-connectivity', () => {
+          throw new Error('native module unavailable');
+        });
+        mod = require('./watch-connectivity');
+      });
+      const handler = jest.fn();
+      const off = mod.subscribeToWatchUserInfo(handler);
+      expect(typeof off).toBe('function');
+      expect(() => off()).not.toThrow();
+      expect(handler).not.toHaveBeenCalled();
+    });
+
+    test('delivers user-info batches to the handler', () => {
+      const events = makeEvents();
+      let mod: any = null;
+      jest.isolateModules(() => {
+        jest.doMock('react-native-watch-connectivity', () => ({ watchEvents: events }), {
+          virtual: true
+        });
+        mod = require('./watch-connectivity');
+      });
+
+      const handler = jest.fn();
+      mod.subscribeToWatchUserInfo(handler);
+
+      const batch = [
+        {
+          version: 1,
+          type: 'CARD_USED',
+          payload: { id: 'c1', usedAt: '2026-06-09T10:00:00.000Z' }
+        },
+        { version: 1, type: 'CARD_USED', payload: { id: 'c2', usedAt: '2026-06-09T10:00:01.000Z' } }
+      ];
+      events.emit('user-info', batch);
+
+      expect(handler).toHaveBeenCalledTimes(1);
+      expect(handler).toHaveBeenCalledWith(batch);
+    });
+
+    test('wraps a single (non-array) user-info payload into a batch', () => {
+      const events = makeEvents();
+      let mod: any = null;
+      jest.isolateModules(() => {
+        jest.doMock('react-native-watch-connectivity', () => ({ watchEvents: events }), {
+          virtual: true
+        });
+        mod = require('./watch-connectivity');
+      });
+
+      const handler = jest.fn();
+      mod.subscribeToWatchUserInfo(handler);
+
+      const single = {
+        version: 1,
+        type: 'CARD_USED',
+        payload: { id: 'c1', usedAt: '2026-06-09T10:00:00.000Z' }
+      };
+      events.emit('user-info', single);
+
+      expect(handler).toHaveBeenCalledWith([single]);
+    });
+
+    test('unsubscribe detaches the user-info listener', () => {
+      const events = makeEvents();
+      let mod: any = null;
+      jest.isolateModules(() => {
+        jest.doMock('react-native-watch-connectivity', () => ({ watchEvents: events }), {
+          virtual: true
+        });
+        mod = require('./watch-connectivity');
+      });
+
+      const handler = jest.fn();
+      const off = mod.subscribeToWatchUserInfo(handler);
+      off();
+
+      events.emit('user-info', [
+        { version: 1, type: 'CARD_USED', payload: { id: 'c1', usedAt: '2026-06-09T10:00:00.000Z' } }
+      ]);
+      expect(handler).not.toHaveBeenCalled();
+    });
+  });
 });

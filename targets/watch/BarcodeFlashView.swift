@@ -105,6 +105,9 @@ struct BarcodeFlashView: View {
       // focus the view for crown events and play haptic
       isFocused = true
       WKInterfaceDevice.current().play(.success)
+      // Story 9.6 (ADR-2026-06-09-001): a displayed barcode is a card "open" —
+      // emit the usage event so the phone counts it toward shared sorting.
+      WatchSessionManager.shared.recordCardUsed(cardId: card.id)
     }
 
     .task(id: "\(card.id)-\(Int(barcodeTargetSize.width))x\(Int(barcodeTargetSize.height))") {
