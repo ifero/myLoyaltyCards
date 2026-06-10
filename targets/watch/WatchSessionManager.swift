@@ -16,6 +16,25 @@ final class WatchSessionManager: NSObject, WCSessionDelegate {
 
   private var container: ModelContainer?
 
+  /// CARD_USED events recorded before `WCSession` activation completes.
+  /// `transferUserInfo` drops payloads on a non-activated session, so opens
+  /// that race a cold launch are held here and flushed from
+  /// `session(_:activationDidCompleteWith:error:)`. Guarded by
+  /// `pendingUsageEventsLock`: SwiftUI records on the main thread while the
+  /// activation callback arrives on a background queue.
+  private var pendingUsageEvents: [[String: Any]] = []
+  private let pendingUsageEventsLock = NSLock()
+
+  /// `usedAt` MUST carry millisecond precision (ADR-2026-06-09-001): the phone
+  /// dedups by `"<cardId>:<usedAt>"`, so sub-second resolution is what keeps
+  /// two distinct opens of the same card from collapsing into one event id.
+  private static let usageEventTimestampFormatter: ISO8601DateFormatter = {
+    let formatter = ISO8601DateFormatter()
+    formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+    formatter.timeZone = TimeZone(identifier: "UTC")
+    return formatter
+  }()
+
   /// Wire up the persistence container and kick off `WCSession` activation.
   /// Cached `applicationContext` is intentionally NOT read here — the iOS API
   /// only populates `WCSession.default.receivedApplicationContext` after the
@@ -50,6 +69,60 @@ final class WatchSessionManager: NSObject, WCSessionDelegate {
     }
   }
 
+  // MARK: - Usage events (Story 9.6, ADR-2026-06-09-001)
+
+  /// Record that a card's barcode was opened on the watch. The event travels
+  /// watch → phone via `transferUserInfo` — the OS queues it FIFO while the
+  /// phone is unreachable and keeps it across relaunches, which is the
+  /// offline-queue behaviour AC3 requires. Usage is telemetry, not a
+  /// card-data edit: the phone applies it commutatively
+  /// (`usageCount += 1`, `lastUsedAt = max`), so the watch stays read-only
+  /// for card data.
+  func recordCardUsed(cardId: String, at date: Date = Date()) {
+    let usedAt = Self.usageEventTimestampFormatter.string(from: date)
+    let event = makeCardUsedEvent(cardId: cardId, usedAt: usedAt)
+
+    guard WCSession.isSupported() else { return }
+    let session = WCSession.default
+
+    pendingUsageEventsLock.lock()
+    pendingUsageEvents.append(event)
+    pendingUsageEventsLock.unlock()
+
+    if session.activationState == .activated {
+      flushPendingUsageEvents(session)
+    } else {
+      log.info("buffering CARD_USED until WCSession activation completes")
+      activateIfNeeded()
+    }
+  }
+
+  private func makeCardUsedEvent(cardId: String, usedAt: String) -> [String: Any] {
+    [
+      "version": 1,
+      "type": "CARD_USED",
+      "payload": ["id": cardId, "usedAt": usedAt]
+    ]
+  }
+
+  private func flushPendingUsageEvents(_ session: WCSession) {
+    guard session.activationState == .activated else { return }
+
+    pendingUsageEventsLock.lock()
+    let events = pendingUsageEvents
+    pendingUsageEvents.removeAll()
+    pendingUsageEventsLock.unlock()
+
+    for event in events {
+      transferUsageEvent(event, via: session)
+    }
+  }
+
+  private func transferUsageEvent(_ event: [String: Any], via session: WCSession) {
+    log.info("transferUserInfo CARD_USED (queued for phone)")
+    _ = session.transferUserInfo(event)
+  }
+
   // MARK: - WCSessionDelegate
 
   func session(
@@ -64,6 +137,7 @@ final class WatchSessionManager: NSObject, WCSessionDelegate {
       "activation complete: state=\(activationState.rawValue) reachable=\(session.isReachable)"
     )
     if activationState == .activated {
+      flushPendingUsageEvents(session)
       applyCachedContextIfAvailable()
       // Best-effort ping so the phone can reply with the latest list if it's
       // foregrounded right now. The applicationContext path covers the
