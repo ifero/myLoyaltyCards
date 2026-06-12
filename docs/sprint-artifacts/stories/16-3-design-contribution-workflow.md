@@ -1,10 +1,12 @@
 # Story 16.3: Establish a design-in-code contribution workflow (docs + GitHub scaffolding)
 
-Status: backlog
+Status: ready-for-dev
 
 Epic: 16 — Platform & Tech Debt
 
 ## Story
+
+<!-- Status: ready-for-dev (refined 2026-06-11) -->
 
 As a maintainer of an open-source project,
 I want a documented, PR-based path for anyone to propose UX/UI changes against the git repo,
@@ -52,8 +54,10 @@ Sibling stories: 16-4 (token source), 16-5 (Storybook/Chromatic preview — bloc
 - Engine-agnostic: unaffected by 16-1 (NativeWind → Unistyles).
 - Reviewer-preview wording should link to 16-5 deliverables and degrade gracefully until 16-5 lands.
 
-## Definition of Ready (before moving to ready-for-dev)
+## Definition of Ready (resolved 2026-06-11)
 
-- [ ] Confirm the `design` GitHub label is (or will be) created.
-- [ ] Confirm the `docs/design/` location and structure.
-- [ ] Confirm the story-vs-no-story policy wording with the maintainer.
+- [x] `design` GitHub label — created during dev via `gh label create design` (AC4).
+- [x] `docs/design/` location + structure confirmed — `docs/design/` with `wireframes/`, `flows/`, and a `README.md` index (AC7); existing `docs/ux-designs/` + `docs/ux-design-specification.md` unchanged.
+- [x] **Story-vs-no-story policy — CONFIRMED (ifero, 2026-06-11):** token / visual polish with NO behavior change → no story (use the `design`-label fast-path); new screen / component / behavior → story required (normal spec-first flow). Narrow exemption, per AC1's decision table.
+
+> Refinement note: two PR-template files exist (`.github/PULL_REQUEST_TEMPLATE.md` + `.github/pull_request_template.md`) — dev should reconcile/confirm the canonical one before applying AC5.

@@ -1,6 +1,6 @@
 # Story 16.1: Migrate Styling Engine — NativeWind → Unistyles [Enabling]
 
-Status: drafted
+Status: ready-for-dev
 
 ## Story
 
@@ -42,7 +42,7 @@ This story migrates the styling mechanism to **react-native-unistyles (v3.x)**, 
 
 ### AC4: NativeWind fully removed
 
-- [ ] `nativewind` + `tailwindcss` removed from package.json
+- [ ] `nativewind` + `tailwindcss` + `prettier-plugin-tailwindcss` removed from package.json
 - [ ] `tailwind.config.js`, `global.css`, `nativewind-env.d.ts` deleted
 - [ ] NativeWind references removed from `babel.config.js` and `metro.config.js`
 - [ ] `global.css` import removed from the app entrypoint
@@ -101,12 +101,14 @@ This story migrates the styling mechanism to **react-native-unistyles (v3.x)**, 
 
 ## Dev Notes
 
-### Open Decisions (resolve during refinement → ready-for-dev)
+### Resolved Decisions (2026-06-11, refinement)
 
-1. **Migration approach** — recommend **incremental** (batch by feature, brief coexistence) over big-bang. _Owner: Winston._
-2. **Unistyles version** — confirm v3.x (New Arch / Nitro Modules) vs a 2.x line. v3 recommended given Expo 55 New Arch default.
-3. **Plugin coexistence** — verify NativeWind + Unistyles babel plugins don't conflict mid-migration (validated in Task 2 spike). If they do, migration becomes big-bang.
-4. **Scope split — DECIDED (2026-06-04): do NOT split.** Stays one atomic story. Rationale: solo dev (no parallel-work or independent-review benefit), and the migration must ship all-or-nothing to avoid a half-baked state where NativeWind and Unistyles both reach users (see AC7). Internal dev may still proceed in safe per-feature batches/commits for rollback, but the story is "done" — and released — only when AC3 + AC4 + AC5 hold together.
+1. **Migration approach — INCREMENTAL with a big-bang fallback.** Migrate feature-by-feature (cards → auth → settings → onboarding → sync indicators → shared) in rollback-safe commits. **Gated by the Task 2 spike:** if the NativeWind + Unistyles babel plugins cannot coexist mid-migration, fall back to a single big-bang migration. Ships atomically either way (AC7). _Owner: Winston._
+2. **Unistyles version — v3.x (confirmed).** New Architecture prerequisite verified in-repo: `app.json` `newArchEnabled: true`, RN 0.83.6, Expo ^55.0.19. v3 (Nitro Modules) is correct; no 2.x line.
+3. **Plugin coexistence — empirical, decided by the Task 2 spike** (not a pre-decision). The spike outcome selects incremental (coexistence OK) vs big-bang (conflict).
+4. **Scope split — NO (decided 2026-06-04).** One atomic story; released only when AC3 + AC4 + AC5 hold together (AC7). Internal per-feature batches/commits allowed for rollback safety.
+
+_Repo survey (2026-06-11) confirmed the Key Facts below: 31 `className` files, NativeWind 4.2.1 / tailwindcss ^3.4.0 / `prettier-plugin-tailwindcss` present, `react-native-unistyles` NOT yet installed, `shared/theme` tokens intact, New Arch on._
 
 ### Key Facts (measured 2026-06-04)
 

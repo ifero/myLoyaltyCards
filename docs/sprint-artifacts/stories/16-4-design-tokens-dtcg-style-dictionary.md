@@ -1,6 +1,6 @@
 # Story 16.4: Make design tokens a portable DTCG source via Style Dictionary
 
-Status: backlog
+Status: ready-for-dev
 
 Epic: 16 — Platform & Tech Debt
 
@@ -27,7 +27,7 @@ Engine-agnostic: 16-1 (NativeWind → Unistyles) explicitly preserves `shared/th
 
 ## Acceptance Criteria (draft — refine before dev)
 
-1. `tokens/*.json` (DTCG format) authored for **primitives + semantic color maps only**: `PRIMARY_COLORS`, `NEUTRAL_COLORS`, `CARD_COLORS`, the color members of `LIGHT_THEME`/`DARK_THEME` (excluding `statusBar`), `SPACING`, `TOUCH_TARGET`, `LAYOUT`, and `TYPOGRAPHY`.
+1. `tokens/*.json` (DTCG format) authored for **primitives + semantic color maps** (MVP): `PRIMARY_COLORS`, `NEUTRAL_COLORS`, `CARD_COLORS`, the color members of `LIGHT_THEME`/`DARK_THEME` (excluding `statusBar`), `SPACING`, `TOUCH_TARGET`, and `LAYOUT`. **`TYPOGRAPHY` (tuple) and `sync-tokens` are DEFERRED** to a follow-up (MVP scope decision 2026-06-11).
 2. A Style Dictionary config generates `shared/theme/tokens.generated.ts` with the exact existing constant names and `as const` shapes. The generated file is **committed** (not gitignored) so Metro / Jest / tsc need no build step.
 3. `colors.ts` / `spacing.ts` / `typography.ts` are refactored to **import primitives** from `tokens.generated.ts` while keeping hand-authored: `BRAND_COLORS`/`getBrandColor`, `statusBar`, all `TAILWIND_*` exports, the typography tuple builder, the spacing interpolation. All **public named exports remain byte-stable**, so `tailwind.config.js`, every `@/shared/theme` consumer, and `colors.contrast.test.ts` work unchanged.
 4. `tokens:build` and `tokens:check` scripts exist; `tokens:check` regenerates to a temp location and `git diff --exit-code`s against the committed file (drift guard), mirroring the existing `check:catalogue-generated` pattern. A CI step runs `tokens:check`.
@@ -48,8 +48,8 @@ Engine-agnostic: 16-1 (NativeWind → Unistyles) explicitly preserves `shared/th
 - Honest framing: the JSON-canonical layer is what delivers "versioned, PR-able tokens"; the Style Dictionary codegen is the _means_, and its real payoff is **portability** (DTCG is readable by Figma Tokens / other tools), not necessity — the tokens already work in TS today.
 - Do **not** move `BRAND_COLORS`/`getBrandColor`/`statusBar` into JSON; they are catalogue-runtime / non-token data.
 
-## Definition of Ready (before moving to ready-for-dev)
+## Definition of Ready (resolved 2026-06-11)
 
-- [ ] Confirm the decision to commit `tokens.generated.ts` (recommended) vs gitignore + build step.
-- [ ] Confirm the MVP token scope (colors + spacing first; typography/sync deferred).
-- [ ] Confirm the DTCG file layout under `tokens/`.
+- [x] **Commit `shared/theme/tokens.generated.ts`** (CONFIRMED, recommended) — not gitignored; a `tokens:check` CI guard `git diff`s a fresh regen for drift (mirrors `check:catalogue-generated`). No build step needed for Metro/Jest/tsc.
+- [x] **MVP scope = colors + spacing/layout primitives** (CONFIRMED). The **typography tuple + `sync-tokens` are DEFERRED** to a follow-up (fiddliest custom Style Dictionary formats) — see AC1.
+- [x] **DTCG layout** confirmed — token JSON under `tokens/*.json` (e.g. `tokens/color.json`, `tokens/spacing.json`).

@@ -1,6 +1,6 @@
 # Story 16.5: Component preview gallery — Storybook + Chromatic [Blocked by 16-1]
 
-Status: backlog
+Status: ready-for-dev
 
 Epic: 16 — Platform & Tech Debt
 
@@ -16,7 +16,7 @@ The component library lives at `shared/components/ui/` (Button, TextField, Actio
 
 **Dependency — `Blocked by: 16-1`.** Story 16-1 replaces NativeWind with react-native-unistyles and deletes `tailwind.config.js` / `global.css`. The web rendering pipeline for Storybook is styling-engine-specific, so we build it **once, against the final engine** to avoid throwaway plumbing.
 
-> Open decision (resolve at refinement, per maintainer): if 16-1 is deprioritized, build engine-agnostically by theming stories via the existing `ThemeProvider` + inline-style path (preserved by both engines), treating class-based layout as best-effort. This needs a **spike** first: Unistyles-3's native (Nitro/C++, New-Architecture) core rendering under `react-native-web` is unproven.
+> ✅ **Resolved 2026-06-11:** 16-1 (Unistyles migration) is committed to this sprint (Wave 2), so 16-5 takes the **"build once, against the final engine"** path — build the web Storybook pipeline against **Unistyles** after 16-1 lands. The engine-agnostic fallback (ThemeProvider + inline styles + Unistyles-on-web spike) is **not** taken. 16-5 is **dev-gated on 16-1** (Sprint 16 Wave 4).
 
 Components theme via `useTheme()` + inline styles (`className` is mostly layout), which is the safety net: colors/typography render correctly through the ThemeProvider even if class-based styling is imperfect on web.
 
@@ -30,7 +30,7 @@ Components theme via `useTheme()` + inline styles (`className` is mostly layout)
 
 ## Tasks / Subtasks (draft)
 
-- [ ] (Gate) Confirm 16-1 done, or take the refinement decision + run the Unistyles-on-web spike.
+- [ ] (Gate) 16-1 (Unistyles) must be `done` before 16-5 dev starts (Wave 4) — build the web pipeline against Unistyles. (No engine-agnostic spike: 16-1 is committed this sprint.)
 - [ ] Add Storybook + `react-native-web` deps; create `.storybook/main.ts` + `preview.tsx` (theme/i18n/SafeArea decorators; reproduce the styling pipeline on web).
 - [ ] Seed the 4 MVP stories; verify the light/dark toggle renders.
 - [ ] Add the 3 dependency-heavier stories (vector-icon fonts, i18n, Modal-on-web).
@@ -43,11 +43,13 @@ Components theme via `useTheme()` + inline styles (`className` is mostly layout)
 - Reanimated / gesture-handler are **not** used by the `ui/` primitives, so they are not a blocker for the MVP.
 - Keep the Chromatic workflow off the critical merge path; path-filter to UI surfaces only.
 
-## Definition of Ready (before moving to ready-for-dev)
+## Definition of Ready (resolved 2026-06-11)
 
-- [ ] 16-1 is `done` — OR a refinement decision to build engine-agnostically, with the Unistyles-on-web spike passed.
-- [ ] Chromatic project created and `CHROMATIC_PROJECT_TOKEN` available as a GitHub secret.
-- [ ] MVP story scope confirmed.
+- [x] **Engine path decided — build after 16-1 (Unistyles).** 16-1 is committed to Sprint 16 (Wave 2); 16-5 is **dev-gated** on it (Wave 4). No engine-agnostic spike.
+- [ ] **Chromatic project + `CHROMATIC_PROJECT_TOKEN` — human prerequisite (ifero):** create the free OSS Chromatic project and add the GitHub secret before the `chromatic.yml` step can run. (Spec is ready regardless.)
+- [x] **MVP story scope confirmed** — Button / TextField / ToggleSwitch / CardShell first; then ActionRow / ColorPicker / BottomSheet.
+
+> Status: spec is `ready-for-dev`, but **dev must not start until 16-1 is `done`** (Wave 4) and the Chromatic token exists.
 
 ## Blocks
 
