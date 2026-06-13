@@ -1,6 +1,6 @@
 # Story 16.8: Fix cloud sync failure on cold app open (auth/network readiness race)
 
-Status: review
+Status: done
 
 ## Story
 
