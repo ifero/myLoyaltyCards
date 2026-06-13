@@ -29,18 +29,29 @@ describe('useNetworkStatus', () => {
     mockFetch.mockResolvedValue(makeState());
   });
 
-  it('loads initial connectivity state from NetInfo.fetch()', async () => {
+  it('starts unready and loads initial connectivity state from NetInfo.fetch()', async () => {
     const unsubscribe = jest.fn();
     mockAddEventListener.mockReturnValue(unsubscribe);
     mockFetch.mockResolvedValue(makeState({ isConnected: false, isInternetReachable: false }));
 
     const { result } = renderHook(() => useNetworkStatus());
 
+    // Initial render — optimistic defaults BUT isReady=false so consumers can gate.
+    expect(result.current).toEqual({
+      isConnected: true,
+      isInternetReachable: true,
+      isReady: false
+    });
+
     await act(async () => {
       await Promise.resolve();
     });
 
-    expect(result.current).toEqual({ isConnected: false, isInternetReachable: false });
+    expect(result.current).toEqual({
+      isConnected: false,
+      isInternetReachable: false,
+      isReady: true
+    });
     expect(mockFetch).toHaveBeenCalledTimes(1);
   });
 
@@ -60,7 +71,11 @@ describe('useNetworkStatus', () => {
       );
     });
 
-    expect(result.current).toEqual({ isConnected: false, isInternetReachable: false });
+    expect(result.current).toEqual({
+      isConnected: false,
+      isInternetReachable: false,
+      isReady: true
+    });
   });
 
   it('unsubscribes NetInfo listener on unmount', () => {

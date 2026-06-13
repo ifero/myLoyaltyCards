@@ -4,17 +4,23 @@ import { useEffect, useState } from 'react';
 export type NetworkStatus = {
   isConnected: boolean;
   isInternetReachable: boolean;
+  // True once NetInfo has reported real connectivity at least once; false on
+  // the optimistic initial render so consumers can distinguish "unknown yet"
+  // from "confirmed disconnected".
+  isReady: boolean;
 };
 
 const toNetworkStatus = (state: NetInfoState): NetworkStatus => ({
   isConnected: state.isConnected ?? false,
-  isInternetReachable: state.isInternetReachable ?? false
+  isInternetReachable: state.isInternetReachable ?? false,
+  isReady: true
 });
 
 export const useNetworkStatus = (): NetworkStatus => {
   const [networkStatus, setNetworkStatus] = useState<NetworkStatus>({
     isConnected: true,
-    isInternetReachable: true
+    isInternetReachable: true,
+    isReady: false
   });
 
   useEffect(() => {
