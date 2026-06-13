@@ -1,6 +1,6 @@
 # Story 16.7: Fix Android beta (alpha) Play upload — authoritative versionCode through Expo prebuild
 
-Status: review
+Status: done
 
 ## Story
 
