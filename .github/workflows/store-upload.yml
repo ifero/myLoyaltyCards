@@ -88,6 +88,13 @@ jobs:
         run: |
           echo "EXPO_PUBLIC_SUPABASE_URL=${{ secrets.EXPO_PUBLIC_SUPABASE_URL }}" >> .env
           echo "EXPO_PUBLIC_SUPABASE_KEY=${{ secrets.EXPO_PUBLIC_SUPABASE_KEY }}" >> .env
+      - name: Compute Android versionCode
+        # Authoritative versionCode baked into the AAB manifest by app.config.ts
+        # during prebuild. Production band = run number + 1,000,000 so this
+        # workflow's counter can never collide with the alpha/beta workflow's in
+        # Play's shared versionCode space. The +1,000,000 offset must stay in
+        # sync with PRODUCTION_VERSION_CODE_OFFSET in app.config.ts.
+        run: echo "ANDROID_VERSION_CODE=$((GITHUB_RUN_NUMBER + 1000000))" >> "$GITHUB_ENV"
       - name: Prebuild native projects
         run: npx expo prebuild --platform android
       - name: Decode Android release keystore

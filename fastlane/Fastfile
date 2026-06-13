@@ -185,6 +185,23 @@ platform :ios do
   end
 end
 
+# Release-signing credentials the Android release build requires. The
+# Expo-generated build.gradle points the `release` buildType at the *debug*
+# signingConfig, so real upload-key signing only happens when these are injected
+# via gradle. Guard their presence so a release can never silently ship
+# debug-signed. (Story 16.7, AC5)
+ANDROID_SIGNING_ENV_VARS = %w[
+  ANDROID_KEYSTORE_PATH
+  ANDROID_KEYSTORE_PASSWORD
+  ANDROID_KEY_ALIAS
+  ANDROID_KEY_PASSWORD
+].freeze
+
+def ensure_android_signing_env!
+  missing = ANDROID_SIGNING_ENV_VARS.select { |name| ENV[name].to_s.strip.empty? }
+  UI.user_error!("Missing Android release-signing env var(s): #{missing.join(', ')}") unless missing.empty?
+end
+
 platform :android do
   package_name = ENV['ANDROID_PACKAGE_NAME'] || CredentialsManager::AppfileConfig.try_fetch_value(:package_name)
   json_key_data = ENV['PLAY_STORE_API_KEY']
@@ -217,17 +234,15 @@ platform :android do
     UI.user_error!("Missing ANDROID_PACKAGE_NAME") unless package_name
     UI.user_error!("Missing PLAY_STORE_API_KEY") unless json_key_data
 
-    # Retrieve last versionCode from Play Console and increment
-    last_version_code = google_play_track_version_codes(
-      package_name: package_name,
-      track: 'alpha',
-      json_key_data: json_key_data
-    ).max || 1
+    ensure_android_signing_env!
+
+    # versionCode is set authoritatively by app.config.ts at `expo prebuild`
+    # time (from ANDROID_VERSION_CODE) and baked into the generated build.gradle
+    # — see beta-releases.yml. This lane only signs and uploads the AAB.
     gradle(
       task: "bundleRelease",
       project_dir: "android",
       properties: {
-        "android.injected.version.code" => last_version_code + 1,
         "android.injected.signing.store.file" => ENV['ANDROID_KEYSTORE_PATH'],
         "android.injected.signing.store.password" => ENV['ANDROID_KEYSTORE_PASSWORD'],
         "android.injected.signing.key.alias" => ENV['ANDROID_KEY_ALIAS'],
@@ -252,16 +267,15 @@ platform :android do
     UI.user_error!("Missing ANDROID_PACKAGE_NAME") unless package_name
     UI.user_error!("Missing PLAY_STORE_API_KEY") unless json_key_data
 
-    last_version_code = google_play_track_version_codes(
-      package_name: package_name,
-      track: 'production',
-      json_key_data: json_key_data
-    ).max || 1
+    ensure_android_signing_env!
+
+    # versionCode is set authoritatively by app.config.ts at `expo prebuild`
+    # time (from ANDROID_VERSION_CODE, production offset band) and baked into the
+    # generated build.gradle — see store-upload.yml. This lane signs and uploads.
     gradle(
       task: "bundleRelease",
       project_dir: "android",
       properties: {
-        "android.injected.version.code" => last_version_code + 1,
         "android.injected.signing.store.file" => ENV['ANDROID_KEYSTORE_PATH'],
         "android.injected.signing.store.password" => ENV['ANDROID_KEYSTORE_PASSWORD'],
         "android.injected.signing.key.alias" => ENV['ANDROID_KEY_ALIAS'],
