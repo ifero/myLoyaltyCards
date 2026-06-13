@@ -162,7 +162,7 @@ Triggers:
 Jobs:
 
 - `ios-testflight-beta` builds and uploads the iOS app to TestFlight using `bundle exec fastlane ios beta`
-- `android-beta` builds and uploads the Android AAB to the Play Console beta track using `bundle exec fastlane android beta`.
+- `android-beta` builds and uploads the Android AAB to the Play Console alpha track using `bundle exec fastlane android beta`.
 
 Notes:
 
@@ -214,7 +214,7 @@ iOS lanes summary:
 Android lanes summary:
 
 - `android adhoc` — Release APK build
-- `android beta` — Android beta artifact build (no Play Store upload in the current lane)
+- `android beta` — Builds an AAB and uploads it to the Play Console alpha (testing) track
 - `android upload_release` — Play Store production upload
 
 ## Release Runbooks
@@ -232,7 +232,7 @@ git push --tags
 
 4. Monitor `.github/workflows/beta-releases.yml` in GitHub Actions.
 5. Verify the iOS build appears in App Store Connect → TestFlight.
-6. Verify Android beta appears in Play Console beta.
+6. Verify the Android build appears in the Play Console alpha (testing) track.
 7. Distribute to testers.
 
 ### Release to Production
@@ -370,7 +370,7 @@ CI keychain setup:
 
 - iOS `beta` lane uses the last TestFlight build number and increments it.
 - `adhoc` and `upload_release` use `GITHUB_RUN_NUMBER` on CI or a timestamp locally.
-- Android beta/release lanes use the next Play Console version code.
+- Android `beta`/`upload_release` versionCode is set by `app.config.ts` at `expo prebuild` time from `ANDROID_VERSION_CODE` (`GITHUB_RUN_NUMBER`, with a `+1,000,000` production offset band so the two release workflows never collide in Play's shared versionCode space), falling back to a Unix timestamp for local builds.
 
 ### `expo prebuild` changes signing settings
 
