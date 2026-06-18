@@ -1,5 +1,5 @@
 # generated: 2026-01-03
-# updated: 2026-06-11
+# updated: 2026-06-18
 # project: myLoyaltyCards
 # tracking_system: file-system
 # story_location: docs/sprint-artifacts
@@ -35,7 +35,7 @@
 # - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
 
 generated: 2026-01-03
-updated: 2026-06-11
+updated: 2026-06-18
 project: myLoyaltyCards
 tracking_system: file-system
 story_location: docs/sprint-artifacts
@@ -116,6 +116,7 @@ current_sprint:
     - 16-4-design-tokens-dtcg-style-dictionary
     - 16-2-implement-logger-sentry-wrapper
     - 16-5-component-gallery-storybook-chromatic
+    - 16-9-relocate-app-screens-to-features
   waves:
     wave_1:
       stories: [16-7, 16-8]
@@ -129,6 +130,9 @@ current_sprint:
     wave_4:
       stories: [16-5]
       note: 'Depends on Wave 2 (16-1 styling engine). Web Storybook (react-native-web) + Chromatic (free OSS) for visual component PR review. Refine → dev after Unistyles lands.'
+    wave_5:
+      stories: [16-9]
+      note: 'Mid-sprint addition (2026-06-18): relocate fat screens out of app/ routing layer → features/cards/screens/ + implement missing route-file lint rule + remove app/__tests__ (co-locate tests). Engine-agnostic. Refined SM→Architect (Winston) same day → ready-for-dev. AD-6: sequence BEFORE 16-2 (shared console.* files in the 3 card screens). AD-2 (cards→auth exception) ratified by ifero 2026-06-18.'
   notes: |
     Sprint 16 planned 2026-06-11 after the Epic 9 retrospective. Theme: clear Epic 16
     (Platform & Tech Debt) — ifero's call to tackle the whole bucket.
@@ -141,6 +145,9 @@ current_sprint:
     Dependency: 16-5 (component gallery) is blocked by 16-1 (styling engine) → Wave 4 after Wave 2.
     Deferred: Epic 10 (Wear OS) stays gated on the Epic 9 retro action #2 (on-device watch
     usage-event validation at the next RC); Epic 14 (Household) still needs UX design first.
+    Mid-sprint (2026-06-18): added 16-9 (relocate app/ screens → features/ + remove app/__tests__)
+    as a tech-debt story (ifero's call); drafted by Bob, refined by Winston (Architect)
+    → ready-for-dev 2026-06-18 (AD-2 cards→auth exception ratified).
 
 next_sprint: null
 
@@ -365,6 +372,7 @@ development_status:
   16-6-stand-up-penpot-design-space: backlog # KEPT IN BACKLOG for Sprint 16 (ifero, 2026-06-11) — trigger-gated: open no-seat-limit Penpot only when real visual designers want in. Draft file exists; not committed to Sprint 16.
   16-7-fix-android-beta-upload-versioncode: done # 2026-06-13: impl complete on feature/16-7-fix-android-beta-upload-versioncode — env-driven versionCode via app.config.ts (verified into merged manifest), workflow Compute steps, Fastfile signing-env guard, cicd.md track fix. dev code-review (sonnet, 3 rounds → 0) + QA (sonnet, 2 rounds → 0) APPROVED; 1535 tests green. Awaiting stakeholder approval to commit/PR. [2026-06-11 refine] CI tech-debt — Android RC alpha upload fails "Version code 1 has already been used" (prebuild regenerates build.gradle versionCode=1). Refined 2026-06-11 w/ ifero: versionCode from GITHUB_RUN_NUMBER plumbed via new app.config.ts (prod offset band to avoid cross-workflow collision); release signingConfig fix kept in scope; also fix prod lane + cicd.md doc. Diagnosed from CI run 27338428755.
   16-8-fix-cloud-sync-cold-open-race: done # 2026-06-13: latch-on-success + network gate + retryWithBackoff on feature/16-8-fix-cloud-sync-cold-open-race. Code review + QA review approved by sonnet subagents. Awaiting stakeholder approval. — bug (filed as tech debt per ifero) — cloud sync fails on every cold open, recovers on manual pull. Confirmed w/ ifero (signed-in; pull-to-refresh works; banner "Cloud sync failed. Pull to retry.") → autoTriggeredRef latch race is root cause (useCloudSync.ts:108-121). Fix: latch-on-success (root) + network-ready gate + retryWithBackoff (defense-in-depth). Refined → ready-for-dev 2026-06-11.
+  16-9-relocate-app-screens-to-features: ready-for-dev # 2026-06-18: relocate fat screens out of app/ routing layer into features/cards/screens/ (index/card[id]/card[id]edit/barcode[id]) + implement the documented-but-MISSING route-file lint rule (root cause) + remove app/__tests__ (co-locate). Drafted by Bob (SM); REFINED → ready-for-dev by Winston (Architect) same day. AD-6: sequence BEFORE 16-2 (both touch console.* in the 3 card screens). AD-2 (cards→auth exception for HomeScreen's guest/migration banners) RATIFIED by ifero 2026-06-18. Pure refactor, engine-agnostic.
   epic-16-retrospective: optional
 
   # Epic 17: Apple Wallet Pass Support — FEASIBILITY-FIRST
