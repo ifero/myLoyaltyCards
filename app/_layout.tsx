@@ -2,6 +2,7 @@ import 'react-native-get-random-values'; // Must be imported before uuid
 import '@/shared/theme/unistyles'; // Registers Unistyles themes (StyleSheet.configure)
 import '@/shared/i18n';
 import { MaterialIcons } from '@expo/vector-icons';
+import * as Sentry from '@sentry/react-native';
 import { Stack, useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import * as Updates from 'expo-updates';
@@ -13,6 +14,8 @@ import { StyleSheet } from 'react-native-unistyles';
 import { getOrCreateGuestSessionId } from '@/core/auth/guest-session-repository';
 import { initializeDatabase } from '@/core/database';
 import { applyWatchUsageEvents, getAllCards } from '@/core/database/card-repository';
+import { initSentry } from '@/core/observability/sentry';
+import { logger } from '@/core/utils/logger';
 import {
   parseWatchUsageEvent,
   pushCardsToWatch,
@@ -32,13 +35,17 @@ export const unstable_settings = {
   initialRouteName: 'index'
 };
 
+// Initialise Sentry as early as possible so errors during module evaluation and
+// app startup are captured (no-op transmit in development; see initSentry).
+initSentry();
+
 // Eagerly validate Supabase env vars so misconfigurations surface early.
 // Wrapped in try/catch to prevent a fatal crash when env vars are absent
 // (e.g. CI build missing EXPO_PUBLIC_SUPABASE_* secrets).
 try {
   getSupabaseClient();
 } catch (error) {
-  console.error(
+  logger.error(
     'Supabase client initialisation failed — check EXPO_PUBLIC_SUPABASE_* env vars:',
     error
   );
@@ -278,7 +285,7 @@ const RootLayout = () => {
               await Updates.reloadAsync();
             }
           } catch (error) {
-            console.warn('Expo update check failed:', error);
+            logger.warn('Expo update check failed:', error);
             // Continue with app initialization even if update check fails
           }
         }
@@ -290,7 +297,7 @@ const RootLayout = () => {
         try {
           await getOrCreateGuestSessionId();
         } catch (error) {
-          console.warn(
+          logger.warn(
             'Guest session initialization failed (continuing without persistent guest ID):',
             error
           );
@@ -304,12 +311,12 @@ const RootLayout = () => {
           const { data } = await getSupabaseClient().auth.getSession();
           setIsAuthenticated(Boolean(data.session));
         } catch (error) {
-          console.warn('Initial session check failed (treating as signed-out):', error);
+          logger.warn('Initial session check failed (treating as signed-out):', error);
         }
 
         setIsReady(true);
       } catch (error) {
-        console.error('App initialization failed:', error);
+        logger.error('App initialization failed:', error);
         setDbError(t('common.errors.initializationFailed'));
       }
     };
@@ -333,7 +340,7 @@ const RootLayout = () => {
               await pushCardsToWatch(cards);
             }
           } catch (e) {
-            console.warn('Watch message handler error:', e);
+            logger.warn('Watch message handler error:', e);
           }
         });
       } catch {
@@ -354,7 +361,7 @@ const RootLayout = () => {
               await applyWatchUsageEvents(usageEvents);
             }
           } catch (e) {
-            console.warn('Watch usage event handler error:', e);
+            logger.warn('Watch usage event handler error:', e);
           }
         });
       } catch {
@@ -415,4 +422,6 @@ const styles = StyleSheet.create({
   }
 });
 
-export default RootLayout;
+// Wrap the root component so Sentry can capture rendering errors and attach
+// navigation/touch context (Story 16.2).
+export default Sentry.wrap(RootLayout);
