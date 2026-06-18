@@ -17,6 +17,7 @@ import { View, Text, ActivityIndicator, Pressable } from 'react-native';
 
 import { getCardById } from '@/core/database';
 import { LoyaltyCard } from '@/core/schemas';
+import { logger } from '@/core/utils/logger';
 
 import { useTheme } from '@/shared/theme';
 import { getContrastForeground } from '@/shared/theme/luminance';
@@ -88,7 +89,7 @@ const CardDetailsScreen = () => {
             setError(t('cards.details.notFound'));
           }
         } catch (err) {
-          console.error('Failed to fetch card:', err);
+          logger.error('Failed to fetch card:', err);
           setError(t('cards.details.loadFailed'));
         } finally {
           setIsLoading(false);

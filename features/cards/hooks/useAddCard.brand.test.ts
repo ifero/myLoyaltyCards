@@ -11,6 +11,7 @@ import { v4 as uuidv4 } from 'uuid';
 
 import { insertCard } from '@/core/database';
 import { BarcodeFormat, CardColor } from '@/core/schemas';
+import { logger } from '@/core/utils/logger';
 
 import { useAddCard, AddCardInput } from './useAddCard';
 
@@ -35,11 +36,11 @@ describe('useAddCard - Brand Context (Story 3.3)', () => {
     (uuidv4 as jest.Mock).mockReturnValue(mockUuid);
     (Haptics.notificationAsync as jest.Mock).mockResolvedValue(undefined);
     (Burnt.toast as jest.Mock).mockReturnValue(undefined);
-    jest.spyOn(console, 'error').mockImplementation(() => {});
+    jest.spyOn(logger, 'error').mockImplementation(() => {});
   });
 
   afterEach(() => {
-    (console.error as jest.Mock).mockRestore();
+    (logger.error as jest.Mock).mockRestore();
   });
 
   describe('Brand-aware card creation', () => {

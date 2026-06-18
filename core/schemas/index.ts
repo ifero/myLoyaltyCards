@@ -8,6 +8,9 @@
 
 import * as z from 'zod';
 
+// Aliased to avoid shadowing the injectable `logger` parameter of parseWithLogging.
+import { logger as appLogger } from '@/core/utils/logger';
+
 // Re-export all card-related schemas and types
 export {
   loyaltyCardSchema,
@@ -17,7 +20,7 @@ export {
   type LoyaltyCard,
   type BarcodeFormat,
   type CardColor,
-  type LoyaltyCardInput,
+  type LoyaltyCardInput
 } from './card';
 
 /**
@@ -29,13 +32,13 @@ interface Logger {
 }
 
 /**
- * Default logger using console
- * In production, this would be replaced with a proper logging service (e.g., Sentry)
+ * Default logger — delegates to the app logging wrapper, which routes errors
+ * to Sentry in production builds (Story 16.2).
  */
 const defaultLogger: Logger = {
   error: (message: string, meta?: Record<string, unknown>) => {
-    console.error(message, meta);
-  },
+    appLogger.error(message, meta);
+  }
 };
 
 /**
@@ -55,7 +58,7 @@ const defaultLogger: Logger = {
  * const card = parseWithLogging(loyaltyCardSchema, jsonData, 'sync:cards');
  * if (card) {
  *   // card is fully typed as LoyaltyCard
- *   console.log(card.name);
+ *   renderCard(card.name);
  * }
  * ```
  */
@@ -70,7 +73,7 @@ export function parseWithLogging<T>(
   if (!result.success) {
     logger.error(`Schema validation failed: ${context}`, {
       errors: result.error.issues,
-      data: JSON.stringify(data).slice(0, 500),
+      data: JSON.stringify(data).slice(0, 500)
     });
     return null;
   }

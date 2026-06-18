@@ -5,6 +5,8 @@
  * Tests the privacy_log event insertion via injected insert function.
  */
 
+import { logger } from '@/core/utils/logger';
+
 import { logConsentEvent } from './consent-logger';
 
 describe('consent-logger', () => {
@@ -12,7 +14,7 @@ describe('consent-logger', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
-    jest.spyOn(console, 'warn').mockImplementation(() => {});
+    jest.spyOn(logger, 'error').mockImplementation(() => {});
     mockInsertFn = jest.fn().mockResolvedValue({ error: null });
   });
 
@@ -58,13 +60,13 @@ describe('consent-logger', () => {
     await expect(logConsentEvent('user-123', 'consent_given', mockInsertFn)).resolves.not.toThrow();
   });
 
-  it('logs a warning when insertFn returns an error', async () => {
+  it('logs an error when insertFn returns an error', async () => {
     const error = { message: 'RLS violation' };
     mockInsertFn.mockResolvedValue({ error });
 
     await logConsentEvent('user-123', 'consent_given', mockInsertFn);
 
-    expect(console.warn).toHaveBeenCalledWith(
+    expect(logger.error).toHaveBeenCalledWith(
       '[consent-logger] Failed to log event:',
       'consent_given',
       error
@@ -77,13 +79,13 @@ describe('consent-logger', () => {
     await expect(logConsentEvent('user-123', 'consent_given', mockInsertFn)).resolves.not.toThrow();
   });
 
-  it('logs a warning when insertFn rejects (network error)', async () => {
+  it('logs an error when insertFn rejects (network error)', async () => {
     const err = new Error('Network error');
     mockInsertFn.mockRejectedValue(err);
 
     await logConsentEvent('user-123', 'consent_given', mockInsertFn);
 
-    expect(console.warn).toHaveBeenCalledWith(
+    expect(logger.error).toHaveBeenCalledWith(
       '[consent-logger] Network error logging event:',
       'consent_given',
       err

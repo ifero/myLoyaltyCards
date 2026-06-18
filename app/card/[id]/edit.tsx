@@ -18,6 +18,7 @@ import { View, Text, ActivityIndicator, Alert, BackHandler } from 'react-native'
 
 import { getCardById } from '@/core/database';
 import { LoyaltyCard } from '@/core/schemas';
+import { logger } from '@/core/utils/logger';
 
 import { useTheme } from '@/shared/theme';
 import { SPACING } from '@/shared/theme/spacing';
@@ -59,7 +60,7 @@ const EditCardScreen = () => {
           setError(t('cards.edit.notFound'));
         }
       } catch (err) {
-        console.error('Failed to fetch card:', err);
+        logger.error('Failed to fetch card:', err);
         setError(t('cards.edit.loadFailed'));
       } finally {
         setIsLoading(false);

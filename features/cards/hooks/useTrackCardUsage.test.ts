@@ -6,6 +6,7 @@
 import { renderHook, waitFor } from '@testing-library/react-native';
 
 import * as cardRepository from '@/core/database';
+import { logger } from '@/core/utils/logger';
 
 import { useTrackCardUsage } from './useTrackCardUsage';
 
@@ -55,15 +56,15 @@ describe('useTrackCardUsage', () => {
   });
 
   it('does not crash when the tracking write rejects (fire-and-forget)', async () => {
-    const consoleError = jest.spyOn(console, 'error').mockImplementation(() => {});
+    const loggerError = jest.spyOn(logger, 'error').mockImplementation(() => {});
     (cardRepository.incrementUsageCount as jest.Mock).mockRejectedValue(new Error('db down'));
 
     expect(() => renderHook(() => useTrackCardUsage('card-1'))).not.toThrow();
 
     await waitFor(() => {
-      expect(consoleError).toHaveBeenCalled();
+      expect(loggerError).toHaveBeenCalled();
     });
 
-    consoleError.mockRestore();
+    loggerError.mockRestore();
   });
 });

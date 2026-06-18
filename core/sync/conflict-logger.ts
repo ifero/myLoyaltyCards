@@ -6,6 +6,8 @@
  * No production telemetry for MVP.
  */
 
+import { logger } from '@/core/utils/logger';
+
 export type ConflictWinner = 'local' | 'cloud';
 
 export type ConflictReason =
@@ -28,16 +30,15 @@ export type ConflictLogEntry = {
 
 /**
  * Log a sync conflict resolution event (dev-only).
- * Uses console.log — no production telemetry.
+ * Routed through `logger.info`, which only logs in development — so this stays
+ * out of production telemetry while keeping the convention consistent.
  */
 export const logConflictResolution = (entry: ConflictLogEntry): void => {
-  if (__DEV__) {
-    console.log('[sync:conflict]', {
-      cardId: entry.cardId,
-      localUpdatedAt: entry.localUpdatedAt,
-      cloudUpdatedAt: entry.cloudUpdatedAt,
-      winner: entry.winner,
-      reason: entry.reason
-    });
-  }
+  logger.info('[sync:conflict]', {
+    cardId: entry.cardId,
+    localUpdatedAt: entry.localUpdatedAt,
+    cloudUpdatedAt: entry.cloudUpdatedAt,
+    winner: entry.winner,
+    reason: entry.reason
+  });
 };

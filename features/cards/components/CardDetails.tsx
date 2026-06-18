@@ -32,6 +32,7 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { LoyaltyCard } from '@/core/schemas';
+import { logger } from '@/core/utils/logger';
 
 import { ActionRow } from '@/shared/components/ui/ActionRow';
 import { useTheme, CARD_COLORS } from '@/shared/theme';
@@ -137,7 +138,7 @@ export const CardDetails: React.FC<CardDetailsProps> = ({
       await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       onCopy?.();
     } catch (error) {
-      console.error('Failed to copy barcode:', error);
+      logger.error('Failed to copy barcode:', error);
       Alert.alert(t('cards.details.copyFailedTitle'), t('cards.details.copyFailedMessage'));
     }
   }, [card.barcode, onCopy, t]);

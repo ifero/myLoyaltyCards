@@ -12,6 +12,7 @@
 import type { Session, User } from '@supabase/supabase-js';
 
 import { getConsentStatus, getConsentTimestamp } from '@/core/privacy/consent-repository';
+import { logger } from '@/core/utils/logger';
 
 import { getSupabaseClient } from './client';
 
@@ -193,10 +194,10 @@ export const signUp = async (
         .upsert(profilePayload, { onConflict: 'id' });
 
       if (profileError) {
-        console.warn('[auth] Failed to upsert signup profile:', profileError);
+        logger.warn('[auth] Failed to upsert signup profile:', profileError);
       }
     } catch (profileError) {
-      console.warn('[auth] Failed to upsert signup profile:', profileError);
+      logger.warn('[auth] Failed to upsert signup profile:', profileError);
     }
 
     return { success: true, data: { user: data.user, session: data.session } };

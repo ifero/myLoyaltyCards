@@ -7,6 +7,7 @@ import { renderHook, act, waitFor } from '@testing-library/react-native';
 
 import * as cardRepository from '@/core/database';
 import { LoyaltyCard } from '@/core/schemas';
+import { logger } from '@/core/utils/logger';
 
 import { useToggleFavorite } from './useToggleFavorite';
 
@@ -59,7 +60,7 @@ describe('useToggleFavorite', () => {
   });
 
   it('rolls back the optimistic update when the write fails (AC6)', async () => {
-    const consoleError = jest.spyOn(console, 'error').mockImplementation(() => {});
+    const loggerError = jest.spyOn(logger, 'error').mockImplementation(() => {});
     (cardRepository.toggleFavorite as jest.Mock).mockRejectedValue(new Error('db down'));
     const onUpdate = jest.fn();
     const { result } = renderHook(() => useToggleFavorite(baseCard, onUpdate));
@@ -73,8 +74,8 @@ describe('useToggleFavorite', () => {
       expect(onUpdate).toHaveBeenNthCalledWith(1, { ...baseCard, isFavorite: true });
       expect(onUpdate).toHaveBeenNthCalledWith(2, { ...baseCard, isFavorite: false });
     });
-    expect(consoleError).toHaveBeenCalled();
-    consoleError.mockRestore();
+    expect(loggerError).toHaveBeenCalled();
+    loggerError.mockRestore();
   });
 
   it('clears isPending after the write settles', async () => {

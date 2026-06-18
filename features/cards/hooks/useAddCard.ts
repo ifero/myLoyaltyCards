@@ -14,6 +14,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { insertCard } from '@/core/database';
 import { LoyaltyCard, BarcodeFormat, CardColor } from '@/core/schemas';
 import { markDirty } from '@/core/sync';
+import { logger } from '@/core/utils/logger';
 
 import { useAuthState } from '@/shared/supabase/useAuthState';
 import { showToast } from '@/shared/toast';
@@ -97,7 +98,7 @@ export function useAddCard(): UseAddCardReturn {
         const message = t('cards.add.failedMessage');
         setError(message);
 
-        console.error('[useAddCard] Failed to add card', err);
+        logger.error('[useAddCard] Failed to add card', err);
 
         // Error feedback
         await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);

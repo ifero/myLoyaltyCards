@@ -18,6 +18,7 @@ import { useTranslation } from 'react-i18next';
 
 import { deleteCard as deleteCardFromDb } from '@/core/database';
 import { addPendingDeletion, markDirty } from '@/core/sync';
+import { logger } from '@/core/utils/logger';
 
 import { useAuthState } from '@/shared/supabase/useAuthState';
 import { showToast } from '@/shared/toast';
@@ -91,7 +92,7 @@ export function useDeleteCard(cardId: string): UseDeleteCardReturn {
 
       return true;
     } catch (err) {
-      console.error('Failed to delete card:', err);
+      logger.error('Failed to delete card:', err);
       const errorMessage = t('cards.delete.failedMessage');
       setError(errorMessage);
 

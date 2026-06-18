@@ -10,6 +10,8 @@
 import * as Brightness from 'expo-brightness';
 import { useCallback, useRef } from 'react';
 
+import { logger } from '@/core/utils/logger';
+
 /**
  * Return type for useBrightness hook
  */
@@ -46,7 +48,7 @@ export function useBrightness(): UseBrightnessReturn {
       await Brightness.setBrightnessAsync(1.0);
     } catch (error) {
       // Brightness API may not be available on all devices/simulators
-      console.warn('Failed to maximize brightness:', error);
+      logger.warn('Failed to maximize brightness:', error);
     }
   }, []);
 
@@ -57,7 +59,7 @@ export function useBrightness(): UseBrightnessReturn {
         originalBrightnessRef.current = null;
       }
     } catch (error) {
-      console.warn('Failed to restore brightness:', error);
+      logger.warn('Failed to restore brightness:', error);
     }
   }, []);
 

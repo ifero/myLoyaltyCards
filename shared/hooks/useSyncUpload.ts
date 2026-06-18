@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { forceSyncLocalCards, uploadLocalCards } from '@/core/sync';
+import { logger } from '@/core/utils/logger';
 
 import { getSession } from '@/shared/supabase/auth';
 import { upsertCards } from '@/shared/supabase/cards';
@@ -37,7 +38,7 @@ export const useSyncUpload = (): UseSyncUploadResult => {
         const sessionResult = await getSession();
         if (!sessionResult.success || !sessionResult.data) {
           const msg = sessionResult.success ? GENERIC_SYNC_ERROR : sessionResult.error.message;
-          console.error(`[useSyncUpload] Session retrieval failed: ${msg}`);
+          logger.error(`[useSyncUpload] Session retrieval failed: ${msg}`);
           setSyncError(msg);
           return;
         }
@@ -52,7 +53,7 @@ export const useSyncUpload = (): UseSyncUploadResult => {
           setSyncError(firstError);
         }
       } catch {
-        console.error('[useSyncUpload] Sync failed unexpectedly');
+        logger.error('[useSyncUpload] Sync failed unexpectedly');
         setSyncError(GENERIC_SYNC_ERROR);
       } finally {
         isRunningRef.current = false;

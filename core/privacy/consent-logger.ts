@@ -11,8 +11,10 @@
  *
  * Behaviour:
  * - No-op when `userId` is null/empty (guest mode — nothing to log)
- * - Never throws — errors are logged as warnings but never propagated.
+ * - Never throws — failures are logged via logger.error (Sentry in prod) but never propagated.
  */
+
+import { logger } from '@/core/utils/logger';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -55,10 +57,14 @@ export const logConsentEvent = async (
     });
 
     if (error) {
-      console.warn('[consent-logger] Failed to log event:', eventType, error);
+      // GDPR audit-write failures must stay observable in production, so use
+      // logger.error, which always logs and routes to Sentry in prod.
+      // eventType is not PII; the Sentry payload is scrubbed before transmit.
+      logger.error('[consent-logger] Failed to log event:', eventType, error);
     }
   } catch (err) {
-    // Offline / transient failures must not crash the consent flow
-    console.warn('[consent-logger] Network error logging event:', eventType, err);
+    // Offline / transient failures must not crash the consent flow, but the
+    // audit gap must still be reported in production (see above).
+    logger.error('[consent-logger] Network error logging event:', eventType, err);
   }
 };

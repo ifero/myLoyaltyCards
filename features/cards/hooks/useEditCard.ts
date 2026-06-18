@@ -13,6 +13,7 @@ import { useTranslation } from 'react-i18next';
 import { updateCard as updateCardInDb, getCardById } from '@/core/database';
 import { LoyaltyCard, BarcodeFormat, CardColor } from '@/core/schemas';
 import { markDirty } from '@/core/sync';
+import { logger } from '@/core/utils/logger';
 
 import { useAuthState } from '@/shared/supabase/useAuthState';
 import { showToast } from '@/shared/toast';
@@ -94,7 +95,7 @@ export function useEditCard(): UseEditCardReturn {
         const message = t('cards.edit.failedMessage');
         setError(message);
 
-        console.error('[useEditCard] Failed to update card', err);
+        logger.error('[useEditCard] Failed to update card', err);
 
         // Error feedback
         await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);

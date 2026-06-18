@@ -7,6 +7,7 @@ import {
   retryWithBackoff,
   uploadLocalCards
 } from '@/core/sync';
+import { logger } from '@/core/utils/logger';
 
 import { useNetworkStatus } from '@/shared/hooks/useNetworkStatus';
 import { getSession } from '@/shared/supabase/auth';
@@ -203,7 +204,7 @@ const runManualSync = async (force: boolean): Promise<void> => {
     if (e instanceof KnownSyncError) {
       setSnapshot({ syncError: e.message });
     } else {
-      console.error('[useCloudSync] Sync failed unexpectedly', e);
+      logger.error('[useCloudSync] Sync failed unexpectedly', e);
       setSnapshot({ syncError: GENERIC_SYNC_ERROR });
     }
   }
@@ -239,7 +240,7 @@ const runAutoSync = async (): Promise<void> => {
       autoTriggered = true;
     }
   } catch (e) {
-    console.error('[useCloudSync] Auto-sync failed after retries', e);
+    logger.error('[useCloudSync] Auto-sync failed after retries', e);
     setSnapshot({ syncError: GENERIC_SYNC_ERROR });
   }
 };

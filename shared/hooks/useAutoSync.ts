@@ -5,6 +5,7 @@ import { batchUpsertCards } from '@/core/database/card-repository';
 import { isDirty, processPendingSync, retryWithBackoff, type CloudDeleteFn } from '@/core/sync';
 import { type CloudUpsertFn, type CloudFetchSinceFn } from '@/core/sync';
 import { getPendingDeletions, clearPendingDeletions } from '@/core/sync';
+import { logger } from '@/core/utils/logger';
 
 import { useNetworkStatus } from '@/shared/hooks/useNetworkStatus';
 import { getSession } from '@/shared/supabase/auth';
@@ -97,7 +98,7 @@ export const useAutoSync = (
             maxRetries: 3,
             baseDelay: 1000,
             onRetry: (attempt, delayMs, error) => {
-              console.log(`[useAutoSync] Retry ${attempt}/3 in ${delayMs}ms`, error);
+              logger.info(`[useAutoSync] Retry ${attempt}/3 in ${delayMs}ms`, error);
             }
           }
         );
@@ -106,7 +107,7 @@ export const useAutoSync = (
           error instanceof Error && error.message.includes('Sync failed')
             ? MAX_RETRIES_EXCEEDED_MESSAGE
             : 'An unexpected error occurred. Changes saved locally.';
-        console.error('[useAutoSync] Sync error:', error);
+        logger.error('[useAutoSync] Sync error:', error);
         setSyncError(message);
       } finally {
         isRunningRef.current = false;
