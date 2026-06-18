@@ -1,4 +1,5 @@
 import { fireEvent, render, screen } from '@testing-library/react-native';
+import { StyleSheet } from 'react-native';
 
 import { ConflictResolutionModal } from './ConflictResolutionModal';
 
@@ -200,6 +201,6 @@ describe('ConflictResolutionModal (dark mode)', () => {
     );
 
     const content = screen.getByTestId('conflict-modal-content');
-    expect(content.props.style.backgroundColor).toBe('#1C1C1E');
+    expect(StyleSheet.flatten(content.props.style).backgroundColor).toBe('#1C1C1E');
   });
 });

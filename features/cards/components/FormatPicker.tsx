@@ -8,6 +8,7 @@
 import { Picker } from '@react-native-picker/picker';
 import { useTranslation } from 'react-i18next';
 import { View, Text } from 'react-native';
+import { StyleSheet } from 'react-native-unistyles';
 
 import { BarcodeFormat, barcodeFormatSchema } from '@/core/schemas';
 
@@ -42,8 +43,8 @@ export const FormatPicker = ({ value, onChange, testID }: FormatPickerProps) => 
 
   return (
     <View testID={testID}>
-      <Text className="mb-1 text-xs text-gray-500">{t('cards.formatPicker.label')}</Text>
-      <View className="overflow-hidden rounded-lg border border-gray-300">
+      <Text style={styles.label}>{t('cards.formatPicker.label')}</Text>
+      <View style={styles.pickerWrapper}>
         <Picker
           selectedValue={value}
           onValueChange={(itemValue) => onChange(itemValue as BarcodeFormat)}
@@ -58,3 +59,18 @@ export const FormatPicker = ({ value, onChange, testID }: FormatPickerProps) => 
     </View>
   );
 };
+
+const styles = StyleSheet.create({
+  label: {
+    marginBottom: 8,
+    fontSize: 12,
+    lineHeight: 16,
+    color: '#6B7280'
+  },
+  pickerWrapper: {
+    overflow: 'hidden',
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#D1D5DB'
+  }
+});

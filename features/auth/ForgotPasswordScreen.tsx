@@ -3,6 +3,7 @@ import { useRouter } from 'expo-router';
 import { useCallback, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Pressable, View } from 'react-native';
+import { StyleSheet } from 'react-native-unistyles';
 
 import { isValidEmail } from '@/core/auth/validation';
 
@@ -107,8 +108,8 @@ const ForgotPasswordScreen = () => {
         subtitleTestID="confirmation-subtitle"
         showAppIcon={false}
       >
-        <View className="w-full items-center">
-          <View testID="reset-password-confirmation-icon" className="mb-6">
+        <View style={styles.confirmation}>
+          <View testID="reset-password-confirmation-icon" style={styles.confirmationIcon}>
             <MaterialIcons name="mail-outline" size={56} color={theme.primary} />
           </View>
 
@@ -157,7 +158,7 @@ const ForgotPasswordScreen = () => {
         </Pressable>
       }
     >
-      <View className="w-full" style={{ gap: spacing.md }}>
+      <View style={[styles.formGroup, { gap: spacing.md }]}>
         <ErrorBanner message={error} testID="server-error" />
 
         <TextField
@@ -201,5 +202,18 @@ const ForgotPasswordScreen = () => {
     </AuthScreenLayout>
   );
 };
+
+const styles = StyleSheet.create({
+  formGroup: {
+    width: '100%'
+  },
+  confirmation: {
+    width: '100%',
+    alignItems: 'center'
+  },
+  confirmationIcon: {
+    marginBottom: 48
+  }
+});
 
 export default ForgotPasswordScreen;

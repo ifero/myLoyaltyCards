@@ -1,5 +1,5 @@
 import 'react-native-get-random-values'; // Must be imported before uuid
-import '../global.css';
+import '@/shared/theme/unistyles'; // Registers Unistyles themes (StyleSheet.configure)
 import '@/shared/i18n';
 import { MaterialIcons } from '@expo/vector-icons';
 import { Stack, useRouter } from 'expo-router';
@@ -8,6 +8,7 @@ import * as Updates from 'expo-updates';
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ActivityIndicator, Pressable, Text, View } from 'react-native';
+import { StyleSheet } from 'react-native-unistyles';
 
 import { getOrCreateGuestSessionId } from '@/core/auth/guest-session-repository';
 import { initializeDatabase } from '@/core/database';
@@ -57,7 +58,7 @@ const HeaderRight = () => {
       onPress={() => router.push('/settings')}
       accessibilityLabel={t('navigation.settings')}
       accessibilityRole="button"
-      className="h-11 w-11 items-center justify-center"
+      style={styles.headerButton}
     >
       <MaterialIcons name="settings" size={26} color={theme.primary} />
     </Pressable>
@@ -78,7 +79,7 @@ const HeaderLeft = () => {
       onPress={() => router.push('/add-card')}
       accessibilityLabel={t('navigation.addCard')}
       accessibilityRole="button"
-      className="h-11 w-11 items-center justify-center"
+      style={styles.headerButton}
     >
       <MaterialIcons name="add" size={28} color={theme.primary} />
     </Pressable>
@@ -128,7 +129,7 @@ const RootLayoutContent = ({ isAuthenticated }: { isAuthenticated: boolean }) =>
                 onPress={() => router.back()}
                 accessibilityLabel={t('addCard.selection.backAccessibilityLabel')}
                 accessibilityRole="button"
-                className="h-11 w-11 items-center justify-center"
+                style={styles.headerButton}
               >
                 <MaterialIcons name="chevron-left" size={28} color={theme.textPrimary} />
               </Pressable>
@@ -368,16 +369,16 @@ const RootLayout = () => {
 
   if (dbError) {
     return (
-      <View className="flex-1 items-center justify-center bg-neutral-900">
-        <Text className="text-lg text-red-500">{t('common.errors.databaseErrorTitle')}</Text>
-        <Text className="mt-2 text-neutral-400">{dbError}</Text>
+      <View style={styles.fullscreen}>
+        <Text style={styles.errorTitle}>{t('common.errors.databaseErrorTitle')}</Text>
+        <Text style={styles.errorBody}>{dbError}</Text>
       </View>
     );
   }
 
   if (!isReady) {
     return (
-      <View className="flex-1 items-center justify-center bg-neutral-900">
+      <View style={styles.fullscreen}>
         <ActivityIndicator size="large" color={PRIMARY_COLORS[500]} />
       </View>
     );
@@ -389,5 +390,29 @@ const RootLayout = () => {
     </ThemeProvider>
   );
 };
+
+const styles = StyleSheet.create({
+  headerButton: {
+    height: 44,
+    width: 44,
+    alignItems: 'center',
+    justifyContent: 'center'
+  },
+  fullscreen: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#171717'
+  },
+  errorTitle: {
+    fontSize: 18,
+    lineHeight: 28,
+    color: '#EF4444'
+  },
+  errorBody: {
+    marginTop: 16,
+    color: '#A3A3A3'
+  }
+});
 
 export default RootLayout;

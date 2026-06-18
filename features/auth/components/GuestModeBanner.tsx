@@ -4,6 +4,7 @@ import { useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Pressable, Text, View } from 'react-native';
+import { StyleSheet } from 'react-native-unistyles';
 
 import { Button } from '@/shared/components/ui';
 import { useTheme } from '@/shared/theme';
@@ -66,12 +67,14 @@ export const GuestModeBanner = ({ isGuestMode }: GuestModeBannerProps) => {
   return (
     <View
       testID="guest-mode-banner"
-      className="mx-4 mb-3 mt-2 overflow-hidden rounded-2xl"
-      style={{
-        backgroundColor: theme.surface,
-        borderWidth: 1,
-        borderColor: `${theme.primary}33`
-      }}
+      style={[
+        styles.banner,
+        {
+          backgroundColor: theme.surface,
+          borderWidth: 1,
+          borderColor: `${theme.primary}33`
+        }
+      ]}
     >
       <View
         pointerEvents="none"
@@ -105,15 +108,12 @@ export const GuestModeBanner = ({ isGuestMode }: GuestModeBannerProps) => {
           <MaterialIcons name="close" size={20} color={theme.primary} />
         </Pressable>
 
-        <View className="flex-row" style={{ paddingRight: minTouchTarget - spacingXs }}>
-          <View
-            className="mr-3 mt-0.5 h-4.5 w-4.5 items-center justify-center rounded-full"
-            style={{ backgroundColor: `${theme.primary}1A` }}
-          >
+        <View style={[styles.body, { paddingRight: minTouchTarget - spacingXs }]}>
+          <View style={[styles.iconCircle, { backgroundColor: `${theme.primary}1A` }]}>
             <MaterialCommunityIcons name="shield-check-outline" size={24} color={theme.primary} />
           </View>
 
-          <View className="flex-1">
+          <View style={styles.bodyText}>
             <Text
               style={{
                 color: theme.textPrimary,
@@ -137,7 +137,7 @@ export const GuestModeBanner = ({ isGuestMode }: GuestModeBannerProps) => {
           </View>
         </View>
 
-        <View className="mt-3 flex-row items-center" style={{ gap: spacingSm }}>
+        <View style={[styles.actions, { gap: spacingSm }]}>
           <View>
             <Button
               testID="guest-mode-banner-create-account"
@@ -163,3 +163,33 @@ export const GuestModeBanner = ({ isGuestMode }: GuestModeBannerProps) => {
     </View>
   );
 };
+
+const styles = StyleSheet.create({
+  banner: {
+    marginHorizontal: 32,
+    marginBottom: 24,
+    marginTop: 16,
+    overflow: 'hidden',
+    borderRadius: 16
+  },
+  body: {
+    flexDirection: 'row'
+  },
+  iconCircle: {
+    marginRight: 24,
+    marginTop: 4,
+    height: 36,
+    width: 36,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: 9999
+  },
+  bodyText: {
+    flex: 1
+  },
+  actions: {
+    marginTop: 24,
+    flexDirection: 'row',
+    alignItems: 'center'
+  }
+});

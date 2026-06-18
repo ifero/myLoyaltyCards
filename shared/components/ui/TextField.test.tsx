@@ -1,40 +1,24 @@
 import { fireEvent, render, screen } from '@testing-library/react-native';
+import { StyleSheet } from 'react-native';
+
+import { LIGHT_THEME } from '@/shared/theme/colors';
 
 import { TextField } from './TextField';
 
-const mockUseTheme = jest.fn();
-
-jest.mock('@/shared/theme', () => ({
-  useTheme: () => mockUseTheme()
-}));
-
-const lightTheme = {
-  textPrimary: '#1F1F24',
-  textTertiary: '#8F8F94',
-  error: '#DC2626',
-  primary: '#1A73E8',
-  border: '#E5E5EB',
-  backgroundSubtle: '#F5F5F5',
-  surface: '#FFFFFF',
-  surfaceElevated: '#FFFFFF'
-};
-
-const darkTheme = {
-  textPrimary: '#F5F5F7',
-  textTertiary: '#99999E',
-  error: '#F87171',
-  primary: '#4DA3FF',
-  border: '#38383A',
-  backgroundSubtle: '#05070A',
-  surface: '#1C1C1E',
-  surfaceElevated: '#1C1C1E'
-};
+// TextField styles via Unistyles (react-native-unistyles/mocks resolves themed
+// styles against the first-registered theme — `light`). So assertions use the
+// real LIGHT_THEME tokens.
+//
+// Dark-mode limitation: the official Unistyles v3 mock always returns the first
+// theme from useUnistyles()/StyleSheet.create — UnistylesRuntime.setTheme() is a
+// no-op in the mock — so a useUnistyles()-based component cannot be unit-rendered
+// in dark mode here. ThemeProvider.test.tsx asserts the engine is switched to
+// dark AND that the token set flips; the on-device light/dark visual sweep (AC5)
+// remains the authoritative regression gate for dark-token application.
+const flattenStyle = (style: unknown) =>
+  StyleSheet.flatten(style as never) as Record<string, unknown>;
 
 describe('TextField', () => {
-  beforeEach(() => {
-    mockUseTheme.mockReturnValue({ theme: lightTheme });
-  });
-
   it('renders label and value', () => {
     render(<TextField label="Name" value="Mario" onChangeText={jest.fn()} testID="field" />);
 
@@ -64,14 +48,14 @@ describe('TextField', () => {
 
     const input = screen.getByTestId('field');
     fireEvent(input, 'focus');
-    expect(input.props.style.borderColor).toBe(lightTheme.primary);
+    expect(flattenStyle(input.props.style).borderColor).toBe(LIGHT_THEME.primary);
   });
 
   it('applies default border when filled but not focused', () => {
     render(<TextField label="Name" value="Mario" onChangeText={jest.fn()} testID="field" />);
 
     const input = screen.getByTestId('field');
-    expect(input.props.style.borderColor).toBe(lightTheme.border);
+    expect(flattenStyle(input.props.style).borderColor).toBe(LIGHT_THEME.border);
   });
 
   it('handles disabled state', () => {
@@ -81,11 +65,17 @@ describe('TextField', () => {
     expect(input.props.editable).toBe(false);
   });
 
-  it('supports dark mode tokens', () => {
-    mockUseTheme.mockReturnValue({ theme: darkTheme });
+  it('applies the themed surfaceElevated background', () => {
     render(<TextField label="Name" value="" onChangeText={jest.fn()} testID="field" />);
 
     const input = screen.getByTestId('field');
-    expect(input.props.style.backgroundColor).toBe(darkTheme.surfaceElevated);
+    expect(flattenStyle(input.props.style).backgroundColor).toBe(LIGHT_THEME.surfaceElevated);
+  });
+
+  it('applies the subtle background when disabled', () => {
+    render(<TextField label="Name" value="" onChangeText={jest.fn()} disabled testID="field" />);
+
+    const input = screen.getByTestId('field');
+    expect(flattenStyle(input.props.style).backgroundColor).toBe(LIGHT_THEME.backgroundSubtle);
   });
 });

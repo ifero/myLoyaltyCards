@@ -21,6 +21,7 @@ import {
   Platform,
   ScrollView
 } from 'react-native';
+import { StyleSheet } from 'react-native-unistyles';
 import * as z from 'zod';
 
 import { barcodeFormatSchema, cardColorSchema } from '@/core/schemas';
@@ -152,19 +153,19 @@ export const CardForm = ({
   return (
     <KeyboardAvoidingView
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      className="flex-1"
+      style={styles.flex1}
     >
       <ScrollView
-        className="flex-1 px-4"
+        style={styles.scroll}
         contentContainerStyle={{ paddingBottom: 100 }}
         keyboardShouldPersistTaps="handled"
         testID={testID}
       >
         {/* Card Name Field - AC2, AC3 */}
-        <View className="mb-4 mt-4">
-          <View className="mb-1 flex-row items-center justify-between">
-            <Text className="text-xs text-gray-500">{t('cards.form.nameLabel')}</Text>
-            <Text className="text-xs text-gray-400">{nameLength}/50</Text>
+        <View style={styles.firstField}>
+          <View style={styles.labelRow}>
+            <Text style={styles.labelText}>{t('cards.form.nameLabel')}</Text>
+            <Text style={styles.counterText}>{nameLength}/50</Text>
           </View>
           <Controller
             control={control}
@@ -180,25 +181,27 @@ export const CardForm = ({
                 maxLength={50}
                 testID="card-name-input"
                 accessibilityLabel={t('cards.form.nameAccessibilityLabel')}
-                className="rounded-lg border px-3 py-3"
-                style={{
-                  borderColor: errors.name ? '#EF4444' : theme.border,
-                  color: theme.textPrimary,
-                  backgroundColor: theme.surface
-                }}
+                style={[
+                  styles.input,
+                  {
+                    borderColor: errors.name ? '#EF4444' : theme.border,
+                    color: theme.textPrimary,
+                    backgroundColor: theme.surface
+                  }
+                ]}
               />
             )}
           />
           {errors.name && (
-            <Text className="mt-1 text-xs text-red-500" testID="name-error">
+            <Text style={styles.errorText} testID="name-error">
               {errors.name.message}
             </Text>
           )}
         </View>
 
         {/* Barcode Number Field - AC4 */}
-        <View className="mb-4">
-          <Text className="mb-1 text-xs text-gray-500">{t('cards.form.barcodeLabel')}</Text>
+        <View style={styles.field}>
+          <Text style={styles.fieldLabel}>{t('cards.form.barcodeLabel')}</Text>
           <Controller
             control={control}
             name="barcode"
@@ -212,38 +215,42 @@ export const CardForm = ({
                 keyboardType="number-pad"
                 testID="barcode-input"
                 accessibilityLabel={t('cards.form.barcodeAccessibilityLabel')}
-                className="rounded-lg border px-3 py-3"
-                style={{
-                  borderColor: errors.barcode ? '#EF4444' : theme.border,
-                  color: theme.textPrimary,
-                  backgroundColor: theme.surface
-                }}
+                style={[
+                  styles.input,
+                  {
+                    borderColor: errors.barcode ? '#EF4444' : theme.border,
+                    color: theme.textPrimary,
+                    backgroundColor: theme.surface
+                  }
+                ]}
               />
             )}
           />
           {errors.barcode && (
-            <Text className="mt-1 text-xs text-red-500" testID="barcode-error">
+            <Text style={styles.errorText} testID="barcode-error">
               {errors.barcode.message}
             </Text>
           )}
         </View>
 
         {/* Barcode Format Display - AC5 (Auto-detected) */}
-        <View className="mb-4" testID="format-display">
-          <Text className="mb-1 text-xs text-gray-500">{t('cards.form.barcodeFormatLabel')}</Text>
+        <View style={styles.field} testID="format-display">
+          <Text style={styles.fieldLabel}>{t('cards.form.barcodeFormatLabel')}</Text>
           <View
-            className="rounded-lg border px-3 py-3"
-            style={{
-              borderColor: theme.border,
-              backgroundColor: theme.surface
-            }}
+            style={[
+              styles.input,
+              {
+                borderColor: theme.border,
+                backgroundColor: theme.surface
+              }
+            ]}
           >
             <Text style={{ color: theme.textPrimary }}>{barcodeFormatLabels[barcodeFormat]}</Text>
           </View>
         </View>
 
         {/* Color Picker - AC6 */}
-        <View className="mb-6">
+        <View style={styles.lastField}>
           <Controller
             control={control}
             name="color"
@@ -261,17 +268,84 @@ export const CardForm = ({
           accessibilityRole="button"
           accessibilityLabel={submitLabel}
           accessibilityState={{ disabled: !isValid || isLoading }}
-          className="h-12 w-full items-center justify-center rounded-lg"
-          style={{
-            backgroundColor: theme.primary,
-            opacity: !isValid || isLoading ? 0.5 : 1
-          }}
+          style={[
+            styles.saveButton,
+            {
+              backgroundColor: theme.primary,
+              opacity: !isValid || isLoading ? 0.5 : 1
+            }
+          ]}
         >
-          <Text className="text-base font-semibold text-white">
-            {isLoading ? t('cards.form.saving') : submitLabel}
-          </Text>
+          <Text style={styles.saveLabel}>{isLoading ? t('cards.form.saving') : submitLabel}</Text>
         </Pressable>
       </ScrollView>
     </KeyboardAvoidingView>
   );
 };
+
+const styles = StyleSheet.create({
+  flex1: {
+    flex: 1
+  },
+  scroll: {
+    flex: 1,
+    paddingHorizontal: 32
+  },
+  firstField: {
+    marginBottom: 32,
+    marginTop: 32
+  },
+  field: {
+    marginBottom: 32
+  },
+  lastField: {
+    marginBottom: 48
+  },
+  labelRow: {
+    marginBottom: 8,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between'
+  },
+  labelText: {
+    fontSize: 12,
+    lineHeight: 16,
+    color: '#6B7280'
+  },
+  counterText: {
+    fontSize: 12,
+    lineHeight: 16,
+    color: '#9CA3AF'
+  },
+  fieldLabel: {
+    marginBottom: 8,
+    fontSize: 12,
+    lineHeight: 16,
+    color: '#6B7280'
+  },
+  input: {
+    borderRadius: 8,
+    borderWidth: 1,
+    paddingHorizontal: 24,
+    paddingVertical: 24
+  },
+  errorText: {
+    marginTop: 8,
+    fontSize: 12,
+    lineHeight: 16,
+    color: '#EF4444'
+  },
+  saveButton: {
+    height: 48,
+    width: '100%',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: 8
+  },
+  saveLabel: {
+    fontSize: 16,
+    lineHeight: 24,
+    fontWeight: '600',
+    color: '#FFFFFF'
+  }
+});

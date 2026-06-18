@@ -9,8 +9,9 @@ import { MaterialIcons } from '@expo/vector-icons';
 import { CameraView } from 'expo-camera';
 import { useEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
-import { View, Text, Pressable, Alert, Linking, StyleSheet } from 'react-native';
+import { View, Text, Pressable, Alert, Linking } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { StyleSheet } from 'react-native-unistyles';
 
 import { useTheme } from '@/shared/theme';
 
@@ -93,10 +94,7 @@ export function BarcodeScanner({ onScan, onManualEntry, onError }: BarcodeScanne
   if (permission === null) {
     // Permission status is still loading
     return (
-      <SafeAreaView
-        className="flex-1 items-center justify-center"
-        style={{ backgroundColor: theme.background }}
-      >
+      <SafeAreaView style={[styles.centered, { backgroundColor: theme.background }]}>
         <Text style={{ color: theme.textPrimary }}>{t('addCard.scanner.checkingPermission')}</Text>
       </SafeAreaView>
     );
@@ -105,51 +103,41 @@ export function BarcodeScanner({ onScan, onManualEntry, onError }: BarcodeScanne
   if (permission.granted === false) {
     // Permission denied - show error state
     return (
-      <SafeAreaView
-        className="flex-1 items-center justify-center px-6"
-        style={{ backgroundColor: theme.background }}
-      >
-        <View className="items-center">
+      <SafeAreaView style={[styles.centeredPadded, { backgroundColor: theme.background }]}>
+        <View style={styles.contentCenter}>
           <MaterialIcons
             name="photo-camera"
             size={48}
             color={theme.textSecondary}
             style={{ marginBottom: 8 }}
           />
-          <Text
-            className="mb-1 text-center text-xl font-semibold"
-            style={{ color: theme.textPrimary }}
-          >
+          <Text style={[styles.title, { color: theme.textPrimary }]}>
             {t('addCard.scanner.cameraAccessTitle')}
           </Text>
-          <Text className="mb-6 text-center text-sm" style={{ color: theme.textSecondary }}>
+          <Text style={[styles.subtitle, { color: theme.textSecondary }]}>
             {t('addCard.scanner.cameraAccessBody')}
           </Text>
-          <View className="w-full gap-3">
+          <View style={styles.buttonGroup}>
             <Pressable
               onPress={async () => {
                 await Linking.openSettings();
               }}
-              className="h-12 items-center justify-center rounded-lg"
-              style={{ backgroundColor: theme.primary }}
+              style={[styles.button, { backgroundColor: theme.primary }]}
               accessibilityRole="button"
               accessibilityLabel={t('common.actions.openSettings')}
             >
-              <Text className="text-base font-semibold text-white">
-                {t('common.actions.openSettings')}
-              </Text>
+              <Text style={styles.buttonLabelWhite}>{t('common.actions.openSettings')}</Text>
             </Pressable>
             <Pressable
               onPress={onManualEntry}
-              className="h-12 items-center justify-center rounded-lg border"
-              style={{
-                borderColor: theme.border,
-                backgroundColor: theme.surface
-              }}
+              style={[
+                styles.buttonOutlined,
+                { borderColor: theme.border, backgroundColor: theme.surface }
+              ]}
               accessibilityRole="button"
               accessibilityLabel={t('addCard.scanner.manualEntryAccessibilityLabel')}
             >
-              <Text className="text-base font-semibold" style={{ color: theme.textPrimary }}>
+              <Text style={[styles.buttonLabel, { color: theme.textPrimary }]}>
                 {t('addCard.scanner.manualEntry')}
               </Text>
             </Pressable>
@@ -162,52 +150,42 @@ export function BarcodeScanner({ onScan, onManualEntry, onError }: BarcodeScanne
   // Show error state if camera error occurred
   if (error && !isReady) {
     return (
-      <SafeAreaView
-        className="flex-1 items-center justify-center px-6"
-        style={{ backgroundColor: theme.background }}
-      >
-        <View className="items-center">
+      <SafeAreaView style={[styles.centeredPadded, { backgroundColor: theme.background }]}>
+        <View style={styles.contentCenter}>
           <MaterialIcons
             name="error-outline"
             size={48}
             color={theme.error}
             style={{ marginBottom: 8 }}
           />
-          <Text
-            className="mb-1 text-center text-xl font-semibold"
-            style={{ color: theme.textPrimary }}
-          >
+          <Text style={[styles.title, { color: theme.textPrimary }]}>
             {t('addCard.scanner.cameraErrorTitle')}
           </Text>
-          <Text className="mb-6 text-center text-sm" style={{ color: theme.textSecondary }}>
+          <Text style={[styles.subtitle, { color: theme.textSecondary }]}>
             {error || t('addCard.scanner.cameraErrorFallback')}
           </Text>
-          <View className="w-full gap-3">
+          <View style={styles.buttonGroup}>
             <Pressable
               onPress={() => {
                 reset();
                 handleRequestPermission();
               }}
-              className="h-12 items-center justify-center rounded-lg"
-              style={{ backgroundColor: theme.primary }}
+              style={[styles.button, { backgroundColor: theme.primary }]}
               accessibilityRole="button"
               accessibilityLabel={t('common.actions.retry')}
             >
-              <Text className="text-base font-semibold text-white">
-                {t('common.actions.retry')}
-              </Text>
+              <Text style={styles.buttonLabelWhite}>{t('common.actions.retry')}</Text>
             </Pressable>
             <Pressable
               onPress={onManualEntry}
-              className="h-12 items-center justify-center rounded-lg border"
-              style={{
-                borderColor: theme.border,
-                backgroundColor: theme.surface
-              }}
+              style={[
+                styles.buttonOutlined,
+                { borderColor: theme.border, backgroundColor: theme.surface }
+              ]}
               accessibilityRole="button"
               accessibilityLabel={t('addCard.scanner.manualEntryAccessibilityLabel')}
             >
-              <Text className="text-base font-semibold" style={{ color: theme.textPrimary }}>
+              <Text style={[styles.buttonLabel, { color: theme.textPrimary }]}>
                 {t('addCard.scanner.manualEntry')}
               </Text>
             </Pressable>
@@ -219,8 +197,8 @@ export function BarcodeScanner({ onScan, onManualEntry, onError }: BarcodeScanne
 
   // Camera is ready - show viewfinder
   return (
-    <SafeAreaView className="flex-1" style={{ backgroundColor: '#000' }} edges={['top', 'bottom']}>
-      <View className="flex-1">
+    <SafeAreaView style={[styles.flex1, { backgroundColor: '#000' }]} edges={['top', 'bottom']}>
+      <View style={styles.flex1}>
         {/* Camera View - AC3 */}
         <CameraView
           style={StyleSheet.absoluteFill}
@@ -232,59 +210,146 @@ export function BarcodeScanner({ onScan, onManualEntry, onError }: BarcodeScanne
         />
 
         {/* Viewfinder Overlay - AC3 */}
-        <View className="flex-1 items-center justify-center">
+        <View style={styles.centered}>
           {/* Semi-transparent overlay around viewfinder */}
-          <View className="absolute inset-0" style={{ backgroundColor: 'rgba(0, 0, 0, 0.5)' }}>
+          <View style={styles.dimOverlay}>
             {/* Viewfinder cutout - 70% screen width, centered */}
-            <View
-              className="absolute left-1/2 top-1/2"
-              style={{
-                width: '70%',
-                aspectRatio: 1,
-                marginLeft: '-35%',
-                marginTop: '-35%',
-                borderWidth: 2,
-                borderColor: '#fff',
-                borderRadius: 16,
-                backgroundColor: 'transparent'
-              }}
-            />
+            <View style={styles.viewfinderCutout} />
           </View>
 
           {/* Instructional text - AC3 */}
-          <View className="absolute top-1/4 w-full px-6">
-            <Text
-              className="text-center text-base font-medium"
-              style={{
-                color: '#fff',
-                textShadowColor: 'rgba(0, 0, 0, 0.75)',
-                textShadowOffset: { width: 0, height: 1 },
-                textShadowRadius: 3
-              }}
-            >
-              {t('addCard.scanner.instruction')}
-            </Text>
+          <View style={styles.instructionWrap}>
+            <Text style={styles.instructionText}>{t('addCard.scanner.instruction')}</Text>
           </View>
         </View>
 
         {/* Manual Entry Button - AC1, AC7 */}
-        <View className="absolute bottom-0 left-0 right-0 px-6 pb-6" style={{ paddingBottom: 48 }}>
+        <View style={styles.bottomBar}>
           <Pressable
             onPress={onManualEntry}
-            className="h-12 items-center justify-center rounded-lg border-2"
-            style={{
-              borderColor: '#fff',
-              backgroundColor: 'rgba(255, 255, 255, 0.1)'
-            }}
+            style={styles.manualEntryButton}
             accessibilityRole="button"
             accessibilityLabel={t('addCard.scanner.manualEntryAccessibilityLabel')}
           >
-            <Text className="text-base font-semibold text-white">
-              {t('addCard.scanner.manualEntry')}
-            </Text>
+            <Text style={styles.buttonLabelWhite}>{t('addCard.scanner.manualEntry')}</Text>
           </Pressable>
         </View>
       </View>
     </SafeAreaView>
   );
 }
+
+const styles = StyleSheet.create({
+  flex1: {
+    flex: 1
+  },
+  centered: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center'
+  },
+  centeredPadded: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 48
+  },
+  contentCenter: {
+    alignItems: 'center'
+  },
+  title: {
+    marginBottom: 8,
+    textAlign: 'center',
+    fontSize: 20,
+    lineHeight: 28,
+    fontWeight: '600'
+  },
+  subtitle: {
+    marginBottom: 48,
+    textAlign: 'center',
+    fontSize: 14,
+    lineHeight: 20
+  },
+  buttonGroup: {
+    width: '100%',
+    gap: 24
+  },
+  button: {
+    height: 48,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: 8
+  },
+  buttonOutlined: {
+    height: 48,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: 8,
+    borderWidth: 1
+  },
+  buttonLabelWhite: {
+    fontSize: 16,
+    lineHeight: 24,
+    fontWeight: '600',
+    color: '#FFFFFF'
+  },
+  buttonLabel: {
+    fontSize: 16,
+    lineHeight: 24,
+    fontWeight: '600'
+  },
+  dimOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)'
+  },
+  viewfinderCutout: {
+    position: 'absolute',
+    left: '50%',
+    top: '50%',
+    width: '70%',
+    aspectRatio: 1,
+    marginLeft: '-35%',
+    marginTop: '-35%',
+    borderWidth: 2,
+    borderColor: '#fff',
+    borderRadius: 16,
+    backgroundColor: 'transparent'
+  },
+  instructionWrap: {
+    position: 'absolute',
+    top: '25%',
+    width: '100%',
+    paddingHorizontal: 48
+  },
+  instructionText: {
+    textAlign: 'center',
+    fontSize: 16,
+    lineHeight: 24,
+    fontWeight: '500',
+    color: '#fff',
+    textShadowColor: 'rgba(0, 0, 0, 0.75)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 3
+  },
+  bottomBar: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    paddingHorizontal: 48,
+    paddingBottom: 48
+  },
+  manualEntryButton: {
+    height: 48,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: 8,
+    borderWidth: 2,
+    borderColor: '#fff',
+    backgroundColor: 'rgba(255, 255, 255, 0.1)'
+  }
+});

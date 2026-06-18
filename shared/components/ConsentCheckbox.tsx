@@ -14,6 +14,7 @@ import { MaterialIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { Pressable, Text, View } from 'react-native';
+import { StyleSheet } from 'react-native-unistyles';
 
 import { useTheme } from '../theme';
 
@@ -52,7 +53,7 @@ const ConsentCheckbox = ({ checked, onToggle, onPolicyPress }: ConsentCheckboxPr
   };
 
   return (
-    <View testID="consent-checkbox" className="flex-row items-start gap-3">
+    <View testID="consent-checkbox" style={styles.row}>
       {/* Checkbox toggle */}
       <Pressable
         testID="consent-checkbox-toggle"
@@ -61,17 +62,19 @@ const ConsentCheckbox = ({ checked, onToggle, onPolicyPress }: ConsentCheckboxPr
         accessibilityLabel={t('auth.consent.checkboxLabel')}
         accessibilityState={{ checked }}
         accessibilityHint={t('auth.consent.checkboxHint')}
-        className="mt-0.5 h-6 w-6 items-center justify-center rounded border-2"
-        style={{
-          borderColor: checked ? theme.primary : theme.border,
-          backgroundColor: checked ? theme.primary : 'transparent'
-        }}
+        style={[
+          styles.checkbox,
+          {
+            borderColor: checked ? theme.primary : theme.border,
+            backgroundColor: checked ? theme.primary : 'transparent'
+          }
+        ]}
       >
         {checked && <MaterialIcons name="check" size={16} color="#FFFFFF" />}
       </Pressable>
 
       {/* Label */}
-      <Text className="flex-1 text-sm leading-5" style={{ color: theme.textPrimary }}>
+      <Text style={[styles.label, { color: theme.textPrimary }]}>
         {`${t('auth.consent.labelPrefix')} `}
         <Text
           testID="consent-policy-link"
@@ -86,5 +89,27 @@ const ConsentCheckbox = ({ checked, onToggle, onPolicyPress }: ConsentCheckboxPr
     </View>
   );
 };
+
+const styles = StyleSheet.create({
+  row: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 24
+  },
+  checkbox: {
+    marginTop: 4,
+    height: 48,
+    width: 48,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: 4,
+    borderWidth: 2
+  },
+  label: {
+    flex: 1,
+    fontSize: 14,
+    lineHeight: 20
+  }
+});
 
 export default ConsentCheckbox;

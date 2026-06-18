@@ -13,6 +13,7 @@ import { useRouter } from 'expo-router';
 import { useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ActivityIndicator, Pressable, ScrollView, Text, View } from 'react-native';
+import { StyleSheet } from 'react-native-unistyles';
 
 import { useAuthState } from '@/shared/supabase/useAuthState';
 import { useTheme } from '@/shared/theme';
@@ -102,8 +103,7 @@ const DataSummaryScreen = () => {
   return (
     <ScrollView
       testID="data-summary-screen"
-      className="flex-1 px-6 pb-8 pt-6"
-      style={{ backgroundColor: theme.background }}
+      style={[styles.scroll, { backgroundColor: theme.background }]}
       contentContainerStyle={{ paddingBottom: 40 }}
       accessibilityLabel={t('privacy.dataSummary.title')}
     >
@@ -111,27 +111,22 @@ const DataSummaryScreen = () => {
       <Text
         testID="data-summary-title"
         accessibilityRole="header"
-        className="mb-2 text-2xl font-bold"
-        style={{ color: theme.textPrimary }}
+        style={[styles.title, { color: theme.textPrimary }]}
       >
         {t('privacy.dataSummary.title')}
       </Text>
-      <Text className="mb-6 text-sm leading-5" style={{ color: theme.textSecondary }}>
+      <Text style={[styles.description, { color: theme.textSecondary }]}>
         {t('privacy.dataSummary.description')}
       </Text>
 
       {/* Data table */}
-      <View
-        testID="data-summary-table"
-        className="mb-6 overflow-hidden rounded-xl"
-        style={{ backgroundColor: theme.surface }}
-      >
+      <View testID="data-summary-table" style={[styles.table, { backgroundColor: theme.surface }]}>
         {/* Header row */}
-        <View className="flex-row border-b px-4 py-3" style={{ borderColor: theme.border }}>
-          <Text className="flex-1 text-sm font-semibold" style={{ color: theme.textPrimary }}>
+        <View style={[styles.headerRow, styles.borderBottom, { borderColor: theme.border }]}>
+          <Text style={[styles.headerCategory, { color: theme.textPrimary }]}>
             {t('privacy.dataSummary.table.categoryHeader')}
           </Text>
-          <Text className="flex-[2] text-sm font-semibold" style={{ color: theme.textPrimary }}>
+          <Text style={[styles.headerData, { color: theme.textPrimary }]}>
             {t('privacy.dataSummary.table.dataCollectedHeader')}
           </Text>
         </View>
@@ -141,18 +136,25 @@ const DataSummaryScreen = () => {
           <View
             key={row.id}
             testID={`data-row-${row.id.toLowerCase().replace(/\s/g, '-')}`}
-            className={`flex-row px-4 py-3 ${idx < DATA_ROWS.length - 1 ? 'border-b' : ''}`}
-            style={{ borderColor: theme.border }}
+            style={[
+              styles.dataRow,
+              idx < DATA_ROWS.length - 1 && styles.borderBottom,
+              { borderColor: theme.border }
+            ]}
           >
             <Text
-              className="flex-1 text-sm"
-              style={{ color: row.collected ? theme.textPrimary : theme.textSecondary }}
+              style={[
+                styles.cellCategory,
+                { color: row.collected ? theme.textPrimary : theme.textSecondary }
+              ]}
             >
               {t(row.categoryKey)}
             </Text>
             <Text
-              className="flex-[2] text-sm"
-              style={{ color: row.collected ? theme.textPrimary : theme.textSecondary }}
+              style={[
+                styles.cellData,
+                { color: row.collected ? theme.textPrimary : theme.textSecondary }
+              ]}
             >
               {t(row.detailKey)}
             </Text>
@@ -167,23 +169,96 @@ const DataSummaryScreen = () => {
         accessibilityLabel={t('privacy.dataSummary.downloadButtonA11yLabel')}
         accessibilityHint={t('privacy.dataSummary.downloadButtonA11yHint')}
         disabled
-        className="mb-4 items-center justify-center rounded-xl"
-        style={{
-          backgroundColor: theme.border,
-          height: 48,
-          opacity: 0.5
-        }}
+        style={[styles.downloadButton, { backgroundColor: theme.border }]}
       >
-        <Text className="text-sm font-semibold" style={{ color: theme.textSecondary }}>
+        <Text style={[styles.downloadLabel, { color: theme.textSecondary }]}>
           {t('privacy.dataSummary.downloadButton')}
         </Text>
       </Pressable>
 
-      <Text className="text-center text-xs" style={{ color: theme.textSecondary }}>
+      <Text style={[styles.footer, { color: theme.textSecondary }]}>
         {t('privacy.dataSummary.downloadFooter')}
       </Text>
     </ScrollView>
   );
 };
+
+const styles = StyleSheet.create({
+  scroll: {
+    flex: 1,
+    paddingHorizontal: 48,
+    paddingBottom: 64,
+    paddingTop: 48
+  },
+  title: {
+    marginBottom: 16,
+    fontSize: 24,
+    lineHeight: 32,
+    fontWeight: '700'
+  },
+  description: {
+    marginBottom: 48,
+    fontSize: 14,
+    lineHeight: 20
+  },
+  table: {
+    marginBottom: 48,
+    overflow: 'hidden',
+    borderRadius: 12
+  },
+  headerRow: {
+    flexDirection: 'row',
+    paddingHorizontal: 32,
+    paddingVertical: 24
+  },
+  borderBottom: {
+    borderBottomWidth: 1
+  },
+  headerCategory: {
+    flex: 1,
+    fontSize: 14,
+    lineHeight: 20,
+    fontWeight: '600'
+  },
+  headerData: {
+    flex: 2,
+    fontSize: 14,
+    lineHeight: 20,
+    fontWeight: '600'
+  },
+  dataRow: {
+    flexDirection: 'row',
+    paddingHorizontal: 32,
+    paddingVertical: 24
+  },
+  cellCategory: {
+    flex: 1,
+    fontSize: 14,
+    lineHeight: 20
+  },
+  cellData: {
+    flex: 2,
+    fontSize: 14,
+    lineHeight: 20
+  },
+  downloadButton: {
+    marginBottom: 32,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: 12,
+    height: 48,
+    opacity: 0.5
+  },
+  downloadLabel: {
+    fontSize: 14,
+    lineHeight: 20,
+    fontWeight: '600'
+  },
+  footer: {
+    textAlign: 'center',
+    fontSize: 12,
+    lineHeight: 16
+  }
+});
 
 export default DataSummaryScreen;

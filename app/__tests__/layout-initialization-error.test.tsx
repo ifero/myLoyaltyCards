@@ -1,8 +1,6 @@
 import { act, render, screen, waitFor } from '@testing-library/react-native';
 import React from 'react';
 
-jest.mock('../../global.css', () => ({}));
-
 import { changeAppLanguage } from '@/shared/i18n';
 
 import RootLayout from '../_layout';

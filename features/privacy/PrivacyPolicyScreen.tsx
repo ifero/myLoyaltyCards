@@ -10,6 +10,7 @@
 import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ScrollView, Text, View } from 'react-native';
+import { StyleSheet } from 'react-native-unistyles';
 
 import { useTheme } from '@/shared/theme';
 
@@ -43,16 +44,12 @@ const renderPolicyContent = (content: string, textColor: string, headingColor: s
 
     // Skip the title line (rendered separately) and blank lines
     if (idx === 0 || idx === 1) return null;
-    if (trimmed === '') return <View key={`sp-${idx}`} className="h-3" />;
+    if (trimmed === '') return <View key={`sp-${idx}`} style={styles.spacer} />;
 
     // Section headers → bold
     if (SECTION_HEADER_RE.test(trimmed)) {
       return (
-        <Text
-          key={`h-${idx}`}
-          className="mb-1 mt-4 text-base font-bold"
-          style={{ color: headingColor }}
-        >
+        <Text key={`h-${idx}`} style={[styles.sectionHeader, { color: headingColor }]}>
           {trimmed}
         </Text>
       );
@@ -61,7 +58,7 @@ const renderPolicyContent = (content: string, textColor: string, headingColor: s
     // Bullet points → slightly indented
     if (trimmed.startsWith('•')) {
       return (
-        <Text key={`b-${idx}`} className="mb-1 pl-4 text-sm leading-5" style={{ color: textColor }}>
+        <Text key={`b-${idx}`} style={[styles.bullet, { color: textColor }]}>
           {trimmed}
         </Text>
       );
@@ -69,7 +66,7 @@ const renderPolicyContent = (content: string, textColor: string, headingColor: s
 
     // Normal body text
     return (
-      <Text key={`t-${idx}`} className="mb-1 text-sm leading-5" style={{ color: textColor }}>
+      <Text key={`t-${idx}`} style={[styles.body, { color: textColor }]}>
         {trimmed}
       </Text>
     );
@@ -98,22 +95,17 @@ const PrivacyPolicyScreen = () => {
   return (
     <ScrollView
       testID="privacy-policy-screen"
-      className="flex-1 px-6 pb-8 pt-6"
-      style={{ backgroundColor: theme.background }}
+      style={[styles.scroll, { backgroundColor: theme.background }]}
       contentContainerStyle={{ paddingBottom: 40 }}
       accessibilityLabel={policyTitle}
     >
       {/* Title */}
-      <Text
-        accessibilityRole="header"
-        className="mb-1 text-2xl font-bold"
-        style={{ color: theme.textPrimary }}
-      >
+      <Text accessibilityRole="header" style={[styles.title, { color: theme.textPrimary }]}>
         {policyTitle}
       </Text>
 
       {/* Meta */}
-      <Text className="mb-6 text-xs" style={{ color: theme.textSecondary }}>
+      <Text style={[styles.meta, { color: theme.textSecondary }]}>
         {t('privacy.version', { version: PRIVACY_POLICY_VERSION })} · {policyLastUpdatedLabel}:{' '}
         {PRIVACY_POLICY_LAST_UPDATED}
       </Text>
@@ -123,5 +115,46 @@ const PrivacyPolicyScreen = () => {
     </ScrollView>
   );
 };
+
+const styles = StyleSheet.create({
+  spacer: {
+    height: 24
+  },
+  sectionHeader: {
+    marginBottom: 8,
+    marginTop: 32,
+    fontSize: 16,
+    lineHeight: 24,
+    fontWeight: '700'
+  },
+  bullet: {
+    marginBottom: 8,
+    paddingLeft: 32,
+    fontSize: 14,
+    lineHeight: 20
+  },
+  body: {
+    marginBottom: 8,
+    fontSize: 14,
+    lineHeight: 20
+  },
+  scroll: {
+    flex: 1,
+    paddingHorizontal: 48,
+    paddingBottom: 64,
+    paddingTop: 48
+  },
+  title: {
+    marginBottom: 8,
+    fontSize: 24,
+    lineHeight: 32,
+    fontWeight: '700'
+  },
+  meta: {
+    marginBottom: 48,
+    fontSize: 12,
+    lineHeight: 16
+  }
+});
 
 export default PrivacyPolicyScreen;

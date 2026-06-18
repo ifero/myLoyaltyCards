@@ -3,7 +3,7 @@
  * Story 1.2: Design System Foundation
  */
 
-export { SPACING, LAYOUT, TOUCH_TARGET, TAILWIND_SPACING, TAILWIND_TOUCH_TARGET } from './spacing';
+export { SPACING, LAYOUT, TOUCH_TARGET } from './spacing';
 export {
   PRIMARY_COLORS,
   CARD_COLORS,
@@ -13,12 +13,8 @@ export {
   LIGHT_THEME,
   DARK_THEME,
   SEMANTIC_COLORS,
-  BARCODE_FLASH,
-  TAILWIND_BACKGROUND_COLORS,
-  TAILWIND_SURFACE_COLORS,
-  TAILWIND_TEXT_COLORS,
-  TAILWIND_BORDER_COLORS
+  BARCODE_FLASH
 } from './colors';
-export { TYPOGRAPHY, TAILWIND_FONT_SIZE } from './typography';
+export { TYPOGRAPHY } from './typography';
 export type { Theme } from './colors';
 export { ThemeProvider, useTheme } from './ThemeProvider';

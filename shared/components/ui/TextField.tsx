@@ -8,9 +8,7 @@ import {
   View,
   ViewStyle
 } from 'react-native';
-
-import { useTheme } from '@/shared/theme';
-import { TOUCH_TARGET } from '@/shared/theme/spacing';
+import { StyleSheet, useUnistyles } from 'react-native-unistyles';
 
 type TextFieldProps = {
   label: string;
@@ -59,7 +57,7 @@ export const TextField = ({
   onSubmitEditing,
   containerStyle
 }: TextFieldProps) => {
-  const { theme } = useTheme();
+  const { theme } = useUnistyles();
   const [focused, setFocused] = useState(false);
 
   const state = useMemo(() => {
@@ -71,16 +69,18 @@ export const TextField = ({
   }, [disabled, error, focused, hasError, value.length]);
 
   const borderColor =
-    state === 'error' ? theme.error : state === 'focused' ? theme.primary : theme.border;
+    state === 'error'
+      ? theme.colors.error
+      : state === 'focused'
+        ? theme.colors.primary
+        : theme.colors.border;
 
   const hasAdornment = Boolean(rightAdornment);
 
   return (
-    <View className="w-full" style={containerStyle}>
-      <Text style={{ color: theme.textPrimary, fontSize: 13, fontWeight: '600', marginBottom: 6 }}>
-        {label}
-      </Text>
-      <View style={{ position: 'relative', justifyContent: 'center' }}>
+    <View style={[styles.container, containerStyle]}>
+      <Text style={styles.label}>{label}</Text>
+      <View style={styles.inputWrapper}>
         <TextInput
           testID={testID}
           value={value}
@@ -94,7 +94,7 @@ export const TextField = ({
             onBlur?.(event);
           }}
           placeholder={placeholder}
-          placeholderTextColor={theme.textTertiary}
+          placeholderTextColor={theme.colors.textTertiary}
           editable={!disabled}
           secureTextEntry={secureTextEntry}
           keyboardType={keyboardType}
@@ -106,33 +106,58 @@ export const TextField = ({
           accessibilityState={{ disabled }}
           returnKeyType={returnKeyType}
           onSubmitEditing={onSubmitEditing}
-          style={{
-            minHeight: TOUCH_TARGET.min,
-            borderRadius: 12,
-            borderWidth: 1,
-            borderColor,
-            backgroundColor: disabled ? theme.backgroundSubtle : theme.surfaceElevated,
-            color: theme.textPrimary,
-            paddingHorizontal: 12,
-            paddingRight: hasAdornment ? 52 : 12,
-            fontSize: 16
-          }}
+          style={[
+            styles.input,
+            {
+              borderColor,
+              backgroundColor: disabled
+                ? theme.colors.backgroundSubtle
+                : theme.colors.surfaceElevated,
+              paddingRight: hasAdornment ? 52 : 12
+            }
+          ]}
         />
-        {hasAdornment ? (
-          <View style={{ position: 'absolute', right: 8, alignSelf: 'center' }}>
-            {rightAdornment}
-          </View>
-        ) : null}
+        {hasAdornment ? <View style={styles.adornment}>{rightAdornment}</View> : null}
       </View>
       {error ? (
-        <Text
-          testID={`${testID}-error`}
-          accessibilityLiveRegion="polite"
-          style={{ color: theme.error, fontSize: 12, marginTop: 4 }}
-        >
+        <Text testID={`${testID}-error`} accessibilityLiveRegion="polite" style={styles.error}>
           {error}
         </Text>
       ) : null}
     </View>
   );
 };
+
+const styles = StyleSheet.create((theme) => ({
+  container: {
+    width: '100%'
+  },
+  label: {
+    color: theme.colors.textPrimary,
+    fontSize: 13,
+    fontWeight: '600',
+    marginBottom: 6
+  },
+  inputWrapper: {
+    position: 'relative',
+    justifyContent: 'center'
+  },
+  input: {
+    minHeight: theme.touchTarget.min,
+    borderRadius: 12,
+    borderWidth: 1,
+    color: theme.colors.textPrimary,
+    paddingHorizontal: 12,
+    fontSize: 16
+  },
+  adornment: {
+    position: 'absolute',
+    right: 8,
+    alignSelf: 'center'
+  },
+  error: {
+    color: theme.colors.error,
+    fontSize: 12,
+    marginTop: 4
+  }
+}));

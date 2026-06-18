@@ -1,4 +1,5 @@
 import { render, screen } from '@testing-library/react-native';
+import { StyleSheet } from 'react-native';
 
 import { ConflictComparisonCard } from './ConflictComparisonCard';
 
@@ -113,6 +114,6 @@ describe('ConflictComparisonCard (dark mode)', () => {
     );
 
     const card = screen.getByTestId('card');
-    expect(card.props.style.backgroundColor).toBe('#2C2C2E');
+    expect(StyleSheet.flatten(card.props.style).backgroundColor).toBe('#2C2C2E');
   });
 });

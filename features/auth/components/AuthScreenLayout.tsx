@@ -9,6 +9,7 @@ import {
   ViewStyle
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { StyleSheet } from 'react-native-unistyles';
 
 import { useTheme } from '@/shared/theme';
 
@@ -45,8 +46,7 @@ export const AuthScreenLayout = ({
   return (
     <KeyboardAvoidingView
       testID={testID}
-      className="flex-1"
-      style={{ backgroundColor: theme.background }}
+      style={[styles.flex1, { backgroundColor: theme.background }]}
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
     >
       <ScrollView
@@ -110,3 +110,9 @@ export const AuthScreenLayout = ({
     </KeyboardAvoidingView>
   );
 };
+
+const styles = StyleSheet.create({
+  flex1: {
+    flex: 1
+  }
+});

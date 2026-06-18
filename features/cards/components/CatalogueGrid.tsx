@@ -9,7 +9,8 @@
 import { FlashList } from '@shopify/flash-list';
 import { useRouter } from 'expo-router';
 import React, { useMemo } from 'react';
-import { View, Text, Pressable, useWindowDimensions, StyleSheet } from 'react-native';
+import { View, Text, Pressable, useWindowDimensions } from 'react-native';
+import { StyleSheet } from 'react-native-unistyles';
 
 import { useTheme } from '@/shared/theme';
 import { SPACING } from '@/shared/theme/spacing';
@@ -43,14 +44,16 @@ const BrandCard: React.FC<{
       testID={testID}
       accessibilityRole="button"
       accessibilityLabel={`${brand.name} brand`}
-      className="m-2 flex-1"
+      style={styles.brandCard}
     >
       <View
-        className="items-center justify-center rounded-lg p-4"
-        style={{
-          backgroundColor: brand.color + '15',
-          aspectRatio: '1/1'
-        }}
+        style={[
+          styles.brandCardInner,
+          {
+            backgroundColor: brand.color + '15',
+            aspectRatio: '1/1'
+          }
+        ]}
       >
         {/* Brand Logo */}
         <View
@@ -71,11 +74,7 @@ const BrandCard: React.FC<{
         </View>
 
         {/* Brand Name */}
-        <Text
-          className="text-center text-sm font-medium"
-          style={{ color: theme.textPrimary }}
-          numberOfLines={2}
-        >
+        <Text style={[styles.brandName, { color: theme.textPrimary }]} numberOfLines={2}>
           {brand.name}
         </Text>
       </View>
@@ -128,7 +127,7 @@ export function CatalogueGrid() {
   );
 
   return (
-    <View className="flex-1" style={{ backgroundColor: theme.background }} testID="catalogue-grid">
+    <View style={[styles.container, { backgroundColor: theme.background }]} testID="catalogue-grid">
       <FlashList
         data={brands as readonly CatalogueBrand[]}
         renderItem={renderItem}
@@ -145,5 +144,24 @@ export function CatalogueGrid() {
 const styles = StyleSheet.create({
   listContent: {
     paddingBottom: SPACING.lg
+  },
+  container: {
+    flex: 1
+  },
+  brandCard: {
+    margin: 16,
+    flex: 1
+  },
+  brandCardInner: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: 8,
+    padding: 32
+  },
+  brandName: {
+    textAlign: 'center',
+    fontSize: 14,
+    lineHeight: 20,
+    fontWeight: '500'
   }
 });

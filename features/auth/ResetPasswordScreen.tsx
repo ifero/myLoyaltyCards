@@ -2,6 +2,7 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ActivityIndicator, Text, View } from 'react-native';
+import { StyleSheet } from 'react-native-unistyles';
 
 import { isValidPassword } from '@/core/auth/validation';
 import { getInitialURL } from '@/core/utils/get-initial-url';
@@ -239,7 +240,7 @@ const ResetPasswordScreen = () => {
         heading={t('auth.resetPassword.errorHeading')}
         showAppIcon={false}
       >
-        <View className="w-full" style={{ gap: spacing.md }}>
+        <View style={[styles.formGroup, { gap: spacing.md }]}>
           <Text style={{ color: theme.textSecondary, textAlign: 'center' }}>{sessionError}</Text>
           <Button
             testID="request-new-link-button"
@@ -259,8 +260,7 @@ const ResetPasswordScreen = () => {
     return (
       <View
         testID="reset-password-loading"
-        className="flex-1 items-center justify-center"
-        style={{ backgroundColor: theme.background }}
+        style={[styles.loading, { backgroundColor: theme.background }]}
       >
         <ActivityIndicator testID="session-loading-indicator" size="large" color={theme.primary} />
         <Text style={{ color: theme.textSecondary, marginTop: 16 }}>
@@ -292,7 +292,7 @@ const ResetPasswordScreen = () => {
       subtitle={t('auth.resetPassword.subtitle')}
       subtitleTestID="reset-password-subtitle"
     >
-      <View className="w-full" style={{ gap: spacing.md }}>
+      <View style={[styles.formGroup, { gap: spacing.md }]}>
         <ErrorBanner message={error} testID="server-error" />
 
         <View>
@@ -355,5 +355,16 @@ const ResetPasswordScreen = () => {
     </AuthScreenLayout>
   );
 };
+
+const styles = StyleSheet.create({
+  formGroup: {
+    width: '100%'
+  },
+  loading: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center'
+  }
+});
 
 export default ResetPasswordScreen;

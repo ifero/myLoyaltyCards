@@ -3,6 +3,7 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Pressable, Text, TextInput, View } from 'react-native';
+import { StyleSheet } from 'react-native-unistyles';
 
 import { isValidEmail } from '@/core/auth/validation';
 
@@ -51,15 +52,17 @@ const StatusNotice = ({ message, tone, boxed = false }: StatusNoticeProps) => {
 
   return (
     <View
-      className={boxed ? 'w-full flex-row items-start rounded-xl' : 'w-full flex-row items-center'}
-      style={{
-        justifyContent: boxed ? 'flex-start' : 'center',
-        backgroundColor: boxed ? `${color}14` : 'transparent',
-        paddingHorizontal: boxed ? spacing.md : 0,
-        paddingVertical: boxed ? spacing.sm : 0,
-        marginTop: spacing.sm,
-        minHeight: boxed ? undefined : spacing.lg
-      }}
+      style={[
+        boxed ? styles.noticeBoxed : styles.noticePlain,
+        {
+          justifyContent: boxed ? 'flex-start' : 'center',
+          backgroundColor: boxed ? `${color}14` : 'transparent',
+          paddingHorizontal: boxed ? spacing.md : 0,
+          paddingVertical: boxed ? spacing.sm : 0,
+          marginTop: spacing.sm,
+          minHeight: boxed ? undefined : spacing.lg
+        }
+      ]}
     >
       <MaterialIcons name={iconName} size={18} color={color} />
       <Text
@@ -283,7 +286,7 @@ const VerifyEmailScreen = () => {
       headingTestID="verify-email-title"
       subtitleTestID="verify-email-subtitle"
     >
-      <View className="w-full" style={{ gap: spacing.md }}>
+      <View style={[styles.formGroup, { gap: spacing.md }]}>
         <TextInput
           ref={inputRef}
           testID="otp-input"
@@ -385,5 +388,22 @@ const VerifyEmailScreen = () => {
     </AuthScreenLayout>
   );
 };
+
+const styles = StyleSheet.create({
+  formGroup: {
+    width: '100%'
+  },
+  noticeBoxed: {
+    width: '100%',
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    borderRadius: 12
+  },
+  noticePlain: {
+    width: '100%',
+    flexDirection: 'row',
+    alignItems: 'center'
+  }
+});
 
 export default VerifyEmailScreen;

@@ -7,7 +7,7 @@ import catalogueData from '../../catalogue/italy.json';
 
 /**
  * Card color type - matches core/schemas/card.ts CardColor
- * Duplicated here to avoid circular dependency with Tailwind config
+ * Duplicated here to keep this token module dependency-free.
  */
 type CardColor = 'blue' | 'red' | 'green' | 'orange' | 'grey';
 
@@ -125,52 +125,4 @@ export const SEMANTIC_COLORS = {
 export const BARCODE_FLASH = {
   background: '#FFFFFF',
   foreground: '#000000'
-} as const;
-
-/**
- * Tailwind-compatible background colors for theming
- * Used in tailwind.config.js to avoid duplication
- */
-export const TAILWIND_BACKGROUND_COLORS = {
-  light: LIGHT_THEME.background,
-  dark: DARK_THEME.background,
-  subtleLight: LIGHT_THEME.backgroundSubtle,
-  subtleDark: DARK_THEME.backgroundSubtle
-} as const;
-
-/**
- * Tailwind-compatible surface colors for theming
- * Used in tailwind.config.js to avoid duplication
- */
-export const TAILWIND_SURFACE_COLORS = {
-  light: LIGHT_THEME.surface,
-  dark: DARK_THEME.surface,
-  elevatedLight: LIGHT_THEME.surfaceElevated,
-  elevatedDark: DARK_THEME.surfaceElevated
-} as const;
-
-/**
- * Tailwind-compatible text colors for theming
- * Used in tailwind.config.js to avoid duplication
- */
-export const TAILWIND_TEXT_COLORS = {
-  primary: {
-    light: LIGHT_THEME.textPrimary,
-    dark: DARK_THEME.textPrimary
-  },
-  secondary: {
-    light: LIGHT_THEME.textSecondary,
-    dark: DARK_THEME.textSecondary
-  },
-  tertiary: {
-    light: LIGHT_THEME.textTertiary,
-    dark: DARK_THEME.textTertiary
-  }
-} as const;
-
-export const TAILWIND_BORDER_COLORS = {
-  light: LIGHT_THEME.border,
-  dark: DARK_THEME.border,
-  strongLight: LIGHT_THEME.borderStrong,
-  strongDark: DARK_THEME.borderStrong
 } as const;
