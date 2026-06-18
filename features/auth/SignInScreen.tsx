@@ -2,6 +2,7 @@ import { useRouter } from 'expo-router';
 import { useCallback, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Pressable, Text, View } from 'react-native';
+import { StyleSheet } from 'react-native-unistyles';
 
 import { isValidEmail } from '@/core/auth/validation';
 
@@ -105,7 +106,7 @@ const SignInScreen = () => {
       headingTestID="sign-in-title"
       subtitleTestID="sign-in-subtitle"
     >
-      <View className="w-full" style={{ gap: spacing.md }}>
+      <View style={[styles.formGroup, { gap: spacing.md }]}>
         <ErrorBanner message={error} testID="server-error" />
 
         <TextField
@@ -191,5 +192,11 @@ const SignInScreen = () => {
     </AuthScreenLayout>
   );
 };
+
+const styles = StyleSheet.create({
+  formGroup: {
+    width: '100%'
+  }
+});
 
 export default SignInScreen;

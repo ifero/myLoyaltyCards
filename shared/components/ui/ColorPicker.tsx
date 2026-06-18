@@ -1,6 +1,7 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { Pressable, View } from 'react-native';
+import { StyleSheet } from 'react-native-unistyles';
 
 import { CARD_COLORS, useTheme } from '@/shared/theme';
 import { TOUCH_TARGET } from '@/shared/theme/spacing';
@@ -27,7 +28,7 @@ export const ColorPicker = ({ value, onChange, testID }: ColorPickerProps) => {
   };
 
   return (
-    <View testID={testID} className="flex-row items-center gap-3">
+    <View testID={testID} style={styles.row}>
       {palette.map((color) => {
         const selected = color === value;
 
@@ -66,3 +67,11 @@ export const ColorPicker = ({ value, onChange, testID }: ColorPickerProps) => {
     </View>
   );
 };
+
+const styles = StyleSheet.create({
+  row: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 24
+  }
+});

@@ -1,23 +1,21 @@
 import { fireEvent, render } from '@testing-library/react-native';
 import React from 'react';
 import { Text } from 'react-native';
+import { UnistylesRuntime } from 'react-native-unistyles';
 
+import { DARK_THEME, LIGHT_THEME } from './colors';
 import { ThemeProvider, useTheme } from './ThemeProvider';
 
 const mockUseColorScheme = jest.fn();
 const mockGetThemePreference = jest.fn();
 const mockSetThemePreference = jest.fn();
 
-const getNativeWindMock = () =>
-  (
-    globalThis as typeof globalThis & {
-      __nativeWindMock: {
-        colorScheme: 'light' | 'dark' | 'system';
-        setColorScheme: jest.Mock;
-        toggleColorScheme: jest.Mock;
-      };
-    }
-  ).__nativeWindMock;
+// Spy on the Unistyles engine theme setter (mocked via react-native-unistyles/mocks).
+// ThemeProvider drives the engine theme through UnistylesRuntime.setTheme.
+// NOTE: declared at module scope and reset via clearAllMocks (NOT restoreAllMocks)
+// in beforeEach/afterEach — restoring would destroy the spy and make assertions
+// pass vacuously. Keep clearAllMocks here intentionally.
+const setThemeSpy = jest.spyOn(UnistylesRuntime, 'setTheme');
 
 jest.mock('react-native/Libraries/Utilities/useColorScheme', () => ({
   __esModule: true,
@@ -50,7 +48,6 @@ const Probe = () => {
 describe('ThemeProvider', () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    getNativeWindMock().colorScheme = 'light';
     mockUseColorScheme.mockReturnValue('light');
     mockGetThemePreference.mockReturnValue('system');
   });
@@ -67,7 +64,9 @@ describe('ThemeProvider', () => {
 
     expect(getByTestId('theme-preference').props.children).toBe('system');
     expect(getByTestId('color-scheme').props.children).toBe('dark');
-    expect(getNativeWindMock().setColorScheme).toHaveBeenCalledWith('dark');
+    expect(setThemeSpy).toHaveBeenCalledWith('dark');
+    // The context `theme` object itself flips to the dark token set.
+    expect(getByTestId('theme-primary').props.children).toBe(DARK_THEME.primary);
   });
 
   it('reacts to OS appearance changes while using the system preference', () => {
@@ -88,7 +87,7 @@ describe('ThemeProvider', () => {
     );
 
     expect(getByTestId('color-scheme').props.children).toBe('dark');
-    expect(getNativeWindMock().setColorScheme).toHaveBeenLastCalledWith('dark');
+    expect(setThemeSpy).toHaveBeenLastCalledWith('dark');
   });
 
   it('overrides system when stored preference is light', () => {
@@ -103,10 +102,12 @@ describe('ThemeProvider', () => {
 
     expect(getByTestId('theme-preference').props.children).toBe('light');
     expect(getByTestId('color-scheme').props.children).toBe('light');
-    expect(getNativeWindMock().setColorScheme).toHaveBeenCalledWith('light');
+    expect(setThemeSpy).toHaveBeenCalledWith('light');
+    // The context `theme` object resolves to the light token set.
+    expect(getByTestId('theme-primary').props.children).toBe(LIGHT_THEME.primary);
   });
 
-  it('persists updates and syncs NativeWind when changing preference', () => {
+  it('persists updates and syncs the Unistyles engine when changing preference', () => {
     const { getByTestId } = render(
       <ThemeProvider>
         <Probe />
@@ -115,10 +116,10 @@ describe('ThemeProvider', () => {
 
     fireEvent.press(getByTestId('set-dark'));
     expect(mockSetThemePreference).toHaveBeenCalledWith('dark');
-    expect(getNativeWindMock().setColorScheme).toHaveBeenLastCalledWith('dark');
+    expect(setThemeSpy).toHaveBeenLastCalledWith('dark');
 
     fireEvent.press(getByTestId('set-system'));
     expect(mockSetThemePreference).toHaveBeenCalledWith('system');
-    expect(getNativeWindMock().setColorScheme).toHaveBeenLastCalledWith('light');
+    expect(setThemeSpy).toHaveBeenLastCalledWith('light');
   });
 });

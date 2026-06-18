@@ -1,6 +1,6 @@
-import { useColorScheme as useNativeWindColorScheme } from 'nativewind';
 import React, { createContext, useContext, useLayoutEffect, useMemo, type ReactNode } from 'react';
 import { useColorScheme } from 'react-native';
+import { UnistylesRuntime } from 'react-native-unistyles';
 
 import {
   getThemePreference,
@@ -47,7 +47,6 @@ interface ThemeProviderProps {
  */
 export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
   const systemColorScheme = useColorScheme();
-  const { setColorScheme } = useNativeWindColorScheme();
   const [themePreference, setThemePreferenceState] = React.useState<ThemePreference>(() =>
     getThemePreference()
   );
@@ -65,9 +64,12 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
       : themePreference;
   const isDark = resolvedScheme === 'dark';
 
+  // Drive the Unistyles engine theme from the resolved scheme. Adaptive themes
+  // are OFF (see shared/theme/unistyles.ts), so the in-app ThemePickerSheet and
+  // system preference both flow through here — preserving Story 13-10 behaviour.
   useLayoutEffect(() => {
-    setColorScheme(resolvedScheme);
-  }, [resolvedScheme, setColorScheme]);
+    UnistylesRuntime.setTheme(resolvedScheme);
+  }, [resolvedScheme]);
 
   const value = useMemo<ThemeContextType>(() => {
     return {
@@ -93,6 +95,17 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
  * - theme: The current theme object (LIGHT_THEME or DARK_THEME)
  * - isDark: Boolean indicating if dark mode is active
  * - colorScheme: 'light' or 'dark' string
+ *
+ * Theme consumption is intentionally HYBRID after the Unistyles migration
+ * (Story 16.1), and both paths are fed by the SAME `shared/theme` tokens and
+ * the SAME resolved scheme (this provider calls `UnistylesRuntime.setTheme`):
+ * - `useTheme().theme.<token>` — the React context object (this hook). Used by
+ *   the app's inline dynamic styles; the flat token shape (`theme.textPrimary`).
+ * - `useUnistyles().theme.colors.<token>` — the Unistyles engine theme, used
+ *   inside `StyleSheet.create((theme) => …)`; nested shape (`theme.colors.*`).
+ * They never diverge because both derive from `shared/theme`. Prefer the
+ * Unistyles path for new styling; this context remains the canonical selector
+ * for theme preference (`useThemePreference`) and `isDark`/`colorScheme`.
  *
  * @throws Error if used outside of ThemeProvider
  */

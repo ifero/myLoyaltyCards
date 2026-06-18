@@ -2,6 +2,7 @@ import { MaterialIcons } from '@expo/vector-icons';
 import React from 'react';
 import { ActivityIndicator } from 'react-native';
 import { Pressable, Text, View } from 'react-native';
+import { StyleSheet } from 'react-native-unistyles';
 
 import { useTheme } from '@/shared/theme';
 import { TOUCH_TARGET } from '@/shared/theme/spacing';
@@ -105,7 +106,7 @@ export const ActionRow = ({
               ) : null}
             </View>
 
-            <View className="flex-row items-center gap-2" style={{ marginLeft: 12, flexShrink: 0 }}>
+            <View style={styles.trailing}>
               {value ? (
                 <Text numberOfLines={1} style={{ color: theme.textSecondary, fontSize: 14 }}>
                   {value}
@@ -128,3 +129,13 @@ export const ActionRow = ({
     </Pressable>
   );
 };
+
+const styles = StyleSheet.create({
+  trailing: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 16,
+    marginLeft: 12,
+    flexShrink: 0
+  }
+});

@@ -1,6 +1,7 @@
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import React from 'react';
 import { View } from 'react-native';
+import { StyleSheet } from 'react-native-unistyles';
 
 import { useTheme } from '@/shared/theme';
 
@@ -10,8 +11,7 @@ export const AppIconHeader = () => {
   return (
     <View
       testID="auth-app-icon-circle"
-      className="mb-6 h-20 w-20 items-center justify-center self-center rounded-full"
-      style={{ backgroundColor: `${theme.primary}1A` }}
+      style={[styles.circle, { backgroundColor: `${theme.primary}1A` }]}
     >
       <MaterialCommunityIcons
         testID="auth-app-icon"
@@ -22,3 +22,15 @@ export const AppIconHeader = () => {
     </View>
   );
 };
+
+const styles = StyleSheet.create({
+  circle: {
+    marginBottom: 48,
+    height: 80,
+    width: 80,
+    alignItems: 'center',
+    justifyContent: 'center',
+    alignSelf: 'center',
+    borderRadius: 9999
+  }
+});

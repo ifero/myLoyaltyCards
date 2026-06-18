@@ -1,4 +1,5 @@
 import { fireEvent, render, screen } from '@testing-library/react-native';
+import { StyleSheet } from 'react-native';
 
 import { SyncErrorBanner } from './SyncErrorBanner';
 
@@ -104,7 +105,7 @@ describe('SyncErrorBanner (dark mode)', () => {
     render(<SyncErrorBanner message="Error" onRetry={jest.fn()} onDismiss={jest.fn()} />);
 
     const banner = screen.getByTestId('sync-error-banner');
-    expect(banner.props.style.backgroundColor).toBe('#461E22');
-    expect(banner.props.style.borderColor).toBe('#FF453A');
+    expect(StyleSheet.flatten(banner.props.style).backgroundColor).toBe('#461E22');
+    expect(StyleSheet.flatten(banner.props.style).borderColor).toBe('#FF453A');
   });
 });

@@ -9,6 +9,7 @@
 import { MaterialIcons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
 import { Platform, Text, View } from 'react-native';
+import { StyleSheet } from 'react-native-unistyles';
 
 import { useTheme } from '@/shared/theme';
 import { SYNC_TOKENS } from '@/shared/theme/sync-tokens';
@@ -47,22 +48,19 @@ export const ConflictComparisonCard = ({
         barcodeTail: data.barcodeTail,
         updatedAt: data.updatedAt
       })}
-      className="flex-1 rounded-xl p-3"
-      style={{ backgroundColor: cardBg }}
+      style={[styles.card, { backgroundColor: cardBg }]}
     >
       {/* Header: icon + label */}
-      <View className="mb-2 flex-row items-center">
+      <View style={styles.header}>
         <MaterialIcons testID={`${testID}-icon`} name={icon} size={16} color={theme.primary} />
         <Text
           testID={`${testID}-label`}
-          className="ml-1.5"
-          style={{
-            color: labelColor,
-            fontSize: 11,
-            fontWeight: '600',
-            textTransform: 'uppercase',
-            letterSpacing: 0.5
-          }}
+          style={[
+            styles.headerLabel,
+            {
+              color: labelColor
+            }
+          ]}
         >
           {label}
         </Text>
@@ -84,7 +82,7 @@ export const ConflictComparisonCard = ({
 
       {/* Points/Balance */}
       {data.points != null && (
-        <View className="mb-1 flex-row items-center">
+        <View style={styles.fieldRow}>
           <Text testID={`${testID}-points-label`} style={{ color: labelColor, fontSize: 11 }}>
             {`${t('syncUi.conflict.comparisonCard.pointsLabel')} `}
           </Text>
@@ -102,7 +100,7 @@ export const ConflictComparisonCard = ({
       )}
 
       {/* Barcode tail */}
-      <View className="mb-1 flex-row items-center">
+      <View style={styles.fieldRow}>
         <Text testID={`${testID}-barcode-label`} style={{ color: labelColor, fontSize: 11 }}>
           {`${t('syncUi.conflict.comparisonCard.barcodeLabel')} `}
         </Text>
@@ -133,3 +131,28 @@ export const ConflictComparisonCard = ({
     </View>
   );
 };
+
+const styles = StyleSheet.create({
+  card: {
+    flex: 1,
+    borderRadius: 12,
+    padding: 24
+  },
+  header: {
+    marginBottom: 16,
+    flexDirection: 'row',
+    alignItems: 'center'
+  },
+  headerLabel: {
+    marginLeft: 12,
+    fontSize: 11,
+    fontWeight: '600',
+    textTransform: 'uppercase',
+    letterSpacing: 0.5
+  },
+  fieldRow: {
+    marginBottom: 8,
+    flexDirection: 'row',
+    alignItems: 'center'
+  }
+});

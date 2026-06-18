@@ -1,6 +1,7 @@
 import { MaterialIcons } from '@expo/vector-icons';
 import React from 'react';
 import { Text, View } from 'react-native';
+import { StyleSheet } from 'react-native-unistyles';
 
 import { useTheme } from '@/shared/theme';
 
@@ -21,13 +22,15 @@ export const ErrorBanner = ({ message, testID = 'auth-error-banner' }: ErrorBann
       testID={testID}
       accessibilityRole="alert"
       accessibilityLiveRegion="polite"
-      className="w-full flex-row items-center rounded-xl"
-      style={{
-        backgroundColor: `${theme.error}14`,
-        paddingHorizontal: spacing.md,
-        paddingVertical: spacing.sm,
-        marginBottom: spacing.md
-      }}
+      style={[
+        styles.banner,
+        {
+          backgroundColor: `${theme.error}14`,
+          paddingHorizontal: spacing.md,
+          paddingVertical: spacing.sm,
+          marginBottom: spacing.md
+        }
+      ]}
     >
       <MaterialIcons name="error-outline" size={18} color={theme.error} />
       <Text
@@ -44,3 +47,12 @@ export const ErrorBanner = ({ message, testID = 'auth-error-banner' }: ErrorBann
     </View>
   );
 };
+
+const styles = StyleSheet.create({
+  banner: {
+    width: '100%',
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderRadius: 12
+  }
+});

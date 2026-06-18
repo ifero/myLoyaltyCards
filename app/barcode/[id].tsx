@@ -15,6 +15,7 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ActivityIndicator, Text, View } from 'react-native';
+import { StyleSheet } from 'react-native-unistyles';
 
 import { getCardById } from '@/core/database';
 import type { LoyaltyCard } from '@/core/schemas';
@@ -71,7 +72,7 @@ export default function BarcodeFlashScreen() {
   // Loading state
   if (isLoading) {
     return (
-      <View className="flex-1 items-center justify-center bg-white">
+      <View style={styles.loadingView}>
         <ActivityIndicator size="large" color="#000000" />
       </View>
     );
@@ -80,11 +81,9 @@ export default function BarcodeFlashScreen() {
   // Error state
   if (error || !card) {
     return (
-      <View className="flex-1 items-center justify-center bg-white p-4">
-        <Text className="text-center text-lg font-semibold text-red-500">
-          {error || t('cards.details.notFound')}
-        </Text>
-        <Text className="mt-4 text-center text-base text-gray-600" onPress={handleDismiss}>
+      <View style={styles.errorView}>
+        <Text style={styles.errorText}>{error || t('cards.details.notFound')}</Text>
+        <Text style={styles.dismissText} onPress={handleDismiss}>
           {t('auth.verifyEmail.goBack')}
         </Text>
       </View>
@@ -93,3 +92,33 @@ export default function BarcodeFlashScreen() {
 
   return <BarcodeFlash card={card} onDismiss={handleDismiss} />;
 }
+
+const styles = StyleSheet.create({
+  loadingView: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#FFFFFF'
+  },
+  errorView: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#FFFFFF',
+    padding: 32
+  },
+  errorText: {
+    textAlign: 'center',
+    fontSize: 18,
+    lineHeight: 28,
+    fontWeight: '600',
+    color: '#EF4444'
+  },
+  dismissText: {
+    marginTop: 32,
+    textAlign: 'center',
+    fontSize: 16,
+    lineHeight: 24,
+    color: '#4B5563'
+  }
+});

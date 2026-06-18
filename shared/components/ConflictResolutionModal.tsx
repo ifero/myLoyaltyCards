@@ -10,6 +10,7 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Modal, Pressable, ScrollView, Text, View } from 'react-native';
+import { StyleSheet } from 'react-native-unistyles';
 
 import { Button } from '@/shared/components/ui/Button';
 import { useTheme } from '@/shared/theme';
@@ -38,7 +39,7 @@ const KeepBothButton = ({
   const [pressed, setPressed] = useState(false);
 
   return (
-    <View className="rounded-xl px-3 py-0.5" style={{ backgroundColor: `${tintColor}18` }}>
+    <View style={[styles.keepBothContainer, { backgroundColor: `${tintColor}18` }]}>
       <Pressable
         testID={testID}
         onPress={onPress}
@@ -47,11 +48,7 @@ const KeepBothButton = ({
         accessibilityRole="button"
         accessibilityLabel={accessibilityLabel}
         accessibilityHint={accessibilityHint}
-        className="items-center justify-center rounded-xl"
-        style={{
-          minHeight: TOUCH_TARGET.min,
-          opacity: pressed ? 0.7 : 1
-        }}
+        style={[styles.keepBothPressable, { opacity: pressed ? 0.7 : 1 }]}
       >
         <Text style={{ color: tintColor, fontWeight: '600', fontSize: 16 }}>{label}</Text>
       </Pressable>
@@ -101,15 +98,13 @@ export const ConflictResolutionModal = ({
     >
       <View
         testID="conflict-modal-overlay"
-        className="flex-1 justify-end"
-        style={{ backgroundColor: overlayBg }}
+        style={[styles.overlay, { backgroundColor: overlayBg }]}
       >
         <View
           testID="conflict-modal-content"
           accessibilityViewIsModal
           accessibilityLabel={t('syncUi.conflict.modal.accessibilityLabel')}
-          className="mx-4 mb-8 rounded-2xl px-5 pb-5 pt-6"
-          style={{ backgroundColor: modalBg, maxHeight: '85%' }}
+          style={[styles.content, { backgroundColor: modalBg }]}
         >
           <ScrollView showsVerticalScrollIndicator={false} bounces={false}>
             {/* Title */}
@@ -141,7 +136,7 @@ export const ConflictResolutionModal = ({
             </Text>
 
             {/* Comparison cards — side by side */}
-            <View className="mb-5 flex-row" style={{ gap: 10 }}>
+            <View style={styles.comparisonRow}>
               <ConflictComparisonCard
                 testID="conflict-local-card"
                 label={t('syncUi.conflict.modal.localLabel')}
@@ -197,11 +192,7 @@ export const ConflictResolutionModal = ({
               accessibilityRole="button"
               accessibilityLabel={t('syncUi.conflict.modal.decideLaterA11yLabel')}
               accessibilityHint={t('syncUi.conflict.modal.decideLaterA11yHint')}
-              className="mt-4 items-center justify-center self-center"
-              style={{
-                minHeight: TOUCH_TARGET.min,
-                opacity: pressedDecideLater ? 0.6 : 1
-              }}
+              style={[styles.decideLater, { opacity: pressedDecideLater ? 0.6 : 1 }]}
             >
               <Text
                 testID="conflict-decide-later-text"
@@ -220,3 +211,42 @@ export const ConflictResolutionModal = ({
     </Modal>
   );
 };
+
+const styles = StyleSheet.create({
+  keepBothContainer: {
+    borderRadius: 12,
+    paddingHorizontal: 24,
+    paddingVertical: 4
+  },
+  keepBothPressable: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: 12,
+    minHeight: TOUCH_TARGET.min
+  },
+  overlay: {
+    flex: 1,
+    justifyContent: 'flex-end'
+  },
+  content: {
+    marginHorizontal: 32,
+    marginBottom: 64,
+    borderRadius: 16,
+    paddingHorizontal: 40,
+    paddingBottom: 40,
+    paddingTop: 48,
+    maxHeight: '85%'
+  },
+  comparisonRow: {
+    marginBottom: 40,
+    flexDirection: 'row',
+    gap: 10
+  },
+  decideLater: {
+    marginTop: 32,
+    alignItems: 'center',
+    justifyContent: 'center',
+    alignSelf: 'center',
+    minHeight: TOUCH_TARGET.min
+  }
+});

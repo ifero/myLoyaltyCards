@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Alert, Linking, Pressable, ScrollView, Text, TextInput, View } from 'react-native';
+import { StyleSheet } from 'react-native-unistyles';
 
 import { useTheme } from '@/shared/theme';
 
@@ -77,22 +78,18 @@ const HelpScreen = ({ itemsOverride }: HelpScreenProps) => {
   return (
     <ScrollView
       testID="help-screen"
-      className="flex-1 px-6 pb-8 pt-10"
-      style={{ backgroundColor: theme.background }}
+      style={[styles.scroll, { backgroundColor: theme.background }]}
       contentContainerStyle={{ paddingBottom: 24 }}
     >
       <Text
         testID="help-title"
-        className="mb-4 text-2xl font-bold"
-        style={{ color: theme.textPrimary }}
+        style={[styles.title, { color: theme.textPrimary }]}
         accessibilityRole="header"
       >
         {t('help.title')}
       </Text>
 
-      <Text className="mb-6 text-base" style={{ color: theme.textSecondary }}>
-        {t('help.subtitle')}
-      </Text>
+      <Text style={[styles.subtitle, { color: theme.textSecondary }]}>{t('help.subtitle')}</Text>
 
       <TextInput
         testID="help-search"
@@ -100,42 +97,41 @@ const HelpScreen = ({ itemsOverride }: HelpScreenProps) => {
         onChangeText={setQuery}
         placeholder={t('help.searchPlaceholder')}
         placeholderTextColor={theme.textSecondary}
-        className="mb-6 rounded-xl px-4 py-3 text-base"
-        style={{
-          backgroundColor: theme.surface,
-          color: theme.textPrimary,
-          borderColor: theme.border,
-          borderWidth: 1
-        }}
+        style={[
+          styles.search,
+          {
+            backgroundColor: theme.surface,
+            color: theme.textPrimary,
+            borderColor: theme.border,
+            borderWidth: 1
+          }
+        ]}
       />
 
       {filteredItems.map((item) => (
         <View
           key={item.id}
-          className="mb-4 rounded-xl p-4"
-          style={{ backgroundColor: theme.surface, borderColor: theme.border, borderWidth: 1 }}
+          style={[
+            styles.card,
+            { backgroundColor: theme.surface, borderColor: theme.border, borderWidth: 1 }
+          ]}
         >
           <Pressable
             onPress={() => toggleExpanded(item.id)}
             accessibilityRole="button"
             accessibilityLabel={item.question}
           >
-            <Text className="text-base font-semibold" style={{ color: theme.textPrimary }}>
-              {item.question}
-            </Text>
+            <Text style={[styles.question, { color: theme.textPrimary }]}>{item.question}</Text>
           </Pressable>
           {expandedIds[item.id] && (
-            <View className="mt-2">
-              <Text className="text-sm" style={{ color: theme.textSecondary }}>
-                {item.answer}
-              </Text>
+            <View style={styles.answerWrap}>
+              <Text style={[styles.answer, { color: theme.textSecondary }]}>{item.answer}</Text>
               {item.steps && item.steps.length > 0 && (
-                <View className="mt-2">
+                <View style={styles.answerWrap}>
                   {item.steps.map((step, index) => (
                     <Text
                       key={`${item.id}-step-${index}`}
-                      className="text-sm"
-                      style={{ color: theme.textSecondary }}
+                      style={[styles.answer, { color: theme.textSecondary }]}
                     >
                       {`• ${step}`}
                     </Text>
@@ -147,7 +143,7 @@ const HelpScreen = ({ itemsOverride }: HelpScreenProps) => {
         </View>
       ))}
 
-      <View className="mt-4 gap-3">
+      <View style={styles.actions}>
         <Pressable
           testID="help-contact-support"
           accessibilityRole="button"
@@ -155,12 +151,9 @@ const HelpScreen = ({ itemsOverride }: HelpScreenProps) => {
           onPress={() =>
             openExternal('mailto:support@myloyaltycards.app', t('help.contactSupportUnavailable'))
           }
-          className="items-center justify-center rounded-xl px-4 py-3"
-          style={{
-            backgroundColor: theme.primary
-          }}
+          style={[styles.actionButton, { backgroundColor: theme.primary }]}
         >
-          <Text className="text-sm font-semibold text-white">{t('help.contactSupport')}</Text>
+          <Text style={styles.actionLabelWhite}>{t('help.contactSupport')}</Text>
         </Pressable>
 
         <Pressable
@@ -170,14 +163,12 @@ const HelpScreen = ({ itemsOverride }: HelpScreenProps) => {
           onPress={() =>
             openExternal('https://myloyaltycards.app/feedback', t('help.submitFeedbackUnavailable'))
           }
-          className="items-center justify-center rounded-xl px-4 py-3"
-          style={{
-            backgroundColor: theme.surface,
-            borderColor: theme.border,
-            borderWidth: 1
-          }}
+          style={[
+            styles.actionButton,
+            { backgroundColor: theme.surface, borderColor: theme.border, borderWidth: 1 }
+          ]}
         >
-          <Text className="text-sm font-semibold" style={{ color: theme.textPrimary }}>
+          <Text style={[styles.actionLabel, { color: theme.textPrimary }]}>
             {t('help.submitFeedback')}
           </Text>
         </Pressable>
@@ -185,5 +176,72 @@ const HelpScreen = ({ itemsOverride }: HelpScreenProps) => {
     </ScrollView>
   );
 };
+
+const styles = StyleSheet.create({
+  scroll: {
+    flex: 1,
+    paddingHorizontal: 48,
+    paddingBottom: 64,
+    paddingTop: 80
+  },
+  title: {
+    marginBottom: 32,
+    fontSize: 24,
+    lineHeight: 32,
+    fontWeight: '700'
+  },
+  subtitle: {
+    marginBottom: 48,
+    fontSize: 16,
+    lineHeight: 24
+  },
+  search: {
+    marginBottom: 48,
+    borderRadius: 12,
+    paddingHorizontal: 32,
+    paddingVertical: 24,
+    fontSize: 16,
+    lineHeight: 24
+  },
+  card: {
+    marginBottom: 32,
+    borderRadius: 12,
+    padding: 32
+  },
+  question: {
+    fontSize: 16,
+    lineHeight: 24,
+    fontWeight: '600'
+  },
+  answerWrap: {
+    marginTop: 16
+  },
+  answer: {
+    fontSize: 14,
+    lineHeight: 20
+  },
+  actions: {
+    marginTop: 32,
+    gap: 24
+  },
+  actionButton: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: 12,
+    paddingHorizontal: 32,
+    paddingVertical: 24
+  },
+  actionLabelWhite: {
+    fontSize: 14,
+    lineHeight: 20,
+    fontWeight: '600',
+    color: '#FFFFFF'
+  },
+  actionLabel: {
+    fontSize: 14,
+    lineHeight: 20,
+    fontWeight: '600'
+  }
+});
 
 export default HelpScreen;

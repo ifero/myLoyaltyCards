@@ -2,6 +2,7 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Text, View } from 'react-native';
+import { StyleSheet } from 'react-native-unistyles';
 
 import { isValidEmail, isValidPassword } from '@/core/auth/validation';
 import { setConsentGiven } from '@/core/privacy/consent-repository';
@@ -168,7 +169,7 @@ const CreateAccountScreen = () => {
       headingTestID="create-account-title"
       subtitleTestID="create-account-subtitle"
     >
-      <View className="w-full" style={{ gap: spacing.md }}>
+      <View style={[styles.formGroup, { gap: spacing.md }]}>
         <TextField
           testID="email-input"
           label={t('auth.fields.email')}
@@ -283,5 +284,11 @@ const CreateAccountScreen = () => {
     </AuthScreenLayout>
   );
 };
+
+const styles = StyleSheet.create({
+  formGroup: {
+    width: '100%'
+  }
+});
 
 export default CreateAccountScreen;

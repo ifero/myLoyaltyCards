@@ -9,6 +9,7 @@
 import { MaterialIcons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
 import { Pressable, View, Text } from 'react-native';
+import { StyleSheet } from 'react-native-unistyles';
 
 import { CardColor, CARD_COLOR_KEYS } from '@/core/schemas';
 
@@ -40,8 +41,8 @@ export function ColorPicker({ value, onChange, testID }: ColorPickerProps) {
 
   return (
     <View testID={testID}>
-      <Text className="mb-2 text-xs text-gray-500">{t('addCard.setup.colorLabel')}</Text>
-      <View className="flex-row gap-2">
+      <Text style={styles.label}>{t('addCard.setup.colorLabel')}</Text>
+      <View style={styles.row}>
         {CARD_COLOR_KEYS.map((color) => {
           const isSelected = value === color;
           const colorHex = CARD_COLORS[color];
@@ -57,12 +58,14 @@ export function ColorPicker({ value, onChange, testID }: ColorPickerProps) {
               })}
               accessibilityState={{ selected: isSelected }}
               testID={`color-option-${color}`}
-              className="h-11 w-11 items-center justify-center rounded-full"
-              style={{
-                backgroundColor: colorHex,
-                borderWidth: isSelected ? 2 : 0,
-                borderColor: 'white'
-              }}
+              style={[
+                styles.swatch,
+                {
+                  backgroundColor: colorHex,
+                  borderWidth: isSelected ? 2 : 0,
+                  borderColor: 'white'
+                }
+              ]}
             >
               {isSelected && <MaterialIcons name="check" size={18} color="#FFFFFF" />}
             </Pressable>
@@ -72,3 +75,23 @@ export function ColorPicker({ value, onChange, testID }: ColorPickerProps) {
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  label: {
+    marginBottom: 16,
+    fontSize: 12,
+    lineHeight: 16,
+    color: '#6B7280'
+  },
+  row: {
+    flexDirection: 'row',
+    gap: 16
+  },
+  swatch: {
+    height: 44,
+    width: 44,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: 9999
+  }
+});

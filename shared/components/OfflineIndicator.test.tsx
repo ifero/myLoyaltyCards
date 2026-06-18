@@ -1,4 +1,5 @@
 import { render, screen } from '@testing-library/react-native';
+import { StyleSheet } from 'react-native';
 
 let mockIsDark = false;
 
@@ -74,7 +75,7 @@ describe('OfflineIndicator', () => {
     render(<OfflineIndicator isOffline pendingChangeCount={2} />);
 
     const container = screen.getByTestId('offline-indicator');
-    expect(container.props.style.backgroundColor).toBe('#4A3A1A');
+    expect(StyleSheet.flatten(container.props.style).backgroundColor).toBe('#4A3A1A');
 
     mockIsDark = false;
   });

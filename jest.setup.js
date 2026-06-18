@@ -326,52 +326,13 @@ jest.mock('@react-native-community/netinfo', () => ({
   }
 }));
 
-// Mock NativeWind/CSS interop to prevent issues in tests
-const mockNativeWind = {
-  colorScheme: 'light',
-  setColorScheme: jest.fn(),
-  toggleColorScheme: jest.fn()
-};
-
-global.__nativeWindMock = mockNativeWind;
-
-jest.mock('nativewind', () => ({
-  styled: (component) => component,
-  useColorScheme: () => mockNativeWind,
-  colorScheme: {
-    set: mockNativeWind.setColorScheme,
-    toggle: mockNativeWind.toggleColorScheme
-  }
-}));
-
-// Mock react-native-css-interop to prevent displayName access issues
-// This completely mocks the runtime to prevent wrap-jsx from processing components
-jest.mock('react-native-css-interop', () => ({
-  cssInterop: (component) => component,
-  remapProps: (component) => component,
-  // Mock the internal runtime functions
-  __esModule: true
-}));
-
-// Mock the wrap-jsx runtime that's causing the displayName issue
-jest.mock(
-  'react-native-css-interop/src/runtime/wrap-jsx',
-  () => ({
-    wrapJSX: (element) => element,
-    __esModule: true
-  }),
-  { virtual: true }
-);
-
-// Mock the third-party libs file that causes the displayName issue
-jest.mock(
-  'react-native-css-interop/src/runtime/third-party-libs/react-native-safe-area-context.native',
-  () => ({
-    maybeHijackSafeAreaProvider: (element) => element,
-    __esModule: true
-  }),
-  { virtual: true }
-);
+// Mock react-native-unistyles (Story 16.1). The official mock replaces the
+// native Nitro module and resolves themed `StyleSheet.create` calls against the
+// first-registered theme. Requiring `unistyles` afterwards runs
+// `StyleSheet.configure` against the mock registry, so `useUnistyles().theme`
+// and themed styles resolve to the real `light` theme values in tests.
+require('react-native-unistyles/mocks');
+require('./shared/theme/unistyles');
 
 // Mock expo-clipboard to avoid ESM parse issues in Jest
 jest.mock('expo-clipboard', () => ({
@@ -390,7 +351,6 @@ jest.mock('expo-brightness', () => ({
 // Clear mock calls after each test to prevent leakage (do not restore spies defined at top-level)
 afterEach(() => {
   jest.clearAllMocks();
-  mockNativeWind.colorScheme = 'light';
 });
 
 // Silence console warnings in tests
@@ -398,9 +358,7 @@ const originalWarn = console.warn;
 console.warn = (...args) => {
   if (
     typeof args[0] === 'string' &&
-    (args[0].includes('NativeWind') ||
-      args[0].includes('Animated') ||
-      args[0].includes('useNativeDriver'))
+    (args[0].includes('Animated') || args[0].includes('useNativeDriver'))
   ) {
     return;
   }

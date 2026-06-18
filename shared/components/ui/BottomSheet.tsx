@@ -10,6 +10,7 @@ import {
   type GestureResponderEvent
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { StyleSheet } from 'react-native-unistyles';
 
 import { useTheme } from '@/shared/theme';
 
@@ -81,8 +82,7 @@ export const BottomSheet = ({
     >
       <Pressable
         testID={testID ? `${testID}-scrim` : undefined}
-        className="flex-1 justify-end"
-        style={{ backgroundColor: 'rgba(0,0,0,0.4)' }}
+        style={styles.scrim}
         onPress={onClose}
       >
         <Pressable
@@ -98,17 +98,7 @@ export const BottomSheet = ({
             paddingBottom: Math.max(20, insets.bottom + 8)
           }}
         >
-          <View
-            className="self-center"
-            style={{
-              width: 40,
-              height: 4,
-              borderRadius: 2,
-              backgroundColor: theme.textSecondary,
-              opacity: 0.4,
-              marginBottom: 14
-            }}
-          />
+          <View style={[styles.handle, { backgroundColor: theme.textSecondary }]} />
           {title ? (
             <Text
               style={{
@@ -133,3 +123,19 @@ export const BottomSheet = ({
     </Modal>
   );
 };
+
+const styles = StyleSheet.create({
+  scrim: {
+    flex: 1,
+    justifyContent: 'flex-end',
+    backgroundColor: 'rgba(0,0,0,0.4)'
+  },
+  handle: {
+    alignSelf: 'center',
+    width: 40,
+    height: 4,
+    borderRadius: 2,
+    opacity: 0.4,
+    marginBottom: 14
+  }
+});

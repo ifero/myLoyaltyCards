@@ -11,6 +11,7 @@
 import { MaterialIcons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
 import { ActivityIndicator, Pressable, Text, View } from 'react-native';
+import { StyleSheet } from 'react-native-unistyles';
 
 import { useTheme } from '@/shared/theme';
 
@@ -54,8 +55,7 @@ const MigrationBanner = ({ status, message, onRetry, onDismiss }: MigrationBanne
       testID="migration-banner"
       accessibilityRole="alert"
       accessibilityLiveRegion="polite"
-      className="mx-4 mt-2 flex-row items-center rounded-lg border px-4 py-3"
-      style={{ backgroundColor, borderColor }}
+      style={[styles.banner, { backgroundColor, borderColor }]}
     >
       {isMigrating && (
         <ActivityIndicator
@@ -68,8 +68,7 @@ const MigrationBanner = ({ status, message, onRetry, onDismiss }: MigrationBanne
 
       <Text
         testID="migration-message"
-        className="flex-1 text-sm"
-        style={{ color: textColor }}
+        style={[styles.message, { color: textColor }]}
         numberOfLines={2}
       >
         {message}
@@ -81,10 +80,9 @@ const MigrationBanner = ({ status, message, onRetry, onDismiss }: MigrationBanne
           onPress={onRetry}
           accessibilityLabel={t('auth.migrationBanner.retryA11yLabel')}
           accessibilityRole="button"
-          className="ml-2 rounded-md px-3 py-1"
-          style={{ backgroundColor: theme.error }}
+          style={[styles.retryButton, { backgroundColor: theme.error }]}
         >
-          <Text className="text-xs font-semibold text-white">{t('common.actions.retry')}</Text>
+          <Text style={styles.retryLabel}>{t('common.actions.retry')}</Text>
         </Pressable>
       )}
 
@@ -94,7 +92,7 @@ const MigrationBanner = ({ status, message, onRetry, onDismiss }: MigrationBanne
           onPress={onDismiss}
           accessibilityLabel={t('auth.migrationBanner.dismissA11yLabel')}
           accessibilityRole="button"
-          className="ml-2 px-1"
+          style={styles.dismissButton}
         >
           <MaterialIcons name="close" size={18} color={textColor} />
         </Pressable>
@@ -102,5 +100,39 @@ const MigrationBanner = ({ status, message, onRetry, onDismiss }: MigrationBanne
     </View>
   );
 };
+
+const styles = StyleSheet.create({
+  banner: {
+    marginHorizontal: 32,
+    marginTop: 16,
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderRadius: 8,
+    borderWidth: 1,
+    paddingHorizontal: 32,
+    paddingVertical: 24
+  },
+  message: {
+    flex: 1,
+    fontSize: 14,
+    lineHeight: 20
+  },
+  retryButton: {
+    marginLeft: 16,
+    borderRadius: 6,
+    paddingHorizontal: 24,
+    paddingVertical: 8
+  },
+  retryLabel: {
+    fontSize: 12,
+    lineHeight: 16,
+    fontWeight: '600',
+    color: '#FFFFFF'
+  },
+  dismissButton: {
+    marginLeft: 16,
+    paddingHorizontal: 8
+  }
+});
 
 export default MigrationBanner;

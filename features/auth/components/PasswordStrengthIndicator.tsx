@@ -1,6 +1,7 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { Text, View } from 'react-native';
+import { StyleSheet } from 'react-native-unistyles';
 
 import { useTheme } from '@/shared/theme';
 
@@ -53,8 +54,7 @@ export const PasswordStrengthIndicator = ({
   return (
     <View
       testID={testID}
-      className="w-full flex-row items-center"
-      style={{ marginTop: spacing.sm, marginBottom: spacing.md }}
+      style={[styles.container, { marginTop: spacing.sm, marginBottom: spacing.md }]}
     >
       <View
         testID={`${testID}-track`}
@@ -86,3 +86,11 @@ export const PasswordStrengthIndicator = ({
     </View>
   );
 };
+
+const styles = StyleSheet.create({
+  container: {
+    width: '100%',
+    flexDirection: 'row',
+    alignItems: 'center'
+  }
+});

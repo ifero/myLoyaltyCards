@@ -1,4 +1,5 @@
 import { act, render, screen } from '@testing-library/react-native';
+import { StyleSheet } from 'react-native';
 
 import { SyncIndicator } from './SyncIndicator';
 
@@ -110,6 +111,6 @@ describe('SyncIndicator (dark mode)', () => {
 
     const container = screen.getByTestId('sync-indicator');
     const innerView = container.children[0];
-    expect(innerView.props.style.backgroundColor).toBe('#2C2C2E');
+    expect(StyleSheet.flatten(innerView.props.style).backgroundColor).toBe('#2C2C2E');
   });
 });

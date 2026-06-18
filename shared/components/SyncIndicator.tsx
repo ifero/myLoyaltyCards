@@ -20,6 +20,7 @@ import Animated, {
   Easing,
   useReducedMotion
 } from 'react-native-reanimated';
+import { StyleSheet } from 'react-native-unistyles';
 
 import { useTheme } from '@/shared/theme';
 import { SYNC_TOKENS } from '@/shared/theme/sync-tokens';
@@ -96,10 +97,7 @@ export const SyncIndicator = ({ syncState, onSuccessDismissed }: SyncIndicatorPr
         isSyncing ? t('syncUi.syncIndicator.syncingA11y') : t('syncUi.syncIndicator.successA11y')
       }
     >
-      <View
-        className="mx-4 mb-2 flex-row items-center rounded-xl px-3 py-2"
-        style={{ backgroundColor }}
-      >
+      <View style={[styles.container, { backgroundColor }]}>
         {isSyncing ? (
           <Animated.View testID="sync-indicator-icon" style={animatedRotationStyle}>
             <MaterialIcons name="sync" size={16} color={iconColor} />
@@ -112,16 +110,7 @@ export const SyncIndicator = ({ syncState, onSuccessDismissed }: SyncIndicatorPr
             color={iconColor}
           />
         ) : null}
-        <Text
-          testID="sync-indicator-label"
-          className="ml-2"
-          style={{
-            color: textColor,
-            fontSize: 12,
-            fontWeight: '500',
-            lineHeight: 16
-          }}
-        >
+        <Text testID="sync-indicator-label" style={[styles.label, { color: textColor }]}>
           {isSyncing
             ? t('syncUi.syncIndicator.syncingMessage')
             : t('syncUi.syncIndicator.successMessage')}
@@ -130,3 +119,21 @@ export const SyncIndicator = ({ syncState, onSuccessDismissed }: SyncIndicatorPr
     </Animated.View>
   );
 };
+
+const styles = StyleSheet.create({
+  container: {
+    marginHorizontal: 32,
+    marginBottom: 16,
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderRadius: 12,
+    paddingHorizontal: 24,
+    paddingVertical: 16
+  },
+  label: {
+    marginLeft: 16,
+    fontSize: 12,
+    fontWeight: '500',
+    lineHeight: 16
+  }
+});

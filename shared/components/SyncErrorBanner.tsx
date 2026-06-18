@@ -8,6 +8,7 @@ import { MaterialIcons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
 import { Pressable, Text, View } from 'react-native';
 import Animated, { FadeIn, FadeOut } from 'react-native-reanimated';
+import { StyleSheet } from 'react-native-unistyles';
 
 import { useTheme } from '@/shared/theme';
 import { NEUTRAL_COLORS } from '@/shared/theme/colors';
@@ -39,8 +40,7 @@ export const SyncErrorBanner = ({ message, onRetry, onDismiss }: SyncErrorBanner
       <View
         testID="sync-error-banner"
         accessibilityRole="alert"
-        className="mx-4 mt-2 flex-row items-center rounded-xl border px-3 py-3"
-        style={{ backgroundColor: bannerBg, borderColor: errorAccent }}
+        style={[styles.banner, { backgroundColor: bannerBg, borderColor: errorAccent }]}
       >
         <MaterialIcons
           testID="sync-error-icon"
@@ -50,12 +50,7 @@ export const SyncErrorBanner = ({ message, onRetry, onDismiss }: SyncErrorBanner
         />
         <Text
           testID="sync-error-message"
-          className="ml-2 flex-1"
-          style={{
-            color: messageColor,
-            fontSize: 12,
-            lineHeight: 16
-          }}
+          style={[styles.message, { color: messageColor }]}
           numberOfLines={2}
         >
           {message}
@@ -67,22 +62,10 @@ export const SyncErrorBanner = ({ message, onRetry, onDismiss }: SyncErrorBanner
           accessibilityLabel={t('syncUi.errorBanner.retryA11yLabel')}
           accessibilityHint={t('syncUi.errorBanner.retryA11yHint')}
           accessibilityRole="button"
-          className="ml-2 items-center justify-center rounded-lg px-3 py-1"
-          style={{
-            backgroundColor: errorAccent,
-            minHeight: TOUCH_TARGET.min
-          }}
+          style={[styles.retryButton, { backgroundColor: errorAccent }]}
           hitSlop={8}
         >
-          <Text
-            style={{
-              color: NEUTRAL_COLORS.white,
-              fontSize: 12,
-              fontWeight: '500'
-            }}
-          >
-            {t('syncUi.errorBanner.retryButton')}
-          </Text>
+          <Text style={styles.retryLabel}>{t('syncUi.errorBanner.retryButton')}</Text>
         </Pressable>
 
         <Pressable
@@ -91,8 +74,7 @@ export const SyncErrorBanner = ({ message, onRetry, onDismiss }: SyncErrorBanner
           accessibilityLabel={t('syncUi.errorBanner.dismissA11yLabel')}
           accessibilityHint={t('syncUi.errorBanner.dismissA11yHint')}
           accessibilityRole="button"
-          className="ml-2 items-center justify-center"
-          style={{ minWidth: TOUCH_TARGET.min, minHeight: TOUCH_TARGET.min }}
+          style={styles.dismissButton}
           hitSlop={8}
         >
           <MaterialIcons name="close" size={18} color={dismissColor} />
@@ -101,3 +83,43 @@ export const SyncErrorBanner = ({ message, onRetry, onDismiss }: SyncErrorBanner
     </Animated.View>
   );
 };
+
+const styles = StyleSheet.create({
+  banner: {
+    marginHorizontal: 32,
+    marginTop: 16,
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderRadius: 12,
+    borderWidth: 1,
+    paddingHorizontal: 24,
+    paddingVertical: 24
+  },
+  message: {
+    marginLeft: 16,
+    flex: 1,
+    fontSize: 12,
+    lineHeight: 16
+  },
+  retryButton: {
+    marginLeft: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: 8,
+    paddingHorizontal: 24,
+    paddingVertical: 8,
+    minHeight: TOUCH_TARGET.min
+  },
+  retryLabel: {
+    color: NEUTRAL_COLORS.white,
+    fontSize: 12,
+    fontWeight: '500'
+  },
+  dismissButton: {
+    marginLeft: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+    minWidth: TOUCH_TARGET.min,
+    minHeight: TOUCH_TARGET.min
+  }
+});

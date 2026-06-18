@@ -13,6 +13,7 @@ import { MaterialIcons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
 import { Text, View } from 'react-native';
 import Animated, { FadeIn, FadeOut } from 'react-native-reanimated';
+import { StyleSheet } from 'react-native-unistyles';
 
 import { useTheme } from '@/shared/theme';
 import { SYNC_TOKENS } from '@/shared/theme/sync-tokens';
@@ -42,23 +43,31 @@ export const OfflineIndicator = ({ isOffline, pendingChangeCount }: OfflineIndic
         testID="offline-indicator"
         accessibilityRole="summary"
         accessibilityLabel={message}
-        className="mx-4 mt-2 flex-row items-center rounded-xl px-3 py-2"
-        style={{ backgroundColor }}
+        style={[styles.container, { backgroundColor }]}
       >
         <MaterialIcons testID="offline-icon" name="cloud-off" size={15} color={textColor} />
-        <Text
-          testID="offline-message"
-          className="ml-2"
-          style={{
-            color: textColor,
-            fontSize: 12,
-            fontWeight: '500',
-            lineHeight: 16
-          }}
-        >
+        <Text testID="offline-message" style={[styles.message, { color: textColor }]}>
           {message}
         </Text>
       </View>
     </Animated.View>
   );
 };
+
+const styles = StyleSheet.create({
+  container: {
+    marginHorizontal: 32,
+    marginTop: 16,
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderRadius: 12,
+    paddingHorizontal: 24,
+    paddingVertical: 16
+  },
+  message: {
+    marginLeft: 16,
+    fontSize: 12,
+    fontWeight: '500',
+    lineHeight: 16
+  }
+});
