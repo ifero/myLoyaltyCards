@@ -42,6 +42,10 @@ export default [
       ...tseslint.configs.recommended.rules,
       // TypeScript handles undefined variables better than ESLint
       'no-undef': 'off',
+      // Story 16.2: ban direct console use — the `logger` wrapper
+      // (core/utils/logger.ts) is the single sanctioned logging sink so that
+      // production errors are routed to Sentry and dev noise is gated.
+      'no-console': 'error',
       // Feature boundary enforcement
       'boundaries/element-types': [
         'error',
@@ -160,6 +164,21 @@ export default [
     },
   },
   {
+    // The logging wrapper is the one place direct console use is allowed — it
+    // IS the sanctioned sink the no-console rule funnels everything else into.
+    files: ['core/utils/logger.ts'],
+    rules: {
+      'no-console': 'off',
+    },
+  },
+  {
+    // Tests legitimately spy on / assert against console; don't ban it there.
+    files: ['**/*.test.{ts,tsx,js,jsx}', '**/*.spec.{ts,tsx,js,jsx}', '**/__tests__/**'],
+    rules: {
+      'no-console': 'off',
+    },
+  },
+  {
     // Node scripts (build/CI tooling): the Node runtime provides process, console,
     // etc. Mirror the TS rule choice and let the runtime/types handle undefined refs.
     files: ['scripts/**/*.{mjs,js}'],
@@ -169,6 +188,8 @@ export default [
     },
     rules: {
       'no-undef': 'off',
+      // Build/CI scripts log to stdout/stderr by design; the wrapper is for app code.
+      'no-console': 'off',
     },
   },
   {
