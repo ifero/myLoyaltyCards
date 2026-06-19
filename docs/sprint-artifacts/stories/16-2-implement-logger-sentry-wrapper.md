@@ -1,6 +1,6 @@
 # Story 16.2: Implement logger/Sentry wrapper and migrate console.\* call sites
 
-Status: review
+Status: done
 
 ## Story
 
