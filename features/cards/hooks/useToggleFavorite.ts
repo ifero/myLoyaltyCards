@@ -15,6 +15,7 @@ import { useCallback, useRef, useState } from 'react';
 
 import { toggleFavorite } from '@/core/database';
 import { LoyaltyCard } from '@/core/schemas';
+import { logger } from '@/core/utils/logger';
 
 export interface UseToggleFavoriteReturn {
   /** Toggle the card's favourite state (optimistic, with rollback on failure) */
@@ -54,7 +55,7 @@ export function useToggleFavorite(
 
     toggleFavorite(card.id)
       .catch((err) => {
-        console.error('Failed to toggle favourite:', err);
+        logger.error('Failed to toggle favourite:', err);
         onUpdate({ ...card, isFavorite: previous }); // rollback
       })
       .finally(() => {

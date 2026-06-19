@@ -14,6 +14,7 @@ import { useFocusEffect } from 'expo-router';
 import { useCallback } from 'react';
 
 import { incrementUsageCount } from '@/core/database';
+import { logger } from '@/core/utils/logger';
 
 /**
  * Track a usage event for the given card on every screen focus.
@@ -28,7 +29,7 @@ export function useTrackCardUsage(cardId: string): void {
       }
 
       incrementUsageCount(cardId).catch((err) => {
-        console.error('Failed to track card usage:', err);
+        logger.error('Failed to track card usage:', err);
       });
     }, [cardId])
   );

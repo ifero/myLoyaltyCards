@@ -7,6 +7,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { catalogueRepository } from '@/core/catalogue/catalogue-repository';
 import { clearLastSyncAt } from '@/core/sync/sync-timestamp';
+import { logger } from '@/core/utils/logger';
 
 import { deleteAccount, getSession, signOut } from '@/shared/supabase/auth';
 import { useAuthState } from '@/shared/supabase/useAuthState';
@@ -143,13 +144,13 @@ const SettingsScreen = () => {
       try {
         await clearLastSyncAt();
       } catch (error) {
-        console.error('[SettingsScreen] Failed to clear sync timestamp on sign out', error);
+        logger.error('[SettingsScreen] Failed to clear sync timestamp on sign out', error);
       }
 
       setIsSignOutSheetOpen(false);
       router.replace('/');
     } catch (error) {
-      console.error('[SettingsScreen] Failed to sign out', error);
+      logger.error('[SettingsScreen] Failed to sign out', error);
       setSignOutError(t('settings.account.signOutError'));
     } finally {
       setIsSigningOut(false);
@@ -171,14 +172,14 @@ const SettingsScreen = () => {
       try {
         await clearLastSyncAt();
       } catch (error) {
-        console.error('[SettingsScreen] Failed to clear sync timestamp on delete account', error);
+        logger.error('[SettingsScreen] Failed to clear sync timestamp on delete account', error);
       }
 
       setIsDeleteSheetOpen(false);
       await showToast({ title: t('settings.account.accountDeleted'), preset: 'done' });
       router.replace('/');
     } catch (error) {
-      console.error('[SettingsScreen] Failed to delete account', error);
+      logger.error('[SettingsScreen] Failed to delete account', error);
       setDeleteError(t('settings.account.deleteError'));
     } finally {
       setIsDeleting(false);

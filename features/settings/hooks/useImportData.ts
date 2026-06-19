@@ -8,6 +8,7 @@ import {
   importAnalyzedCards,
   type ImportPreview
 } from '@/core/settings/importCards';
+import { logger } from '@/core/utils/logger';
 
 import { showToast } from '@/shared/toast';
 
@@ -86,7 +87,7 @@ export const useImportData = ({
         variant: analysis.title === 'No Card Data' ? 'empty' : 'invalid'
       });
     } catch (error) {
-      console.error('[useImportData] Failed to read import file', error);
+      logger.error('[useImportData] Failed to read import file', error);
       setErrorState({
         title: t('settings.import.invalidFileTitle'),
         message: t('settings.import.unreadableFile'),
@@ -146,7 +147,7 @@ export const useImportData = ({
         void onSyncRequested();
       }
     } catch (error) {
-      console.error('[useImportData] Failed to import cards', error);
+      logger.error('[useImportData] Failed to import cards', error);
       setErrorState({
         title: t('settings.import.failedTitle'),
         message: t('settings.import.failedMessage'),

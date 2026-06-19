@@ -5,6 +5,8 @@
 
 import { renderHook, act } from '@testing-library/react-native';
 
+import { logger } from '@/core/utils/logger';
+
 import { useBrightness } from './useBrightness';
 
 // Mock expo-brightness
@@ -101,7 +103,7 @@ describe('useBrightness', () => {
   });
 
   it('should handle errors gracefully during maximize', async () => {
-    const consoleSpy = jest.spyOn(console, 'warn').mockImplementation();
+    const loggerSpy = jest.spyOn(logger, 'warn').mockImplementation();
     mockGetBrightnessAsync.mockRejectedValue(new Error('Brightness not available'));
 
     const { result } = renderHook(() => useBrightness());
@@ -111,12 +113,12 @@ describe('useBrightness', () => {
       await result.current.maximize();
     });
 
-    expect(consoleSpy).toHaveBeenCalled();
-    consoleSpy.mockRestore();
+    expect(loggerSpy).toHaveBeenCalled();
+    loggerSpy.mockRestore();
   });
 
   it('should handle errors gracefully during restore', async () => {
-    const consoleSpy = jest.spyOn(console, 'warn').mockImplementation();
+    const loggerSpy = jest.spyOn(logger, 'warn').mockImplementation();
     mockGetBrightnessAsync.mockResolvedValue(0.5);
     mockSetBrightnessAsync
       .mockResolvedValueOnce(undefined) // maximize succeeds
@@ -133,8 +135,8 @@ describe('useBrightness', () => {
       await result.current.restore();
     });
 
-    expect(consoleSpy).toHaveBeenCalled();
-    consoleSpy.mockRestore();
+    expect(loggerSpy).toHaveBeenCalled();
+    loggerSpy.mockRestore();
   });
 
   it('should clear stored brightness after restore', async () => {

@@ -64,7 +64,15 @@
           }
         }
       ],
-      "expo-localization"
+      "expo-localization",
+      [
+        "@sentry/react-native",
+        {
+          "organization": "andrea-pacino",
+          "project": "react-native",
+          "url": "https://de.sentry.io/"
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true

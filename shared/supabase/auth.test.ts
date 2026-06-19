@@ -7,6 +7,7 @@
  */
 
 import { getCardCount } from '@/core/database/card-repository';
+import { logger } from '@/core/utils/logger';
 
 import {
   continueAsGuest,
@@ -182,7 +183,7 @@ describe('signInWithEmail', () => {
 // ---------------------------------------------------------------------------
 
 describe('signUp', () => {
-  let mockWarn: jest.SpiedFunction<typeof console.warn>;
+  let mockWarn: jest.SpiedFunction<typeof logger.warn>;
 
   beforeEach(() => {
     mockSignUp.mockReset();
@@ -195,7 +196,7 @@ describe('signUp', () => {
     mockUpsert.mockResolvedValue({ data: null, error: null });
     mockGetConsentStatus.mockReturnValue(false);
     mockGetConsentTimestamp.mockReturnValue(null);
-    mockWarn = jest.spyOn(console, 'warn').mockImplementation(() => undefined);
+    mockWarn = jest.spyOn(logger, 'warn').mockImplementation(() => undefined);
   });
 
   afterEach(() => {

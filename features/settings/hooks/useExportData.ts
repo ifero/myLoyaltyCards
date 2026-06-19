@@ -6,6 +6,7 @@ import { useTranslation } from 'react-i18next';
 
 import { getAllCards, getCardCount } from '@/core/database/card-repository';
 import { createExportPayload } from '@/core/settings/importCards';
+import { logger } from '@/core/utils/logger';
 
 import { showToast } from '@/shared/toast';
 
@@ -50,7 +51,7 @@ export const useExportData = () => {
         }
       } catch (error) {
         shareFailed = true;
-        console.warn('[useExportData] Sharing failed, keeping exported file locally', error);
+        logger.warn('[useExportData] Sharing failed, keeping exported file locally', error);
       }
 
       await showToast({
@@ -62,7 +63,7 @@ export const useExportData = () => {
       await refreshCardCount();
       return true;
     } catch (error) {
-      console.error('[useExportData] Export failed', error);
+      logger.error('[useExportData] Export failed', error);
       const message = t('settings.export.failedMessage');
       setExportError(message);
       await showToast({

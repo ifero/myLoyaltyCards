@@ -1,3 +1,5 @@
+import { logger } from '@/core/utils/logger';
+
 import { logConflictResolution, type ConflictLogEntry } from './conflict-logger';
 
 const makeEntry = (overrides: Partial<ConflictLogEntry> = {}): ConflictLogEntry => ({
@@ -9,9 +11,14 @@ const makeEntry = (overrides: Partial<ConflictLogEntry> = {}): ConflictLogEntry 
   ...overrides
 });
 
+// The wrapper is the sanctioned sink; `logger.info` itself only logs in
+// development (covered by core/utils/logger.test.ts), so here we just assert
+// the conflict resolver delegates to it with the right payload.
 beforeEach(() => {
   jest.clearAllMocks();
-  jest.spyOn(console, 'log').mockImplementation(() => {});
+  jest.spyOn(logger, 'info').mockImplementation(() => {});
+  jest.spyOn(logger, 'warn').mockImplementation(() => {});
+  jest.spyOn(logger, 'error').mockImplementation(() => {});
 });
 
 afterEach(() => {
@@ -19,11 +26,11 @@ afterEach(() => {
 });
 
 describe('logConflictResolution', () => {
-  it('logs conflict entry in dev mode', () => {
+  it('logs conflict entry', () => {
     const entry = makeEntry();
     logConflictResolution(entry);
 
-    expect(console.log).toHaveBeenCalledWith('[sync:conflict]', {
+    expect(logger.info).toHaveBeenCalledWith('[sync:conflict]', {
       cardId: 'card-1',
       localUpdatedAt: '2026-03-20T10:00:00.000Z',
       cloudUpdatedAt: '2026-03-21T10:00:00.000Z',
@@ -35,7 +42,7 @@ describe('logConflictResolution', () => {
   it('logs local-wins conflict', () => {
     logConflictResolution(makeEntry({ winner: 'local', reason: 'local-newer' }));
 
-    expect(console.log).toHaveBeenCalledWith(
+    expect(logger.info).toHaveBeenCalledWith(
       '[sync:conflict]',
       expect.objectContaining({ winner: 'local', reason: 'local-newer' })
     );
@@ -52,7 +59,7 @@ describe('logConflictResolution', () => {
       })
     );
 
-    expect(console.log).toHaveBeenCalledWith(
+    expect(logger.info).toHaveBeenCalledWith(
       '[sync:conflict]',
       expect.objectContaining({ reason: 'tie-cloud-wins' })
     );
@@ -67,7 +74,7 @@ describe('logConflictResolution', () => {
       })
     );
 
-    expect(console.log).toHaveBeenCalledWith(
+    expect(logger.info).toHaveBeenCalledWith(
       '[sync:conflict]',
       expect.objectContaining({ localUpdatedAt: null, reason: 'local-delete-wins' })
     );
@@ -76,19 +83,20 @@ describe('logConflictResolution', () => {
   it('handles entry with null timestamps', () => {
     logConflictResolution(makeEntry({ localUpdatedAt: null, cloudUpdatedAt: null }));
 
-    expect(console.log).toHaveBeenCalledWith(
+    expect(logger.info).toHaveBeenCalledWith(
       '[sync:conflict]',
       expect.objectContaining({ localUpdatedAt: null, cloudUpdatedAt: null })
     );
   });
 
-  it('does not log when __DEV__ is false', () => {
-    const original = (global as Record<string, unknown>).__DEV__;
-    (global as Record<string, unknown>).__DEV__ = false;
-
+  // Pins the sink level: conflict logging must stay dev-only telemetry. It routes
+  // exclusively through `logger.info` (which suppresses in production — see
+  // core/utils/logger.test.ts), never through the always-on `error`/`warn`.
+  it('only uses logger.info — never warn/error (no production telemetry)', () => {
     logConflictResolution(makeEntry());
 
-    expect(console.log).not.toHaveBeenCalled();
-    (global as Record<string, unknown>).__DEV__ = original;
+    expect(logger.info).toHaveBeenCalledTimes(1);
+    expect(logger.warn).not.toHaveBeenCalled();
+    expect(logger.error).not.toHaveBeenCalled();
   });
 });

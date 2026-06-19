@@ -26,6 +26,7 @@ import Animated, {
 } from 'react-native-reanimated';
 
 import type { LoyaltyCard } from '@/core/schemas';
+import { logger } from '@/core/utils/logger';
 
 import { BarcodeRenderer } from './BarcodeRenderer';
 import { useBrightness } from '../hooks/useBrightness';
@@ -92,7 +93,7 @@ export function BarcodeFlash({ card, onDismiss }: BarcodeFlashProps) {
       await Clipboard.setStringAsync(card.barcode);
       await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     } catch (error) {
-      console.warn('Failed to copy barcode:', error);
+      logger.warn('Failed to copy barcode:', error);
     }
   }, [card.barcode]);
 

@@ -19,6 +19,7 @@ import { StyleSheet } from 'react-native-unistyles';
 
 import { getCardById } from '@/core/database';
 import type { LoyaltyCard } from '@/core/schemas';
+import { logger } from '@/core/utils/logger';
 
 import { BarcodeFlash } from '@/features/cards/components/BarcodeFlash';
 
@@ -54,7 +55,7 @@ export default function BarcodeFlashScreen() {
           setError(t('cards.details.notFound'));
         }
       } catch (err) {
-        console.error('Failed to load card:', err);
+        logger.error('Failed to load card:', err);
         setError(t('cards.details.loadFailed'));
       } finally {
         setIsLoading(false);

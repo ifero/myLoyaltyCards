@@ -1,6 +1,8 @@
-const { getDefaultConfig } = require('expo/metro-config');
+// Sentry's Expo Metro config wraps Expo's default config to enable source map
+// upload and component annotation (Story 16.2). It supersedes getDefaultConfig.
+const { getSentryExpoConfig } = require('@sentry/react-native/metro');
 
-const config = getDefaultConfig(__dirname);
+const config = getSentryExpoConfig(__dirname);
 
 // SVG transformer: treat .svg as source (components) instead of assets
 config.transformer = {

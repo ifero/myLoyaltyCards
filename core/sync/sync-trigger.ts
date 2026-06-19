@@ -2,6 +2,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import { getAllCards } from '@/core/database/card-repository';
 import { LoyaltyCard } from '@/core/schemas';
+import { logger } from '@/core/utils/logger';
 
 import { mergeCards, syncChangedCards, type CloudFetchSinceFn } from './cloud-sync';
 import { type CloudCardRow, cloudRowToLocalCard } from './mappers';
@@ -141,7 +142,7 @@ export const processPendingSync = async (
     await clearPendingDeletionsFn();
   }
 
-  console.log(
+  logger.info(
     `[sync] Delta sync: downloaded ${downloadedCount}, uploaded ${upsertedCount}, deleted ${deletedCount}`
   );
 

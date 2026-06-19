@@ -105,6 +105,16 @@ jest.mock('burnt', () => ({
   toast: jest.fn()
 }));
 
+// Mock @sentry/react-native (native module). The logger wrapper imports Sentry
+// and routes production errors to captureException; mocking here keeps the
+// native SDK out of the test runtime and lets tests assert on the wrapper.
+jest.mock('@sentry/react-native', () => ({
+  init: jest.fn(),
+  wrap: jest.fn((component) => component),
+  captureException: jest.fn(),
+  captureMessage: jest.fn()
+}));
+
 // Mock expo-localization
 jest.mock('expo-localization', () => ({
   getLocales: jest.fn(() => [{ languageTag: 'en-US', languageCode: 'en' }])

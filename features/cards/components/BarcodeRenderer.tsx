@@ -16,6 +16,7 @@ import { useTranslation } from 'react-i18next';
 import { Image, PixelRatio, type ViewStyle, View } from 'react-native';
 
 import type { BarcodeFormat } from '@/core/schemas';
+import { logger } from '@/core/utils/logger';
 
 /** Conversion ratio from pixels to millimeters (bwip-js uses mm) */
 const PX_TO_MM_RATIO = 10;
@@ -133,9 +134,7 @@ export const BarcodeRenderer = memo(function BarcodeRenderer({
           setError(false);
         }
       } catch (err) {
-        if (__DEV__) {
-          console.warn('Failed to generate barcode:', err);
-        }
+        logger.warn('Failed to generate barcode:', err);
         if (!cancelled) {
           setError(true);
           setSource(null);

@@ -1,5 +1,7 @@
 import { act, renderHook, waitFor } from '@testing-library/react-native';
 
+import { logger } from '@/core/utils/logger';
+
 const mockUploadLocalCards = jest.fn();
 const mockForceSyncLocalCards = jest.fn();
 const mockDownloadCloudCards = jest.fn();
@@ -851,7 +853,7 @@ describe('useCloudSync', () => {
         isAuthenticated: true
       });
 
-      const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+      const loggerErrorSpy = jest.spyOn(logger, 'error').mockImplementation(() => {});
 
       const { unmount } = renderHook(() => useCloudSync());
 
@@ -877,7 +879,7 @@ describe('useCloudSync', () => {
       });
 
       // No error was logged — the sync succeeded, not cancelled-as-failure.
-      const errorLogs = consoleErrorSpy.mock.calls.filter((c) =>
+      const errorLogs = loggerErrorSpy.mock.calls.filter((c) =>
         String(c[0]).includes('[useCloudSync]')
       );
       expect(errorLogs).toHaveLength(0);
@@ -888,7 +890,7 @@ describe('useCloudSync', () => {
       expect(result.current.downloadedCount).toBe(2);
       expect(result.current.syncError).toBeNull();
 
-      consoleErrorSpy.mockRestore();
+      loggerErrorSpy.mockRestore();
     });
 
     it('runs the cold-open auto-sync only ONCE across multiple concurrently mounted instances', async () => {

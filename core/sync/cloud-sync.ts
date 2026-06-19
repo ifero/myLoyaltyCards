@@ -2,6 +2,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import { getAllCards } from '@/core/database/card-repository';
 import { LoyaltyCard } from '@/core/schemas';
+import { logger } from '@/core/utils/logger';
 
 import { logConflictResolution } from './conflict-logger';
 import { CloudCardRow, cloudRowToLocalCard, localCardToCloudRow } from './mappers';
@@ -79,7 +80,7 @@ export const uploadLocalCards = async (
   options: UploadLocalCardsOptions = {}
 ): Promise<UploadLocalCardsResult> => {
   if (!userId) {
-    console.error('[cloud-sync] uploadLocalCards: invalid userId');
+    logger.error('[cloud-sync] uploadLocalCards: invalid userId');
     return {
       success: false,
       uploadedCount: 0,
@@ -126,7 +127,7 @@ export const uploadLocalCards = async (
   for (const batch of batches) {
     const { error } = await cloudUpsertFn(batch);
     if (error) {
-      console.error(`[cloud-sync] Batch upload failed: ${error}`);
+      logger.error(`[cloud-sync] Batch upload failed: ${error}`);
       failedCount += batch.length;
       errors.push(toAppError('SYNC_UPLOAD_BATCH_FAILED', error));
       continue;
@@ -531,7 +532,7 @@ export const downloadCloudCards = async (
   options: DownloadCloudCardsOptions = {}
 ): Promise<DownloadCloudCardsResult> => {
   if (!userId) {
-    console.error('[cloud-sync] downloadCloudCards: invalid userId');
+    logger.error('[cloud-sync] downloadCloudCards: invalid userId');
     return {
       success: false,
       downloadedCount: 0,
@@ -560,7 +561,7 @@ export const downloadCloudCards = async (
   // 1. Fetch from cloud
   const { data: cloudRows, error: fetchError } = await cloudFetchFn(userId);
   if (fetchError) {
-    console.error(`[cloud-sync] Cloud fetch failed: ${fetchError}`);
+    logger.error(`[cloud-sync] Cloud fetch failed: ${fetchError}`);
     return {
       success: false,
       downloadedCount: 0,
@@ -579,7 +580,7 @@ export const downloadCloudCards = async (
       cloudCards.push(card);
     } else {
       skipped++;
-      console.error(`[cloud-sync] Skipping invalid cloud row id=${row.id}`);
+      logger.error(`[cloud-sync] Skipping invalid cloud row id=${row.id}`);
     }
   }
 

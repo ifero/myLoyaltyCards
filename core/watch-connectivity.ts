@@ -30,6 +30,8 @@
 import { toDataURL, type RenderOptions } from '@bwip-js/react-native';
 import * as z from 'zod';
 
+import { logger } from '@/core/utils/logger';
+
 import type { LoyaltyCard } from './schemas';
 
 type Unsubscribe = () => void;
@@ -191,7 +193,7 @@ async function buildWatchQRCodeBase64(card: LoyaltyCard): Promise<string | null>
     const parts = uri.split(',', 2);
     return parts.length === 2 ? (parts[1] ?? null) : uri;
   } catch (err) {
-    console.warn('[watch-connectivity] failed to pre-render QR for watch:', err);
+    logger.warn('[watch-connectivity] failed to pre-render QR for watch:', err);
     return null;
   }
 }
@@ -245,7 +247,7 @@ async function buildSnapshotWithOptionalQRImages(
   const snapshot = cards.map(toBaseWatchCardPayload);
 
   if (snapshotEnvelopeSize(snapshot) > WATCH_SNAPSHOT_MAX_BYTES) {
-    console.warn('[watch-connectivity] base watch snapshot exceeds payload budget');
+    logger.warn('[watch-connectivity] base watch snapshot exceeds payload budget');
     return snapshot;
   }
 
@@ -274,7 +276,7 @@ async function buildSnapshotWithOptionalQRImages(
     if (snapshotEnvelopeSize(snapshot) > WATCH_SNAPSHOT_MAX_BYTES) {
       snapshot[index] = basePayload;
       canEmbedMoreQRImages = false;
-      console.warn(
+      logger.warn(
         '[watch-connectivity] dropped QR image from watch snapshot to stay under payload budget'
       );
     }
@@ -411,7 +413,7 @@ function ensureDiagnostics(native: NativeModule): void {
     'file-received-error'
   ]) {
     const off = subscribe(native, ev, (payload) => {
-      console.warn(`[watch-connectivity] ${ev}:`, payload);
+      logger.warn(`[watch-connectivity] ${ev}:`, payload);
     });
     if (off) diagnosticsUnsubscribers.push(off);
   }
@@ -421,7 +423,7 @@ function ensureDiagnostics(native: NativeModule): void {
   // have been dropped by the OS.
   for (const ev of ['reachability', 'paired', 'installed']) {
     const off = subscribe(native, ev, (value) => {
-      console.info(`[watch-connectivity] ${ev}:`, value);
+      logger.info(`[watch-connectivity] ${ev}:`, value);
       if (value === true && latestSourceCards) {
         // Rebuild the snapshot lazily so QR fallbacks are only generated when
         // the watch can actually receive them.
@@ -464,11 +466,11 @@ export async function sendMessageToWatch(message: WatchMessage): Promise<boolean
   if (typeof native.sendMessage === 'function') {
     try {
       native.sendMessage(sanitizedMessage, undefined, (err) => {
-        console.warn('[watch-connectivity] sendMessage error:', err);
+        logger.warn('[watch-connectivity] sendMessage error:', err);
       });
       return true;
     } catch (err) {
-      console.warn('[watch-connectivity] sendMessage threw:', err);
+      logger.warn('[watch-connectivity] sendMessage threw:', err);
       return false;
     }
   }
@@ -477,7 +479,7 @@ export async function sendMessageToWatch(message: WatchMessage): Promise<boolean
       native.updateApplicationContext(sanitizedMessage);
       return true;
     } catch (err) {
-      console.warn('[watch-connectivity] updateApplicationContext threw:', err);
+      logger.warn('[watch-connectivity] updateApplicationContext threw:', err);
       return false;
     }
   }
@@ -577,7 +579,7 @@ async function flushSnapshot(): Promise<boolean> {
   }
 
   if (snapshotEnvelopeSize(latestSnapshot) > WATCH_SNAPSHOT_MAX_BYTES) {
-    console.warn('[watch-connectivity] skipped watch snapshot because payload exceeds budget');
+    logger.warn('[watch-connectivity] skipped watch snapshot because payload exceeds budget');
     return false;
   }
 
@@ -588,7 +590,7 @@ async function flushSnapshot(): Promise<boolean> {
       native.updateApplicationContext(message);
       return true;
     } catch (err) {
-      console.warn('[watch-connectivity] updateApplicationContext threw:', err);
+      logger.warn('[watch-connectivity] updateApplicationContext threw:', err);
     }
   }
   // Defensive fallback: queued user info. Not snapshot semantics, but at
@@ -599,7 +601,7 @@ async function flushSnapshot(): Promise<boolean> {
       native.transferUserInfo(message);
       return true;
     } catch (err) {
-      console.warn('[watch-connectivity] transferUserInfo threw:', err);
+      logger.warn('[watch-connectivity] transferUserInfo threw:', err);
     }
   }
   return false;

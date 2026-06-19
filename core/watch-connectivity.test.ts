@@ -3,6 +3,13 @@
 
 jest.mock('@bwip-js/react-native');
 
+// The module re-requires its dependency graph after jest.resetModules() in each
+// test, so a spy on the real logger singleton wouldn't survive the reset. A mock
+// closing over this stable object IS returned on every (re)require, so assertions
+// on mockLogger.warn hold across resets. Logger gating is covered in logger.test.ts.
+const mockLogger = { info: jest.fn(), warn: jest.fn(), error: jest.fn() };
+jest.mock('@/core/utils/logger', () => ({ logger: mockLogger }));
+
 const sampleCard = {
   id: 'c1',
   name: 'Card',
@@ -47,20 +54,12 @@ function makeEvents() {
 }
 
 describe('watch-connectivity wrapper', () => {
-  let consoleWarnSpy: jest.SpyInstance;
-  let consoleInfoSpy: jest.SpyInstance;
-
   beforeEach(() => {
-    consoleWarnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {});
-    consoleInfoSpy = jest.spyOn(console, 'info').mockImplementation(() => {});
-
     const bwip = require('@bwip-js/react-native');
     bwip.__mockReset?.();
   });
 
   afterEach(() => {
-    consoleWarnSpy.mockRestore();
-    consoleInfoSpy.mockRestore();
     jest.resetModules();
     jest.clearAllMocks();
   });
@@ -154,7 +153,7 @@ describe('watch-connectivity wrapper', () => {
       });
 
       await expect(mod.sendMessageToWatch({ x: 1 })).resolves.toBe(false);
-      expect(consoleWarnSpy).toHaveBeenCalled();
+      expect(mockLogger.warn).toHaveBeenCalled();
     });
 
     test('removes null fields from nested payloads before sending', async () => {
@@ -424,7 +423,7 @@ describe('watch-connectivity wrapper', () => {
       });
 
       await expect(mod.pushCardsToWatch([sampleCard])).resolves.toBe(false);
-      expect(consoleWarnSpy).toHaveBeenCalled();
+      expect(mockLogger.warn).toHaveBeenCalled();
     });
 
     test('maps usageCount to a safe default and omits null optionals', async () => {
@@ -527,7 +526,7 @@ describe('watch-connectivity wrapper', () => {
       const payload = updateApplicationContext.mock.calls[0]![0].payload;
       expect(payload[0].barcodeImageBase64).toHaveLength(30_000);
       expect(payload[1]).not.toHaveProperty('barcodeImageBase64');
-      expect(consoleWarnSpy).toHaveBeenCalledWith(
+      expect(mockLogger.warn).toHaveBeenCalledWith(
         expect.stringContaining('dropped QR image from watch snapshot')
       );
     });
@@ -552,7 +551,7 @@ describe('watch-connectivity wrapper', () => {
       await expect(mod.pushCardsToWatch([oversizedCard])).resolves.toBe(false);
 
       expect(updateApplicationContext).not.toHaveBeenCalled();
-      expect(consoleWarnSpy).toHaveBeenCalledWith(
+      expect(mockLogger.warn).toHaveBeenCalledWith(
         expect.stringContaining('skipped watch snapshot because payload exceeds budget')
       );
     });
@@ -624,7 +623,7 @@ describe('watch-connectivity wrapper', () => {
       await mod.pushCardsToWatch([sampleCard]);
 
       events.emit('application-context-error', { error: 'payload too large' });
-      expect(consoleWarnSpy).toHaveBeenCalledWith(
+      expect(mockLogger.warn).toHaveBeenCalledWith(
         expect.stringContaining('application-context-error'),
         expect.anything()
       );

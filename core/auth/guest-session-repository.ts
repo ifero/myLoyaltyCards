@@ -13,6 +13,8 @@
 
 import { v4 as uuidv4 } from 'uuid';
 
+import { logger } from '@/core/utils/logger';
+
 // ---------------------------------------------------------------------------
 // Constants
 // ---------------------------------------------------------------------------
@@ -66,7 +68,7 @@ export const getOrCreateGuestSessionId = async (): Promise<string> => {
       }
     } catch (error) {
       // SecureStore operation failed — fall through to in-memory fallback
-      console.warn('SecureStore unavailable for guest session read/write:', error);
+      logger.warn('SecureStore unavailable for guest session read/write:', error);
     }
   }
 
@@ -97,7 +99,7 @@ export const clearGuestSessionId = async (): Promise<void> => {
       }
     } catch (error) {
       // Best-effort — ignore errors during cleanup
-      console.warn('SecureStore unavailable for guest session deletion:', error);
+      logger.warn('SecureStore unavailable for guest session deletion:', error);
     }
   }
 };

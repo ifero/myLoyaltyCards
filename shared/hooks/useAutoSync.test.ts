@@ -1,6 +1,8 @@
 import { act, renderHook } from '@testing-library/react-native';
 import { AppState, AppStateStatus } from 'react-native';
 
+import { logger } from '@/core/utils/logger';
+
 const mockIsDirty = jest.fn();
 const mockProcessPendingSync = jest.fn();
 const mockRetryWithBackoff = jest.fn();
@@ -73,11 +75,11 @@ beforeEach(() => {
   });
   mockRetryWithBackoff.mockImplementation(async (fn: () => Promise<unknown>) => fn());
 
-  jest.spyOn(console, 'error').mockImplementation(() => {});
+  jest.spyOn(logger, 'error').mockImplementation(() => {});
 });
 
 afterEach(() => {
-  (console.error as jest.Mock).mockRestore();
+  (logger.error as jest.Mock).mockRestore();
 });
 
 describe('useAutoSync', () => {

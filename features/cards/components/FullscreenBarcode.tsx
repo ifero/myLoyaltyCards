@@ -27,6 +27,7 @@ import {
 } from 'react-native';
 
 import type { LoyaltyCard } from '@/core/schemas';
+import { logger } from '@/core/utils/logger';
 
 import { TOUCH_TARGET } from '@/shared/theme/spacing';
 
@@ -68,7 +69,7 @@ export const FullscreenBarcode: React.FC<FullscreenBarcodeProps> = ({
       await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       onCopy?.();
     } catch (error) {
-      console.warn('Failed to copy barcode:', error);
+      logger.warn('Failed to copy barcode:', error);
     }
   }, [card.barcode, onCopy]);
 

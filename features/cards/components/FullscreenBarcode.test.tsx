@@ -9,6 +9,7 @@ import * as Haptics from 'expo-haptics';
 import React from 'react';
 
 import { LoyaltyCard } from '@/core/schemas';
+import { logger } from '@/core/utils/logger';
 
 import { FullscreenBarcode } from './FullscreenBarcode';
 
@@ -184,7 +185,7 @@ describe('FullscreenBarcode', () => {
 
   describe('Copy error handling', () => {
     it('handles clipboard error gracefully', async () => {
-      const consoleWarnSpy = jest.spyOn(console, 'warn').mockImplementation();
+      const loggerWarnSpy = jest.spyOn(logger, 'warn').mockImplementation();
       (Clipboard.setStringAsync as jest.Mock).mockRejectedValueOnce(new Error('fail'));
 
       const { getByTestId } = render(
@@ -194,9 +195,9 @@ describe('FullscreenBarcode', () => {
       fireEvent.press(getByTestId('fullscreen-barcode-number'));
 
       await waitFor(() => {
-        expect(consoleWarnSpy).toHaveBeenCalledWith('Failed to copy barcode:', expect.any(Error));
+        expect(loggerWarnSpy).toHaveBeenCalledWith('Failed to copy barcode:', expect.any(Error));
       });
-      consoleWarnSpy.mockRestore();
+      loggerWarnSpy.mockRestore();
     });
 
     it('copies barcode without onCopy callback', async () => {

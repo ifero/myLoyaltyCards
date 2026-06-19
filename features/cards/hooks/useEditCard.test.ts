@@ -40,6 +40,7 @@ jest.mock('@/shared/supabase/useAuthState', () => ({
 
 import { getCardById, updateCard as updateCardInDb } from '@/core/database';
 import * as syncModule from '@/core/sync';
+import { logger } from '@/core/utils/logger';
 
 import { useEditCard } from './useEditCard';
 
@@ -48,11 +49,11 @@ describe('useEditCard', () => {
     jest.clearAllMocks();
     (Haptics.notificationAsync as jest.Mock).mockResolvedValue(undefined);
     (Burnt.toast as jest.Mock).mockReturnValue(undefined);
-    jest.spyOn(console, 'error').mockImplementation(() => {});
+    jest.spyOn(logger, 'error').mockImplementation(() => {});
   });
 
   afterEach(() => {
-    (console.error as jest.Mock).mockRestore();
+    (logger.error as jest.Mock).mockRestore();
   });
 
   it('updates card and shows success feedback', async () => {
