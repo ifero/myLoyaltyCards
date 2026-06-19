@@ -22,6 +22,10 @@ jobs:
       APP_STORE_CONNECT_API_KEY_KEY: ${{ secrets.APP_STORE_CONNECT_API_KEY_KEY }}
       EXPO_PUBLIC_SUPABASE_URL: ${{ secrets.EXPO_PUBLIC_SUPABASE_URL }}
       EXPO_PUBLIC_SUPABASE_KEY: ${{ secrets.EXPO_PUBLIC_SUPABASE_KEY }}
+      # Sentry: DSN inlined into the bundle at build time; auth token enables
+      # source-map + native-symbol upload for symbolication.
+      EXPO_PUBLIC_SENTRY_DSN: ${{ secrets.EXPO_PUBLIC_SENTRY_DSN }}
+      SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
       FASTLANE_SKIP_UPDATE_CHECK: '1'
       FASTLANE_DISABLE_COLORS: '1'
 
@@ -43,6 +47,16 @@ jobs:
         run: |
           echo "EXPO_PUBLIC_SUPABASE_URL=${{ secrets.EXPO_PUBLIC_SUPABASE_URL }}" >> .env
           echo "EXPO_PUBLIC_SUPABASE_KEY=${{ secrets.EXPO_PUBLIC_SUPABASE_KEY }}" >> .env
+          echo "EXPO_PUBLIC_SENTRY_DSN=${{ secrets.EXPO_PUBLIC_SENTRY_DSN }}" >> .env
+      - name: Configure Sentry symbol upload
+        run: |
+          if [ -n "$SENTRY_AUTH_TOKEN" ]; then
+            echo "SENTRY_AUTH_TOKEN present — Sentry symbol/source-map upload enabled."
+            echo "SENTRY_DISABLE_AUTO_UPLOAD=false" >> "$GITHUB_ENV"
+          else
+            echo "::warning::SENTRY_AUTH_TOKEN not set — skipping Sentry symbol upload (crashes won't be symbolicated). Add the SENTRY_AUTH_TOKEN repo secret to enable."
+            echo "SENTRY_DISABLE_AUTO_UPLOAD=true" >> "$GITHUB_ENV"
+          fi
       - name: Prebuild native projects
         run: npx expo prebuild --platform ios
       - name: Generate watchOS catalogue (Brands.swift)
@@ -67,6 +81,10 @@ jobs:
       ANDROID_KEYSTORE_PATH: ${{ github.workspace }}/android/app/release.keystore
       EXPO_PUBLIC_SUPABASE_URL: ${{ secrets.EXPO_PUBLIC_SUPABASE_URL }}
       EXPO_PUBLIC_SUPABASE_KEY: ${{ secrets.EXPO_PUBLIC_SUPABASE_KEY }}
+      # Sentry: DSN inlined into the bundle at build time; auth token enables
+      # source-map + native-symbol upload for symbolication.
+      EXPO_PUBLIC_SENTRY_DSN: ${{ secrets.EXPO_PUBLIC_SENTRY_DSN }}
+      SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
       FASTLANE_SKIP_UPDATE_CHECK: '1'
       FASTLANE_DISABLE_COLORS: '1'
 
@@ -84,6 +102,16 @@ jobs:
         run: |
           echo "EXPO_PUBLIC_SUPABASE_URL=${{ secrets.EXPO_PUBLIC_SUPABASE_URL }}" >> .env
           echo "EXPO_PUBLIC_SUPABASE_KEY=${{ secrets.EXPO_PUBLIC_SUPABASE_KEY }}" >> .env
+          echo "EXPO_PUBLIC_SENTRY_DSN=${{ secrets.EXPO_PUBLIC_SENTRY_DSN }}" >> .env
+      - name: Configure Sentry symbol upload
+        run: |
+          if [ -n "$SENTRY_AUTH_TOKEN" ]; then
+            echo "SENTRY_AUTH_TOKEN present — Sentry symbol/source-map upload enabled."
+            echo "SENTRY_DISABLE_AUTO_UPLOAD=false" >> "$GITHUB_ENV"
+          else
+            echo "::warning::SENTRY_AUTH_TOKEN not set — skipping Sentry symbol upload (crashes won't be symbolicated). Add the SENTRY_AUTH_TOKEN repo secret to enable."
+            echo "SENTRY_DISABLE_AUTO_UPLOAD=true" >> "$GITHUB_ENV"
+          fi
       - name: Compute Android versionCode
         # Authoritative versionCode baked into the AAB manifest by app.config.ts
         # during prebuild. Alpha/beta band = the workflow run number.
