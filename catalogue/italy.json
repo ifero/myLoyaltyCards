@@ -29,7 +29,7 @@
       "name": "Carrefour",
       "aliases": ["payback", "market", "express"],
       "logo": "carrefour",
-      "color": "#00338D",
+      "color": "#004e9f",
       "defaultFormat": "EAN13"
     },
     {
@@ -125,14 +125,14 @@
       "name": "Coin",
       "aliases": ["coincard", "department"],
       "logo": "coin",
-      "color": "#000000"
+      "color": "#64191E"
     },
     {
       "id": "ovs",
       "name": "OVS",
       "aliases": ["fashion", "clothing", "friends"],
       "logo": "ovs",
-      "color": "#000000",
+      "color": "#001526",
       "defaultFormat": "EAN13"
     },
     {
@@ -155,14 +155,14 @@
       "name": "Decò",
       "aliases": ["supermarket", "grocery", "deco"],
       "logo": "deco",
-      "color": "#D71920"
+      "color": "#292929"
     },
     {
       "id": "uniclub",
       "name": "UniClub",
       "aliases": ["loyalty", "rewards", "catalog"],
       "logo": "uniclub",
-      "color": "#F28C00"
+      "color": "#005DAA"
     },
     {
       "id": "desigual",
