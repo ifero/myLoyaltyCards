@@ -10,6 +10,10 @@ import { LoyaltyCard } from '@/core/schemas';
 
 import { BrandHero } from './BrandHero';
 
+jest.mock('@/shared/theme', () => ({
+  useTheme: () => ({ isDark: false })
+}));
+
 // Mock theme
 jest.mock('@/shared/theme/colors', () => ({
   CARD_COLORS: {

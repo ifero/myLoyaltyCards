@@ -24,24 +24,12 @@ import { LoyaltyCard } from '@/core/schemas';
 
 import { useTheme } from '@/shared/theme';
 import { CARD_COLORS } from '@/shared/theme/colors';
+import { getLuminance } from '@/shared/theme/luminance';
 import { TYPOGRAPHY } from '@/shared/theme/typography';
 
 import { BrandLogo } from './BrandLogo';
 import { useBrandLogo } from '../hooks/useBrandLogo';
 import { getBrandLogo } from '../utils/brandLogos';
-
-/**
- * Returns true if a hex color is perceptually dark (relative luminance < 0.2).
- * Uses simplified sRGB → luminance formula per WCAG 2.0.
- */
-const isDarkBrandColor = (hex: string): boolean => {
-  const c = hex.replace('#', '');
-  const r = parseInt(c.substring(0, 2), 16) / 255;
-  const g = parseInt(c.substring(2, 4), 16) / 255;
-  const b = parseInt(c.substring(4, 6), 16) / 255;
-  const luminance = 0.2126 * r + 0.7152 * g + 0.0722 * b;
-  return luminance < 0.2;
-};
 
 /** Standard grid tile dimensions (pt) */
 export const TILE_WIDTH = 171;
@@ -108,7 +96,9 @@ export const CardTile: React.FC<CardTileProps> = ({
 
   // Resolve background color: brand hex for catalogue, card palette color for custom
   const backgroundColor = brand ? brand.color : (CARD_COLORS[card.color] ?? CARD_COLORS.grey);
-  const isBlackBrand = isDarkBrandColor(backgroundColor);
+  const luminance = getLuminance(backgroundColor);
+  const isBlackBrand = luminance < 0.2;
+  const isLightBrand = luminance > 0.85;
 
   // Determine foreground color for avatar text
   const foregroundColor = isBlackBrand ? '#FFFFFF' : '#1F1F24';
@@ -138,8 +128,14 @@ export const CardTile: React.FC<CardTileProps> = ({
             height: tileHeight,
             borderRadius: tileRadius,
             backgroundColor,
-            borderWidth: isDark && isBlackBrand ? 1 : 0,
-            borderColor: isDark && isBlackBrand ? '#40404A' : 'transparent'
+            borderWidth: isLightBrand || (isDark && isBlackBrand) ? 1 : 0,
+            borderColor: isLightBrand
+              ? isDark
+                ? 'rgba(255,255,255,0.12)'
+                : 'rgba(0,0,0,0.08)'
+              : isDark && isBlackBrand
+                ? '#40404A'
+                : 'transparent'
           },
           !isDark && styles.shadow,
           highlighted && highlightStyle

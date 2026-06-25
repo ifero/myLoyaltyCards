@@ -1,6 +1,15 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" width="472" height="307" viewBox="0 0 47.2 30.7">
-  <path fill="#D61233" d="M23.6,23V7.6h23.6V23H23.6z"/>
-  <path fill="#FFFFFF" d="M0,23V7.7h23.6V23H0z"/>
-  <path fill="#02154E" d="M0,0v7.6h47.2V0H0z M0,23v7.7h47.2V23H0z"/>
+<svg version="1.1" id="Layer_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px" viewBox="0 0 74 48" style="enable-background:new 0 0 74 48;" xml:space="preserve">
+ <style type="text/css">
+  .st0{fill-rule:evenodd;clip-rule:evenodd;fill:#C8102E;}
+	.st1{fill-rule:evenodd;clip-rule:evenodd;fill:#FFFFFF;}
+	.st2{fill-rule:evenodd;clip-rule:evenodd;fill:#041E42;}
+ </style>
+ <g>
+  <path class="st0" d="M37,36.1h37V11.9H37V36.1z">
+  </path>
+  <path class="st1" d="M0,36.1h37V12H0L0,36.1z">
+  </path>
+  <path class="st2" d="M0,12h74V0H0V12z M0,48h74V36H0V48z">
+  </path>
+ </g>
 </svg>

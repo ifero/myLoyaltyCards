@@ -4,13 +4,13 @@ import { type SvgProps } from 'react-native-svg';
 
 import AcquaESaponeLogo from '@/assets/images/brands/acqua-e-sapone.svg';
 import BennetLogo from '@/assets/images/brands/bennet.svg';
-import BlukidsLogo from '@/assets/images/brands/blukids.svg';
+import BlukidsLogo from '@/assets/images/brands/blukids.png';
 import BurgerKingLogo from '@/assets/images/brands/burger-king.svg';
 import CalliopeLogo from '@/assets/images/brands/calliope.svg';
 import CalzedoniaLogo from '@/assets/images/brands/calzedonia.svg';
 import CamaieuLogo from '@/assets/images/brands/camaieu.svg';
 import CarrefourLogo from '@/assets/images/brands/carrefour.svg';
-import CoinLogo from '@/assets/images/brands/coin.svg';
+import CoinLogo from '@/assets/images/brands/coin.png';
 import ConadLogo from '@/assets/images/brands/conad.svg';
 import CoopLogo from '@/assets/images/brands/coop.svg';
 import CraiLogo from '@/assets/images/brands/crai.svg';

@@ -45,14 +45,14 @@
       "name": "Eurospin",
       "aliases": ["discount", "market"],
       "logo": "eurospin",
-      "color": "#005596"
+      "color": "#0069B1"
     },
     {
       "id": "pam",
       "name": "Pam",
       "aliases": ["panorama", "per te"],
       "logo": "pam",
-      "color": "#E30613"
+      "color": "#165226"
     },
     {
       "id": "despar",
@@ -66,7 +66,7 @@
       "name": "Unieuro",
       "aliases": ["electronics", "tech", "club"],
       "logo": "unieuro",
-      "color": "#2D8BF0"
+      "color": "#151B26"
     },
     {
       "id": "mediaworld",
@@ -125,7 +125,7 @@
       "name": "Coin",
       "aliases": ["coincard", "department"],
       "logo": "coin",
-      "color": "#64191E"
+      "color": "#ffffff"
     },
     {
       "id": "ovs",
@@ -169,28 +169,28 @@
       "name": "Desigual",
       "aliases": ["fashion", "clothing", "spain"],
       "logo": "desigual",
-      "color": "#000000"
+      "color": "#202124"
     },
     {
       "id": "blukids",
       "name": "Blukids",
       "aliases": ["kids", "fashion", "children"],
       "logo": "blukids",
-      "color": "#0057B8"
+      "color": "#ffffff"
     },
     {
       "id": "original-marines",
       "name": "Original Marines",
       "aliases": ["kids", "fashion", "children"],
       "logo": "original-marines",
-      "color": "#0B3A82"
+      "color": "#FFFFFF"
     },
     {
       "id": "euronics",
       "name": "Euronics",
       "aliases": ["electronics", "tech", "appliances"],
       "logo": "euronics",
-      "color": "#003B8E"
+      "color": "#1D428A"
     },
     {
       "id": "toys-center",
@@ -218,7 +218,7 @@
       "name": "Camaieu",
       "aliases": ["fashion", "clothing", "women"],
       "logo": "camaieu",
-      "color": "#E5007D"
+      "color": "#F00075"
     },
     {
       "id": "intimissimi",
@@ -232,7 +232,7 @@
       "name": "Motivi",
       "aliases": ["fashion", "clothing", "women"],
       "logo": "motivi",
-      "color": "#111111"
+      "color": "#D09361"
     },
     {
       "id": "acqua-e-sapone",
@@ -246,7 +246,7 @@
       "name": "CRAI",
       "aliases": ["supermarket", "grocery", "market"],
       "logo": "crai",
-      "color": "#D71920"
+      "color": "#ffffff"
     },
     {
       "id": "lotteria-degli-scontrini",
@@ -267,14 +267,14 @@
       "name": "Oltre",
       "aliases": ["fashion", "clothing", "women"],
       "logo": "oltre",
-      "color": "#111111"
+      "color": "#FFDF7E"
     },
     {
       "id": "pandora",
       "name": "Pandora",
       "aliases": ["jewelry", "fashion", "charms"],
       "logo": "pandora",
-      "color": "#224099"
+      "color": "#FFB3CB"
     },
     {
       "id": "rinascente",
@@ -295,14 +295,14 @@
       "name": "Penny Market",
       "aliases": ["supermarket", "discount", "grocery"],
       "logo": "penny-market",
-      "color": "#D71920"
+      "color": "#CD1414"
     },
     {
       "id": "pitta-rosso",
       "name": "Pitta Rosso",
       "aliases": ["shoes", "fashion", "footwear"],
       "logo": "pitta-rosso",
-      "color": "#E30613"
+      "color": "#ffffff"
     },
     {
       "id": "il-gigante",
@@ -316,14 +316,14 @@
       "name": "MD",
       "aliases": ["supermarket", "discount", "grocery"],
       "logo": "md",
-      "color": "#E30613"
+      "color": "#3276c2"
     },
     {
       "id": "burger-king",
       "name": "Burger King",
       "aliases": ["restaurant", "fast food", "burger"],
       "logo": "burger-king",
-      "color": "#D62300"
+      "color": "#F4E9DB"
     },
     {
       "id": "ido",
@@ -344,14 +344,14 @@
       "name": "Tommy Hilfiger",
       "aliases": ["fashion", "clothing", "premium"],
       "logo": "tommy-hilfiger",
-      "color": "#0A1F44"
+      "color": "#ffffff"
     },
     {
       "id": "calzedonia",
       "name": "Calzedonia",
       "aliases": ["hosiery", "fashion", "lingerie"],
       "logo": "calzedonia",
-      "color": "#8E1B2F"
+      "color": "#000000"
     },
     {
       "id": "calliope",
@@ -365,7 +365,7 @@
       "name": "JYSK",
       "aliases": ["home", "furniture", "house"],
       "logo": "jysk",
-      "color": "#004A98"
+      "color": "#034694"
     }
   ]
 }

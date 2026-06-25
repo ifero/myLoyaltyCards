@@ -12,8 +12,9 @@ import { View, Text, StyleSheet } from 'react-native';
 
 import type { LoyaltyCard } from '@/core/schemas';
 
+import { useTheme } from '@/shared/theme';
 import { CARD_COLORS } from '@/shared/theme/colors';
-import { getContrastForeground } from '@/shared/theme/luminance';
+import { getContrastForeground, getLuminance } from '@/shared/theme/luminance';
 import { LAYOUT } from '@/shared/theme/spacing';
 import { TYPOGRAPHY } from '@/shared/theme/typography';
 
@@ -41,28 +42,35 @@ const AVATAR_SIZE = 72;
  */
 export const BrandHero: React.FC<BrandHeroProps> = ({ card, testID }) => {
   const brand = useBrandLogo(card.brandId);
+  const { isDark } = useTheme();
 
-  const { backgroundColor, foregroundColor, displayName, firstLetter } = useMemo(() => {
-    const isCatalogue = card.brandId !== null && brand !== undefined;
-    const bgColor = isCatalogue
-      ? (brand?.color ?? CARD_COLORS.grey)
-      : (CARD_COLORS[card.color] ?? CARD_COLORS.grey);
+  const { backgroundColor, foregroundColor, displayName, firstLetter, isLightBrand } =
+    useMemo(() => {
+      const isCatalogue = card.brandId !== null && brand !== undefined;
+      const bgColor = isCatalogue
+        ? (brand?.color ?? CARD_COLORS.grey)
+        : (CARD_COLORS[card.color] ?? CARD_COLORS.grey);
 
-    // Determine foreground color based on luminance
-    const fgColor = getContrastForeground(bgColor);
-
-    return {
-      backgroundColor: bgColor,
-      foregroundColor: fgColor,
-      displayName: isCatalogue ? (brand?.name ?? card.name) : card.name,
-      firstLetter: card.name.trim().charAt(0).toUpperCase() || 'C'
-    };
-  }, [card.brandId, card.color, card.name, brand]);
+      return {
+        backgroundColor: bgColor,
+        foregroundColor: getContrastForeground(bgColor),
+        isLightBrand: getLuminance(bgColor) > 0.85,
+        displayName: isCatalogue ? (brand?.name ?? card.name) : card.name,
+        firstLetter: card.name.trim().charAt(0).toUpperCase() || 'C'
+      };
+    }, [card.brandId, card.color, card.name, brand]);
 
   const logo = brand ? getBrandLogo(brand.logo) : undefined;
 
   return (
-    <View testID={testID} style={[styles.container, { backgroundColor }]}>
+    <View
+      testID={testID}
+      style={[
+        styles.container,
+        { backgroundColor },
+        isLightBrand && !isDark && styles.lightBrandBorder
+      ]}
+    >
       {card.brandId !== null && brand ? (
         // Catalogue card: logo slot
         <View testID={`${testID}-logo-slot`} style={styles.logoSlot}>
@@ -101,6 +109,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: LAYOUT.screenHorizontalMargin,
     paddingTop: 16,
     paddingBottom: 20
+  },
+  lightBrandBorder: {
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(0,0,0,0.08)'
   },
   logoSlot: {
     width: LOGO_SIZE,
