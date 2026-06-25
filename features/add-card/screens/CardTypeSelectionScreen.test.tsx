@@ -98,7 +98,7 @@ jest.mock('@/core/catalogue/catalogue-repository', () => ({
 
 // Mock brandLogos
 jest.mock('@/features/cards/utils/brandLogos', () => ({
-  getBrandLogoComponent: jest.fn(() => undefined)
+  getBrandLogo: jest.fn(() => undefined)
 }));
 
 describe('CardTypeSelectionScreen', () => {

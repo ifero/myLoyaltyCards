@@ -33,7 +33,12 @@ const MockLogoComponent = ({ width, height }: { width: number; height: number })
   require('react').createElement('View', { testID: 'mock-svg-logo', style: { width, height } });
 
 jest.mock('../utils/brandLogos', () => ({
-  getBrandLogoComponent: jest.fn(() => MockLogoComponent)
+  getBrandLogo: jest.fn(() => MockLogoComponent)
+}));
+
+jest.mock('./BrandLogo', () => ({
+  BrandLogo: ({ source, width, height }: { source: unknown; width: number; height: number }) =>
+    typeof source === 'function' ? source({ width, height }) : null
 }));
 
 const mockCustomCard: LoyaltyCard = {

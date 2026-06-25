@@ -86,7 +86,7 @@ jest.mock('@/features/cards/hooks/useAddCard', () => ({
 
 // Mock brandLogos
 jest.mock('@/features/cards/utils/brandLogos', () => ({
-  getBrandLogoComponent: jest.fn(() => undefined)
+  getBrandLogo: jest.fn(() => undefined)
 }));
 
 // Mock luminance

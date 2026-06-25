@@ -26,8 +26,9 @@ import { useTheme } from '@/shared/theme';
 import { CARD_COLORS } from '@/shared/theme/colors';
 import { TYPOGRAPHY } from '@/shared/theme/typography';
 
+import { BrandLogo } from './BrandLogo';
 import { useBrandLogo } from '../hooks/useBrandLogo';
-import { getBrandLogoComponent } from '../utils/brandLogos';
+import { getBrandLogo } from '../utils/brandLogos';
 
 /**
  * Returns true if a hex color is perceptually dark (relative luminance < 0.2).
@@ -113,12 +114,10 @@ export const CardTile: React.FC<CardTileProps> = ({
   const foregroundColor = isBlackBrand ? '#FFFFFF' : '#1F1F24';
   const firstLetter = card.name.trim().charAt(0).toUpperCase() || 'C';
 
-  // Get SVG logo component if available
-  const LogoComponent = brand ? getBrandLogoComponent(brand.logo) : undefined;
+  const logo = brand ? getBrandLogo(brand.logo) : undefined;
 
-  // Logo sizing: fill most of the tile, letting SVG preserve its own aspect ratio
   const logoWidth = Math.round(tileWidth * 0.85);
-  const logoHeight = Math.round(tileHeight * 0.65);
+  const logoHeight = Math.round(tileHeight * 0.85);
 
   return (
     <Pressable
@@ -146,9 +145,8 @@ export const CardTile: React.FC<CardTileProps> = ({
           highlighted && highlightStyle
         ]}
       >
-        {LogoComponent ? (
-          /* Catalogue card with SVG logo */
-          <LogoComponent width={logoWidth} height={logoHeight} color={foregroundColor} />
+        {logo ? (
+          <BrandLogo source={logo} width={logoWidth} height={logoHeight} color={foregroundColor} />
         ) : brand ? (
           /* Catalogue card without SVG: brand name abbreviation fallback */
           <View style={styles.logoSlot}>

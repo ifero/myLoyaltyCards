@@ -17,8 +17,9 @@ import { getContrastForeground } from '@/shared/theme/luminance';
 import { LAYOUT } from '@/shared/theme/spacing';
 import { TYPOGRAPHY } from '@/shared/theme/typography';
 
+import { BrandLogo } from './BrandLogo';
 import { useBrandLogo } from '../hooks/useBrandLogo';
-import { getBrandLogoComponent } from '../utils/brandLogos';
+import { getBrandLogo } from '../utils/brandLogos';
 
 interface BrandHeroProps {
   card: LoyaltyCard;
@@ -58,15 +59,15 @@ export const BrandHero: React.FC<BrandHeroProps> = ({ card, testID }) => {
     };
   }, [card.brandId, card.color, card.name, brand]);
 
-  const LogoComponent = brand ? getBrandLogoComponent(brand.logo) : undefined;
+  const logo = brand ? getBrandLogo(brand.logo) : undefined;
 
   return (
     <View testID={testID} style={[styles.container, { backgroundColor }]}>
       {card.brandId !== null && brand ? (
         // Catalogue card: logo slot
         <View testID={`${testID}-logo-slot`} style={styles.logoSlot}>
-          {LogoComponent ? (
-            <LogoComponent width={LOGO_SIZE} height={LOGO_SIZE} color={foregroundColor} />
+          {logo ? (
+            <BrandLogo source={logo} width={LOGO_SIZE} height={LOGO_SIZE} color={foregroundColor} />
           ) : (
             <Text style={[styles.brandAbbreviation, { color: foregroundColor }]}>
               {brand.name.substring(0, 2).toUpperCase()}

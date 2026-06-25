@@ -18,7 +18,12 @@ const MockLogo = ({ width, height }: { width: number; height: number }) =>
   require('react').createElement('View', { testID: 'pill-logo', style: { width, height } });
 
 jest.mock('@/features/cards/utils/brandLogos', () => ({
-  getBrandLogoComponent: jest.fn(() => MockLogo)
+  getBrandLogo: jest.fn(() => MockLogo)
+}));
+
+jest.mock('@/features/cards/components/BrandLogo', () => ({
+  BrandLogo: ({ source, width, height }: { source: unknown; width: number; height: number }) =>
+    typeof source === 'function' ? source({ width, height }) : null
 }));
 
 const testBrand: CatalogueBrand = {
@@ -45,10 +50,10 @@ describe('BrandPill', () => {
     expect(screen.getByTestId('pill-logo')).toBeTruthy();
   });
 
-  it('does not render logo when getBrandLogoComponent returns null', () => {
+  it('does not render logo when getBrandLogo returns undefined', () => {
     // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const { getBrandLogoComponent } = require('@/features/cards/utils/brandLogos');
-    (getBrandLogoComponent as jest.Mock).mockReturnValueOnce(undefined);
+    const { getBrandLogo } = require('@/features/cards/utils/brandLogos');
+    (getBrandLogo as jest.Mock).mockReturnValueOnce(undefined);
 
     render(<BrandPill brand={testBrand} />);
     expect(screen.queryByTestId('pill-logo')).toBeNull();

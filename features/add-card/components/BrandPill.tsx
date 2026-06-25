@@ -11,7 +11,8 @@ import { View, Text, StyleSheet } from 'react-native';
 
 import { getContrastForeground } from '@/shared/theme/luminance';
 
-import { getBrandLogoComponent } from '@/features/cards/utils/brandLogos';
+import { BrandLogo } from '@/features/cards/components/BrandLogo';
+import { getBrandLogo } from '@/features/cards/utils/brandLogos';
 
 import { CatalogueBrand } from '@/catalogue/types';
 
@@ -25,13 +26,13 @@ const LOGO_SIZE = 16;
 
 export const BrandPill: React.FC<BrandPillProps> = ({ brand, testID = 'brand-pill' }) => {
   const foregroundColor = getContrastForeground(brand.color);
-  const LogoComponent = getBrandLogoComponent(brand.logo);
+  const logo = getBrandLogo(brand.logo);
 
   return (
     <View testID={testID} style={[styles.pill, { backgroundColor: brand.color }]}>
-      {LogoComponent && (
+      {logo && (
         <View style={styles.logoContainer}>
-          <LogoComponent width={LOGO_SIZE} height={LOGO_SIZE} color={foregroundColor} />
+          <BrandLogo source={logo} width={LOGO_SIZE} height={LOGO_SIZE} color={foregroundColor} />
         </View>
       )}
       <Text style={[styles.text, { color: foregroundColor }]} numberOfLines={1}>

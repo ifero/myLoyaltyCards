@@ -50,7 +50,6 @@ jest.mock('../hooks/useBrandLogo', () => ({
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const { useBrandLogo } = require('../hooks/useBrandLogo');
 
-// Mock getBrandLogoComponent to return a simple component for known brands
 jest.mock('../utils/brandLogos', () => {
   // eslint-disable-next-line @typescript-eslint/no-require-imports
   const React = require('react');
@@ -59,9 +58,14 @@ jest.mock('../utils/brandLogos', () => {
   const MockLogo = (props: Record<string, unknown>) =>
     React.createElement(View, { ...props, testID: 'brand-logo-svg' });
   return {
-    getBrandLogoComponent: jest.fn(() => MockLogo)
+    getBrandLogo: jest.fn(() => MockLogo)
   };
 });
+
+jest.mock('./BrandLogo', () => ({
+  BrandLogo: ({ source, width, height }: { source: unknown; width: number; height: number }) =>
+    typeof source === 'function' ? source({ width, height }) : null
+}));
 
 describe('CardTile', () => {
   const mockCard: LoyaltyCard = {

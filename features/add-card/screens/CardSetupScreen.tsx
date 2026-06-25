@@ -36,8 +36,9 @@ import { useTheme } from '@/shared/theme';
 import { getContrastForeground } from '@/shared/theme/luminance';
 import { SPACING, LAYOUT, TOUCH_TARGET } from '@/shared/theme/spacing';
 
+import { BrandLogo } from '@/features/cards/components/BrandLogo';
 import { useAddCard } from '@/features/cards/hooks/useAddCard';
-import { getBrandLogoComponent } from '@/features/cards/utils/brandLogos';
+import { getBrandLogo } from '@/features/cards/utils/brandLogos';
 
 import { CatalogueBrand } from '@/catalogue/types';
 
@@ -55,14 +56,14 @@ type SetupParams = {
 
 /** Brand header for catalogue mode */
 const BrandHeader: React.FC<{ brand: CatalogueBrand }> = ({ brand }) => {
-  const LogoComponent = getBrandLogoComponent(brand.logo);
+  const logo = getBrandLogo(brand.logo);
   const fgColor = getContrastForeground(brand.color);
 
   return (
     <View style={[styles.brandHeader, { backgroundColor: brand.color }]}>
       <View style={styles.brandLogoCircle}>
-        {LogoComponent ? (
-          <LogoComponent width={32} height={32} color={fgColor} />
+        {logo ? (
+          <BrandLogo source={logo} width={32} height={32} color={fgColor} />
         ) : (
           <Text style={[styles.brandFallbackLetter, { color: fgColor }]}>
             {brand.name.charAt(0).toUpperCase()}

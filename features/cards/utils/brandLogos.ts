@@ -1,12 +1,5 @@
-/**
- * Brand Logo Registry
- * Story 13.2: Map catalogue brand IDs to their SVG logo components.
- *
- * Each brand's SVG in assets/images/brands/ is imported as a React component
- * via react-native-svg-transformer. Use getBrandLogoComponent() for lookup.
- */
-
 import { type FC } from 'react';
+import { type ImageSourcePropType } from 'react-native';
 import { type SvgProps } from 'react-native-svg';
 
 import AcquaESaponeLogo from '@/assets/images/brands/acqua-e-sapone.svg';
@@ -57,12 +50,14 @@ import StroiliLogo from '@/assets/images/brands/stroili.svg';
 import TigotaLogo from '@/assets/images/brands/tigota.svg';
 import TommyHilfigerLogo from '@/assets/images/brands/tommy-hilfiger.svg';
 import ToysCenterLogo from '@/assets/images/brands/toys-center.svg';
-import UniclubLogo from '@/assets/images/brands/uniclub.svg';
+import UniclubLogo from '@/assets/images/brands/uniclub.png';
 import UnieuroLogo from '@/assets/images/brands/unieuro.svg';
 import ZaraLogo from '@/assets/images/brands/zara.svg';
 
-/** Static map from brand logo key → SVG component */
-const BRAND_LOGOS: Record<string, FC<SvgProps>> = {
+/** SVG component or static image source — consumers render via <BrandLogo /> */
+export type BrandLogoSource = FC<SvgProps> | ImageSourcePropType;
+
+const BRAND_LOGOS: Record<string, BrandLogoSource> = {
   'acqua-e-sapone': AcquaESaponeLogo,
   bennet: BennetLogo,
   blukids: BlukidsLogo,
@@ -111,14 +106,9 @@ const BRAND_LOGOS: Record<string, FC<SvgProps>> = {
   tigota: TigotaLogo,
   'tommy-hilfiger': TommyHilfigerLogo,
   'toys-center': ToysCenterLogo,
-  unieuro: UnieuroLogo,
   uniclub: UniclubLogo,
+  unieuro: UnieuroLogo,
   zara: ZaraLogo
 };
 
-/**
- * Get the SVG logo component for a brand by its logo key.
- * Returns undefined if no logo exists for the given key.
- */
-export const getBrandLogoComponent = (logoKey: string): FC<SvgProps> | undefined =>
-  BRAND_LOGOS[logoKey];
+export const getBrandLogo = (logoKey: string): BrandLogoSource | undefined => BRAND_LOGOS[logoKey];
