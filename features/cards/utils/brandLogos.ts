@@ -47,6 +47,7 @@ import PrenatalLogo from '@/assets/images/brands/prenatal.svg';
 import RinascenteLogo from '@/assets/images/brands/rinascente.svg';
 import SephoraLogo from '@/assets/images/brands/sephora.svg';
 import StroiliLogo from '@/assets/images/brands/stroili.svg';
+import SuperConvenienteLogo from '@/assets/images/brands/super-conveniente.svg';
 import TigotaLogo from '@/assets/images/brands/tigota.svg';
 import TommyHilfigerLogo from '@/assets/images/brands/tommy-hilfiger.svg';
 import ToysCenterLogo from '@/assets/images/brands/toys-center.svg';
@@ -103,6 +104,7 @@ const BRAND_LOGOS: Record<string, BrandLogoSource> = {
   rinascente: RinascenteLogo,
   sephora: SephoraLogo,
   stroili: StroiliLogo,
+  'super-conveniente': SuperConvenienteLogo,
   tigota: TigotaLogo,
   'tommy-hilfiger': TommyHilfigerLogo,
   'toys-center': ToysCenterLogo,

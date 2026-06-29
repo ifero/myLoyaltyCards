@@ -55,6 +55,7 @@ enum BrandLogoCatalogData {
     "rinascente",
     "sephora",
     "stroili",
+    "super-conveniente",
     "tigota",
     "tommy-hilfiger",
     "toys-center",
