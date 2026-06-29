@@ -366,6 +366,13 @@
       "aliases": ["home", "furniture", "house"],
       "logo": "jysk",
       "color": "#034694"
+    },
+    {
+      "id": "super-conveniente",
+      "name": "Super Conveniente",
+      "aliases": ["supermarket", "grocery", "discount"],
+      "logo": "super-conveniente",
+      "color": "#FFED00"
     }
   ]
 }

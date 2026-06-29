@@ -63,6 +63,7 @@ enum WatchBrands {
     .init(id: "tommy-hilfiger", logoUrl: "assets/images/brands/tommy-hilfiger.svg", name: "Tommy Hilfiger", aliases: ["fashion", "clothing", "premium"]),
     .init(id: "calzedonia", logoUrl: "assets/images/brands/calzedonia.svg", name: "Calzedonia", aliases: ["hosiery", "fashion", "lingerie"]),
     .init(id: "calliope", logoUrl: "assets/images/brands/calliope.svg", name: "Calliope", aliases: ["fashion", "clothing", "retail"]),
-    .init(id: "jysk", logoUrl: "assets/images/brands/jysk.svg", name: "JYSK", aliases: ["home", "furniture", "house"])
+    .init(id: "jysk", logoUrl: "assets/images/brands/jysk.svg", name: "JYSK", aliases: ["home", "furniture", "house"]),
+    .init(id: "super-conveniente", logoUrl: "assets/images/brands/super-conveniente.svg", name: "Super Conveniente", aliases: ["supermarket", "grocery", "discount"])
   ]
 }
