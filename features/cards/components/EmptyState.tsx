@@ -18,8 +18,10 @@ import { useTheme } from '@/shared/theme';
 import { TYPOGRAPHY } from '@/shared/theme/typography';
 
 /**
- * Wallet illustration matching Figma (node 52:64).
- * Uses primary color with varying opacities + accent dots.
+ * Wallet illustration. Canonical source: this component — the repo is canonical for design
+ * (see docs/design/CONTRIBUTING-DESIGN.md). Uses the theme primary color with varying
+ * opacities + accent dots.
+ * (Historical breadcrumb: originally matched Figma node 52:64 — Figma is now ideation-only.)
  */
 const WalletIllustration: React.FC<{ primary: string }> = ({ primary }) => (
   <Svg width={160} height={120} viewBox="0 0 160 120" fill="none">
