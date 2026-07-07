@@ -2,19 +2,21 @@ name: PR conventions
 
 # Fails the PR if it doesn't follow the machine-checkable rules in CONTRIBUTING.md:
 # Conventional Commit title, branch naming, and a spec-first story reference for
-# code changes (docs:/chore: titles and catalogue PRs are exempt).
+# code changes (docs:/chore: titles, catalogue PRs, and design-labelled PRs are exempt).
 
 on:
   pull_request:
-    types: [opened, edited, synchronize, reopened, ready_for_review]
+    # labeled/unlabeled: re-run when a story-exempt label (catalogue/design) is applied after opening.
+    types: [opened, edited, synchronize, reopened, ready_for_review, labeled, unlabeled]
 
 permissions:
   contents: read
 
 jobs:
   check:
-    # Skip drafts and bot PRs (e.g. Dependabot).
-    if: github.event.pull_request.draft == false && github.event.pull_request.user.type != 'Bot'
+    # Skip drafts, bot PRs (e.g. Dependabot), and already-closed/merged PRs
+    # (labeled/unlabeled fire post-merge too — don't re-run on resolved PRs).
+    if: github.event.pull_request.draft == false && github.event.pull_request.user.type != 'Bot' && github.event.pull_request.state == 'open'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout

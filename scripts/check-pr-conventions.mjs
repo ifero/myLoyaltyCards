@@ -6,7 +6,8 @@
 //   1. PR title is a Conventional Commit: <type>(<scope>): <summary>
 //   2. Branch name uses an allowed prefix (feature/ fix/ refactor/ docs/ chore/)
 //   3. Spec-first: code changes reference an existing story
-//      (docs:/chore: titles and catalogue PRs are exempt)
+//      (docs:/chore: titles, catalogue PRs, and `design`-labelled PRs are exempt —
+//       the design label covers token/visual polish per docs/design/CONTRIBUTING-DESIGN.md)
 //
 // Inputs via env: PR_TITLE, PR_BODY, HEAD_REF, PR_LABELS (comma-separated).
 
@@ -56,7 +57,10 @@ if (HEAD_REF && !new RegExp(`^(${BRANCH_PREFIXES.join('|')})/.+`).test(HEAD_REF)
 
 // 3) Spec-first: code changes must reference an existing story
 const storyExempt =
-  ['docs', 'chore'].includes(type) || scope === 'catalogue' || LABELS.includes('catalogue');
+  ['docs', 'chore'].includes(type) ||
+  scope === 'catalogue' ||
+  LABELS.includes('catalogue') ||
+  LABELS.includes('design');
 if (!storyExempt) {
   const slugs = resolveStorySlugs(`${PR_TITLE}\n${PR_BODY}`);
   if (slugs.length === 0) {
@@ -64,7 +68,7 @@ if (!storyExempt) {
       [
         'Spec-first: this looks like a code change but references no story.',
         '  Link a docs/sprint-artifacts/stories/<id>.md story in the PR body, or end the',
-        '  title with "(Story X.Y)". (docs:/chore: titles and catalogue PRs are exempt.)'
+        '  title with "(Story X.Y)". (docs:/chore: titles and catalogue- or design-labelled PRs are exempt.)'
       ].join('\n')
     );
   }
