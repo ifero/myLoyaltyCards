@@ -1,6 +1,6 @@
 # Story 16.4: Make design tokens a portable DTCG source via Style Dictionary
 
-Status: review
+Status: done
 
 Epic: 16 — Platform & Tech Debt
 
