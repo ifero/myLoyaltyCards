@@ -1,6 +1,6 @@
 # Story 16.3: Establish a design-in-code contribution workflow (docs + GitHub scaffolding)
 
-Status: review
+Status: done
 
 Epic: 16 — Platform & Tech Debt
 
