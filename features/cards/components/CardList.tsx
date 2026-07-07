@@ -35,9 +35,10 @@ import { useCardSearch } from '../hooks/useCardSearch';
 import { useCardSort } from '../hooks/useCardSort';
 
 /**
- * Fixed 2-column layout.
- * Values derived from Figma (file 4PSsX8SyTUU0GCUdBAAEED, node 52:64).
- * Differs from shared/theme/spacing LAYOUT tokens which apply to other screens.
+ * Fixed 2-column layout. Canonical source: this file — the repo is canonical for design
+ * (see docs/design/CONTRIBUTING-DESIGN.md). These grid values are intentionally local and
+ * differ from the shared/theme/spacing LAYOUT tokens used by other screens.
+ * (Historical breadcrumb: originally derived from Figma node 52:64 — Figma is now ideation-only.)
  */
 const NUM_COLUMNS = 2;
 const SCREEN_MARGIN = 16;

@@ -12,6 +12,7 @@ This project is built **spec-first** using the [BMAD-METHOD](https://github.com/
 
 - [Code of Conduct](#code-of-conduct)
 - [Ways to Contribute](#ways-to-contribute)
+- [Design / UI Changes](#design--ui-changes)
 - [The BMAD SDD Methodology](#the-bmad-sdd-methodology)
 - [Where the Specs Live](#where-the-specs-live)
 - [Local Setup](#local-setup)
@@ -42,7 +43,22 @@ Be respectful, constructive, and inclusive. This is a hobby project maintained i
 | 💡 **Feature idea**          | Open a GitHub issue/discussion. New features enter through **planning**, not a direct PR.              |
 | 🏷️ **Brand catalogue entry** | The lightest path — see [Contributing Brand Catalogue Entries](#contributing-brand-catalogue-entries). |
 | 💻 **Code change**           | Must follow the [SDD workflow](#the-contribution-workflow-step-by-step) below.                         |
+| 🎨 **Design / UI change**    | Propose UX/UI by PR — no Figma seat needed. See [Design / UI Changes](#design--ui-changes).            |
 | 📝 **Docs / specs**          | Same SDD workflow, using a `docs/` story or a `docs:` change.                                          |
+
+---
+
+## Design / UI Changes
+
+UX/UI is contributed **in code**, by PR — the repository is the canonical source of truth
+for design (Figma is ideation-only). You don't need a Figma seat.
+
+See **[`docs/design/CONTRIBUTING-DESIGN.md`](docs/design/CONTRIBUTING-DESIGN.md)** for the
+design-specific details: the three design layers (tokens / components / flows), how to
+propose a change to each, the **story-vs-no-story** decision table (token/visual polish
+uses a `design`-label fast-path; new screens/components/behavior follow the normal
+spec-first flow), and how reviewers preview changes. The golden rules in this document
+still apply — the design guide defers to them rather than repeating them.
 
 ---
 
@@ -243,7 +259,7 @@ Quality is enforced at three levels. **All must pass — bypassing them is forbi
 | **CI — quality**        | every PR & push to `main` | `lint` → `typecheck` → `test:coverage` (+ watchOS tests)                             |
 | **CI — PR conventions** | every PR                  | Conventional-Commit title, branch naming, and spec-first story link (see note below) |
 
-The **PR conventions** check ([`pr-conventions.yml`](.github/workflows/pr-conventions.yml)) fails the PR if the title isn't a Conventional Commit, the branch doesn't use an allowed prefix, or a **code change** references no story. `docs:`/`chore:` titles and catalogue PRs are exempt from the story requirement.
+The **PR conventions** check ([`pr-conventions.yml`](.github/workflows/pr-conventions.yml)) fails the PR if the title isn't a Conventional Commit, the branch doesn't use an allowed prefix, or a **code change** references no story. `docs:`/`chore:` titles and catalogue- or `design`-labelled PRs are exempt from the story requirement (the `design` label covers token/visual polish — see [Design / UI Changes](#design--ui-changes)).
 
 🚫 **`--no-verify` is strictly forbidden** for both `git commit` and `git push`. If a hook fails:
 

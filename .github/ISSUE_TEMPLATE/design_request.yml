@@ -1,0 +1,80 @@
+name: 🎨 Design / UI Request
+description: Propose a UX/UI change — restyling, a new component, or a new screen/flow.
+title: '[Design]: '
+labels: ['design', 'needs-triage']
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for helping shape the design! 🎨
+
+        ℹ️ **How design works here:** myLoyaltyCards is **design-in-code** — the repository is the canonical source of truth for design and changes land by PR (no Figma seat needed; Figma is ideation-only). It's also spec-first: **token/visual polish** with no behavior change can take the fast-path, but a **new component, screen, or behavior** needs a `ready-for-dev` story first. See the [Design Contribution Guide](https://github.com/ifero/myLoyaltyCards/blob/main/docs/design/CONTRIBUTING-DESIGN.md).
+
+  - type: checkboxes
+    id: preflight
+    attributes:
+      label: Pre-flight checks
+      options:
+        - label: I searched existing issues and discussions and this isn't already proposed.
+          required: true
+        - label: I read the Design Contribution Guide (docs/design/CONTRIBUTING-DESIGN.md).
+          required: true
+
+  - type: dropdown
+    id: layer
+    attributes:
+      label: Which design layer does this affect?
+      description: See the guide for what each layer means.
+      options:
+        - Token (color, spacing, typography, radius)
+        - Component (button, field, card, illustration, …)
+        - Flow / screen (new screen or changed user flow)
+        - Not sure
+    validations:
+      required: true
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: What problem does this solve?
+      description: Focus on the user / usability problem, not the implementation.
+      placeholder: "When I'm viewing my cards, the contrast is too low to ..."
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed design change
+      description: What should change visually or in the flow?
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+    validations:
+      required: false
+
+  - type: dropdown
+    id: platform
+    attributes:
+      label: Which platform(s) would this affect?
+      multiple: true
+      options:
+        - iOS (phone)
+        - Android (phone)
+        - Apple Watch (watchOS)
+        - Wear OS (planned)
+        - All / cross-platform
+    validations:
+      required: false
+
+  - type: textarea
+    id: mockups
+    attributes:
+      label: Mockups / screenshots / references
+      description: Drag & drop any sketches, screenshots, before/after images, or links that illustrate the idea.
+    validations:
+      required: false
