@@ -1,0 +1,29 @@
+{
+  "SPACING": {
+    "$type": "number",
+    "$description": "8px base grid spacing scale (unitless density-independent pixels).",
+    "xs": { "$value": 4, "$description": "0.5 grid units" },
+    "sm": { "$value": 8, "$description": "1 grid unit" },
+    "smMd": { "$value": 12 },
+    "md": { "$value": 16, "$description": "2 grid units" },
+    "lg": { "$value": 24, "$description": "3 grid units" },
+    "xl": { "$value": 32, "$description": "4 grid units" },
+    "xxl": { "$value": 48, "$description": "6 grid units" }
+  },
+  "LAYOUT": {
+    "$type": "number",
+    "$description": "Screen layout constants (unitless density-independent pixels, plus the cardAspectRatio ratio).",
+    "screenHorizontalMargin": { "$value": 24 },
+    "contentPadding": { "$value": 24 },
+    "gridGutter": { "$value": 12 },
+    "cardAspectRatio": { "$value": 1.3333333333333333, "$description": "4 / 3" },
+    "safeAreaTopInsetMin": { "$value": 16 },
+    "safeAreaBottomInsetMin": { "$value": 16 }
+  },
+  "TOUCH_TARGET": {
+    "$type": "number",
+    "$description": "Minimum touch target sizes for accessibility (unitless density-independent pixels).",
+    "min": { "$value": 44, "$description": "44x44 minimum (WCAG / HIG)" },
+    "watch": { "$value": 32, "$description": "Smaller minimum for watch screens" }
+  }
+}

@@ -33,14 +33,20 @@ Design in this repo lives in three layers. Know which layer your change touches 
 determines where you edit and whether you need a story (see the
 [decision table](#does-my-change-need-a-story)).
 
-| Layer                  | What it is                                            | Where it lives                                                                                                                                                             |
-| ---------------------- | ----------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **1. Tokens**          | Colors, spacing, typography, radii — the design atoms | [`shared/theme/*.ts`](../../shared/theme/)                                                                                                                                 |
-| **2. Components**      | Reusable UI: buttons, fields, cards, illustrations    | [`shared/components/`](../../shared/components/), [`features/**/components/`](../../features/)                                                                             |
-| **3. Flows / screens** | How screens compose and how a user moves through them | [`docs/ux-designs/`](../ux-designs/), [`docs/ux-design-specification.md`](../ux-design-specification.md) + this folder's [`flows/`](flows/) & [`wireframes/`](wireframes/) |
+| Layer                  | What it is                                            | Where it lives                                                                                                                                                                                                       |
+| ---------------------- | ----------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **1. Tokens**          | Colors, spacing, typography, radii — the design atoms | Primitives: DTCG JSON in [`tokens/*.json`](../../tokens/) → generated [`shared/theme/tokens.generated.ts`](../../shared/theme/tokens.generated.ts). Hand-authored extras: [`shared/theme/*.ts`](../../shared/theme/) |
+| **2. Components**      | Reusable UI: buttons, fields, cards, illustrations    | [`shared/components/`](../../shared/components/), [`features/**/components/`](../../features/)                                                                                                                       |
+| **3. Flows / screens** | How screens compose and how a user moves through them | [`docs/ux-designs/`](../ux-designs/), [`docs/ux-design-specification.md`](../ux-design-specification.md) + this folder's [`flows/`](flows/) & [`wireframes/`](wireframes/)                                           |
 
-> **Tokens note:** the portable token source (DTCG JSON → generated TS) is owned by
-> story 16-4. Until it lands, tokens are the hand-authored `shared/theme/*.ts` files.
+> **Tokens note:** as of story 16-4, the **primitive** tokens (the color ramps,
+> `CARD_COLORS`, the `LIGHT_THEME`/`DARK_THEME` color members, `SPACING`, `LAYOUT`,
+> `TOUCH_TARGET`) are authored as **portable DTCG JSON** in [`tokens/*.json`](../../tokens/)
+> and generated into `shared/theme/tokens.generated.ts` via Style Dictionary
+> (`yarn tokens:build`; a `tokens:check` CI guard blocks drift). Non-token values stay
+> hand-authored in `shared/theme/*.ts`: the catalogue-runtime `BRAND_COLORS`/`getBrandColor`,
+> the `statusBar` literal, `SEMANTIC_COLORS`, `BARCODE_FLASH`, and typography (`TYPOGRAPHY` and
+> `sync-tokens` generation are deferred to a follow-up).
 
 ---
 
@@ -52,7 +58,12 @@ you edit and _whether a story is required_.
 
 ### Layer 1 — Tokens
 
-1. Edit the relevant file in `shared/theme/` (e.g. a color value, a spacing primitive).
+1. For a **primitive** (a color ramp value, a `CARD_COLORS` entry, a `LIGHT_THEME`/`DARK_THEME`
+   color member, a `SPACING`/`LAYOUT`/`TOUCH_TARGET` value), edit the DTCG JSON in
+   [`tokens/*.json`](../../tokens/) and run `yarn tokens:build` to regenerate
+   `shared/theme/tokens.generated.ts` — commit both (`yarn tokens:check` guards against drift).
+   For the hand-authored extras (`BRAND_COLORS`, `statusBar`, `SEMANTIC_COLORS`, `BARCODE_FLASH`,
+   typography), edit the relevant `shared/theme/*.ts` file directly.
 2. If this is pure visual polish with **no behavior change**, use the
    [`design`-label fast-path](#the-design-label-fast-path) — no story required.
 3. Open a PR. Show the before/after (a Storybook/Chromatic preview is ideal; see

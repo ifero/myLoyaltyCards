@@ -17,6 +17,8 @@
     "lint": "eslint . --ext .ts,.tsx",
     "typecheck": "tsc --noEmit",
     "format": "prettier --write .",
+    "tokens:build": "node scripts/build-tokens.mjs",
+    "tokens:check": "node scripts/build-tokens.mjs --check",
     "test": "jest",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
@@ -112,6 +114,7 @@
     "lint-staged": "^16.2.7",
     "prettier": "^3.2.5",
     "react-native-svg-transformer": "^1.5.3",
+    "style-dictionary": "^5.5.0",
     "supabase": "^2.76.15",
     "typescript": "~5.9.2"
   },
