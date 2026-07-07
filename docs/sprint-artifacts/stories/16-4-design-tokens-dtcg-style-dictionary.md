@@ -1,6 +1,6 @@
 # Story 16.4: Make design tokens a portable DTCG source via Style Dictionary
 
-Status: ready-for-dev
+Status: review
 
 Epic: 16 — Platform & Tech Debt
 
@@ -35,12 +35,12 @@ Engine-agnostic: 16-1 (NativeWind → Unistyles) explicitly preserves `shared/th
 
 ## Tasks / Subtasks (draft)
 
-- [ ] Transcribe current literal values into `tokens/*.json` (DTCG).
-- [ ] Add `style-dictionary` dev-dependency + `style-dictionary.config.mjs` with a custom TS format that reproduces the existing primitive shapes/keys.
-- [ ] Generate `shared/theme/tokens.generated.ts`; `git diff` to confirm byte-for-byte parity with today's values.
-- [ ] Refactor the three theme files to import primitives; keep derived/runtime exports hand-authored.
-- [ ] Add `tokens:build` + `tokens:check` scripts + a CI guard step.
-- [ ] Run `yarn typecheck` + `yarn test`; confirm contrast test green.
+- [x] Transcribe current literal values into `tokens/*.json` (DTCG).
+- [x] Add `style-dictionary` dev-dependency + `style-dictionary.config.mjs` with a custom TS format that reproduces the existing primitive shapes/keys.
+- [x] Generate `shared/theme/tokens.generated.ts`; `git diff` to confirm byte-for-byte parity with today's values.
+- [x] Refactor the three theme files to import primitives; keep derived/runtime exports hand-authored. _(colors.ts + spacing.ts; typography.ts left fully hand-authored — TYPOGRAPHY deferred per AC1.)_
+- [x] Add `tokens:build` + `tokens:check` scripts + a CI guard step.
+- [x] Run `yarn typecheck` + `yarn test`; confirm contrast test green.
 
 ## Tech Notes
 
@@ -53,3 +53,61 @@ Engine-agnostic: 16-1 (NativeWind → Unistyles) explicitly preserves `shared/th
 - [x] **Commit `shared/theme/tokens.generated.ts`** (CONFIRMED, recommended) — not gitignored; a `tokens:check` CI guard `git diff`s a fresh regen for drift (mirrors `check:catalogue-generated`). No build step needed for Metro/Jest/tsc.
 - [x] **MVP scope = colors + spacing/layout primitives** (CONFIRMED). The **typography tuple + `sync-tokens` are DEFERRED** to a follow-up (fiddliest custom Style Dictionary formats) — see AC1.
 - [x] **DTCG layout** confirmed — token JSON under `tokens/*.json` (e.g. `tokens/color.json`, `tokens/spacing.json`).
+
+## Dev Agent Record
+
+### Context Reference
+
+- Implemented by Amelia (Dev agent) via the `dev-story` workflow on 2026-07-07.
+- Branch: `feature/16-4-design-tokens-dtcg-style-dictionary`.
+- Style Dictionary v5.5.0.
+
+### Completion Notes
+
+**MVP delivered (AC1–AC5).** Canonical primitive values now live in DTCG JSON under `tokens/` and generate `shared/theme/tokens.generated.ts` via Style Dictionary. `colors.ts` and `spacing.ts` import the generated primitives; all public `@/shared/theme` exports are byte-stable.
+
+- **AC1** — `tokens/color.json` + `tokens/spacing.json` (DTCG `$value`/`$type`) author `PRIMARY_COLORS`, `CARD_COLORS`, `NEUTRAL_COLORS`, `LIGHT_THEME_COLORS`, `DARK_THEME_COLORS` (color members only; `statusBar` excluded), `SPACING`, `LAYOUT`, `TOUCH_TARGET`. `TYPOGRAPHY` + `sync-tokens` deferred as planned.
+- **AC2** — a custom `typescript/mlc-token-primitives` Style Dictionary format (in `scripts/token-format.mjs`, so the formatting logic is ESLint-covered) regenerates the exact `export const <NAME> = { … } as const` shapes/keys. Committed, no build step for Metro/Jest/tsc.
+- **AC3** — `colors.ts`/`spacing.ts` import primitives; `BRAND_COLORS`/`getBrandColor`, `statusBar`, `SEMANTIC_COLORS`, `BARCODE_FLASH` stay hand-authored. `CARD_COLORS` keeps its `Record<CardColor, string>` public type via a typed re-assignment; `LIGHT_THEME`/`DARK_THEME` are reassembled from the generated color maps + the hand-authored `statusBar`. New `tokens.generated.test.ts` asserts value parity.
+- **AC4** — `tokens:build` / `tokens:check` scripts + a `tokens:check` CI step in `ci-quality-gates.yml`. The generator prettier-formats its output so the committed file matches a fresh regen; `tokens:check` diffs a temp regen with `git diff --no-index --exit-code` (mirrors `check:catalogue-generated`).
+- **AC5** — `yarn typecheck`, `yarn lint` (0 errors / 0 warnings), and `yarn test` (1572/1572, 155 suites) all green; the WCAG contrast canary passes unchanged. (Coverage stays ≥80%, but note `jest.config.js`'s `collectCoverageFrom` scopes coverage to `features/**`/`core/**` — this story's `shared/theme` + build-tooling files aren't instrumented, so the real value-safety nets here are `tokens.generated.test.ts` and the contrast canary, not the coverage number.)
+
+**⚠️ Story-context divergence (16.1 landed first).** The story's "Verified constraints" (§Background) predate Story 16.1 (NativeWind→Unistyles), which is now `done`. Consequently `tailwind.config.js` and all `TAILWIND_*` exports **no longer exist**, and `typography.ts` no longer emits a Tailwind tuple. Byte-stability was therefore validated against the _actual_ current public API (the `shared/theme/index.ts` barrel + the `unistyles.ts` consumer), not the stale description. This shrank the hand-authored surface to catalogue-runtime + `statusBar` + `SEMANTIC_COLORS`/`BARCODE_FLASH`; there is no `tailwind.config.js` left to keep working.
+
+**Decisions:**
+
+- `LAYOUT.cardAspectRatio` is authored as the exact IEEE-754 double `1.3333333333333333` (=== `4 / 3`); runtime value unchanged. Its TS type narrows from `number` to that literal — assignable everywhere `number` was, so no consumer breaks.
+- `style-dictionary` added as a **devDependency** (build-time codegen, not an Expo runtime lib → `yarn add -D`, not `npx expo install`).
+- Grid-unit / touch-target documentation from the old inline comments is preserved as DTCG `$description` fields in the JSON (the canonical source).
+
+### File List
+
+**New:**
+
+- `tokens/color.json`
+- `tokens/spacing.json`
+- `style-dictionary.config.mjs`
+- `scripts/token-format.mjs`
+- `scripts/build-tokens.mjs`
+- `shared/theme/tokens.generated.ts` (generated, committed)
+- `shared/theme/tokens.generated.test.ts`
+
+**Modified:**
+
+- `shared/theme/colors.ts`
+- `shared/theme/spacing.ts`
+- `package.json` (`style-dictionary` devDependency; `tokens:build` / `tokens:check` scripts)
+- `yarn.lock`
+- `.github/workflows/ci-quality-gates.yml` (`tokens:check` step)
+- `.husky/pre-push` (`tokens:check` gate)
+- `CONTRIBUTING.md` (quality-gates table: added `tokens:check`)
+- `docs/design/CONTRIBUTING-DESIGN.md` (Layer 1 tokens now point to `tokens/*.json` + `yarn tokens:build`)
+- `docs/sprint-artifacts/sprint-status.yaml` (16-4 → `in-progress`; the `review` gate lives in the story `.md`, per the `mark-story-done.mjs` invariant that the yaml never holds `review`)
+- `docs/sprint-artifacts/stories/16-4-design-tokens-dtcg-style-dictionary.md`
+
+## Change Log
+
+| Date       | Version | Description                                                                                                                                                                                                                                                                                                                                                         | Author       |
+| ---------- | ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------ |
+| 2026-07-07 | 0.1     | Implemented MVP: DTCG token JSON + Style Dictionary codegen (`tokens.generated.ts`) + byte-stable theme refactor + `tokens:build`/`tokens:check` + CI drift guard. All gates green.                                                                                                                                                                                 | Amelia (Dev) |
+| 2026-07-07 | 0.2     | Addressed code-review + QA findings: DTCG `$type: number` (spec-valid); source-JSON validation (fail loudly on `$`-typos); leading-zero key guard; moved token-format logic to lint-covered `scripts/token-format.mjs`; doc updates (`CONTRIBUTING.md` × 1, `CONTRIBUTING-DESIGN.md`); `tokens:check` added to pre-push; sprint-status kept off the `review` value. | Amelia (Dev) |

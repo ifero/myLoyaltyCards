@@ -1,9 +1,24 @@
 /**
  * Color Constants
  * Story 13.1: Implement Design System Tokens & Components
+ *
+ * Primitive color records (PRIMARY_COLORS, CARD_COLORS, NEUTRAL_COLORS, and the
+ * per-theme color maps) are generated from the DTCG token JSON under `tokens/`
+ * via Style Dictionary — see `tokens.generated.ts` (Story 16.4). Edit the JSON
+ * and run `yarn tokens:build` to change a value. The catalogue-runtime brand
+ * map, the non-token `statusBar` literal, and the derived SEMANTIC_COLORS /
+ * BARCODE_FLASH values stay hand-authored here.
  */
-
+import {
+  CARD_COLORS as CARD_COLORS_TOKENS,
+  DARK_THEME_COLORS,
+  LIGHT_THEME_COLORS,
+  NEUTRAL_COLORS,
+  PRIMARY_COLORS
+} from './tokens.generated';
 import catalogueData from '../../catalogue/italy.json';
+
+export { NEUTRAL_COLORS, PRIMARY_COLORS };
 
 /**
  * Card color type - matches core/schemas/card.ts CardColor
@@ -11,43 +26,11 @@ import catalogueData from '../../catalogue/italy.json';
  */
 type CardColor = 'blue' | 'red' | 'green' | 'orange' | 'grey';
 
-export const PRIMARY_COLORS = {
-  50: '#E8F1FE',
-  100: '#D2E3FC',
-  200: '#AECBFA',
-  300: '#8AB4F8',
-  400: '#669DF6',
-  500: '#1A73E8',
-  600: '#1967D2',
-  700: '#185ABC',
-  800: '#174EA6',
-  900: '#163A7A'
-} as const;
-
 /**
  * 5-color card palette for Virtual Logo system
  * Used when cards don't have official logos
  */
-export const CARD_COLORS: Record<CardColor, string> = {
-  blue: '#1A73E8',
-  red: '#E2231A',
-  green: '#16A34A',
-  orange: '#F59E0B',
-  grey: '#64748B'
-} as const;
-
-export const NEUTRAL_COLORS = {
-  white: '#FFFFFF',
-  black: '#000000',
-  slate50: '#F8FAFC',
-  slate100: '#F1F5F9',
-  slate200: '#E2E8F0',
-  slate300: '#CBD5E1',
-  slate400: '#94A3B8',
-  slate600: '#475569',
-  slate700: '#334155',
-  slate900: '#0F172A'
-} as const;
+export const CARD_COLORS: Record<CardColor, string> = CARD_COLORS_TOKENS;
 
 export const BRAND_COLORS = Object.freeze(
   catalogueData.brands.reduce<Record<string, string>>((accumulator, brand) => {
@@ -59,48 +42,20 @@ export const BRAND_COLORS = Object.freeze(
 export const getBrandColor = (brandId: string): string | undefined => BRAND_COLORS[brandId];
 
 /**
- * Light theme colors — aligned with Figma (Story 12-2)
+ * Light theme colors — aligned with Figma (Story 12-2). Color members are
+ * generated (LIGHT_THEME_COLORS); the non-token `statusBar` literal is appended
+ * here so it stays out of the portable token JSON.
  */
 export const LIGHT_THEME = {
-  primary: '#1A73E8',
-  primaryDark: '#1967D2',
-  background: '#FFFFFF',
-  backgroundSubtle: '#F5F5F5',
-  surface: '#FFFFFF',
-  surfaceElevated: '#F5F5F5',
-  textPrimary: '#1F1F24',
-  textSecondary: '#66666B',
-  textTertiary: '#8F8F94',
-  border: '#E5E5EB',
-  borderStrong: '#8F8F94',
-  success: '#16A34A',
-  warning: '#D97706',
-  error: '#DC2626',
-  info: '#1A73E8',
-  link: '#1A73E8',
+  ...LIGHT_THEME_COLORS,
   statusBar: 'dark' as const
 } as const;
 
 /**
- * Dark theme colors (OLED optimized) — aligned with Figma (Story 12-2)
+ * Dark theme colors (OLED optimized) — aligned with Figma (Story 12-2).
  */
 export const DARK_THEME = {
-  primary: '#4DA3FF',
-  primaryDark: '#1A73E8',
-  background: '#000000',
-  backgroundSubtle: '#0A0A0A',
-  surface: '#1C1C1E',
-  surfaceElevated: '#2C2C2E',
-  textPrimary: '#F5F5F7',
-  textSecondary: '#D9D9DE',
-  textTertiary: '#99999E',
-  border: '#38383A',
-  borderStrong: '#636366',
-  success: '#22C55E',
-  warning: '#F59E0B',
-  error: '#F87171',
-  info: '#4DA3FF',
-  link: '#4DA3FF',
+  ...DARK_THEME_COLORS,
   statusBar: 'light' as const
 } as const;
 

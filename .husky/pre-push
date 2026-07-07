@@ -4,6 +4,9 @@
 echo "Running typecheck..."
 yarn typecheck || exit 1
 
+echo "Checking design tokens are in sync..."
+yarn tokens:check || exit 1
+
 echo "Running lint..."
 yarn lint || exit 1
 
