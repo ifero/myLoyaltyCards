@@ -44,7 +44,22 @@ jobs:
           node-version: '24'
           cache: 'yarn'
       - name: Install dependencies
-        run: yarn install --frozen-lockfile
+        # `yarn install` runs the `supabase` CLI postinstall, which downloads a
+        # binary from GitHub Releases and pipes it into gunzip without checking the
+        # HTTP status. A transient GitHub hiccup therefore aborts the whole install
+        # with `Z_DATA_ERROR: incorrect header check`. This CLI version has no
+        # skip-download flag, so retry to ride out the flakiness.
+        run: |
+          for attempt in 1 2 3; do
+            if yarn install --frozen-lockfile; then
+              echo "Dependencies installed (attempt $attempt)."
+              exit 0
+            fi
+            echo "::warning::yarn install failed (attempt $attempt/3); retrying in 15s…"
+            sleep 15
+          done
+          echo "::error::yarn install failed after 3 attempts."
+          exit 1
       - name: Create .env file
         run: |
           echo "EXPO_PUBLIC_SUPABASE_URL=${{ secrets.EXPO_PUBLIC_SUPABASE_URL }}" >> .env
@@ -83,6 +98,31 @@ jobs:
           org.gradle.workers.max=2
           org.gradle.daemon=false
           EOF
+      - name: Pre-provision Gradle (harden flaky distribution download)
+        # `expo prebuild` writes gradle-wrapper.properties with the wrapper's
+        # default 10s networkTimeout. The wrapper's download of gradle-*-bin.zip
+        # from services.gradle.org intermittently exceeds that and aborts the build
+        # with `java.net.SocketTimeoutException: Read timed out`. Raise the timeout,
+        # then warm the download with retries so Fastlane's assembleRelease runs
+        # against an already-provisioned Gradle instead of downloading under a lane.
+        run: |
+          props=android/gradle/wrapper/gradle-wrapper.properties
+          if grep -q '^networkTimeout=' "$props"; then
+            sed -i 's/^networkTimeout=.*/networkTimeout=120000/' "$props"
+          else
+            printf 'networkTimeout=120000\n' >> "$props"
+          fi
+          echo "Gradle wrapper config:"; cat "$props"
+          for attempt in 1 2 3; do
+            if (cd android && ./gradlew --version); then
+              echo "Gradle distribution provisioned (attempt $attempt)."
+              exit 0
+            fi
+            echo "::warning::Gradle provisioning failed (attempt $attempt/3); retrying in 20s…"
+            sleep 20
+          done
+          echo "::error::Gradle provisioning failed after 3 attempts."
+          exit 1
       - name: Run Fastlane (Android AdHoc)
         run: bundle exec fastlane android adhoc
       - name: Upload APK artifact

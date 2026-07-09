@@ -51,7 +51,22 @@ jobs:
           node-version: '24'
           cache: 'yarn'
       - name: Install dependencies
-        run: yarn install --frozen-lockfile
+        # `yarn install` runs the `supabase` CLI postinstall, which downloads a
+        # binary from GitHub Releases and pipes it into gunzip without checking the
+        # HTTP status. A transient GitHub hiccup therefore aborts the whole install
+        # with `Z_DATA_ERROR: incorrect header check`. This CLI version has no
+        # skip-download flag, so retry to ride out the flakiness.
+        run: |
+          for attempt in 1 2 3; do
+            if yarn install --frozen-lockfile; then
+              echo "Dependencies installed (attempt $attempt)."
+              exit 0
+            fi
+            echo "::warning::yarn install failed (attempt $attempt/3); retrying in 15s…"
+            sleep 15
+          done
+          echo "::error::yarn install failed after 3 attempts."
+          exit 1
       - name: Create .env file
         run: |
           echo "EXPO_PUBLIC_SUPABASE_URL=${{ secrets.EXPO_PUBLIC_SUPABASE_URL }}" >> .env
