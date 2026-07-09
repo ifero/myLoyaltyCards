@@ -2,6 +2,7 @@
 
 [![CI — Quality Gates](https://github.com/ifero/myLoyaltyCards/actions/workflows/ci-quality-gates.yml/badge.svg)](https://github.com/ifero/myLoyaltyCards/actions/workflows/ci-quality-gates.yml)
 [![watchOS Tests](https://github.com/ifero/myLoyaltyCards/actions/workflows/watchos-tests.yml/badge.svg)](https://github.com/ifero/myLoyaltyCards/actions/workflows/watchos-tests.yml)
+[![Component gallery — Storybook](https://img.shields.io/badge/Storybook-component%20gallery-ff4785.svg?logo=storybook&logoColor=white)](https://www.chromatic.com/library?appId=6a4fc5ac9de1aaad76bfb550)
 [![Expo SDK 55](https://img.shields.io/badge/Expo%20SDK-55-000020.svg?logo=expo)](https://expo.dev)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](#license)
 

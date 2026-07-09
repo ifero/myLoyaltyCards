@@ -1,0 +1,83 @@
+name: Chromatic — Component Gallery
+
+# Publishes the web Storybook (react-native-web) to Chromatic for visual-diff
+# review on PRs that touch UI surfaces. Story 16.5 (AC3).
+#
+# This workflow is deliberately SEPARATE from ci-quality-gates.yml and is NOT a
+# required merge check: it is path-filtered to UI surfaces and runs with
+# --exit-zero-on-changes, so visual changes never block a merge and the existing
+# quality gate is never slowed.
+#
+# Prerequisite (human, ifero): create the free open-source Chromatic project and
+# add the CHROMATIC_PROJECT_TOKEN repository secret. Until that secret exists the
+# publish step no-ops (it cannot run on fork PRs either), so this workflow stays
+# green in the meantime.
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+    paths:
+      - 'shared/components/ui/**'
+      - 'shared/theme/**'
+      - '**/*.stories.tsx'
+      - '.storybook/**'
+      - 'babel.config.js'
+      - 'package.json'
+      - 'yarn.lock'
+      - '.github/workflows/chromatic.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'shared/components/ui/**'
+      - 'shared/theme/**'
+      - '**/*.stories.tsx'
+      - '.storybook/**'
+      - 'babel.config.js'
+      - 'package.json'
+      - 'yarn.lock'
+      - '.github/workflows/chromatic.yml'
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: 'true'
+
+jobs:
+  chromatic:
+    name: Publish Storybook to Chromatic
+    runs-on: ubuntu-latest
+    env:
+      CHROMATIC_PROJECT_TOKEN: ${{ secrets.CHROMATIC_PROJECT_TOKEN }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          # TurboSnap/--only-changed diffs against the baseline commit, which
+          # requires full git history.
+          fetch-depth: 0
+
+      - name: Use Node.js 24
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: 'yarn'
+
+      - name: Cache node modules
+        uses: actions/cache@v4
+        with:
+          path: |
+            node_modules
+            ~/.cache/yarn
+          key: ${{ runner.os }}-yarn-sdk55-${{ hashFiles('**/yarn.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-yarn-sdk55-
+
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+
+      - name: Publish to Chromatic (builds Storybook + uploads)
+        if: ${{ env.CHROMATIC_PROJECT_TOKEN != '' }}
+        run: yarn chromatic --only-changed --exit-zero-on-changes --ci
+
+      - name: Chromatic token not configured
+        if: ${{ env.CHROMATIC_PROJECT_TOKEN == '' }}
+        run: echo "::notice::CHROMATIC_PROJECT_TOKEN is not set — skipping the Storybook publish. Create the OSS Chromatic project and add the repository secret to enable visual review (Story 16.5)."

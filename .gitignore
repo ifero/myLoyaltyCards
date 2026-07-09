@@ -36,6 +36,12 @@ yarn-error.*
 # Testing
 coverage/
 
+# Storybook (web component gallery — build artifacts, Story 16.5)
+storybook-static/
+build-storybook.log
+chromatic-diagnostics.json
+chromatic.log
+
 # IDE
 .idea/
 .vscode/
