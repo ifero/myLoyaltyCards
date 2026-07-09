@@ -193,6 +193,18 @@ export default [
     },
   },
   {
+    // Story 16.5: Storybook stories + `.storybook` config. Stories intentionally
+    // carry literal display copy (they are previews, not shipped UI) and neither
+    // stories nor the Storybook config participate in the app's layer graph — so
+    // exempt them from the i18n literal rule and the boundaries rule to keep
+    // `yarn lint` (a merge gate) green. AC4.
+    files: ['**/*.stories.{ts,tsx}', '.storybook/**/*.{ts,tsx}'],
+    rules: {
+      'i18next/no-literal-string': 'off',
+      'boundaries/element-types': 'off',
+    },
+  },
+  {
     ignores: [
       'node_modules/**',
       // Nested Claude Code worktrees (gitignored) are full repo copies; linting
@@ -201,6 +213,7 @@ export default [
       '.expo/**',
       'dist/**',
       'web-build/**',
+      'storybook-static/**',
       'android/**',
       'ios/**',
       'watch-android/**',
