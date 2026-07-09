@@ -1,6 +1,6 @@
 # Story 16.5: Component preview gallery — Storybook + Chromatic [Blocked by 16-1]
 
-Status: review
+Status: done
 
 Epic: 16 — Platform & Tech Debt
 
