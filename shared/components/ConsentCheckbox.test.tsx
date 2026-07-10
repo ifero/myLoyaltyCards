@@ -6,7 +6,7 @@
 import { render, fireEvent, screen } from '@testing-library/react-native';
 import React from 'react';
 
-import ConsentCheckbox from '../ConsentCheckbox';
+import ConsentCheckbox from './ConsentCheckbox';
 
 // Mock useTheme
 jest.mock('@/shared/theme', () => ({

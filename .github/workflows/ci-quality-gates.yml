@@ -53,6 +53,9 @@ jobs:
       - name: Check design tokens are in sync
         run: yarn tokens:check
 
+      - name: Check tests are co-located (no __tests__ folders)
+        run: yarn check:no-tests-folders
+
       - name: Run tests (with coverage)
         run: yarn test:coverage --watchAll=false --runInBand
 

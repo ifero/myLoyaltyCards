@@ -1,7 +1,7 @@
 import { render, screen } from '@testing-library/react-native';
 import React from 'react';
 
-import { PasswordStrengthIndicator } from '../PasswordStrengthIndicator';
+import { PasswordStrengthIndicator } from './PasswordStrengthIndicator';
 
 jest.mock('@/shared/theme', () => ({
   useTheme: () => ({
