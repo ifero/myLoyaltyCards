@@ -1,7 +1,7 @@
 import { fireEvent, render, screen } from '@testing-library/react-native';
 import React from 'react';
 
-import { PasswordInput } from '../PasswordInput';
+import { PasswordInput } from './PasswordInput';
 
 jest.mock('@/shared/theme', () => ({
   useTheme: () => ({

@@ -1,7 +1,7 @@
 import { render, screen } from '@testing-library/react-native';
 import React from 'react';
 
-import { ErrorBanner } from '../ErrorBanner';
+import { ErrorBanner } from './ErrorBanner';
 
 jest.mock('@/shared/theme', () => ({
   useTheme: () => ({

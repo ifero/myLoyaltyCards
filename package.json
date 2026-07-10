@@ -22,6 +22,7 @@
     "chromatic": "chromatic",
     "tokens:build": "node scripts/build-tokens.mjs",
     "tokens:check": "node scripts/build-tokens.mjs --check",
+    "check:no-tests-folders": "node scripts/check-no-tests-folders.mjs",
     "test": "jest",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
