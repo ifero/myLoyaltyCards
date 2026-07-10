@@ -83,3 +83,7 @@ fastlane/.env.default
 
 # Claude Code local (personal) settings
 .claude/settings.local.json
+
+# BMAD personal install answers (installer-regenerated per developer; shared config lives in
+# _bmad/config.toml and _bmad/custom/config.toml, which ARE committed)
+_bmad/config.user.toml
