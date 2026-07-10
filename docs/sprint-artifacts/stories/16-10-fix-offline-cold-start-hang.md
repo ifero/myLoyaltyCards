@@ -1,6 +1,6 @@
 # Story 16.10: Fix offline cold-start hang (app stuck on the loading spinner with no connectivity)
 
-Status: review
+Status: done
 
 ## Story
 
