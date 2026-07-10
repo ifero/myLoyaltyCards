@@ -8,7 +8,7 @@
 import { render, fireEvent } from '@testing-library/react-native';
 import React from 'react';
 
-import MigrationBanner from '../MigrationBanner';
+import MigrationBanner from './MigrationBanner';
 
 // ---------------------------------------------------------------------------
 // Mock theme

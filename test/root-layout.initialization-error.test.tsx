@@ -3,7 +3,7 @@ import React from 'react';
 
 import { changeAppLanguage } from '@/shared/i18n';
 
-import RootLayout from '../_layout';
+import RootLayout from '@/app/_layout';
 
 const mockInitializeDatabase = jest.fn();
 const mockGetAllCards = jest.fn().mockResolvedValue([]);

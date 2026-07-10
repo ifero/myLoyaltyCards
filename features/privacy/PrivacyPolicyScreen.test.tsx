@@ -11,7 +11,7 @@ import { changeAppLanguage } from '@/shared/i18n';
 
 import { PRIVACY_POLICY_VERSION } from '@/assets/legal/privacy-policy';
 
-import PrivacyPolicyScreen from '../PrivacyPolicyScreen';
+import PrivacyPolicyScreen from './PrivacyPolicyScreen';
 
 // Mock useTheme
 jest.mock('@/shared/theme', () => ({

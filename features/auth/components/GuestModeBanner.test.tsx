@@ -2,7 +2,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react-native';
 import React from 'react';
 
-import { GuestModeBanner } from '../components';
+import { GuestModeBanner } from './GuestModeBanner';
 
 jest.mock('@/shared/theme', () => ({
   useTheme: () => ({

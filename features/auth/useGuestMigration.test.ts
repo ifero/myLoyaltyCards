@@ -30,7 +30,7 @@ jest.mock('@/shared/supabase/auth', () => ({
 // Import after mocks
 // ---------------------------------------------------------------------------
 
-import { useGuestMigration, SUCCESS_BANNER_DELAY } from '../useGuestMigration';
+import { useGuestMigration, SUCCESS_BANNER_DELAY } from './useGuestMigration';
 
 // ---------------------------------------------------------------------------
 // Fixtures
