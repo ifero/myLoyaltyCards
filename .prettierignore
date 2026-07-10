@@ -1,0 +1,9 @@
+# BMAD-generated content — installer output from `bmad install`.
+# Keep byte-identical to what the installer produces so re-running it yields no
+# spurious diff. Never reformat these. Team/personal config in _bmad/custom/ and
+# your own (non-bmad-) skills/agents are NOT ignored and format normally.
+_bmad/
+.claude/skills/bmad-*/
+.agents/skills/bmad-*/
+.github/agents/bmad-*
+.github/copilot-instructions.md
