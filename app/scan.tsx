@@ -2,11 +2,15 @@
  * Legacy Scan Route
  *
  * Backward-compatible bridge from old `/scan` entrypoint to the new
- * Story 13.4 scanner flow at `/add-card/scan`.
+ * Story 13.4 scanner flow at `/add-card/scan`. Still reached from the
+ * catalogue grid (features/cards/components/CatalogueGrid.tsx).
+ *
+ * Story 16.9 (AD-4): declarative `<Redirect>` so this route file complies with
+ * the route-file lint rule (no effect hooks or local state). `<Redirect>`
+ * performs a replace-style navigation on mount, preserving prior behaviour.
  */
 
-import { useLocalSearchParams, useRouter } from 'expo-router';
-import { useEffect } from 'react';
+import { Redirect, useLocalSearchParams } from 'expo-router';
 
 type LegacyScanParams = {
   brandId?: string;
@@ -15,23 +19,24 @@ type LegacyScanParams = {
   brandFormat?: string;
 };
 
-export default function ScanScreen() {
-  const router = useRouter();
+const ScanScreen = () => {
   const params = useLocalSearchParams<LegacyScanParams>();
 
-  useEffect(() => {
-    router.replace({
-      pathname: '/add-card/scan',
-      params: {
-        ...(params.brandId && {
-          brandId: params.brandId,
-          brandName: params.brandName,
-          brandColor: params.brandColor,
-          brandFormat: params.brandFormat
-        })
-      }
-    });
-  }, [router, params.brandId, params.brandName, params.brandColor, params.brandFormat]);
+  return (
+    <Redirect
+      href={{
+        pathname: '/add-card/scan',
+        params: {
+          ...(params.brandId && {
+            brandId: params.brandId,
+            brandName: params.brandName,
+            brandColor: params.brandColor,
+            brandFormat: params.brandFormat
+          })
+        }
+      }}
+    />
+  );
+};
 
-  return null;
-}
+export default ScanScreen;

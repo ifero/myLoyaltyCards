@@ -74,6 +74,18 @@ export default [
                 ['feature', { featureName: 'cards' }],
               ],
             },
+            // Story 16.9 (AD-2): cards feature depends on auth feature. The
+            // relocated HomeScreen composes auth's guest-mode + migration
+            // banners (GuestModeBanner, MigrationBanner, useGuestMigration).
+            // app/ used to own this cross-feature composition; moving the screen
+            // into features/cards makes the dependency explicit and bounded,
+            // mirroring the add-card → cards exception above.
+            {
+              from: [['feature', { featureName: 'cards' }]],
+              allow: [
+                ['feature', { featureName: 'auth' }],
+              ],
+            },
             // shared can import from core, catalogue, and other shared modules
             {
               from: 'shared',
@@ -159,6 +171,40 @@ export default [
               'suffixText',
             ],
           },
+        },
+      ],
+    },
+  },
+  {
+    // Story 16.9 (AD-3): route files must only re-export from features — no
+    // hooks/state/business logic. This is the architecture.md-documented rule
+    // that was specified but never implemented, letting fat screens accumulate
+    // in app/. `_layout.tsx` files legitimately hold routing/provider logic and
+    // are exempt; tests are not route files.
+    //
+    // NOTE (verified): architecture.md's snippet writes
+    // `files: ['app/**/*.tsx', '!app/**/_layout.tsx']`, but in ESLint flat config
+    // a leading-`!` entry inside `files` is NOT a subtraction from the positive
+    // pattern — it is an independent, near-universal matcher OR'd with it. Under
+    // the real (multi-block) config this makes the rule match almost the entire
+    // repo (`--print-config` confirms it applies even to
+    // `features/auth/useGuestMigration.ts`) AND still fails to exempt
+    // `app/_layout.tsx`. Block-level `ignores` gives the intended AND-semantics:
+    // app route files, minus `_layout.tsx` and tests. (architecture.md:~1300
+    // should be corrected to match.)
+    files: ['app/**/*.tsx'],
+    ignores: ['app/**/_layout.tsx', '**/*.test.tsx', '**/*.spec.tsx'],
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        {
+          paths: [
+            {
+              name: 'react',
+              importNames: ['useState', 'useEffect', 'useCallback', 'useMemo'],
+              message: 'Route files should only re-export from features. No hooks allowed.',
+            },
+          ],
         },
       ],
     },

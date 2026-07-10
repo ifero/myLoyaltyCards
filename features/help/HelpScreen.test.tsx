@@ -9,9 +9,9 @@ import { Alert, Linking } from 'react-native';
 
 import { changeAppLanguage } from '@/shared/i18n';
 
+import bundledHelpItems from './help-data.json';
+import HelpScreen from './HelpScreen';
 import docsHelpItems from '../../docs/help.json';
-import bundledHelpItems from '../../features/help/help-data.json';
-import HelpScreen from '../help';
 
 jest.mock('@/shared/theme', () => ({
   useTheme: () => ({

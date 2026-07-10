@@ -16,7 +16,7 @@ import React from 'react';
 
 import { changeAppLanguage } from '@/shared/i18n';
 
-import RootLayout from '../_layout';
+import RootLayout from '@/app/_layout';
 
 const mockReplace = jest.fn();
 const mockRouter = { replace: mockReplace, back: jest.fn(), push: jest.fn() };
