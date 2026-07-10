@@ -3,8 +3,9 @@
  * Story 6.9: Logout
  *
  * Tests reactive auth state detection via Supabase's onAuthStateChange.
- * The hook relies on onAuthStateChange firing INITIAL_SESSION synchronously
- * during subscription — no separate getSession() call needed.
+ * onAuthStateChange emits INITIAL_SESSION during subscription — synchronously
+ * for a valid/absent session, but only after a network refresh for an expired
+ * token (see Story 16.10). These tests mock it firing synchronously.
  */
 
 import { renderHook, act } from '@testing-library/react-native';
