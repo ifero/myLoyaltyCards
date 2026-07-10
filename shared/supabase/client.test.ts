@@ -9,8 +9,10 @@
 import {
   createSecureStoreAdapter,
   createSupabaseClient,
+  getSessionStorageKey,
   getSupabaseClient,
   getSupabaseCredentials,
+  hasPersistedSession,
   resetSupabaseClientForTesting,
   SecureStoreAdapter
 } from './client';
@@ -309,6 +311,99 @@ describe('createSupabaseClient — auth options', () => {
 describe('resetSupabaseClientForTesting', () => {
   it('is exported and callable without throwing', () => {
     expect(() => resetSupabaseClientForTesting()).not.toThrow();
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Persisted-session probe (boot auth gate — Story 16.10)
+// ---------------------------------------------------------------------------
+
+describe('getSessionStorageKey', () => {
+  it('derives sb-<ref>-auth-token from the Supabase URL (matches supabase-js default)', () => {
+    expect(getSessionStorageKey('https://abcdefgh.supabase.co')).toBe('sb-abcdefgh-auth-token');
+  });
+});
+
+describe('hasPersistedSession', () => {
+  const validEnv = {
+    EXPO_PUBLIC_SUPABASE_URL: 'https://abcdefgh.supabase.co',
+    EXPO_PUBLIC_SUPABASE_KEY: 'test-key'
+  };
+
+  const makeStorage = (value: string | null) => ({
+    getItem: jest.fn().mockResolvedValue(value),
+    setItem: jest.fn().mockResolvedValue(undefined),
+    removeItem: jest.fn().mockResolvedValue(undefined)
+  });
+
+  it('returns true when a session with an access_token is persisted', async () => {
+    const storage = makeStorage(JSON.stringify({ access_token: 'jwt', user: { id: 'u1' } }));
+    await expect(hasPersistedSession(validEnv, storage)).resolves.toBe(true);
+  });
+
+  it('reads from the supabase-js default key with no network round-trip', async () => {
+    const storage = makeStorage(JSON.stringify({ access_token: 'jwt' }));
+    await hasPersistedSession(validEnv, storage);
+    expect(storage.getItem).toHaveBeenCalledWith('sb-abcdefgh-auth-token');
+  });
+
+  it('returns true for an EXPIRED-but-present session (past expiry) without any refresh', async () => {
+    // The crux of Story 16.10: an expired token must still read as "signed in"
+    // from storage alone — never a network refresh (which hangs offline).
+    const storage = makeStorage(JSON.stringify({ access_token: 'jwt', expires_at: 1 }));
+    await expect(hasPersistedSession(validEnv, storage)).resolves.toBe(true);
+  });
+
+  it('returns false when no session is persisted', async () => {
+    const storage = makeStorage(null);
+    await expect(hasPersistedSession(validEnv, storage)).resolves.toBe(false);
+  });
+
+  it('returns false when the stored value has no access_token', async () => {
+    const storage = makeStorage(JSON.stringify({ foo: 'bar' }));
+    await expect(hasPersistedSession(validEnv, storage)).resolves.toBe(false);
+  });
+
+  it('returns false (never throws) on corrupt JSON', async () => {
+    const storage = makeStorage('{not valid json');
+    await expect(hasPersistedSession(validEnv, storage)).resolves.toBe(false);
+  });
+
+  it('returns false (never throws) when env is missing, without touching storage', async () => {
+    const storage = makeStorage(JSON.stringify({ access_token: 'jwt' }));
+    await expect(hasPersistedSession({}, storage)).resolves.toBe(false);
+    expect(storage.getItem).not.toHaveBeenCalled();
+  });
+
+  it('reads a CHUNKED (>1800 byte) session end-to-end through the real SecureStore adapter (AC2)', async () => {
+    // Integration: the probe must work against the ACTUAL chunk-splitting
+    // adapter, not just a flat mock. A large multi-JWT session exceeds the
+    // 1800-byte SecureStore chunk size and is stored across multiple keys —
+    // the probe has to reassemble it exactly as the SDK's own reads would.
+    const map = new Map<string, string>();
+    const store = {
+      getItemAsync: jest.fn(async (k: string) => (map.has(k) ? map.get(k)! : null)),
+      setItemAsync: jest.fn(async (k: string, v: string) => {
+        map.set(k, v);
+      }),
+      deleteItemAsync: jest.fn(async (k: string) => {
+        map.delete(k);
+      })
+    } as unknown as typeof import('expo-secure-store');
+    const adapter = createSecureStoreAdapter(store);
+    const key = getSessionStorageKey(validEnv.EXPO_PUBLIC_SUPABASE_URL);
+
+    const largeSession = JSON.stringify({
+      access_token: 'a'.repeat(2000),
+      refresh_token: 'r'.repeat(2000),
+      user: { id: 'u1' }
+    });
+    await adapter.setItem(key, largeSession);
+
+    // Sanity: the value really was chunked (a `.chunks` count key was written).
+    expect(store.setItemAsync).toHaveBeenCalledWith(`${key}.chunks`, expect.any(String));
+
+    await expect(hasPersistedSession(validEnv, adapter)).resolves.toBe(true);
   });
 });
 

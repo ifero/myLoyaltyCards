@@ -222,3 +222,55 @@ export const getSupabaseClient = () => {
 export const resetSupabaseClientForTesting = () => {
   supabaseInstance = null;
 };
+
+// ---------------------------------------------------------------------------
+// Persisted-session probe (boot auth gate — Story 16.10)
+// ---------------------------------------------------------------------------
+
+/**
+ * Derive the SecureStore key supabase-js persists the auth session under.
+ *
+ * MUST match supabase-js's default derivation exactly — `sb-${ref}-auth-token`,
+ * where `ref` is the first hostname label of the Supabase URL (see
+ * `@supabase/supabase-js` `SupabaseClient`). We only ever READ the value
+ * supabase-js writes and never set `storageKey` ourselves, so there is no
+ * session-migration risk.
+ */
+export const getSessionStorageKey = (url: string): string => {
+  const { hostname } = new URL(url);
+  return `sb-${hostname.split('.')[0]}-auth-token`;
+};
+
+/**
+ * Whether a Supabase auth session is persisted on this device — resolved from
+ * SecureStore ONLY, with NO network and NO token refresh.
+ *
+ * This is the offline-safe alternative to `auth.getSession()` / the SDK's
+ * `INITIAL_SESSION` event: both trigger a network token refresh when the
+ * persisted token is expired (`autoRefreshToken: true`), which never settles
+ * offline — the exact cold-start hang this probe avoids (Story 16.10). An
+ * expired-but-present session still counts as "signed in": offline we keep the
+ * user in their cached cards, and the background refresh reconciles once
+ * connectivity returns.
+ *
+ * Best-effort: any failure (missing/invalid env, unreadable/corrupt storage)
+ * resolves to `false` (guest) rather than throwing.
+ */
+export const hasPersistedSession = async (
+  env: SupabaseEnv = getRuntimeSupabaseEnv(),
+  storage: SupportedStorage = SecureStoreAdapter
+): Promise<boolean> => {
+  try {
+    const { url } = getSupabaseCredentials(env);
+    const raw = await storage.getItem(getSessionStorageKey(url));
+    if (!raw) return false;
+    const parsed: unknown = JSON.parse(raw);
+    return (
+      typeof parsed === 'object' &&
+      parsed !== null &&
+      typeof (parsed as { access_token?: unknown }).access_token === 'string'
+    );
+  } catch {
+    return false;
+  }
+};

@@ -34,9 +34,11 @@ export const useAuthState = (): { authState: AuthState; isAuthenticated: boolean
       return;
     }
 
-    // Subscribe to auth state changes. Supabase fires INITIAL_SESSION
-    // synchronously during subscription, which sets the initial state
-    // without needing a separate getSession() call.
+    // Subscribe to auth state changes. Supabase emits INITIAL_SESSION during
+    // subscription — synchronously for a valid or absent session, but only
+    // AFTER a network token refresh when the persisted token is expired
+    // (autoRefreshToken). Code that must resolve auth offline must NOT block on
+    // this event; see useBootAuthGate / hasPersistedSession (Story 16.10).
     const {
       data: { subscription }
     } = supabase.auth.onAuthStateChange((_event, session) => {
