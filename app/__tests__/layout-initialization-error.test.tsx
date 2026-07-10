@@ -61,7 +61,16 @@ jest.mock('@/features/settings', () => ({
 }));
 
 jest.mock('@/shared/supabase/client', () => ({
-  getSupabaseClient: jest.fn(() => ({}))
+  getSupabaseClient: jest.fn(() => ({
+    auth: {
+      onAuthStateChange: (callback: (event: string, session: unknown) => void) => {
+        // Boot auth gate resolves from the synchronous INITIAL_SESSION (no network).
+        callback('INITIAL_SESSION', null);
+        return { data: { subscription: { unsubscribe: jest.fn() } } };
+      }
+    }
+  })),
+  hasPersistedSession: () => Promise.resolve(false)
 }));
 
 jest.mock('@/shared/theme', () => {

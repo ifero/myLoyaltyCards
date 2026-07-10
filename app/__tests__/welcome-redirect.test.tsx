@@ -22,7 +22,7 @@ const mockReplace = jest.fn();
 const mockRouter = { replace: mockReplace, back: jest.fn(), push: jest.fn() };
 
 const mockGetAllCards = jest.fn().mockResolvedValue([]);
-const mockGetSession = jest.fn();
+const mockOnAuthStateChange = jest.fn();
 const mockIsFirstLaunch = jest.fn();
 const mockCompleteFirstLaunch = jest.fn();
 
@@ -71,8 +71,14 @@ jest.mock('@/features/settings', () => ({
 
 jest.mock('@/shared/supabase/client', () => ({
   getSupabaseClient: jest.fn(() => ({
-    auth: { getSession: () => mockGetSession() }
-  }))
+    auth: {
+      onAuthStateChange: (callback: (event: string, session: unknown) => void) =>
+        mockOnAuthStateChange(callback)
+    }
+  })),
+  // Auth is decided synchronously via INITIAL_SESSION below, so the storage
+  // probe is not the deciding signal in these welcome-gate tests.
+  hasPersistedSession: () => Promise.resolve(false)
 }));
 
 jest.mock('@/shared/theme', () => ({
@@ -88,6 +94,24 @@ jest.mock('@/shared/theme', () => ({
   })
 }));
 
+/** The captured onAuthStateChange callback, for firing post-boot auth events. */
+let capturedAuthCallback: ((event: string, session: unknown) => void) | undefined;
+
+/**
+ * Fire INITIAL_SESSION synchronously (Supabase's real behaviour for a valid or
+ * absent session) with the given session, so the boot auth gate resolves at
+ * once. Also captures the callback for later transitions (e.g. SIGNED_OUT).
+ */
+const emitInitialSession = (initialSession: unknown) => {
+  mockOnAuthStateChange.mockImplementation(
+    (callback: (event: string, session: unknown) => void) => {
+      capturedAuthCallback = callback;
+      callback('INITIAL_SESSION', initialSession);
+      return { data: { subscription: { unsubscribe: jest.fn() } } };
+    }
+  );
+};
+
 describe('RootLayout welcome gate (auth-aware)', () => {
   beforeEach(async () => {
     jest.clearAllMocks();
@@ -97,7 +121,7 @@ describe('RootLayout welcome gate (auth-aware)', () => {
   });
 
   it('does NOT redirect a signed-in user to welcome, even when first_launch is unset', async () => {
-    mockGetSession.mockResolvedValue({ data: { session: { user: { id: 'u1' } } } });
+    emitInitialSession({ user: { id: 'u1' } });
     mockIsFirstLaunch.mockReturnValue(true);
 
     render(<RootLayout />);
@@ -108,7 +132,7 @@ describe('RootLayout welcome gate (auth-aware)', () => {
   });
 
   it('redirects a signed-out first-launch user to welcome', async () => {
-    mockGetSession.mockResolvedValue({ data: { session: null } });
+    emitInitialSession(null);
     mockIsFirstLaunch.mockReturnValue(true);
 
     render(<RootLayout />);
@@ -118,7 +142,7 @@ describe('RootLayout welcome gate (auth-aware)', () => {
   });
 
   it('does NOT redirect a signed-out returning user (first_launch already cleared)', async () => {
-    mockGetSession.mockResolvedValue({ data: { session: null } });
+    emitInitialSession(null);
     mockIsFirstLaunch.mockReturnValue(false);
 
     render(<RootLayout />);
@@ -128,5 +152,25 @@ describe('RootLayout welcome gate (auth-aware)', () => {
     await waitFor(() => expect(mockGetAllCards).toHaveBeenCalled());
     expect(mockReplace).not.toHaveBeenCalledWith('/welcome');
     expect(mockCompleteFirstLaunch).not.toHaveBeenCalled();
+  });
+
+  it('does NOT bounce to welcome when a signed-in user signs out post-boot (reactive auth, first_launch already cleared)', async () => {
+    // Boot signed-in: the gate clears first_launch. Model the real
+    // completeFirstLaunch, which makes subsequent isFirstLaunch() return false.
+    mockIsFirstLaunch.mockReturnValue(true);
+    mockCompleteFirstLaunch.mockImplementation(() => mockIsFirstLaunch.mockReturnValue(false));
+    emitInitialSession({ user: { id: 'u1' } });
+
+    render(<RootLayout />);
+    await waitFor(() => expect(mockCompleteFirstLaunch).toHaveBeenCalledTimes(1));
+
+    // isAuthenticated is reactive for the app's lifetime now (Story 16.10). A
+    // later sign-out must NOT re-trigger the welcome gate — first_launch is
+    // already cleared, so the returning-user path applies (no /welcome bounce).
+    act(() => {
+      capturedAuthCallback?.('SIGNED_OUT', null);
+    });
+
+    expect(mockReplace).not.toHaveBeenCalledWith('/welcome');
   });
 });

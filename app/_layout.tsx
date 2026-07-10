@@ -16,6 +16,7 @@ import { initializeDatabase } from '@/core/database';
 import { applyWatchUsageEvents, getAllCards } from '@/core/database/card-repository';
 import { initSentry } from '@/core/observability/sentry';
 import { logger } from '@/core/utils/logger';
+import { withTimeout } from '@/core/utils/with-timeout';
 import {
   parseWatchUsageEvent,
   pushCardsToWatch,
@@ -26,6 +27,7 @@ import {
 } from '@/core/watch-connectivity';
 
 import { getSupabaseClient } from '@/shared/supabase/client';
+import { useBootAuthGate } from '@/shared/supabase/useBootAuthGate';
 import { ThemeProvider, useTheme } from '@/shared/theme';
 import { PRIMARY_COLORS } from '@/shared/theme/colors';
 
@@ -266,19 +268,40 @@ const RootLayoutContent = ({ isAuthenticated }: { isAuthenticated: boolean }) =>
   );
 };
 
+/**
+ * Max time to wait for the Expo update manifest check before proceeding with
+ * boot. `checkForUpdateAsync()` has no built-in JS timeout, so on a flaky
+ * (connected-but-no-internet) network it can otherwise stall the loading
+ * screen. Boot must never hang (Story 16.10, AC1).
+ */
+const UPDATE_CHECK_TIMEOUT_MS = 5000;
+
 const RootLayout = () => {
   const { t } = useTranslation();
-  const [isReady, setIsReady] = useState(false);
+  // Infra readiness (local, offline-safe): DB init + guest-session bootstrap.
+  const [isInitialized, setIsInitialized] = useState(false);
   const [dbError, setDbError] = useState<string | null>(null);
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  // Auth readiness resolved offline-safe by useBootAuthGate (a SecureStore
+  // session probe + reactive onAuthStateChange + safety timeout) — replaces the
+  // blocking getSession() that hung offline on an expired-token refresh.
+  const { isReady: isAuthReady, isAuthenticated } = useBootAuthGate();
 
   useEffect(() => {
     const initializeApp = async () => {
       try {
-        // Check for updates first (if enabled) to ensure reload happens during splash
+        // Check for updates first (if enabled) so any reload happens during the
+        // loading screen. checkForUpdateAsync gates boot and has no reliable JS
+        // timeout, so it is bounded with withTimeout — a flaky network must not
+        // stall the spinner (AC1). fetchUpdateAsync/reloadAsync run only after a
+        // manifest is fetched (i.e. with connectivity), so they don't affect the
+        // offline cold-start this story fixes; a mid-download stall on a degraded
+        // connection is a separate, pre-existing edge (see story follow-ups).
         if (Updates.isEnabled) {
           try {
-            const update = await Updates.checkForUpdateAsync();
+            const update = await withTimeout(
+              Updates.checkForUpdateAsync(),
+              UPDATE_CHECK_TIMEOUT_MS
+            );
             if (update.isAvailable) {
               await Updates.fetchUpdateAsync();
               // Reload will happen here, before UI is shown
@@ -303,18 +326,11 @@ const RootLayout = () => {
           );
         }
 
-        // Resolve whether a persisted Supabase session exists BEFORE showing any
-        // UI, so the welcome gate (RootLayoutContent) never flashes or bounces an
-        // already signed-in user. Best-effort: env-misconfig / no session → treat
-        // as signed-out and fall through to the normal first-launch flow.
-        try {
-          const { data } = await getSupabaseClient().auth.getSession();
-          setIsAuthenticated(Boolean(data.session));
-        } catch (error) {
-          logger.warn('Initial session check failed (treating as signed-out):', error);
-        }
-
-        setIsReady(true);
+        // Auth state is resolved separately by useBootAuthGate (an offline-safe
+        // SecureStore probe + reactive onAuthStateChange), so boot no longer
+        // blocks on a getSession() token refresh that never settled offline.
+        // See Story 16.10 / AD-16-10-01.
+        setIsInitialized(true);
       } catch (error) {
         logger.error('App initialization failed:', error);
         setDbError(t('common.errors.initializationFailed'));
@@ -374,6 +390,13 @@ const RootLayout = () => {
     };
   }, []);
 
+  // Gate the UI on BOTH local infra AND resolved auth state. Both are
+  // offline-safe (local DB init + the SecureStore session probe in
+  // useBootAuthGate), so this flips fast with no connectivity — and only once
+  // auth is known, preserving the no-flash welcome gate (a signed-in user is
+  // never bounced to /welcome).
+  const isReady = isInitialized && isAuthReady;
+
   if (dbError) {
     return (
       <View style={styles.fullscreen}>
@@ -385,7 +408,7 @@ const RootLayout = () => {
 
   if (!isReady) {
     return (
-      <View style={styles.fullscreen}>
+      <View style={styles.fullscreen} testID="boot-loading">
         <ActivityIndicator size="large" color={PRIMARY_COLORS[500]} />
       </View>
     );
