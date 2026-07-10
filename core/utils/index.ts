@@ -12,3 +12,4 @@ export {
   isValidEAN13Checksum,
   type NormalizedBarcode
 } from './normalizeBarcode';
+export { withTimeout } from './with-timeout';
