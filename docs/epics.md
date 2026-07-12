@@ -20,9 +20,29 @@ phase2Stories: 10
 phase3Epics: 3
 phase3Stories: 18
 frsConvered: 72
+# DEPRECATION (added 2026-07-11): see the banner below the title; authoritative tracker = sprint-status.yaml
+deprecated: true
+authoritative_source: 'docs/sprint-artifacts/sprint-status.yaml'
+deprecation_reason: 'Historical Epics 1-13 plan. Live Epics 11,14,15,16,17 + ~80 sprint-added stories, the Epic 8->13 absorption, and Epic 6 renumbering exist ONLY in sprint-status.yaml. Do NOT regenerate the tracker from this file.'
 ---
 
 # myLoyaltyCards - Epic Breakdown
+
+> [!CAUTION]
+> **DEPRECATED — historical planning artifact. `docs/sprint-artifacts/sprint-status.yaml` is the authoritative system of record.**
+>
+> This file is the **original Epics 1–13 plan**, frozen after initial planning. It is **badly out of sync** with what actually shipped and must **not** be used to regenerate the sprint tracker.
+>
+> **⛔ Do NOT run `bmad-sprint-planning` (or any generator) against this file.** That skill rebuilds `development_status` from `*epic*.md` and removes any tracked item "not in epic files" — pointing it here would **delete Epics 11, 14, 15, 16, 17** and ~80 sprint-added stories, plus the `last_sprint` / `current_sprint` / `next_sprint` / `action_items` blocks the template doesn't know about. Advance sprints by **editing `sprint-status.yaml` directly** (a manual transition), as was done for the Sprint 16→17 roll-over.
+>
+> **Known divergences (as of 2026-07-11):**
+>
+> - **Missing entirely here:** Epic 11 (CI/CD), Epic 14 (Household), Epic 15 (i18n), Epic 16 (Platform/Tech-Debt — 9 stories shipped), Epic 17 (Wallet).
+> - **Epic 8** (Settings, stories 8.1–8.5) is shown as live here, but was **absorbed into Epic 13** (DEC-S10-001).
+> - **Epic 6** numbering diverged: here `6.7 = Sign In with Apple` … stops at 6.13; the tracker has `6-7 = Sign In Email` … through **6-20**.
+> - ~80 sprint-added stories (9-6a, 5-6a/5-7…5-10, 6-14…6-20, the 13-x follow-ups, all 16-x) exist **only** in the tracker.
+>
+> Context: `docs/sprint-artifacts/epic-16-retro-2026-07-11.md`. To make this file trustworthy again, resync it to the tracker (a larger rewrite) — otherwise treat it as **read-only history**.
 
 ## Overview
 

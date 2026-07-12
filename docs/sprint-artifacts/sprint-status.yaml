@@ -1,5 +1,5 @@
 # generated: 2026-01-03
-# updated: 2026-06-18
+# updated: 2026-07-11
 # project: myLoyaltyCards
 # tracking_system: file-system
 # story_location: docs/sprint-artifacts
@@ -35,7 +35,7 @@
 # - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
 
 generated: 2026-01-03
-updated: 2026-06-18
+updated: 2026-07-11
 project: myLoyaltyCards
 tracking_system: file-system
 story_location: docs/sprint-artifacts
@@ -44,68 +44,14 @@ story_location: docs/sprint-artifacts
 # LAST SPRINT (completed)
 # ============================================
 last_sprint:
-  number: 15
-  name: 'Sprint 15: Smart Card Sorting'
-  goal: 'Complete Epic 9 — activate usage tracking and favourites, implement the smart sorting algorithm, and sync card order to Apple Watch.'
-  status: completed
-  planning_date: 2026-06-06
-  start_date: 2026-06-09
-  end_date: 2026-06-20
-  completed_date: 2026-06-10
-  duration: 2 weeks
-  epics: [9]
-  stories:
-    - 9-1-track-card-usage
-    - 9-2-mark-card-as-favorite
-    - 9-3-implement-sorting-algorithm
-    - 9-4-sync-sorting-to-watch
-    - 9-5-selectable-watch-sort
-    - 9-6a-watch-usage-event-adr
-    - 9-6-count-watch-card-opens
-  waves:
-    wave_1:
-      stories: [9-1, 9-2]
-      note: 'Usage tracking + favourites (schema fields already in place from Epic 2).'
-    wave_2:
-      stories: [9-3]
-      note: 'Favourites-first smart sort on the phone card list.'
-    wave_3:
-      stories: [9-4]
-      note: 'Sync favourite ordering + usage data to Apple Watch.'
-    wave_4:
-      stories: [9-6a, 9-5]
-      note: 'Mid-sprint via correct-course (2026-06-09): 9-6a enabling ADR (watch→phone CARD_USED, ADR-2026-06-09-001); 9-5 selectable watch sort.'
-    wave_5:
-      stories: [9-6]
-      note: 'Mid-sprint: count watch card opens toward the shared usageCount/lastUsedAt counters (FR76).'
-  notes: |
-    Sprint 15 delivered Epic 9 (Smart Card Sorting). Scope grew 4 → 7 mid-sprint via
-    correct-course (added 9-6a, 9-5, 9-6); all 7 stories done and merged to main (#123–#132)
-    by 2026-06-10, ahead of the planned window. Quality gates held throughout (1503 tests,
-    coverage ≥80%, 0 production incidents).
-  retrospective: |
-    Epic 9 retrospective completed 2026-06-10 (party mode; Bob facilitating).
-    Full write-up: docs/sprint-artifacts/epic-9-retro-2026-06-10.md
-    Highlights: course-correction absorbed +3 stories with no quality drop; Sprint 14 retro
-    lessons applied (spike-first 9.6a ADR before 9.6 + API-currency checks in ACs); Epic 2
-    schema-ahead made 9.3 a one-tier change.
-    Watch-outs: correct-course didn't update current_sprint.stories/waves (reconciled 2026-06-10);
-    design validation landed late on 9.2; physical-device watch validation still pending (next RC).
-    Top action items: reconcile the sprint record within correct-course (Bob); validate watch
-    usage-events + favourite sync on a physical pair at the next RC — GATES Epic 10 (ifero);
-    design sign-off before code-review for UI stories (Sally + Bob).
-
-# ============================================
-# CURRENT SPRINT
-# ============================================
-current_sprint:
   number: 16
   name: 'Sprint 16: Platform & Tech-Debt Clear-Out (Epic 16)'
-  goal: 'Clear Epic 16 — ship the two reliability fixes (Android beta upload, cloud sync on cold open), migrate the styling engine to Unistyles, and stand up the design-in-code foundation (contribution workflow, design tokens, component gallery).'
-  status: in-progress # started 2026-06-11
+  goal: 'Clear the Epic 16 tech-debt bucket — ship the reliability fixes (Android beta upload, cloud sync on cold open, offline cold-start hang), migrate the styling engine to Unistyles, and stand up the design-in-code foundation (contribution workflow, portable tokens, component gallery + Chromatic).'
+  status: completed
   planning_date: 2026-06-11
   start_date: 2026-06-11
   end_date: 2026-06-25
+  completed_date: 2026-07-10
   duration: 2 weeks
   epics: [16]
   stories:
@@ -117,64 +63,116 @@ current_sprint:
     - 16-2-implement-logger-sentry-wrapper
     - 16-5-component-gallery-storybook-chromatic
     - 16-9-relocate-app-screens-to-features
+    - 16-10-fix-offline-cold-start-hang
   waves:
     wave_1:
       stories: [16-7, 16-8]
-      note: 'Ship-now reliability fixes (both ready-for-dev, independent). 16-7: Android RC alpha upload — authoritative versionCode via GITHUB_RUN_NUMBER through a new app.config.ts (+ prod offset band, release-signing fix, cicd.md doc). 16-8: cloud sync fails on every cold open — autoTriggeredRef latch-on-success + network-ready gate + retryWithBackoff.'
+      note: 'Ship-now reliability fixes (independent). 16-7: authoritative Android versionCode via GITHUB_RUN_NUMBER through a new app.config.ts (+ prod offset band, signing guard, cicd.md doc). 16-8: cold-open cloud-sync race — autoTriggeredRef latch-on-success + network gate + retryWithBackoff (+ singleton-store dedup).'
     wave_2:
       stories: [16-1]
-      note: 'Refine → dev. Migrate styling engine NativeWind/Tailwind → react-native-unistyles (atomic, ~31 className files, zero visual regression). Refinement first: incremental dev approach + Unistyles v3 plugin coexistence. UNBLOCKS 16-5.'
+      note: 'Styling engine NativeWind/Tailwind → react-native-unistyles (big-bang, 31 className files, zero token duplication). UNBLOCKED 16-5. Post-review device fix: HeaderIconButton for the nav-bar Pressable-remap flash.'
     wave_3:
       stories: [16-3, 16-4, 16-2]
-      note: 'Refine → dev, parallel-capable (engine-agnostic, independent of 16-1). 16-3: design-contribution workflow (CONTRIBUTING-DESIGN.md, labels/templates, docs/design/ home). 16-4: design tokens → portable DTCG JSON + Style Dictionary (tokens.generated.ts). 16-2: logger/Sentry wrapper + migrate ~65 console.* call sites (re-opened — was wrongly marked done). All three have draft story files needing a refinement pass.'
+      note: 'Design-in-code + observability, parallel (engine-agnostic). 16-3: contribution workflow (CONTRIBUTING-DESIGN.md, design-label fast-path). 16-4: portable DTCG tokens + Style Dictionary (tokens.generated.ts). 16-2: logger/Sentry wrapper + ~30 console.* migrated + PII scrub + no-console rule.'
     wave_4:
       stories: [16-5]
-      note: 'Depends on Wave 2 (16-1 styling engine). Web Storybook (react-native-web) + Chromatic (free OSS) for visual component PR review. Refine → dev after Unistyles lands.'
+      note: 'Depended on Wave 2 (Unistyles). Web Storybook (react-native-web) + path-filtered Chromatic — the design validator. Chromatic project/token remains a human prereq to activate visual diffs.'
     wave_5:
       stories: [16-9]
-      note: 'Mid-sprint addition (2026-06-18): relocate fat screens out of app/ routing layer → features/cards/screens/ + implement missing route-file lint rule + remove app/__tests__ (co-locate tests). Engine-agnostic. Refined SM→Architect (Winston) same day → ready-for-dev. AD-6: sequence BEFORE 16-2 (shared console.* files in the 3 card screens). AD-2 (cards→auth exception) ratified by ifero 2026-06-18.'
+      note: 'Mid-sprint add (2026-06-18): relocate fat screens app/ → features/cards/screens/ + implement the missing route-file lint rule (root cause) + remove app/__tests__. AD-2 (cards→auth) ratified by ifero.'
+    hotfix:
+      stories: [16-10]
+      note: 'Fast-tracked HOTFIX (CRITICAL — broke offline-first): offline cold-start hang. AD-16-10-01 via useBootAuthGate (storage probe + reactive listener + safety timeout) + withTimeout on the update check. Counted in Sprint 16 per ifero (2026-07-11).'
   notes: |
-    Sprint 16 planned 2026-06-11 after the Epic 9 retrospective. Theme: clear Epic 16
-    (Platform & Tech Debt) — ifero's call to tackle the whole bucket.
-    Scope: 7 stories across 4 waves. 16-2 (logger/Sentry) was found wrongly marked done
-    (corrected 2026-06-11 → drafted) and folded into Wave 3; 16-6 (Penpot) is kept in backlog
-    as trigger-gated ("when real visual designers want in").
-    Readiness reality: only 16-7 + 16-8 are ready-for-dev; 16-1, 16-2, 16-3, 16-4, 16-5 are all
-    drafted and need a refinement pass → ready-for-dev before dev. So the SM/PM refinement phase
-    is the gating work for this sprint — larger and prep-heavier than the focused Epic 9 one.
-    Dependency: 16-5 (component gallery) is blocked by 16-1 (styling engine) → Wave 4 after Wave 2.
-    Deferred: Epic 10 (Wear OS) stays gated on the Epic 9 retro action #2 (on-device watch
-    usage-event validation at the next RC); Epic 14 (Household) still needs UX design first.
-    Mid-sprint (2026-06-18): added 16-9 (relocate app/ screens → features/ + remove app/__tests__)
-    as a tech-debt story (ifero's call); drafted by Bob, refined by Winston (Architect)
-    → ready-for-dev 2026-06-18 (AD-2 cards→auth exception ratified).
+    Sprint 16 cleared the Epic 16 Platform & Tech-Debt bucket: 8 planned stories across
+    5 waves + the 16-10 hotfix = 9 delivered, all done and merged to main by 2026-07-10.
+    1675 tests green (≈+172), coverage ≥80% held, 0 production incidents — and 3 of the 9
+    were fixes for stakeholder-reported prod defects (16-7, 16-8, 16-10). New tech introduced:
+    react-native-unistyles v3, @sentry/react-native, Style Dictionary, Storybook + Chromatic.
+    Epic 16 stays OPEN as a standing bucket (16-6 trigger-gated; 16-11/12/13 → Sprint 17).
+    Follow-ups created: 16-11, 16-12, 16-13.
+  retrospective: |
+    Sprint 16 / Epic 16 clear-out retrospective completed 2026-07-11 (party mode; Amelia
+    facilitating — SM role dissolved in the 6.10 migration).
+    Full write-up: docs/sprint-artifacts/epic-16-retro-2026-07-11.md
+    Highlights: reliability trilogy diagnosed with file:line root causes; adversarial reviews
+    that EXECUTE real environments caught what green gates missed (16-5 browser crashes; 16-10
+    disproved its own ADR's synchronous-INITIAL_SESSION premise); root-cause fixes that stop
+    recurrence (16-9 route-file lint rule); the design validator (16-3/4/5) is ifero's standout win.
+    Watch-outs: device/hardware validation debt is COMPOUNDING (5 ifero-owned gates → one RC pass,
+    Action #1); Sentry prod-firing carried a 2nd sprint (Action #2); dissolved SM role orphaned
+    2 Epic 9 action items (re-homed, Action #3); uncommitted-WIP drift (16-3 re-verification);
+    coverage blind spot on shared/** (→ 16-13). Action items now machine-tracked in action_items.
 
-next_sprint:
-  # PROPOSED by PM (John) 2026-07-09 from 3 stakeholder-reported bugs. NOT finalized:
-  # needs an SM sprint-planning pass (waves/capacity) + SM/Architect story refinement
-  # (all three stories are `drafted`) to reach ready-for-dev before dev starts.
+# ============================================
+# CURRENT SPRINT
+# ============================================
+current_sprint:
   number: 17
   name: 'Sprint 17: Reliability & Auth Hardening'
-  goal: 'Fix the remaining stakeholder-reported defects: stop deleted cards resurrecting on cloud sync (16-11), and rebuild password management on OTP — reset-via-OTP (6-19) and change-password-in-Settings (6-20). NOTE: 16-10 (offline cold-start hang, CRITICAL) is fast-tracked as a HOTFIX ahead of this sprint.'
-  status: proposed
+  goal: 'Fix the remaining stakeholder-reported defects and harden the platform: stop deleted cards resurrecting on cloud sync (16-11); rebuild password management on OTP — reset-via-OTP (6-19) and change-password-in-Settings (6-20); bound the OTA update download at boot (16-12); and close the coverage blind spot by widening the jest gate to shared/** (16-13).'
+  status: planned # promoted from next_sprint 2026-07-11 (sprint-planning). All 5 stories are still `drafted` (no story files) → run create-story refinement to ready-for-dev before dev.
+  planning_date: 2026-07-11
   epics: [16, 6]
   stories:
     - 16-11-fix-card-deletion-cloud-resurrection
     - 6-19-password-reset-via-otp
     - 6-20-change-password-in-settings
+    - 16-13-widen-jest-coverage-to-shared
+    - 16-12-bound-ota-update-download-boot
   waves:
     wave_1:
-      stories: [16-11]
-      note: 'Data-integrity sync fix (independent). Cousin of 16-8 — coordinate with its useCloudSync singleton store.'
+      stories: [16-11, 16-12, 16-13]
+      note: "Reliability + tech-debt, parallel-capable. 16-11: data-integrity sync fix (deleted cards resurrect) — cousin of 16-8; MUST coordinate with 16-8's useCloudSync module-level singleton store, and revive the dead mergeWithDeletions (cloud-sync.ts). 16-12: bound Updates.fetchUpdateAsync/reloadAsync at boot with withTimeout (reuses core/utils/with-timeout from 16-10; online mid-download edge). 16-13: widen jest collectCoverageFrom to shared/** — land the config early so this sprint's shared/ changes (16-11) are gated; the triage (backfill vs justified exclude) is the work."
     wave_2:
       stories: [6-19, 6-20]
-      note: 'Auth/OTP thread: 6-19 builds the recovery-OTP plumbing (send/verify wrappers + OTP UX); 6-20 reuses it for the Settings change-password entry. Sequence 6-19 -> 6-20.'
+      note: "Auth/OTP thread, sequenced 6-19 → 6-20. 6-19 builds the recovery-OTP plumbing (send/verify wrappers + OTP UX), reusing Epic 6's proven verifyEmailOtp/VerifyEmailScreen; de-risked by 16-10's Supabase-auth learnings (hasPersistedSession; INITIAL_SESSION not synchronous for an expired token). 6-20 reuses that plumbing for the Settings change-password entry."
   notes: |
-    Proposed 2026-07-09 by PM (John) from ifero's bug report. Not yet finalized —
-    run SM sprint-planning to confirm sequencing/capacity, and SM/Architect refinement
-    to lift 16-11 / 6-19 / 6-20 from `drafted` -> ready-for-dev.
-    HOTFIX: 16-10 (offline cold-start hang) is CRITICAL — it breaks the offline-first
-    promise — and is to be picked up immediately, ahead of Sprint 17, per ifero.
+    Promoted from next_sprint on 2026-07-11 during sprint-planning (after the Sprint 16 retro).
+    Scope confirmed by ifero: the 3 proposed defect stories + 16-13 (coverage, retro Action #5)
+    + 16-12 (OTA boot bound). 5 stories, 2 waves.
+    GATING WORK: all 5 are `drafted` with NO story files — run create-story (SM/Architect-style
+    refinement) to lift each drafted → ready-for-dev before dev. sprint-planning only sequenced
+    them into the sprint; it did NOT make them ready-for-dev.
+    Carry-over from Sprint 16 (tracked in action_items, NOT a Sprint 17 dev item): the consolidated
+    RC validation pass (Action #1, ifero) — 16-1 device visual sweep, 16-2 Sentry prod smoke test,
+    16-8 cold-open, 16-10 airplane-mode, + Epic 9 watch validation — which also gates Sprint 18.
+
+next_sprint:
+  # STAGED 2026-07-11 (sprint-planning). GATED — cannot start until the RC watch-validation
+  # (action_items: Sprint 16 Action #1 / carried Epic 9 Action #2) confirms watch usage-events
+  # + favourite sync on a physical phone+watch pair. Also needs create-story refinement
+  # (all 10-x stories are `backlog`) → ready-for-dev before dev.
+  number: 18
+  name: 'Sprint 18: Wear OS App (Epic 10)'
+  goal: 'Bring the loyalty-card experience to Android/Wear OS — project structure, catalogue generation, card list (Carbon UI), barcode display, local storage, and phone sync — reusing the usage-event protocol proven portable to the Wearable Data Layer by ADR-2026-06-09-001.'
+  status: proposed # GATED on the RC watch-validation; not committed
+  epics: [10]
+  stories:
+    - 10-1-create-wear-os-project-structure
+    - 10-2-generate-catalogue-for-wear-os
+    - 10-3-implement-card-list-carbon-ui
+    - 10-4-display-barcode-on-wear-os
+    - 10-5-store-cards-locally
+    - 10-6-sync-cards-from-phone
+  waves:
+    wave_1:
+      stories: [10-1, 10-2]
+      note: 'Enabling: Wear OS project structure + catalogue generation (mirror the watchOS 5-1/5-2 pattern). Prerequisite to everything else.'
+    wave_2:
+      stories: [10-3, 10-4, 10-5]
+      note: 'Card list (Carbon UI) + barcode display + local storage on the watch.'
+    wave_3:
+      stories: [10-6]
+      note: 'Sync cards from phone — reuses the Wearable Data Layer per ADR-2026-06-09-001.'
+  notes: |
+    Staged 2026-07-11 as the sprint-after-Sprint-17, per ifero. NOT committed — HARD-GATED on
+    the RC watch-validation (see action_items: Sprint 16 Action #1 / Epic 9 Action #2): a solid,
+    on-device-validated watchOS app is the prerequisite for the Wear OS equivalent (ifero's stated
+    direction). Do NOT start until that RC pass lands. All 10-x stories are `backlog` and need
+    create-story refinement → ready-for-dev first.
+    Alternative if the watch gate slips: Epic 14 (Household Collaboration) — but it needs
+    dedicated UX design first (14-5a) before implementation.
 
 development_status:
   # ============================================
@@ -193,7 +191,7 @@ development_status:
   epic-1-completed: 2026-01-07
 
   # Epic 2: Card Management & Barcode Display
-  epic-2: in-progress
+  epic-2: done # all tracked stories (2-1..2-10) done; closed during Sprint 16 reconciliation 2026-07-10
   2-1-display-card-list: done
   2-2-add-card-manually: done
   2-3-scan-barcode-with-camera: done
@@ -224,7 +222,7 @@ development_status:
   epic-4-retrospective: optional
 
   # Epic 5: Apple Watch App
-  epic-5: in-progress
+  epic-5: done # all tracked stories (5-1..5-10) done; closed during Sprint 16 reconciliation 2026-07-10
   5-1-create-watchos-project-structure: done
   5-2-generate-catalogue-for-watchos: done
   5-3-implement-card-list-carbon-ui: done
@@ -262,8 +260,8 @@ development_status:
   6-17-design-otp-verification-screen: done # Sprint 13 — Figma OTP Verification page approved by Ifero on 2026-04-28; design dependency cleared
   6-18-otp-email-verification-flow: done # Sprint 13 — OTP verify flow implemented, full validation green, dev+QA subagent reviews approved on 2026-04-29
   6-18a-otp-verification-followup: done # Sprint 14 — stakeholder-approved follow-up bugfix for 8-digit OTP + single-field redesign from Story 6.18
-  6-19-password-reset-via-otp: drafted # 2026-07-09: forgot-password reset is dead — resetPasswordForEmail deep-link (auth.ts:322, redirect :318) never lands: app scheme not in Supabase redirect allowlist (config.toml:154,156 = 127.0.0.1 only), warm-start deep links unhandled (getInitialURL cold-start only, no url listener), no recovery email template (config.toml:230-232 confirmation only). Replace with OTP recovery: send code -> verifyOtp(type:recovery) -> new-password screen -> updateUser(password). Reuses proven verifyEmailOtp/VerifyEmailScreen 8-digit OTP (auth.ts:212-241). Supersedes 6-8's un-verified deep-link. Drafted by PM (John); Sprint 17. Needs SM/Architect refinement -> ready-for-dev.
-  6-20-change-password-in-settings: drafted # 2026-07-09: signed-in users have NO way to change password (Settings AccountSection.tsx exposes only Sign Out :66 + Delete Account :74). Add OTP-gated Change Password: Settings row -> OTP -> new password -> updateUser(password) (auth.ts:345 exists). Shares recovery-OTP plumbing with 6-19 (sequence after it). Drafted by PM (John); Sprint 17. Needs refinement -> ready-for-dev.
+  6-19-password-reset-via-otp: ready-for-dev # 2026-07-09: forgot-password reset is dead — resetPasswordForEmail deep-link (auth.ts:322, redirect :318) never lands: app scheme not in Supabase redirect allowlist (config.toml:154,156 = 127.0.0.1 only), warm-start deep links unhandled (getInitialURL cold-start only, no url listener), no recovery email template (config.toml:230-232 confirmation only). Replace with OTP recovery: send code -> verifyOtp(type:recovery) -> new-password screen -> updateUser(password). Reuses proven verifyEmailOtp/VerifyEmailScreen 8-digit OTP (auth.ts:212-241). Supersedes 6-8's un-verified deep-link. Drafted by PM (John); Sprint 17. Needs SM/Architect refinement -> ready-for-dev.
+  6-20-change-password-in-settings: ready-for-dev # 2026-07-09: signed-in users have NO way to change password (Settings AccountSection.tsx exposes only Sign Out :66 + Delete Account :74). Add OTP-gated Change Password: Settings row -> OTP -> new password -> updateUser(password) (auth.ts:345 exists). Shares recovery-OTP plumbing with 6-19 (sequence after it). Drafted by PM (John); Sprint 17. Needs refinement -> ready-for-dev.
   epic-6-retrospective: optional
 
   # Epic 7: Cloud Synchronization
@@ -327,7 +325,7 @@ development_status:
   epic-14-retrospective: optional
 
   # Epic 15: Internationalisation & Public Presence
-  epic-15: in-progress
+  epic-15: done # both tracked stories (15-1, 15-2) done; closed 2026-07-10 (note: Epic 15 not defined in epics.md)
   15-1-github-pages-landing-page: done # Sprint 13 Wave 1 — local implementation, tests, dev review, and QA review complete; Italian copy approved, Pages config/live verification pending
   15-2-italian-language-in-app: done # Story implemented; localized app + watch copy completed, validated, and pushed for PR review
   epic-15-retrospective: optional
@@ -362,7 +360,7 @@ development_status:
 
   # Epic 13: UI Implementation ✅ COMPLETE
   # Absorbs Epic 8 (Settings) — 8-X stories will NOT be implemented separately
-  epic-13: in-progress
+  epic-13: done
   13-1-implement-design-system-tokens: done # implementation complete, QA + dev review approved
   13-2-restyle-home-screen: done # QA + dev review approved 2026-04-03
   13-3-restyle-card-detail: done # QA + dev review approved, PR #90 awaiting stakeholder merge
@@ -375,7 +373,7 @@ development_status:
   13-8-restyle-sync-indicators: done # QA + dev review approved, PR created 2026-04-11
   13-9-update-apple-watch-ui: done # maps to 12-9, PR #97 merged 2026-04-11
   13-10-fix-dark-mode-system-preference: done # Sprint 13 — tests green, dev + QA approved, stakeholder approved push/PR
-  epic-13-completed: ~
+  epic-13-completed: 2026-04-11 # closed during Sprint 16 reconciliation; retro done 2026-04-11
   epic-13-retrospective: done # completed 2026-04-11
 
   # ============================================
@@ -401,10 +399,10 @@ development_status:
   16-8-fix-cloud-sync-cold-open-race: done # 2026-06-13: latch-on-success + network gate + retryWithBackoff on feature/16-8-fix-cloud-sync-cold-open-race. Code review + QA review approved by sonnet subagents. Awaiting stakeholder approval. — bug (filed as tech debt per ifero) — cloud sync fails on every cold open, recovers on manual pull. Confirmed w/ ifero (signed-in; pull-to-refresh works; banner "Cloud sync failed. Pull to retry.") → autoTriggeredRef latch race is root cause (useCloudSync.ts:108-121). Fix: latch-on-success (root) + network-ready gate + retryWithBackoff (defense-in-depth). Refined → ready-for-dev 2026-06-11.
   16-9-relocate-app-screens-to-features: done # 2026-07-10 dev complete (Amelia): 4 screens → features/cards/screens/ (verbatim move), routes now thin re-exports, cards→auth boundary exception + route-file no-restricted-imports rule added to eslint, app/scan.tsx → hook-free <Redirect> (kept — live from CatalogueGrid), app/__tests__ removed (welcome dup deleted), +3 screen test suites + extended HomeScreen to restore coverage (81.49% branch). Per ifero: app/ holds NO test files — the 4 app-subject tests (scan + 3 root-layout) live in top-level test/ (import via @/app/...), superseding AD-5. lint+typecheck+1675 tests green. code-review + QA both APPROVED zero-comments. Awaiting ifero final review before PR. | 2026-06-18: relocate fat screens out of app/ routing layer into features/cards/screens/ (index/card[id]/card[id]edit/barcode[id]) + implement the documented-but-MISSING route-file lint rule (root cause) + remove app/__tests__ (co-locate). Drafted by Bob (SM); REFINED → ready-for-dev by Winston (Architect) same day. AD-6: sequence BEFORE 16-2 (both touch console.* in the 3 card screens). AD-2 (cards→auth exception for HomeScreen's guest/migration banners) RATIFIED by ifero 2026-06-18. Pure refactor, engine-agnostic.
   16-10-fix-offline-cold-start-hang: done # 2026-07-10 impl complete (Amelia) — AD-16-10-01 via useBootAuthGate (storage probe + reactive onAuthStateChange + safety timeout) + withTimeout on the update check; code-review + QA both APPROVED zero-comments; awaiting ifero review before PR. 2026-07-09 HOTFIX (CRITICAL — breaks offline-first): offline cold start hangs on the loading spinner forever. Root cause app/_layout.tsx:311 — unguarded await auth.getSession() (autoRefreshToken:true -> network token refresh, no timeout/abort); offline it never settles so setIsReady(true) (:317) never fires. REFINED -> ready-for-dev by Winston (Architect) 2026-07-09: AD-16-10-01 locks the fix — gate boot on the synchronous INITIAL_SESSION (useAuthState.ts:37-44, storage-only, no network) + safety timeout; REJECTED the getSession-timeout option (bounds but doesn't remove the hang). Preserves the no-flash welcome-gate intent (app/_layout.tsx:306-309); also fixes latent isAuthenticated staleness. Drafted by PM (John); FAST-TRACKED as a hotfix ahead of Sprint 17. Sibling of 16-8.
-  16-11-fix-card-deletion-cloud-resurrection: drafted # 2026-07-09: signed-in card delete resurrects on the next useCloudSync (pull-to-refresh/cold-open). Two uncoordinated sync engines: useCloudSync is deletion-blind — full-fetch + mergeCards re-adds cloud-only cards (cloud-sync.ts:337-340,:591) + re-upload (useCloudSync.ts:155-181); never drains syncPendingDeletions (deletion-tracker.ts:3) nor calls deleteCardFromCloud (cards.ts:75-87). Deletion-aware processPendingSync (useAutoSync -> sync-trigger.ts:128-142) loses the race. Purpose-built mergeWithDeletions (cloud-sync.ts:470-523) is DEAD CODE. Cousin of 16-8. Drafted by PM (John); Sprint 17. Needs refinement -> ready-for-dev.
-  16-12-bound-ota-update-download-boot: drafted # 2026-07-10: Story 16.10 follow-up. checkForUpdateAsync was bounded in 16.10 (withTimeout 5s) but Updates.fetchUpdateAsync()/reloadAsync (app/_layout.tsx initializeApp) are NOT — a flaky connection that serves a manifest then stalls mid-bundle-download can still hang boot (online-only edge, out of 16.10's offline scope; pre-existing). Fix: wrap fetchUpdateAsync in withTimeout (core/utils/with-timeout.ts) behind a tunable budget that won't abort legit slow downloads; on timeout boot the current bundle. Drafted by Amelia (Dev); needs refinement -> ready-for-dev.
-  16-13-widen-jest-coverage-to-shared: drafted # 2026-07-10: Story 16.10 QA follow-up. jest.config.js collectCoverageFrom spans only core/** + features/**; shared/** (Supabase auth/session, hooks, theme, i18n) is outside the 80% global gate — incl. the 16.10 hotfix logic (useBootAuthGate, client.ts). Add shared/**; expect some files below threshold -> backfill tests or add justified excludes (that triage is the work, not the glob edit). Chore/tech-debt; no behaviour change. Drafted by Amelia (Dev); needs refinement -> ready-for-dev.
-  epic-16-retrospective: optional
+  16-11-fix-card-deletion-cloud-resurrection: ready-for-dev # 2026-07-09: signed-in card delete resurrects on the next useCloudSync (pull-to-refresh/cold-open). Two uncoordinated sync engines: useCloudSync is deletion-blind — full-fetch + mergeCards re-adds cloud-only cards (cloud-sync.ts:337-340,:591) + re-upload (useCloudSync.ts:155-181); never drains syncPendingDeletions (deletion-tracker.ts:3) nor calls deleteCardFromCloud (cards.ts:75-87). Deletion-aware processPendingSync (useAutoSync -> sync-trigger.ts:128-142) loses the race. Purpose-built mergeWithDeletions (cloud-sync.ts:470-523) is DEAD CODE. Cousin of 16-8. Drafted by PM (John); Sprint 17. Needs refinement -> ready-for-dev.
+  16-12-bound-ota-update-download-boot: ready-for-dev # 2026-07-10: Story 16.10 follow-up. checkForUpdateAsync was bounded in 16.10 (withTimeout 5s) but Updates.fetchUpdateAsync()/reloadAsync (app/_layout.tsx initializeApp) are NOT — a flaky connection that serves a manifest then stalls mid-bundle-download can still hang boot (online-only edge, out of 16.10's offline scope; pre-existing). Fix: wrap fetchUpdateAsync in withTimeout (core/utils/with-timeout.ts) behind a tunable budget that won't abort legit slow downloads; on timeout boot the current bundle. Drafted by Amelia (Dev); needs refinement -> ready-for-dev.
+  16-13-widen-jest-coverage-to-shared: ready-for-dev # 2026-07-10: Story 16.10 QA follow-up. jest.config.js collectCoverageFrom spans only core/** + features/**; shared/** (Supabase auth/session, hooks, theme, i18n) is outside the 80% global gate — incl. the 16.10 hotfix logic (useBootAuthGate, client.ts). Add shared/**; expect some files below threshold -> backfill tests or add justified excludes (that triage is the work, not the glob edit). Chore/tech-debt; no behaviour change. Drafted by Amelia (Dev); needs refinement -> ready-for-dev.
+  epic-16-retrospective: done # completed 2026-07-11 — docs/sprint-artifacts/epic-16-retro-2026-07-11.md (Sprint 16 clear-out; Epic 16 stays open as a standing bucket)
 
   # Epic 17: Apple Wallet Pass Support — FEASIBILITY-FIRST
   # Status: PARKED for future refinement (decision: ifero, party mode 2026-06-04).
@@ -417,3 +415,48 @@ development_status:
   epic-17: backlog
   17-1-spike-apple-wallet-feasibility: backlog # PARKED — full story NOT yet drafted; spike to be written during a future refinement
   epic-17-retrospective: optional
+
+# ============================================
+# ACTION ITEMS
+# ============================================
+# Machine-tracked from the Sprint 16 retro (2026-07-11) onward. Earlier retros'
+# action items live only in their epic-N-retro-*.md write-ups.
+# Status values: open | in-progress | done | parked
+action_items:
+  # --- Sprint 16 / Epic 16 clear-out retro (2026-07-11) ---
+  - epic: 16
+    action: 'Consolidated RC validation pass — clear all stacked device gates on ONE RC build: 16-1 on-device light/dark sweep + dev-client build; 16-8 cold-open sync; 16-10 airplane-mode cold start; + carry-over Epic 9 watch usage/favourite validation (gates Epic 10)'
+    owner: 'ifero'
+    category: 'critical-path'
+    status: open
+  - epic: 16
+    action: 'Close Sentry prod-firing verification (carries Epic 9 action #4, 2nd sprint) — unblocked by #140 CI symbol upload; fold into the RC pass. Done when a release-build error lands symbolicated in andrea-pacino/react-native'
+    owner: 'ifero + Amelia'
+    category: 'technical'
+    status: open
+  - epic: 16
+    action: 'Re-home orphaned SM action items onto the Dev role (SM dissolved in the 6.10 migration): reconcile current_sprint.stories/waves inside every correct-course (carries Epic 9 action #1)'
+    owner: 'Amelia'
+    category: 'process'
+    status: open
+  - epic: 16
+    action: 'Adopt commit-on-green — PR promptly once a story hits zero-comment approval; if held for stakeholder approval, record the base commit so drift is visible (the 16-3 re-verification tax)'
+    owner: 'Amelia + ifero'
+    category: 'process'
+    status: open
+  - epic: 16
+    action: 'Prioritize 16-13 (widen jest collectCoverageFrom to shared/**) early in Sprint 17 — the blind spot hides boot/auth/sync safety code (useBootAuthGate, client.ts, useCloudSync). Not blocking the planned wave-1 16-11'
+    owner: 'Amelia'
+    category: 'tech-debt'
+    status: open
+  - epic: 16
+    action: 'Re-baseline stale stories at dev-start — quick check against current main for any story drafted before a dependency landed (16-4 drift lesson)'
+    owner: 'Amelia'
+    category: 'process'
+    status: open
+  # --- Carried from Sprint 15 / Epic 9 retro (2026-06-10), resolved here ---
+  - epic: 9
+    action: 'Epic 5 generic-complication follow-up (carried Sprint 14 -> 15 -> 16): consciously PARKED per ifero (2026-07-11) — fold into Epic 10 (Wear OS) when watch work resumes. Satisfies Epic 9 action #5 (draft or consciously park)'
+    owner: 'ifero'
+    category: 'accountability'
+    status: parked

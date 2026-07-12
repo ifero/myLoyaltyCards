@@ -1,6 +1,8 @@
-# Story 16.13: Widen Jest coverage collection to `shared/`
+# Story 16.13: Widen the Jest coverage gate to `shared/**`
 
-Status: drafted
+Status: ready-for-dev
+
+Epic: 16 — Platform & Tech Debt
 
 ## Story
 
@@ -10,48 +12,94 @@ so that safety-critical logic in `shared/` (Supabase auth/session, sync hooks) i
 
 ## Context
 
-Follow-up from **Story 16.10** QA review. `jest.config.js` `collectCoverageFrom` currently spans only `core/**` + `features/**`. The 16.10 hotfix's safety-critical logic (`shared/supabase/useBootAuthGate.ts`, `shared/supabase/client.ts`) sits **outside** the enforced 80% global threshold — it is well tested, but "coverage maintained" is only _measured_ for the collected subset.
+Follow-up from **Story 16.10** QA review. `jest.config.js` `collectCoverageFrom` currently spans only `features/**` + `core/**` (`:22-27`). The 16.10 hotfix logic (`shared/supabase/useBootAuthGate.ts`, `client.ts`) and the 16-8 store (`shared/hooks/useCloudSync.ts`) sit **outside** the enforced 80% global gate — well tested, but not measured.
 
-`shared/` holds Supabase auth/session, hooks (`useCloudSync`, `useAutoSync`, `useNetworkStatus`), theme, and i18n — plenty worth gating. Pre-existing repo policy gap, **not** introduced by 16.10.
+**Empirical finding (measured 2026-07-11, main checkout, full suite 1675 tests) — this INVERTS the draft's premise.** Adding `shared/**` does **not** drop the gate; `shared/**` is already ~95% covered, so the global numbers **improve**:
 
-### Why this is a story, not a one-line config change
+| Metric     | Now (core+features) | +`shared/**` | Δ         | Gate  |
+| ---------- | ------------------- | ------------ | --------- | ----- |
+| Statements | 91.38%              | **92.19%**   | **+0.81** | 80 ✅ |
+| Branches   | 81.49%              | **83.91%**   | **+2.42** | 80 ✅ |
+| Functions  | 87.84%              | 87.47%       | −0.37     | 80 ✅ |
+| Lines      | 91.98%              | **92.82%**   | **+0.84** | 80 ✅ |
 
-Adding `shared/**` pulls previously-unmeasured files into the **global** threshold calculation. Some may fall below 80%, which would **fail the coverage gate**. The real work is the triage: backfill tests where the logic warrants it, or add narrowly-justified excludes (generated files, storybook stories, pure type modules). That investigation — not the one-line glob edit — is the deliverable.
+Both runs exit 0. **Branches** — the tightest metric today (only 1.49 pts of headroom) — **gains +2.42 pts**. So there is no large triage: the real work is the glob edit + one genuine backfill (`shared/toast.ts`, the only untested logic file) + a couple of cosmetic excludes.
+
+The one genuine gap: **`shared/toast.ts`** (57.14% stmts / 50% branch, **no** co-located test) — a user-facing utility imported by 8 feature files.
 
 ## Acceptance Criteria
 
-1. `collectCoverageFrom` in `jest.config.js` includes `shared/**/*.{ts,tsx}` (retaining the existing `!**/*.d.ts` / `!**/index.ts` excludes plus any newly-justified excludes).
-2. `yarn test:coverage` passes the **80% global threshold** with `shared/` included — via backfilled tests and/or documented excludes. The global threshold is **not** lowered.
-3. Every exclude added is enumerated with a one-line justification (e.g. generated tokens, storybook `*.stories.tsx`, type-only modules, `*.test.*` helpers).
-4. CI `Quality gates` job stays green; no flaky suites introduced.
+1. `collectCoverageFrom` in `jest.config.js` includes `'shared/**/*.{ts,tsx}'`, retaining `'!**/*.d.ts'` and `'!**/index.ts'`.
+2. `yarn test:coverage` passes the **global 80%** threshold on all four metrics with `shared/` collected; the thresholds are **not** lowered. (Verified: 92.19 / 83.91 / 87.47 / 92.82, exit 0 — the glob edit alone keeps the gate green.)
+3. `shared/toast.ts` gets a co-located `shared/toast.test.ts` to ≥80% (convention: prefer testing logic; "new behavior has tests") — it is the only untested logic file in `shared/`.
+4. Each new exclude is enumerated with a one-line justification and **scoped to `shared/`** so core/features accounting is untouched: `'!shared/types/**'` (type-only modules, erased at compile — morally identical to the existing `!**/*.d.ts`); and (decision) `'!shared/theme/spacing.ts'` (pure re-export shim of `tokens.generated`, never imported directly).
+5. CI "Quality gates" job (`ci-quality-gates.yml` runs `test:coverage`) stays green; no flaky suites.
 
 ## Tasks / Subtasks
 
-- [ ] Add `shared/**/*.{ts,tsx}` to `collectCoverageFrom`; run `yarn test:coverage` to capture the baseline `shared/` numbers (AC: 1)
-- [ ] Triage below-threshold `shared/` files: backfill tests where logic warrants; exclude generated/type-only/storybook files with justification (AC: 2, 3)
-- [ ] Confirm the global threshold passes and CI `Quality gates` is green (AC: 2, 4)
-- [ ] Consider (and document the decision on) whether a temporary per-directory ramp is needed, but prefer a single global gate (AC: 2)
+- [ ] (AC1) Add `'shared/**/*.{ts,tsx}'` to `collectCoverageFrom` (`jest.config.js:22-27`).
+- [ ] (AC3) Add `shared/toast.test.ts`: (a) happy path calls `Burnt.toast(options)`; (b) `Burnt.toast` not a function → `logger.warn` + early return (`toast.ts:10-11`); (c) `Burnt.toast` throws → catch `logger.warn` (`:16`). Mock `burnt` + `@/core/utils/logger`.
+- [ ] (AC4) Add `'!shared/types/**'` (type-only); decide on `'!shared/theme/spacing.ts'` (re-export shim) and document either way.
+- [ ] (AC2,5) Run `yarn test:coverage --watchAll=false --runInBand`; confirm global ≥80% on all four metrics, exit 0.
+- [ ] (AC4) Note in Dev Notes that `shared/i18n/index.ts` logic stays unmeasured under `!**/index.ts` (documented decision, not a regression).
 
 ## Dev Notes
 
-### References
+### Current Jest coverage config (`jest.config.js`)
 
-- `jest.config.js` — `collectCoverageFrom` + `coverageThreshold` (global 80%).
-- `shared/` tree (supabase, hooks, theme, i18n, components).
-- Story 16.10 QA review — the deferred coverage-scope finding that motivates this story.
+- `collectCoverageFrom` (`:22-27`): `features/**/*.{ts,tsx}`, `core/**/*.{ts,tsx}`, `!**/*.d.ts`, `!**/index.ts`.
+- `coverageThreshold` (`:28-35`): global **80** on branches/functions/lines/statements.
+- Ignores: `testPathIgnorePatterns` (`:18`) `['/node_modules/','/.claude/','babel.config.test.js','targets/watch/']`; `modulePathIgnorePatterns` (`:21`) `['/.claude/']` — the Haste worktree guard, **DO NOT touch**. No `coveragePathIgnorePatterns` anywhere; no per-file excludes beyond `d.ts`/`index.ts`.
+- CI: `ci-quality-gates.yml` runs `yarn test:coverage --watchAll=false --runInBand`.
 
-### Definition of Ready (not yet met — needs SM/Architect refinement)
+### `shared/**` gaps (measured; the only ones that matter)
 
-- [ ] Baseline `shared/` coverage measured so the size of the backfill is known
-- [ ] Agreement on exclude policy (what legitimately shouldn't be gated)
-- [ ] Confirmation this stays a single global threshold (no per-file ratchet sprawl)
+- `shared/toast.ts` — 57.14 / 50, **no** test → **BACKFILL** (only required work).
+- `shared/types/sync-ui.ts` — 0% type-only → **EXCLUDE** (`'!shared/types/**'`).
+- `shared/theme/spacing.ts` — 0% pure re-export → **EXCLUDE** (decision).
+- `shared/i18n/index.ts` — holds real logic (`getSystemLanguage` / `resolveLanguagePreference` / `changeAppLanguage`) but is swept out by `!**/index.ts` → stays **unmeasured**; document as a known gap (keep the blanket `index.ts` rule this round).
+- Everything else in `shared/` (auth.ts 95.83, client.ts 91.76, useBootAuthGate 91.66, useCloudSync 99.1, useAutoSync 90.8, theme, i18n locales, `ui/*`) is already ≥80% aggregate.
 
-### Project Structure Notes
+### Test Plan
 
-Config + test-backfill only; **no product behaviour change**. Chore / tech-debt. Part of Epic 16 — Platform & Tech Debt; follow-up to 16.10.
+- **New:** `shared/toast.test.ts` (~3 tests) — the only required new file (mock `burnt` + `logger`).
+- **Optional follow-ups (NOT needed for the gate; per-file dips only):** `useSyncUpload.ts` (branch 77%), `colors.getBrandColor` (funcs 50%), `ConflictResolutionModal.tsx` (funcs 33%). Leave as separate tech-debt unless done opportunistically.
 
-## Change Log
+### Regressions to avoid
 
-| Date       | Change                                                                                                       | Author       |
-| ---------- | ------------------------------------------------------------------------------------------------------------ | ------------ |
-| 2026-07-10 | Drafted as a Story 16.10 QA follow-up (coverage scope excludes `shared/`). Needs refinement → ready-for-dev. | Amelia (Dev) |
+Do **not** lower any of the four 80 thresholds; do **not** touch the `/.claude/` Haste guard (`:18-21`); keep `features/**`+`core/**` and the `d.ts`/`index.ts` excludes; **scope new excludes to `shared/`** (not global) so core/features accounting is undisturbed; avoid a global `!**/*.stories.*` / `!**/*.test.*` (it changes core/features accounting — leave it out).
+
+### Scope estimate
+
+Small chore: 1 config edit + 1 new test file + 1–2 excludes. **Zero** files strictly need backfill to keep the gate green (`toast.ts` is done for convention, not to rescue the gate).
+
+### Definition of Ready
+
+- [x] Baseline measured (glob edit keeps the gate green: 92.19 / 83.91 / 87.47 / 92.82)
+- [x] Exclude policy defined (`shared/types/**`; `spacing.ts` decision)
+- [x] Single global gate (no per-file ratchet)
+- [ ] Open decisions confirmed by ifero (below) — recommended defaults baked in
+
+### Open decisions (recommended defaults applied)
+
+1. **`shared/theme/spacing.ts` (0%, pure re-export)** — baked in: EXCLUDE, for a clean report (contributes ~0 either way).
+2. **`shared/types/sync-ui.ts`** — baked in: EXCLUDE the whole `shared/types/` dir (type-only).
+3. **`shared/i18n/index.ts` logic unmeasured** — baked in: keep the blanket `!**/index.ts` rule + note the gap; a carve-out is a possible future story.
+4. **Optional per-file backfills** (`useSyncUpload` branch, `getBrandColor`, `ConflictResolutionModal`) — baked in: leave as separate tech-debt (they don't affect the gate).
+
+## Dev Agent Record
+
+### Agent Model Used
+
+### Debug Log References
+
+### Completion Notes List
+
+### File List
+
+### Change Log
+
+| Date       | Change                                                                                                                  | Author       |
+| ---------- | ----------------------------------------------------------------------------------------------------------------------- | ------------ |
+| 2026-07-10 | Drafted as a Story 16.10 QA follow-up. Needs refinement → ready-for-dev.                                                | Amelia (Dev) |
+| 2026-07-11 | Refined → ready-for-dev. Measured coverage inverts the premise: the gate stays green; only `toast.ts` needs a backfill. | Amelia (Dev) |
