@@ -1,6 +1,10 @@
+---
+baseline_commit: 4a7c2941b7b97fe7e1461b5525a0c01bfba67964
+---
+
 # Story 16.12: Bound the OTA update download at boot so a stalled fetch can't hang the app
 
-Status: ready-for-dev
+Status: review
 
 Epic: 16 — Platform & Tech Debt
 
@@ -46,13 +50,13 @@ Expo API (confirmed via Context7; repo runs `expo-updates ~55.0.21`): `fetchUpda
 
 ## Tasks / Subtasks
 
-- [ ] (AC 1,5) Add `UPDATE_FETCH_TIMEOUT_MS` const (recommend `30000`) + JSDoc next to `UPDATE_CHECK_TIMEOUT_MS` (`app/_layout.tsx:277`).
-- [ ] (AC 1,2,3,5) Wrap `Updates.fetchUpdateAsync()` in `withTimeout(…, UPDATE_FETCH_TIMEOUT_MS, 'Expo update download timed out')` inside a dedicated inner `try/catch`; gate `reloadAsync` on fetch success; on timeout `logger.warn` + fall through to boot the current bundle (`app/_layout.tsx:305-309`).
-- [ ] (AC 4) Do **not** bound `reloadAsync`; document the rationale in Dev Notes.
-- [ ] (AC 1) Update the stale comment near the update block (the mid-download "follow-up" is now implemented).
-- [ ] (AC 7) In `test/root-layout.offline-boot.test.tsx`, hoist module vars `mockFetchUpdateAsync` + `mockReloadAsync` (mirror `mockCheckForUpdateAsync` at `:20/:30`); set defaults in `beforeEach`.
-- [ ] (AC 7) Add tests: fetch-stall → bounded boot on current bundle + `reloadAsync` NOT called; normal fetch under budget → fetch + reload proceed.
-- [ ] (AC 7) Run `yarn lint`/`typecheck`/`test` from the **main** checkout (not a `.claude` worktree).
+- [x] (AC 1,5) Add `UPDATE_FETCH_TIMEOUT_MS` const (recommend `30000`) + JSDoc next to `UPDATE_CHECK_TIMEOUT_MS` (`app/_layout.tsx:277`).
+- [x] (AC 1,2,3,5) Wrap `Updates.fetchUpdateAsync()` in `withTimeout(…, UPDATE_FETCH_TIMEOUT_MS, 'Expo update download timed out')` inside a dedicated inner `try/catch`; gate `reloadAsync` on fetch success; on timeout `logger.warn` + fall through to boot the current bundle (`app/_layout.tsx:305-309`).
+- [x] (AC 4) Do **not** bound `reloadAsync`; document the rationale in Dev Notes.
+- [x] (AC 1) Update the stale comment near the update block (the mid-download "follow-up" is now implemented).
+- [x] (AC 7) In `test/root-layout.offline-boot.test.tsx`, hoist module vars `mockFetchUpdateAsync` + `mockReloadAsync` (mirror `mockCheckForUpdateAsync` at `:20/:30`); set defaults in `beforeEach`.
+- [x] (AC 7) Add tests: fetch-stall → bounded boot on current bundle + `reloadAsync` NOT called; normal fetch under budget → fetch + reload proceed.
+- [x] (AC 7) Run `yarn lint`/`typecheck`/`test` from the **main** checkout (not a `.claude` worktree).
 
 ## Dev Notes
 
@@ -101,15 +105,54 @@ Single-file change (`app/_layout.tsx`) + the relocated test. Engine-agnostic. No
 
 ### Agent Model Used
 
+claude-opus-4-8 (Claude Opus 4.8)
+
 ### Debug Log References
+
+- Red→green (relocated integration test): the new "download stalls" test failed
+  against the unbounded `fetchUpdateAsync` (spinner never cleared), then passed
+  once `withTimeout(UPDATE_FETCH_TIMEOUT_MS)` was wired in.
+- `yarn typecheck` ✓ · `yarn lint` ✓ · `yarn test` ✓ (163 suites / 1703 tests) ·
+  `yarn test:coverage` ✓ (80% gate held; `app/**` is unmeasured by design).
 
 ### Completion Notes List
 
+- Added `UPDATE_FETCH_TIMEOUT_MS = 30000` beside `UPDATE_CHECK_TIMEOUT_MS`, with
+  JSDoc explaining the more generous budget and the no-abort / defer-to-next-launch
+  property (AC1, AC5).
+- Wrapped `Updates.fetchUpdateAsync()` in
+  `withTimeout(…, UPDATE_FETCH_TIMEOUT_MS, 'Expo update download timed out')`
+  inside a dedicated inner `try/catch`; `reloadAsync` runs only if the bounded
+  fetch resolves; on timeout / fetch error (or a rare reload failure) the catch
+  `logger.warn('Expo update download/reload failed:', error)`s and falls through
+  to boot the current bundle — the error never reaches the outer catch, so
+  `dbError` is never set (AC1, AC2, AC3).
+- `reloadAsync` is deliberately NOT wrapped in `withTimeout` (network-free,
+  terminal, unrecoverable on failure; only reached after the bounded fetch) —
+  rationale documented in a code comment and AD-16-12-01 (AC4).
+- Refreshed the stale update-block comment (the "pre-existing follow-up" is now
+  implemented) (AC1).
+- Tests (`test/root-layout.offline-boot.test.tsx`): hoisted
+  `mockFetchUpdateAsync` / `mockReloadAsync` + a `logger` mock, defaults set in
+  `beforeEach`; added four Story 16.12 cases (AC7): (1) download stall —
+  budget-pinned (still gated at 29s, booted after 30s), `reloadAsync` NOT called,
+  `logger.warn` called, `logger.error` NOT called; (2) immediate fetch error →
+  same graceful degradation; (3) slow-but-within-budget download (25s) still
+  fetches then reloads, proving the budget doesn't abort a legit slow download
+  (AC2); (4) offline check-fails so the fetch path is never reached (AC6).
+- Reused `core/utils/with-timeout.ts` — no new dependency, no schema/native
+  change; only `app/_layout.tsx` + the one test touched (AC5).
+
 ### File List
+
+- `app/_layout.tsx` (modified)
+- `test/root-layout.offline-boot.test.tsx` (modified)
 
 ### Change Log
 
-| Date       | Change                                                                                           | Author       |
-| ---------- | ------------------------------------------------------------------------------------------------ | ------------ |
-| 2026-07-10 | Drafted as a Story 16.10 follow-up. Needs refinement → ready-for-dev.                            | Amelia (Dev) |
-| 2026-07-11 | Refined → ready-for-dev (AD-16-12-01; research-backed file:line; corrected the stale test path). | Amelia (Dev) |
+| Date       | Change                                                                                                                                                                                                                                                                           | Author       |
+| ---------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------ |
+| 2026-07-10 | Drafted as a Story 16.10 follow-up. Needs refinement → ready-for-dev.                                                                                                                                                                                                            | Amelia (Dev) |
+| 2026-07-11 | Refined → ready-for-dev (AD-16-12-01; research-backed file:line; corrected the stale test path).                                                                                                                                                                                 | Amelia (Dev) |
+| 2026-07-13 | Implemented AD-16-12-01: bounded `fetchUpdateAsync` with `UPDATE_FETCH_TIMEOUT_MS` (30s) via `withTimeout`; `reloadAsync` gated on fetch success and left unbounded; +2 integration tests. All gates green → review.                                                             | Amelia (Dev) |
+| 2026-07-13 | Review hardening (code + QA): added fetch-error, offline (AC6), and slow-within-budget (AC2) tests; pinned the 30s budget in the stall test (gated at 29s, booted after 30s); broadened the failure log to `Expo update download/reload failed:`. 163 suites / 1703 tests green. | Amelia (Dev) |
