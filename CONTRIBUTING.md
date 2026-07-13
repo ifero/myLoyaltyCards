@@ -207,19 +207,22 @@ feature/<story-id>-<short-description>     # new feature / planned story
 fix/<short-description>                     # bug fix
 refactor/<short-description>                # behavior-preserving refactor
 docs/<short-description>                     # documentation / specs
+chore/<short-description>                    # tooling / config / maintenance
 
 # examples
 feature/5-9-watch-complication
 fix/barcode-scanner-crash
 docs/contributing-guide
+chore/upgrade-ci-node
 ```
 
-| Prefix      | Use for                             |
-| ----------- | ----------------------------------- |
-| `feature/`  | New features or planned stories     |
-| `fix/`      | Bug fixes                           |
-| `refactor/` | Refactors with no functional change |
-| `docs/`     | Documentation & spec updates        |
+| Prefix      | Use for                                                   |
+| ----------- | --------------------------------------------------------- |
+| `feature/`  | New features or planned stories                           |
+| `fix/`      | Bug fixes                                                 |
+| `refactor/` | Refactors with no functional change                       |
+| `docs/`     | Documentation & spec updates                              |
+| `chore/`    | Tooling, config, or maintenance changes (no product code) |
 
 ---
 
