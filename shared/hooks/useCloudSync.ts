@@ -4,14 +4,17 @@ import { batchUpsertCards } from '@/core/database/card-repository';
 import {
   downloadCloudCards,
   forceSyncLocalCards,
+  getPendingDeletions,
+  removePendingDeletions,
   retryWithBackoff,
-  uploadLocalCards
+  uploadLocalCards,
+  type DeletionSyncDeps
 } from '@/core/sync';
 import { logger } from '@/core/utils/logger';
 
 import { useNetworkStatus } from '@/shared/hooks/useNetworkStatus';
 import { getSession } from '@/shared/supabase/auth';
-import { fetchCards, upsertCards } from '@/shared/supabase/cards';
+import { deleteCardFromCloud, fetchCards, upsertCards } from '@/shared/supabase/cards';
 import { useAuthState } from '@/shared/supabase/useAuthState';
 
 export type UseCloudSyncResult = {
@@ -126,6 +129,18 @@ const setSnapshot = (patch: Partial<CloudSyncSnapshot>): void => {
   }
 };
 
+// Deletion-aware download dependencies (Story 16.11). useCloudSync is the engine
+// that runs on cold open and pull-to-refresh, and it used to be deletion-blind:
+// a full cloud fetch re-added deleted cards and INSERT-OR-REPLACE resurrected
+// them. Wiring these deps into downloadCloudCards drains queued deletions instead
+// — the merge filters them out locally and they are removed from the cloud.
+// Stable module constant: the underlying functions never change identity.
+const deletionSyncDeps: DeletionSyncDeps = {
+  getPendingDeletions,
+  deleteFromCloud: deleteCardFromCloud,
+  removeDrained: removePendingDeletions
+};
+
 // Core sync routine. Throws SyncBusyError for transient skips (already running /
 // not authenticated yet) so retryWithBackoff can retry naturally and the auto-
 // trigger latch never flips on a no-op. Throws KnownSyncError for structured
@@ -153,8 +168,11 @@ const performSync = async (force: boolean): Promise<void> => {
     const userId = sessionResult.data.user.id;
 
     const downloadResult = force
-      ? await downloadCloudCards(userId, fetchCards, { forceSync: true })
-      : await downloadCloudCards(userId, fetchCards);
+      ? await downloadCloudCards(userId, fetchCards, {
+          forceSync: true,
+          deletions: deletionSyncDeps
+        })
+      : await downloadCloudCards(userId, fetchCards, { deletions: deletionSyncDeps });
 
     if (!downloadResult.success) {
       const firstError = downloadResult.errors[0]?.message ?? DOWNLOAD_ERROR_MESSAGE;

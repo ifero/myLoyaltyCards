@@ -4,7 +4,7 @@ import { getAllCards } from '@/core/database/card-repository';
 import { LoyaltyCard } from '@/core/schemas';
 import { logger } from '@/core/utils/logger';
 
-import { mergeCards, syncChangedCards, type CloudFetchSinceFn } from './cloud-sync';
+import { mergeWithDeletions, syncChangedCards, type CloudFetchSinceFn } from './cloud-sync';
 import { type CloudCardRow, cloudRowToLocalCard } from './mappers';
 import { getLastSyncAt, setLastSyncAt } from './sync-timestamp';
 
@@ -56,7 +56,7 @@ export const clearDirty = async (): Promise<void> => {
  *   5. Delta upload (push local changes since lastSyncAt)
  *   6. Process pending deletions (by ID, no timestamp filter)
  *   7. Update lastSyncAt to current timestamp (only on full success)
- *   8. Clear dirty flag and deletion queue
+ *   8. Clear dirty flag + remove the snapshotted deletion IDs (targeted, not a blind clear)
  *
  * First sync (null lastSyncAt): full sync → set lastSyncAt.
  *
@@ -66,7 +66,7 @@ export const clearDirty = async (): Promise<void> => {
  * @param cloudFetchSinceFn    Dependency-injected delta fetch function
  * @param persistMergedCardsFn Dependency-injected batch persist function
  * @param getPendingDeletions  Function to retrieve pending deletion IDs
- * @param clearPendingDeletionsFn Function to clear the deletion queue
+ * @param removePendingDeletionsFn Function to remove specific (drained) deletion IDs from the queue
  */
 export const processPendingSync = async (
   userId: string,
@@ -75,7 +75,7 @@ export const processPendingSync = async (
   cloudFetchSinceFn: CloudFetchSinceFn,
   persistMergedCardsFn: PersistMergedCardsFn,
   getPendingDeletions: () => Promise<string[]>,
-  clearPendingDeletionsFn: () => Promise<void>
+  removePendingDeletionsFn: (ids: string[]) => Promise<void>
 ): Promise<ProcessPendingSyncResult> => {
   const errors: string[] = [];
   let downloadedCount = 0;
@@ -107,9 +107,15 @@ export const processPendingSync = async (
   }
   downloadedCount = cloudCards.length;
 
+  // Story 16.11: snapshot pending deletions once and feed them to the
+  // deletion-aware merge, so a card deleted locally but still edited in the
+  // cloud delta is filtered out (not re-persisted). The explicit delete loop
+  // below drives the actual cloud deletions over this same snapshot.
+  const pendingIds = await getPendingDeletions();
+
   if (cloudCards.length > 0) {
     const localCards = await getAllCards();
-    const { merged } = mergeCards(localCards, cloudCards);
+    const { merged } = mergeWithDeletions(localCards, cloudCards, pendingIds);
 
     // 4. Persist merged cards locally
     await persistMergedCardsFn(merged);
@@ -125,7 +131,6 @@ export const processPendingSync = async (
   }
 
   // 6. Process pending deletions (by ID, no timestamp filter — AC7)
-  const pendingIds = await getPendingDeletions();
   for (const cardId of pendingIds) {
     const { error } = await cloudDeleteFn(cardId, userId);
     if (error) {
@@ -135,11 +140,14 @@ export const processPendingSync = async (
     }
   }
 
-  // 7 + 8. Update lastSyncAt + clear dirty/deletions ONLY on full success (atomicity)
+  // 7 + 8. On full success only (atomicity): advance lastSyncAt, clear dirty, and
+  // remove ONLY the snapshotted deletion IDs. Targeted removal (not a blind clear)
+  // so a deletion enqueued mid-run — absent from this snapshot — is never wiped
+  // and cannot resurrect on a later download (Story 16.11).
   if (errors.length === 0) {
     await setLastSyncAt(new Date().toISOString());
     await clearDirty();
-    await clearPendingDeletionsFn();
+    await removePendingDeletionsFn(pendingIds);
   }
 
   logger.info(

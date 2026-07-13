@@ -4,7 +4,8 @@ import {
   _PENDING_DELETIONS_KEY,
   addPendingDeletion,
   clearPendingDeletions,
-  getPendingDeletions
+  getPendingDeletions,
+  removePendingDeletions
 } from './deletion-tracker';
 
 beforeEach(() => {
@@ -69,5 +70,55 @@ describe('clearPendingDeletions', () => {
   it('removes the pending deletions key from AsyncStorage', async () => {
     await clearPendingDeletions();
     expect(AsyncStorage.removeItem).toHaveBeenCalledWith(_PENDING_DELETIONS_KEY);
+  });
+});
+
+describe('removePendingDeletions', () => {
+  it('does nothing when given an empty id list', async () => {
+    await removePendingDeletions([]);
+
+    expect(AsyncStorage.getItem).not.toHaveBeenCalled();
+    expect(AsyncStorage.setItem).not.toHaveBeenCalled();
+    expect(AsyncStorage.removeItem).not.toHaveBeenCalled();
+  });
+
+  it('removes only the given id, keeping the rest', async () => {
+    (AsyncStorage.getItem as jest.Mock).mockResolvedValue(JSON.stringify(['a', 'b', 'c']));
+
+    await removePendingDeletions(['b']);
+
+    expect(AsyncStorage.setItem).toHaveBeenCalledWith(
+      _PENDING_DELETIONS_KEY,
+      JSON.stringify(['a', 'c'])
+    );
+  });
+
+  it('removes several ids in one call', async () => {
+    (AsyncStorage.getItem as jest.Mock).mockResolvedValue(JSON.stringify(['a', 'b', 'c']));
+
+    await removePendingDeletions(['a', 'c']);
+
+    expect(AsyncStorage.setItem).toHaveBeenCalledWith(
+      _PENDING_DELETIONS_KEY,
+      JSON.stringify(['b'])
+    );
+  });
+
+  it('clears the key entirely when the last queued id is drained', async () => {
+    (AsyncStorage.getItem as jest.Mock).mockResolvedValue(JSON.stringify(['only']));
+
+    await removePendingDeletions(['only']);
+
+    expect(AsyncStorage.removeItem).toHaveBeenCalledWith(_PENDING_DELETIONS_KEY);
+    expect(AsyncStorage.setItem).not.toHaveBeenCalled();
+  });
+
+  it('does not write when none of the ids are queued (avoids clobbering a mid-sync enqueue)', async () => {
+    (AsyncStorage.getItem as jest.Mock).mockResolvedValue(JSON.stringify(['a', 'b']));
+
+    await removePendingDeletions(['x', 'y']);
+
+    expect(AsyncStorage.setItem).not.toHaveBeenCalled();
+    expect(AsyncStorage.removeItem).not.toHaveBeenCalled();
   });
 });

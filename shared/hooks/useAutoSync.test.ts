@@ -7,7 +7,7 @@ const mockIsDirty = jest.fn();
 const mockProcessPendingSync = jest.fn();
 const mockRetryWithBackoff = jest.fn();
 const mockGetPendingDeletions = jest.fn();
-const mockClearPendingDeletions = jest.fn();
+const mockRemovePendingDeletions = jest.fn();
 const mockGetSession = jest.fn();
 const mockUseAuthState = jest.fn();
 const mockUseNetworkStatus = jest.fn();
@@ -21,7 +21,7 @@ jest.mock('@/core/sync', () => ({
   processPendingSync: (...args: unknown[]) => mockProcessPendingSync(...args),
   retryWithBackoff: (...args: unknown[]) => mockRetryWithBackoff(...args),
   getPendingDeletions: (...args: unknown[]) => mockGetPendingDeletions(...args),
-  clearPendingDeletions: (...args: unknown[]) => mockClearPendingDeletions(...args)
+  removePendingDeletions: (...args: unknown[]) => mockRemovePendingDeletions(...args)
 }));
 
 jest.mock('@/shared/hooks/useNetworkStatus', () => ({

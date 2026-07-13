@@ -9,6 +9,11 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { LoyaltyCard } from '@/core/schemas';
 
 import { type CloudFetchSinceFn } from './cloud-sync';
+import {
+  _PENDING_DELETIONS_KEY,
+  getPendingDeletions,
+  removePendingDeletions
+} from './deletion-tracker';
 import { CloudCardRow } from './mappers';
 import { getLastSyncAt, setLastSyncAt } from './sync-timestamp';
 import {
@@ -100,7 +105,7 @@ describe('processPendingSync', () => {
   let mockFetchSinceFn: jest.MockedFunction<CloudFetchSinceFn>;
   let mockPersistMergedCardsFn: jest.MockedFunction<PersistMergedCardsFn>;
   let mockGetPendingDeletions: jest.Mock<Promise<string[]>>;
-  let mockClearPendingDeletions: jest.Mock<Promise<void>>;
+  let mockRemovePendingDeletions: jest.Mock<Promise<void>, [string[]]>;
 
   beforeEach(() => {
     mockUpsertFn = jest.fn().mockResolvedValue({ error: null });
@@ -108,7 +113,7 @@ describe('processPendingSync', () => {
     mockFetchSinceFn = jest.fn().mockResolvedValue({ data: [], error: null });
     mockPersistMergedCardsFn = jest.fn().mockResolvedValue(undefined);
     mockGetPendingDeletions = jest.fn().mockResolvedValue([]);
-    mockClearPendingDeletions = jest.fn().mockResolvedValue(undefined);
+    mockRemovePendingDeletions = jest.fn().mockResolvedValue(undefined);
     mockGetAllCards.mockResolvedValue([]);
   });
 
@@ -120,7 +125,7 @@ describe('processPendingSync', () => {
       mockFetchSinceFn,
       mockPersistMergedCardsFn,
       mockGetPendingDeletions,
-      mockClearPendingDeletions
+      mockRemovePendingDeletions
     );
 
   it('returns error when userId is invalid and skips cloud operations', async () => {
@@ -131,7 +136,7 @@ describe('processPendingSync', () => {
       mockFetchSinceFn,
       mockPersistMergedCardsFn,
       mockGetPendingDeletions,
-      mockClearPendingDeletions
+      mockRemovePendingDeletions
     );
 
     expect(result.success).toBe(false);
@@ -219,6 +224,30 @@ describe('processPendingSync', () => {
     expect(mockPersistMergedCardsFn).not.toHaveBeenCalled();
   });
 
+  // Story 16.11 (T4): the delta merge is deletion-aware, so a card deleted
+  // locally but still edited in the cloud delta is filtered from the persisted
+  // set instead of being resurrected. Fails if the merge reverts to mergeCards.
+  it('excludes a locally-queued deletion even when the cloud delta still carries a newer edit', async () => {
+    await setLastSyncAt('2026-03-20T10:00:00.000Z');
+    const deletedId = '00000000-0000-4000-8000-000000000042';
+    const survivorId = '00000000-0000-4000-8000-000000000043';
+    mockFetchSinceFn.mockResolvedValue({
+      data: [
+        makeCloudRow({ id: deletedId, updated_at: '2026-03-25T10:00:00.000Z' }),
+        makeCloudRow({ id: survivorId, updated_at: '2026-03-25T10:00:00.000Z' })
+      ],
+      error: null
+    });
+    mockGetAllCards.mockResolvedValue([]); // deletedId already hard-deleted locally
+    mockGetPendingDeletions.mockResolvedValue([deletedId]);
+
+    await callProcess();
+
+    const persistedIds = (mockPersistMergedCardsFn.mock.calls[0]?.[0] ?? []).map((c) => c.id);
+    expect(persistedIds).not.toContain(deletedId); // filtered — would resurrect via mergeCards
+    expect(persistedIds).toContain(survivorId); // an ordinary cloud card still merges
+  });
+
   // ─── Deletions unaffected (AC7) ────────────────────────
 
   it('processes pending deletions (by ID, no timestamp filter)', async () => {
@@ -235,12 +264,38 @@ describe('processPendingSync', () => {
 
   // ─── Success path ──────────────────────────────────────
 
-  it('clears dirty flag and deletion queue on success', async () => {
+  it('clears dirty flag and removes the snapshotted deletion ids on success', async () => {
+    mockGetPendingDeletions.mockResolvedValue(['del-1', 'del-2']);
+
     const result = await callProcess();
 
     expect(result.success).toBe(true);
     expect(AsyncStorage.removeItem).toHaveBeenCalledWith(_SYNC_DIRTY_KEY);
-    expect(mockClearPendingDeletions).toHaveBeenCalledTimes(1);
+    // Targeted removal of exactly the snapshotted ids — NOT a blind queue wipe.
+    expect(mockRemovePendingDeletions).toHaveBeenCalledWith(['del-1', 'del-2']);
+  });
+
+  // Story 16.11 (T4): the terminal clear removes ONLY the ids snapshotted at the
+  // start of the run, so a deletion enqueued mid-run survives (it can't be
+  // silently wiped and later resurrected). Exercises the REAL deletion-tracker
+  // against the functional AsyncStorage mock.
+  it('preserves a deletion enqueued mid-run, removing only the snapshotted ids', async () => {
+    // Live queue holds [A, C]; the run captured only [A] (C arrived after the snapshot).
+    await AsyncStorage.setItem(_PENDING_DELETIONS_KEY, JSON.stringify(['A', 'C']));
+    const snapshot = jest.fn().mockResolvedValue(['A']);
+
+    const result = await processPendingSync(
+      userId,
+      mockUpsertFn,
+      mockDeleteFn,
+      mockFetchSinceFn,
+      mockPersistMergedCardsFn,
+      snapshot,
+      removePendingDeletions // REAL targeted removal
+    );
+
+    expect(result.success).toBe(true);
+    expect(await getPendingDeletions()).toEqual(['C']); // mid-run enqueue survives
   });
 
   it('updates lastSyncAt on success', async () => {
@@ -276,7 +331,7 @@ describe('processPendingSync', () => {
 
     expect(result.success).toBe(false);
     expect(result.errors).toContain('Upsert failed: Network error');
-    expect(mockClearPendingDeletions).not.toHaveBeenCalled();
+    expect(mockRemovePendingDeletions).not.toHaveBeenCalled();
   });
 
   it('reports successful upsert count even when one upload batch fails', async () => {
@@ -306,7 +361,7 @@ describe('processPendingSync', () => {
 
     expect(result.success).toBe(false);
     expect(result.errors[0]).toContain('Delete failed for del-1');
-    expect(mockClearPendingDeletions).not.toHaveBeenCalled();
+    expect(mockRemovePendingDeletions).not.toHaveBeenCalled();
   });
 
   it('does NOT update lastSyncAt on upsert failure (atomicity)', async () => {

@@ -4,7 +4,7 @@ import { AppState, AppStateStatus } from 'react-native';
 import { batchUpsertCards } from '@/core/database/card-repository';
 import { isDirty, processPendingSync, retryWithBackoff, type CloudDeleteFn } from '@/core/sync';
 import { type CloudUpsertFn, type CloudFetchSinceFn } from '@/core/sync';
-import { getPendingDeletions, clearPendingDeletions } from '@/core/sync';
+import { getPendingDeletions, removePendingDeletions } from '@/core/sync';
 import { logger } from '@/core/utils/logger';
 
 import { useNetworkStatus } from '@/shared/hooks/useNetworkStatus';
@@ -87,7 +87,7 @@ export const useAutoSync = (
               cloudFetchSinceFn,
               batchUpsertCards,
               getPendingDeletions,
-              clearPendingDeletions
+              removePendingDeletions
             );
 
             if (!result.success) {

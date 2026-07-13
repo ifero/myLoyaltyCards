@@ -263,9 +263,30 @@ export type DownloadCloudCardsResult = {
   throttled: boolean;
 };
 
+/**
+ * Dependencies that make the download path deletion-aware (Story 16.11).
+ *
+ * When supplied to `downloadCloudCards`, queued-for-deletion cards are filtered
+ * out of the merge (so they are never re-persisted locally) AND deleted from the
+ * cloud. Omit the bundle to get the original deletion-blind LWW behaviour.
+ */
+export type DeletionSyncDeps = {
+  /** Read the card ids currently queued for deletion. */
+  getPendingDeletions: () => Promise<string[]>;
+  /** Delete one card from the cloud, scoped to the user (RLS). */
+  deleteFromCloud: (cardId: string, userId: string) => Promise<{ error: string | null }>;
+  /** Clear only the ids that were successfully drained from the cloud. */
+  removeDrained: (ids: string[]) => Promise<void>;
+};
+
 type DownloadCloudCardsOptions = {
   forceSync?: boolean;
   now?: () => number;
+  /**
+   * When provided, the download path becomes deletion-aware (Story 16.11):
+   * pending deletions are filtered from the merge and drained from the cloud.
+   */
+  deletions?: DeletionSyncDeps;
 };
 
 // Epoch ISO string used as fallback for malformed timestamps (Story 7.6 — AC edge cases)
@@ -587,9 +608,33 @@ export const downloadCloudCards = async (
   // 3. Get local cards
   const localCards = await getAllCards();
 
-  // 4. Merge
-  const mergeResult = mergeCards(localCards, cloudCards);
+  // 4. Merge — deletion-aware when a deletions bundle is wired in (Story 16.11).
+  //    With no pending deletions, mergeWithDeletions(local, cloud, []) is
+  //    behaviourally identical to mergeCards, so back-compat holds (AC4).
+  const pendingDeletions = options.deletions ? await options.deletions.getPendingDeletions() : [];
+  const mergeResult = mergeWithDeletions(localCards, cloudCards, pendingDeletions);
   mergeResult.skipped = skipped;
+
+  // 4a. Drain the cloud-side deletions this run surfaced. A failed delete is
+  //     logged and its id RETAINED for the next run (self-healing) — it never
+  //     fails the sync or resurrects locally, because the merged set already
+  //     excludes every pending deletion (AC3, Open Decision #3). Only the ids
+  //     actually deleted from the cloud are cleared from the queue, so a delete
+  //     enqueued mid-sync is never lost (Open Decision #1).
+  if (options.deletions && mergeResult.cloudDeletions.length > 0) {
+    const drained: string[] = [];
+    for (const cardId of mergeResult.cloudDeletions) {
+      const { error } = await options.deletions.deleteFromCloud(cardId, userId);
+      if (error) {
+        logger.error(`[cloud-sync] Cloud deletion failed for id=${cardId}: ${error}`);
+      } else {
+        drained.push(cardId);
+      }
+    }
+    if (drained.length > 0) {
+      await options.deletions.removeDrained(drained);
+    }
+  }
 
   // 5. Persist throttle timestamp so both download & upload share the cooldown
   await setLastCloudSyncAt(now());
