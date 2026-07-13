@@ -1,6 +1,6 @@
 # Story 16.11: Fix card-deletion cloud resurrection (deletion-aware cloud sync)
 
-Status: review
+Status: done
 
 Epic: 16 — Platform & Tech Debt
 
