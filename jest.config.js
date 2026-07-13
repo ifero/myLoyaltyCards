@@ -22,8 +22,13 @@ module.exports = {
   collectCoverageFrom: [
     'features/**/*.{ts,tsx}',
     'core/**/*.{ts,tsx}',
+    'shared/**/*.{ts,tsx}',
     '!**/*.d.ts',
-    '!**/index.ts'
+    '!**/index.ts',
+    // shared/-scoped excludes (Story 16.13) — kept off the global glob so
+    // core/features accounting is unchanged:
+    '!shared/types/**', // type-only modules; erased at compile (as with !**/*.d.ts)
+    '!shared/theme/spacing.ts' // pure re-export of tokens.generated; no logic/branches of its own to cover
   ],
   coverageThreshold: {
     global: {
