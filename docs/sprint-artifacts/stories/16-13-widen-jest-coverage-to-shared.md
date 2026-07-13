@@ -4,7 +4,7 @@ baseline_commit: 31af5be5c911b70d221dfec7ea07a5ce991279a2
 
 # Story 16.13: Widen the Jest coverage gate to `shared/**`
 
-Status: review
+Status: done
 
 Epic: 16 — Platform & Tech Debt
 
