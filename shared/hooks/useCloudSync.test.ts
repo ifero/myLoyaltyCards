@@ -12,12 +12,17 @@ const mockUseNetworkStatus = jest.fn();
 const mockUpsertCards = jest.fn();
 const mockFetchCards = jest.fn();
 const mockBatchUpsertCards = jest.fn();
+const mockGetPendingDeletions = jest.fn();
+const mockRemovePendingDeletions = jest.fn();
+const mockDeleteCardFromCloud = jest.fn();
 
 jest.mock('@/core/sync', () => ({
   uploadLocalCards: (...args: unknown[]) => mockUploadLocalCards(...args),
   forceSyncLocalCards: (...args: unknown[]) => mockForceSyncLocalCards(...args),
   downloadCloudCards: (...args: unknown[]) => mockDownloadCloudCards(...args),
-  retryWithBackoff: (...args: unknown[]) => mockRetryWithBackoff(...args)
+  retryWithBackoff: (...args: unknown[]) => mockRetryWithBackoff(...args),
+  getPendingDeletions: (...args: unknown[]) => mockGetPendingDeletions(...args),
+  removePendingDeletions: (...args: unknown[]) => mockRemovePendingDeletions(...args)
 }));
 
 jest.mock('@/core/database/card-repository', () => ({
@@ -38,12 +43,22 @@ jest.mock('@/shared/hooks/useNetworkStatus', () => ({
 
 jest.mock('@/shared/supabase/cards', () => ({
   upsertCards: (...args: unknown[]) => mockUpsertCards(...args),
-  fetchCards: (...args: unknown[]) => mockFetchCards(...args)
+  fetchCards: (...args: unknown[]) => mockFetchCards(...args),
+  deleteCardFromCloud: (...args: unknown[]) => mockDeleteCardFromCloud(...args)
 }));
 
 import { __resetCloudSyncStoreForTests, useCloudSync } from './useCloudSync';
 
 const MOCK_USER_ID = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa';
+
+// Story 16.11: performSync wires a deletion bundle into every downloadCloudCards
+// call. Matches its shape without depending on the (module-private) instance.
+const expectDeletionsBundle = () =>
+  expect.objectContaining({
+    getPendingDeletions: expect.any(Function),
+    deleteFromCloud: expect.any(Function),
+    removeDrained: expect.any(Function)
+  });
 
 const successDownload = {
   success: true,
@@ -144,7 +159,9 @@ describe('useCloudSync', () => {
       renderHook(() => useCloudSync());
 
       await waitFor(() => {
-        expect(mockDownloadCloudCards).toHaveBeenCalledWith(MOCK_USER_ID, expect.any(Function));
+        expect(mockDownloadCloudCards).toHaveBeenCalledWith(MOCK_USER_ID, expect.any(Function), {
+          deletions: expectDeletionsBundle()
+        });
         expect(mockUploadLocalCards).toHaveBeenCalledWith(MOCK_USER_ID, expect.any(Function));
       });
     });
@@ -217,6 +234,34 @@ describe('useCloudSync', () => {
 
       expect(mockBatchUpsertCards).not.toHaveBeenCalled();
       expect(mockUploadLocalCards).not.toHaveBeenCalled();
+    });
+
+    it('wires the real deletion dependencies into the download bundle (Story 16.11)', async () => {
+      mockUseAuthState.mockReturnValue({
+        authState: 'authenticated',
+        isAuthenticated: true
+      });
+      mockGetPendingDeletions.mockResolvedValue(['card-1']);
+      mockDeleteCardFromCloud.mockResolvedValue({ error: null });
+      mockRemovePendingDeletions.mockResolvedValue(undefined);
+
+      renderHook(() => useCloudSync());
+
+      await waitFor(() => {
+        expect(mockDownloadCloudCards).toHaveBeenCalled();
+      });
+
+      // The bundle passed to downloadCloudCards must delegate to the ACTUAL
+      // imported functions — a mis-wire (e.g. swapping delete/remove) is caught
+      // by invoking each and asserting the underlying module fn ran.
+      const { deletions } = mockDownloadCloudCards.mock.calls[0][2];
+      await deletions.getPendingDeletions();
+      await deletions.deleteFromCloud('card-1', MOCK_USER_ID);
+      await deletions.removeDrained(['card-1']);
+
+      expect(mockGetPendingDeletions).toHaveBeenCalled();
+      expect(mockDeleteCardFromCloud).toHaveBeenCalledWith('card-1', MOCK_USER_ID);
+      expect(mockRemovePendingDeletions).toHaveBeenCalledWith(['card-1']);
     });
   });
 
@@ -318,7 +363,8 @@ describe('useCloudSync', () => {
       });
 
       expect(mockDownloadCloudCards).toHaveBeenCalledWith(MOCK_USER_ID, expect.any(Function), {
-        forceSync: true
+        forceSync: true,
+        deletions: expectDeletionsBundle()
       });
       expect(mockForceSyncLocalCards).toHaveBeenCalledWith(MOCK_USER_ID, expect.any(Function));
     });
@@ -335,7 +381,9 @@ describe('useCloudSync', () => {
         await result.current.triggerSync();
       });
 
-      expect(mockDownloadCloudCards).toHaveBeenCalledWith(MOCK_USER_ID, expect.any(Function));
+      expect(mockDownloadCloudCards).toHaveBeenCalledWith(MOCK_USER_ID, expect.any(Function), {
+        deletions: expectDeletionsBundle()
+      });
       expect(mockUploadLocalCards).toHaveBeenCalled();
     });
 

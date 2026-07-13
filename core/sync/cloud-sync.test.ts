@@ -450,6 +450,115 @@ describe('downloadCloudCards', () => {
   });
 });
 
+// ─── downloadCloudCards deletion drain (Story 16.11) ──────────
+
+describe('downloadCloudCards — deletion drain (Story 16.11)', () => {
+  const userId = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa';
+  const idOk = makeCloudRow(0).id;
+  const idFail = makeCloudRow(1).id;
+
+  let deleteFromCloud: jest.Mock<Promise<{ error: string | null }>, [string, string]>;
+  let getPending: jest.Mock<Promise<string[]>, []>;
+  let removeDrained: jest.Mock<Promise<void>, [string[]]>;
+  const bundle = () => ({ getPendingDeletions: getPending, deleteFromCloud, removeDrained });
+
+  beforeEach(() => {
+    fetchFn = jest.fn().mockResolvedValue({ data: [], error: null });
+    deleteFromCloud = jest.fn().mockResolvedValue({ error: null });
+    getPending = jest.fn().mockResolvedValue([]);
+    removeDrained = jest.fn().mockResolvedValue(undefined);
+  });
+
+  it('filters a pending-deletion card out of the merge and deletes it from the cloud', async () => {
+    getPending.mockResolvedValue([idOk]);
+    fetchFn.mockResolvedValue({ data: [makeCloudRow(0), makeCloudRow(2)], error: null });
+    mockGetAllCards.mockResolvedValue([]); // card already hard-deleted locally
+
+    const result = await downloadCloudCards(userId, fetchFn, {
+      forceSync: true,
+      deletions: bundle()
+    });
+
+    expect(result.mergeResult?.merged.find((c) => c.id === idOk)).toBeUndefined();
+    expect(deleteFromCloud).toHaveBeenCalledWith(idOk, userId);
+    expect(removeDrained).toHaveBeenCalledWith([idOk]);
+  });
+
+  it('retains a failed cloud-deletion id and still reports success (AC3)', async () => {
+    getPending.mockResolvedValue([idOk]);
+    deleteFromCloud.mockResolvedValue({ error: 'server 500' });
+    fetchFn.mockResolvedValue({ data: [makeCloudRow(0)], error: null });
+
+    const result = await downloadCloudCards(userId, fetchFn, {
+      forceSync: true,
+      deletions: bundle()
+    });
+
+    expect(result.success).toBe(true); // a failed drain never fails the sync
+    expect(removeDrained).not.toHaveBeenCalled(); // nothing drained → queue untouched
+  });
+
+  it('removes only the succeeded ids on partial failure (AC3)', async () => {
+    getPending.mockResolvedValue([idOk, idFail]);
+    deleteFromCloud.mockImplementation(async (id) =>
+      id === idFail ? { error: 'boom' } : { error: null }
+    );
+    fetchFn.mockResolvedValue({ data: [makeCloudRow(0), makeCloudRow(1)], error: null });
+
+    await downloadCloudCards(userId, fetchFn, { forceSync: true, deletions: bundle() });
+
+    expect(removeDrained).toHaveBeenCalledWith([idOk]);
+  });
+
+  it('does not read or drain the queue when no deletions bundle is provided (back-compat)', async () => {
+    getPending.mockResolvedValue([idOk]);
+    fetchFn.mockResolvedValue({ data: [makeCloudRow(0)], error: null });
+
+    await downloadCloudCards(userId, fetchFn, { forceSync: true });
+
+    expect(getPending).not.toHaveBeenCalled();
+    expect(deleteFromCloud).not.toHaveBeenCalled();
+  });
+
+  it('does not delete or remove when the deletion queue is empty', async () => {
+    getPending.mockResolvedValue([]); // empty queue
+    fetchFn.mockResolvedValue({ data: [makeCloudRow(0)], error: null });
+
+    await downloadCloudCards(userId, fetchFn, { forceSync: true, deletions: bundle() });
+
+    expect(deleteFromCloud).not.toHaveBeenCalled();
+    expect(removeDrained).not.toHaveBeenCalled();
+  });
+
+  it('does not delete a queued id that is absent from the cloud (already gone)', async () => {
+    getPending.mockResolvedValue([idFail]); // queued for deletion…
+    fetchFn.mockResolvedValue({ data: [makeCloudRow(0)], error: null }); // …but cloud only has idOk
+
+    await downloadCloudCards(userId, fetchFn, { forceSync: true, deletions: bundle() });
+
+    expect(deleteFromCloud).not.toHaveBeenCalled(); // nothing in the cloud to delete
+    expect(removeDrained).not.toHaveBeenCalled();
+  });
+
+  it('does not touch the deletion bundle when the download is throttled', async () => {
+    const now = 1_000_000;
+    (AsyncStorage.getItem as jest.Mock).mockResolvedValue(
+      String(now - _CLOUD_SYNC_COOLDOWN_MS + 1000)
+    );
+    getPending.mockResolvedValue([idOk]);
+
+    const result = await downloadCloudCards(userId, fetchFn, {
+      now: () => now,
+      deletions: bundle()
+    });
+
+    expect(result.throttled).toBe(true);
+    expect(getPending).not.toHaveBeenCalled(); // bundle never consulted under cooldown
+    expect(deleteFromCloud).not.toHaveBeenCalled();
+    expect(removeDrained).not.toHaveBeenCalled();
+  });
+});
+
 // ─── syncChangedCards (Story 7.3 + 7.4 delta) ─────────────────
 
 describe('syncChangedCards', () => {

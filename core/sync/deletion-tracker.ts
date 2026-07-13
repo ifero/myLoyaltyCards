@@ -41,4 +41,35 @@ export const clearPendingDeletions = async (): Promise<void> => {
   await AsyncStorage.removeItem(PENDING_DELETIONS_KEY);
 };
 
+/**
+ * Remove specific card IDs from the pending-deletion queue.
+ *
+ * Unlike `clearPendingDeletions()` (which wipes the whole queue), this clears
+ * only the ids that were actually drained — so a deletion enqueued mid-sync is
+ * never silently lost when the download path removes the ids it saw at merge
+ * time (Story 16.11).
+ */
+export const removePendingDeletions = async (ids: string[]): Promise<void> => {
+  if (ids.length === 0) {
+    return;
+  }
+
+  const existing = await getPendingDeletions();
+  const toRemove = new Set(ids);
+  const remaining = existing.filter((id) => !toRemove.has(id));
+
+  // None of the ids were queued — leave storage untouched (avoids clobbering a
+  // queue another writer may have just updated).
+  if (remaining.length === existing.length) {
+    return;
+  }
+
+  if (remaining.length === 0) {
+    await AsyncStorage.removeItem(PENDING_DELETIONS_KEY);
+    return;
+  }
+
+  await AsyncStorage.setItem(PENDING_DELETIONS_KEY, JSON.stringify(remaining));
+};
+
 export const _PENDING_DELETIONS_KEY = PENDING_DELETIONS_KEY;

@@ -11,6 +11,7 @@ export {
   _CLOUD_SYNC_COOLDOWN_MS,
   type UploadLocalCardsResult,
   type DownloadCloudCardsResult,
+  type DeletionSyncDeps,
   type SyncChangedCardsResult,
   type MergeResult,
   type MergeWithDeletionsResult,
@@ -36,6 +37,7 @@ export {
   addPendingDeletion,
   getPendingDeletions,
   clearPendingDeletions,
+  removePendingDeletions,
   _PENDING_DELETIONS_KEY
 } from './deletion-tracker';
 
