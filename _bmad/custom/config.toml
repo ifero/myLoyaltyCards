@@ -5,3 +5,21 @@
 #
 # [agents.bmad-agent-pm]
 # description = "Prefers short, bulleted PRDs over narrative drafts."
+
+# Pin sprint artifacts to the team's documented location (see CONTRIBUTING.md,
+# README.md, AGENTS.md). The installer default is _bmad-output/implementation-artifacts,
+# but the live sprint-status.yaml + stories/ live under docs/sprint-artifacts. This pin
+# keeps every BMAD sprint skill (dev-story, create-story, sprint-planning, sprint-status,
+# correct-course) pointed at the real artifacts and survives installer regeneration.
+[modules.bmm]
+implementation_artifacts = "{project-root}/docs/sprint-artifacts"
+planning_artifacts = "{project-root}/docs"
+
+# Tea (Test Architect) outputs — same rationale as above. Installer default is
+# _bmad-output/test-artifacts; pin them under docs/sprint-artifacts so test-design,
+# test-reviews, and traceability sit beside stories/ with the rest of the artifacts.
+[modules.tea]
+test_artifacts = "{project-root}/docs/sprint-artifacts"
+test_design_output = "docs/sprint-artifacts/test-design"
+test_review_output = "docs/sprint-artifacts/test-reviews"
+trace_output = "docs/sprint-artifacts/traceability"
