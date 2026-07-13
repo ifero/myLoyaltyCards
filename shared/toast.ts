@@ -2,7 +2,7 @@ import * as Burnt from 'burnt';
 
 import { logger } from '@/core/utils/logger';
 
-type ToastOptions = Parameters<typeof Burnt.toast>[0];
+export type ToastOptions = Parameters<typeof Burnt.toast>[0];
 
 export const showToast = async (options: ToastOptions) => {
   try {
