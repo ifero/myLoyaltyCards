@@ -276,6 +276,18 @@ const RootLayoutContent = ({ isAuthenticated }: { isAuthenticated: boolean }) =>
  */
 const UPDATE_CHECK_TIMEOUT_MS = 5000;
 
+/**
+ * Max time to wait for the Expo update bundle download before proceeding with
+ * boot. Like the manifest check, `fetchUpdateAsync()` has no built-in JS
+ * timeout, so a connection that serves the manifest then stalls mid-download
+ * would otherwise hang the loading screen indefinitely. The budget is far more
+ * generous than the manifest check because a bundle is much larger than a
+ * manifest; `withTimeout` never aborts the native download, so a slow download
+ * that exceeds the budget is not lost — it simply applies on a later cold start
+ * (Story 16.12, AC1).
+ */
+const UPDATE_FETCH_TIMEOUT_MS = 30000;
+
 const RootLayout = () => {
   const { t } = useTranslation();
   // Infra readiness (local, offline-safe): DB init + guest-session bootstrap.
@@ -290,12 +302,14 @@ const RootLayout = () => {
     const initializeApp = async () => {
       try {
         // Check for updates first (if enabled) so any reload happens during the
-        // loading screen. checkForUpdateAsync gates boot and has no reliable JS
-        // timeout, so it is bounded with withTimeout — a flaky network must not
-        // stall the spinner (AC1). fetchUpdateAsync/reloadAsync run only after a
-        // manifest is fetched (i.e. with connectivity), so they don't affect the
-        // offline cold-start this story fixes; a mid-download stall on a degraded
-        // connection is a separate, pre-existing edge (see story follow-ups).
+        // loading screen. Neither checkForUpdateAsync (manifest) nor
+        // fetchUpdateAsync (bundle download) has a reliable JS-level timeout, so
+        // both are bounded with withTimeout — a flaky network (a manifest that
+        // fetches, then stalls mid-download) must never stall the spinner. On
+        // either timeout, boot proceeds on the CURRENT bundle and any staged
+        // update applies on a later cold start (Story 16.10 AC1; Story 16.12
+        // AC1). These calls run only with connectivity, so they don't affect the
+        // pure-offline cold-start fixed in 16.10.
         if (Updates.isEnabled) {
           try {
             const update = await withTimeout(
@@ -303,9 +317,24 @@ const RootLayout = () => {
               UPDATE_CHECK_TIMEOUT_MS
             );
             if (update.isAvailable) {
-              await Updates.fetchUpdateAsync();
-              // Reload will happen here, before UI is shown
-              await Updates.reloadAsync();
+              // Dedicated try/catch so a stalled or failed download — or a rare
+              // reload failure — degrades gracefully: log and boot the current
+              // bundle. reloadAsync runs only if the bounded fetch resolves.
+              try {
+                await withTimeout(
+                  Updates.fetchUpdateAsync(),
+                  UPDATE_FETCH_TIMEOUT_MS,
+                  'Expo update download timed out'
+                );
+                // reloadAsync is intentionally NOT wrapped in withTimeout: it
+                // does no network I/O (the download already completed) and a JS
+                // timeout cannot cancel a native runtime teardown. It is reached
+                // only after the bounded fetch (Story 16.12, AC4).
+                await Updates.reloadAsync();
+              } catch (error) {
+                logger.warn('Expo update download/reload failed:', error);
+                // Boot the current bundle; the update applies on a later launch.
+              }
             }
           } catch (error) {
             logger.warn('Expo update check failed:', error);
