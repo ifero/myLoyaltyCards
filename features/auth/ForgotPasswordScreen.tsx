@@ -8,7 +8,7 @@ import { StyleSheet } from 'react-native-unistyles';
 import { isValidEmail } from '@/core/auth/validation';
 
 import { Button, TextField } from '@/shared/components/ui';
-import { requestPasswordReset } from '@/shared/supabase/auth';
+import { sendPasswordResetOtp } from '@/shared/supabase/auth';
 import { useTheme } from '@/shared/theme';
 
 import { AuthLink, AuthScreenLayout, ErrorBanner } from './components';
@@ -21,7 +21,6 @@ const ForgotPasswordScreen = () => {
   const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [submitted, setSubmitted] = useState(false);
   const [fieldErrors, setFieldErrors] = useState<{ email?: string }>({});
 
   const mapForgotPasswordErrorMessage = useCallback(
@@ -64,72 +63,31 @@ const ForgotPasswordScreen = () => {
     setLoading(true);
 
     try {
-      const result = await requestPasswordReset(email.trim());
+      const trimmedEmail = email.trim();
+      const result = await sendPasswordResetOtp(trimmedEmail);
 
       if (!result.success) {
         setError(mapForgotPasswordErrorMessage(result.error.message));
         return;
       }
 
-      setSubmitted(true);
+      // Mirror the signup flow (CreateAccountScreen): hand off to the shared
+      // OTP screen with the email + a send timestamp that seeds the resend
+      // cooldown. This replaces the old "check your email" dead-end — the user
+      // now enters the emailed code in-app.
+      router.push({
+        pathname: '/recovery-otp',
+        params: {
+          email: trimmedEmail,
+          sentAt: String(Date.now())
+        }
+      });
     } catch {
       setError(t('auth.forgotPassword.genericError'));
     } finally {
       setLoading(false);
     }
-  }, [email, mapForgotPasswordErrorMessage, t, validate]);
-
-  const handleTryAgain = useCallback(async () => {
-    setError(null);
-    setLoading(true);
-
-    try {
-      const result = await requestPasswordReset(email.trim());
-
-      if (!result.success) {
-        setSubmitted(false);
-        setError(mapForgotPasswordErrorMessage(result.error.message));
-      }
-    } catch {
-      setSubmitted(false);
-      setError(t('auth.forgotPassword.genericError'));
-    } finally {
-      setLoading(false);
-    }
-  }, [email, mapForgotPasswordErrorMessage, t]);
-
-  if (submitted) {
-    return (
-      <AuthScreenLayout
-        testID="forgot-password-confirmation"
-        heading={t('auth.forgotPassword.confirmationHeading')}
-        headingTestID="confirmation-title"
-        subtitle={t('auth.forgotPassword.confirmationSubtitle')}
-        subtitleTestID="confirmation-subtitle"
-        showAppIcon={false}
-      >
-        <View style={styles.confirmation}>
-          <View testID="reset-password-confirmation-icon" style={styles.confirmationIcon}>
-            <MaterialIcons name="mail-outline" size={56} color={theme.primary} />
-          </View>
-
-          <AuthLink
-            testID="try-again-button"
-            actionText={t('auth.forgotPassword.tryAgain')}
-            onPress={handleTryAgain}
-            accessibilityLabel={t('auth.forgotPassword.tryAgain')}
-          />
-
-          <AuthLink
-            testID="back-to-sign-in-button"
-            actionText={t('auth.forgotPassword.backToSignIn')}
-            onPress={() => router.push('/sign-in')}
-            accessibilityLabel={t('auth.accessibility.backToSignIn')}
-          />
-        </View>
-      </AuthScreenLayout>
-    );
-  }
+  }, [email, mapForgotPasswordErrorMessage, router, t, validate]);
 
   return (
     <AuthScreenLayout
@@ -187,9 +145,9 @@ const ForgotPasswordScreen = () => {
           size="large"
           onPress={handleSendReset}
           loading={loading}
-          accessibilityLabel={t('auth.accessibility.sendResetLink')}
+          accessibilityLabel={t('auth.accessibility.sendResetCode')}
         >
-          {t('auth.forgotPassword.sendResetLink')}
+          {t('auth.forgotPassword.sendResetCode')}
         </Button>
 
         <AuthLink
@@ -206,13 +164,6 @@ const ForgotPasswordScreen = () => {
 const styles = StyleSheet.create({
   formGroup: {
     width: '100%'
-  },
-  confirmation: {
-    width: '100%',
-    alignItems: 'center'
-  },
-  confirmationIcon: {
-    marginBottom: 48
   }
 });
 

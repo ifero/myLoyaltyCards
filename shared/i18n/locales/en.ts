@@ -47,7 +47,8 @@ export const en = {
     verifyEmail: 'Verify Email',
     signIn: 'Sign In',
     forgotPassword: 'Forgot Password',
-    resetPassword: 'Reset Password',
+    recoveryOtp: 'Reset Password',
+    newPassword: 'New Password',
     whatWeCollect: 'What We Collect'
   },
   onboarding: {
@@ -347,13 +348,12 @@ export const en = {
       passwordHint: 'Enter your password',
       passwordRuleHint: 'Minimum 8 characters with at least one letter and one number',
       confirmPasswordHint: 'Re-enter your password to confirm',
-      forgotPasswordEmailHint: 'Enter your email address to receive a reset link',
+      forgotPasswordEmailHint: 'Enter your email address to receive a reset code',
       confirmNewPasswordHint: 'Re-enter your new password to confirm',
       forgotPassword: 'Forgot password',
       back: 'Back',
-      sendResetLink: 'Send Reset Link',
+      sendResetCode: 'Send password reset code',
       backToSignIn: 'Back to Sign In',
-      requestNewLink: 'Request a new reset link',
       verificationCodeLabel: '8-digit verification code',
       verificationCodeHint: 'Enter the 8-digit code from your email',
       confirmCode: 'Confirm',
@@ -394,28 +394,9 @@ export const en = {
     },
     forgotPassword: {
       heading: 'Forgot Password?',
-      subtitle: "No worries. Enter your email and we'll send you a reset link.",
-      sendResetLink: 'Send Reset Link',
+      subtitle: "No worries. Enter your email and we'll send you a reset code.",
+      sendResetCode: 'Send Reset Code',
       backToSignIn: 'Back to Sign In',
-      confirmationHeading: 'Check your email',
-      confirmationSubtitle:
-        "If an account exists for that email, we've sent a reset link. Check your inbox and spam folder.",
-      tryAgain: 'Try again',
-      networkError: 'Unable to connect. Check your internet and try again.',
-      genericError: 'An unexpected error occurred. Please try again.'
-    },
-    resetPassword: {
-      invalidLink: 'Invalid or expired reset link. Please request a new one.',
-      expiredLink: 'This reset link has expired. Please request a new one.',
-      verifyFailed: 'Failed to verify reset link. Please try again.',
-      errorHeading: 'Reset Link Invalid',
-      requestNewLink: 'Request New Link',
-      verifyingLink: 'Verifying reset link…',
-      successHeading: 'Password Updated!',
-      redirectingHome: 'Redirecting to home…',
-      heading: 'Set New Password',
-      subtitle: 'Choose a strong new password for your account.',
-      button: 'Update Password',
       networkError: 'Unable to connect. Check your internet and try again.',
       genericError: 'An unexpected error occurred. Please try again.'
     },
@@ -432,6 +413,27 @@ export const en = {
       verifyUnavailable: "Couldn't verify right now. Check your connection and try again.",
       resendFailure: "Couldn't resend code. Try again.",
       resendSuccess: 'Code resent. Enter the newest code from your email.'
+    },
+    recoveryOtp: {
+      heading: 'Reset your password',
+      subtitle: 'We sent an 8-digit code to {{email}}',
+      confirm: 'Confirm',
+      resendCode: 'Resend code',
+      resendIn: 'Resend in {{time}}',
+      wrongEmail: 'Wrong email?',
+      goBack: 'Go back',
+      incorrectCode: 'Incorrect code. Please try again.',
+      expiredCode: 'This code has expired. Please request a new one.',
+      verifyUnavailable: "Couldn't verify right now. Check your connection and try again.",
+      resendFailure: "Couldn't resend code. Try again.",
+      resendSuccess: 'Code resent. Enter the newest code from your email.'
+    },
+    newPassword: {
+      heading: 'Set New Password',
+      subtitle: 'Choose a strong new password for your account.',
+      button: 'Update Password',
+      networkError: 'Unable to connect. Check your internet and try again.',
+      genericError: 'An unexpected error occurred. Please try again.'
     },
     passwordStrength: {
       weak: 'Weak',

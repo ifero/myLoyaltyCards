@@ -228,8 +228,20 @@ otp_expiry = 3600
 
 # Uncomment to customize email template
 [auth.email.template.confirmation]
-subject = "Verify your myLoyaltyCards email"
+subject = "Verify your myLoyaltyCards email / Verifica la tua email myLoyaltyCards"
 content_path = "./supabase/templates/confirmation.html"
+
+# Password-recovery OTP template (Story 6.19). Uses {{ .Token }} so recovery
+# sends an 8-digit code (otp_length/otp_expiry above), not a magic link — this
+# is what makes the in-app OTP reset flow work locally.
+# RELEASE STEP (human, prod dashboard): the hosted Supabase project's recovery
+# email template must be switched to this OTP template too — Authentication →
+# Email Templates → Reset Password → use {{ .Token }}. Same manual step 6.18
+# tracked for the confirmation template; local config.toml alone does not change
+# the production project.
+[auth.email.template.recovery]
+subject = "Reset your myLoyaltyCards password / Reimposta la tua password myLoyaltyCards"
+content_path = "./supabase/templates/recovery.html"
 
 # Uncomment to customize notification email template
 # [auth.email.notification.password_changed]

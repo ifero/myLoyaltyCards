@@ -65,7 +65,14 @@ const toAuthError = (err: unknown): AuthError => {
   return { message: 'An unexpected error occurred. Please try again.' };
 };
 
-const normalizeVerifyEmailOtpError = (error: AuthError): AuthError => {
+/**
+ * Normalizes a raw auth error from an OTP verification into a stable,
+ * UI-actionable code (`invalid_otp | expired_otp | network_error |
+ * unknown_error`). Shared by the signup email-verify (`verifyEmailOtp`,
+ * `type: 'email'`) and password-recovery (`verifyPasswordResetOtp`,
+ * `type: 'recovery'`) OTP flows — Story 6.19.
+ */
+const normalizeOtpError = (error: AuthError): AuthError => {
   const code = error.code?.toLowerCase();
   const message = error.message.toLowerCase();
 
@@ -222,13 +229,13 @@ export const verifyEmailOtp = async (
     });
 
     if (error) {
-      return { success: false, error: normalizeVerifyEmailOtpError(toAuthError(error)) };
+      return { success: false, error: normalizeOtpError(toAuthError(error)) };
     }
 
     if (!data.user || !data.session) {
       return {
         success: false,
-        error: normalizeVerifyEmailOtpError({
+        error: normalizeOtpError({
           message: 'Verification completed but no session was returned. Please try again.'
         })
       };
@@ -236,7 +243,7 @@ export const verifyEmailOtp = async (
 
     return { success: true, data: { user: data.user, session: data.session } };
   } catch (err) {
-    return { success: false, error: normalizeVerifyEmailOtpError(toAuthError(err)) };
+    return { success: false, error: normalizeOtpError(toAuthError(err)) };
   }
 };
 
@@ -304,22 +311,18 @@ export const getSession = async (): Promise<AuthResult<Session | null>> => {
 };
 
 /**
- * Request a password reset email for the given address.
+ * Send a password-recovery one-time code to the given email (Story 6.19).
  *
- * Supabase does not reveal whether the email is actually registered,
- * which prevents user enumeration attacks. Transport-level errors
- * (network, rate limit) are still surfaced as `AuthError`.
- *
- * @param email - The user's email address.
- * @param redirectTo - Deep link URL that the reset email should redirect to.
+ * Calls `resetPasswordForEmail` WITHOUT a `redirectTo` — with a `{{ .Token }}`
+ * recovery email template this delivers a numeric OTP instead of a deep link,
+ * so no redirect allowlist is involved. Like every reset entry point, success
+ * is returned regardless of whether the email is registered (no user
+ * enumeration); only transport errors (network, rate limit) surface.
  */
-export const requestPasswordReset = async (
-  email: string,
-  redirectTo = 'myloyaltycards://reset-password'
-): Promise<AuthResult<void>> => {
+export const sendPasswordResetOtp = async (email: string): Promise<AuthResult<void>> => {
   try {
     const supabase = getSupabaseClient();
-    const { error } = await supabase.auth.resetPasswordForEmail(email, { redirectTo });
+    const { error } = await supabase.auth.resetPasswordForEmail(email);
 
     if (error) {
       return { success: false, error: toAuthError(error) };
@@ -332,10 +335,49 @@ export const requestPasswordReset = async (
 };
 
 /**
+ * Verify a password-recovery OTP and return the recovery session (Story 6.19).
+ *
+ * Mirrors `verifyEmailOtp` but with `type: 'recovery'`; the returned session
+ * authorizes the subsequent `updatePassword` call. Errors are normalized to the
+ * shared OTP codes via `normalizeOtpError`.
+ */
+export const verifyPasswordResetOtp = async (
+  email: string,
+  token: string
+): Promise<AuthResult<AuthSession>> => {
+  try {
+    const supabase = getSupabaseClient();
+    const { data, error } = await supabase.auth.verifyOtp({
+      email,
+      token,
+      type: 'recovery'
+    });
+
+    if (error) {
+      return { success: false, error: normalizeOtpError(toAuthError(error)) };
+    }
+
+    if (!data.user || !data.session) {
+      return {
+        success: false,
+        error: normalizeOtpError({
+          message: 'Verification completed but no session was returned. Please try again.'
+        })
+      };
+    }
+
+    return { success: true, data: { user: data.user, session: data.session } };
+  } catch (err) {
+    return { success: false, error: normalizeOtpError(toAuthError(err)) };
+  }
+};
+
+/**
  * Update the current user's password.
  *
- * This is called after the user follows a reset link and a new session has
- * been established (via `exchangeCodeForSession` or deep-link hash).
+ * Called once a recovery session is active — for password reset that is the
+ * session returned by `verifyPasswordResetOtp` (Story 6.19). Also used by an
+ * already-authenticated user changing their own password.
  *
  * @param newPassword - The new password to set.
  */

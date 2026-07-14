@@ -251,9 +251,15 @@ const RootLayoutContent = ({ isAuthenticated }: { isAuthenticated: boolean }) =>
           }}
         />
         <Stack.Screen
-          name="reset-password"
+          name="recovery-otp"
           options={{
-            title: t('navigation.resetPassword')
+            title: t('navigation.recoveryOtp')
+          }}
+        />
+        <Stack.Screen
+          name="new-password"
+          options={{
+            title: t('navigation.newPassword')
           }}
         />
         <Stack.Screen

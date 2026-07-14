@@ -47,7 +47,8 @@ export const it = {
     verifyEmail: 'Verifica email',
     signIn: 'Accedi',
     forgotPassword: 'Password dimenticata',
-    resetPassword: 'Reimposta password',
+    recoveryOtp: 'Reimposta password',
+    newPassword: 'Nuova password',
     whatWeCollect: 'Cosa raccogliamo'
   },
   onboarding: {
@@ -349,13 +350,12 @@ export const it = {
       passwordHint: 'Inserisci la tua password',
       passwordRuleHint: 'Almeno 8 caratteri con almeno una lettera e un numero',
       confirmPasswordHint: 'Inserisci di nuovo la password per confermare',
-      forgotPasswordEmailHint: 'Inserisci il tuo indirizzo email per ricevere un link di reset',
+      forgotPasswordEmailHint: 'Inserisci il tuo indirizzo email per ricevere un codice di reset',
       confirmNewPasswordHint: 'Inserisci di nuovo la nuova password per confermare',
       forgotPassword: 'Password dimenticata',
       back: 'Indietro',
-      sendResetLink: 'Invia link di reimpostazione',
+      sendResetCode: 'Invia codice di reimpostazione',
       backToSignIn: "Torna all'accesso",
-      requestNewLink: 'Richiedi un nuovo link di reset',
       verificationCodeLabel: 'Codice di verifica a 8 cifre',
       verificationCodeHint: 'Inserisci il codice a 8 cifre ricevuto via email',
       confirmCode: 'Conferma',
@@ -396,28 +396,9 @@ export const it = {
     },
     forgotPassword: {
       heading: 'Password dimenticata?',
-      subtitle: 'Nessun problema. Inserisci la tua email e ti invieremo un link di reset.',
-      sendResetLink: 'Invia link di reset',
+      subtitle: 'Nessun problema. Inserisci la tua email e ti invieremo un codice di reset.',
+      sendResetCode: 'Invia codice di reset',
       backToSignIn: "Torna all'accesso",
-      confirmationHeading: 'Controlla la tua email',
-      confirmationSubtitle:
-        'Se esiste un account per questa email, abbiamo inviato un link di reset. Controlla la posta in arrivo e lo spam.',
-      tryAgain: 'Riprova',
-      networkError: 'Impossibile connettersi. Controlla internet e riprova.',
-      genericError: 'Si è verificato un errore imprevisto. Riprova.'
-    },
-    resetPassword: {
-      invalidLink: 'Link di reset non valido o scaduto. Richiedine uno nuovo.',
-      expiredLink: 'Questo link di reset è scaduto. Richiedine uno nuovo.',
-      verifyFailed: 'Impossibile verificare il link di reset. Riprova.',
-      errorHeading: 'Link di reset non valido',
-      requestNewLink: 'Richiedi un nuovo link',
-      verifyingLink: 'Verifica del link di reset…',
-      successHeading: 'Password aggiornata!',
-      redirectingHome: 'Reindirizzamento alla home…',
-      heading: 'Imposta una nuova password',
-      subtitle: 'Scegli una nuova password sicura per il tuo account.',
-      button: 'Aggiorna password',
       networkError: 'Impossibile connettersi. Controlla internet e riprova.',
       genericError: 'Si è verificato un errore imprevisto. Riprova.'
     },
@@ -434,6 +415,27 @@ export const it = {
       verifyUnavailable: 'Impossibile verificare ora. Controlla la connessione e riprova.',
       resendFailure: 'Impossibile inviare di nuovo il codice. Riprova.',
       resendSuccess: 'Codice inviato di nuovo. Inserisci il codice più recente ricevuto via email.'
+    },
+    recoveryOtp: {
+      heading: 'Reimposta la password',
+      subtitle: 'Abbiamo inviato un codice di 8 cifre a {{email}}',
+      confirm: 'Conferma',
+      resendCode: 'Invia di nuovo il codice',
+      resendIn: 'Invia di nuovo tra {{time}}',
+      wrongEmail: 'Email sbagliata?',
+      goBack: 'Torna indietro',
+      incorrectCode: 'Codice non corretto. Riprova.',
+      expiredCode: 'Questo codice è scaduto. Richiedine uno nuovo.',
+      verifyUnavailable: 'Impossibile verificare ora. Controlla la connessione e riprova.',
+      resendFailure: 'Impossibile inviare di nuovo il codice. Riprova.',
+      resendSuccess: 'Codice inviato di nuovo. Inserisci il codice più recente ricevuto via email.'
+    },
+    newPassword: {
+      heading: 'Imposta una nuova password',
+      subtitle: 'Scegli una nuova password sicura per il tuo account.',
+      button: 'Aggiorna password',
+      networkError: 'Impossibile connettersi. Controlla internet e riprova.',
+      genericError: 'Si è verificato un errore imprevisto. Riprova.'
     },
     passwordStrength: {
       weak: 'Debole',
