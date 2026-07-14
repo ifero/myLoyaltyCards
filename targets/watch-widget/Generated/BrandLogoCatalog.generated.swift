@@ -37,6 +37,7 @@ enum BrandLogoCatalogData {
     "il-gigante",
     "intimissimi",
     "jysk",
+    "leroy-merlin",
     "lidl",
     "lotteria-degli-scontrini",
     "md",

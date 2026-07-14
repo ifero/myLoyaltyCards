@@ -29,6 +29,7 @@ import IkeaLogo from '@/assets/images/brands/ikea.svg';
 import IlGiganteLogo from '@/assets/images/brands/il-gigante.svg';
 import IntimissimiLogo from '@/assets/images/brands/intimissimi.svg';
 import JyskLogo from '@/assets/images/brands/jysk.svg';
+import LeroyMerlinLogo from '@/assets/images/brands/leroy-merlin.svg';
 import LidlLogo from '@/assets/images/brands/lidl.svg';
 import LotteriaDegliScontriniLogo from '@/assets/images/brands/lotteria-degli-scontrini.svg';
 import MdLogo from '@/assets/images/brands/md.svg';
@@ -86,6 +87,7 @@ const BRAND_LOGOS: Record<string, BrandLogoSource> = {
   'il-gigante': IlGiganteLogo,
   intimissimi: IntimissimiLogo,
   jysk: JyskLogo,
+  'leroy-merlin': LeroyMerlinLogo,
   lidl: LidlLogo,
   'lotteria-degli-scontrini': LotteriaDegliScontriniLogo,
   md: MdLogo,
