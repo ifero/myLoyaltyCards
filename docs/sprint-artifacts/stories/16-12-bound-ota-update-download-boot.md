@@ -4,7 +4,7 @@ baseline_commit: 4a7c2941b7b97fe7e1461b5525a0c01bfba67964
 
 # Story 16.12: Bound the OTA update download at boot so a stalled fetch can't hang the app
 
-Status: review
+Status: done
 
 Epic: 16 — Platform & Tech Debt
 
