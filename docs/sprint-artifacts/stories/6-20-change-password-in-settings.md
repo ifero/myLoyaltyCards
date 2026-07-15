@@ -4,7 +4,7 @@ baseline_commit: 4420d1a91649ff891456574d06df0a4890f90ebd
 
 # Story 6.20: Change password in Settings (OTP-gated)
 
-Status: review
+Status: done
 
 Epic: 6 — User Authentication & Privacy
 
