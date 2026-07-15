@@ -125,7 +125,11 @@ export const en = {
       guestBody: 'Sign in or create an account to back up your cards and sync across devices.',
       accountDeleted: 'Account deleted',
       signOutError: 'Unable to sign out',
-      deleteError: 'Unable to delete account'
+      deleteError: 'Unable to delete account',
+      changePassword: 'Change Password',
+      changePasswordA11y: 'Change Password',
+      changePasswordError: 'Unable to send the verification code. Please try again.',
+      passwordChanged: 'Password changed'
     },
     preferences: {
       themeLabel: 'Theme',

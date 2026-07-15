@@ -127,7 +127,11 @@ export const it = {
         'Accedi o crea un account per salvare le tue carte e sincronizzarle tra i dispositivi.',
       accountDeleted: 'Account eliminato',
       signOutError: 'Impossibile uscire',
-      deleteError: "Impossibile eliminare l'account"
+      deleteError: "Impossibile eliminare l'account",
+      changePassword: 'Cambia password',
+      changePasswordA11y: 'Cambia password',
+      changePasswordError: 'Impossibile inviare il codice di verifica. Riprova.',
+      passwordChanged: 'Password modificata'
     },
     preferences: {
       themeLabel: 'Tema',

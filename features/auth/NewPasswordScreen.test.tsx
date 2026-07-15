@@ -40,13 +40,21 @@ jest.mock('@/shared/theme', () => ({
 }));
 
 const mockReplace = jest.fn();
+const mockDismissTo = jest.fn();
+const mockParams: Record<string, string | undefined> = {};
 jest.mock('expo-router', () => ({
-  useRouter: () => ({ replace: mockReplace })
+  useRouter: () => ({ replace: mockReplace, dismissTo: mockDismissTo }),
+  useLocalSearchParams: () => mockParams
 }));
 
 const mockUpdatePassword = jest.fn();
 jest.mock('@/shared/supabase/auth', () => ({
   updatePassword: (...args: unknown[]) => mockUpdatePassword(...args)
+}));
+
+const mockShowToast = jest.fn();
+jest.mock('@/shared/toast', () => ({
+  showToast: (...args: unknown[]) => mockShowToast(...args)
 }));
 
 const fillPasswords = (password: string, confirm: string) => {
@@ -79,6 +87,7 @@ describe('NewPasswordScreen', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
+    Object.keys(mockParams).forEach((key) => delete mockParams[key]);
   });
 
   it('renders the heading, subtitle, both inputs and the submit button', () => {
@@ -191,18 +200,22 @@ describe('NewPasswordScreen', () => {
     });
   });
 
-  it('navigates to a custom successHref on success (reuse hook for e.g. Settings)', async () => {
+  it('confirms with a toast and returns to /settings when origin=change-password (AC4)', async () => {
     mockUpdatePassword.mockResolvedValue({ success: true, data: undefined });
+    mockParams.origin = 'change-password';
 
-    render(<NewPasswordScreen successHref="/settings" />);
+    render(<NewPasswordScreen />);
 
     fillPasswords('ValidPass1', 'ValidPass1');
     fireEvent.press(screen.getByTestId('update-password-button'));
 
     await waitFor(() => {
       expect(mockUpdatePassword).toHaveBeenCalledWith('ValidPass1');
-      expect(mockReplace).toHaveBeenCalledWith('/settings');
+      expect(mockShowToast).toHaveBeenCalledWith({ title: 'Password changed', preset: 'done' });
+      expect(mockDismissTo).toHaveBeenCalledWith('/settings');
     });
+    // The recovery destination (replace to /) must not be used for this flow.
+    expect(mockReplace).not.toHaveBeenCalled();
   });
 
   it('surfaces a mapped network error when the update fails for connectivity', async () => {

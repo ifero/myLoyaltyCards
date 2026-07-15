@@ -102,6 +102,29 @@ describe('RecoveryOtpScreen', () => {
     expect(mockVerifyEmailOtp).not.toHaveBeenCalled();
   });
 
+  it('preserves the back stack and forwards origin when launched from Settings (Story 6.20)', async () => {
+    mockVerifyPasswordResetOtp.mockResolvedValue({
+      success: true,
+      data: { user: { id: 'u1' }, session: { access_token: 'token' } }
+    });
+    mockParams.origin = 'change-password';
+
+    render(<RecoveryOtpScreen />);
+
+    fireEvent.changeText(screen.getByTestId('otp-input'), '12345678');
+
+    await waitFor(() => {
+      expect(mockVerifyPasswordResetOtp).toHaveBeenCalledWith('test@example.com', '12345678');
+      // Change-password keeps Settings on the stack (no dismissTo) and forwards
+      // the origin so NewPasswordScreen returns to /settings on success.
+      expect(mockReplace).toHaveBeenCalledWith({
+        pathname: '/new-password',
+        params: { origin: 'change-password' }
+      });
+    });
+    expect(mockDismissTo).not.toHaveBeenCalled();
+  });
+
   it('shows the incorrect-code error on an invalid OTP and clears it on edit', async () => {
     mockVerifyPasswordResetOtp.mockResolvedValue({
       success: false,
@@ -191,6 +214,17 @@ describe('RecoveryOtpScreen', () => {
     fireEvent.press(screen.getByTestId('wrong-email-link'));
 
     expect(mockReplace).toHaveBeenCalledWith('/forgot-password');
+  });
+
+  it('cancels back to /settings from the wrong-email link when launched from Settings (Story 6.20)', () => {
+    mockParams.origin = 'change-password';
+
+    render(<RecoveryOtpScreen />);
+
+    fireEvent.press(screen.getByTestId('wrong-email-link'));
+
+    expect(mockDismissTo).toHaveBeenCalledWith('/settings');
+    expect(mockReplace).not.toHaveBeenCalledWith('/forgot-password');
   });
 
   it('tracks the resend cooldown seeded from sentAt', () => {

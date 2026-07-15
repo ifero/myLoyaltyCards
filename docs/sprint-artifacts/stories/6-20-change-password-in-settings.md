@@ -1,6 +1,10 @@
+---
+baseline_commit: 4420d1a91649ff891456574d06df0a4890f90ebd
+---
+
 # Story 6.20: Change password in Settings (OTP-gated)
 
-Status: ready-for-dev
+Status: review
 
 Epic: 6 — User Authentication & Privacy
 
@@ -35,11 +39,11 @@ Note `secure_password_change = false` (`config.toml:211`): Supabase does **not**
 
 ## Tasks / Subtasks
 
-- [ ] **T1** (AC1,6) Add the `ActionRow` + `onChangePassword` prop to `AccountSection`; add `settings.account.changePassword*` keys to `en.ts`/`it.ts` (near `:116-128`); update `AccountSection.test.tsx`.
-- [ ] **T2** (AC2,4) In `SettingsScreen`, add a `startChangePassword` handler → `sendPasswordResetOtp(email)` → navigate to the OTP screen with `{ email, sentAt, purpose: 'change-password' }`; wire the new `AccountSection` prop.
-- [ ] **T3** (AC3,4) Ensure the shared new-password screen honors the settings success-destination param + toast.
-- [ ] **T4** (AC5,6) Tests for the Settings entry, the OTP-gate navigation payload, and success/error routing.
-- [ ] **T5** (process) On completion set the story `.md` Status → `review`; populate Dev Agent Record.
+- [x] **T1** (AC1,6) Add the `ActionRow` + `onChangePassword` prop to `AccountSection`; add `settings.account.changePassword*` keys to `en.ts`/`it.ts` (near `:116-128`); update `AccountSection.test.tsx`.
+- [x] **T2** (AC2,4) In `SettingsScreen`, add a `startChangePassword` handler → `sendPasswordResetOtp(email)` → navigate to the OTP screen with `{ email, sentAt, origin: 'change-password' }`; wire the new `AccountSection` prop. _(Param named `origin`, not `purpose`, to avoid colliding with `VerifyEmailScreen`'s `purpose` prop — see Completion Notes.)_
+- [x] **T3** (AC3,4) Ensure the shared new-password screen honors the settings success-destination param + toast.
+- [x] **T4** (AC5,6) Tests for the Settings entry, the OTP-gate navigation payload, and success/error routing.
+- [x] **T5** (process) On completion set the story `.md` Status → `review`; populate Dev Agent Record.
 
 ## Dev Notes
 
@@ -81,15 +85,59 @@ Change surface: `features/settings/components/AccountSection.tsx` + `features/se
 
 ### Agent Model Used
 
+claude-opus-4-8 (dev-story workflow, Explanatory style).
+
 ### Debug Log References
+
+- `tsc --noEmit` → clean (exit 0).
+- `eslint` on all changed files → clean (exit 0).
+- Full jest suite: **165 suites / 1747 tests green** (after code-review + QA rounds); global coverage **93.23% stmts / 85.59% branch / 88.29% funcs / 93.83% lines** (≥80% gate met).
 
 ### Completion Notes List
 
+AD-6-20-01 was implemented by threading **one route param — `origin: 'change-password'`** — through the reused 6.19 recovery flow (Settings → shared OTP screen → shared new-password screen), rather than adding any new screen, route, or supabase wrapper. The three change-points the discriminator drives:
+
+1. **`SettingsScreen.startChangePassword`** — sends the OTP (`sendPasswordResetOtp(email)`) then `router.push('/recovery-otp', { email, sentAt, origin: 'change-password' })`. Surfaces a toast if the session email hasn't loaded yet (no dead tap); the row is `disabled` while the send is in flight so a double tap can't send twice (same pattern as `confirmSignOut`/`confirmDeleteAccount`, which rely on the trigger's disabled state rather than a JS re-entry guard); a send failure surfaces a localized error toast.
+2. **`VerifyEmailScreen` (recovery `onVerified`)** — now origin-aware: for `change-password` it **preserves** the Settings back stack (no `dismissTo`) and forwards `origin` to `/new-password`; the recovery path is byte-for-byte unchanged (`dismissTo('/') → replace('/new-password')`).
+3. **`NewPasswordScreen`** — reads `origin`: recovery lands on `/` (unchanged); change-password shows a success toast and `dismissTo('/settings')` back to the preserved screen.
+
+Decisions worth flagging for review:
+
+- **Param name `origin`, not `purpose`.** The story's T2 sketched `purpose: 'change-password'`, but `VerifyEmailScreen` already has a `purpose` **prop** (`'signup' | 'recovery'`). Reusing the word as a route param would be genuinely confusing, so the param is `origin`. Behaviour matches the spec exactly.
+- **Removed the vestigial `successHref` prop** on `NewPasswordScreen`. It was a 6.19 placeholder for this story, but `app/new-password.tsx` is a pure re-export (route-file lint rule), so a prop could never be set for the real route. AC4 asks for a success-destination **param** — `origin` is that mechanism. Its one prop-based test was converted to the param path.
+- **OTP-screen copy reused as-is** from recovery ("Reset your password"). The story scoped 6.20 to exactly three additions on top of 6.19; adding flow-specific "change password" OTP copy was intentionally left out of scope.
+- Recovery/confirmation email templates untouched (6.19 already made them bilingual).
+
 ### File List
+
+Source:
+
+- `features/settings/components/AccountSection.tsx` — Change Password `ActionRow` (lock icon, between Sign Out & Delete) + `onChangePassword`/`isChangingPassword` props.
+- `features/settings/screens/SettingsScreen.tsx` — `startChangePassword` handler + `isChangingPassword` state; wired the new `AccountSection` props; imports `sendPasswordResetOtp`.
+- `features/auth/VerifyEmailScreen.tsx` — origin-aware recovery `onVerified` **and `onWrongEmail`** (change-password cancels back to `/settings` instead of the anonymous forgot-password screen); reads/forwards the `origin` param; uses the shared `getSingleParam` helper.
+- `features/auth/NewPasswordScreen.tsx` — `origin`-param success destination (`/` vs `dismissTo('/settings')` + toast); removed `successHref` prop; uses the shared `getSingleParam` helper.
+- `features/auth/routeParams.ts` — **new**: shared expo-router param unwrap (`getSingleParam`), extracted from `VerifyEmailScreen` so both auth screens share one copy.
+- `shared/i18n/locales/en.ts`, `shared/i18n/locales/it.ts` — `settings.account.changePassword` / `changePasswordA11y` / `changePasswordError` / `passwordChanged`.
+
+Tests:
+
+- `features/settings/components/AccountSection.test.tsx` — change-password row wiring + row-order assertion (AC1).
+- `features/settings/screens/SettingsScreen.test.tsx` — send+route payload (AC2), send-failure toast (AC5), unexpected-throw toast, empty-email feedback, in-flight double-tap guard; `sendPasswordResetOtp`/`showToast` mocks.
+- `features/auth/NewPasswordScreen.test.tsx` — origin=change-password toast + `dismissTo('/settings')` (AC4); router/params/toast mocks.
+- `features/auth/RecoveryOtpScreen.test.tsx` — change-password preserves the stack + forwards origin, and cancels back to `/settings` from the wrong-email link (Story 6.20).
+- `features/auth/routeParams.test.ts` — **new**: `getSingleParam` string/array/undefined branches.
+
+Process:
+
+- `docs/sprint-artifacts/stories/6-20-change-password-in-settings.md` — `baseline_commit`; task checkboxes; this record; Status → review.
+- `docs/sprint-artifacts/sprint-status.yaml` — `6-20` → in-progress → review; `updated` date.
 
 ### Change Log
 
-| Date       | Change                                                                            | Author       |
-| ---------- | --------------------------------------------------------------------------------- | ------------ |
-| 2026-07-09 | Drafted by PM (John) from ifero's bug report.                                     | John (PM)    |
-| 2026-07-11 | Refined → ready-for-dev (AD-6-20-01; reuses 6-19 plumbing; sequenced after 6-19). | Amelia (Dev) |
+| Date       | Change                                                                                                                                                                                                                                                  | Author       |
+| ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------ |
+| 2026-07-09 | Drafted by PM (John) from ifero's bug report.                                                                                                                                                                                                           | John (PM)    |
+| 2026-07-11 | Refined → ready-for-dev (AD-6-20-01; reuses 6-19 plumbing; sequenced after 6-19).                                                                                                                                                                       | Amelia (Dev) |
+| 2026-07-15 | Implemented: OTP-gated Change Password in Settings via reused 6.19 plumbing (single `origin` route param); en/it copy; tests + coverage green.                                                                                                          | Amelia (Dev) |
+| 2026-07-15 | Code-review round 1 (Sonnet): origin-aware `onWrongEmail` (no signed-in dead-end); empty-email toast feedback; hide chevron while sending; row-order + double-tap tests; extracted shared `getSingleParam`.                                             | Amelia (Dev) |
+| 2026-07-15 | QA round 1 (Sonnet): `disabled` (a11y + native block) on the row while sending — replaced the now-redundant JS re-entry guard to match `confirmSignOut` precedent; added AccountSection loading/a11y-label tests + explicit guest-row-absent assertion. | Amelia (Dev) |

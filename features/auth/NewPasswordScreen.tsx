@@ -1,4 +1,4 @@
-import { type Href, useRouter } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useCallback, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Text, View } from 'react-native';
@@ -9,6 +9,7 @@ import { isValidPassword } from '@/core/auth/validation';
 import { Button } from '@/shared/components/ui';
 import { updatePassword } from '@/shared/supabase/auth';
 import { useTheme } from '@/shared/theme';
+import { showToast } from '@/shared/toast';
 
 import {
   AuthScreenLayout,
@@ -16,6 +17,7 @@ import {
   PasswordInput,
   PasswordStrengthIndicator
 } from './components';
+import { getSingleParam } from './routeParams';
 
 /**
  * Shared "set a new password" screen (Story 6.19; reused by Story 6.20).
@@ -25,14 +27,19 @@ import {
  * password and calls `updatePassword`; there is no deep-link/token handling
  * (that dead flow was removed with the old ResetPasswordScreen).
  *
- * `successHref` is where a successful update navigates. It defaults to `/`
- * (the recovery flow), and a caller (e.g. the Settings change-password flow in
- * 6.20) can wrap this screen to point elsewhere.
+ * Where a successful update navigates is driven by the `origin` route param so
+ * the single `/new-password` route serves both flows without a wrapper (the
+ * route file is a pure re-export). Recovery (6.19) lands on `/`; the Settings
+ * change-password flow (6.20, `origin: 'change-password'`) confirms with a toast
+ * and returns to the preserved `/settings` screen via `dismissTo`.
  */
-const NewPasswordScreen = ({ successHref = '/' }: { successHref?: Href }) => {
+const NewPasswordScreen = () => {
   const { theme, typography, spacing } = useTheme();
   const { t } = useTranslation();
   const router = useRouter();
+  const params = useLocalSearchParams<{ origin?: string | string[] }>();
+  const origin = getSingleParam(params.origin);
+  const isSettingsChangePassword = origin === 'change-password';
 
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -96,13 +103,22 @@ const NewPasswordScreen = ({ successHref = '/' }: { successHref?: Href }) => {
         return;
       }
 
-      router.replace(successHref);
+      if (isSettingsChangePassword) {
+        // Story 6.20: confirm the change and return to the Settings screen that
+        // launched the flow. The OTP screen preserved the back stack for this
+        // origin, so dismissTo lands on the live /settings without duplicating it.
+        await showToast({ title: t('settings.account.passwordChanged'), preset: 'done' });
+        router.dismissTo('/settings');
+        return;
+      }
+
+      router.replace('/');
     } catch {
       setError(t('auth.newPassword.genericError'));
     } finally {
       setLoading(false);
     }
-  }, [mapUpdateError, password, router, successHref, t, validate]);
+  }, [isSettingsChangePassword, mapUpdateError, password, router, t, validate]);
 
   return (
     <AuthScreenLayout

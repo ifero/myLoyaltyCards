@@ -9,7 +9,7 @@ import { catalogueRepository } from '@/core/catalogue/catalogue-repository';
 import { clearLastSyncAt } from '@/core/sync/sync-timestamp';
 import { logger } from '@/core/utils/logger';
 
-import { deleteAccount, getSession, signOut } from '@/shared/supabase/auth';
+import { deleteAccount, getSession, sendPasswordResetOtp, signOut } from '@/shared/supabase/auth';
 import { useAuthState } from '@/shared/supabase/useAuthState';
 import { useTheme } from '@/shared/theme';
 import { showToast } from '@/shared/toast';
@@ -51,6 +51,8 @@ const SettingsScreen = () => {
 
   const [isDeleting, setIsDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
+
+  const [isChangingPassword, setIsChangingPassword] = useState(false);
 
   const {
     themePreference,
@@ -186,6 +188,43 @@ const SettingsScreen = () => {
     }
   };
 
+  // OTP-gated password change (Story 6.20, AD-6-20-01). Prove control of the
+  // account email before allowing a change, then reuse the 6.19 recovery flow:
+  // send the code here, hand off to the shared OTP screen tagged with
+  // `origin: 'change-password'` so it routes back to /settings (not /) and the
+  // back stack is preserved for a clean return. `isChangingPassword` disables
+  // the row while the send is in flight, so a double tap can't send twice (same
+  // pattern as confirmSignOut/confirmDeleteAccount above — the trigger's own
+  // disabled state guards re-entry). A not-yet-loaded session email surfaces a
+  // toast rather than a dead tap (retrying once it resolves succeeds).
+  const startChangePassword = async () => {
+    if (!email) {
+      await showToast({ title: t('settings.account.changePasswordError'), preset: 'error' });
+      return;
+    }
+
+    setIsChangingPassword(true);
+
+    try {
+      const result = await sendPasswordResetOtp(email);
+
+      if (!result.success) {
+        await showToast({ title: t('settings.account.changePasswordError'), preset: 'error' });
+        return;
+      }
+
+      router.push({
+        pathname: '/recovery-otp',
+        params: { email, sentAt: String(Date.now()), origin: 'change-password' }
+      });
+    } catch (error) {
+      logger.error('[SettingsScreen] Failed to start change-password', error);
+      await showToast({ title: t('settings.account.changePasswordError'), preset: 'error' });
+    } finally {
+      setIsChangingPassword(false);
+    }
+  };
+
   return (
     <>
       <ScrollView
@@ -202,7 +241,9 @@ const SettingsScreen = () => {
           <AccountSection
             email={email || t('settings.account.fallbackEmail')}
             onSignOut={() => setIsSignOutSheetOpen(true)}
+            onChangePassword={startChangePassword}
             onDeleteAccount={() => setIsDeleteSheetOpen(true)}
+            isChangingPassword={isChangingPassword}
           />
         ) : (
           <AccountSectionGuest
