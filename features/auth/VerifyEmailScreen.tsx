@@ -19,6 +19,7 @@ import {
 import { useTheme } from '@/shared/theme';
 
 import { AuthLink, AuthScreenLayout, ErrorBanner } from './components';
+import { getSingleParam } from './routeParams';
 
 const OTP_LENGTH = 8;
 const OTP_INPUT_MAX_LENGTH = OTP_LENGTH * 2;
@@ -54,10 +55,19 @@ type VerifyOtpConfig = {
     resendFailure: string;
     resendSuccess: string;
   };
-  /** Navigation after a successful verification. */
-  onVerified: (router: VerifyOtpRouter) => void;
-  /** Where the "wrong email?" link goes (signup carries the current email). */
-  onWrongEmail: (router: VerifyOtpRouter, email: string) => void;
+  /**
+   * Navigation after a successful verification. `context.origin` carries the
+   * originating flow (Story 6.20): recovery clears the pushed screens, while
+   * `change-password` (from Settings) preserves the back stack so the shared
+   * NewPasswordScreen can return to /settings.
+   */
+  onVerified: (router: VerifyOtpRouter, context: { origin?: string }) => void;
+  /**
+   * Where the "wrong email?" link goes. Signup carries the current email back to
+   * create-account; recovery goes to forgot-password — except the Settings
+   * change-password origin (6.20), which cancels back to /settings.
+   */
+  onWrongEmail: (router: VerifyOtpRouter, context: { email: string; origin?: string }) => void;
   /** Auto-redirect when the email route param is missing/invalid. */
   onInvalidEmail: (router: VerifyOtpRouter) => void;
 };
@@ -84,7 +94,7 @@ const PURPOSE_CONFIG: Record<VerifyOtpPurpose, VerifyOtpConfig> = {
       router.dismissTo('/');
       router.replace('/');
     },
-    onWrongEmail: (router, email) =>
+    onWrongEmail: (router, { email }) =>
       router.replace({ pathname: '/create-account', params: { email } }),
     onInvalidEmail: (router) => router.replace('/create-account')
   },
@@ -106,23 +116,37 @@ const PURPOSE_CONFIG: Record<VerifyOtpPurpose, VerifyOtpConfig> = {
       resendSuccess: 'auth.recoveryOtp.resendSuccess'
     },
     // The recovery session from verifyOtp is now active; hand off to the shared
-    // new-password screen (which calls updatePassword). dismissTo('/') first so
-    // the pushed forgot-password + recovery-otp screens are cleared from the
-    // back stack (AC7) — mirroring signup's dismiss — then replace the root with
-    // the new-password screen. The stack-clear lives here, not in the shared
-    // NewPasswordScreen, because 6-20 reuses that screen from Settings where the
-    // stack must be preserved.
-    onVerified: (router) => {
+    // new-password screen (which calls updatePassword). The stack handling
+    // deliberately lives here, not in the shared NewPasswordScreen, because the
+    // two origins need opposite behaviour.
+    onVerified: (router, { origin }) => {
+      if (origin === 'change-password') {
+        // Story 6.20: reached from Settings. Preserve the back stack so the
+        // shared NewPasswordScreen can dismissTo('/settings') on success, and
+        // forward the origin so it picks the /settings destination + toast.
+        router.replace({ pathname: '/new-password', params: { origin } });
+        return;
+      }
+
+      // Recovery (6.19): clear the pushed forgot-password + recovery-otp screens
+      // from the back stack (AC7, mirroring signup's dismiss) before replacing
+      // the root with the new-password screen.
       router.dismissTo('/');
       router.replace('/new-password');
     },
-    onWrongEmail: (router) => router.replace('/forgot-password'),
+    onWrongEmail: (router, { origin }) => {
+      if (origin === 'change-password') {
+        // Story 6.20: "wrong email?" from the Settings flow cancels back to the
+        // preserved Settings screen rather than the anonymous recovery entry.
+        router.dismissTo('/settings');
+        return;
+      }
+
+      router.replace('/forgot-password');
+    },
     onInvalidEmail: (router) => router.replace('/forgot-password')
   }
 };
-
-const getSingleParam = (value: string | string[] | undefined): string | undefined =>
-  Array.isArray(value) ? value[0] : value;
 
 const buildCooldownFlowKey = (
   purpose: VerifyOtpPurpose,
@@ -191,12 +215,17 @@ const VerifyEmailScreen = ({ purpose = 'signup' }: { purpose?: VerifyOtpPurpose 
   const { theme, spacing, typography, touchTarget } = useTheme();
   const { t } = useTranslation();
   const router = useRouter();
-  const params = useLocalSearchParams<{ email?: string | string[]; sentAt?: string | string[] }>();
+  const params = useLocalSearchParams<{
+    email?: string | string[];
+    sentAt?: string | string[];
+    origin?: string | string[];
+  }>();
 
   const config = PURPOSE_CONFIG[purpose];
 
   const email = getSingleParam(params.email) ?? '';
   const sentAt = getSingleParam(params.sentAt);
+  const origin = getSingleParam(params.origin);
   const isEmailParamValid = isValidEmail(email);
   const cooldownFlowKey = useMemo(
     () => buildCooldownFlowKey(purpose, email, sentAt),
@@ -325,7 +354,7 @@ const VerifyEmailScreen = ({ purpose = 'signup' }: { purpose?: VerifyOtpPurpose 
           return;
         }
 
-        config.onVerified(router);
+        config.onVerified(router, { origin });
       } catch {
         setBannerErrorMessage(t(config.copy.verifyUnavailable));
       } finally {
@@ -333,7 +362,7 @@ const VerifyEmailScreen = ({ purpose = 'signup' }: { purpose?: VerifyOtpPurpose 
         setLoading(false);
       }
     },
-    [clearFeedback, config, cooldownFlowKey, email, isEmailParamValid, loading, router, t]
+    [clearFeedback, config, cooldownFlowKey, email, isEmailParamValid, loading, origin, router, t]
   );
 
   const handleOtpChange = useCallback(
@@ -495,7 +524,7 @@ const VerifyEmailScreen = ({ purpose = 'signup' }: { purpose?: VerifyOtpPurpose 
           testID="wrong-email-link"
           prefixText={t(config.copy.wrongEmail)}
           actionText={t(config.copy.goBack)}
-          onPress={() => config.onWrongEmail(router, email)}
+          onPress={() => config.onWrongEmail(router, { email, origin })}
           accessibilityLabel={t('auth.accessibility.wrongEmailGoBack')}
         />
       </View>

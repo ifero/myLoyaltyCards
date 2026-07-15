@@ -9,10 +9,18 @@ import { useTheme } from '@/shared/theme';
 type AccountSectionProps = {
   email: string;
   onSignOut: () => void;
+  onChangePassword: () => void;
   onDeleteAccount: () => void;
+  isChangingPassword?: boolean;
 };
 
-export const AccountSection = ({ email, onSignOut, onDeleteAccount }: AccountSectionProps) => {
+export const AccountSection = ({
+  email,
+  onSignOut,
+  onChangePassword,
+  onDeleteAccount,
+  isChangingPassword = false
+}: AccountSectionProps) => {
   const { theme } = useTheme();
   const { t } = useTranslation();
 
@@ -70,6 +78,17 @@ export const AccountSection = ({ email, onSignOut, onDeleteAccount }: AccountSec
         label={t('common.actions.signOut')}
         accessibilityLabel={t('settings.account.signOutA11y')}
         onPress={onSignOut}
+      />
+      <ActionRow
+        testID="settings-change-password-row"
+        variant="plain"
+        prefix={<MaterialIcons name="lock-outline" size={24} color={theme.primary} />}
+        label={t('settings.account.changePassword')}
+        accessibilityLabel={t('settings.account.changePasswordA11y')}
+        onPress={onChangePassword}
+        isLoading={isChangingPassword}
+        disabled={isChangingPassword}
+        showChevron={!isChangingPassword}
       />
       <ActionRow
         testID="settings-delete-row"

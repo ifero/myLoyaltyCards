@@ -1,4 +1,4 @@
-import { fireEvent, render, waitFor } from '@testing-library/react-native';
+import { act, fireEvent, render, waitFor } from '@testing-library/react-native';
 
 import SettingsScreen from './SettingsScreen';
 
@@ -9,7 +9,9 @@ const mockUseAuthState = jest.fn();
 const mockGetSession = jest.fn();
 const mockSignOut = jest.fn();
 const mockDeleteAccount = jest.fn();
+const mockSendPasswordResetOtp = jest.fn();
 const mockClearLastSyncAt = jest.fn();
+const mockShowToast = jest.fn();
 
 const mockUseThemePreference = jest.fn();
 const mockUseLanguagePreference = jest.fn();
@@ -56,7 +58,12 @@ jest.mock('@/shared/supabase/useAuthState', () => ({
 jest.mock('@/shared/supabase/auth', () => ({
   getSession: () => mockGetSession(),
   signOut: () => mockSignOut(),
-  deleteAccount: () => mockDeleteAccount()
+  deleteAccount: () => mockDeleteAccount(),
+  sendPasswordResetOtp: (...args: unknown[]) => mockSendPasswordResetOtp(...args)
+}));
+
+jest.mock('@/shared/toast', () => ({
+  showToast: (...args: unknown[]) => mockShowToast(...args)
 }));
 
 jest.mock('@/core/sync/sync-timestamp', () => ({
@@ -143,6 +150,7 @@ describe('SettingsScreen', () => {
 
     mockSignOut.mockResolvedValue({ success: true, data: undefined });
     mockDeleteAccount.mockResolvedValue({ success: true, data: undefined });
+    mockSendPasswordResetOtp.mockResolvedValue({ success: true, data: undefined });
     mockClearLastSyncAt.mockResolvedValue(undefined);
   });
 
@@ -153,6 +161,8 @@ describe('SettingsScreen', () => {
 
     expect(getByTestId('settings-guest-card')).toBeTruthy();
     expect(queryByTestId('settings-account-card')).toBeNull();
+    // Change Password is an account-only action — never shown to guests (AC1).
+    expect(queryByTestId('settings-change-password-row')).toBeNull();
   });
 
   it('renders signed-in account section when authenticated', async () => {
@@ -269,5 +279,111 @@ describe('SettingsScreen', () => {
       expect(mockDeleteAccount).toHaveBeenCalled();
       expect(mockReplace).toHaveBeenCalledWith('/');
     });
+  });
+
+  it('starts change-password: sends the OTP and routes to recovery-otp tagged change-password (AC2)', async () => {
+    mockUseAuthState.mockReturnValue({ isAuthenticated: true, authState: 'authenticated' });
+
+    const { getByTestId, getByText } = render(<SettingsScreen />);
+
+    // Wait for the session email to load so the guard passes.
+    await waitFor(() => expect(getByText('maria@gmail.com')).toBeTruthy());
+
+    fireEvent.press(getByTestId('settings-change-password-row'));
+
+    await waitFor(() => {
+      expect(mockSendPasswordResetOtp).toHaveBeenCalledWith('maria@gmail.com');
+      expect(mockPush).toHaveBeenCalledWith({
+        pathname: '/recovery-otp',
+        params: expect.objectContaining({ email: 'maria@gmail.com', origin: 'change-password' })
+      });
+    });
+  });
+
+  it('ignores a second Change Password tap while the first send is in flight', async () => {
+    mockUseAuthState.mockReturnValue({ isAuthenticated: true, authState: 'authenticated' });
+    let resolveSend: (value: unknown) => void = () => {};
+    mockSendPasswordResetOtp.mockImplementation(
+      () =>
+        new Promise((resolve) => {
+          resolveSend = resolve;
+        })
+    );
+
+    const { getByTestId, getByText } = render(<SettingsScreen />);
+
+    await waitFor(() => expect(getByText('maria@gmail.com')).toBeTruthy());
+
+    // A rapid double tap must not fire two OTP sends (no duplicate emails).
+    fireEvent.press(getByTestId('settings-change-password-row'));
+    fireEvent.press(getByTestId('settings-change-password-row'));
+
+    expect(mockSendPasswordResetOtp).toHaveBeenCalledTimes(1);
+
+    await act(async () => {
+      resolveSend({ success: true, data: undefined });
+    });
+  });
+
+  it('shows an error toast and does not navigate when the OTP send fails (AC5)', async () => {
+    mockUseAuthState.mockReturnValue({ isAuthenticated: true, authState: 'authenticated' });
+    mockSendPasswordResetOtp.mockResolvedValue({
+      success: false,
+      error: { message: 'rate limited' }
+    });
+
+    const { getByTestId, getByText } = render(<SettingsScreen />);
+
+    await waitFor(() => expect(getByText('maria@gmail.com')).toBeTruthy());
+
+    fireEvent.press(getByTestId('settings-change-password-row'));
+
+    await waitFor(() => {
+      expect(mockSendPasswordResetOtp).toHaveBeenCalledWith('maria@gmail.com');
+      expect(mockShowToast).toHaveBeenCalledWith({
+        title: 'Unable to send the verification code. Please try again.',
+        preset: 'error'
+      });
+    });
+    expect(mockPush).not.toHaveBeenCalled();
+  });
+
+  it('shows an error toast when the OTP send throws unexpectedly', async () => {
+    mockUseAuthState.mockReturnValue({ isAuthenticated: true, authState: 'authenticated' });
+    mockSendPasswordResetOtp.mockRejectedValue(new Error('boom'));
+
+    const { getByTestId, getByText } = render(<SettingsScreen />);
+
+    await waitFor(() => expect(getByText('maria@gmail.com')).toBeTruthy());
+
+    fireEvent.press(getByTestId('settings-change-password-row'));
+
+    await waitFor(() => {
+      expect(mockShowToast).toHaveBeenCalledWith({
+        title: 'Unable to send the verification code. Please try again.',
+        preset: 'error'
+      });
+    });
+    expect(mockPush).not.toHaveBeenCalled();
+  });
+
+  it('surfaces feedback and does not send when the session email has not loaded', async () => {
+    mockUseAuthState.mockReturnValue({ isAuthenticated: true, authState: 'authenticated' });
+    mockGetSession.mockResolvedValue({ success: true, data: { user: { email: undefined } } });
+
+    const { getByTestId } = render(<SettingsScreen />);
+
+    // The row renders immediately (fallback email), but with no real email the
+    // guard must block the send AND give feedback rather than a dead tap.
+    fireEvent.press(getByTestId('settings-change-password-row'));
+
+    await waitFor(() => {
+      expect(mockShowToast).toHaveBeenCalledWith({
+        title: 'Unable to send the verification code. Please try again.',
+        preset: 'error'
+      });
+    });
+    expect(mockSendPasswordResetOtp).not.toHaveBeenCalled();
+    expect(mockPush).not.toHaveBeenCalled();
   });
 });
