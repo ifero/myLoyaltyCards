@@ -45,9 +45,9 @@ jest.mock('expo-router', () => ({
   useRouter: () => ({ back: mockBack, push: mockPush })
 }));
 
-const mockRequestPasswordReset = jest.fn();
+const mockSendPasswordResetOtp = jest.fn();
 jest.mock('@/shared/supabase/auth', () => ({
-  requestPasswordReset: (...args: unknown[]) => mockRequestPasswordReset(...args)
+  sendPasswordResetOtp: (...args: unknown[]) => mockSendPasswordResetOtp(...args)
 }));
 
 describe('ForgotPasswordScreen', () => {
@@ -75,8 +75,48 @@ describe('ForgotPasswordScreen', () => {
     expect(mockPush).toHaveBeenCalledWith('/sign-in');
   });
 
-  it('submits reset and shows confirmation state', async () => {
-    mockRequestPasswordReset.mockResolvedValue({ success: true, data: undefined });
+  it('blocks an empty email and never calls the send API', async () => {
+    render(<ForgotPasswordScreen />);
+
+    fireEvent.press(screen.getByTestId('send-reset-button'));
+
+    await waitFor(() => {
+      expect(screen.getByText('Email is required.')).toBeTruthy();
+    });
+    expect(mockSendPasswordResetOtp).not.toHaveBeenCalled();
+    expect(mockPush).not.toHaveBeenCalled();
+  });
+
+  it('blocks a malformed email and never calls the send API', async () => {
+    render(<ForgotPasswordScreen />);
+
+    fireEvent.changeText(screen.getByTestId('email-input'), 'not-an-email');
+    fireEvent.press(screen.getByTestId('send-reset-button'));
+
+    await waitFor(() => {
+      expect(screen.getByText('Please enter a valid email address')).toBeTruthy();
+    });
+    expect(mockSendPasswordResetOtp).not.toHaveBeenCalled();
+    expect(mockPush).not.toHaveBeenCalled();
+  });
+
+  it('clears the email field error once the user edits the field', async () => {
+    render(<ForgotPasswordScreen />);
+
+    fireEvent.press(screen.getByTestId('send-reset-button'));
+    await waitFor(() => {
+      expect(screen.getByText('Email is required.')).toBeTruthy();
+    });
+
+    fireEvent.changeText(screen.getByTestId('email-input'), 'a');
+
+    await waitFor(() => {
+      expect(screen.queryByText('Email is required.')).toBeNull();
+    });
+  });
+
+  it('sends the reset code and navigates to the recovery OTP screen with email + sentAt', async () => {
+    mockSendPasswordResetOtp.mockResolvedValue({ success: true, data: undefined });
 
     render(<ForgotPasswordScreen />);
 
@@ -84,21 +124,33 @@ describe('ForgotPasswordScreen', () => {
     fireEvent.press(screen.getByTestId('send-reset-button'));
 
     await waitFor(() => {
-      expect(mockRequestPasswordReset).toHaveBeenCalledWith('test@example.com');
-      expect(screen.getByTestId('forgot-password-confirmation')).toBeTruthy();
-      expect(screen.getByTestId('reset-password-confirmation-icon')).toBeTruthy();
+      expect(mockSendPasswordResetOtp).toHaveBeenCalledWith('test@example.com');
+      expect(mockPush).toHaveBeenCalledWith({
+        pathname: '/recovery-otp',
+        params: { email: 'test@example.com', sentAt: expect.any(String) }
+      });
     });
+  });
 
-    fireEvent.press(screen.getByTestId('try-again-button'));
+  it('trims surrounding whitespace from the email before sending and navigating', async () => {
+    mockSendPasswordResetOtp.mockResolvedValue({ success: true, data: undefined });
+
+    render(<ForgotPasswordScreen />);
+
+    fireEvent.changeText(screen.getByTestId('email-input'), '  test@example.com  ');
+    fireEvent.press(screen.getByTestId('send-reset-button'));
 
     await waitFor(() => {
-      expect(mockRequestPasswordReset).toHaveBeenCalledTimes(2);
-      expect(screen.getByTestId('forgot-password-confirmation')).toBeTruthy();
+      expect(mockSendPasswordResetOtp).toHaveBeenCalledWith('test@example.com');
+      expect(mockPush).toHaveBeenCalledWith({
+        pathname: '/recovery-otp',
+        params: { email: 'test@example.com', sentAt: expect.any(String) }
+      });
     });
   });
 
   it('shows a mapped network error instead of the raw backend message', async () => {
-    mockRequestPasswordReset.mockResolvedValue({
+    mockSendPasswordResetOtp.mockResolvedValue({
       success: false,
       error: { message: 'Network request failed' }
     });
@@ -116,8 +168,11 @@ describe('ForgotPasswordScreen', () => {
     });
   });
 
-  it('shows generic translated error when send-reset throws unexpectedly', async () => {
-    mockRequestPasswordReset.mockRejectedValue(new Error('Unexpected failure'));
+  it('shows a generic error when send fails with a non-network message', async () => {
+    mockSendPasswordResetOtp.mockResolvedValue({
+      success: false,
+      error: { message: 'Something unexpected happened' }
+    });
 
     render(<ForgotPasswordScreen />);
 
@@ -125,26 +180,18 @@ describe('ForgotPasswordScreen', () => {
     fireEvent.press(screen.getByTestId('send-reset-button'));
 
     await waitFor(() => {
-      expect(screen.getByTestId('server-error')).toBeTruthy();
       expect(screen.getByText('An unexpected error occurred. Please try again.')).toBeTruthy();
     });
+    expect(mockPush).not.toHaveBeenCalled();
   });
 
-  it('shows generic translated error when try-again throws unexpectedly', async () => {
-    mockRequestPasswordReset
-      .mockResolvedValueOnce({ success: true, data: undefined })
-      .mockRejectedValueOnce(new Error('Unexpected failure'));
+  it('shows generic translated error when send-reset throws unexpectedly', async () => {
+    mockSendPasswordResetOtp.mockRejectedValue(new Error('Unexpected failure'));
 
     render(<ForgotPasswordScreen />);
 
     fireEvent.changeText(screen.getByTestId('email-input'), 'test@example.com');
     fireEvent.press(screen.getByTestId('send-reset-button'));
-
-    await waitFor(() => {
-      expect(screen.getByTestId('forgot-password-confirmation')).toBeTruthy();
-    });
-
-    fireEvent.press(screen.getByTestId('try-again-button'));
 
     await waitFor(() => {
       expect(screen.getByTestId('server-error')).toBeTruthy();

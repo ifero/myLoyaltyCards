@@ -51,10 +51,14 @@ jest.mock('expo-router', () => ({
 
 const mockVerifyEmailOtp = jest.fn();
 const mockResendVerificationEmail = jest.fn();
+const mockVerifyPasswordResetOtp = jest.fn();
+const mockSendPasswordResetOtp = jest.fn();
 
 jest.mock('@/shared/supabase/auth', () => ({
   verifyEmailOtp: (...args: unknown[]) => mockVerifyEmailOtp(...args),
-  resendVerificationEmail: (...args: unknown[]) => mockResendVerificationEmail(...args)
+  resendVerificationEmail: (...args: unknown[]) => mockResendVerificationEmail(...args),
+  verifyPasswordResetOtp: (...args: unknown[]) => mockVerifyPasswordResetOtp(...args),
+  sendPasswordResetOtp: (...args: unknown[]) => mockSendPasswordResetOtp(...args)
 }));
 
 describe('VerifyEmailScreen', () => {
@@ -75,6 +79,28 @@ describe('VerifyEmailScreen', () => {
     expect(screen.getByText('Verify your email')).toBeTruthy();
     expect(screen.getByText('We sent an 8-digit code to test@example.com')).toBeTruthy();
     expect(screen.getByTestId('otp-input')).toBeTruthy();
+  });
+
+  // Regression guard (Story 6.19): parametrizing this screen must NOT change the
+  // default. With no `purpose` prop it must remain the signup email-verify flow —
+  // the recovery API must never be reached, and success still lands on home.
+  it('defaults to the signup purpose — uses the email-verify API, not recovery', async () => {
+    mockVerifyEmailOtp.mockResolvedValue({
+      success: true,
+      data: { user: { id: 'u1' }, session: { access_token: 'token' } }
+    });
+
+    render(<VerifyEmailScreen />);
+
+    fireEvent.changeText(screen.getByTestId('otp-input'), '12345678');
+
+    await waitFor(() => {
+      expect(mockVerifyEmailOtp).toHaveBeenCalledWith('test@example.com', '12345678');
+      expect(mockDismissTo).toHaveBeenCalledWith('/');
+      expect(mockReplace).toHaveBeenCalledWith('/');
+    });
+    expect(mockVerifyPasswordResetOtp).not.toHaveBeenCalled();
+    expect(mockSendPasswordResetOtp).not.toHaveBeenCalled();
   });
 
   it('auto-submits on the eighth digit and navigates home on success', async () => {
@@ -244,6 +270,8 @@ describe('VerifyEmailScreen', () => {
     });
 
     expect(mockResendVerificationEmail).toHaveBeenCalledWith('test@example.com');
+    // Signup resend must use the signup API only, never the recovery send.
+    expect(mockSendPasswordResetOtp).not.toHaveBeenCalled();
     expect(screen.getByText('Code resent. Enter the newest code from your email.')).toBeTruthy();
 
     expect(screen.getByText('Resend in 1:00')).toBeTruthy();
@@ -300,5 +328,64 @@ describe('VerifyEmailScreen', () => {
       pathname: '/create-account',
       params: { email: 'test@example.com' }
     });
+  });
+
+  it('does not fire a second verify while one is already in flight', async () => {
+    let resolveVerify: (value: unknown) => void = () => {};
+    mockVerifyEmailOtp.mockImplementation(
+      () =>
+        new Promise((resolve) => {
+          resolveVerify = resolve;
+        })
+    );
+
+    render(<VerifyEmailScreen />);
+
+    fireEvent.changeText(screen.getByTestId('otp-input'), '12345678');
+    await waitFor(() => expect(mockVerifyEmailOtp).toHaveBeenCalledTimes(1));
+
+    // A manual confirm press while the first verify is still pending must be a
+    // no-op (guarded by loading / isVerifyingRef) — no duplicate network call.
+    fireEvent.press(screen.getByTestId('confirm-code-button'));
+    expect(mockVerifyEmailOtp).toHaveBeenCalledTimes(1);
+
+    await act(async () => {
+      resolveVerify({
+        success: true,
+        data: { user: { id: 'u1' }, session: { access_token: 't' } }
+      });
+    });
+  });
+
+  it('does not resend while the cooldown is still running', () => {
+    // beforeEach seeds a fresh sentAt, so the 60s cooldown is active on mount.
+    render(<VerifyEmailScreen />);
+
+    expect(screen.getByText(/Resend in/)).toBeTruthy();
+    fireEvent.press(screen.getByTestId('resend-code-button'));
+
+    expect(mockResendVerificationEmail).not.toHaveBeenCalled();
+  });
+
+  it('starts a fresh 60s cooldown when the sentAt param is missing', () => {
+    jest.useFakeTimers();
+    jest.setSystemTime(new Date('2026-07-14T12:00:00.000Z'));
+    delete mockParams.sentAt;
+
+    render(<VerifyEmailScreen />);
+
+    expect(screen.getByText('Resend in 1:00')).toBeTruthy();
+
+    jest.useRealTimers();
+  });
+
+  it('sanitizes a mixed paste to digits and does not auto-submit below 8 digits', () => {
+    render(<VerifyEmailScreen />);
+
+    const input = screen.getByTestId('otp-input');
+    fireEvent.changeText(input, 'ab12cd34e');
+
+    expect(input.props.value).toBe('1234');
+    expect(mockVerifyEmailOtp).not.toHaveBeenCalled();
   });
 });

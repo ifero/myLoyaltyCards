@@ -8,7 +8,14 @@ import { StyleSheet } from 'react-native-unistyles';
 import { isValidEmail } from '@/core/auth/validation';
 
 import { Button } from '@/shared/components/ui';
-import { resendVerificationEmail, verifyEmailOtp } from '@/shared/supabase/auth';
+import {
+  type AuthResult,
+  type AuthSession,
+  resendVerificationEmail,
+  sendPasswordResetOtp,
+  verifyEmailOtp,
+  verifyPasswordResetOtp
+} from '@/shared/supabase/auth';
 import { useTheme } from '@/shared/theme';
 
 import { AuthLink, AuthScreenLayout, ErrorBanner } from './components';
@@ -18,11 +25,110 @@ const OTP_INPUT_MAX_LENGTH = OTP_LENGTH * 2;
 const RESEND_COOLDOWN_MS = 60_000;
 const resendCooldownExpiryByFlow = new Map<string, number>();
 
+/**
+ * The two OTP flows this screen serves (Story 6.19). `signup` verifies a new
+ * account's email (`type: 'email'`); `recovery` verifies a password-reset code
+ * (`type: 'recovery'`). The 8-digit field, cooldown and auto-submit are
+ * identical — only the verify/resend calls, post-success route, wrong-email
+ * fallback and display copy differ, all captured in `PURPOSE_CONFIG`.
+ */
+export type VerifyOtpPurpose = 'signup' | 'recovery';
+
+type VerifyOtpRouter = ReturnType<typeof useRouter>;
+
+type VerifyOtpConfig = {
+  verify: (email: string, token: string) => Promise<AuthResult<AuthSession>>;
+  resend: (email: string) => Promise<AuthResult<void>>;
+  /** i18n keys — copy is the only thing that differs textually between flows. */
+  copy: {
+    heading: string;
+    subtitle: string;
+    confirm: string;
+    resendCode: string;
+    resendIn: string;
+    wrongEmail: string;
+    goBack: string;
+    incorrectCode: string;
+    expiredCode: string;
+    verifyUnavailable: string;
+    resendFailure: string;
+    resendSuccess: string;
+  };
+  /** Navigation after a successful verification. */
+  onVerified: (router: VerifyOtpRouter) => void;
+  /** Where the "wrong email?" link goes (signup carries the current email). */
+  onWrongEmail: (router: VerifyOtpRouter, email: string) => void;
+  /** Auto-redirect when the email route param is missing/invalid. */
+  onInvalidEmail: (router: VerifyOtpRouter) => void;
+};
+
+const PURPOSE_CONFIG: Record<VerifyOtpPurpose, VerifyOtpConfig> = {
+  signup: {
+    verify: verifyEmailOtp,
+    resend: resendVerificationEmail,
+    copy: {
+      heading: 'auth.verifyEmail.heading',
+      subtitle: 'auth.verifyEmail.subtitle',
+      confirm: 'auth.verifyEmail.confirm',
+      resendCode: 'auth.verifyEmail.resendCode',
+      resendIn: 'auth.verifyEmail.resendIn',
+      wrongEmail: 'auth.verifyEmail.wrongEmail',
+      goBack: 'auth.verifyEmail.goBack',
+      incorrectCode: 'auth.verifyEmail.incorrectCode',
+      expiredCode: 'auth.verifyEmail.expiredCode',
+      verifyUnavailable: 'auth.verifyEmail.verifyUnavailable',
+      resendFailure: 'auth.verifyEmail.resendFailure',
+      resendSuccess: 'auth.verifyEmail.resendSuccess'
+    },
+    onVerified: (router) => {
+      router.dismissTo('/');
+      router.replace('/');
+    },
+    onWrongEmail: (router, email) =>
+      router.replace({ pathname: '/create-account', params: { email } }),
+    onInvalidEmail: (router) => router.replace('/create-account')
+  },
+  recovery: {
+    verify: verifyPasswordResetOtp,
+    resend: sendPasswordResetOtp,
+    copy: {
+      heading: 'auth.recoveryOtp.heading',
+      subtitle: 'auth.recoveryOtp.subtitle',
+      confirm: 'auth.recoveryOtp.confirm',
+      resendCode: 'auth.recoveryOtp.resendCode',
+      resendIn: 'auth.recoveryOtp.resendIn',
+      wrongEmail: 'auth.recoveryOtp.wrongEmail',
+      goBack: 'auth.recoveryOtp.goBack',
+      incorrectCode: 'auth.recoveryOtp.incorrectCode',
+      expiredCode: 'auth.recoveryOtp.expiredCode',
+      verifyUnavailable: 'auth.recoveryOtp.verifyUnavailable',
+      resendFailure: 'auth.recoveryOtp.resendFailure',
+      resendSuccess: 'auth.recoveryOtp.resendSuccess'
+    },
+    // The recovery session from verifyOtp is now active; hand off to the shared
+    // new-password screen (which calls updatePassword). dismissTo('/') first so
+    // the pushed forgot-password + recovery-otp screens are cleared from the
+    // back stack (AC7) — mirroring signup's dismiss — then replace the root with
+    // the new-password screen. The stack-clear lives here, not in the shared
+    // NewPasswordScreen, because 6-20 reuses that screen from Settings where the
+    // stack must be preserved.
+    onVerified: (router) => {
+      router.dismissTo('/');
+      router.replace('/new-password');
+    },
+    onWrongEmail: (router) => router.replace('/forgot-password'),
+    onInvalidEmail: (router) => router.replace('/forgot-password')
+  }
+};
+
 const getSingleParam = (value: string | string[] | undefined): string | undefined =>
   Array.isArray(value) ? value[0] : value;
 
-const buildCooldownFlowKey = (email: string, sentAt: string | undefined) =>
-  `${email}::${sentAt ?? 'initial'}`;
+const buildCooldownFlowKey = (
+  purpose: VerifyOtpPurpose,
+  email: string,
+  sentAt: string | undefined
+) => `${purpose}::${email}::${sentAt ?? 'initial'}`;
 
 const formatCooldown = (remainingSeconds: number) => {
   const minutes = Math.floor(remainingSeconds / 60);
@@ -81,16 +187,21 @@ const StatusNotice = ({ message, tone, boxed = false }: StatusNoticeProps) => {
   );
 };
 
-const VerifyEmailScreen = () => {
+const VerifyEmailScreen = ({ purpose = 'signup' }: { purpose?: VerifyOtpPurpose }) => {
   const { theme, spacing, typography, touchTarget } = useTheme();
   const { t } = useTranslation();
   const router = useRouter();
   const params = useLocalSearchParams<{ email?: string | string[]; sentAt?: string | string[] }>();
 
+  const config = PURPOSE_CONFIG[purpose];
+
   const email = getSingleParam(params.email) ?? '';
   const sentAt = getSingleParam(params.sentAt);
   const isEmailParamValid = isValidEmail(email);
-  const cooldownFlowKey = useMemo(() => buildCooldownFlowKey(email, sentAt), [email, sentAt]);
+  const cooldownFlowKey = useMemo(
+    () => buildCooldownFlowKey(purpose, email, sentAt),
+    [purpose, email, sentAt]
+  );
 
   const inputRef = useRef<TextInput | null>(null);
   const isVerifyingRef = useRef(false);
@@ -108,9 +219,9 @@ const VerifyEmailScreen = () => {
 
   useEffect(() => {
     if (!isEmailParamValid) {
-      router.replace('/create-account');
+      config.onInvalidEmail(router);
     }
-  }, [isEmailParamValid, router]);
+  }, [config, isEmailParamValid, router]);
 
   useEffect(() => {
     if (!isEmailParamValid) {
@@ -193,37 +304,36 @@ const VerifyEmailScreen = () => {
       setLoading(true);
 
       try {
-        const result = await verifyEmailOtp(email, code);
+        const result = await config.verify(email, code);
 
         if (!result.success) {
           if (result.error.code === 'invalid_otp') {
-            setOtpErrorMessage(t('auth.verifyEmail.incorrectCode'));
+            setOtpErrorMessage(t(config.copy.incorrectCode));
             return;
           }
 
           if (result.error.code === 'expired_otp') {
             const nextCooldownExpiresAt = Date.now();
-            setOtpErrorMessage(t('auth.verifyEmail.expiredCode'));
+            setOtpErrorMessage(t(config.copy.expiredCode));
             resendCooldownExpiryByFlow.set(cooldownFlowKey, nextCooldownExpiresAt);
             setCooldownExpiresAt(nextCooldownExpiresAt);
             setNow(nextCooldownExpiresAt);
             return;
           }
 
-          setBannerErrorMessage(t('auth.verifyEmail.verifyUnavailable'));
+          setBannerErrorMessage(t(config.copy.verifyUnavailable));
           return;
         }
 
-        router.dismissTo('/');
-        router.replace('/');
+        config.onVerified(router);
       } catch {
-        setBannerErrorMessage(t('auth.verifyEmail.verifyUnavailable'));
+        setBannerErrorMessage(t(config.copy.verifyUnavailable));
       } finally {
         isVerifyingRef.current = false;
         setLoading(false);
       }
     },
-    [clearFeedback, cooldownFlowKey, email, isEmailParamValid, loading, router, t]
+    [clearFeedback, config, cooldownFlowKey, email, isEmailParamValid, loading, router, t]
   );
 
   const handleOtpChange = useCallback(
@@ -253,26 +363,35 @@ const VerifyEmailScreen = () => {
     setLoading(true);
 
     try {
-      const result = await resendVerificationEmail(email);
+      const result = await config.resend(email);
 
       if (!result.success) {
-        setBannerErrorMessage(t('auth.verifyEmail.resendFailure'));
+        setBannerErrorMessage(t(config.copy.resendFailure));
         return;
       }
 
       const nextCooldownExpiresAt = Date.now() + RESEND_COOLDOWN_MS;
       resendCooldownExpiryByFlow.set(cooldownFlowKey, nextCooldownExpiresAt);
       setOtpValue('');
-      setSuccessMessage(t('auth.verifyEmail.resendSuccess'));
+      setSuccessMessage(t(config.copy.resendSuccess));
       setCooldownExpiresAt(nextCooldownExpiresAt);
       setNow(Date.now());
       focusInput();
     } catch {
-      setBannerErrorMessage(t('auth.verifyEmail.resendFailure'));
+      setBannerErrorMessage(t(config.copy.resendFailure));
     } finally {
       setLoading(false);
     }
-  }, [clearFeedback, cooldownFlowKey, email, focusInput, isEmailParamValid, resendDisabled, t]);
+  }, [
+    clearFeedback,
+    config,
+    cooldownFlowKey,
+    email,
+    focusInput,
+    isEmailParamValid,
+    resendDisabled,
+    t
+  ]);
 
   if (!isEmailParamValid) {
     return null;
@@ -281,8 +400,8 @@ const VerifyEmailScreen = () => {
   return (
     <AuthScreenLayout
       testID="verify-email-screen"
-      heading={t('auth.verifyEmail.heading')}
-      subtitle={t('auth.verifyEmail.subtitle', { email })}
+      heading={t(config.copy.heading)}
+      subtitle={t(config.copy.subtitle, { email })}
       headingTestID="verify-email-title"
       subtitleTestID="verify-email-subtitle"
     >
@@ -333,7 +452,7 @@ const VerifyEmailScreen = () => {
           disabled={!isOtpComplete}
           accessibilityLabel={t('auth.accessibility.confirmCode')}
         >
-          {t('auth.verifyEmail.confirm')}
+          {t(config.copy.confirm)}
         </Button>
 
         <Pressable
@@ -343,8 +462,8 @@ const VerifyEmailScreen = () => {
           accessibilityRole="button"
           accessibilityLabel={
             resendDisabled
-              ? t('auth.verifyEmail.resendIn', { time: formatCooldown(remainingSeconds) })
-              : t('auth.verifyEmail.resendCode')
+              ? t(config.copy.resendIn, { time: formatCooldown(remainingSeconds) })
+              : t(config.copy.resendCode)
           }
           accessibilityState={{ disabled: resendDisabled, busy: loading }}
           style={{
@@ -362,8 +481,8 @@ const VerifyEmailScreen = () => {
             }}
           >
             {resendDisabled
-              ? t('auth.verifyEmail.resendIn', { time: formatCooldown(remainingSeconds) })
-              : t('auth.verifyEmail.resendCode')}
+              ? t(config.copy.resendIn, { time: formatCooldown(remainingSeconds) })
+              : t(config.copy.resendCode)}
           </Text>
         </Pressable>
 
@@ -374,14 +493,9 @@ const VerifyEmailScreen = () => {
 
         <AuthLink
           testID="wrong-email-link"
-          prefixText={t('auth.verifyEmail.wrongEmail')}
-          actionText={t('auth.verifyEmail.goBack')}
-          onPress={() =>
-            router.replace({
-              pathname: '/create-account',
-              params: { email }
-            })
-          }
+          prefixText={t(config.copy.wrongEmail)}
+          actionText={t(config.copy.goBack)}
+          onPress={() => config.onWrongEmail(router, email)}
           accessibilityLabel={t('auth.accessibility.wrongEmailGoBack')}
         />
       </View>

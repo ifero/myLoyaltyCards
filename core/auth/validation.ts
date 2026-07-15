@@ -3,7 +3,7 @@
  * Story 6-8: Password Reset (extracted to eliminate duplication)
  *
  * Shared validation helpers used by all auth screens:
- * - SignInScreen, CreateAccountScreen, ForgotPasswordScreen, ResetPasswordScreen
+ * - SignInScreen, CreateAccountScreen, ForgotPasswordScreen, NewPasswordScreen
  */
 
 // ---------------------------------------------------------------------------

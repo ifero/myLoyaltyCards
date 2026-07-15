@@ -13,12 +13,13 @@ import {
   continueAsGuest,
   deleteAccount,
   getSession,
-  requestPasswordReset,
+  sendPasswordResetOtp,
   signInWithEmail,
   signOut,
   signUp,
   updatePassword,
   verifyEmailOtp,
+  verifyPasswordResetOtp,
   resendVerificationEmail
 } from './auth';
 
@@ -611,33 +612,33 @@ describe('getSession', () => {
 });
 
 // ---------------------------------------------------------------------------
-// requestPasswordReset
+// sendPasswordResetOtp (Story 6.19)
 // ---------------------------------------------------------------------------
 
-describe('requestPasswordReset', () => {
+describe('sendPasswordResetOtp', () => {
   beforeEach(() => {
     mockResetPasswordForEmail.mockReset();
   });
 
-  it('returns success when Supabase sends the reset email', async () => {
+  it('calls resetPasswordForEmail with ONLY the email (no redirectTo) and returns success', async () => {
     mockResetPasswordForEmail.mockResolvedValue({ data: {}, error: null });
 
-    const result = await requestPasswordReset('test@example.com');
+    const result = await sendPasswordResetOtp('test@example.com');
 
     expect(result.success).toBe(true);
-    expect(mockResetPasswordForEmail).toHaveBeenCalledWith('test@example.com', {
-      redirectTo: 'myloyaltycards://reset-password'
-    });
+    expect(mockResetPasswordForEmail).toHaveBeenCalledWith('test@example.com');
+    // The recovery OTP template carries the code — there must be NO second
+    // (redirectTo) argument, unlike the dead deep-link flow.
+    expect(mockResetPasswordForEmail).toHaveBeenCalledTimes(1);
+    expect(mockResetPasswordForEmail.mock.calls[0]).toHaveLength(1);
   });
 
-  it('accepts a custom redirectTo parameter', async () => {
+  it('returns success even for an unregistered email (no user enumeration)', async () => {
     mockResetPasswordForEmail.mockResolvedValue({ data: {}, error: null });
 
-    await requestPasswordReset('test@example.com', 'custom://url');
+    const result = await sendPasswordResetOtp('unknown@example.com');
 
-    expect(mockResetPasswordForEmail).toHaveBeenCalledWith('test@example.com', {
-      redirectTo: 'custom://url'
-    });
+    expect(result.success).toBe(true);
   });
 
   it('returns failure when Supabase returns an error', async () => {
@@ -646,7 +647,7 @@ describe('requestPasswordReset', () => {
       error: { message: 'Rate limit exceeded' }
     });
 
-    const result = await requestPasswordReset('test@example.com');
+    const result = await sendPasswordResetOtp('test@example.com');
 
     expect(result.success).toBe(false);
     if (!result.success) {
@@ -657,11 +658,122 @@ describe('requestPasswordReset', () => {
   it('returns failure when network throws', async () => {
     mockResetPasswordForEmail.mockRejectedValue(new Error('Network error'));
 
-    const result = await requestPasswordReset('test@example.com');
+    const result = await sendPasswordResetOtp('test@example.com');
 
     expect(result.success).toBe(false);
     if (!result.success) {
       expect(result.error.message).toBe('Network error');
+    }
+  });
+});
+
+// ---------------------------------------------------------------------------
+// verifyPasswordResetOtp (Story 6.19)
+// ---------------------------------------------------------------------------
+
+describe('verifyPasswordResetOtp', () => {
+  beforeEach(() => {
+    mockVerifyOtp.mockReset();
+  });
+
+  it('verifies with type "recovery" and returns the recovery session', async () => {
+    mockVerifyOtp.mockResolvedValue({
+      data: { user: MOCK_USER, session: MOCK_SESSION },
+      error: null
+    });
+
+    const result = await verifyPasswordResetOtp('test@example.com', '12345678');
+
+    expect(mockVerifyOtp).toHaveBeenCalledWith({
+      email: 'test@example.com',
+      token: '12345678',
+      type: 'recovery'
+    });
+    expect(result.success).toBe(true);
+    if (result.success) {
+      expect(result.data.user).toEqual(MOCK_USER);
+      expect(result.data.session).toEqual(MOCK_SESSION);
+    }
+  });
+
+  it('returns invalid_otp when the provider rejects the code', async () => {
+    mockVerifyOtp.mockResolvedValue({
+      data: { user: null, session: null },
+      error: { message: 'Token is invalid or has expired', code: 'otp_invalid' }
+    });
+
+    const result = await verifyPasswordResetOtp('test@example.com', '00000000');
+
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      expect(result.error.code).toBe('invalid_otp');
+    }
+  });
+
+  it('returns expired_otp when the provider reports an expired code', async () => {
+    mockVerifyOtp.mockResolvedValue({
+      data: { user: null, session: null },
+      error: { message: 'Token has expired', code: 'otp_expired' }
+    });
+
+    const result = await verifyPasswordResetOtp('test@example.com', '12345678');
+
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      expect(result.error.code).toBe('expired_otp');
+    }
+  });
+
+  it('returns network_error when verification throws for connectivity issues', async () => {
+    mockVerifyOtp.mockRejectedValue(new Error('Network request failed'));
+
+    const result = await verifyPasswordResetOtp('test@example.com', '12345678');
+
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      expect(result.error.code).toBe('network_error');
+    }
+  });
+
+  it('returns unknown_error for an unrecognized provider error', async () => {
+    mockVerifyOtp.mockResolvedValue({
+      data: { user: null, session: null },
+      error: { message: 'OTP verification unavailable', code: 'provider_down' }
+    });
+
+    const result = await verifyPasswordResetOtp('test@example.com', '12345678');
+
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      expect(result.error.code).toBe('unknown_error');
+    }
+  });
+
+  it('returns a normalized error when no session is returned despite no provider error', async () => {
+    mockVerifyOtp.mockResolvedValue({
+      data: { user: null, session: null },
+      error: null
+    });
+
+    const result = await verifyPasswordResetOtp('test@example.com', '12345678');
+
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      expect(result.error.code).toBe('unknown_error');
+    }
+  });
+
+  it('maps to invalid_otp when only the message (not the code) signals invalidity', async () => {
+    mockVerifyOtp.mockResolvedValue({
+      data: { user: null, session: null },
+      error: { message: 'Token is invalid', code: 'bad_request' }
+    });
+
+    const result = await verifyPasswordResetOtp('test@example.com', '00000000');
+
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      expect(result.error.code).toBe('invalid_otp');
     }
   });
 });

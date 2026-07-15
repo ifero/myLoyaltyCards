@@ -1,6 +1,10 @@
+---
+baseline_commit: b3a5d1cdb22673ddb07c3d1e301a575d95390c90
+---
+
 # Story 6.19: Password reset via OTP (replace the dead deep-link recovery)
 
-Status: ready-for-dev
+Status: review
 
 Epic: 6 — User Authentication & Privacy
 
@@ -50,13 +54,13 @@ Plus **warm-start deep links are unhandled**: `ResetPasswordScreen` only reads `
 
 ## Tasks / Subtasks
 
-- [ ] **T1** (AC1) Add `[auth.email.template.recovery]` to `config.toml` + `supabase/templates/recovery.html` (clone `confirmation.html`, `{{ .Token }}`); document the production-dashboard step.
-- [ ] **T2** (AC2,3,9) Add `sendPasswordResetOtp` + `verifyPasswordResetOtp` to `auth.ts`; rename `normalizeVerifyEmailOtpError` → `normalizeOtpError` and share it; add `auth.test.ts` suites asserting exact payloads (`resetPasswordForEmail(email)` with no second arg; `verifyOtp({ email, token, type: 'recovery' })`) + all error codes.
-- [ ] **T3** (AC4,7,8,9) Rewire `ForgotPasswordScreen` to send-then-navigate; update its tests.
-- [ ] **T4** (AC5,7,8,9) Recovery OTP verify screen — parametrize `VerifyEmailScreen` with `purpose` (default `'signup'`) + regression tests for the signup path; register the route.
-- [ ] **T5** (AC6,7,8,9) Shared new-password screen (repurpose `ResetPasswordScreen`, deep-link preamble removed, success-destination param) + route + tests.
-- [ ] **T6** (Open decision #2) Remove the dead `requestPasswordReset` + `ResetPasswordScreen` + `reset-password` route + unused `getInitialURL` usage (recommended), OR leave dormant.
-- [ ] **T7** (process) On completion set the story `.md` Status → `review`; populate Dev Agent Record.
+- [x] **T1** (AC1) Add `[auth.email.template.recovery]` to `config.toml` + `supabase/templates/recovery.html` (clone `confirmation.html`, `{{ .Token }}`); document the production-dashboard step.
+- [x] **T2** (AC2,3,9) Add `sendPasswordResetOtp` + `verifyPasswordResetOtp` to `auth.ts`; rename `normalizeVerifyEmailOtpError` → `normalizeOtpError` and share it; add `auth.test.ts` suites asserting exact payloads (`resetPasswordForEmail(email)` with no second arg; `verifyOtp({ email, token, type: 'recovery' })`) + all error codes.
+- [x] **T3** (AC4,7,8,9) Rewire `ForgotPasswordScreen` to send-then-navigate; update its tests.
+- [x] **T4** (AC5,7,8,9) Recovery OTP verify screen — parametrize `VerifyEmailScreen` with `purpose` (default `'signup'`) + regression tests for the signup path; register the route.
+- [x] **T5** (AC6,7,8,9) Shared new-password screen (repurpose `ResetPasswordScreen`, deep-link preamble removed, success-destination param) + route + tests.
+- [x] **T6** (Open decision #2) Remove the dead `requestPasswordReset` + `ResetPasswordScreen` + `reset-password` route + unused `getInitialURL` usage (recommended), OR leave dormant.
+- [x] **T7** (process) On completion set the story `.md` Status → `review`; populate Dev Agent Record.
 
 ## Dev Notes
 
@@ -111,15 +115,71 @@ Neighboring auth screens use local `useState` + `useCallback` (NOT React Hook Fo
 
 ### Agent Model Used
 
+`claude-opus-4-8` (Amelia / dev). Independent code-review and QA-review passes were run by separate `claude-sonnet-5` subagents (different model, per the review-gate protocol).
+
 ### Debug Log References
+
+None — no blocking issues. `yarn typecheck`, `yarn lint`, `yarn test`, and coverage stayed green throughout.
 
 ### Completion Notes List
 
+- **AD-6-19-01 implemented as specified.** The dead deep-link recovery is replaced with an in-app OTP flow that reuses the proven 6.18 email-verify pattern.
+- **T2 (`shared/supabase/auth.ts`):** added `sendPasswordResetOtp` (`resetPasswordForEmail(email)` — no `redirectTo`, success even for unknown emails / no enumeration) and `verifyPasswordResetOtp` (`verifyOtp({ …, type: 'recovery' })`); renamed `normalizeVerifyEmailOtpError` → `normalizeOtpError` and shared it across both verify flows (pure rename).
+- **T3 (`ForgotPasswordScreen`):** send-then-navigate to `/recovery-otp` with `{ email, sentAt }` (mirrors `CreateAccountScreen`); removed the dead "check your email" confirmation state; reworded user copy from "reset link" → "reset code" and renamed the `sendResetLink` key → `sendResetCode`.
+- **T4 (`VerifyEmailScreen`):** parametrized with `purpose: 'signup' | 'recovery'` (default `'signup'`) via a `PURPOSE_CONFIG` table (verify/resend fns, i18n copy, success/invalid-email/wrong-email navigation). Recovery is bound through a thin `RecoveryOtpScreen` feature wrapper so `app/recovery-otp` stays a pure re-export. The `signup` path is proven unchanged by an explicit default-purpose regression guard plus the untouched 6.18 suite; the module-level resend-cooldown map key is namespaced by purpose to prevent cross-flow collision.
+- **T5 (`NewPasswordScreen`):** shared new-password form repurposed from the deleted `ResetPasswordScreen` body (deep-link/`setSession` preamble removed), with a `successHref` prop (default `/`) so 6-20's Settings flow can reuse it with a different destination.
+- **T6:** removed the dead flow — `ResetPasswordScreen` (+test), `app/reset-password`, `requestPasswordReset` (+tests), `core/utils/get-initial-url.ts`, the `reset-password` Stack.Screen, and the orphaned `auth.resetPassword` / `navigation.resetPassword` i18n keys.
+- **T1 (`supabase/`):** added `[auth.email.template.recovery]` + `supabase/templates/recovery.html` (cloned from `confirmation.html`, `{{ .Token }}`).
+- **AC7 back-stack:** cleared via `dismissTo('/')` + `replace('/new-password')` in the recovery config (kept out of the shared `NewPasswordScreen` so 6-20 preserves its stack).
+- **Accepted design decisions (for ifero to confirm):** (1) success navigates straight to `/` with no confirmation screen — exactly per AC6 (`router.replace('/')`) and consistent with the signup OTP flow; (2) `NewPasswordScreen` surfaces a generic error rather than a mount-time session guard if it is ever reached without a recovery session — that path is outside the ACs, fails safely (Supabase rejects the update), and a guard would reintroduce the session-probing this story deliberately removed.
+- **Reviews:** Sonnet code review (1 blocker — the AC7 back-stack bug — + 7 findings) and Sonnet QA review (test-coverage gaps) were each looped to **APPROVED / zero comments**.
+- **Coverage:** touched files 96.8% stmts / 94.4% branch; full suite 1734 tests green.
+- **Bilingual (EN/IT) email templates** (added post-review at ifero's request, 2026-07-14): both `supabase/templates/recovery.html` and `supabase/templates/confirmation.html` now carry English + Italian copy in a single template (Supabase serves one template per email type — there is no per-user-locale switching without custom SMTP + a send hook), with bilingual subject lines in `config.toml`. **Note:** `confirmation.html` originates in Story 6.18, but its bilingual conversion was **handled here in 6.19** so signup and recovery emails stay consistent; it is copy/markup only (no logic, not test-covered).
+
+### ⚠️ Human release prerequisite (production Supabase dashboard)
+
+Recovery is fully OTP-based locally via `config.toml`, but the **hosted project's Reset-Password email template must be switched to the OTP (`{{ .Token }}`) template** before shipping — _Authentication → Email Templates → Reset Password_. Until then, production recovery emails still send Supabase's default magic link. This is the same class of manual step Story 6.18 tracked for the confirmation template; it is non-blocking for dev. Paste the new bilingual `recovery.html` (and its bilingual subject) into that dashboard field; optionally refresh the prod **Confirm signup** template with the now-bilingual `confirmation.html` to match. **Owner: ifero. Status: ☐ pending (do at release).**
+
 ### File List
+
+**Added**
+
+- `app/new-password.tsx`
+- `app/recovery-otp.tsx`
+- `features/auth/NewPasswordScreen.tsx`
+- `features/auth/NewPasswordScreen.test.tsx`
+- `features/auth/RecoveryOtpScreen.tsx`
+- `features/auth/RecoveryOtpScreen.test.tsx`
+- `supabase/templates/recovery.html`
+
+**Modified**
+
+- `app/_layout.tsx`
+- `core/auth/validation.ts`
+- `features/auth/ForgotPasswordScreen.tsx`
+- `features/auth/ForgotPasswordScreen.test.tsx`
+- `features/auth/VerifyEmailScreen.tsx`
+- `features/auth/VerifyEmailScreen.test.tsx`
+- `features/auth/index.ts`
+- `shared/i18n/locales/en.ts`
+- `shared/i18n/locales/it.ts`
+- `shared/supabase/auth.ts`
+- `shared/supabase/auth.test.ts`
+- `supabase/config.toml`
+- `supabase/templates/confirmation.html` (Story 6.18 file — bilingual EN/IT conversion handled here; see Completion Notes)
+
+**Deleted**
+
+- `app/reset-password.tsx`
+- `core/utils/get-initial-url.ts`
+- `features/auth/ResetPasswordScreen.tsx`
+- `features/auth/ResetPasswordScreen.test.tsx`
 
 ### Change Log
 
-| Date       | Change                                                                       | Author       |
-| ---------- | ---------------------------------------------------------------------------- | ------------ |
-| 2026-07-09 | Drafted by PM (John) from ifero's bug report.                                | John (PM)    |
-| 2026-07-11 | Refined → ready-for-dev (AD-6-19-01; OTP recovery reusing the 6.18 pattern). | Amelia (Dev) |
+| Date       | Change                                                                                                                | Author       |
+| ---------- | --------------------------------------------------------------------------------------------------------------------- | ------------ |
+| 2026-07-09 | Drafted by PM (John) from ifero's bug report.                                                                         | John (PM)    |
+| 2026-07-11 | Refined → ready-for-dev (AD-6-19-01; OTP recovery reusing the 6.18 pattern).                                          | Amelia (Dev) |
+| 2026-07-14 | Implemented OTP recovery (T1–T7); dead deep-link flow removed; Sonnet code-review + QA both approved.                 | Amelia (Dev) |
+| 2026-07-14 | Post-review: made recovery + confirmation email templates bilingual (EN/IT) + bilingual subjects, at ifero's request. | Amelia (Dev) |
