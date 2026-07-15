@@ -4,7 +4,7 @@ baseline_commit: b3a5d1cdb22673ddb07c3d1e301a575d95390c90
 
 # Story 6.19: Password reset via OTP (replace the dead deep-link recovery)
 
-Status: review
+Status: done
 
 Epic: 6 — User Authentication & Privacy
 
