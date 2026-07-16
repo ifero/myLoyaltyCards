@@ -4,7 +4,7 @@ baseline_commit: 174658ad1196fc30ccf8e00cc5cbe0d833cc14c2
 
 # Story 16.15: Fix `formatRelativeTime` crash on Hermes (`Intl.RelativeTimeFormat` unsupported)
 
-Status: review
+Status: done
 
 Epic: 16 — Platform & Tech Debt
 
