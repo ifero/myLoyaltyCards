@@ -18,23 +18,24 @@ export const formatRelativeTime = (isoString: string | null, locale = ENGLISH_LO
   const diffMinutes = Math.floor(diffMs / 60000);
   const diffHours = Math.floor(diffMs / 3600000);
   const diffDays = Math.floor(diffMs / 86400000);
-  const formatter = new Intl.RelativeTimeFormat(locale, { numeric: 'always' });
 
   if (diffSeconds < 60) {
     return isItalian ? 'Proprio adesso' : 'Just now';
   }
 
   if (diffMinutes < 60) {
-    return isItalian ? formatter.format(-diffMinutes, 'minute') : `${diffMinutes} min ago`;
+    return isItalian
+      ? `${diffMinutes} ${diffMinutes === 1 ? 'minuto' : 'minuti'} fa`
+      : `${diffMinutes} min ago`;
   }
 
   if (diffHours < 24) {
     return isItalian
-      ? formatter.format(-diffHours, 'hour')
+      ? `${diffHours} ${diffHours === 1 ? 'ora' : 'ore'} fa`
       : `${diffHours} hour${diffHours === 1 ? '' : 's'} ago`;
   }
 
   return isItalian
-    ? formatter.format(-diffDays, 'day')
+    ? `${diffDays} ${diffDays === 1 ? 'giorno' : 'giorni'} fa`
     : `${diffDays} day${diffDays === 1 ? '' : 's'} ago`;
 };
