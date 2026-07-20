@@ -1,5 +1,5 @@
 # generated: 2026-01-03
-# updated: 2026-07-14
+# updated: 2026-07-20
 # project: myLoyaltyCards
 # tracking_system: file-system
 # story_location: docs/sprint-artifacts
@@ -35,7 +35,7 @@
 # - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
 
 generated: 2026-01-03
-updated: 2026-07-15
+updated: 2026-07-20
 project: myLoyaltyCards
 tracking_system: file-system
 story_location: docs/sprint-artifacts
@@ -111,7 +111,8 @@ current_sprint:
   number: 17
   name: 'Sprint 17: Reliability & Auth Hardening'
   goal: 'Fix the remaining stakeholder-reported defects and harden the platform: stop deleted cards resurrecting on cloud sync (16-11); rebuild password management on OTP — reset-via-OTP (6-19) and change-password-in-Settings (6-20); bound the OTA update download at boot (16-12); and close the coverage blind spot by widening the jest gate to shared/** (16-13).'
-  status: planned # promoted from next_sprint 2026-07-11 (sprint-planning). All 5 stories are still `drafted` (no story files) → run create-story refinement to ready-for-dev before dev.
+  status: completed # all 6 stories done + merged; Sprint 17 retro completed 2026-07-20. Awaiting sprint-planning to promote Sprint 18 (now ungated).
+  retrospective: docs/sprint-artifacts/sprint-17-retro-2026-07-20.md # completed 2026-07-20 (party mode; Amelia facilitating)
   planning_date: 2026-07-11
   epics: [16, 6]
   stories:
@@ -143,14 +144,14 @@ current_sprint:
     16-8 cold-open, 16-10 airplane-mode, + Epic 9 watch validation — which also gates Sprint 18.
 
 next_sprint:
-  # STAGED 2026-07-11 (sprint-planning). GATED — cannot start until the RC watch-validation
-  # (action_items: Sprint 16 Action #1 / carried Epic 9 Action #2) confirms watch usage-events
-  # + favourite sync on a physical phone+watch pair. Also needs create-story refinement
-  # (all 10-x stories are `backlog`) → ready-for-dev before dev.
+  # STAGED 2026-07-11 (sprint-planning). UNGATED 2026-07-20 — the RC watch/device validation
+  # (Sprint 16 Action #1 / carried Epic 9 Action #2) was COMPLETED by ifero: watch usage-events
+  # + favourite sync validated on device, all stacked device gates cleared. Now needs only
+  # create-story refinement (all 10-x stories are `backlog`) → ready-for-dev before dev.
   number: 18
   name: 'Sprint 18: Wear OS App (Epic 10)'
   goal: 'Bring the loyalty-card experience to Android/Wear OS — project structure, catalogue generation, card list (Carbon UI), barcode display, local storage, and phone sync — reusing the usage-event protocol proven portable to the Wearable Data Layer by ADR-2026-06-09-001.'
-  status: proposed # GATED on the RC watch-validation; not committed
+  status: proposed # UNGATED 2026-07-20 (RC validation done); needs create-story refinement, then sprint-planning to commit
   epics: [10]
   stories:
     - 10-1-create-wear-os-project-structure
@@ -170,12 +171,12 @@ next_sprint:
       stories: [10-6]
       note: 'Sync cards from phone — reuses the Wearable Data Layer per ADR-2026-06-09-001.'
   notes: |
-    Staged 2026-07-11 as the sprint-after-Sprint-17, per ifero. NOT committed — HARD-GATED on
-    the RC watch-validation (see action_items: Sprint 16 Action #1 / Epic 9 Action #2): a solid,
-    on-device-validated watchOS app is the prerequisite for the Wear OS equivalent (ifero's stated
-    direction). Do NOT start until that RC pass lands. All 10-x stories are `backlog` and need
-    create-story refinement → ready-for-dev first.
-    Alternative if the watch gate slips: Epic 14 (Household Collaboration) — but it needs
+    Staged 2026-07-11 as the sprint-after-Sprint-17, per ifero. UNGATED 2026-07-20 — the RC
+    watch/device validation (Sprint 16 Action #1 / Epic 9 Action #2) is COMPLETE: the
+    on-device-validated watchOS app (prerequisite for the Wear OS equivalent) is confirmed.
+    Remaining before dev: create-story refinement of all 10-x stories (`backlog`) → ready-for-dev,
+    then sprint-planning to commit.
+    Alternative still available: Epic 14 (Household Collaboration) — but it needs
     dedicated UX design first (14-5a) before implementation.
 
 development_status:
@@ -408,6 +409,7 @@ development_status:
   16-13-widen-jest-coverage-to-shared: done # 2026-07-10: Story 16.10 QA follow-up. jest.config.js collectCoverageFrom spans only core/** + features/**; shared/** (Supabase auth/session, hooks, theme, i18n) is outside the 80% global gate — incl. the 16.10 hotfix logic (useBootAuthGate, client.ts). Add shared/**; expect some files below threshold -> backfill tests or add justified excludes (that triage is the work, not the glob edit). Chore/tech-debt; no behaviour change. Drafted by Amelia (Dev); needs refinement -> ready-for-dev.
   16-15-fix-relative-time-hermes-intl-crash: done # 2026-07-16: production Hermes crash (Sentry REACT-NATIVE-1 + -2, one root cause). formatRelativeTime built `new Intl.RelativeTimeFormat` unconditionally (core/utils/relative-time.ts:21) but Hermes lacks it → `new undefined(...)` → TypeError 'Cannot read property prototype of undefined'; -1 handled onunhandledrejection (boot load(), 7 events), -2 fatal onerror (30s setInterval, 2 events). CI green because Node/Jest has full ICU + the Italian path (sole formatter consumer) had 0 coverage. Fix (w/ ifero): drop Intl entirely, hardcode Italian relative strings verified byte-for-byte vs ICU (numeric:'always') + add Italian-locale tests (1-vs-N boundaries). No new dep, no UX change. 13/13 tests + typecheck + lint green. Both Sentry issues resolved. Fixed before the story was written; awaiting ifero review before commit/PR.
   16-14-observe-ota-update-failures: ready-for-dev # 2026-07-13: Story 16.12 QA follow-up. Boot-time OTA update failures (checkForUpdateAsync + fetchUpdateAsync/reloadAsync) are logged via logger.warn, which is __DEV__-only (core/utils/logger.ts) → a complete no-op in prod, so OTA stalls/failures are invisible in the field (no frequency signal; can't validate 16-12's 30s budget). AD-16-14-01: add a dedicated non-fatal logger.notify → Sentry.captureMessage('warning') (NOT a change to logger.warn; NOT the fatal dbError path) and route the 2 OTA sites through it. 2 files + logger tests (logger.ts IS coverage-measured). Drafted by Amelia (Dev); sprint assignment TBD (Epic 16 standing bucket).
+  16-16-adopt-formatjs-intl-polyfill: drafted # 2026-07-20: Sprint 17 retro action D. Adopt FormatJS Intl polyfill (/polyfill-force chain @ earliest entry) so Intl is Hermes-safe (prevents the 16-15 iOS crash class); lint-enforce not-yet-polyfilled Intl.*; relative-time.ts migration OPTIONAL (changes EN copy — needs UX sign-off). Drafted by Amelia; needs ifero open decisions → ready-for-dev. Epic 16 bucket; not a Wear OS dep.
   epic-16-retrospective: done # completed 2026-07-11 — docs/sprint-artifacts/epic-16-retro-2026-07-11.md (Sprint 16 clear-out; Epic 16 stays open as a standing bucket)
 
   # Epic 17: Apple Wallet Pass Support — FEASIBILITY-FIRST
@@ -429,40 +431,46 @@ development_status:
 # action items live only in their epic-N-retro-*.md write-ups.
 # Status values: open | in-progress | done | parked
 action_items:
-  # --- Sprint 16 / Epic 16 clear-out retro (2026-07-11) ---
+  # --- Sprint 16 / Epic 16 clear-out retro (2026-07-11); statuses reconciled at Sprint 17 retro (2026-07-20) ---
   - epic: 16
-    action: 'Consolidated RC validation pass — clear all stacked device gates on ONE RC build: 16-1 on-device light/dark sweep + dev-client build; 16-8 cold-open sync; 16-10 airplane-mode cold start; + carry-over Epic 9 watch usage/favourite validation (gates Epic 10)'
+    action: 'Consolidated RC validation pass — clear all stacked device gates on ONE RC build: 16-1 on-device light/dark sweep + dev-client build; 16-8 cold-open sync; 16-10 airplane-mode cold start; + carry-over Epic 9 watch usage/favourite validation (gates Epic 10). [DONE 2026-07-20 (ifero): completed on device; unblocks Sprint 18.]'
     owner: 'ifero'
     category: 'critical-path'
-    status: open
+    status: done
   - epic: 16
-    action: 'Close Sentry prod-firing verification (carries Epic 9 action #4, 2nd sprint) — unblocked by #140 CI symbol upload; fold into the RC pass. Done when a release-build error lands symbolicated in andrea-pacino/react-native'
+    action: 'Close Sentry prod-firing verification (carries Epic 9 action #4, 2nd sprint) — unblocked by #140 CI symbol upload; fold into the RC pass. Done when a release-build error lands symbolicated in andrea-pacino/react-native. [DONE 2026-07-20: 16-15 diagnosed a real symbolicated release-build crash from Sentry.]'
     owner: 'ifero + Amelia'
     category: 'technical'
-    status: open
+    status: done
   - epic: 16
-    action: 'Re-home orphaned SM action items onto the Dev role (SM dissolved in the 6.10 migration): reconcile current_sprint.stories/waves inside every correct-course (carries Epic 9 action #1)'
+    action: 'Re-home orphaned SM action items onto the Dev role (SM dissolved in the 6.10 migration): reconcile current_sprint.stories/waves inside every correct-course (carries Epic 9 action #1). [IN-PROGRESS: story-level reconciliation held; the action_items block itself went stale in Sprint 17 and was reconciled at the 2026-07-20 retro.]'
     owner: 'Amelia'
     category: 'process'
-    status: open
+    status: in-progress
   - epic: 16
-    action: 'Adopt commit-on-green — PR promptly once a story hits zero-comment approval; if held for stakeholder approval, record the base commit so drift is visible (the 16-3 re-verification tax)'
+    action: 'Adopt commit-on-green — PR promptly once a story hits zero-comment approval; if held for stakeholder approval, record the base commit so drift is visible (the 16-3 re-verification tax). [DONE 2026-07-20: baseline_commit frontmatter is now a standing convention.]'
     owner: 'Amelia + ifero'
     category: 'process'
-    status: open
+    status: done
   - epic: 16
-    action: 'Prioritize 16-13 (widen jest collectCoverageFrom to shared/**) early in Sprint 17 — the blind spot hides boot/auth/sync safety code (useBootAuthGate, client.ts, useCloudSync). Not blocking the planned wave-1 16-11'
+    action: 'Prioritize 16-13 (widen jest collectCoverageFrom to shared/**) early in Sprint 17 — the blind spot hides boot/auth/sync safety code (useBootAuthGate, client.ts, useCloudSync). Not blocking the planned wave-1 16-11. [DONE 2026-07-20: 16-13 shipped in wave 1.]'
     owner: 'Amelia'
     category: 'tech-debt'
-    status: open
+    status: done
   - epic: 16
-    action: 'Re-baseline stale stories at dev-start — quick check against current main for any story drafted before a dependency landed (16-4 drift lesson)'
+    action: 'Re-baseline stale stories at dev-start — quick check against current main for any story drafted before a dependency landed (16-4 drift lesson). [DONE 2026-07-20: practiced across 16-13/6-19/16-12.]'
     owner: 'Amelia'
     category: 'process'
-    status: open
+    status: done
   # --- Carried from Sprint 15 / Epic 9 retro (2026-06-10), resolved here ---
   - epic: 9
     action: 'Epic 5 generic-complication follow-up (carried Sprint 14 -> 15 -> 16): consciously PARKED per ifero (2026-07-11) — fold into Epic 10 (Wear OS) when watch work resumes. Satisfies Epic 9 action #5 (draft or consciously park)'
     owner: 'ifero'
     category: 'accountability'
     status: parked
+  # --- Sprint 17 retro (2026-07-20) ---
+  - epic: 16
+    action: 'Draft & scope a story for FormatJS Intl polyfill adoption: @formatjs/intl-getcanonicallocales -> intl-locale -> intl-pluralrules -> intl-relativetimeformat, imported with /polyfill-force + en/it locale data at app entry (before any Intl use). Fold in a lint rule enforcing the polyfill entry import (supersedes the dropped interim ban); opportunistically migrate core/utils/relative-time.ts off hardcoded Italian strings. Prevents recurrence of the 16-15 iOS-Hermes crash class.'
+    owner: 'Amelia (draft) + Winston (scope)'
+    category: 'tech-debt'
+    status: open
