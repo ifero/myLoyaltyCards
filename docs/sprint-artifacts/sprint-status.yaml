@@ -44,76 +44,14 @@ story_location: docs/sprint-artifacts
 # LAST SPRINT (completed)
 # ============================================
 last_sprint:
-  number: 16
-  name: 'Sprint 16: Platform & Tech-Debt Clear-Out (Epic 16)'
-  goal: 'Clear the Epic 16 tech-debt bucket — ship the reliability fixes (Android beta upload, cloud sync on cold open, offline cold-start hang), migrate the styling engine to Unistyles, and stand up the design-in-code foundation (contribution workflow, portable tokens, component gallery + Chromatic).'
-  status: completed
-  planning_date: 2026-06-11
-  start_date: 2026-06-11
-  end_date: 2026-06-25
-  completed_date: 2026-07-10
-  duration: 2 weeks
-  epics: [16]
-  stories:
-    - 16-7-fix-android-beta-upload-versioncode
-    - 16-8-fix-cloud-sync-cold-open-race
-    - 16-1-migrate-nativewind-to-unistyles
-    - 16-3-design-contribution-workflow
-    - 16-4-design-tokens-dtcg-style-dictionary
-    - 16-2-implement-logger-sentry-wrapper
-    - 16-5-component-gallery-storybook-chromatic
-    - 16-9-relocate-app-screens-to-features
-    - 16-10-fix-offline-cold-start-hang
-  waves:
-    wave_1:
-      stories: [16-7, 16-8]
-      note: 'Ship-now reliability fixes (independent). 16-7: authoritative Android versionCode via GITHUB_RUN_NUMBER through a new app.config.ts (+ prod offset band, signing guard, cicd.md doc). 16-8: cold-open cloud-sync race — autoTriggeredRef latch-on-success + network gate + retryWithBackoff (+ singleton-store dedup).'
-    wave_2:
-      stories: [16-1]
-      note: 'Styling engine NativeWind/Tailwind → react-native-unistyles (big-bang, 31 className files, zero token duplication). UNBLOCKED 16-5. Post-review device fix: HeaderIconButton for the nav-bar Pressable-remap flash.'
-    wave_3:
-      stories: [16-3, 16-4, 16-2]
-      note: 'Design-in-code + observability, parallel (engine-agnostic). 16-3: contribution workflow (CONTRIBUTING-DESIGN.md, design-label fast-path). 16-4: portable DTCG tokens + Style Dictionary (tokens.generated.ts). 16-2: logger/Sentry wrapper + ~30 console.* migrated + PII scrub + no-console rule.'
-    wave_4:
-      stories: [16-5]
-      note: 'Depended on Wave 2 (Unistyles). Web Storybook (react-native-web) + path-filtered Chromatic — the design validator. Chromatic project/token remains a human prereq to activate visual diffs.'
-    wave_5:
-      stories: [16-9]
-      note: 'Mid-sprint add (2026-06-18): relocate fat screens app/ → features/cards/screens/ + implement the missing route-file lint rule (root cause) + remove app/__tests__. AD-2 (cards→auth) ratified by ifero.'
-    hotfix:
-      stories: [16-10]
-      note: 'Fast-tracked HOTFIX (CRITICAL — broke offline-first): offline cold-start hang. AD-16-10-01 via useBootAuthGate (storage probe + reactive listener + safety timeout) + withTimeout on the update check. Counted in Sprint 16 per ifero (2026-07-11).'
-  notes: |
-    Sprint 16 cleared the Epic 16 Platform & Tech-Debt bucket: 8 planned stories across
-    5 waves + the 16-10 hotfix = 9 delivered, all done and merged to main by 2026-07-10.
-    1675 tests green (≈+172), coverage ≥80% held, 0 production incidents — and 3 of the 9
-    were fixes for stakeholder-reported prod defects (16-7, 16-8, 16-10). New tech introduced:
-    react-native-unistyles v3, @sentry/react-native, Style Dictionary, Storybook + Chromatic.
-    Epic 16 stays OPEN as a standing bucket (16-6 trigger-gated; 16-11/12/13 → Sprint 17).
-    Follow-ups created: 16-11, 16-12, 16-13.
-  retrospective: |
-    Sprint 16 / Epic 16 clear-out retrospective completed 2026-07-11 (party mode; Amelia
-    facilitating — SM role dissolved in the 6.10 migration).
-    Full write-up: docs/sprint-artifacts/epic-16-retro-2026-07-11.md
-    Highlights: reliability trilogy diagnosed with file:line root causes; adversarial reviews
-    that EXECUTE real environments caught what green gates missed (16-5 browser crashes; 16-10
-    disproved its own ADR's synchronous-INITIAL_SESSION premise); root-cause fixes that stop
-    recurrence (16-9 route-file lint rule); the design validator (16-3/4/5) is ifero's standout win.
-    Watch-outs: device/hardware validation debt is COMPOUNDING (5 ifero-owned gates → one RC pass,
-    Action #1); Sentry prod-firing carried a 2nd sprint (Action #2); dissolved SM role orphaned
-    2 Epic 9 action items (re-homed, Action #3); uncommitted-WIP drift (16-3 re-verification);
-    coverage blind spot on shared/** (→ 16-13). Action items now machine-tracked in action_items.
-
-# ============================================
-# CURRENT SPRINT
-# ============================================
-current_sprint:
   number: 17
   name: 'Sprint 17: Reliability & Auth Hardening'
   goal: 'Fix the remaining stakeholder-reported defects and harden the platform: stop deleted cards resurrecting on cloud sync (16-11); rebuild password management on OTP — reset-via-OTP (6-19) and change-password-in-Settings (6-20); bound the OTA update download at boot (16-12); and close the coverage blind spot by widening the jest gate to shared/** (16-13).'
-  status: completed # all 6 stories done + merged; Sprint 17 retro completed 2026-07-20. Awaiting sprint-planning to promote Sprint 18 (now ungated).
-  retrospective: docs/sprint-artifacts/sprint-17-retro-2026-07-20.md # completed 2026-07-20 (party mode; Amelia facilitating)
+  status: completed
   planning_date: 2026-07-11
+  start_date: 2026-07-11
+  end_date: 2026-07-20
+  completed_date: 2026-07-20
   epics: [16, 6]
   stories:
     - 16-11-fix-card-deletion-cloud-resurrection
@@ -133,25 +71,37 @@ current_sprint:
       stories: [6-19, 6-20]
       note: "Auth/OTP thread, sequenced 6-19 → 6-20. 6-19 builds the recovery-OTP plumbing (send/verify wrappers + OTP UX), reusing Epic 6's proven verifyEmailOtp/VerifyEmailScreen; de-risked by 16-10's Supabase-auth learnings (hasPersistedSession; INITIAL_SESSION not synchronous for an expired token). 6-20 reuses that plumbing for the Settings change-password entry."
   notes: |
-    Promoted from next_sprint on 2026-07-11 during sprint-planning (after the Sprint 16 retro).
-    Scope confirmed by ifero: the 3 proposed defect stories + 16-13 (coverage, retro Action #5)
-    + 16-12 (OTA boot bound). 5 stories, 2 waves.
-    GATING WORK: all 5 are `drafted` with NO story files — run create-story (SM/Architect-style
-    refinement) to lift each drafted → ready-for-dev before dev. sprint-planning only sequenced
-    them into the sprint; it did NOT make them ready-for-dev.
-    Carry-over from Sprint 16 (tracked in action_items, NOT a Sprint 17 dev item): the consolidated
-    RC validation pass (Action #1, ifero) — 16-1 device visual sweep, 16-2 Sentry prod smoke test,
-    16-8 cold-open, 16-10 airplane-mode, + Epic 9 watch validation — which also gates Sprint 18.
+    Sprint 17 delivered 6/6 stories, all done and merged to main by 2026-07-20. Tests ~1675 →
+    1747 (≈+72), 80% global gate held (branch ~85%), 0 new production incidents. Two of the six
+    fixed real stakeholder/production defects: 16-15 (fatal iOS-Hermes Intl crash — Sentry
+    RN-1/RN-2) and 16-11 (deleted-card cloud resurrection). Heavy reuse of prior investment:
+    withTimeout (16-10) carried 16-12 with no new code; the 6.18 OTP plumbing carried 6-19 → 6-20
+    (nearly free via a single origin route param); 16-11 revived mergeWithDeletions, dead since
+    Story 7.6. Tech-debt spawned: 16-14 (OTA observability — logger.warn is __DEV__-only → prod
+    -blind). Device/RC validation CLEARED by ifero (watch usage/favourite + all stacked device
+    gates) → unblocked Sprint 18. Neither epic closed: Epic 16 is a standing bucket (16-6/16-14
+    /16-16 outstanding); Epic 6 still has 6-12/6-13 social sign-in in backlog.
+  retrospective: |
+    Sprint 17 retrospective completed 2026-07-20 (party mode; Amelia facilitating).
+    Full write-up: docs/sprint-artifacts/sprint-17-retro-2026-07-20.md
+    Headline: bug-clearing focus; reuse compounding paid off exactly as the Sprint 16 retro
+    predicted; root-cause fixes throughout (16-11 revived dead code, 16-15 dropped Intl entirely,
+    16-13 widened the gate at the config root). Standout lesson: green tests on Node do NOT prove
+    a Hermes build works — Intl behaves three ways (full on Node/Jest, OS-ICU on Android Hermes,
+    limited subset on iOS Hermes); only exercising the real prod runtime closes that class.
+    Decision: adopt the FormatJS Intl polyfill as the standard for Intl usage (action D → story
+    16-16, drafted). Process lesson: keep the tracker honest at close in BOTH directions — three
+    records under-reported completion this sprint (status, action_items, device-validation debt).
 
-next_sprint:
-  # STAGED 2026-07-11 (sprint-planning). UNGATED 2026-07-20 — the RC watch/device validation
-  # (Sprint 16 Action #1 / carried Epic 9 Action #2) was COMPLETED by ifero: watch usage-events
-  # + favourite sync validated on device, all stacked device gates cleared. Now needs only
-  # create-story refinement (all 10-x stories are `backlog`) → ready-for-dev before dev.
+# ============================================
+# CURRENT SPRINT
+# ============================================
+current_sprint:
   number: 18
   name: 'Sprint 18: Wear OS App (Epic 10)'
   goal: 'Bring the loyalty-card experience to Android/Wear OS — project structure, catalogue generation, card list (Carbon UI), barcode display, local storage, and phone sync — reusing the usage-event protocol proven portable to the Wearable Data Layer by ADR-2026-06-09-001.'
-  status: proposed # UNGATED 2026-07-20 (RC validation done); needs create-story refinement, then sprint-planning to commit
+  status: planned # promoted from next_sprint 2026-07-20 (Sprint 17 → 18 roll-over). GATING: all six 10-x stories are `backlog` with NO story files — run create-story to lift each → ready-for-dev before dev. sprint-planning only sequenced them; it did NOT make them ready-for-dev.
+  planning_date: 2026-07-20
   epics: [10]
   stories:
     - 10-1-create-wear-os-project-structure
@@ -171,13 +121,55 @@ next_sprint:
       stories: [10-6]
       note: 'Sync cards from phone — reuses the Wearable Data Layer per ADR-2026-06-09-001.'
   notes: |
-    Staged 2026-07-11 as the sprint-after-Sprint-17, per ifero. UNGATED 2026-07-20 — the RC
-    watch/device validation (Sprint 16 Action #1 / Epic 9 Action #2) is COMPLETE: the
-    on-device-validated watchOS app (prerequisite for the Wear OS equivalent) is confirmed.
-    Remaining before dev: create-story refinement of all 10-x stories (`backlog`) → ready-for-dev,
-    then sprint-planning to commit.
-    Alternative still available: Epic 14 (Household Collaboration) — but it needs
-    dedicated UX design first (14-5a) before implementation.
+    Promoted from next_sprint on 2026-07-20 during the Sprint 17 → 18 roll-over (after the
+    Sprint 17 retro), per ifero. UNGATED 2026-07-20 — the RC watch/device validation (Sprint 16
+    Action #1 / carried Epic 9 Action #2) is COMPLETE: the on-device-validated watchOS app
+    (prerequisite for the Wear OS equivalent) is confirmed.
+    GATING WORK: all six 10-x stories are `backlog` with NO story files — run create-story
+    (SM/Architect-style refinement) to lift each backlog → ready-for-dev before dev.
+    sprint-planning only sequenced them into the sprint; it did NOT make them ready-for-dev.
+    Fast-follow available (NOT a Wear OS dependency — Android Hermes has ICU): the FormatJS Intl
+    polyfill (Sprint 17 retro action D → story 16-16, drafted) can slot into this sprint or the
+    Epic 16 standing bucket independently.
+    Epic 5 generic-complication follow-up (parked into Epic 10 per ifero) resumes with this work.
+
+next_sprint:
+  # STAGED 2026-07-20 (Sprint 17 → 18 roll-over), per ifero. Epic 14 (Household Collaboration).
+  # HARD PREREQUISITE: 14-5a (household-cards UX design) must be designed + signed off before the
+  # implementation stories can be refined. Wave sequencing below is PROVISIONAL — confirm scope
+  # at the sprint-planning that commits Sprint 19.
+  number: 19
+  name: 'Sprint 19: Household Collaboration (Epic 14)'
+  goal: 'Let users share loyalty cards and shopping lists within a household — card sharing via deep-link, household membership, and synced shopping lists — building on the cloud-sync foundation. Requires dedicated UX design (14-5a) before implementation stories are refined.'
+  status: proposed # STAGED 2026-07-20; GATED on 14-5a UX design; needs create-story refinement, then sprint-planning to commit
+  epics: [14]
+  stories:
+    - 14-5a-household-cards-ux-design
+    - 14-4-household-membership
+    - 14-2-card-sharing-deeplink
+    - 14-3-shopping-list-single-user
+    - 14-5-household-card-sharing
+    - 14-6-household-shopping-list-sync
+  waves:
+    wave_1:
+      stories: [14-5a]
+      note: 'UX design FIRST — household-cards UX design (14-5a) is the hard prerequisite; no implementation story can be refined to ready-for-dev until the interaction/visual design is signed off by ifero.'
+    wave_2:
+      stories: [14-4, 14-2]
+      note: 'Foundation (post-design): household membership (14-4) + card-sharing deep-link (14-2).'
+    wave_3:
+      stories: [14-5, 14-3, 14-6]
+      note: 'Household card sharing (14-5) + shopping list single-user (14-3) → synced household shopping list (14-6).'
+  notes: |
+    Staged 2026-07-20 as the sprint-after-Sprint-18, per ifero (chosen at the Sprint 17 retro
+    roll-over). Epic 14 is already in-progress (14-1 household-collaboration-scoping done).
+    HARD PREREQUISITE: 14-5a (household-cards UX design) must be designed and signed off before
+    the implementation stories (14-2/3/4/5/6) can be refined to ready-for-dev — engage the UX
+    designer (Sally / bmad-ux) first. The wave sequencing above is PROVISIONAL; confirm at the
+    sprint-planning that commits Sprint 19.
+    Alternatives still available if priorities shift: continue the Epic 16 standing bucket
+    (16-6 Penpot trigger-gated, 16-14 OTA observability ready-for-dev, 16-16 FormatJS polyfill
+    drafted), or finish Epic 6 social sign-in (6-12 Apple / 6-13 Google, both backlog).
 
 development_status:
   # ============================================
