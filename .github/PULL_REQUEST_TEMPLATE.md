@@ -68,7 +68,7 @@
 - [ ] A `ready-for-dev` story exists and its acceptance criteria are met _(skip for `design` fast-path or `catalogue` PRs)_
 - [ ] `yarn lint`, `yarn typecheck`, and `yarn test` pass locally (I did **not** use `--no-verify`)
 - [ ] New behavior has co-located tests; coverage is not regressed
-- [ ] Follows the layer boundaries & rules in `docs/project_context.md` and `AGENTS.md`
+- [ ] Follows the layer boundaries & rules in `docs/project-context.md` and `AGENTS.md`
 - [ ] `docs/sprint-artifacts/sprint-status.yaml` and the story file are updated _(skip for `design` fast-path or `catalogue` PRs)_
 - [ ] I performed a self-review of my own changes
 

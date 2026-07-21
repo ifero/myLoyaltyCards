@@ -1,6 +1,7 @@
 # generated: 2026-01-03
-# updated: 2026-07-20
+# last_updated: 2026-07-21
 # project: myLoyaltyCards
+# project_key: NOKEY
 # tracking_system: file-system
 # story_location: docs/sprint-artifacts
 
@@ -17,7 +18,7 @@
 #
 # Story Status:
 #   - backlog: Story only exists in epic file
-#   - drafted: Story file created in stories folder
+#   - drafted: Story file created (legacy; BMAD readers map → ready-for-dev)
 #   - ready-for-dev: Draft approved and story context created
 #   - in-progress: Developer actively working on implementation
 #   - review: Ready for code review (via Dev's code-review workflow)
@@ -25,18 +26,30 @@
 #
 # Retrospective Status:
 #   - optional: Can be completed but not required
-#   - completed: Retrospective has been done
+#   - done: Retrospective has been done
+#
+# PROJECT EXTENSIONS (non-vanilla — documented + tolerated by BMAD readers):
+#   Full superset schema: docs/sprint-artifacts/README.md
+#   - Terminal statuses beyond the vanilla set (kept truthful rather than faked as 'done'):
+#       cancelled — work consciously dropped (e.g. 11-3, 11-4)
+#       absorbed / absorbed-into-epic-N — scope delivered under another epic (Epic 8 → Epic 13)
+#   - Sprint blocks (last_sprint / current_sprint / next_sprint, each with waves) use their own
+#     status vocabulary: proposed → planned → in-progress → completed. Vanilla BMAD neither emits
+#     nor parses these; they are preserved deliberately as the live sprint record.
+#   - action_items entries carry a `category` field and may use a `parked` status.
+#   - Epic completion dates are inline comments on the epic line (never separate `epic-N-completed` keys).
 #
 # WORKFLOW NOTES:
 # ===============
 # - Epic transitions to 'in-progress' automatically when first story is created
 # - Stories can be worked in parallel if team capacity allows
-# - SM typically drafts next story after previous one is 'done' to incorporate learnings
+# - Developer typically drafts next story after previous one is 'done' to incorporate learnings
 # - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
 
 generated: 2026-01-03
-updated: 2026-07-20
+last_updated: 2026-07-21
 project: myLoyaltyCards
+project_key: NOKEY
 tracking_system: file-system
 story_location: docs/sprint-artifacts
 
@@ -177,7 +190,7 @@ development_status:
   # ============================================
 
   # Epic 1: Project Foundation & App Shell ✅ COMPLETE
-  epic-1: done
+  epic-1: done # completed 2026-01-07
   1-1-configure-development-environment: done
   1-2-implement-design-system-foundation: done
   1-3-create-core-data-schema: done
@@ -185,7 +198,6 @@ development_status:
   1-5-build-app-shell-with-header-navigation: done
   1-6-extend-semantic-error-colors: drafted # follow-up from 6.14 review — assigned to Sally
   epic-1-retrospective: optional
-  epic-1-completed: 2026-01-07
 
   # Epic 2: Card Management & Barcode Display
   epic-2: done # all tracked stories (2-1..2-10) done; closed during Sprint 16 reconciliation 2026-07-10
@@ -202,14 +214,13 @@ development_status:
   epic-2-retrospective: optional
 
   # Epic 3: Italian Brand Catalogue
-  epic-3: done
+  epic-3: done # completed 2026-02-08
   3-1-create-italian-catalogue-data: done
   3-2-browse-catalogue-grid: done
   3-3-add-card-from-catalogue: done
   3-4-cache-catalogue-for-offline: done
   3-5-update-catalogue-via-ota: done
   epic-3-retrospective: optional
-  epic-3-completed: 2026-02-08
 
   # Epic 4: Onboarding Experience
   epic-4: done
@@ -234,8 +245,7 @@ development_status:
   epic-5-retrospective: optional
 
   # Epic 6: User Authentication & Privacy
-  epic-6: in-progress
-  epic-6-completed: 2026-03-28
+  epic-6: in-progress # core auth completed 2026-03-28; reopened for social sign-in (6-12/6-13)
   # Sprint 7 stories (in sprint)
   6-1-create-supabase-project-environments: done
   6-2-define-cloud-schema-rls: done
@@ -262,8 +272,7 @@ development_status:
   epic-6-retrospective: optional
 
   # Epic 7: Cloud Synchronization
-  epic-7: done
-  epic-7-completed: 2026-03-28
+  epic-7: done # completed 2026-03-28
   7-1-upload-cards-to-cloud: done
   7-2-download-cards-from-cloud: done
   7-3-sync-card-changes: done
@@ -289,8 +298,7 @@ development_status:
   # ============================================
 
   # Epic 9: Smart Card Sorting ✅ COMPLETE
-  epic-9: done
-  epic-9-completed: 2026-06-10
+  epic-9: done # completed 2026-06-10
   9-1-track-card-usage: done
   9-2-mark-card-as-favorite: done # design signed off 2026-06-07 (Figma frame approved); impl + code review + QA complete; awaiting stakeholder commit approval
   9-3-implement-sorting-algorithm: done
@@ -339,8 +347,7 @@ development_status:
   epic-11-retrospective: done
 
   # Epic 12: App-Wide Design Overhaul (Figma) ✅ COMPLETE
-  epic-12: done
-  epic-12-completed: 2026-04-01
+  epic-12: done # completed 2026-04-01
   12-1-design-system-foundation: done
   12-1a-source-real-brand-logos: done # parallel track — ifero owns, non-blocking
   12-2-home-screen-card-list: done
@@ -357,7 +364,7 @@ development_status:
 
   # Epic 13: UI Implementation ✅ COMPLETE
   # Absorbs Epic 8 (Settings) — 8-X stories will NOT be implemented separately
-  epic-13: done
+  epic-13: done # completed 2026-04-11 (closed during Sprint 16 reconciliation)
   13-1-implement-design-system-tokens: done # implementation complete, QA + dev review approved
   13-2-restyle-home-screen: done # QA + dev review approved 2026-04-03
   13-3-restyle-card-detail: done # QA + dev review approved, PR #90 awaiting stakeholder merge
@@ -370,7 +377,6 @@ development_status:
   13-8-restyle-sync-indicators: done # QA + dev review approved, PR created 2026-04-11
   13-9-update-apple-watch-ui: done # maps to 12-9, PR #97 merged 2026-04-11
   13-10-fix-dark-mode-system-preference: done # Sprint 13 — tests green, dev + QA approved, stakeholder approved push/PR
-  epic-13-completed: 2026-04-11 # closed during Sprint 16 reconciliation; retro done 2026-04-11
   epic-13-retrospective: done # completed 2026-04-11
 
   # ============================================
