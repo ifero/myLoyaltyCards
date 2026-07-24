@@ -45,7 +45,7 @@ so that "most used / recently used" sorting is accurate on both the Watch and th
 
 ### Docs / rules (per 9.6a ADR)
 
-- [x] Apply the refined read-only wording across the 7 references (CONTRIBUTING, project_context ×2, architecture, epics ×3) + add `CARD_USED` to the documented message types
+- [x] Apply the refined read-only wording across the 7 references (CONTRIBUTING, project-context ×2, architecture, epics ×3) + add `CARD_USED` to the documented message types
 
 ### Tests
 

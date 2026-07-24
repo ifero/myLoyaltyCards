@@ -63,7 +63,7 @@ While reviewing Story 9.4 on a real device pair (phone + Apple Watch Ultra), thr
 
 ### Technical Impact
 
-- **Read-only is enshrined in 7 places across 5 files** (CONTRIBUTING ×1, project*context ×2, architecture ×1, epics ×3). Every reference is qualified as \_card-data editing* on the phone — so C2 is a **refinement, not a reversal**: the watch stays read-only for card data; it gains a _usage-event_ channel that is commutative and conflict-free.
+- **Read-only is enshrined in 7 places across 5 files** (CONTRIBUTING ×1, project-context ×2, architecture ×1, epics ×3). Every reference is qualified as _card-data editing_ on the phone — so C2 is a **refinement, not a reversal**: the watch stays read-only for card data; it gains a _usage-event_ channel that is commutative and conflict-free.
 - C2 touches both phone (event handler + increment) and watch (event emit + offline queue) and the sync protocol (message versioning).
 - C3 and C1 build on 9.4's `isFavorite` sync; C3 is pure watch UI; C1 needs watch-local persistence + a watch picker.
 - Aligns with the **Sprint 14 retro action items** already on record: "Spike-first for Watch/native APIs" and "Mandatory API-currency check before any Apple-platform story" → reflected as story 9.6a + an API-currency AC.
@@ -228,7 +228,7 @@ ADD:
 | Role             | Responsibility                                                                                      | Deliverable                                                     |
 | ---------------- | --------------------------------------------------------------------------------------------------- | --------------------------------------------------------------- |
 | **PM**           | Approve FR25/FR26; confirm C2 is pulled past the "read-only-for-MVP" line                           | PRD edits (§4.2)                                                |
-| **Architect**    | Story 9.6a ADR: usage-event channel, conflict-free proof, read-only refinement, Wear OS consistency | ADR + arch/project_context/CONTRIBUTING/epics edits (§4.3–§4.5) |
+| **Architect**    | Story 9.6a ADR: usage-event channel, conflict-free proof, read-only refinement, Wear OS consistency | ADR + arch/project-context/CONTRIBUTING/epics edits (§4.3–§4.5) |
 | **UX**           | Watch sort picker + watch favourite badge specs                                                     | UX edits (§4.6)                                                 |
 | **SM**           | Draft stories 9.5, 9.6a, 9.6; add to `sprint-status.yaml`                                           | Story files + board entries                                     |
 | **Dev (Amelia)** | Fold C3 into 9.4; implement 9.5 then 9.6 after specs land                                           | Code + tests, per-story                                         |

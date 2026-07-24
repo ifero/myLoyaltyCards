@@ -66,7 +66,7 @@ claude-opus-4-8 (Amelia) — initial ADR draft via correct-course
 ### Completion Notes List
 
 - **ADR draft produced 2026-06-09** → [`docs/adr-2026-06-09-watch-usage-events.md`](../../adr-2026-06-09-watch-usage-events.md), Status **Proposed**. Covers the `CARD_USED` message, the commutative conflict-safety argument, offline/dedup, the read-only refinement + exact 7-reference edit list, Wear OS consistency, and an API-currency note. **PM scope confirmation received 2026-06-09 (ifero). Awaiting Architect ratification** (Status Proposed → Accepted) before 9.6 goes `ready-for-dev`.
-- **ADR ratified 2026-06-09 (Winston, Architect).** Status → **Accepted**. Validated commutativity + dedup (tightened `usedAt` → ms precision), offline via `transferUserInfo` (verified current; Simulator-unsupported → physical-device test in 9.6), and Wear OS adoptability (Wearable Data Layer). Folded into `architecture.md` as `ADR-2026-06-09-001`; read-only wording refined across all **7 references** (CONTRIBUTING ×1, project_context ×2, architecture ×1, epics ×3); `CARD_USED` added to both documented `SyncMessage` unions. **Story 9.6 unblocked → `ready-for-dev`.**
+- **ADR ratified 2026-06-09 (Winston, Architect).** Status → **Accepted**. Validated commutativity + dedup (tightened `usedAt` → ms precision), offline via `transferUserInfo` (verified current; Simulator-unsupported → physical-device test in 9.6), and Wear OS adoptability (Wearable Data Layer). Folded into `architecture.md` as `ADR-2026-06-09-001`; read-only wording refined across all **7 references** (CONTRIBUTING ×1, project-context ×2, architecture ×1, epics ×3); `CARD_USED` added to both documented `SyncMessage` unions. **Story 9.6 unblocked → `ready-for-dev`.**
 
 ### File List
 
