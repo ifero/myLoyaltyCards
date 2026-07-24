@@ -52,7 +52,7 @@ so that counting watch card opens (Story 9.6) never reintroduces the card-edit c
 ### References
 
 - Proposal: [sprint-change-proposal-2026-06-09.md](../sprint-change-proposal-2026-06-09.md)
-- Sync rules: [docs/project_context.md](../../project_context.md) (§ Sync Patterns / Watch App Rules), [docs/architecture.md](../../architecture.md)
+- Sync rules: [docs/project-context.md](../../project-context.md) (§ Sync Patterns / Watch App Rules), [docs/architecture.md](../../architecture.md)
 - Watch connectivity: [core/watch-connectivity.ts](../../../core/watch-connectivity.ts)
 
 ## Dev Agent Record

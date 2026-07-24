@@ -13,6 +13,11 @@
 
 [workflow]
 
+# In force during the workflow (before the generate step) so the previous-story lookup finds files.
+activation_steps_prepend = [
+  "STORY FILE LOCATION (this project): existing story files live in the stories/ subfolder of implementation_artifacts (docs/sprint-artifacts/stories/), NOT flat. Wherever the workflow scans implementation_artifacts for an existing story file — in particular the 'Previous Story Intelligence' step that finds and loads {implementation_artifacts}/{{epic_num}}-{{previous_story_num}}-*.md — scan the stories/ subfolder instead (docs/sprint-artifacts/stories/{{epic_num}}-{{previous_story_num}}-*.md), otherwise the lookup silently finds nothing and the new story is drafted without prior-story context. The NEW story file is still written flat by the template; the on_complete hook relocates it into stories/ afterwards.",
+]
+
 persistent_facts = [
   "file:{project-root}/docs/sprint-artifacts/README.md",
 ]

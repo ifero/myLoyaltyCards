@@ -330,7 +330,7 @@ development_status:
   epic-14-retrospective: optional
 
   # Epic 15: Internationalisation & Public Presence
-  epic-15: done # both tracked stories (15-1, 15-2) done; closed 2026-07-10 (note: Epic 15 not defined in epics.md)
+  epic-15: done # both tracked stories (15-1, 15-2) done; closed 2026-07-10
   15-1-github-pages-landing-page: done # Sprint 13 Wave 1 — local implementation, tests, dev review, and QA review complete; Italian copy approved, Pages config/live verification pending
   15-2-italian-language-in-app: done # Story implemented; localized app + watch copy completed, validated, and pushed for PR review
   epic-15-retrospective: optional
