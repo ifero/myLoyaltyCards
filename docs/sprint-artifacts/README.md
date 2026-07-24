@@ -6,13 +6,13 @@ for those extensions — it is loaded as a persistent fact by the customized spr
 
 ## Layout
 
-| Path                                                             | What it is                                                                                    |
-| ---------------------------------------------------------------- | --------------------------------------------------------------------------------------------- |
-| `sprint-status.yaml`                                             | **Authoritative** system of record — live status + sprint blocks (see below).                 |
-| `stories/`                                                       | One markdown file per story, `{epic}-{story}-{slug}.md`. **Story files live here, not flat.** |
-| `test-reviews/`, `test-design/`, `traceability/`                 | TEA (Test Architect) outputs (pinned in `_bmad/custom/config.toml`).                          |
-| `*-retro-*.md`                                                   | Epic / sprint retrospectives.                                                                 |
-| `sprint-change-proposal-*.md`, `manual-*.md`, `epic-*-cicd.yaml` | Point-in-time working docs.                                                                   |
+| Path                                                             | What it is                                                                                                                                                             |
+| ---------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `sprint-status.yaml`                                             | **Authoritative** system of record — live status + sprint blocks (see below).                                                                                          |
+| `stories/`                                                       | One markdown file per story, `{epic}-{story}-{slug}.md`. **Story files live here, not flat.**                                                                          |
+| `test-reviews/` (+ `test-design/`, `traceability/` on first use) | TEA (Test Architect) output locations, pinned in `_bmad/custom/config.toml`. Only `test-reviews/` exists today; the others are created when their workflow first runs. |
+| `*-retro-*.md`                                                   | Epic / sprint retrospectives.                                                                                                                                          |
+| `sprint-change-proposal-*.md`, `manual-*.md`, `epic-*-cicd.yaml` | Point-in-time working docs.                                                                                                                                            |
 
 `docs/epics.md` is the human-readable **story catalogue** (every `### Story N.M` there maps 1:1 to a
 `development_status` key here). The **tracker is source of truth** for live status; `epics.md` is
@@ -65,7 +65,10 @@ non-standard, which is expected.
   `development_status` (never downgrading). Without that guard a vanilla run would strip the sprint
   blocks — do not remove it.
 - **`bmad-create-story`** is guarded by `_bmad/custom/bmad-create-story.toml`: relocates new story
-  files into `stories/`.
+  files into `stories/`. **Trade-off:** because story files sit in `stories/` (not the flat
+  `implementation_artifacts` root), `bmad-sprint-planning`'s "story file exists → `ready-for-dev`"
+  auto-detection never fires. That is expected — story statuses are maintained explicitly in the
+  tracker and by the story-status automation, not inferred from file presence.
 - **`bmad-sprint-status`** (read-only) parses `development_status` + `action_items` and tolerates the
   extensions.
 

@@ -2321,6 +2321,8 @@ Consciously cancelled — rollback does not apply to mobile app-store binaries, 
 
 ### Story 12.IC: Update Icon References in Story Docs 12-1 through 12-4
 
+_Tracker key: `12-icon-doc-cleanup` (non-numeric `IC` identifier — does not derive from the title; keep in sync manually)._
+
 **As a** developer preparing to implement Epic 13, **I want** Epic 12 story docs 12-1 through 12-4 to reference the correct MI/MCI icon system, **So that** implementation specs are accurate and I don't build against stale legacy-icon references.
 
 **Acceptance Criteria:**
@@ -2330,6 +2332,8 @@ Consciously cancelled — rollback does not apply to mobile app-store binaries, 
 - Grep for the legacy cleanup pattern across all `12-*.md` returns zero matches.
 
 ### Story 12.FI: Update Figma Design System Page — Icon Section
+
+_Tracker key: `12-figma-icon-update` (non-numeric `FI` identifier — does not derive from the title; keep in sync manually)._
 
 **As a** developer implementing Epic 13, **I want** the Figma design system page to show MI/MCI icons instead of the legacy icon family, **So that** the design source of truth matches the implementation icon system.
 

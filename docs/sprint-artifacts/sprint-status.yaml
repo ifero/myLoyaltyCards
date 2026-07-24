@@ -51,7 +51,7 @@ last_updated: 2026-07-21
 project: myLoyaltyCards
 project_key: NOKEY
 tracking_system: file-system
-story_location: docs/sprint-artifacts
+story_location: docs/sprint-artifacts # BMAD implementation_artifacts root; story FILES live in the stories/ subfolder (see README.md)
 
 # ============================================
 # LAST SPRINT (completed)

@@ -1,31 +1,36 @@
 # Team override for the bmad-sprint-planning skill.
 # Merges over .claude/skills/bmad-sprint-planning/customize.toml per BMad structural
-# rules (scalars: override wins; arrays such as persistent_facts: append).
+# rules (scalars: override wins; arrays such as persistent_facts / activation_steps_*: append).
 #
 # WHY THIS EXISTS
 # ---------------
 # This project's docs/sprint-artifacts/sprint-status.yaml is a documented SUPERSET of the
 # vanilla BMAD schema (see docs/sprint-artifacts/README.md). Vanilla sprint-planning only
 # knows the `development_status` + `action_items` shape and would STRIP the sprint blocks
-# (last_sprint / current_sprint / next_sprint / waves) on regeneration. The on_complete
-# guard below makes any regeneration non-destructive and keeps the tracker authoritative.
+# (last_sprint / current_sprint / next_sprint / waves) when it rewrites the file in its
+# "Generate sprint status file" step.
+#
+# The preservation constraint is established as a PREPEND step + a persistent fact so it is
+# in force DURING that write (not just at the end). `on_complete` is a verify-and-restore
+# backstop that runs after the write to catch any regression.
 
 [workflow]
 
-persistent_facts = [
-  "file:{project-root}/docs/sprint-artifacts/README.md",
+# Runs before the workflow proceeds — so the invariant is in force during the generate/write step.
+activation_steps_prepend = [
+  "PRESERVATION CONSTRAINT (this project): docs/sprint-artifacts/sprint-status.yaml is a SUPERSET of the vanilla schema and is the source of truth. When you reach the step that generates/writes the file, you MUST preserve verbatim the top-level last_sprint, current_sprint, and next_sprint blocks (every number/name/goal/status/epics/stories/waves/notes/retrospective field) and the action_items list. Only (re)generate the development_status map, and do it as a MERGE into the existing file: never downgrade a status; keep the project-extension statuses (cancelled, absorbed, absorbed-into-epic-N); keep epic completion dates as inline comments on the epic line (never separate epic-N-completed keys); keep the metadata keys last_updated and project_key. Story files live in docs/sprint-artifacts/stories/ (a subfolder) — detect them there, not flat.",
 ]
 
+persistent_facts = [
+  "file:{project-root}/docs/sprint-artifacts/README.md",
+  "sprint-status.yaml is a documented SUPERSET (sprint blocks + extension statuses); regeneration must MERGE development_status and preserve everything else — see docs/sprint-artifacts/README.md.",
+]
+
+# Verify-and-restore backstop, executed at the final step AFTER the file was written.
 on_complete = """
-sprint-status.yaml here is a SUPERSET of the vanilla BMAD schema and is the SOURCE OF TRUTH.
-Before writing the file you MUST preserve, verbatim, the top-level `last_sprint`,
-`current_sprint`, and `next_sprint` blocks (including every number/name/goal/status/waves/
-notes/retrospective field) and the `action_items` list. Only (re)generate the
-`development_status` map, and do it as a MERGE into the existing file: never downgrade a
-status; keep the documented project-extension statuses (`cancelled`, `absorbed`,
-`absorbed-into-epic-N`); keep epic completion dates as inline comments on the epic line
-(never as separate `epic-N-completed` keys); keep the metadata keys `last_updated` and
-`project_key`. Story files live in `docs/sprint-artifacts/stories/` (a subfolder) — detect
-them there, not flat. If following the vanilla steps would drop or rewrite any of the blocks
-above, STOP and report to the user instead of writing.
+Verify the write did not regress the superset: re-open sprint-status.yaml and confirm the top-level
+last_sprint, current_sprint, next_sprint blocks (with their waves) and the action_items list are all
+still present and unchanged, metadata still uses last_updated + project_key, and no epic-N-completed
+keys were reintroduced. If ANY of those blocks was dropped, narrowed, or rewritten, restore them from
+the previous version (git) and re-apply only the development_status merge, then report what happened.
 """
