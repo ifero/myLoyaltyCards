@@ -55,7 +55,7 @@ While reviewing Story 9.4 on a real device pair (phone + Apple Watch Ultra), thr
 | ------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | **PRD** (`docs/prd.md`)                    | Add **FR25** (selectable sort per surface, persisted) — the phone already does this, so the PRD is already behind reality. Add **FR26** (usage counted on every display surface incl. watch). Note a watch **A‑Z default** intentionally diverges from FR22's "most-recent-first." No PRD conflict for C2 (read-only is not a PRD rule). |
 | **Architecture** (`docs/architecture.md`)  | **C2 (significant):** new watch→phone `CARD_USED` message type; conflict-free reconciliation (commutative increments + `max(lastUsedAt)`); refine the read-only decision. **C1 (minor):** watch-side preference storage.                                                                                                                 |
-| **project_context.md**                     | Update "Watch App Rules" + "Sync Patterns" read-only lines (§237, §324) and the message-type list.                                                                                                                                                                                                                                       |
+| **project-context.md**                     | Update "Watch App Rules" + "Sync Patterns" read-only lines (§237, §324) and the message-type list.                                                                                                                                                                                                                                       |
 | **CONTRIBUTING.md**                        | Refine line 270 ("never add mutation paths") to the data-editing-vs-usage-event distinction.                                                                                                                                                                                                                                             |
 | **epics.md**                               | Epic 9: add 9.5/9.6/9.6a + 9.4 AC. Epic 10: update read-only note (`:1922`) + add parity scope. Refine ARCH-20 (`:266`) and `:1008`.                                                                                                                                                                                                     |
 | **UX** (`docs/ux-design-specification.md`) | Add watch **sort picker** spec (C1) and watch **favourite badge** spec (C3), both in the watch "Carbon Utility" style.                                                                                                                                                                                                                   |
@@ -63,7 +63,7 @@ While reviewing Story 9.4 on a real device pair (phone + Apple Watch Ultra), thr
 
 ### Technical Impact
 
-- **Read-only is enshrined in 7 places across 5 files** (CONTRIBUTING ×1, project_context ×2, architecture ×1, epics ×3). Every reference is qualified as _card-data editing_ on the phone — so C2 is a **refinement, not a reversal**: the watch stays read-only for card data; it gains a _usage-event_ channel that is commutative and conflict-free.
+- **Read-only is enshrined in 7 places across 5 files** (CONTRIBUTING ×1, project-context ×2, architecture ×1, epics ×3). Every reference is qualified as _card-data editing_ on the phone — so C2 is a **refinement, not a reversal**: the watch stays read-only for card data; it gains a _usage-event_ channel that is commutative and conflict-free.
 - C2 touches both phone (event handler + increment) and watch (event emit + offline queue) and the sync protocol (message versioning).
 - C3 and C1 build on 9.4's `isFavorite` sync; C3 is pure watch UI; C1 needs watch-local persistence + a watch picker.
 - Aligns with the **Sprint 14 retro action items** already on record: "Spike-first for Watch/native APIs" and "Mandatory API-currency check before any Apple-platform story" → reflected as story 9.6a + an API-currency AC.
@@ -169,12 +169,12 @@ FR26: Card usage (usageCount, lastUsedAt) is recorded whenever a card's barcode 
 NOTE: A watch A‑Z default is intentional and diverges from FR22's most-recent-first default.
 ```
 
-### 4.3 Architecture (`docs/architecture.md`) + `project_context.md` + `CONTRIBUTING.md`
+### 4.3 Architecture (`docs/architecture.md`) + `project-context.md` + `CONTRIBUTING.md`
 
 ```
 OLD (architecture.md:1029):           - Watch is READ-ONLY for MVP
-OLD (project_context.md:237):         - **Watch is READ-ONLY** for MVP (prevents conflicts)
-OLD (project_context.md:324):         - Watch is **READ-ONLY** for MVP
+OLD (project-context.md:237):         - **Watch is READ-ONLY** for MVP (prevents conflicts)
+OLD (project-context.md:324):         - Watch is **READ-ONLY** for MVP
 OLD (CONTRIBUTING.md:270):            - **Apple Watch is read-only** — never add mutation paths to the watch.
 
 NEW (consistent wording, all sites):
@@ -182,7 +182,7 @@ NEW (consistent wording, all sites):
     The watch MAY emit usage events (card-opened); the phone applies them as commutative
     increments (usageCount += 1, lastUsedAt = max). This preserves the no-edit-conflict guarantee.
 
-ALSO (architecture.md sync section + project_context.md message versioning):
+ALSO (architecture.md sync section + project-context.md message versioning):
   ADD message type: CARD_USED (watch → phone) to the versioned SyncMessage union.
 ```
 
@@ -228,7 +228,7 @@ ADD:
 | Role             | Responsibility                                                                                      | Deliverable                                                     |
 | ---------------- | --------------------------------------------------------------------------------------------------- | --------------------------------------------------------------- |
 | **PM**           | Approve FR25/FR26; confirm C2 is pulled past the "read-only-for-MVP" line                           | PRD edits (§4.2)                                                |
-| **Architect**    | Story 9.6a ADR: usage-event channel, conflict-free proof, read-only refinement, Wear OS consistency | ADR + arch/project_context/CONTRIBUTING/epics edits (§4.3–§4.5) |
+| **Architect**    | Story 9.6a ADR: usage-event channel, conflict-free proof, read-only refinement, Wear OS consistency | ADR + arch/project-context/CONTRIBUTING/epics edits (§4.3–§4.5) |
 | **UX**           | Watch sort picker + watch favourite badge specs                                                     | UX edits (§4.6)                                                 |
 | **SM**           | Draft stories 9.5, 9.6a, 9.6; add to `sprint-status.yaml`                                           | Story files + board entries                                     |
 | **Dev (Amelia)** | Fold C3 into 9.4; implement 9.5 then 9.6 after specs land                                           | Code + tests, per-story                                         |

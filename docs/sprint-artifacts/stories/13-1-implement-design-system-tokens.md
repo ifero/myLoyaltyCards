@@ -265,7 +265,7 @@ This story changes the design system foundation but does NOT restyle individual 
 ### References
 
 - [Source: docs/sprint-artifacts/stories/12-1-design-system-foundation.md — Complete Figma specs]
-- [Source: docs/project_context.md — Implementation rules, naming, layer boundaries]
+- [Source: docs/project-context.md — Implementation rules, naming, layer boundaries]
 - [Source: docs/architecture.md — Tech stack, NativeWind patterns]
 - [Source: shared/theme/colors.ts — Current color tokens to replace]
 - [Source: shared/theme/spacing.ts — Current spacing tokens to verify]

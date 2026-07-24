@@ -52,7 +52,7 @@ so that counting watch card opens (Story 9.6) never reintroduces the card-edit c
 ### References
 
 - Proposal: [sprint-change-proposal-2026-06-09.md](../sprint-change-proposal-2026-06-09.md)
-- Sync rules: [docs/project_context.md](../../project_context.md) (§ Sync Patterns / Watch App Rules), [docs/architecture.md](../../architecture.md)
+- Sync rules: [docs/project-context.md](../../project-context.md) (§ Sync Patterns / Watch App Rules), [docs/architecture.md](../../architecture.md)
 - Watch connectivity: [core/watch-connectivity.ts](../../../core/watch-connectivity.ts)
 
 ## Dev Agent Record
@@ -66,13 +66,13 @@ claude-opus-4-8 (Amelia) — initial ADR draft via correct-course
 ### Completion Notes List
 
 - **ADR draft produced 2026-06-09** → [`docs/adr-2026-06-09-watch-usage-events.md`](../../adr-2026-06-09-watch-usage-events.md), Status **Proposed**. Covers the `CARD_USED` message, the commutative conflict-safety argument, offline/dedup, the read-only refinement + exact 7-reference edit list, Wear OS consistency, and an API-currency note. **PM scope confirmation received 2026-06-09 (ifero). Awaiting Architect ratification** (Status Proposed → Accepted) before 9.6 goes `ready-for-dev`.
-- **ADR ratified 2026-06-09 (Winston, Architect).** Status → **Accepted**. Validated commutativity + dedup (tightened `usedAt` → ms precision), offline via `transferUserInfo` (verified current; Simulator-unsupported → physical-device test in 9.6), and Wear OS adoptability (Wearable Data Layer). Folded into `architecture.md` as `ADR-2026-06-09-001`; read-only wording refined across all **7 references** (CONTRIBUTING ×1, project_context ×2, architecture ×1, epics ×3); `CARD_USED` added to both documented `SyncMessage` unions. **Story 9.6 unblocked → `ready-for-dev`.**
+- **ADR ratified 2026-06-09 (Winston, Architect).** Status → **Accepted**. Validated commutativity + dedup (tightened `usedAt` → ms precision), offline via `transferUserInfo` (verified current; Simulator-unsupported → physical-device test in 9.6), and Wear OS adoptability (Wearable Data Layer). Folded into `architecture.md` as `ADR-2026-06-09-001`; read-only wording refined across all **7 references** (CONTRIBUTING ×1, project-context ×2, architecture ×1, epics ×3); `CARD_USED` added to both documented `SyncMessage` unions. **Story 9.6 unblocked → `ready-for-dev`.**
 
 ### File List
 
 - `docs/adr-2026-06-09-watch-usage-events.md` (ADR — now **Accepted**)
 - `docs/architecture.md` (SyncMessage union + `CARD_USED` + Watch Editing Policy → ADR-2026-06-09-001)
-- `docs/project_context.md` (Sync Patterns + Message Versioning + Watch App Rules)
+- `docs/project-context.md` (Sync Patterns + Message Versioning + Watch App Rules)
 - `CONTRIBUTING.md` (watch read-only wording)
 - `docs/epics.md` (ARCH-20 + Epic 5 note + Epic 10 Wear OS parity)
 - `docs/sprint-artifacts/stories/9-6-count-watch-card-opens.md` (gate cleared → ready-for-dev + ADR specifics in Dev Notes)

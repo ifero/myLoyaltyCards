@@ -274,7 +274,7 @@ shared/
 
 - [Source: docs/architecture.md#Sync Patterns] — Delta sync, timestamp-based
 - [Source: docs/architecture.md#Data Architecture] — "Sync Strategy: Delta sync, Timestamp-based, changed cards only"
-- [Source: docs/project_context.md#Sync Patterns] — 5-min cooldown, force sync
+- [Source: docs/project-context.md#Sync Patterns] — 5-min cooldown, force sync
 - [Source: docs/epics.md#Story 7.4] — Original AC and scope
 - [Source: core/sync/cloud-sync.ts] — Upload/download infrastructure to refactor
 - [Source: core/sync/sync-trigger.ts] — processPendingSync() to integrate delta logic

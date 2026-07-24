@@ -130,7 +130,7 @@ _Repo survey (2026-06-11) confirmed the Key Facts below: 31 `className` files, N
 
 - [Foundation dependency: docs/sprint-artifacts/stories/13-1-implement-design-system-tokens.md]
 - [Dark-mode behavior to preserve: docs/sprint-artifacts/stories/13-10-fix-dark-mode-system-preference.md]
-- [Project rules: docs/project_context.md]
+- [Project rules: docs/project-context.md]
 - [Architecture: docs/architecture.md]
 - [react-native-unistyles v3 documentation]
 

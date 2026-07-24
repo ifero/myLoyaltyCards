@@ -10,7 +10,7 @@ so that production error reporting actually fires and logging is consistent acro
 
 ## Context
 
-Surfaced during **Story 9.2** code review (2026-06-07). `docs/project_context.md` (Error Handling → Logging) and `CONTRIBUTING.md` prescribe a `logger` wrapper with `Sentry.captureException` in production instead of `console.*`. Current state (verified 2026-06-08):
+Surfaced during **Story 9.2** code review (2026-06-07). `docs/project-context.md` (Error Handling → Logging) and `CONTRIBUTING.md` prescribe a `logger` wrapper with `Sentry.captureException` in production instead of `console.*`. Current state (verified 2026-06-08):
 
 - A **minimal `logger` stub already exists** at `core/utils/logger.ts` (added 2026-03-28, exported from the `core/utils` barrel). It exposes `info` / `warn` / `error` but only **forwards directly to `console.*`** — no `__DEV__` gating and no Sentry routing.
 - Adoption is **partial**: only a couple of `core/` call sites use it (`core/sync/retry.ts`, `core/schemas/index.ts`). **~30 files with `console.*`** remain (verified 2026-06-11; the earlier "~65" was an occurrence estimate) across `features/`, `core/`, `shared/`, `app/` (excluding tests) — e.g. `features/settings/screens/SettingsScreen.tsx`, `features/settings/hooks/useImportData.ts`, `features/cards/hooks/useTrackCardUsage.ts`, `useDeleteCard.ts`, `useToggleFavorite.ts`, `features/cards/components/CardDetails.tsx`.
@@ -54,7 +54,7 @@ _Repo survey (2026-06-11): `logger.ts` is a console-forwarding stub (`info`/`war
 
 ### References
 
-- `docs/project_context.md` → "Error Handling → Logging" (prescribed shape) and "Critical Anti-Patterns" ("Use `console.log` directly ❌ → Use `logger` wrapper ✅").
+- `docs/project-context.md` → "Error Handling → Logging" (prescribed shape) and "Critical Anti-Patterns" ("Use `console.log` directly ❌ → Use `logger` wrapper ✅").
 - `CONTRIBUTING.md` — prescribes the `logger` wrapper convention.
 - Sibling precedent intentionally left on `console.error` pending this story: `useToggleFavorite.ts` (Story 9.2), `useTrackCardUsage.ts` (Story 9.1).
 - Privacy: do not send card data / PII to Sentry (GDPR rules).
