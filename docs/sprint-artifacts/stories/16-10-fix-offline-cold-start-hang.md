@@ -78,7 +78,7 @@ See **AD-16-10-01** above — Option A (gate on synchronous `INITIAL_SESSION` + 
 - Offline-safe pattern to reuse: `shared/supabase/useAuthState.ts:25-49` (`:37-44` `INITIAL_SESSION`).
 - Connectivity (available if needed): `shared/hooks/useNetworkStatus.ts` (optimistic default → confirmed via `NetInfo.fetch()`).
 - Local DB init (ruled out — local-only): `core/database/database.ts:9,50`.
-- Coding rules: `docs/project_context.md`, `AGENTS.md` (layer boundaries `app → features → shared → core`; `const` arrows; `logger` wrapper).
+- Coding rules: `docs/project-context.md`, `AGENTS.md` (layer boundaries `app → features → shared → core`; `const` arrows; `logger` wrapper).
 
 ### Definition of Ready
 

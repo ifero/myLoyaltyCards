@@ -58,21 +58,21 @@ Key insight: **usage is not card-data editing.** It is an append-only, **commuta
 
 ## Docs to update on ratification (Story 9.6 "docs" task)
 
-> ✅ **Applied 2026-06-09 at ratification** (Architect) — all 7 references reworded + `CARD_USED` added to both documented `SyncMessage` unions (architecture.md & project_context.md). The code-level `sync.ts` schema change remains Story 9.6's implementation task. The `epics.md:1922` row had already advanced to ~line 1980 via the correct-course and is now flipped from "proposed" to "ratified."
+> ✅ **Applied 2026-06-09 at ratification** (Architect) — all 7 references reworded + `CARD_USED` added to both documented `SyncMessage` unions (architecture.md & project-context.md). The code-level `sync.ts` schema change remains Story 9.6's implementation task. The `epics.md:1922` row had already advanced to ~line 1980 via the correct-course and is now flipped from "proposed" to "ratified."
 
 Reword consistently (data-vs-usage) at all 7 references, and add `CARD_USED` to the documented message types:
 
 | File                      | Line | Current                                                                                   |
 | ------------------------- | ---- | ----------------------------------------------------------------------------------------- |
 | `CONTRIBUTING.md`         | 270  | "Apple Watch is read-only — never add mutation paths to the watch."                       |
-| `docs/project_context.md` | 237  | "Watch is READ-ONLY for MVP (prevents conflicts)"                                         |
-| `docs/project_context.md` | 324  | "Watch is READ-ONLY for MVP"                                                              |
+| `docs/project-context.md` | 237  | "Watch is READ-ONLY for MVP (prevents conflicts)"                                         |
+| `docs/project-context.md` | 324  | "Watch is READ-ONLY for MVP"                                                              |
 | `docs/architecture.md`    | 1029 | "Watch is READ-ONLY for MVP"                                                              |
 | `docs/epics.md`           | 266  | "ARCH-20: Watch is READ-ONLY for MVP (editing only happens on phone)"                     |
 | `docs/epics.md`           | 1008 | "Watch is READ-ONLY for MVP (card editing only on phone)"                                 |
 | `docs/epics.md`           | 1922 | "Watch is READ-ONLY (consistent with watchOS behavior)" (Epic 10 — already forward-noted) |
 
-Also add `CARD_USED` to the `SyncMessage` type list in `docs/project_context.md` (§ Message Versioning) and `docs/architecture.md` (sync section).
+Also add `CARD_USED` to the `SyncMessage` type list in `docs/project-context.md` (§ Message Versioning) and `docs/architecture.md` (sync section).
 
 ## Alternatives considered
 

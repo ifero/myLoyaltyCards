@@ -72,7 +72,7 @@ claude-opus-4-8 (Amelia) — initial ADR draft via correct-course
 
 - `docs/adr-2026-06-09-watch-usage-events.md` (ADR — now **Accepted**)
 - `docs/architecture.md` (SyncMessage union + `CARD_USED` + Watch Editing Policy → ADR-2026-06-09-001)
-- `docs/project_context.md` (Sync Patterns + Message Versioning + Watch App Rules)
+- `docs/project-context.md` (Sync Patterns + Message Versioning + Watch App Rules)
 - `CONTRIBUTING.md` (watch read-only wording)
 - `docs/epics.md` (ARCH-20 + Epic 5 note + Epic 10 Wear OS parity)
 - `docs/sprint-artifacts/stories/9-6-count-watch-card-opens.md` (gate cleared → ready-for-dev + ADR specifics in Dev Notes)

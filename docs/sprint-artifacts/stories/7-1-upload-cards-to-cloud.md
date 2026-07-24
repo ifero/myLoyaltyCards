@@ -262,7 +262,7 @@ shared/
 - [Source: docs/architecture.md#Sync Patterns] — Cloud sync throttle, batch pattern
 - [Source: docs/architecture.md#API & Communication Patterns] — Supabase REST API
 - [Source: docs/architecture.md#Data Architecture] — Delta sync, last-write-wins
-- [Source: docs/project_context.md#Sync Patterns] — 5-minute cooldown, force sync
+- [Source: docs/project-context.md#Sync Patterns] — 5-minute cooldown, force sync
 - [Source: docs/epics.md#Epic 7] — Full epic scope and story interconnections
 - [Source: core/auth/guest-migration.ts] — Existing upload pattern to extract and reuse
 
