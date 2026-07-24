@@ -60,10 +60,12 @@ non-standard, which is expected.
 
 ## Running the BMAD skills safely
 
-- **`bmad-sprint-planning`** is guarded by `_bmad/custom/bmad-sprint-planning.toml`: its `on_complete`
-  instruction preserves the sprint blocks + `action_items` verbatim and only merges
-  `development_status` (never downgrading). Without that guard a vanilla run would strip the sprint
-  blocks — do not remove it.
+- **`bmad-sprint-planning`** is guarded by `_bmad/custom/bmad-sprint-planning.toml`: an
+  `activation_steps_prepend` step plus a `persistent_fact` establish the preservation constraint
+  _before_ the generate/write step (so the sprint blocks + `action_items` survive and only
+  `development_status` is merged, never downgrading), and `on_complete` verifies-and-restores after
+  the write as a backstop. Without that guard a vanilla run would strip the sprint blocks — do not
+  remove it.
 - **`bmad-create-story`** is guarded by `_bmad/custom/bmad-create-story.toml`: relocates new story
   files into `stories/`. **Trade-off:** because story files sit in `stories/` (not the flat
   `implementation_artifacts` root), `bmad-sprint-planning`'s "story file exists → `ready-for-dev`"
