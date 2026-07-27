@@ -14,7 +14,7 @@ so that `app/` stays a thin, _enforceably_ re-export-only routing boundary, feat
 
 ## Background / Context
 
-The architecture mandates that `app/` is a **thin routing layer that only re-exports** screens from `features/` — no business logic in route files. Documented in `docs/project_context.md` (Project Structure, Route Files Pattern, Anti-Patterns) and `docs/architecture.md` (folder-responsibility table; "thin routing layer (delegates to features)").
+The architecture mandates that `app/` is a **thin routing layer that only re-exports** screens from `features/` — no business logic in route files. Documented in `docs/project-context.md` (Project Structure, Route Files Pattern, Anti-Patterns) and `docs/architecture.md` (folder-responsibility table; "thin routing layer (delegates to features)").
 
 Over time, several screens were built **directly in `app/`** instead of `features/`, plus a non-conforming `app/__tests__/` folder. This story relocates them. It is a **pure refactor** (move, don't rewrite) — zero behavioral/visual change — and is **engine-agnostic** (independent of the completed 16-1 Unistyles migration).
 

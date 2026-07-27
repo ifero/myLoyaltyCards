@@ -1,0 +1,33 @@
+# Team override for the bmad-create-story skill.
+# Merges over .claude/skills/bmad-create-story/customize.toml per BMad structural rules
+# (scalars: override wins; arrays such as persistent_facts: append).
+#
+# WHY THIS EXISTS
+# ---------------
+# This project stores story files in the `stories/` SUBFOLDER of implementation_artifacts
+# (docs/sprint-artifacts/stories/), because the story-status automation depends on that path
+# (scripts/lib/story-refs.mjs, scripts/mark-story-done.mjs, .github/workflows/mark-story-done.yml,
+# scripts/check-pr-conventions.mjs). Stock create-story writes new story files FLAT to
+# {implementation_artifacts}/{{story_key}}.md. The on_complete hook relocates the new file into
+# the stories/ subfolder so it sits with the others and the automation can find it.
+
+[workflow]
+
+# In force during the workflow (before the generate step) so the previous-story lookup finds files.
+activation_steps_prepend = [
+  "STORY FILE LOCATION (this project): existing story files live in the stories/ subfolder of implementation_artifacts (docs/sprint-artifacts/stories/), NOT flat. Wherever the workflow scans implementation_artifacts for an existing story file — in particular the 'Previous Story Intelligence' step that finds and loads {implementation_artifacts}/{{epic_num}}-{{previous_story_num}}-*.md — scan the stories/ subfolder instead (docs/sprint-artifacts/stories/{{epic_num}}-{{previous_story_num}}-*.md), otherwise the lookup silently finds nothing and the new story is drafted without prior-story context. The NEW story file is still written flat by the template; the on_complete hook relocates it into stories/ afterwards.",
+]
+
+persistent_facts = [
+  "file:{project-root}/docs/sprint-artifacts/README.md",
+]
+
+on_complete = """
+This project keeps story files in the `stories/` SUBFOLDER of implementation_artifacts. After the
+story file has been saved and sprint-status.yaml updated, check where the new file landed: if it
+was written flat to `{implementation_artifacts}/{{story_key}}.md`, MOVE it to
+`{implementation_artifacts}/stories/{{story_key}}.md` (create the folder if needed) without changing
+its content, so it sits with the other story files and the story-status automation
+(scripts/lib/story-refs.mjs, .github/workflows/mark-story-done.yml) can locate it. If it was already
+written under `stories/`, do nothing.
+"""

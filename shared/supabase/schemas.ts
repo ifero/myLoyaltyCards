@@ -94,7 +94,7 @@ export type CloudLoyaltyCard = z.infer<typeof cloudLoyaltyCardSchema>;
 /**
  * Insert shape for loyalty_cards.
  * All fields including id, created_at, and updated_at are client-generated
- * (project_context.md: "UUIDs: Client-generated on all platforms"), so the
+ * (project-context.md: "UUIDs: Client-generated on all platforms"), so the
  * insert shape is identical to the full row shape. This alias makes the API
  * surface symmetric with CloudUserInsert / CloudPrivacyLogInsert.
  */

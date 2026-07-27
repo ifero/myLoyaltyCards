@@ -301,7 +301,7 @@ This story implements the approved Figma design from Story 12-2 (Home Screen pag
 
 - [Design spec: docs/sprint-artifacts/stories/12-2-home-screen-card-list.md]
 - [Foundation dependency: docs/sprint-artifacts/stories/13-1-implement-design-system-tokens.md]
-- [Project rules: docs/project_context.md]
+- [Project rules: docs/project-context.md]
 - [Architecture: docs/architecture.md]
 - [Current CardList: features/cards/components/CardList.tsx]
 - [Current CardTile: features/cards/components/CardTile.tsx]

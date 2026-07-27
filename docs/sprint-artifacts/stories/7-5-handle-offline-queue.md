@@ -296,7 +296,7 @@ app/
 
 - [Source: docs/architecture.md#Sync Patterns] — Watch sync retry pattern (3 attempts, exponential backoff)
 - [Source: docs/architecture.md#API & Communication Patterns] — "Offline Queue: Local queue + retry"
-- [Source: docs/project_context.md#Database Patterns] — Transactions for all writes
+- [Source: docs/project-context.md#Database Patterns] — Transactions for all writes
 - [Source: docs/epics.md#Story 7.5] — Original AC and scope
 - [Source: core/sync/sync-trigger.ts] — Sync trigger to extend with offline awareness
 

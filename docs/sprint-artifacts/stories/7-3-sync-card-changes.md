@@ -271,7 +271,7 @@ shared/
 
 - [Source: docs/architecture.md#Sync Patterns] — 5-min cloud sync cooldown pattern
 - [Source: docs/architecture.md#State & Communication Patterns] — Zustand with Immer
-- [Source: docs/project_context.md#Sync Patterns] — Cloud sync throttle, force sync
+- [Source: docs/project-context.md#Sync Patterns] — Cloud sync throttle, force sync
 - [Source: docs/epics.md#Story 7.3] — Original AC and scope
 - [Source: core/database/card-repository.ts] — CRUD entry points to wire triggers into
 - [Source: core/sync/cloud-sync.ts] — Throttle and upload infrastructure (from 7.1)

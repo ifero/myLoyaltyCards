@@ -110,7 +110,7 @@ The app targets the **European Union** market, beginning with an Italian brand c
 | Jest + RNTL               | Unit / component testing               |
 | ESLint + Prettier + Husky | Linting, formatting, git hooks         |
 
-> The system was designed in [`docs/architecture.md`](docs/architecture.md); for the canonical, enforced implementation rules see [`docs/project_context.md`](docs/project_context.md).
+> The system was designed in [`docs/architecture.md`](docs/architecture.md); for the canonical, enforced implementation rules see [`docs/project-context.md`](docs/project-context.md).
 
 ---
 
@@ -129,7 +129,7 @@ catalogue/   → Brand data (JSON source of truth) + parsing
 **Allowed import direction:** `app → features → shared → core` (+ `catalogue`).
 Cross-feature imports (`features/X → features/Y`) and upward imports (`core → features`) are **forbidden** and fail CI.
 
-Other foundational rules (full list in [`docs/project_context.md`](docs/project_context.md)):
+Other foundational rules (full list in [`docs/project-context.md`](docs/project-context.md)):
 
 - **Zod schemas are the source of truth** for all data types (`type X = z.infer<typeof xSchema>`).
 - **UUIDs are generated client-side** on every platform; the server never assigns IDs.
@@ -287,7 +287,7 @@ Phase 3  Implementation→  Sprint planning → per-story specs → dev →     
 | [`docs/architecture.md`](docs/architecture.md)                       | System architecture & decisions          |
 | [`docs/epics.md`](docs/epics.md)                                     | Epics & story breakdown                  |
 | [`docs/ux-design-specification.md`](docs/ux-design-specification.md) | UX design specification                  |
-| [`docs/project_context.md`](docs/project_context.md)                 | Enforced implementation rules for agents |
+| [`docs/project-context.md`](docs/project-context.md)                 | Enforced implementation rules for agents |
 | [`docs/test-design-system.md`](docs/test-design-system.md)           | Test strategy & design                   |
 | [`docs/cicd.md`](docs/cicd.md)                                       | CI/CD pipeline & release runbooks        |
 | [`docs/sprint-artifacts/`](docs/sprint-artifacts/)                   | Sprint status, stories, retrospectives   |

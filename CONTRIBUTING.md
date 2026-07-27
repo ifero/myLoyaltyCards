@@ -107,12 +107,12 @@ This prevents "drive-by" features that don't fit the architecture and keeps ever
 | Architecture                                 | [`docs/architecture.md`](docs/architecture.md)                                         | 2     |
 | Epics & stories breakdown                    | [`docs/epics.md`](docs/epics.md)                                                       | 2     |
 | Test design                                  | [`docs/test-design-system.md`](docs/test-design-system.md)                             | 2     |
-| Enforced implementation rules                | [`docs/project_context.md`](docs/project_context.md)                                   | —     |
+| Enforced implementation rules                | [`docs/project-context.md`](docs/project-context.md)                                   | —     |
 | Sprint status (source of truth for progress) | [`docs/sprint-artifacts/sprint-status.yaml`](docs/sprint-artifacts/sprint-status.yaml) | 3     |
 | Individual story specs                       | [`docs/sprint-artifacts/stories/`](docs/sprint-artifacts/stories/)                     | 3     |
 | Agent operating rules                        | [`AGENTS.md`](AGENTS.md)                                                               | —     |
 
-Read [`docs/project_context.md`](docs/project_context.md) and [`AGENTS.md`](AGENTS.md) **before writing any code** — they contain the rules CI and reviewers enforce.
+Read [`docs/project-context.md`](docs/project-context.md) and [`AGENTS.md`](AGENTS.md) **before writing any code** — they contain the rules CI and reviewers enforce.
 
 ---
 
@@ -164,7 +164,7 @@ git checkout -b feature/5-9-watch-complication
 ### 4. Implement the story
 
 - Implement **only what the story's acceptance criteria require** — keep scope tight.
-- Follow [`docs/project_context.md`](docs/project_context.md) and [`AGENTS.md`](AGENTS.md): layer boundaries, Zod-as-source-of-truth, client-side UUIDs, ISO-8601 UTC dates, transactional DB writes, the `logger` wrapper, etc.
+- Follow [`docs/project-context.md`](docs/project-context.md) and [`AGENTS.md`](AGENTS.md): layer boundaries, Zod-as-source-of-truth, client-side UUIDs, ISO-8601 UTC dates, transactional DB writes, the `logger` wrapper, etc.
 - **Add/extend tests** co-located with the source (`Foo.tsx` → `Foo.test.tsx`). New behavior needs new tests.
 - For libraries, consult the official docs (Context7 / Expo docs) and install with `npx expo install <pkg>` — **not** `yarn add` — for Expo-managed packages.
 
@@ -276,7 +276,7 @@ Do not bypass gates "just this once" — CI will fail anyway, and it keeps share
 
 ## Coding Standards
 
-The authoritative rules are in [`docs/project_context.md`](docs/project_context.md) and [`AGENTS.md`](AGENTS.md). Highlights:
+The authoritative rules are in [`docs/project-context.md`](docs/project-context.md) and [`AGENTS.md`](AGENTS.md). Highlights:
 
 - **TypeScript, strict mode** for all new code. No `any` escapes without justification.
 - **`const` arrow functions** everywhere (including exported/async) — no `function` declarations.

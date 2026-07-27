@@ -252,7 +252,7 @@ shared/
 - [Source: docs/architecture.md#Sync Patterns] — Last-write-wins, 5-min throttle
 - [Source: docs/architecture.md#Data Architecture] — Delta sync strategy
 - [Source: docs/architecture.md#API & Communication Patterns] — Supabase REST API
-- [Source: docs/project_context.md#Sync Patterns] — Cloud sync cooldown
+- [Source: docs/project-context.md#Sync Patterns] — Cloud sync cooldown
 - [Source: docs/epics.md#Story 7.2] — Original AC and scope
 - [Source: core/auth/guest-migration.ts] — Upload pattern to mirror for download
 - [Source: core/database/card-repository.ts] — `upsertCard()` for local persistence
