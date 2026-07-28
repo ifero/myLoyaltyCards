@@ -1,5 +1,5 @@
 /**
- * RootLayout cold-start boot behaviour (integration) — Stories 16.10 & 16.12.
+ * RootLayout cold-start boot behaviour (integration) — Stories 16.10, 16.12 & 16.14.
  *
  * Guarantees that the isolated hook/util tests can't prove on their own:
  *  1. (16.10) A stalled `Updates.checkForUpdateAsync()` cannot hang boot — the
@@ -11,6 +11,9 @@
  *     hang boot either — the same wrapper bounds it, so boot proceeds on the
  *     current bundle and `reloadAsync` is not reached (AC1); the normal OTA
  *     path (fetch then reload) is preserved (AC2).
+ *  4. (16.14) Both OTA failure paths report through `logger.notify` — the
+ *     production-visible, non-fatal channel — and never through the
+ *     `__DEV__`-only `logger.warn` nor the fatal `logger.error` (AC1-AC3).
  */
 import { act, render, screen } from '@testing-library/react-native';
 import React from 'react';
@@ -29,6 +32,7 @@ const mockHasPersistedSession = jest.fn();
 const mockIsFirstLaunch = jest.fn();
 const mockCompleteFirstLaunch = jest.fn();
 const mockLoggerWarn = jest.fn();
+const mockLoggerNotify = jest.fn();
 const mockLoggerError = jest.fn();
 
 jest.mock('expo-status-bar', () => ({ StatusBar: () => null }));
@@ -64,6 +68,7 @@ jest.mock('@/core/utils/logger', () => ({
   logger: {
     info: jest.fn(),
     warn: (...args: unknown[]) => mockLoggerWarn(...args),
+    notify: (...args: unknown[]) => mockLoggerNotify(...args),
     error: (...args: unknown[]) => mockLoggerError(...args)
   }
 }));
@@ -113,7 +118,7 @@ const emitInitialSession = (session: unknown) => {
   );
 };
 
-describe('RootLayout cold-start boot (Stories 16.10, 16.12)', () => {
+describe('RootLayout cold-start boot (Stories 16.10, 16.12, 16.14)', () => {
   beforeEach(async () => {
     jest.clearAllMocks();
     // Initialise i18n with real timers, then switch to fake for the test body.
@@ -152,6 +157,16 @@ describe('RootLayout cold-start boot (Stories 16.10, 16.12)', () => {
     // actually became true, not merely that initializeApp ran).
     expect(screen.queryByTestId('boot-loading')).toBeNull();
     expect(mockGetAllCards).toHaveBeenCalled();
+    // The manifest-check TIMEOUT reports on the production-visible channel too,
+    // not just an outright rejection — AC1 of Story 16.14 covers both. It is
+    // tagged 'timeout', which is what makes budget calibration countable in
+    // Sentry separately from genuine failures (AD-16-14-02).
+    expect(mockLoggerNotify).toHaveBeenCalledWith('Expo update check failed:', {
+      tags: { otaFailureKind: 'timeout' },
+      context: [expect.any(Error)]
+    });
+    expect(mockLoggerWarn).not.toHaveBeenCalled();
+    expect(mockLoggerError).not.toHaveBeenCalled();
   });
 
   it('boots as authenticated from the storage probe when the auth listener stalls offline (expired token → no welcome bounce) (AC2, AC4)', async () => {
@@ -190,7 +205,7 @@ describe('RootLayout cold-start boot (Stories 16.10, 16.12)', () => {
     });
     expect(screen.getByTestId('boot-loading')).toBeTruthy();
     expect(mockReloadAsync).not.toHaveBeenCalled();
-    expect(mockLoggerWarn).not.toHaveBeenCalled();
+    expect(mockLoggerNotify).not.toHaveBeenCalled();
 
     // Cross UPDATE_FETCH_TIMEOUT_MS (30000ms in app/_layout.tsx): withTimeout
     // rejects → boot proceeds on the CURRENT bundle — the spinner is gone
@@ -202,13 +217,18 @@ describe('RootLayout cold-start boot (Stories 16.10, 16.12)', () => {
     expect(mockGetAllCards).toHaveBeenCalled();
     // ...reloadAsync was never reached (nothing downloaded to swap in)...
     expect(mockReloadAsync).not.toHaveBeenCalled();
-    // ...and the stall was logged via logger.warn, never escalated to the
-    // dbError path (logger.error precedes every setDbError) (AC3).
-    expect(mockLoggerWarn).toHaveBeenCalledWith(
-      'Expo update download/reload failed:',
-      expect.any(Error)
-    );
+    // ...and the stall was reported via logger.notify — the production-visible
+    // channel (Story 16.14, AC2) — never escalated to the dbError path
+    // (logger.error precedes every setDbError) (16.12 AC3 / 16.14 AC3). Tagged
+    // 'timeout': we abandoned the download at OUR 30s budget, which is the case
+    // that speaks to whether that budget is calibrated (AD-16-14-02).
+    expect(mockLoggerNotify).toHaveBeenCalledWith('Expo update download/reload failed:', {
+      tags: { otaFailureKind: 'timeout' },
+      context: [expect.any(Error)]
+    });
     expect(mockLoggerError).not.toHaveBeenCalled();
+    // Not the __DEV__-only channel: that was the prod-blind spot 16.14 closed.
+    expect(mockLoggerWarn).not.toHaveBeenCalled();
   });
 
   it('boots the current bundle without reloading when the update download errors outright (Story 16.12, AC3)', async () => {
@@ -227,11 +247,68 @@ describe('RootLayout cold-start boot (Stories 16.10, 16.12)', () => {
     expect(screen.queryByTestId('boot-loading')).toBeNull();
     expect(mockGetAllCards).toHaveBeenCalled();
     expect(mockReloadAsync).not.toHaveBeenCalled();
-    expect(mockLoggerWarn).toHaveBeenCalledWith(
-      'Expo update download/reload failed:',
-      expect.any(Error)
-    );
+    // Tagged 'error', NOT 'timeout' — this is the discrimination AD-16-14-02
+    // exists for: a network failure says nothing about whether 30s is enough,
+    // so it must not pollute the timeout count used to calibrate the budget.
+    expect(mockLoggerNotify).toHaveBeenCalledWith('Expo update download/reload failed:', {
+      tags: { otaFailureKind: 'error' },
+      context: [expect.any(Error)]
+    });
     expect(mockLoggerError).not.toHaveBeenCalled();
+    expect(mockLoggerWarn).not.toHaveBeenCalled();
+  });
+
+  it('classifies a non-Error rejection as an error, not a timeout (Story 16.14, AD-16-14-02)', async () => {
+    // `classifyOtaFailure` guards on `error instanceof Error` before reading
+    // `.message`. A native bridge can reject with a non-Error (a string, a plain
+    // object), so this pins the guard's false branch: no crash reading `.message`
+    // off a primitive, and it falls back to 'error' rather than mis-claiming a
+    // timeout it cannot possibly have verified.
+    mockCheckForUpdateAsync.mockRejectedValueOnce('native bridge rejected with a string');
+    emitInitialSession(null);
+
+    render(<RootLayout />);
+
+    await act(async () => {
+      await jest.advanceTimersByTimeAsync(100);
+    });
+
+    expect(mockLoggerNotify).toHaveBeenCalledWith('Expo update check failed:', {
+      tags: { otaFailureKind: 'error' },
+      context: ['native bridge rejected with a string']
+    });
+    // Boot still completes; the classifier never throws on a non-Error.
+    expect(screen.queryByTestId('boot-loading')).toBeNull();
+    expect(mockLoggerError).not.toHaveBeenCalled();
+  });
+
+  it('classifies a reloadAsync failure as an error, not a timeout (Story 16.14, AD-16-14-02)', async () => {
+    // The download catch wraps BOTH the bounded fetch and reloadAsync, so it has
+    // a third failure mode its comment calls out but no test covered: the
+    // download succeeds and the reload itself fails. It must tag 'error' — the
+    // 30s budget was never reached, so this must not inflate the timeout count
+    // used to judge that budget.
+    mockCheckForUpdateAsync.mockResolvedValue({ isAvailable: true });
+    mockFetchUpdateAsync.mockResolvedValue(undefined);
+    mockReloadAsync.mockRejectedValueOnce(new Error('reload failed'));
+    emitInitialSession(null);
+
+    render(<RootLayout />);
+
+    await act(async () => {
+      await jest.advanceTimersByTimeAsync(100);
+    });
+
+    expect(mockFetchUpdateAsync).toHaveBeenCalledTimes(1);
+    expect(mockReloadAsync).toHaveBeenCalledTimes(1);
+    expect(mockLoggerNotify).toHaveBeenCalledWith('Expo update download/reload failed:', {
+      tags: { otaFailureKind: 'error' },
+      context: [expect.any(Error)]
+    });
+    // Boot still completes on the current bundle; never the fatal path.
+    expect(screen.queryByTestId('boot-loading')).toBeNull();
+    expect(mockLoggerError).not.toHaveBeenCalled();
+    expect(mockLoggerWarn).not.toHaveBeenCalled();
   });
 
   it('completes fetch then reload for a slow download that finishes within budget (Story 16.12, AC2)', async () => {
@@ -260,6 +337,9 @@ describe('RootLayout cold-start boot (Stories 16.10, 16.12)', () => {
     });
     expect(mockFetchUpdateAsync).toHaveBeenCalledTimes(1);
     expect(mockReloadAsync).toHaveBeenCalledTimes(1);
+    // A successful OTA path emits no telemetry at all (Story 16.14, AC1/AC2 are
+    // failure-only — a healthy update must not generate Sentry noise).
+    expect(mockLoggerNotify).not.toHaveBeenCalled();
     expect(mockLoggerWarn).not.toHaveBeenCalled();
   });
 
@@ -280,5 +360,15 @@ describe('RootLayout cold-start boot (Stories 16.10, 16.12)', () => {
     // Boot still completes on the current bundle; no dbError escalation.
     expect(screen.queryByTestId('boot-loading')).toBeNull();
     expect(mockLoggerError).not.toHaveBeenCalled();
+    // The manifest-check failure reports on the production-visible channel
+    // (Story 16.14, AC1) rather than the __DEV__-only logger.warn — and being a
+    // real rejection rather than a budget expiry, it is tagged 'error'. Paired
+    // with the 'timeout' case in the first test, this pins BOTH classifier
+    // branches for the check site (AD-16-14-02).
+    expect(mockLoggerNotify).toHaveBeenCalledWith('Expo update check failed:', {
+      tags: { otaFailureKind: 'error' },
+      context: [expect.any(Error)]
+    });
+    expect(mockLoggerWarn).not.toHaveBeenCalled();
   });
 });
