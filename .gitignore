@@ -87,3 +87,8 @@ fastlane/.env.default
 # BMAD personal install answers (installer-regenerated per developer; shared config lives in
 # _bmad/config.toml and _bmad/custom/config.toml, which ARE committed)
 _bmad/config.user.toml
+
+# BMAD generic output folder — transient, per-developer session output (party-mode memories and
+# keepsakes, brainstorming scratch). Every artifact that IS a project record is pinned to docs/ via
+# _bmad/custom/config.toml, so nothing durable should ever land here.
+_bmad-output/
