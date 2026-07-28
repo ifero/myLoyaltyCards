@@ -98,6 +98,59 @@ describe('scrubEvent', () => {
     const event = {} as unknown as Parameters<typeof scrubEvent>[0];
     expect(scrubEvent(event)).toEqual({});
   });
+
+  it('does NOT redact tags — documents a real gap, so callers never put PII there (Story 16.14, AD-16-14-02)', () => {
+    // scrubEvent walks `extra` and `contexts` only. `tags` are passed straight
+    // through, so the scrubber offers them NO protection. This is pinned rather
+    // than fixed: extending redaction to tags would change a shared hook used by
+    // every event. The contract instead lives on `NotifyOptions.tags` — tag
+    // values must be caller-controlled literals (e.g. 'timeout' | 'error'),
+    // never runtime data. If this test ever starts failing because tags DID get
+    // redacted, that is an improvement — update the docs on NotifyOptions.tags.
+    const event = {
+      tags: { otaFailureKind: 'timeout', userEmail: 'person@example.com' }
+    } as unknown as Parameters<typeof scrubEvent>[0];
+
+    const { tags } = scrubEvent(event);
+
+    expect(tags?.otaFailureKind).toBe('timeout');
+    expect(tags?.userEmail).toBe('person@example.com'); // NOT redacted — by design of scrubEvent's scope
+  });
+
+  it('scrubs a captureMessage-shaped event, not just exceptions (Story 16.14, AC4)', () => {
+    // `logger.notify` emits via `Sentry.captureMessage`. The SDK applies
+    // `beforeSend` to every event whose `type` is undefined — message events
+    // included — so the scrubber is the same single authority for both. This
+    // pins that the notify payload shape (message + level + extra.context, with
+    // Errors already flattened to plain objects by the SDK's normalize step)
+    // survives scrubbing with its diagnostics intact and its PII gone.
+    const event = {
+      message: 'Expo update download/reload failed:',
+      level: 'warning',
+      user: { id: 'user-123' },
+      extra: {
+        context: [
+          { name: 'Error', message: 'Expo update download timed out', stack: 'at initializeApp' },
+          { cardNumber: '1234 5678 9012 3456', accessToken: 'tok', storeName: 'Acme Rewards' }
+        ]
+      }
+    } as unknown as Parameters<typeof scrubEvent>[0];
+
+    const scrubbed = scrubEvent(event);
+    const context = (scrubbed.extra as { context: Array<Record<string, unknown>> }).context;
+
+    // Identity of the user never leaves the device...
+    expect(scrubbed.user).toBeUndefined();
+    // ...nor does anything card-shaped or credential-shaped...
+    expect(context[1]?.cardNumber).toBe(REDACTED);
+    expect(context[1]?.accessToken).toBe(REDACTED);
+    // ...while the diagnostics that make the signal actionable are preserved.
+    expect(context[0]?.message).toBe('Expo update download timed out');
+    expect(context[0]?.stack).toBe('at initializeApp');
+    expect(context[1]?.storeName).toBe('Acme Rewards');
+    expect(scrubbed.message).toBe('Expo update download/reload failed:');
+    expect(scrubbed.level).toBe('warning');
+  });
 });
 
 describe('initSentry', () => {
