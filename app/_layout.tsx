@@ -294,6 +294,31 @@ const UPDATE_CHECK_TIMEOUT_MS = 5000;
  */
 const UPDATE_FETCH_TIMEOUT_MS = 30000;
 
+/**
+ * The exact rejection messages handed to `withTimeout` for each OTA step.
+ *
+ * They are named constants rather than inline literals because they do double
+ * duty as the failure classifier below. `withTimeout` rejects with
+ * `new Error(timeoutMessage)` verbatim (pinned by `with-timeout.test.ts`) and
+ * exposes no distinguishable error type, so comparing against the exact literal
+ * THIS file supplied is what separates "we gave up at our own budget" from
+ * "expo-updates or the network failed outright".
+ */
+const UPDATE_CHECK_TIMEOUT_MESSAGE = 'Expo update check timed out';
+const UPDATE_FETCH_TIMEOUT_MESSAGE = 'Expo update download timed out';
+
+/**
+ * Classify an OTA failure for the `otaFailureKind` Sentry tag (Story 16.14).
+ *
+ * Only a `'timeout'` speaks to whether the budgets above are calibrated — an
+ * `'error'` is the network or the native module failing regardless of how long
+ * we were willing to wait. The message is a fixed grouping key, so this tag is
+ * the only thing that makes the two distinguishable in Sentry's UI: tags are
+ * indexed and chartable, `extra.context` is not.
+ */
+const classifyOtaFailure = (error: unknown, timeoutMessage: string): 'timeout' | 'error' =>
+  error instanceof Error && error.message === timeoutMessage ? 'timeout' : 'error';
+
 const RootLayout = () => {
   const { t } = useTranslation();
   // Infra readiness (local, offline-safe): DB init + guest-session bootstrap.
@@ -315,12 +340,21 @@ const RootLayout = () => {
         // either timeout, boot proceeds on the CURRENT bundle and any staged
         // update applies on a later cold start (Story 16.10 AC1; Story 16.12
         // AC1). These calls run only with connectivity, so they don't affect the
-        // pure-offline cold-start fixed in 16.10.
+        // pure-offline cold-start fixed in 16.10. Both failure paths report via
+        // logger.notify — a NON-FATAL, warning-level Sentry message — so the
+        // real-world failure rate is measurable instead of vanishing into the
+        // __DEV__-only logger.warn (Story 16.14, AD-16-14-01), and each carries
+        // an indexed otaFailureKind tag so a budget timeout can be counted
+        // separately from an outright failure (AD-16-14-02) — that split is what
+        // makes the budgets above calibratable from Sentry's UI. Neither path may
+        // reach logger.error: that is the fatal dbError channel and would render
+        // the boot-error screen.
         if (Updates.isEnabled) {
           try {
             const update = await withTimeout(
               Updates.checkForUpdateAsync(),
-              UPDATE_CHECK_TIMEOUT_MS
+              UPDATE_CHECK_TIMEOUT_MS,
+              UPDATE_CHECK_TIMEOUT_MESSAGE
             );
             if (update.isAvailable) {
               // Dedicated try/catch so a stalled or failed download — or a rare
@@ -330,7 +364,7 @@ const RootLayout = () => {
                 await withTimeout(
                   Updates.fetchUpdateAsync(),
                   UPDATE_FETCH_TIMEOUT_MS,
-                  'Expo update download timed out'
+                  UPDATE_FETCH_TIMEOUT_MESSAGE
                 );
                 // reloadAsync is intentionally NOT wrapped in withTimeout: it
                 // does no network I/O (the download already completed) and a JS
@@ -338,12 +372,20 @@ const RootLayout = () => {
                 // only after the bounded fetch (Story 16.12, AC4).
                 await Updates.reloadAsync();
               } catch (error) {
-                logger.warn('Expo update download/reload failed:', error);
+                logger.notify('Expo update download/reload failed:', {
+                  tags: {
+                    otaFailureKind: classifyOtaFailure(error, UPDATE_FETCH_TIMEOUT_MESSAGE)
+                  },
+                  context: [error]
+                });
                 // Boot the current bundle; the update applies on a later launch.
               }
             }
           } catch (error) {
-            logger.warn('Expo update check failed:', error);
+            logger.notify('Expo update check failed:', {
+              tags: { otaFailureKind: classifyOtaFailure(error, UPDATE_CHECK_TIMEOUT_MESSAGE) },
+              context: [error]
+            });
             // Continue with app initialization even if update check fails
           }
         }

@@ -31,13 +31,21 @@ describe('withTimeout', () => {
     await expect(result).rejects.toThrow('Operation timed out after 1000ms');
   });
 
-  it('honours a custom timeout message', async () => {
+  it('echoes a custom timeout message VERBATIM (a contract the OTA classifier relies on)', async () => {
     const neverSettles = new Promise<string>(() => {});
     const result = withTimeout(neverSettles, 500, 'update check timed out');
 
     jest.advanceTimersByTime(500);
 
-    await expect(result).rejects.toThrow('update check timed out');
+    // Asserted with an Error instance, which compares the message for EXACT
+    // equality. `toThrow('...')` alone would NOT do: that matcher only checks
+    // substring containment, so it would stay green if this util ever wrapped or
+    // prefixed the message. `app/_layout.tsx` classifies an OTA failure by
+    // testing `error.message === <the literal it passed here>` (Story 16.14,
+    // AD-16-14-02) — if the echo stopped being verbatim, every real timeout
+    // would be mis-tagged as a generic error. Verbatim echo is therefore a
+    // contract other code depends on, not an incidental formatting detail.
+    await expect(result).rejects.toThrow(new Error('update check timed out'));
   });
 
   it('keeps the timeout result when the promise rejects later (first settlement wins, no unhandled rejection)', async () => {
