@@ -4,7 +4,7 @@ baseline_commit: 48a3fd3d028af4181bdf8bf710730091583b9352
 
 # Story 16.14: Surface boot-time OTA update failures in production telemetry
 
-Status: review
+Status: done
 
 Epic: 16 — Platform & Tech Debt
 
