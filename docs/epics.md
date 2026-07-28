@@ -2827,6 +2827,92 @@ Epic 14 evolves myLoyaltyCards from a single-user loyalty card manager into a li
 - A startup/guard test asserts `Intl.RelativeTimeFormat`/`Intl.PluralRules` are defined at runtime, so removing the polyfill entry import fails CI.
 - Existing behaviour is preserved: current `relative-time` EN/IT tests stay green and no user-facing copy changes unless a UX-copy sign-off explicitly approves migrating `relative-time.ts` (default: leave 16.15's tested implementation as-is); a grep audit confirms no unguarded `Intl` consumer remains, with all gates green.
 
+### Story 16.17: Redesign the app launch experience — one continuous, branded, theme-aware surface
+
+**As a** user opening the app in a checkout queue, **I want** the launch to be a single calm branded surface instead of a stack of flashing placeholder screens, **So that** the app reads as instantly ready — and as _ours_ — rather than as something still assembling itself.
+
+**Acceptance Criteria:**
+
+- The stretched placeholder is gone: `assets/splash-icon.png` (today a 1×1 `#00FF00`@50% pixel that `resizeMode: 'contain'` scales into a full-screen-width green square) becomes a copy of `assets/app-icons/variants/aurora/expo/icon-1024.png`, so the native mark is byte-identical to the shipped app icon by construction.
+- The deprecated `expo.splash` key is removed and `expo-splash-screen` (not currently installed at all) is adopted as a config plugin with `imageWidth`, `backgroundColor`, and a `dark` variant — so a dark-mode launch never flashes white.
+- The JS launch surface is theme-aware, retiring the hardcoded `'#171717'` background that Story 13.10 left behind. It resolves its scheme from the **system** appearance to match the native layer — not from the persisted theme preference — because the two resolvers otherwise disagree for a user who has forced a scheme against their device, producing a hard cut mid-launch.
+- The native→JS handoff is visually invisible: one shared `SPLASH_LOGO_WIDTH` constant (width **and** height) drives both the plugin config and the component, since `SplashScreen.setOptions({ fade })` is iOS-only and pixel-identity is the sole mechanism concealing Android's hard cut.
+- `preventAutoHideAsync()` is called at module scope and `hideAsync()` on the launch surface's first paint (not on `isReady`), so the wait happens on a surface the app controls — with `.catch()` on both and an unconditional fallback timer, so a rejected promise or a missing `onLayout` can never strand the native splash.
+- The app's own logo (the aurora artwork, matching the shipped icon) renders at runtime for the first time — eight brand SVGs exist today referenced by zero code, and the current "brand" is a `MaterialIcons` `credit-card` glyph.
+- Progressive disclosure per the folded-in motion spec: no motion for the first 600ms, then a breathing opacity on the mark until ready (never a third spinner), a 250ms cross-fade out, and reduced motion fully honoured.
+- Boot semantics are unchanged — `isReady`, both OTA budgets, the `dbError` branch, and Story 16.14's `logger.notify`/`otaFailureKind` sites are untouched, and `testID="boot-loading"` is preserved so all existing offline-boot assertions pass unmodified.
+- Verified on a **release build** on iOS and Android in both schemes (Expo's docs state the splash does not render faithfully in Expo Go or a dev build); a passing CI run does not satisfy this.
+
+### Expo SDK 57 upgrade thread (Stories 16.18 – 16.21)
+
+**Sequencing decision (ifero, 2026-07-28):** this thread starts **only after Story 16.17 is done**. Story
+16.16 (FormatJS `Intl` polyfill) **rides with this thread** rather than shipping separately, because SDK
+56+ makes **Hermes v1 the default engine** and the 16.15 production crash was caused by Hermes' partial
+`Intl` — the polyfill must be in place before the engine changes underneath it.
+
+**Target is SDK 57, not 56.** SDK 57 (2026-06-30, RN 0.86, React 19.2 — unchanged from 56) is described
+by Expo as "the easiest Expo SDK upgrade you've ever made", and the 56→57 diff is package.json-only.
+Routing via 56 would cost a second Reanimated migration and a second device-RC pass for no benefit.
+
+**Why the cost is lower than it looks:** the project is pure CNG (`android/`, `ios/` gitignored), so every
+native diff in the upgrade guide is regenerated rather than hand-applied; and the toolchain floors are
+already met (Xcode 26.6 local / 26.4.1 in CI, Node 24.16, `minimumOsVersion: 18.0` already above the new
+iOS 16.4 requirement).
+
+### Story 16.18: Upgrade to Expo SDK 57 — JS dependencies and Jest preset
+
+**As a** maintainer, **I want** the JS/dependency half of the SDK 57 upgrade landed with a green test suite, **So that** the native work in 16.19 starts from a known-good JavaScript baseline instead of debugging both halves at once.
+
+**Acceptance Criteria:**
+
+- `expo` → `^57`, all `expo-*` packages → `~57.x`, `react`/`react-dom` → 19.2.3, `react-native` → 0.86.x, via `npx expo install expo@latest --fix`.
+- **Hard build blockers cleared together:** `react-native-reanimated` `4.2.1` → `4.5.1` and `react-native-worklets` `0.7.4` → `0.10.1`. These must move as a pair — 4.2.1 hard-pins worklets to `0.7.x`, and each independently fails the build (Reanimated's podspec `raise`s on an unsupported RN version; worklets throws a `GradleException` wired to `preBuild`).
+- Community bumps to Expo's pins: `react-native-gesture-handler` → `~2.32.0`, `react-native-screens` → `~4.26.0`, `react-native-safe-area-context` → `~5.7.0` (**not** 5.8.0 — outside the pin, trips `expo-doctor`), `@react-native-community/netinfo` → `12.0.1`. Stay on `@shopify/flash-list` 2.0.2, `@react-native-async-storage/async-storage` 2.x, `@react-native-picker/picker` 2.11.4, and `react-native-edge-to-edge` ^1.8.1 (a `react-native-unistyles@3` peer — do not remove).
+- **The `react-native-screens` bump also closes a latent fatal Android crash** present on the current `~4.23.0` pin (upstream #4311 — `Screen.onLayout` → `IllegalArgumentException: [RNScreens] DecorView is required for applying inset correction, but was null`, fixed in 4.25.0). It is invisible in Sentry only because the project has **zero Android telemetry** (10 events/90 days, 100 % iOS), not because it is safe.
+- `@expo/vector-icons` is an **explicit** dependency — `expo@57` no longer depends on it and 54 files import it. Migrating those imports to `@react-native-vector-icons/*` is explicitly **out of scope**.
+- `jest.config.js` `preset: 'react-native'` → `'@react-native/jest-preset'` (RN 0.85 moved the preset to its own package, a declared peer of `react-native`); add it as a devDependency and re-audit `transformIgnorePatterns`, which currently lists neither `react-native-reanimated` nor `react-native-worklets`.
+- `StyleSheet.absoluteFillObject` → `absoluteFill` (removed in RN 0.85) in `MultiCodePickerSheet.tsx` and `ScannerOverlay.tsx`. Safe to land ahead of this story — in RN 0.83.6 both names reference the same frozen object.
+- `newArchEnabled: true` removed from `app.json` (now the default).
+- All gates green from the main checkout, with the test count recorded before and after.
+
+### Story 16.19: SDK 57 native unblock — apple-targets v5, burnt, and watch connectivity
+
+**As a** maintainer, **I want** the three non-Expo native blockers resolved and proven by a real build, **So that** the SDK 57 upgrade can actually compile for iOS and the watchOS target still ships.
+
+**Acceptance Criteria:**
+
+- `@bacons/apple-targets` → `^5.0.0`, required for two independent SDK 56+ breakages: its `ExtensionStorage.podspec` iOS floor moves 15.1 → 16.4, and `@expo/prebuild-config` moves to a runtime dependency (it is no longer hoisted, so `expo config`/`prebuild` otherwise throws `Cannot find module '@expo/prebuild-config/build/plugins/icons/AssetContents'`). Its peer range is `expo: ">=52"`, so **there is no install warning** for being on the broken version.
+- The v5 relocation of `generated.entitlements` into `ios/<productName>/` is handled in both `targets/watch/expo-target.config.js` and `targets/watch-widget/expo-target.config.js` (both declare app-group entitlements), and the regenerated watchOS target + widget build and run.
+- **`burnt` is unblocked.** Its podspec declares iOS 13.0 while its Swift does `import ExpoModulesCore` (16.4 floor) → compile error. `expo-build-properties`' `deploymentTarget: 18.0` does **not** rescue it: pods normalise to `min_ios_version_supported`, still 15.1 in RN 0.86. Fix via a one-line `yarn patch` (upstream PR #60 is unmerged and the package is ~16 months stale) **or** replace it with an `@expo/ui` equivalent. If patched, add a CI guard so a dependency refresh cannot silently drop the patch.
+- **`react-native-watch-connectivity` 1.1.0 is proven by a build, not by inspection.** Keep 1.1.0 — it is pure Objective-C legacy-bridge (no Swift ⇒ immune to the 16.4 floor) and RN 0.86 still ships the `ObjCInteropTurboModule` machinery it needs. Do **not** blind-bump to 2.0.0: it renames its pod to `WatchConnectivity`, shadowing Apple's framework and breaking its own `#import <WatchConnectivity/WCSession.h>` (upstream #134, open and unanswered for ~4 months) — and `targets/watch/expo-target.config.js` explicitly lists `WatchConnectivity` in `frameworks`.
+- Phone ↔ watch sync verified end to end on a real device: card push, `requestCards`, and `CARD_USED` usage events.
+
+### Story 16.20: Migrate @sentry/react-native v7 → v8
+
+**As a** maintainer, **I want** Sentry on a version that actually supports RN 0.86, **So that** crash reporting and symbol upload keep working after the upgrade instead of failing silently.
+
+**Acceptance Criteria:**
+
+- `@sentry/react-native` → `~8.20.0` (floor 8.15.1: Expo-SDK-56-validated and clear of the 8.14.0 Android regression). The 7.x line was abandoned on 2026-02-12, three months before SDK 56, and 7.11.0 requires Metro internals at module top level — fixed only in 8.8.0 and never backported.
+- Expo's own bundled pin still says `~7.11.0` in both the 56 and 57 branches (it also still lists the deprecated `sentry-expo`), so an `expo.install.exclude` entry is added for `@sentry/react-native` and the deviation is documented.
+- `metro.config.js` needs **no change** — `getSentryExpoConfig`'s implementation and type signature are byte-identical between v7 and v8. Confirm rather than assume.
+- CI symbol upload re-proven end to end (`sentry.gradle` → `sentry.gradle.kts` with a back-compat shim; the `SENTRY_DISABLE_AUTO_UPLOAD` guard across the release workflows). v8 adds a native Debug-configuration skip and a first-class `disableAutoUpload` plugin prop, so the env-var guard can be narrowed to release-only.
+- A release/staging build produces a **symbolicated** event in `andrea-pacino/react-native`.
+- **Known open upstream issue documented, with a decision recorded:** #6514 — `Sentry.wrap` breaks Fast Refresh on RN 0.85+/React 19.2 (whole-tree remount on save). `app/_layout.tsx` ends in `export default Sentry.wrap(RootLayout)`, so this degrades the dev loop; the workaround is gating `Sentry.wrap` to release builds.
+
+### Story 16.21: SDK 57 CI and on-device release validation
+
+**As a** maintainer, **I want** CI and a real-device pass to prove the upgraded app before it reaches users, **So that** an SDK jump cannot repeat the 16.15 class of failure where CI was green and production crashed.
+
+**Acceptance Criteria:**
+
+- Workflow cache-key salts move `sdk55` → `sdk57` in `ci-quality-gates.yml` and `watchos-tests.yml`; otherwise `restore-keys` would restore a stale SDK-55 `node_modules`.
+- `scripts/ensure-expo-sqlite-vendor-files.mjs` still resolves against `expo-sqlite@57` — it runs in `postinstall` and sets a failing exit code if the vendored sqlite sources move, so a layout change would **fail `yarn install` in CI**.
+- Fastlane build + three-identity match (app / `.watch` / `.watch.widget`) re-proven — it is downstream of apple-targets v5's project generation, so this is where a v5 regression surfaces.
+- **Hermes v1 verification (this is the point of the story):** with Story 16.16's polyfill in place, `Intl.RelativeTimeFormat` and `Intl.PluralRules` are confirmed working on a **real iOS Hermes build**, not on Node/Jest. `useHermesV1: false` in `expo-build-properties` is documented as the rollback lever.
+- **Android memory validated.** A known SDK 57 issue raises Android memory ~25–30 % with Hermes v1 + Reanimated; measure it and record the result, since Epic 10 (Wear OS) builds directly on this.
+- Full on-device RC pass per the project's established gate: watch app + complication, camera/scanner, offline cold start, cloud sync, OTA update, Sentry symbolication, and Android edge-to-edge.
+
 ---
 
 ## Epic 17: Apple Wallet Pass Support
