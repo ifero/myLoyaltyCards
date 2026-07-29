@@ -391,7 +391,7 @@ This document provides the complete epic and story breakdown for myLoyaltyCards,
 | 13   | UI Implementation                      | 2     | done                                           |
 | 14   | Household Collaboration                | 3     | in-progress (14-5a UX gates impl)              |
 | 15   | Internationalisation & Public Presence | 2     | done                                           |
-| 16   | Platform & Tech Debt (standing bucket) | —     | in-progress                                    |
+| 16   | Platform & Tech Debt (standing bucket) | —     | in-progress (16-22 in Sprint 18)               |
 | 17   | Apple Wallet Pass Support              | 3     | backlog (parked — spike first)                 |
 
 ---
