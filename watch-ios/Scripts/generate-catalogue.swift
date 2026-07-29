@@ -211,10 +211,13 @@ func writeSource(_ source: String, to url: URL) throws {
 // MARK: - Brands.swift (watch app target)
 
 func generateSource(from catalogue: CatalogueData, sourcePath: String) -> String {
+  // No logo path is emitted: the watch app renders initials (CardListView) and the
+  // widget resolves artwork through BrandLogo-<id>.imageset, so a per-brand asset
+  // URL had no consumer. It also could not be derived reliably — app logos are a
+  // mix of .svg and .png.
   let brands = catalogue.brands
     .map { brand in
-      let logoUrl = "assets/images/brands/\(brand.logo).svg"
-      return "    .init(id: \"\(swiftStringLiteral(brand.id))\", logoUrl: \"\(swiftStringLiteral(logoUrl))\", name: \(optionalLiteral(brand.name)), aliases: \(aliasesLiteral(brand.aliases)))"
+      "    .init(id: \"\(swiftStringLiteral(brand.id))\", name: \(optionalLiteral(brand.name)), aliases: \(aliasesLiteral(brand.aliases)))"
     }
     .joined(separator: ",\n")
 
@@ -227,7 +230,6 @@ func generateSource(from catalogue: CatalogueData, sourcePath: String) -> String
 
     struct WatchBrand: Sendable {
       let id: String
-      let logoUrl: String
       let name: String?
       let aliases: [String]
     }
