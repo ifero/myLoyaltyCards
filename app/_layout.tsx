@@ -4,11 +4,13 @@ import '@/shared/i18n';
 import { MaterialIcons } from '@expo/vector-icons';
 import * as Sentry from '@sentry/react-native';
 import { Stack, useRouter } from 'expo-router';
+import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import * as Updates from 'expo-updates';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ActivityIndicator, Pressable, Text, View } from 'react-native';
+import { Pressable, Text, View } from 'react-native';
+import Animated, { FadeIn, useReducedMotion } from 'react-native-reanimated';
 import { StyleSheet } from 'react-native-unistyles';
 
 import { getOrCreateGuestSessionId } from '@/core/auth/guest-session-repository';
@@ -26,16 +28,35 @@ import {
   WatchUsageEvent
 } from '@/core/watch-connectivity';
 
+import { AppLaunchScreen } from '@/shared/components/launch/AppLaunchScreen';
+import { EXIT_FADE_MS, SPLASH_HIDE_FALLBACK_MS } from '@/shared/components/launch/constants';
 import { getSupabaseClient } from '@/shared/supabase/client';
 import { useBootAuthGate } from '@/shared/supabase/useBootAuthGate';
 import { ThemeProvider, useTheme } from '@/shared/theme';
-import { PRIMARY_COLORS } from '@/shared/theme/colors';
 
 import { completeFirstLaunch, isFirstLaunch } from '@/features/settings';
 
 export const unstable_settings = {
   initialRouteName: 'index'
 };
+
+// Hold the native splash until the JS launch surface has painted, so the two
+// never overlap-cut (Story 16.17, AD-16-17-01). Both calls live at MODULE scope
+// because Expo's docs are explicit that `preventAutoHideAsync` inside a component
+// or hook can run too late — after the splash has already auto-hidden.
+//
+// Both are `.catch()`-ed for the same reason `logger.notify` is guarded in Story
+// 16.14: adding a launch surface must not be able to introduce a NEW boot
+// failure. `preventAutoHideAsync` and `hideAsync` both return rejectable
+// promises, and an unhandled rejection here would be a permanent white/black
+// screen — strictly worse than the flash this story deletes, and a regression of
+// the "boot never hangs" guarantee from Stories 16.10/16.12.
+SplashScreen.preventAutoHideAsync().catch(() => {});
+// `duration` is cross-platform; `fade` is documented iOS-ONLY, which is why
+// pixel-identity between the native PNG and the JS mark (not this fade) is what
+// conceals the handoff on Android. Duration matches the JS→content cross-fade so
+// both halves of the launch share one feel.
+SplashScreen.setOptions({ duration: EXIT_FADE_MS, fade: true });
 
 // Initialise Sentry as early as possible so errors during module evaluation and
 // app startup are captured (no-op transmit in development; see initSentry).
@@ -328,6 +349,47 @@ const RootLayout = () => {
   // session probe + reactive onAuthStateChange + safety timeout) — replaces the
   // blocking getSession() that hung offline on an expired-token refresh.
   const { isReady: isAuthReady, isAuthenticated } = useBootAuthGate();
+  const reducedMotion = useReducedMotion();
+  const splashHiddenRef = useRef(false);
+  const splashFallbackTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  /**
+   * Hand the launch over from the native splash to the JS surface.
+   *
+   * Called on the launch surface's first paint (`onLayout`) — deliberately NOT
+   * when `isReady` flips. The native layer cannot animate, so holding it to
+   * readiness would leave nowhere to show the liveness signal the slow path
+   * needs; hiding early moves the wait onto a surface we control, and because
+   * that surface is pixel-identical the transfer is invisible.
+   *
+   * Idempotent, so the fallback timer below and `onLayout` can both fire without
+   * hiding twice.
+   */
+  const hideSplashScreen = useCallback(() => {
+    if (splashHiddenRef.current) {
+      return;
+    }
+    splashHiddenRef.current = true;
+    if (splashFallbackTimerRef.current) {
+      clearTimeout(splashFallbackTimerRef.current);
+      splashFallbackTimerRef.current = null;
+    }
+    SplashScreen.hideAsync().catch(() => {});
+  }, []);
+
+  // Belt and braces (AD-16-17-01): `onLayout` never fires for a zero-size
+  // layout, which would leave the native splash up forever. This deadline hides
+  // it regardless, so no rendering accident can turn a launch polish story into
+  // a boot hang.
+  useEffect(() => {
+    splashFallbackTimerRef.current = setTimeout(hideSplashScreen, SPLASH_HIDE_FALLBACK_MS);
+    return () => {
+      if (splashFallbackTimerRef.current) {
+        clearTimeout(splashFallbackTimerRef.current);
+        splashFallbackTimerRef.current = null;
+      }
+    };
+  }, [hideSplashScreen]);
 
   useEffect(() => {
     const initializeApp = async () => {
@@ -484,43 +546,73 @@ const RootLayout = () => {
   }
 
   if (!isReady) {
-    return (
-      <View style={styles.fullscreen} testID="boot-loading">
-        <ActivityIndicator size="large" color={PRIMARY_COLORS[500]} />
-      </View>
-    );
+    // testID retained verbatim: nine assertions in
+    // test/root-layout.offline-boot.test.tsx key off `boot-loading`, and renaming
+    // it would silently void the offline-boot regression suite (AC11).
+    return <AppLaunchScreen onLayout={hideSplashScreen} testID="boot-loading" />;
   }
 
   return (
-    <ThemeProvider>
-      <RootLayoutContent isAuthenticated={isAuthenticated} />
-    </ThemeProvider>
+    // The launch surface exits by cross-fading into content over the same
+    // duration as the native→JS handoff. Skipped entirely under reduced motion,
+    // where every transition becomes an instant swap.
+    <Animated.View
+      entering={reducedMotion ? undefined : FadeIn.duration(EXIT_FADE_MS)}
+      style={styles.contentRoot}
+      testID="app-content-root"
+    >
+      <ThemeProvider>
+        <RootLayoutContent isAuthenticated={isAuthenticated} />
+      </ThemeProvider>
+    </Animated.View>
   );
 };
 
-const styles = StyleSheet.create({
+// Themed via Unistyles' function form even though these styles render OUTSIDE
+// `ThemeProvider` (Story 16.17, AD-16-17-03). That works because Unistyles is
+// engine-level, not context-level: the side-effect import at the top of this file
+// runs `StyleSheet.configure` at module-evaluation time, so `theme` resolves here
+// while `useTheme()` — which reads a React context — would throw. The hardcoded
+// near-black background these styles used to carry was unowned debt from before
+// that was true: not a design token, matching neither theme's background, and
+// left behind when Story 13.10 corrected the spinner's colour.
+const styles = StyleSheet.create((theme) => ({
   headerButton: {
     height: 44,
     width: 44,
     alignItems: 'center',
     justifyContent: 'center'
   },
+  // Carries the theme background explicitly, and that is load-bearing rather
+  // than redundant: during the exit `FadeIn` this view is partially transparent,
+  // so anything behind it composites through — and by then the launch surface has
+  // unmounted, leaving the raw native window background. Without a colour here
+  // the cross-fade would reveal a THIRD background mid-transition, reintroducing
+  // in the exit exactly the flash this story deletes from the entrance. With it,
+  // the fade runs straight into the theme's own field, which is also where a
+  // forced-preference user's scheme override is meant to land (AD-16-17-05).
+  contentRoot: {
+    flex: 1,
+    backgroundColor: theme.colors.background
+  },
+  // Now owned by the `dbError` branch only — the `!isReady` branch renders
+  // AppLaunchScreen, which owns its own styles.
   fullscreen: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#171717'
+    backgroundColor: theme.colors.background
   },
   errorTitle: {
     fontSize: 18,
     lineHeight: 28,
-    color: '#EF4444'
+    color: theme.colors.error
   },
   errorBody: {
     marginTop: 16,
-    color: '#A3A3A3'
+    color: theme.colors.textSecondary
   }
-});
+}));
 
 // Wrap the root component so Sentry can capture rendering errors and attach
 // navigation/touch context (Story 16.2).

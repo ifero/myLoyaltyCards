@@ -1,0 +1,157 @@
+/**
+ * AppLaunchScreen — the single continuous launch surface (Story 16.17).
+ *
+ * Replaces the JS boot gate's bare `ActivityIndicator` on a hardcoded near-black
+ * field with a surface pixel-identical to the native splash it takes over from:
+ * the same wallet mark, the same square size, the same flat brand field. The point
+ * is CONTINUITY, not spectacle — the documented brand is explicitly anti-splash
+ * ("Silent Reliability", "Eliminating 'Loading...' states") — so the only motion
+ * here is a restrained liveness signal on the slow path, where NFR-U5 requires one.
+ *
+ * Two decisions in here are subtle enough to be worth restating:
+ *
+ * 1. **The field is ONE brand colour, not a theme-aware background.** Revised
+ *    after device verification overturned AD-16-17-03/05, which had this surface
+ *    following the SYSTEM colour scheme. The native splash background is baked at
+ *    build time from `userInterfaceStyle: "automatic"`, so it cannot read the
+ *    user's runtime theme preference — meaning ANY theme-aware field disagrees
+ *    with the app for override users. On device that measured as ~1.75 s of white
+ *    followed by black content on every cold start: a full luminance inversion
+ *    that a 250 ms fade does not rescue. A single brand colour in both layers
+ *    makes the mismatch structurally impossible rather than merely smaller, and it
+ *    deletes the `useColorScheme` read entirely. The user's theme now becomes
+ *    visible exactly once, in the designed cross-fade into content.
+ *
+ * 2. **The mark is the wallet FOREGROUND, not the boxed app icon.** On a brand
+ *    field the icon's own rounded blue container would read as a box inside a box
+ *    — the "sticker on a page" look that got the first two attempts rejected. The
+ *    transparent variant is the same artwork with that container removed, which is
+ *    exactly what it exists for.
+ *
+ * Colours come from token constants, never `useTheme()`: this renders BEFORE
+ * `ThemeProvider` mounts (from the `!isReady` branch above it), so `useTheme()`
+ * would throw. It also avoids the `@/shared/theme` barrel, which all three
+ * root-layout suites replace wholesale.
+ */
+import { useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
+import { View, type LayoutChangeEvent } from 'react-native';
+import Animated, {
+  cancelAnimation,
+  Easing,
+  useAnimatedStyle,
+  useReducedMotion,
+  useSharedValue,
+  withRepeat,
+  withTiming
+} from 'react-native-reanimated';
+import { StyleSheet } from 'react-native-unistyles';
+
+import AuroraMark from '@/assets/images/app-icon-variant-aurora-transparent.svg';
+
+import {
+  BREATH_DELAY_MS,
+  BREATH_DURATION_MS,
+  BREATH_FADE_IN_MS,
+  BREATH_MIN_OPACITY,
+  LAUNCH_FIELD_COLOR,
+  SPLASH_LOGO_WIDTH
+} from './constants';
+
+export type AppLaunchScreenProps = {
+  /**
+   * Fired when the surface has actually painted. `app/_layout.tsx` uses this to
+   * hide the native splash — hiding on first paint rather than on `isReady`
+   * moves the wait onto a surface that can animate, and because the two surfaces
+   * are pixel-identical the transfer is invisible.
+   */
+  onLayout?: (event: LayoutChangeEvent) => void;
+  /** Applied to the root. `app/_layout.tsx` passes `boot-loading` (AC11). */
+  testID?: string;
+};
+
+export const AppLaunchScreen = ({ onLayout, testID }: AppLaunchScreenProps) => {
+  const { t } = useTranslation();
+  const reducedMotion = useReducedMotion();
+
+  // Two shared values rather than one, so the breath can FADE IN instead of
+  // popping: `breath` oscillates 1 ⇄ BREATH_MIN_OPACITY, while `reveal` ramps
+  // 0 → 1 over BREATH_FADE_IN_MS and scales how much of that oscillation is
+  // actually applied. At `reveal = 0` the opacity is exactly 1, so the quiet
+  // phase is genuinely static. Composing them with plain arithmetic in the
+  // worklet (below) deliberately avoids `interpolate`/`withSequence`, neither of
+  // which the repo's Reanimated mock provides (`jest.setup.js`) — this design
+  // therefore cannot rot as that mock drifts.
+  const breath = useSharedValue(1);
+  const reveal = useSharedValue(0);
+
+  useEffect(() => {
+    // Reduced motion: no breath at all, and no timer to leak. The mark simply
+    // stays static at full opacity
+    // (`docs/ux-designs/4-1-welcome-screen-design.md:223-226`).
+    if (reducedMotion) {
+      return undefined;
+    }
+
+    // Silent on the fast path: nothing moves until BREATH_DELAY_MS. Once the
+    // breath is revealed it never stops before the surface unmounts (which is
+    // what `isReady` flipping does), so it cannot blink.
+    const timer = setTimeout(() => {
+      reveal.value = withTiming(1, { duration: BREATH_FADE_IN_MS });
+      breath.value = withRepeat(
+        withTiming(BREATH_MIN_OPACITY, {
+          duration: BREATH_DURATION_MS,
+          easing: Easing.inOut(Easing.ease)
+        }),
+        -1,
+        true
+      );
+    }, BREATH_DELAY_MS);
+
+    return () => {
+      clearTimeout(timer);
+      cancelAnimation(breath);
+      cancelAnimation(reveal);
+    };
+  }, [reducedMotion, breath, reveal]);
+
+  const markStyle = useAnimatedStyle(() => ({
+    opacity: 1 - reveal.value * (1 - breath.value)
+  }));
+
+  return (
+    <View
+      accessible
+      accessibilityLabel={t('common.launch.accessibilityLabel')}
+      onLayout={onLayout}
+      style={styles.surface}
+      testID={testID}
+    >
+      {/* The mark is decorative — the root above already carries the one label a
+          screen reader should hear. Both props, per FannedCardIllustration. */}
+      <Animated.View
+        accessibilityElementsHidden
+        importantForAccessibility="no-hide-descendants"
+        style={markStyle}
+        testID="app-launch-mark"
+      >
+        <AuroraMark
+          height={SPLASH_LOGO_WIDTH}
+          testID="app-launch-mark-logo"
+          width={SPLASH_LOGO_WIDTH}
+        />
+      </Animated.View>
+    </View>
+  );
+};
+
+const styles = StyleSheet.create({
+  surface: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    // One colour, no theme variants — see LAUNCH_FIELD_COLOR for why that is the
+    // fix rather than a simplification.
+    backgroundColor: LAUNCH_FIELD_COLOR
+  }
+});

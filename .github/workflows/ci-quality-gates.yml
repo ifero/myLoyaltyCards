@@ -53,6 +53,14 @@ jobs:
       - name: Check design tokens are in sync
         run: yarn tokens:check
 
+      # Regenerates assets/splash-icon.png from app-icon-variant-aurora-transparent.svg
+      # and fails on any mismatch, so the checked-in raster can never drift from the
+      # artwork. Also catches the trap that shipped a hard-edged blue square on the
+      # launch field: `assets/icon.png` is intentionally opaque and full-bleed (the OS
+      # masks app icons itself), so it must never be used as the splash image.
+      - name: Check the splash icon is in sync with its source artwork
+        run: yarn splash:check
+
       - name: Check tests are co-located (no __tests__ folders)
         run: yarn check:no-tests-folders
 

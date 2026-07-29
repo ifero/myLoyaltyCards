@@ -30,6 +30,9 @@ export const en = {
     errors: {
       databaseErrorTitle: 'Database Error',
       initializationFailed: 'Initialization failed'
+    },
+    launch: {
+      accessibilityLabel: 'myLoyaltyCards, starting up'
     }
   },
   navigation: {
