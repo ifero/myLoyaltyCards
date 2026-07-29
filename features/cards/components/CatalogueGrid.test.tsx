@@ -63,10 +63,6 @@ jest.mock('@/catalogue/italy.json', () => ({
   ]
 }));
 
-// Mock SVG files for brand logos
-jest.mock('@/assets/images/brands/esselunga.svg', () => 'esselunga-logo');
-jest.mock('@/assets/images/brands/carrefour.svg', () => 'carrefour-logo');
-
 describe('CatalogueGrid', () => {
   const mockRouter = {
     push: jest.fn()
