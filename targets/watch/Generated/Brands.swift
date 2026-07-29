@@ -65,6 +65,9 @@ enum WatchBrands {
     .init(id: "calliope", logoUrl: "assets/images/brands/calliope.svg", name: "Calliope", aliases: ["fashion", "clothing", "retail"]),
     .init(id: "jysk", logoUrl: "assets/images/brands/jysk.svg", name: "JYSK", aliases: ["home", "furniture", "house"]),
     .init(id: "super-conveniente", logoUrl: "assets/images/brands/super-conveniente.svg", name: "Super Conveniente", aliases: ["supermarket", "grocery", "discount"]),
-    .init(id: "leroy-merlin", logoUrl: "assets/images/brands/leroy-merlin.svg", name: "Leroy Merlin", aliases: ["bricolage", "fai da te", "casa", "giardino"])
+    .init(id: "leroy-merlin", logoUrl: "assets/images/brands/leroy-merlin.svg", name: "Leroy Merlin", aliases: ["bricolage", "fai da te", "casa", "giardino"]),
+    .init(id: "paghi-poco", logoUrl: "assets/images/brands/paghi-poco.svg", name: "Paghi Poco", aliases: ["supermarket", "grocery", "supermercati", "gruppo rocchetta", "sicilia"]),
+    .init(id: "il-centesimo", logoUrl: "assets/images/brands/il-centesimo.svg", name: "il Centesimo", aliases: ["supermarket", "grocery", "discount", "spicciolo d'oro", "sicilia"]),
+    .init(id: "codice-fiscale", logoUrl: "assets/images/brands/codice-fiscale.svg", name: "Codice Fiscale", aliases: ["tessera sanitaria", "cf", "partita iva", "documenti"])
   ]
 }

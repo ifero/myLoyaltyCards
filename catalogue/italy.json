@@ -1,5 +1,5 @@
 {
-  "version": "2026-07-14",
+  "version": "2026-07-29",
   "brands": [
     {
       "id": "esselunga",
@@ -379,6 +379,27 @@
       "name": "Leroy Merlin",
       "aliases": ["bricolage", "fai da te", "casa", "giardino"],
       "logo": "leroy-merlin",
+      "color": "#FFFFFF"
+    },
+    {
+      "id": "paghi-poco",
+      "name": "Paghi Poco",
+      "aliases": ["supermarket", "grocery", "supermercati", "gruppo rocchetta", "sicilia"],
+      "logo": "paghi-poco",
+      "color": "#FFFFFF"
+    },
+    {
+      "id": "il-centesimo",
+      "name": "il Centesimo",
+      "aliases": ["supermarket", "grocery", "discount", "spicciolo d'oro", "sicilia"],
+      "logo": "il-centesimo",
+      "color": "#FFDC00"
+    },
+    {
+      "id": "codice-fiscale",
+      "name": "Codice Fiscale",
+      "aliases": ["tessera sanitaria", "cf", "partita iva", "documenti"],
+      "logo": "codice-fiscale",
       "color": "#FFFFFF"
     }
   ]
