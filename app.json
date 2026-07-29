@@ -8,11 +8,6 @@
     "scheme": "myloyaltycards",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
-    "splash": {
-      "image": "./assets/splash-icon.png",
-      "resizeMode": "contain",
-      "backgroundColor": "#ffffff"
-    },
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.iferoporefi.myloyaltycards",
@@ -71,6 +66,14 @@
           "organization": "andrea-pacino",
           "project": "react-native",
           "url": "https://de.sentry.io/"
+        }
+      ],
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/splash-icon.png",
+          "imageWidth": 260,
+          "backgroundColor": "#1A73E8"
         }
       ]
     ],

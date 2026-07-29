@@ -90,6 +90,27 @@ jest.mock('@react-native-async-storage/async-storage', () => {
   };
 });
 
+// Mock expo-splash-screen (Story 16.17).
+//
+// Two reasons this has to be mocked rather than transformed. It ships
+// untranspiled ESM and the `expo` alternative in `transformIgnorePatterns` does
+// not cover it (each alternative must be followed by `/`, so `expo/` never
+// matches `expo-splash-screen/`). And even once transformed, its
+// `import { isRunningInExpoGo } from 'expo'` drags in expo's side-effect chain
+// (expo-asset → expo-modules-core EventEmitter), which does not survive this
+// jsdom environment. On device every export no-ops safely when the native module
+// is absent, so a no-op mock is faithful to real off-device behaviour.
+//
+// Suites that need to ASSERT on these calls (e.g. the splash strand guards in
+// test/root-layout.splash-handoff.test.tsx) declare their own local factory,
+// which overrides this one.
+jest.mock('expo-splash-screen', () => ({
+  preventAutoHideAsync: jest.fn(() => Promise.resolve()),
+  hideAsync: jest.fn(() => Promise.resolve()),
+  hide: jest.fn(),
+  setOptions: jest.fn()
+}));
+
 // Mock expo-haptics
 jest.mock('expo-haptics', () => ({
   notificationAsync: jest.fn(),
