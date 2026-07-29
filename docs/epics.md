@@ -2913,6 +2913,21 @@ iOS 16.4 requirement).
 - **Android memory validated.** A known SDK 57 issue raises Android memory ~25–30 % with Hermes v1 + Reanimated; measure it and record the result, since Epic 10 (Wear OS) builds directly on this.
 - Full on-device RC pass per the project's established gate: watch app + complication, camera/scanner, offline cold start, cloud sync, OTA update, Sentry symbolication, and Android edge-to-edge.
 
+### Story 16.22: Fix card-grid tile overlap on narrow screens — derive tile width from the grid cell
+
+**As a** user opening my card list on a standard Android phone, **I want** the card tiles to stay inside their own columns instead of colliding in the middle of the screen, **So that** I can read and tap the right card at a checkout counter without squinting at overlapping artwork.
+
+**Acceptance Criteria:**
+
+- The grid tile width is **derived from the window width**, not hardcoded. `TILE_WIDTH = 171` (`features/cards/components/CardTile.tsx:35`) is a frozen derivation of `(390 − 32 − 16) / 2` — the tile width on Figma's default 390 dp iPhone frame — so it stops being a function of the viewport and exceeds its cell on narrower screens.
+- **Overlap becomes arithmetically impossible.** FlashList v2 assigns each grid cell an exact width (`GridLayoutManager.getWidth()` returns `boundedSize / maxColumns`) and does not negotiate with the child, so an oversized tile paints outside its cell rather than reflowing. Measured: tiles overlap whenever the window is **narrower than 374 dp** — 14 dp of overlap at 360 dp (the most common Android portrait width), 54 dp at 320 dp. iOS never showed it because the narrowest shipped iPhone is 375 dp, one dp above the cliff.
+- **16 pt screen margins and 16 pt gutters hold at every width**, finally satisfying Story 13.2 AC1's two clauses (`:24` "171x140pt with 16pt gutters", `:31` "16pt horizontal screen margins") simultaneously — today they can only both hold at exactly 390 dp, and the oversized tile has been silently eating the gutter everywhere (a 390 dp iPhone actually renders 20 dp margins and an 8 dp gutter).
+- **Zero visual change at the design reference width:** the tile is exactly 171 × 140 pt at 390 dp. Aspect ratio `140 / 171` is preserved at other widths; `TILE_RADIUS` stays a fixed 16 pt.
+- A co-located **layout contract test** (modelled on `targets/watch/__tests__/watch-layout-contract.test.ts`) asserts the geometry across a device-width table and sweeps the no-overlap invariant across 280–1024 dp.
+- Verified on a real narrow Android device/emulator at 360 dp and 320 dp in both themes. Android's **Display size** setting lowers the effective dp width, so a device that is fine at default settings can cross below the 374 dp cliff.
+- The exported constants keep their values and are re-documented as **design reference dimensions at 390 dp**, so the existing `CardTile.test.tsx:142-144` assertions and the `CardList.test.tsx:92-97` module mock keep passing unchanged.
+- Out of scope, flagged for separate stories: responsive column counts (the UX spec asks for 2–3 columns at `:61`/`:414-415`; Story 13.2 deliberately shipped a fixed 2-column grid, and `CatalogueGrid.tsx:27-29` already implements the responsive pattern in the same folder), the orientation-locked landscape guidance (`app.json:6` is `"portrait"`), and a `CardTile` → `CardShell` migration.
+
 ---
 
 ## Epic 17: Apple Wallet Pass Support
