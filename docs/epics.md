@@ -385,7 +385,7 @@ This document provides the complete epic and story breakdown for myLoyaltyCards,
 | 7    | Cloud Synchronization                  | 1     | done                                           |
 | 8    | Settings & Preferences                 | 1     | absorbed → Epic 13                             |
 | 9    | Smart Card Sorting                     | 2     | done                                           |
-| 10   | Wear OS App                            | 2     | backlog (Sprint 18)                            |
+| 10   | Wear OS App                            | 2     | in-progress (Sprint 18)                        |
 | 11   | CI/CD & Quality Gates                  | 1     | done                                           |
 | 12   | App-Wide Design Overhaul (Figma)       | 2     | done                                           |
 | 13   | UI Implementation                      | 2     | done                                           |
