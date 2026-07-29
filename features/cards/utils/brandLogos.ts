@@ -10,6 +10,7 @@ import CalliopeLogo from '@/assets/images/brands/calliope.svg';
 import CalzedoniaLogo from '@/assets/images/brands/calzedonia.svg';
 import CamaieuLogo from '@/assets/images/brands/camaieu.svg';
 import CarrefourLogo from '@/assets/images/brands/carrefour.svg';
+import CodiceFiscaleLogo from '@/assets/images/brands/codice-fiscale.svg';
 import CoinLogo from '@/assets/images/brands/coin.png';
 import ConadLogo from '@/assets/images/brands/conad.svg';
 import CoopLogo from '@/assets/images/brands/coop.svg';
@@ -26,6 +27,7 @@ import EurospinLogo from '@/assets/images/brands/eurospin.svg';
 import HmLogo from '@/assets/images/brands/hm.svg';
 import IdoLogo from '@/assets/images/brands/ido.svg';
 import IkeaLogo from '@/assets/images/brands/ikea.svg';
+import IlCentesimoLogo from '@/assets/images/brands/il-centesimo.png';
 import IlGiganteLogo from '@/assets/images/brands/il-gigante.svg';
 import IntimissimiLogo from '@/assets/images/brands/intimissimi.svg';
 import JyskLogo from '@/assets/images/brands/jysk.svg';
@@ -39,6 +41,7 @@ import OldWildWestLogo from '@/assets/images/brands/old-wild-west.svg';
 import OltreLogo from '@/assets/images/brands/oltre.svg';
 import OriginalMarinesLogo from '@/assets/images/brands/original-marines.svg';
 import OvsLogo from '@/assets/images/brands/ovs.svg';
+import PaghiPocoLogo from '@/assets/images/brands/paghi-poco.png';
 import PamLogo from '@/assets/images/brands/pam.svg';
 import PandoraLogo from '@/assets/images/brands/pandora.svg';
 import PennyMarketLogo from '@/assets/images/brands/penny-market.svg';
@@ -68,6 +71,7 @@ const BRAND_LOGOS: Record<string, BrandLogoSource> = {
   calliope: CalliopeLogo,
   camaieu: CamaieuLogo,
   carrefour: CarrefourLogo,
+  'codice-fiscale': CodiceFiscaleLogo,
   crai: CraiLogo,
   deco: DecoLogo,
   demma: DemmaLogo,
@@ -84,6 +88,7 @@ const BRAND_LOGOS: Record<string, BrandLogoSource> = {
   hm: HmLogo,
   ikea: IkeaLogo,
   ido: IdoLogo,
+  'il-centesimo': IlCentesimoLogo,
   'il-gigante': IlGiganteLogo,
   intimissimi: IntimissimiLogo,
   jysk: JyskLogo,
@@ -97,6 +102,7 @@ const BRAND_LOGOS: Record<string, BrandLogoSource> = {
   oltre: OltreLogo,
   'original-marines': OriginalMarinesLogo,
   ovs: OvsLogo,
+  'paghi-poco': PaghiPocoLogo,
   pam: PamLogo,
   pandora: PandoraLogo,
   'penny-market': PennyMarketLogo,

@@ -5,7 +5,6 @@ import path from 'node:path';
 
 type Brand = {
   id: string;
-  logo: string;
 };
 
 const repoRoot = path.resolve(__dirname, '../../..');
@@ -89,8 +88,13 @@ describe('watchOS catalogue generation', () => {
 
     for (const brand of catalogue.brands) {
       expect(generated).toContain(`id: "${brand.id}"`);
-      expect(generated).toContain(`logoUrl: "assets/images/brands/${brand.logo}.svg"`);
     }
+
+    // No per-brand asset path is emitted. Nothing consumed it (the watch app draws
+    // initials, the widget resolves BrandLogo-<id>.imageset), and it hardcoded a
+    // ".svg" suffix that was wrong for the PNG-logo brands. Asserting its absence
+    // keeps it from creeping back in with the same broken assumption.
+    expect(generated).not.toContain('logoUrl');
   });
 
   it('skips regeneration when inputs are unchanged', () => {
@@ -129,7 +133,7 @@ describe('watchOS catalogue generation', () => {
 
     expect(afterContents).not.toBe(beforeContents);
     expect(afterContents).toContain('id: "brand-special"');
-    expect(afterContents).toContain('logoUrl: "assets/images/brands/demo.svg"');
+    expect(afterContents).toContain('name: "Special Brand"');
   });
 
   it('fails check mode when the committed generated output is stale', () => {
