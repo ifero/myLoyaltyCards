@@ -4,7 +4,7 @@ baseline_commit: e9d841d403881867215df74ac162e9ac8e9a8fa6
 
 # Story 16.17: Redesign the app launch experience — one continuous, branded, theme-aware surface
 
-Status: review
+Status: done
 
 Epic: 16 — Platform & Tech Debt
 
