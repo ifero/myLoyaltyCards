@@ -86,8 +86,14 @@ npm expo lint                   # Run ESLint
 ```bash
 npx eas-cli@latest build --platform ios -s            # Use EAS to build for iOS platform and submit to App Store
 npx eas-cli@latest build --platform android -s        # Use EAS to build for Android platform and submit to Google Play Store
-npx expo export -p web && npx eas-cli@latest deploy   # Deploy web to EAS Hosting
 ```
+
+> **There is no web target.** This is a phone + wearable app (iOS, Android, watchOS, Wear OS)
+> and the JS entry pulls in native-only modules (`react-native-watch-connectivity`,
+> `expo-sqlite`, `react-native-image-code-scanner`, `expo-brightness`, `burnt`) that have no
+> web implementation, so `expo start --web` / `expo export -p web` cannot bundle. Do not add
+> `expo.web` to `app.json`. To preview UI in a browser, use the Storybook surface
+> (`yarn storybook`) — that is what `react-native-web` is installed for.
 
 ## 🚨 Critical Instructions (From Dev Memory)
 
