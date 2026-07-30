@@ -2928,6 +2928,27 @@ iOS 16.4 requirement).
 - The exported constants keep their values and are re-documented as **design reference dimensions at 390 dp**, so the existing `CardTile.test.tsx:142-144` assertions and the `CardList.test.tsx:92-97` module mock keep passing unchanged.
 - Out of scope, flagged for separate stories: responsive column counts (the UX spec asks for 2–3 columns at `:61`/`:414-415`; Story 13.2 deliberately shipped a fixed 2-column grid, and `CatalogueGrid.tsx:27-29` already implements the responsive pattern in the same folder), the orientation-locked landscape guidance (`app.json:6` is `"portrait"`), and a `CardTile` → `CardShell` migration.
 
+### Story 16.23: Fix silent barcode-scan failures on iOS — reported as "PENNY Card EAN-13 not recognised"
+
+**As a** user adding a loyalty card by scanning a photo or screenshot of it, **I want** the app to tell me **why** the scan failed rather than always claiming the image contains no barcode, **So that** a scan failure is recoverable and diagnosable — and so the next field report can actually be investigated.
+
+**Root cause (established):** the PENNY card artwork's barcode is **under-rasterised**. It was drawn at roughly half the size it needed (module ≈ 2.83 px) and upscaled 2×, so 1-module elements render as **4 or 6 px against a 5.66 px ideal — a 1.50× spread**. Apple Vision rejects that narrow-element variation; Google ML Kit tolerates it, which is why a Samsung device reads the same card via both camera and image. Proven by A/B on the real file: the measured bar geometry rendered crisply **misses**, an ideal module grid at the identical span and height **hits**; modelling a 269 px render upscaled 2× predicts 57 of 59 element widths exactly. Upscaling to 4836 px, hard binarisation and all four `VNDetectBarcodesRequest` revisions were tested and all fail.
+
+**But there is a fix: resampling.** The iOS _camera_ reads that exact image perfectly — it uses AVFoundation, not Vision, and its optics low-pass the quantised edges for free. Reproducing that in software works: downscaling the file to anywhere in **0.85×–0.25×** makes Vision decode it, robustly and strictly additively. This also explains why only this card fails — `scaleImageIfNeeded(maxDimension: 2048)` already resamples anything wider than 2048 px, so most images get the correction for free, while this 806 px file sails through untouched. Alongside that, the app's own defect stands: it reports "No barcode found in this image" — untrue, since Android reads it — with no route forward and no telemetry.
+
+**Acceptance Criteria:**
+
+- **Device verification, not investigation.** On a real iOS device (never the simulator) confirm the failure is a Vision miss rather than a rejection, and confirm the **physical** card scans via the add-card camera — that is the recovery the new copy recommends, so it must be verified rather than assumed.
+- `useImageScan` **separates** "decoder returned zero results" from "the native call threw" — the bare `catch {}` at `useImageScan.ts:152` currently discards the reason — and the user-facing copy differentiates the two in **both** `en.ts` and `it.ts`.
+- Both failure paths emit `logger.notify` (Story 16.14's production-visible channel; `logger.warn` is a `__DEV__`-only no-op). **The barcode value, image URI, and file name never reach Sentry** — tag values are not scrubbed by the PII filter.
+- The `?? 'CODE128'` fallback in `useImageScan.ts:51` and `useBarcodeScanner.ts:31` becomes observable, so a decoder format outside the map can no longer silently mislabel a stored card.
+- **The 6 supported symbologies are unchanged by decision** (`barcodeFormatSchema` is a cross-platform sync contract shared with watchOS/Wear OS); only the unbacked `DATAMATRIX` locale key at `en.ts:526` / `it.ts:529` is removed.
+- `penny-market` (`catalogue/italy.json:293-298`) declares `defaultFormat: "EAN13"`, restoring the `applyExpectedFormat` safety net for the brand.
+- **A resample retry makes the image decode:** a downscaled second attempt (≈0.6×, measured window 0.85×–0.25×) after a zero-result pass, preferably by extending the library's existing retry ladder, which tries greyscale, contrast and rotations but never rescaling. Manual entry stays reachable for the images it does not rescue. Fixed-radius blur, upscaling, sharpening, binarising, alternate Vision revisions, crop-and-retry and ML Kit on iOS are all explicitly rejected with measured reasons.
+- **Android must not regress** — it is the known-good platform and is re-verified after any change to the shared JS path.
+
+**Notes:** the payload `2095110257978` was verified to be a **valid EAN-13** (check digit 8 confirmed) that `bwip-js` renders correctly, that `inferBarcodeFormat` classifies correctly, and that every scan surface already requests — so the defect is in the decode step, not in format support. An earlier suspicion about the library's Android 1024 px downscale cap was **reversed** by the Samsung result: Android downscales harder than iOS (1024 vs 2048) and still succeeds. **Reintroducing ML Kit on iOS is structurally blocked** — Google ships it as a `.framework` with an iOS-Device-only arm64 slice, so CocoaPods excludes arm64 for simulators and every Apple-Silicon simulator build breaks (`2-9…md:124-134`). The observability half is OTA-eligible; the resample retry is a **native** change (library patch or a new `expo-image-manipulator` dependency) and needs a new binary, so the two halves can ship separately.
+
 ---
 
 ## Epic 17: Apple Wallet Pass Support
