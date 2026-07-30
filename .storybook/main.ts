@@ -2,6 +2,15 @@ import { resolve } from 'node:path';
 
 import type { StorybookConfig } from '@storybook/react-native-web-vite';
 
+// This Storybook is the ONLY consumer of `react-native-web` and `react-dom` — do not
+// drop them as "unused" deps. The app itself has no web target (there is no `expo.web`
+// in app.json; `expo start --web` cannot bundle, because the entry reaches native-only
+// modules such as `react-native-watch-connectivity` and `expo-sqlite`). This surface is
+// independent of that: it bundles through Vite, never reads app.json, and only mounts
+// the `shared/components/ui` primitives — never the app entry. It is what backs the
+// Chromatic visual-diff workflow (Story 16.5) and is the right place to eyeball a
+// component at a fixed viewport.
+
 const projectRoot = process.cwd();
 
 const config: StorybookConfig = {
