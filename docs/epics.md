@@ -2928,21 +2928,24 @@ iOS 16.4 requirement).
 - The exported constants keep their values and are re-documented as **design reference dimensions at 390 dp**, so the existing `CardTile.test.tsx:142-144` assertions and the `CardList.test.tsx:92-97` module mock keep passing unchanged.
 - Out of scope, flagged for separate stories: responsive column counts (the UX spec asks for 2–3 columns at `:61`/`:414-415`; Story 13.2 deliberately shipped a fixed 2-column grid, and `CatalogueGrid.tsx:27-29` already implements the responsive pattern in the same folder), the orientation-locked landscape guidance (`app.json:6` is `"portrait"`), and a `CardTile` → `CardShell` migration.
 
-### Story 16.23: Fix silent barcode-scan failures — reported as "PENNY Card EAN-13 not recognised"
+### Story 16.23: Fix silent barcode-scan failures on iOS — reported as "PENNY Card EAN-13 not recognised"
 
 **As a** user adding a loyalty card by scanning a photo or screenshot of it, **I want** the app to tell me **why** the scan failed rather than always claiming the image contains no barcode, **So that** a scan failure is recoverable and diagnosable — and so the next field report can actually be investigated.
 
+**Platform:** iOS. A Samsung (Android) device decodes the same card correctly via **both** the camera and the image path, so the shared JS pipeline is exonerated and the defect sits in Apple **Vision** (iOS) rather than **ML Kit** (Android) inside `react-native-image-code-scanner`. This is precisely the divergence Story 2.9 flagged at `2-9-scan-cards-from-image-screenshot.md:184`.
+
 **Acceptance Criteria:**
 
-- **Reproduced on device first**, on the confirmed surface (scan-from-image, `react-native-image-code-scanner` — not `expo-camera`), recording platform, source image dimensions, and whether `ImageCodeScanner.scan` returned an empty array or **threw**. A camera scan of the physical card is run as the control: camera-works + image-fails isolates the defect to the image pipeline.
+- **Reproduced on a real iOS device first** (never the simulator — the library pins an older Vision revision there), answering two forking questions: **Q1** did `ImageCodeScanner.scan` resolve `[]` or **reject** (verbatim code + message)? **Q2** does the **iOS camera** read the physical card? AVFoundation is a different engine from Vision, so camera-works + image-fails pins the defect on Vision specifically.
 - `useImageScan` **separates** "decoder returned zero results" from "the native call threw" — the bare `catch {}` at `useImageScan.ts:152` currently discards the reason — and the user-facing copy differentiates the two in **both** `en.ts` and `it.ts`.
 - Both failure paths emit `logger.notify` (Story 16.14's production-visible channel; `logger.warn` is a `__DEV__`-only no-op). **The barcode value, image URI, and file name never reach Sentry** — tag values are not scrubbed by the PII filter.
 - The `?? 'CODE128'` fallback in `useImageScan.ts:51` and `useBarcodeScanner.ts:31` becomes observable, so a decoder format outside the map can no longer silently mislabel a stored card.
 - **The 6 supported symbologies are unchanged by decision** (`barcodeFormatSchema` is a cross-platform sync contract shared with watchOS/Wear OS); only the unbacked `DATAMATRIX` locale key at `en.ts:526` / `it.ts:529` is removed.
 - `penny-market` (`catalogue/italy.json:293-298`) declares `defaultFormat: "EAN13"`, restoring the `applyExpectedFormat` safety net for the brand.
-- Android's 1024 px downscale cap vs iOS's 2048 px (inside the library) is compared and recorded — patching `node_modules` is out of scope, but an Android-only failure would otherwise stay invisible given the project's near-zero Android telemetry.
+- **The iOS gap is closed or explicitly deferred with evidence**, on one of three branches: (a) a fix in our code — candidate is `expo-camera`'s exported-but-unused `scanFromURLAsync`, to be spiked since it is likely Vision-backed too; (b) an upstream report against `react-native-image-code-scanner` plus a CI-guarded `yarn patch` if the fix is small; or (c) a documented deferral where AC2–AC4 carry the value. On every branch, the manual-entry escape hatch must be reachable and obvious from the failure state.
+- **Android must not regress** — it is the known-good platform and is re-verified after any change to the shared JS path.
 
-**Note:** the reported payload `2095110257978` was verified to be a **valid EAN-13** (check digit 8 confirmed) that `bwip-js` renders correctly, that `inferBarcodeFormat` classifies correctly, and that every scan surface already requests — so the defect is in the decode step, not in format support. JS-only, so OTA-eligible like 16.22; but AC1's reproduction still needs a real device, since Jest mocks both decoders.
+**Notes:** the payload `2095110257978` was verified to be a **valid EAN-13** (check digit 8 confirmed) that `bwip-js` renders correctly, that `inferBarcodeFormat` classifies correctly, and that every scan surface already requests — so the defect is in the decode step, not in format support. An earlier suspicion about the library's Android 1024 px downscale cap was **reversed** by the Samsung result: Android downscales harder than iOS (1024 vs 2048) and still succeeds. **Reintroducing ML Kit on iOS is structurally blocked** — Google ships it as a `.framework` with an iOS-Device-only arm64 slice, so CocoaPods excludes arm64 for simulators and every Apple-Silicon simulator build breaks (`2-9…md:124-134`). AC2–AC6 are OTA-eligible; AC7 may not be if it lands in Swift.
 
 ---
 
