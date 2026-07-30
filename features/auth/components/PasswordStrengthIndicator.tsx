@@ -32,12 +32,22 @@ export const PasswordStrengthIndicator = ({
   password,
   testID = 'password-strength-indicator'
 }: PasswordStrengthIndicatorProps) => {
+  // Hooks must run before any early return: NewPasswordScreen renders this
+  // component unconditionally, so `password` goes '' -> non-empty on the first
+  // keystroke. With the early return above the hooks, the empty render
+  // allocated zero hooks, which left `fiber.memoizedState` null and made React
+  // pick the *mount* dispatcher on the following render instead of throwing
+  // "Rendered more hooks than during the previous render". That masked the
+  // violation but silently remounted useTranslation's language subscription on
+  // every empty<->non-empty transition, and any hook added above the return
+  // would have turned it into a hard crash.
+  const { theme, typography, spacing } = useTheme();
+  const { t } = useTranslation();
+
   if (!password.trim()) {
     return null;
   }
 
-  const { theme, typography, spacing } = useTheme();
-  const { t } = useTranslation();
   const strength = getPasswordStrength(password);
 
   const width = strength === 'weak' ? '33%' : strength === 'fair' ? '66%' : '100%';
