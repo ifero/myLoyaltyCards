@@ -58,6 +58,12 @@ _This document builds collaboratively through step-by-step discovery. Sections a
 
 - React Native + Expo as development framework
 - 4 target platforms: iOS, Android, watchOS, Wear OS
+- **Web is explicitly not a target.** The app is portrait phone + wearable only; its JS entry
+  reaches native-only modules with no web implementation (`react-native-watch-connectivity`,
+  `expo-sqlite`, `react-native-image-code-scanner`, `expo-brightness`, `burnt`), so a web
+  bundle is not buildable without shimming each one. `app.json` therefore declares no
+  `expo.web` block. `react-native-web`/`react-dom` remain installed **for Storybook only**
+  (`.storybook/`, Chromatic — Story 16.5), which bundles via Vite and never loads the app entry.
 - Wearable storage limits (~100MB for app + data)
 - Expo dev client with custom native modules for wearable features
 

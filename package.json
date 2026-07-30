@@ -7,7 +7,6 @@
     "android": "expo run:android",
     "ios": "expo run:ios",
     "preios": "node scripts/ensure-expo-sqlite-vendor-files.mjs",
-    "web": "expo start --web",
     "fastlane:match": "./scripts/fastlane-match.sh",
     "fastlane:match:bootstrap": "./scripts/fastlane-match.sh bootstrap",
     "fastlane:match:fetch": "./scripts/fastlane-match.sh fetch",
