@@ -18,8 +18,15 @@ Epic: 16 — Platform & Tech Debt
 >
 > **Apple Vision is not the limitation either — that was measured, not assumed.** On macOS Vision the
 > payload decodes at every leading digit, at 1 px per module, with a 1-module quiet zone, under
-> low-quality JPEG, and from a **194 × 40 px** image. The defect is therefore a property of **ifero's
-> specific file**. Start with the [zero-device harness](#zero-device-reproduction-harness), not a device
+> low-quality JPEG, from a **194 × 40 px** image, and from a faithful reconstruction of the entire card.
+>
+> **🎯 Leading hypothesis: this is not a recognition bug at all — the image never loads.**
+> `UIImage(contentsOfFile:)` returning `nil` rejects with `INVALID_IMAGE`
+> (`ImageCodeScanner.swift:146-149`), the bare `catch {}` swallows it, and the user is told "No barcode
+> found in this image" — which would be simply false. Android's `BitmapFactory` and iOS's ImageIO do not
+> accept the same containers, which fits the platform split exactly. **Defect 1 is therefore the
+> diagnostic that names this bug, not merely observability polish.** Start with
+> `sips -g all <file>` and the [zero-device harness](#zero-device-reproduction-harness), not a device
 > session.
 >
 > **AC2–AC6 ship as an OTA update** — JS/TS + JSON + locales only, so
@@ -79,33 +86,47 @@ on iOS. So the iOS image path is **not** broadly broken — something about this
 macOS ships the same Vision framework as iOS, so the payload was tested directly against
 `VNDetectBarcodesRequest` using the app's exact symbology set. **Every single case decoded correctly:**
 
-| Test                                                                        | Result                                                               |
-| --------------------------------------------------------------------------- | -------------------------------------------------------------------- |
-| Leading digit sweep — `X09511025797` + checksum, X = 0…9                    | ✅ all 10 decode. **The `2` prefix / parity pattern is irrelevant.** |
-| Module width 1, 2, 3, 4, 6, 10 px                                           | ✅ all decode — even a **95 px-wide** barcode                        |
-| Quiet zone 11, 7, 4, 2, 1 modules                                           | ✅ all decode (only a **zero** quiet zone fails)                     |
-| Bar height 150 → 25 px at 570 px wide                                       | ✅ decodes down to 25 px (fails only below ~15 px)                   |
-| JPEG at `low` / `normal` / `high` / `best`                                  | ✅ all decode                                                        |
-| Downscaled to 800 / 500 / 350 / 250 px wide                                 | ✅ all decode, PNG and JPEG alike                                    |
-| **Combined worst case: 194 × 40 px, low-quality JPEG, 1-module quiet zone** | ✅ **decodes**                                                       |
+| Test                                                                                                                                                                             | Result                                                               |
+| -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------- |
+| Leading digit sweep — `X09511025797` + checksum, X = 0…9                                                                                                                         | ✅ all 10 decode. **The `2` prefix / parity pattern is irrelevant.** |
+| Module width 1, 2, 3, 4, 6, 10 px                                                                                                                                                | ✅ all decode — even a **95 px-wide** barcode                        |
+| Quiet zone 11, 7, 4, 2, 1 modules                                                                                                                                                | ✅ all decode (only a **zero** quiet zone fails)                     |
+| Bar height 150 → 25 px at 570 px wide                                                                                                                                            | ✅ decodes down to 25 px (fails only below ~15 px)                   |
+| JPEG at `low` / `normal` / `high` / `best`                                                                                                                                       | ✅ all decode                                                        |
+| Downscaled to 800 / 500 / 350 / 250 px wide                                                                                                                                      | ✅ all decode, PNG and JPEG alike                                    |
+| **Combined worst case: 194 × 40 px, low-quality JPEG, 1-module quiet zone**                                                                                                      | ✅ **decodes**                                                       |
+| **Faithful reconstruction of the whole card** — 806 × 496 canvas, bars at the measured 4.81 px/module × 125 px, red→yellow gradient bands, digits below, at low/normal/best JPEG | ✅ **all decode**                                                    |
 
 **Conclusion: Apple Vision reads `2095110257978` under conditions far harsher than any real card
 image.** The payload, the symbology, the leading digit, resolution, compression and quiet zone are all
 exonerated **for iOS too**.
 
-Therefore the defect is a property of **ifero's specific image file**, not of the barcode and not of the
-framework. Combined with "only this card fails", the remaining candidates are narrow:
+### 🎯 Leading hypothesis: the image never loads — this is not a recognition bug
 
-- **Capture quality** — glare, skew, motion blur, or low contrast in a photo of the physical card. This
-  is where ML Kit genuinely outperforms Vision, and it would explain the platform split exactly.
-- **File format or path** — a HEIC asset, or a `ph://` URI reaching `UIImage(contentsOfFile:)`, which
-  returns `nil` → `INVALID_IMAGE` **rejection**, not an empty result. Today those are indistinguishable.
-- **The bars are not what the printed digits say** — unlikely, since Android returned a checksum-valid
-  read, but cheap to confirm.
+Everything reproducible has now been eliminated, and each elimination is independently confirmed:
 
-⚠️ **So AC1 no longer needs a device for its first cut.** Get the actual file from ifero and run it
-through the harness below on any Mac. That single command distinguishes "the file is bad" from
-"the app's pipeline mishandles a good file", and it costs a minute.
+| Candidate                                        | Status                                                                                                                                                               |
+| ------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| The bars don't encode the printed digits         | ❌ **Dead.** ifero confirmed Android decoded **`2095110257978`**, the correct value — so the bars are a genuine, checksum-valid EAN-13.                              |
+| Vision can't handle the payload or geometry      | ❌ **Dead.** Measured above, including a faithful reconstruction of the entire card.                                                                                 |
+| Capture quality (glare / skew / blur / contrast) | ❌ **Dead.** The supplied image is a **synthetic digital graphic** — crisp flat-black bars, no noise, no perspective. Not a photograph.                              |
+| The orientation double-apply (Defect 4.4)        | ❌ **Dead.** It requires a non-`.up` image **over 2048 px**. This image is 806 px wide, so `scaleImageIfNeeded` never runs, and a digital graphic is `.up`.          |
+| **The file never loads on iOS**                  | 🎯 **Leading.** `UIImage(contentsOfFile:)` returning `nil` → `safeReject("INVALID_IMAGE", …)` (`ImageCodeScanner.swift:146-149`) → swallowed by the bare `catch {}`. |
+
+**Reframe the whole story around this.** If the leading hypothesis holds, the app is not failing to
+_recognise_ a barcode — it never gets as far as looking at one, and then reports **"No barcode found in
+this image"**, which is actively misleading. Defect 1 stops being "nice-to-have observability" and
+becomes **the diagnostic that names the bug**.
+
+Why the platform split fits: Android's `BitmapFactory` and iOS's ImageIO do not accept the same set of
+containers. A file Android decodes happily can return `nil` from `UIImage(contentsOfFile:)` — candidates
+include WebP or AVIF saved with a `.jpg` extension, an unusual colour profile or bit depth, or a
+percent-encoded / non-`file://` path surviving
+`path.replacingOccurrences(of: "file://", with: "")` (`:144`).
+
+⚠️ **AC1 Step 0 does not need a device, and barely needs the app.** With the real file in hand:
+`sips -g all <file>` names the container, colour space, bit depth and alpha in one line, and the
+[harness](#zero-device-reproduction-harness) distinguishes `LOAD_FAILED` from `MISS` in the next.
 
 #### Zero-device reproduction harness
 
@@ -258,7 +279,10 @@ problem is the file, and none of the theories below apply.
 3. **Duplicate symbology registration.** We request both `EAN_13` and `UPC_A`; the switch appends
    `.ean13` for `"EAN_13"` **and** `[.ean13, .upce]` for `"UPC_A"` (`:197-202`), so `.ean13` lands in
    `request.symbologies` twice. Probably benign — verify rather than assume.
-4. **Candidate orientation double-apply — UNVERIFIED, check before acting.** `scaleImageIfNeeded`
+4. **⛔ Orientation double-apply — RULED OUT for this report, kept only as a latent library bug.** It
+   cannot explain the Penny case (806 px wide ⇒ `scaleImageIfNeeded` never runs; digital graphic ⇒
+   `.up`). Do **not** spend time on it here; file it upstream separately if you want it fixed.
+   `scaleImageIfNeeded`
    (`:80-92`) draws through `image.draw(in:)`, which **bakes** the orientation into the pixels, then
    re-wraps the result as `UIImage(cgImage: rendered.cgImage!, scale:, orientation: image.imageOrientation)` — re-attaching the original orientation to already-rotated pixels. The handler is
    then built with `orientation: cgImagePropertyOrientation(from: currentImage.imageOrientation)`
@@ -550,17 +574,19 @@ exposes no reason code when the native call fails.
 - **2026-07-30 — scope: this card only.** Every other card has always scanned fine on iOS. The iOS image
   path is not broadly broken, so the fix is input-shaped, not structural. Together with the macOS Vision
   measurements this is what turned AC1 into a file-classification step rather than a device hunt.
+- **2026-07-30 — Android decoded the correct value**, `2095110257978`, not merely "a scan succeeded". The
+  bars are therefore a genuine checksum-valid EAN-13 and the mock-up theory is dead.
+- **2026-07-30 — the input is a synthetic digital graphic**, not a photo of the physical card (crisp
+  flat-black bars, no noise or perspective). This killed the capture-quality and orientation hypotheses.
 
 ### Open questions for ifero
 
-1. **⭐ The blocker: the actual image file.** Everything now hinges on running _ifero's file_ — not a
-   re-render, not a screenshot of it — through the [harness](#zero-device-reproduction-harness). One
-   minute, no device. Until then AC7's branch cannot be chosen.
-2. Was the failing input **that digital card image**, or a **photo of the physical card**? A photo makes
-   capture quality (glare/skew/blur) the leading candidate and makes the Defect-4 orientation theory
-   reachable; a screenshot rules the orientation theory out entirely (screenshots are `.up`).
-3. Does the **iOS camera** read the physical Penny card? ifero may already know from everyday use, which
-   would save a device session.
+1. **⭐ The only blocker: the actual image file.** Everything reproducible has been eliminated, so the
+   answer is in the bytes. Needed: `sips -g all <file>` output (container, colour space, bit depth,
+   alpha) and the file itself through the [harness](#zero-device-reproduction-harness). One minute, no
+   device, no build. Until then AC7's branch cannot be chosen.
+2. Does the **iOS camera** read the physical Penny card? ifero may already know from everyday use. A
+   working camera would confirm the card itself is fine and keep the focus on the file path.
 
 ## Dev Agent Record
 
