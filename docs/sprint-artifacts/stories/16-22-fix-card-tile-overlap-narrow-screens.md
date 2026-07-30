@@ -4,7 +4,7 @@ baseline_commit: 7837f359540c72c30edcf392e1a897fa99ab9752
 
 # Story 16.22: Fix card-grid tile overlap on narrow screens — derive tile width from the grid cell
 
-Status: in-progress
+Status: review
 
 Epic: 16 — Platform & Tech Debt
 
@@ -236,9 +236,9 @@ this exists so the same class of bug cannot reappear via the second code path.
   - [x] Confirm the `CardList.test.tsx:279-283` `numColumns === 2` test still passes — column count
         is deliberately unchanged (see Out of scope).
 
-- [ ] **Task 5 — Gates and device verification (AC: 7, 8)**
+- [x] **Task 5 — Gates and device verification (AC: 7, 8)**
   - [x] From the **main checkout**: `yarn lint`, `yarn typecheck`, `yarn test`, and `yarn test:coverage`.
-  - [ ] Android dev build at 360 dp and 320 dp, light + dark. Capture screenshots; record the exact
+  - [x] Android dev build at 360 dp and 320 dp, light + dark. Capture screenshots; record the exact
         widths in the Dev Agent Record.
   - [x] Spot-check iOS at 390 dp to confirm AC4's "no visible change" claim holds in the running app,
         not only in the arithmetic.
@@ -666,15 +666,17 @@ Out-of-scope list and the repo's surgical-diff convention):
 
 ### Device Verification Record (AC7)
 
-⚠️ **The Android half of AC7 is NOT satisfied — it is the one open item in the story.** This
-host has no Android AVD and no system image, so it needs a real device. The script below is
-ready to run.
+✅ **AC7 closed by ifero on 2026-07-30**, who tested the change on their own device and reported
+"I've tested it and it works", then approved the PR. Recorded exactly as given: the specific dp
+widths and themes ifero exercised were **not** captured, so the rows below say "not stated"
+rather than asserting 360/320 dp in both themes. The agent could not run this itself — this host
+has no Android AVD and no system image (see the Completion Notes). The script below is kept for
+the next person who needs to reproduce the narrow-width check.
 
-| Platform | Device / emulator             | Width (dp) | Theme      | Result                                    |
-| -------- | ----------------------------- | ---------- | ---------- | ----------------------------------------- |
-| Android  | _none available on this host_ | 360        | both       | **PENDING** — no AVD / no system image    |
-| Android  | _none available on this host_ | 320        | both       | **PENDING** — no AVD / no system image    |
-| iOS      | iPhone 13 sim, iOS 18.6       | 390        | light+dark | ✅ **PASS** — measured exactly, see below |
+| Platform | Device / emulator       | Width (dp) | Theme      | Result                                    |
+| -------- | ----------------------- | ---------- | ---------- | ----------------------------------------- |
+| Android  | ifero's own device      | not stated | not stated | ✅ **PASS** — "tested it and it works"    |
+| iOS      | iPhone 13 sim, iOS 18.6 | 390        | light+dark | ✅ **PASS** — measured exactly, see below |
 
 **✅ iOS 390 dp spot-check DONE (Task 5, third subtask) — AC4 confirmed in the running app, not
 just in the arithmetic.** A 390 × 844 pt iPhone 13 simulator was created (no stock simulator is
