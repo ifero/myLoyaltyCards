@@ -1,6 +1,9 @@
 name: CI — watchOS tests
 
 on:
+  # Lets a maintainer re-measure the job duration on demand when re-tuning
+  # timeout-minutes, without pushing a throwaway commit to a trigger path.
+  workflow_dispatch:
   pull_request:
     types: [opened, synchronize, reopened, ready_for_review]
     paths:
@@ -9,6 +12,7 @@ on:
       - 'ios/**'
       - 'app.json'
       - 'fastlane/Fastfile'
+      - '.github/workflows/watchos-tests.yml'
   push:
     branches: [main]
     paths:
@@ -17,6 +21,7 @@ on:
       - 'ios/**'
       - 'app.json'
       - 'fastlane/Fastfile'
+      - '.github/workflows/watchos-tests.yml'
 
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: 'true'
@@ -25,7 +30,19 @@ jobs:
   watchos-tests:
     name: watchOS (xcodebuild) tests
     runs-on: macos-latest
-    timeout-minutes: 30
+    # Job wall-clock for green runs, measured over the last 30 successful runs
+    # (includes the ~2m of cache-save post-steps, which count against this
+    # ceiling): median ~23m, p95 ~28m, slowest ~29m. The old 30m limit sat
+    # inside that noise band, so a slow runner draw surfaced as a red
+    # `cancelled` check with zero failing steps rather than as a real failure.
+    #
+    # Nearly all of it is the xcodebuild step: the `watch` scheme depends on the
+    # parent iOS app, so ~23m goes to compiling that app's Pod tree (RNSVG,
+    # RNReanimated, RNScreens, SDWebImage, …) to reach a watch target that
+    # itself compiles in ~17s. Caching does not reach that cost — see the PR
+    # that raised this limit — so headroom is the fix until the scheme's
+    # dependency graph is narrowed.
+    timeout-minutes: 50
 
     steps:
       - name: Checkout
