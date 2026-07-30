@@ -648,21 +648,27 @@ today (no other consumer exists) and the fallback is required by AC9 to keep the
 and mocks valid, so it stays — the props' JSDoc states the constraint.
 
 **Follow-ups flagged, deliberately not fixed here** (out of scope per the story's own
-Out-of-scope list and the repo's surgical-diff convention):
+Out-of-scope list and the repo's surgical-diff convention). Each was spun off as its own task, and
+**two of the four already landed on `main` while this story was in review** — they arrived here via
+a `git merge origin/main`, and all gates were re-run green on the merged state:
 
-1. `CardList.test.tsx`'s pre-existing `'calls forceSync and refetch on refresh'` test only
-   asserts `onRefresh` is defined and never invokes it, so it cannot fail if pull-to-refresh
-   breaks. Untouched by this diff; surfaced by the code review. Confirmed by coverage:
-   `CardList.tsx` lines 80–85 (the whole refresh body) are at 0 %.
-2. `app.json` declares a `web` bundler config but the web target cannot bundle
-   (`react-native-watch-connectivity` has no web shim).
-3. `CardTile`'s fixed-size fallback children vs the pinned favourite badge (finding 1 above) —
-   blocks a future 3-column grid.
+1. ~~`CardList.test.tsx`'s pre-existing `'calls forceSync and refetch on refresh'` test only
+   asserted `onRefresh` was defined and never invoked it, so it could not fail if pull-to-refresh
+   broke (`CardList.tsx` refresh body was at 0 % coverage).~~ **DONE — `00e2141` (#171).** Note it
+   also had to rewrite this file's `expo-router` mock so `useFocusEffect` fires on callback-identity
+   change rather than every render; otherwise the two `setIsRefreshing` re-renders bumped `refetch`
+   on their own and masked the very thing the test now checks. That mock change is in this branch
+   via the merge, and all 101 of this story's own tests still pass under it.
+2. ~~`app.json` declared a `web` bundler config but the web target could not bundle
+   (`react-native-watch-connectivity` has no web shim).~~ **DONE — `f1d8957` (#170)**, which removed
+   `expo.web` and kept `react-native-web`/`react-dom` because Storybook owns them.
+3. `CardTile`'s fixed-size fallback children vs the pinned favourite badge (QA finding 1 above) —
+   **still open**; blocks a future 3-column grid.
 4. The repo has **no `eslint-plugin-react-hooks`** (verified absent from `eslint.config.mjs` and
    `package.json`), so neither `rules-of-hooks` nor `exhaustive-deps` runs. "`yarn lint` is
    clean" therefore says nothing about hook dependency arrays — and this story's central
    regression risk _was_ a dependency array (see the round-3 finding above). Repo-wide
-   pre-existing gap; spun off as its own task.
+   pre-existing gap; **still open**.
 
 ### Device Verification Record (AC7)
 
