@@ -7,7 +7,7 @@
  * no-results message, focus-effect refetch, pull-to-refresh, performance.
  */
 
-import { render, screen } from '@testing-library/react-native';
+import { act, render, screen } from '@testing-library/react-native';
 import { useFocusEffect } from 'expo-router';
 
 import { LoyaltyCard } from '@/core/schemas';
@@ -47,10 +47,23 @@ jest.mock('@/shared/hooks/useCloudSync', () => ({
   })
 }));
 
-jest.mock('expo-router', () => ({
-  useFocusEffect: jest.fn((callback: () => void) => callback()),
-  useRouter: () => ({ push: jest.fn() })
-}));
+/**
+ * Real `useFocusEffect` re-runs its callback when the callback's identity
+ * changes — on focus — NOT on every render. Modelling that with `useEffect`
+ * keeps `refetch` call counts meaningful: a mock that fired per render let the
+ * two `setIsRefreshing` re-renders inside `handleRefresh` bump `refetch` on
+ * their own, which masked a pull-to-refresh that never called `refetch` at all.
+ */
+jest.mock('expo-router', () => {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const mockReact = require('react');
+  return {
+    useFocusEffect: jest.fn((callback: () => void) => {
+      mockReact.useEffect(callback, [callback]);
+    }),
+    useRouter: () => ({ push: jest.fn() })
+  };
+});
 
 jest.mock('@/shared/theme', () => ({
   useTheme: () => ({
@@ -354,9 +367,20 @@ describe('CardList', () => {
       setupCards(twoCards);
       render(<CardList />);
 
-      const flashList = screen.getByTestId('card-list-flashlist');
-      const onRefresh = flashList.props.onRefresh;
-      expect(onRefresh).toBeDefined();
+      // `jest.setup.js` forwards `onRefresh` onto the mock FlashList's host
+      // View, so this is the component's own `handleRefresh`.
+      const onRefresh = screen.getByTestId('card-list-flashlist').props.onRefresh;
+
+      // Drop the mount-time focus-effect call so both assertions below can only
+      // be satisfied by `handleRefresh` itself.
+      mockRefetch.mockClear();
+
+      await act(async () => {
+        await onRefresh();
+      });
+
+      expect(mockForceSync).toHaveBeenCalledTimes(1);
+      expect(mockRefetch).toHaveBeenCalledTimes(1);
     });
   });
 
