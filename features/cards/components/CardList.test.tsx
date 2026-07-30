@@ -1,14 +1,17 @@
 /**
  * CardList Component Tests
  * Story 13.2: Restyle Home Screen — AC1, AC3, AC4, AC5, AC6, AC10
+ * Story 16.22: Fix card-grid tile overlap — AC1, AC2, AC3, AC4, AC10
  *
  * Covers: loading, error, empty state, single-card state,
  * fixed 2-column grid, search+sort controls (>= 2 cards),
- * no-results message, focus-effect refetch, pull-to-refresh, performance.
+ * no-results message, focus-effect refetch, pull-to-refresh, performance,
+ * and viewport-derived tile sizing across window widths.
  */
 
-import { render, screen } from '@testing-library/react-native';
+import { act, render, screen } from '@testing-library/react-native';
 import { useFocusEffect } from 'expo-router';
+import { Dimensions, StyleSheet, type EmitterSubscription } from 'react-native';
 
 import { LoyaltyCard } from '@/core/schemas';
 
@@ -16,13 +19,38 @@ import { CardList } from './CardList';
 import { useCards } from '../hooks/useCards';
 import { useCardSearch } from '../hooks/useCardSearch';
 import { useCardSort } from '../hooks/useCardSort';
+import {
+  GUTTER,
+  LIST_CONTENT_PADDING,
+  NUM_COLUMNS,
+  SCREEN_MARGIN,
+  SINGLE_TILE_HEIGHT,
+  SINGLE_TILE_WIDTH
+} from '../utils/gridLayout';
 
 const mockCardTileProps = jest.fn();
 
 // Extend global type for test mocks
 declare global {
-  var mockFlashListState: { numColumns: number | undefined };
+  var mockFlashListState: {
+    numColumns: number | undefined;
+    contentContainerStyle: unknown;
+    listHeaderStyle: unknown;
+  };
 }
+
+/**
+ * Drive the viewport width. `useWindowDimensions` reads `Dimensions.get('window')`
+ * in its state initialiser, so spying on the public Dimensions API exercises the
+ * real hook rather than replacing it. The hook's effect re-reads and compares the
+ * four metrics by value, so a stable return value cannot loop.
+ */
+const mockDimensionsGet = jest.spyOn(Dimensions, 'get');
+const setWindowWidth = (width: number) =>
+  mockDimensionsGet.mockReturnValue({ width, height: 844, scale: 3, fontScale: 1 });
+
+/** The reference width the 171 x 140 design was measured on. */
+const REFERENCE_WIDTH = 390;
 
 // ── Hook mocks ──────────────────────────────────────────────────
 jest.mock('../hooks/useCards');
@@ -76,13 +104,17 @@ jest.mock('./CardTile', () => {
     CardTile: ({
       card,
       enlarged,
-      highlighted
+      highlighted,
+      tileWidth,
+      tileHeight
     }: {
       card: { name: string };
       enlarged?: boolean;
       highlighted?: boolean;
+      tileWidth?: number;
+      tileHeight?: number;
     }) => {
-      mockCardTileProps({ card, enlarged, highlighted });
+      mockCardTileProps({ card, enlarged, highlighted, tileWidth, tileHeight });
       return React.createElement(
         Text,
         { testID: enlarged ? 'card-tile-enlarged' : 'card-tile' },
@@ -209,9 +241,16 @@ describe('CardList', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     global.mockFlashListState.numColumns = undefined;
+    global.mockFlashListState.contentContainerStyle = undefined;
+    global.mockFlashListState.listHeaderStyle = undefined;
+    setWindowWidth(REFERENCE_WIDTH);
     setupCards([]);
     setupSearch();
     setupSort();
+  });
+
+  afterAll(() => {
+    mockDimensionsGet.mockRestore();
   });
 
   // ── Loading state ──
@@ -288,6 +327,171 @@ describe('CardList', () => {
       render(<CardList />);
       expect(screen.getByText('Apple Store')).toBeTruthy();
       expect(screen.getByText('Best Buy')).toBeTruthy();
+    });
+
+    it('highlights only the just-added card in the grid', () => {
+      // The single-card branch already had this covered; the GRID branch did not, even
+      // though Story 16.22 rewrote the very `renderItem` callback that carries it. A
+      // dropped `highlightCardId` dependency would silently kill the just-added green
+      // highlight for the common 2+-card view with every other test still green.
+      setupCards(twoCards);
+      render(<CardList highlightCardId="2" />);
+
+      const byName = new Map(
+        mockCardTileProps.mock.calls.map(([props]) => [props.card.name, props])
+      );
+      expect(byName.get('Best Buy')).toMatchObject({ highlighted: true, enlarged: undefined });
+      expect(byName.get('Apple Store')).toMatchObject({ highlighted: false });
+    });
+  });
+
+  // ── Viewport-derived tile sizing — Story 16.22 (AC1, AC2, AC3, AC4, AC10) ──
+  describe('Viewport-derived tile sizing — Story 16.22', () => {
+    /** Size props CardList handed the first tile it rendered. */
+    const capturedTileSize = (): { tileWidth?: number; tileHeight?: number } => {
+      const call = mockCardTileProps.mock.calls[0]?.[0];
+      expect(call).toBeDefined();
+      return call;
+    };
+
+    /**
+     * Room left for a tile inside its grid cell, derived independently from
+     * FlashList's own model: it measures `boundedSize` with a probe view inside
+     * the padded content container, splits it by column count, and the tile
+     * wrapper then spends GUTTER / 2 on each side.
+     */
+    const cellContentWidth = (windowWidth: number) =>
+      (windowWidth - 2 * LIST_CONTENT_PADDING) / NUM_COLUMNS - GUTTER;
+
+    it('passes exactly 171 x 140 at the 390 dp design reference width (AC4)', () => {
+      setWindowWidth(REFERENCE_WIDTH);
+      setupCards(twoCards);
+      render(<CardList />);
+
+      expect(capturedTileSize()).toMatchObject({ tileWidth: 171, tileHeight: 140 });
+    });
+
+    it('shrinks the tile to fit at 360 dp, where the fixed 171 pt tile overlapped (AC1)', () => {
+      setWindowWidth(360);
+      setupCards(twoCards);
+      render(<CardList />);
+
+      expect(capturedTileSize()).toMatchObject({ tileWidth: 156, tileHeight: 128 });
+    });
+
+    it('re-derives the tile size when the viewport changes on an ALREADY-MOUNTED list (AC1)', () => {
+      // This is the case `useWindowDimensions()` was chosen for over a module-scope
+      // `Dimensions.get()`: an Android Display-size or font-scale change while the
+      // screen is mounted. `useFocusEffect` keeps this screen alive across tab focus
+      // rather than remounting it, so a stale `renderItem` closure would keep
+      // painting overlapping tiles for the lifetime of the mount — with every
+      // render-time test above still passing.
+      const changeHandlers: ((payload: { window: { width: number } }) => void)[] = [];
+      const addEventListener = jest
+        .spyOn(Dimensions, 'addEventListener')
+        .mockImplementation((_type, handler) => {
+          changeHandlers.push(handler as (payload: { window: { width: number } }) => void);
+          // Only `.remove()` is exercised; the rest of EmitterSubscription is irrelevant here.
+          return { remove: jest.fn() } as unknown as EmitterSubscription;
+        });
+
+      try {
+        setWindowWidth(REFERENCE_WIDTH);
+        setupCards(twoCards);
+        render(<CardList />);
+        expect(capturedTileSize()).toMatchObject({ tileWidth: 171, tileHeight: 140 });
+
+        mockCardTileProps.mockClear();
+        setWindowWidth(360);
+        act(() => {
+          changeHandlers.forEach((handler) => handler({ window: Dimensions.get('window') }));
+        });
+
+        expect(capturedTileSize()).toMatchObject({ tileWidth: 156, tileHeight: 128 });
+      } finally {
+        addEventListener.mockRestore();
+      }
+    });
+
+    it.each([320, 340, 360, 375, 390, 412, 430])(
+      'passes a tile width that fits its own grid cell at %i dp (AC2)',
+      (windowWidth) => {
+        setWindowWidth(windowWidth);
+        setupCards(twoCards);
+        render(<CardList />);
+
+        const { tileWidth } = capturedTileSize();
+        expect(tileWidth).toBeDefined();
+        expect(tileWidth!).toBeLessThanOrEqual(cellContentWidth(windowWidth));
+        expect(2 * tileWidth! + 2 * SCREEN_MARGIN + GUTTER).toBeLessThanOrEqual(windowWidth);
+      }
+    );
+
+    it('splits the 16 pt screen margin between the list content and the tile wrapper (AC3)', () => {
+      setupCards(twoCards);
+      render(<CardList />);
+
+      // The list keeps only the remainder; the rest lives on each tile wrapper, so
+      // adjacent wrappers form a 16 pt gutter and the outer edges still total 16 pt.
+      const listContent = StyleSheet.flatten(global.mockFlashListState.contentContainerStyle) as {
+        paddingHorizontal?: number;
+      };
+      expect(listContent.paddingHorizontal).toBe(LIST_CONTENT_PADDING);
+    });
+
+    it('keeps the search/sort header at the same 16 pt visual margin as the grid (AC3)', () => {
+      setupCards(twoCards);
+      render(<CardList />);
+
+      // Required companion to the listContent padding change: the header lives in the
+      // same padded container as the tiles but has no tileWrapper of its own, so it
+      // needs the wrapper's share of the margin or it widens to 8 pt.
+      const header = StyleSheet.flatten(global.mockFlashListState.listHeaderStyle) as {
+        paddingHorizontal?: number;
+      };
+      expect(header.paddingHorizontal).toBe(GUTTER / 2);
+      expect(LIST_CONTENT_PADDING + (header.paddingHorizontal ?? 0)).toBe(SCREEN_MARGIN);
+    });
+
+    it('sizes the enlarged single-card tile from the viewport too (AC10)', () => {
+      setupCards([makeCard()]);
+      render(<CardList />);
+
+      expect(capturedTileSize()).toMatchObject({
+        tileWidth: SINGLE_TILE_WIDTH,
+        tileHeight: SINGLE_TILE_HEIGHT
+      });
+    });
+
+    it('clamps the enlarged single-card tile on a viewport too narrow for 220 pt (AC10)', () => {
+      setWindowWidth(240);
+      setupCards([makeCard()]);
+      render(<CardList />);
+
+      expect(capturedTileSize().tileWidth).toBe(240 - 2 * SCREEN_MARGIN);
+    });
+
+    it('reads the window dimensions once, not once per rendered tile', () => {
+      // Guards against `CardList` re-deriving the viewport per tile (e.g. moving the
+      // read inside `renderItem`). Note `./CardTile` is mocked in this suite, so a
+      // `useWindowDimensions()` added to the real CardTile would NOT be caught here —
+      // the anti-pattern table is the guard for that.
+      const manyCards = Array.from({ length: 20 }, (_, i) =>
+        makeCard({ id: `${i}`, name: `Store ${i}` })
+      );
+      setupCards(manyCards);
+      mockDimensionsGet.mockClear();
+      setWindowWidth(360);
+      render(<CardList />);
+
+      expect(mockCardTileProps).toHaveBeenCalledTimes(manyCards.length);
+      // Bounded against the TILE COUNT rather than useWindowDimensions' internal
+      // read count (2 per mount today), so the assertion survives an RN internals
+      // change or a StrictMode double-render while still catching the regression it
+      // exists for: a per-tile read would scale with the list. The lower bound keeps
+      // it from passing vacuously if the hook is dropped altogether.
+      expect(mockDimensionsGet.mock.calls.length).toBeGreaterThanOrEqual(1);
+      expect(mockDimensionsGet.mock.calls.length).toBeLessThan(manyCards.length);
     });
   });
 

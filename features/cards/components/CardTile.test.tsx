@@ -1,10 +1,13 @@
 /**
  * CardTile Component Tests
  * Story 13.2: Restyle Home Screen — AC1, AC7, AC9
+ * Story 16.22: Fix card-grid tile overlap — AC1, AC5, AC9 (tileWidth/tileHeight props)
  */
 
 import { render, screen, fireEvent } from '@testing-library/react-native';
 import { useRouter } from 'expo-router';
+import { StyleSheet } from 'react-native';
+import Animated from 'react-native-reanimated';
 
 import { LoyaltyCard } from '@/core/schemas';
 
@@ -61,6 +64,9 @@ jest.mock('../utils/brandLogos', () => {
     getBrandLogo: jest.fn(() => MockLogo)
   };
 });
+
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const { getBrandLogo } = require('../utils/brandLogos');
 
 jest.mock('./BrandLogo', () => ({
   BrandLogo: ({ source, width, height }: { source: unknown; width: number; height: number }) =>
@@ -148,6 +154,180 @@ describe('CardTile', () => {
       expect(SINGLE_TILE_WIDTH).toBe(220);
       expect(SINGLE_TILE_HEIGHT).toBe(180);
       expect(SINGLE_TILE_RADIUS).toBe(20);
+    });
+  });
+
+  // ── Viewport-derived dimensions — Story 16.22 (AC1, AC5, AC9) ──
+  describe('Applied tile dimensions — Story 16.22', () => {
+    /** Flattened style of the tile shell (the Animated.View, not the name below it). */
+    const tileStyle = (element: React.ReactElement) => {
+      const { UNSAFE_getByType } = render(element);
+      return StyleSheet.flatten(UNSAFE_getByType(Animated.View).props.style) as {
+        width?: number;
+        height?: number;
+        borderRadius?: number;
+      };
+    };
+
+    it('applies an explicit tileWidth/tileHeight to the tile shell', () => {
+      // 360 dp — the most common Android portrait width, where the old fixed 171 overlapped.
+      const style = tileStyle(<CardTile card={mockCard} tileWidth={156} tileHeight={128} />);
+      expect(style.width).toBe(156);
+      expect(style.height).toBe(128);
+    });
+
+    it('falls back to the design reference constants when no size props are given', () => {
+      const style = tileStyle(<CardTile card={mockCard} />);
+      expect(style.width).toBe(TILE_WIDTH);
+      expect(style.height).toBe(TILE_HEIGHT);
+    });
+
+    it('falls back to the enlarged constants for a single card with no size props', () => {
+      const style = tileStyle(<CardTile card={mockCard} enlarged />);
+      expect(style.width).toBe(SINGLE_TILE_WIDTH);
+      expect(style.height).toBe(SINGLE_TILE_HEIGHT);
+    });
+
+    it('lets explicit size props override the enlarged constants', () => {
+      const style = tileStyle(
+        <CardTile card={mockCard} enlarged tileWidth={208} tileHeight={170} />
+      );
+      expect(style.width).toBe(208);
+      expect(style.height).toBe(170);
+    });
+
+    it('keeps the corner radius fixed when the tile shrinks (AC5)', () => {
+      expect(
+        tileStyle(<CardTile card={mockCard} tileWidth={136} tileHeight={111} />).borderRadius
+      ).toBe(TILE_RADIUS);
+      expect(
+        tileStyle(<CardTile card={mockCard} enlarged tileWidth={188} tileHeight={154} />)
+          .borderRadius
+      ).toBe(SINGLE_TILE_RADIUS);
+    });
+
+    it('derives the brand logo size from the applied tile size, not the constants', () => {
+      const brandCard: LoyaltyCard = { ...mockCard, brandId: 'esselunga' };
+      (useBrandLogo as jest.Mock).mockReturnValue({
+        id: 'esselunga',
+        name: 'Esselunga',
+        color: '#DB1F26',
+        logo: 'esselunga',
+        aliases: []
+      });
+
+      render(<CardTile card={brandCard} tileWidth={156} tileHeight={128} />);
+      const logo = screen.getByTestId('brand-logo-svg');
+      expect(logo.props.width).toBe(Math.round(156 * 0.85));
+      expect(logo.props.height).toBe(Math.round(128 * 0.85));
+    });
+
+    /**
+     * The tile's fallback children (`logoSlot`, `avatarCircle`) are FIXED sizes and are
+     * centre-aligned, while `favouriteBadge` is pinned to the right edge. Before this
+     * story the tile never went below 171 pt, so they could never meet. Now that the
+     * tile tracks the viewport there is a width at which the centred fallback reaches
+     * the badge, so the clearance is asserted rather than assumed.
+     *
+     * At 136 pt (the tile at 320 dp, the narrowest width AC7 exercises) the abbreviation
+     * slot clears the badge by 6 pt. The collision point is ~124 pt of tile, i.e. a
+     * ~296 dp viewport — below every real device. It matters mainly as a floor for any
+     * future change that shrinks the tile further, a 3-column grid above all.
+     */
+    describe('fallback children clear the favourite badge', () => {
+      const NARROWEST_SUPPORTED_TILE_WIDTH = 136;
+
+      /** Right-pinned badge: its left edge is tileWidth − (right + width). */
+      const badgeLeftEdge = (tileWidth: number, element: React.ReactElement) => {
+        render(element);
+        const badge = StyleSheet.flatten(screen.getByTestId('favourite-badge').props.style) as {
+          right?: number;
+          width?: number;
+        };
+        expect(badge.right).toBeDefined();
+        expect(badge.width).toBeDefined();
+        return tileWidth - (badge.right! + badge.width!);
+      };
+
+      /**
+       * Width of the nearest styled ancestor of a text node — the fallback container
+       * that holds it. Walks up rather than assuming a depth, because RNTL interposes
+       * composite elements that carry no style of their own.
+       */
+      const enclosingWidth = (text: string): number | undefined => {
+        let node = screen.getByText(text).parent;
+        while (node) {
+          const style = StyleSheet.flatten(node.props?.style) as { width?: number } | undefined;
+          if (typeof style?.width === 'number') return style.width;
+          node = node.parent;
+        }
+        return undefined;
+      };
+
+      it('keeps the brand-abbreviation slot clear of the badge at 320 dp', () => {
+        // Catalogue brand whose SVG asset is missing → the abbreviation-slot branch.
+        (useBrandLogo as jest.Mock).mockReturnValue({
+          id: 'esselunga',
+          name: 'Esselunga',
+          color: '#DB1F26',
+          logo: 'esselunga',
+          aliases: []
+        });
+        (getBrandLogo as jest.Mock).mockReturnValue(undefined);
+
+        const left = badgeLeftEdge(
+          NARROWEST_SUPPORTED_TILE_WIDTH,
+          <CardTile
+            card={{ ...mockCard, brandId: 'esselunga', isFavorite: true }}
+            tileWidth={NARROWEST_SUPPORTED_TILE_WIDTH}
+            tileHeight={111}
+          />
+        );
+        const slotWidth = enclosingWidth('ES');
+        expect(slotWidth).toBeDefined();
+
+        // Centred child, so its right edge is tileWidth / 2 + width / 2.
+        const slotRightEdge = NARROWEST_SUPPORTED_TILE_WIDTH / 2 + slotWidth! / 2;
+        expect(slotRightEdge).toBeLessThan(left);
+      });
+
+      it('keeps the first-letter avatar clear of the badge at 320 dp', () => {
+        (useBrandLogo as jest.Mock).mockReturnValue(undefined);
+
+        const left = badgeLeftEdge(
+          NARROWEST_SUPPORTED_TILE_WIDTH,
+          <CardTile
+            card={{ ...mockCard, isFavorite: true }}
+            tileWidth={NARROWEST_SUPPORTED_TILE_WIDTH}
+            tileHeight={111}
+          />
+        );
+        const avatarWidth = enclosingWidth('T');
+        expect(avatarWidth).toBeDefined();
+
+        const avatarRightEdge = NARROWEST_SUPPORTED_TILE_WIDTH / 2 + avatarWidth! / 2;
+        expect(avatarRightEdge).toBeLessThan(left);
+      });
+    });
+
+    it('keeps single-line tail ellipsis for the name regardless of tile size', () => {
+      // Deliberately NOT a claim about *where* truncation falls — RNTL runs no flex
+      // layout, so no unit test can observe that. What this pins is that passing a size
+      // prop doesn't disturb the name's truncation contract: still one line, still
+      // native tail ellipsis, at the narrow tile as at the reference tile.
+      //
+      // The real consequence — the name gets 136 pt instead of 171 at 320 dp, ~20 %
+      // less, compounded by Android's independent font-scale setting — is a product
+      // decision for ifero and is checked by hand in the AC7 script, not here.
+      for (const size of [{ tileWidth: 136, tileHeight: 111 }, {}]) {
+        const { unmount } = render(
+          <CardTile card={{ ...mockCard, name: 'Supermercato Esselunga Fidaty Plus' }} {...size} />
+        );
+        const name = screen.getByText('Supermercato Esselunga Fidaty Plus');
+        expect(name.props.numberOfLines).toBe(1);
+        expect(name.props.ellipsizeMode).toBe('tail');
+        unmount();
+      }
     });
   });
 

@@ -4,7 +4,7 @@ baseline_commit: 7837f359540c72c30edcf392e1a897fa99ab9752
 
 # Story 16.22: Fix card-grid tile overlap on narrow screens — derive tile width from the grid cell
 
-Status: ready-for-dev
+Status: in-progress
 
 Epic: 16 — Platform & Tech Debt
 
@@ -164,83 +164,83 @@ this exists so the same class of bug cannot reappear via the second code path.
 
 ## Tasks / Subtasks
 
-- [ ] **Task 1 — Pure layout helper (AC: 1, 2, 4, 5, 10)**
-  - [ ] Create `features/cards/utils/gridLayout.ts`. No React imports; pure functions only.
-  - [ ] Export the grid geometry constants, moved out of `CardList.tsx`: `NUM_COLUMNS = 2`,
+- [x] **Task 1 — Pure layout helper (AC: 1, 2, 4, 5, 10)**
+  - [x] Create `features/cards/utils/gridLayout.ts`. No React imports; pure functions only.
+  - [x] Export the grid geometry constants, moved out of `CardList.tsx`: `NUM_COLUMNS = 2`,
         `SCREEN_MARGIN = 16`, `GUTTER = 16`. Also export `LIST_CONTENT_PADDING = SCREEN_MARGIN - GUTTER / 2`
         (= 8) so the style and the maths cannot drift apart.
-  - [ ] `getGridTileWidth(windowWidth: number): number` →
+  - [x] `getGridTileWidth(windowWidth: number): number` →
         `Math.floor((windowWidth - 2 * LIST_CONTENT_PADDING - NUM_COLUMNS * GUTTER) / NUM_COLUMNS)`,
         i.e. `floor((W - 48) / 2)`. Clamp the result to a floor of `1` so a degenerate/zero measured
         width can never produce a negative width.
-  - [ ] `getGridTileHeight(tileWidth: number): number` →
+  - [x] `getGridTileHeight(tileWidth: number): number` →
         `Math.round(tileWidth * TILE_HEIGHT / TILE_WIDTH)`.
-  - [ ] `getSingleTileWidth(windowWidth: number): number` →
+  - [x] `getSingleTileWidth(windowWidth: number): number` →
         `Math.min(SINGLE_TILE_WIDTH, windowWidth - 2 * SCREEN_MARGIN)` (AC10), and
         `getSingleTileHeight(width) = Math.round(width * SINGLE_TILE_HEIGHT / SINGLE_TILE_WIDTH)` so the
         enlarged tile keeps its own 220 : 180 ratio if it ever clamps. At every real device width this
         returns exactly 220 × 180 — the clamp is dormant by design.
-  - [ ] **Reuse precedent for the hook:** `CatalogueGrid.tsx:99-102` already drives a FlashList grid
+  - [x] **Reuse precedent for the hook:** `CatalogueGrid.tsx:99-102` already drives a FlashList grid
         from `useWindowDimensions()` in this same folder. Follow that shape; do not invent a new one.
-  - [ ] Import the four reference constants from `./CardTile`'s module — or, to avoid a
+  - [x] Import the four reference constants from `./CardTile`'s module — or, to avoid a
         `utils/ → components/` import direction, re-declare the design reference dimensions in
         `gridLayout.ts` and have `CardTile.tsx` re-export them so the public export surface is
         unchanged. **Prefer the second**: geometry belongs in `utils/`, and `CardTile.tsx` keeps
         exporting `TILE_WIDTH`/`TILE_HEIGHT`/`TILE_RADIUS`/`SINGLE_TILE_*` so AC9 holds and no
         existing import breaks.
-  - [ ] Add `gridLayout` to `features/cards/utils/index.ts` only if that barrel is the established
+  - [x] Add `gridLayout` to `features/cards/utils/index.ts` only if that barrel is the established
         consumption path — check it first; do not add an unused export.
 
-- [ ] **Task 2 — `CardTile` accepts its width (AC: 1, 5, 9)**
-  - [ ] Add optional props `tileWidth?: number` and `tileHeight?: number`.
-  - [ ] Replace `CardTile.tsx:93-94` so the applied values are
+- [x] **Task 2 — `CardTile` accepts its width (AC: 1, 5, 9)**
+  - [x] Add optional props `tileWidth?: number` and `tileHeight?: number`.
+  - [x] Replace `CardTile.tsx:93-94` so the applied values are
         `tileWidth ?? (enlarged ? SINGLE_TILE_WIDTH : TILE_WIDTH)` and the same shape for height.
         The default MUST remain the current constant so the 15 existing `CardTile.test.tsx` renders
         (which pass no width prop) stay green.
-  - [ ] Leave `tileRadius` selection (`:95`) untouched — radius does not scale (AC5).
-  - [ ] Leave `logoWidth`/`logoHeight` (`:109-110`) untouched — they already derive from `tileWidth`.
-  - [ ] Do not change the `Animated.View` style array structure (`:123-143`); only the width/height
+  - [x] Leave `tileRadius` selection (`:95`) untouched — radius does not scale (AC5).
+  - [x] Leave `logoWidth`/`logoHeight` (`:109-110`) untouched — they already derive from `tileWidth`.
+  - [x] Do not change the `Animated.View` style array structure (`:123-143`); only the width/height
         values feeding it.
 
-- [ ] **Task 3 — `CardList` computes once and passes down (AC: 1, 2, 3, 10)**
-  - [ ] Add a single `useWindowDimensions()` call in `CardList`. **One subscription for the whole
+- [x] **Task 3 — `CardList` computes once and passes down (AC: 1, 2, 3, 10)**
+  - [x] Add a single `useWindowDimensions()` call in `CardList`. **One subscription for the whole
         list** — do not call it inside `CardTile` (that would create one subscription per rendered
         tile).
-  - [ ] Derive `tileWidth` / `tileHeight` via the Task-1 helpers, memoised on `width`, and pass both
+  - [x] Derive `tileWidth` / `tileHeight` via the Task-1 helpers, memoised on `width`, and pass both
         to `CardTile` in `renderItem` (`:101-108`) and in the single-card branch (`:142`, using
         `getSingleTileWidth`).
-  - [ ] `listContent.paddingHorizontal` (`:198`): `SCREEN_MARGIN` → `LIST_CONTENT_PADDING` (16 → 8).
-  - [ ] `tileWrapper.paddingHorizontal` (`:207`) stays `GUTTER / 2` (8). Combined with the above this
+  - [x] `listContent.paddingHorizontal` (`:198`): `SCREEN_MARGIN` → `LIST_CONTENT_PADDING` (16 → 8).
+  - [x] `tileWrapper.paddingHorizontal` (`:207`) stays `GUTTER / 2` (8). Combined with the above this
         yields 16 pt outer margins and a 16 pt gutter at every width.
-  - [ ] **Required companion to the padding change:** add `paddingHorizontal: GUTTER / 2` to
+  - [x] **Required companion to the padding change:** add `paddingHorizontal: GUTTER / 2` to
         `headerContainer` (`:201-203`) so SearchBar + SortFilterRow stay at a 16 pt visual margin
         instead of widening to 8 pt (AC3). Verify the same for the `noResults` block (`:221-226`) and
         `EmptyState` — both are centre-aligned, so an 8 pt shift is expected to be invisible;
         confirm rather than assume.
-  - [ ] Update the file-header comment (`:37-42`, `:50-51`): the grid values now live in
+  - [x] Update the file-header comment (`:37-42`, `:50-51`): the grid values now live in
         `utils/gridLayout.ts`, and "Fixed 2-column FlashList grid" is still accurate for the **column
         count** but the tile width is now viewport-derived. Keep the existing note that these values
         are intentionally local and differ from the `LAYOUT` tokens (see Anti-patterns).
 
-- [ ] **Task 4 — Tests (AC: 2, 4, 6, 8)**
-  - [ ] `features/cards/utils/gridLayout.test.ts` — the AC6 contract test: the device-width table,
+- [x] **Task 4 — Tests (AC: 2, 4, 6, 8)**
+  - [x] `features/cards/utils/gridLayout.test.ts` — the AC6 contract test: the device-width table,
         the AC2 invariant swept across 280–1024 dp, the AC4 exact `171 × 140` at 390 dp, and the
         degenerate-input floor.
-  - [ ] `CardList.test.tsx` — assert `CardTile` receives a `tileWidth` that fits its cell. The
+  - [x] `CardList.test.tsx` — assert `CardTile` receives a `tileWidth` that fits its cell. The
         existing `mockCardTileProps` spy already captures props, so extend the captured shape rather
         than adding a new mechanism. Mock `useWindowDimensions` to drive at least a narrow (360) and
         the reference (390) width.
-  - [ ] `CardTile.test.tsx` — add a case asserting an explicit `tileWidth`/`tileHeight` prop is
+  - [x] `CardTile.test.tsx` — add a case asserting an explicit `tileWidth`/`tileHeight` prop is
         applied to the tile view, and that omitting them falls back to the constants. Do **not**
         delete the `:140-152` dimension assertions.
-  - [ ] Confirm the `CardList.test.tsx:279-283` `numColumns === 2` test still passes — column count
+  - [x] Confirm the `CardList.test.tsx:279-283` `numColumns === 2` test still passes — column count
         is deliberately unchanged (see Out of scope).
 
 - [ ] **Task 5 — Gates and device verification (AC: 7, 8)**
-  - [ ] From the **main checkout**: `yarn lint`, `yarn typecheck`, `yarn test`, and `yarn test:coverage`.
+  - [x] From the **main checkout**: `yarn lint`, `yarn typecheck`, `yarn test`, and `yarn test:coverage`.
   - [ ] Android dev build at 360 dp and 320 dp, light + dark. Capture screenshots; record the exact
         widths in the Dev Agent Record.
-  - [ ] Spot-check iOS at 390 dp to confirm AC4's "no visible change" claim holds in the running app,
+  - [x] Spot-check iOS at 390 dp to confirm AC4's "no visible change" claim holds in the running app,
         not only in the arithmetic.
 
 ## Dev Notes
@@ -504,16 +504,289 @@ intent and is cited below; its _implementation_ guidance is not.
 
 ### Agent Model Used
 
-_To be filled by the dev agent._
+claude-opus-5 (implementation), claude-sonnet-5 (code review + QA review subagents)
 
 ### Debug Log References
 
+- `yarn typecheck` — clean.
+- `yarn lint` — clean. `npx prettier --check` — clean.
+- `yarn test` — **170 suites / 1890 tests green** from the main checkout.
+- `yarn test:coverage` — **exit 0**, i.e. the 80 % global gate passes. Global statements/branches
+  read 93.38–93.43 % / 86.11–86.16 % across repeated runs — that few-hundredths jitter is normal
+  with parallel workers, so treat the exit code as the fact and the percentages as approximate.
+  `gridLayout.ts` is at **100 %** statements/branches/functions/lines in every run.
+- `yarn tokens:check` — in sync. `yarn check:no-tests-folders` — clean.
+- **Mutation-checked** the three assertions most at risk of passing vacuously, each by
+  breaking the code and confirming the test goes red, then restoring:
+  1. Removing `headerContainer.paddingHorizontal` → the AC3 header test fails.
+  2. Narrowing `renderItem`'s dep array to `[highlightCardId]` → the mounted-viewport-change
+     test fails (it caught the stale-closure regression it exists for).
+  3. The AC2 sweep reproduces the shipped 374 dp cliff for the old fixed 171 pt tile, so the
+     sweep would have caught the original bug rather than passing trivially.
+
+**Review rounds.** Three adversarial Sonnet code-review rounds; every finding was either fixed
+or explicitly triaged. The substantive one was round 3's: nothing guarded `renderItem`'s
+dependency array against a **live** viewport change on an already-mounted list — the exact
+Android Display-size scenario `useWindowDimensions()` was chosen for. Every other sizing test
+set the width _before_ `render()`, so a stale closure would have kept painting overlapping
+tiles for the lifetime of the mount with the whole suite still green. Now covered by
+`'re-derives the tile size when the viewport changes on an ALREADY-MOUNTED list'`, which spies
+on `Dimensions.addEventListener`, captures the change handler and fires it inside `act()`.
+Also hardened: `toTileDimension()` guards non-finite input, because `Math.max(1, NaN)` is `NaN`
+and would otherwise have put a silent `NaN` into a style width.
+
+⚠️ **Note for review:** during round 2 a foreign, half-applied edit appeared in the working
+tree — `CardList.test.tsx`'s `expo-router` mock had been rewritten as groundwork for the
+pull-to-refresh follow-up (item 1 below) while the vacuous test itself was left untouched. It
+was reverted, and the full source diff was then re-read line by line to confirm it contains
+only this story's changes. Later rounds were run read-only to prevent a repeat.
+
 ### Completion Notes List
+
+**What was implemented (Tasks 1–4, all ACs except AC7):**
+
+- `features/cards/utils/gridLayout.ts` (NEW) — pure geometry. `getGridTileWidth` =
+  `floor((W − 48) / 2)`, `getGridTileHeight` at the 140/171 ratio, plus the defensive
+  single-tile clamp. Grid constants moved here from `CardList.tsx`, and
+  `LIST_CONTENT_PADDING` is **derived** (`SCREEN_MARGIN − GUTTER / 2`) so the stylesheet
+  and the arithmetic cannot drift apart.
+- Design reference constants (`TILE_WIDTH`/`TILE_HEIGHT`/`TILE_RADIUS`/`SINGLE_TILE_*`) now
+  live in `gridLayout.ts` and are **re-exported** by `CardTile.tsx` — Task 1's preferred
+  option, so `utils/` never imports from `components/` and no existing import breaks (AC9).
+- `CardTile` gained optional `tileWidth`/`tileHeight`, destructured as `tileWidthProp`/
+  `tileHeightProp` so the existing local names — and therefore the `Animated.View` style
+  array and the `tileWidth * 0.85` logo derivation — are untouched (AC5).
+- `CardList` calls `useWindowDimensions()` **once** and passes sizes down; the two
+  `useMemo`s are keyed on `windowWidth` only.
+- Padding split: `listContent` 16 → `LIST_CONTENT_PADDING` (8), `tileWrapper` stays at
+  `GUTTER / 2` (8), and `headerContainer` gains `GUTTER / 2` — restoring 16 pt outer margins
+  and a 16 pt gutter (AC3), which the shipped code never achieved at any width (it rendered
+  20/8 on a 390 dp iPhone).
+
+**One precision caveat on AC3, disclosed rather than glossed.** AC3's wording is "**exactly**
+16 pt ... on all widths". That holds only where `Math.floor` sheds nothing. Elsewhere the tile
+is narrower than its content box and, being centre-aligned, the leftover splits evenly on both
+sides — padding the outer margin by one share and the gutter by two:
+
+| Viewport width | Outer margin  | Gutter       | Notes                                |
+| -------------- | ------------- | ------------ | ------------------------------------ |
+| even integer   | exactly 16    | exactly 16   | includes the 390 dp design reference |
+| odd integer    | exactly 16.25 | exactly 16.5 | 2 of AC6's 10 widths (375, 393)      |
+| fractional     | < 16.5        | < 17         | 1080 / 2.625 = 411.43 dp → 16.36 pt  |
+
+The fractional row is **not hypothetical** — Android reports `pixels / density`, and density is
+a float that need not divide evenly, which is the very Display-size mechanism this story is
+about. This is **not fixable within the story's own constraints, and is harmless in the right
+direction**: flooring is mandated by Open Decision 5 (it is what makes the AC2 fit
+unfalsifiable), and asymmetric per-column padding — the only way to land exact integers — is
+explicitly rejected by Open Decision 3. The slack can only ever _add_ clearance, never remove
+it, so AC2 is strictly safer than nominal, and the worst case is under one point (≈3 physical
+px at 3x). Rather than leave this as prose, **all three rows are asserted** in
+`gridLayout.test.ts` across the 280–1024 dp integer sweep plus a fractional sweep, so no bound
+can silently grow. Flagged for ifero as a wording correction to AC3, not a code change.
+
+**A factual correction to the story's own Dev Notes** (surfaced by review; Dev Notes is not a
+section the dev agent may edit, so it is recorded here): "Files to touch" states "Nothing else
+consumes `CardTile` — **verified**: the only references are `CardList.tsx`, the two test files,
+and `CardTile.tsx` itself." It misses `features/cards/index.ts:27`, which re-exports `CardTile`
+from the feature barrel. Confirmed harmless: a repo-wide grep for `from '@/features/cards'`
+returns **nothing**, so there is no consumer today, and AC9's unchanged fallback constants would
+protect one anyway. (That barrel export is itself a pre-existing divergence from
+`project-context.md`'s "DO NOT export: components" rule — not this story's business.)
+
+**Verified rather than assumed** (Task 3 asked for confirmation, not assumption): the
+`noResults` block and `EmptyState` are unaffected by the padding change — both are
+centre-aligned, and `EmptyState` carries its own `paddingHorizontal: 32` with fixed-width
+children (160/240 pt), so the extra 16 pt of available width only _reduces_ clipping at
+narrow widths. `SearchBar` and `SortFilterRow` are full-width rows with no self-margin,
+which is precisely why the `headerContainer` companion change was required.
+
+**Not implemented — AC7 device verification (see the table below).** This machine has **no
+Android AVD and no Android system image installed**, so the 360 dp / 320 dp Android checks
+could not be run here. Two fallbacks were attempted and both are genuinely unavailable, not
+skipped: an iPhone SE (1st gen) simulator would give a true 320 pt viewport but the device
+type cannot pair with any installed iOS runtime (needs iOS ≤ 15), and the Expo **web**
+target — which would have rendered the real component tree at exactly 320/360 CSS px —
+**cannot bundle at all**, because `react-native-watch-connectivity` has no web
+implementation (`Unable to resolve module ./RNWatch`). That web-build failure is
+pre-existing and unrelated to this story; flagged as a follow-up, not fixed.
+
+**QA review findings — what a narrower tile changes beyond the overlap itself.** A dedicated
+QA pass (separate from the 7 code-review rounds) looked for consequences the arithmetic can't
+show. Two are worth reading before merge:
+
+1. **A second, intra-tile collision class is now reachable — bounded and guarded, not fixed.**
+   `CardTile`'s fallback children are **fixed** sizes and centre-aligned (`logoSlot` 64 × 64 for
+   a catalogue brand with no SVG asset; `avatarCircle` 48 × 48 for a custom card), while
+   `favouriteBadge` is pinned right (`right: 6`, `width: 24`, so its left edge is
+   `tileWidth − 30`). Before this story the tile never dropped below 171 pt, so they could never
+   meet. Measured thresholds: the abbreviation slot touches the badge at `tileWidth < 124`
+   (≈296 dp viewport) and the avatar at `tileWidth < 108` (≈264 dp). **No real device reaches
+   either** — at 320 dp the tile is 136 pt and the slot clears the badge by 6 pt. Two tests in
+   `CardTile.test.tsx` (`describe('fallback children clear the favourite badge')`) now pin that
+   clearance; mutation-checked at 116 pt, where the slot correctly fails and the avatar
+   correctly still passes. **Why it matters anyway:** a future 3-column grid — flagged in this
+   story's own Out of scope, and already implemented in `CatalogueGrid.tsx` — would give a
+   ≈116 pt tile on a 412 dp phone, i.e. **below** the 124 pt threshold. Spun off as its own task;
+   scaling those children is a visual design change, not a bug fix.
+2. **Card names truncate ~20 % sooner on the narrowest screens.** The name sits below the tile
+   with `numberOfLines={1}` and tracks the tile width, so at 320 dp it has 136 pt instead of 171. Android's **font size** setting compounds this on an axis independent of window width.
+   Behaviour is documented by a test (truncation is still delegated to the platform via
+   `ellipsizeMode="tail"` — not broken), and a font-scale check is included in the AC7 script
+   below. Going to two lines or clamping the font scale is a **product decision for ifero**, not
+   something this bug fix should decide.
+
+**Release note for the PR — not only narrow screens change.** AC4 promises no visual change _at
+390 dp_, and that is exactly what it means: every other width now gets a proportional tile.
+375 dp goes 171 → 163 (−4.7 %); 430 dp goes 171 → 191 (+11.7 %). This is correct and intended,
+but worth saying out loud so a "my cards look bigger" report from a Pro Max user is not
+mistaken for a regression.
+
+**Known dormant trap, accepted:** `CardTile`'s size props fall back to the 171/140 constants, so
+a future _grid_ caller that forgot to pass them would silently reintroduce this bug. Unreachable
+today (no other consumer exists) and the fallback is required by AC9 to keep the existing tests
+and mocks valid, so it stays — the props' JSDoc states the constraint.
+
+**Follow-ups flagged, deliberately not fixed here** (out of scope per the story's own
+Out-of-scope list and the repo's surgical-diff convention):
+
+1. `CardList.test.tsx`'s pre-existing `'calls forceSync and refetch on refresh'` test only
+   asserts `onRefresh` is defined and never invokes it, so it cannot fail if pull-to-refresh
+   breaks. Untouched by this diff; surfaced by the code review. Confirmed by coverage:
+   `CardList.tsx` lines 80–85 (the whole refresh body) are at 0 %.
+2. `app.json` declares a `web` bundler config but the web target cannot bundle
+   (`react-native-watch-connectivity` has no web shim).
+3. `CardTile`'s fixed-size fallback children vs the pinned favourite badge (finding 1 above) —
+   blocks a future 3-column grid.
+4. The repo has **no `eslint-plugin-react-hooks`** (verified absent from `eslint.config.mjs` and
+   `package.json`), so neither `rules-of-hooks` nor `exhaustive-deps` runs. "`yarn lint` is
+   clean" therefore says nothing about hook dependency arrays — and this story's central
+   regression risk _was_ a dependency array (see the round-3 finding above). Repo-wide
+   pre-existing gap; spun off as its own task.
 
 ### Device Verification Record (AC7)
 
-| Platform | Device / emulator | Width (dp) | Theme | Result |
-| -------- | ----------------- | ---------- | ----- | ------ |
-|          |                   |            |       |        |
+⚠️ **The Android half of AC7 is NOT satisfied — it is the one open item in the story.** This
+host has no Android AVD and no system image, so it needs a real device. The script below is
+ready to run.
+
+| Platform | Device / emulator             | Width (dp) | Theme      | Result                                    |
+| -------- | ----------------------------- | ---------- | ---------- | ----------------------------------------- |
+| Android  | _none available on this host_ | 360        | both       | **PENDING** — no AVD / no system image    |
+| Android  | _none available on this host_ | 320        | both       | **PENDING** — no AVD / no system image    |
+| iOS      | iPhone 13 sim, iOS 18.6       | 390        | light+dark | ✅ **PASS** — measured exactly, see below |
+
+**✅ iOS 390 dp spot-check DONE (Task 5, third subtask) — AC4 confirmed in the running app, not
+just in the arithmetic.** A 390 × 844 pt iPhone 13 simulator was created (no stock simulator is
+exactly 390 — iPhone 16 is 393), the app was built Debug and driven to a two-card grid
+(Conad + Esselunga). Rather than eyeball it, the screenshot was decoded and the geometry measured
+at 3× scale:
+
+| Measured (light theme, 390 dp) | Value                      | Expected |
+| ------------------------------ | -------------------------- | -------- |
+| Left outer margin              | **16.00 pt**               | 16       |
+| Tile width                     | **171.00 pt**              | 171      |
+| Gutter (187 → 203 pt)          | **16.00 pt**               | 16       |
+| Right outer margin             | **16.00 pt**               | 16       |
+| Tile height (207 → 347 pt)     | **140.00 pt**              | 140      |
+| Accounting                     | 16+171+16+171+16 = **390** | 390      |
+
+So the design reference width is byte-for-byte the old design **and** finally has the documented
+16/16 rhythm. Dark theme re-checked at the same width: identical geometry, true-black background,
+tiles cleanly separated. The single-card enlarged state was also observed en route and renders at
+its unchanged 220 × 180 (AC10's clamp dormant, as designed).
+
+Two incidental notes from the build, neither caused by this story: passing
+`-sdk iphonesimulator` to `xcodebuild` makes the **watch widget** target compile against iOS and
+fail (`WatchComplicationWidget.swift` uses iOS 17+ SwiftUI APIs) — omit the flag and the workspace
+builds clean; and `yarn test:coverage` returned exit 1 once out of four runs, the known
+intermittent Jest worker flake, passing 3/3 on retry.
+
+#### AC7 manual test script (Android, ~10 minutes)
+
+**Prerequisites:** a real Android phone with USB debugging on (`adb devices` lists it); a dev
+build installed (release build not required — no native change); **at least 2 cards** in the
+wallet so the grid renders, including **one favourited** card, and ideally add a card during the
+session to see the green "just added" highlight (it fades after 2 s).
+
+**1 — find the device's physical width**
+
+```bash
+adb shell wm size
+```
+
+**2 — compute the two target densities.** `density = physical_width_px × 160 / target_dp`
+
+| Physical width | 360 dp | 320 dp |
+| -------------- | ------ | ------ |
+| 1080 px        | 480    | 540    |
+| 1440 px        | 640    | 720    |
+
+**3 — test 360 dp.** With the app **already open on the card list**, set the density without
+relaunching — this exercises the live-viewport-change path (the grid should resize in place, no
+flash of overlapping tiles):
+
+```bash
+adb shell wm density 480
+```
+
+Then also force-stop and reopen to cover cold start:
+
+```bash
+adb shell am force-stop com.iferoporefi.myloyaltycards
+```
+
+Check in **light** theme, then repeat in **dark** (Settings → Display → Dark theme):
+
+- a clear visible gap between the two tiles in every row — no overlapping artwork, no smeared
+  shadow between tiles
+- the favourite star sits fully inside its own tile, not touching the neighbour or the tile's own
+  logo/avatar
+- the green highlight border on a just-added card is a clean rounded rectangle inside its tile
+- card names are legible — heavier `…` truncation than before is **expected and fine**; garbled
+  or overlapping text is not
+- the search box and sort row line up with the grid's left/right edge
+
+**4 — test 320 dp:** `adb shell wm density 540`, then repeat every check in both themes.
+
+**5 — restore the device, pass or fail:**
+
+```bash
+adb shell wm density reset
+```
+
+**Optional (covers the QA truncation finding):** before restoring, set Settings → Display → Font
+size to maximum and re-check a long card name at 320 dp — confirm it is still recognisable.
+
+**PASS** = no tile overlap, a visible gutter in every row, badge and highlight border fully
+inside their own tile, at both widths in both themes.
+**FAIL** = any overlap, anything spilling into a neighbouring tile, or a crash/blank screen.
+
+Record the density values actually used in the table above.
 
 ### File List
+
+| File                                          | Change                                                                 |
+| --------------------------------------------- | ---------------------------------------------------------------------- |
+| `features/cards/utils/gridLayout.ts`          | **NEW** — pure geometry helpers + grid constants                       |
+| `features/cards/utils/gridLayout.test.ts`     | **NEW** — layout contract test, 40 cases (AC2, AC4, AC6, AC10)         |
+| `features/cards/components/CardTile.tsx`      | UPDATE — optional `tileWidth`/`tileHeight`; re-exports consts          |
+| `features/cards/components/CardList.tsx`      | UPDATE — `useWindowDimensions`, derived sizes, padding split           |
+| `features/cards/components/CardTile.test.tsx` | UPDATE — 9 new cases (props, badge clearance, name); `:140-152` intact |
+| `features/cards/components/CardList.test.tsx` | UPDATE — 15 sizing cases + grid-highlight guard; Dimensions spy        |
+| `jest.setup.js`                               | UPDATE — FlashList mock also captures list-level layout props          |
+| `docs/sprint-artifacts/sprint-status.yaml`    | UPDATE — story → `in-progress`                                         |
+| `docs/sprint-artifacts/stories/16-22-…md`     | UPDATE — checkboxes, Status, Dev Agent Record                          |
+
+`features/cards/utils/index.ts` was deliberately **not** touched: that barrel exports only
+`generateInitials` and `formatBarcodeNumber`, while `brandLogos.ts` — the other
+component-consumed util in the folder — is imported directly (`../utils/brandLogos`). Direct
+import is therefore the established path here, and adding a barrel entry would create an
+unused export (Task 1 said to check first and not add one).
+
+### Change Log
+
+| Date       | Change                                                                                           |
+| ---------- | ------------------------------------------------------------------------------------------------ |
+| 2026-07-30 | Tile width derived from the viewport; 16/16 margins+gutters restored at every width (Tasks 1–4). |
+| 2026-07-30 | Addressed code review findings — 3 items resolved, 1 triaged as an out-of-scope follow-up.       |
