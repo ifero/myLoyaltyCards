@@ -2928,6 +2928,22 @@ iOS 16.4 requirement).
 - The exported constants keep their values and are re-documented as **design reference dimensions at 390 dp**, so the existing `CardTile.test.tsx:142-144` assertions and the `CardList.test.tsx:92-97` module mock keep passing unchanged.
 - Out of scope, flagged for separate stories: responsive column counts (the UX spec asks for 2–3 columns at `:61`/`:414-415`; Story 13.2 deliberately shipped a fixed 2-column grid, and `CatalogueGrid.tsx:27-29` already implements the responsive pattern in the same folder), the orientation-locked landscape guidance (`app.json:6` is `"portrait"`), and a `CardTile` → `CardShell` migration.
 
+### Story 16.23: Fix silent barcode-scan failures — reported as "PENNY Card EAN-13 not recognised"
+
+**As a** user adding a loyalty card by scanning a photo or screenshot of it, **I want** the app to tell me **why** the scan failed rather than always claiming the image contains no barcode, **So that** a scan failure is recoverable and diagnosable — and so the next field report can actually be investigated.
+
+**Acceptance Criteria:**
+
+- **Reproduced on device first**, on the confirmed surface (scan-from-image, `react-native-image-code-scanner` — not `expo-camera`), recording platform, source image dimensions, and whether `ImageCodeScanner.scan` returned an empty array or **threw**. A camera scan of the physical card is run as the control: camera-works + image-fails isolates the defect to the image pipeline.
+- `useImageScan` **separates** "decoder returned zero results" from "the native call threw" — the bare `catch {}` at `useImageScan.ts:152` currently discards the reason — and the user-facing copy differentiates the two in **both** `en.ts` and `it.ts`.
+- Both failure paths emit `logger.notify` (Story 16.14's production-visible channel; `logger.warn` is a `__DEV__`-only no-op). **The barcode value, image URI, and file name never reach Sentry** — tag values are not scrubbed by the PII filter.
+- The `?? 'CODE128'` fallback in `useImageScan.ts:51` and `useBarcodeScanner.ts:31` becomes observable, so a decoder format outside the map can no longer silently mislabel a stored card.
+- **The 6 supported symbologies are unchanged by decision** (`barcodeFormatSchema` is a cross-platform sync contract shared with watchOS/Wear OS); only the unbacked `DATAMATRIX` locale key at `en.ts:526` / `it.ts:529` is removed.
+- `penny-market` (`catalogue/italy.json:293-298`) declares `defaultFormat: "EAN13"`, restoring the `applyExpectedFormat` safety net for the brand.
+- Android's 1024 px downscale cap vs iOS's 2048 px (inside the library) is compared and recorded — patching `node_modules` is out of scope, but an Android-only failure would otherwise stay invisible given the project's near-zero Android telemetry.
+
+**Note:** the reported payload `2095110257978` was verified to be a **valid EAN-13** (check digit 8 confirmed) that `bwip-js` renders correctly, that `inferBarcodeFormat` classifies correctly, and that every scan surface already requests — so the defect is in the decode step, not in format support. JS-only, so OTA-eligible like 16.22; but AC1's reproduction still needs a real device, since Jest mocks both decoders.
+
 ---
 
 ## Epic 17: Apple Wallet Pass Support
