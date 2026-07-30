@@ -12,18 +12,23 @@ Epic: 16 — Platform & Tech Debt
 > `modulePathIgnorePatterns: ['/.claude/']` and `testPathIgnorePatterns: [… '/.claude/' …]`, so
 > `yarn test` inside a worktree finds **zero tests** and passes vacuously.
 >
-> **🔴 This is an iOS defect.** Android (Samsung, ifero 2026-07-30) decodes the same card correctly via
-> both the camera and the image path. Our JS pipeline is shared and therefore exonerated — the
-> divergence is Apple **Vision** (iOS) vs **ML Kit** (Android) inside
-> `react-native-image-code-scanner`.
+> **🔴 iOS-only, and input-specific.** Android (Samsung, ifero 2026-07-30) decodes this card via both
+> the camera and the image path, and on iOS **only this one card** fails — every other card has always
+> worked. So neither the JS pipeline nor the iOS image path is broadly broken.
+>
+> **Apple Vision is not the limitation either — that was measured, not assumed.** On macOS Vision the
+> payload decodes at every leading digit, at 1 px per module, with a 1-module quiet zone, under
+> low-quality JPEG, and from a **194 × 40 px** image. The defect is therefore a property of **ifero's
+> specific file**. Start with the [zero-device harness](#zero-device-reproduction-harness), not a device
+> session.
 >
 > **AC2–AC6 ship as an OTA update** — JS/TS + JSON + locales only, so
 > `runtimeVersion: { policy: 'appVersion' }` is not a blocker (unlike Story 16.17). **AC7 may not**: if
 > the iOS gap can only be closed with a `yarn patch` against the library's Swift, that is a native
 > change and needs a new binary. Decide the branch first, then the release path.
 >
-> ⚠️ Reproduce on a **real iOS device**, never the simulator — the library pins an older Vision
-> revision under `#if targetEnvironment(simulator)`.
+> ⚠️ When a device session **is** warranted, use a **real iOS device**, never the simulator — the
+> library pins an older Vision revision under `#if targetEnvironment(simulator)`.
 >
 > **The scope decisions recorded below are binding, not questions.** The symbology set stays at 6;
 > implement as written and do not pause to re-open it.
@@ -57,19 +62,80 @@ That single data point does more work than everything else in this story:
 1. **It confirms the payload and our JS pipeline are fine.** The identical `useImageScan` →
    `mapFormat` → `normalizeBarcode` → `applyExpectedFormat` chain runs on both platforms. Android
    succeeds through it. Nothing above the native boundary is at fault.
-2. **It localises the defect to Apple's Vision framework**, which is the iOS half of
-   `react-native-image-code-scanner`. Android uses **ML Kit**. Different engines, same input, different
-   result.
+2. **It localises the failure below the native boundary** — Android uses **ML Kit**, iOS uses Apple
+   **Vision**. Different engines, same input, different result. (⚠️ Read on: the next section shows
+   Vision is not intrinsically incapable of this barcode, so "Vision is weak" is **not** the conclusion
+   to draw from this.)
 3. **Story 2.9 predicted exactly this**, at
    `docs/sprint-artifacts/stories/2-9-scan-cards-from-image-screenshot.md:184`: _"Barcode recognition
    should still be verified on both platforms because iOS and Android now use different native engines
-   for static images (Vision on iOS, ML Kit on Android)."_ That warning has now cashed in. Treat the
-   engine split as the working root cause, not as one hypothesis among many.
+   for static images (Vision on iOS, ML Kit on Android)."_ That warning has now cashed in.
 
-⚠️ **AC1 still gates the fix on an iOS device reproduction** — but its purpose has narrowed: no longer
-"which surface?", now "**does iOS Vision return empty, or does the native call throw?**", and "**does
-the iOS _camera_ decode the physical card?**". Those two answers pick the fix. Everything below is
-scoped by them.
+**And only this card fails** (ifero, 2026-07-30). Every other card in the app has always scanned fine
+on iOS. So the iOS image path is **not** broadly broken — something about this one input defeats it.
+
+### Vision is not the limitation — measured, not assumed
+
+macOS ships the same Vision framework as iOS, so the payload was tested directly against
+`VNDetectBarcodesRequest` using the app's exact symbology set. **Every single case decoded correctly:**
+
+| Test                                                                        | Result                                                               |
+| --------------------------------------------------------------------------- | -------------------------------------------------------------------- |
+| Leading digit sweep — `X09511025797` + checksum, X = 0…9                    | ✅ all 10 decode. **The `2` prefix / parity pattern is irrelevant.** |
+| Module width 1, 2, 3, 4, 6, 10 px                                           | ✅ all decode — even a **95 px-wide** barcode                        |
+| Quiet zone 11, 7, 4, 2, 1 modules                                           | ✅ all decode (only a **zero** quiet zone fails)                     |
+| Bar height 150 → 25 px at 570 px wide                                       | ✅ decodes down to 25 px (fails only below ~15 px)                   |
+| JPEG at `low` / `normal` / `high` / `best`                                  | ✅ all decode                                                        |
+| Downscaled to 800 / 500 / 350 / 250 px wide                                 | ✅ all decode, PNG and JPEG alike                                    |
+| **Combined worst case: 194 × 40 px, low-quality JPEG, 1-module quiet zone** | ✅ **decodes**                                                       |
+
+**Conclusion: Apple Vision reads `2095110257978` under conditions far harsher than any real card
+image.** The payload, the symbology, the leading digit, resolution, compression and quiet zone are all
+exonerated **for iOS too**.
+
+Therefore the defect is a property of **ifero's specific image file**, not of the barcode and not of the
+framework. Combined with "only this card fails", the remaining candidates are narrow:
+
+- **Capture quality** — glare, skew, motion blur, or low contrast in a photo of the physical card. This
+  is where ML Kit genuinely outperforms Vision, and it would explain the platform split exactly.
+- **File format or path** — a HEIC asset, or a `ph://` URI reaching `UIImage(contentsOfFile:)`, which
+  returns `nil` → `INVALID_IMAGE` **rejection**, not an empty result. Today those are indistinguishable.
+- **The bars are not what the printed digits say** — unlikely, since Android returned a checksum-valid
+  read, but cheap to confirm.
+
+⚠️ **So AC1 no longer needs a device for its first cut.** Get the actual file from ifero and run it
+through the harness below on any Mac. That single command distinguishes "the file is bad" from
+"the app's pipeline mishandles a good file", and it costs a minute.
+
+#### Zero-device reproduction harness
+
+`swiftc -O vision.swift -o vision && ./vision <image…>` — mirrors `react-native-image-code-scanner`'s
+iOS symbology set for the six formats this app requests.
+
+```swift
+import Foundation
+import Vision
+import AppKit
+
+let symbologies: [VNBarcodeSymbology] = [.code128, .ean13, .ean8, .qr, .code39, .upce]
+
+for path in CommandLine.arguments.dropFirst() {
+  guard let img = NSImage(contentsOfFile: path),
+        let cg = img.cgImage(forProposedRect: nil, context: nil, hints: nil) else {
+    print("LOAD_FAILED \(path)"); continue          // ← the iOS INVALID_IMAGE case
+  }
+  let req = VNDetectBarcodesRequest()
+  req.symbologies = symbologies
+  try? VNImageRequestHandler(cgImage: cg, orientation: .up, options: [:]).perform([req])
+  let obs = req.results ?? []
+  if obs.isEmpty { print("MISS   \(path)") }
+  else { obs.forEach { print("HIT    \(path) -> \($0.symbology.rawValue) \($0.payloadStringValue ?? "<nil>")") } }
+}
+```
+
+⚠️ One caveat: macOS and iOS may run different Vision **revisions**, so a macOS HIT on ifero's file
+does not fully prove iOS would hit — but a macOS **MISS** is strong evidence the file itself is the
+problem, and that is the answer worth having first.
 
 ### What was already ruled out (verified, not assumed)
 
@@ -87,6 +153,8 @@ changed, so every result below still holds. **Do not re-litigate them; do not "f
 | The leading-zero bug from Story 2.9 recurring | ❌ **Ruled out** | That bug (iOS Vision reporting Italian Conad EAN-13 as 12-digit UPC-A) only fires on a leading `0`. This payload leads with `2`, so `isLikelyUPCA` returns false and no digit can be stripped.                                                                                                                                   |
 | Our JS scan pipeline is at fault              | ❌ **Ruled out** | Android runs the identical `useImageScan` → `mapFormat` → `normalizeBarcode` chain and **succeeds** (ifero, Samsung device, 2026-07-30). The divergence is below the native boundary.                                                                                                                                            |
 | The library's Android 1024 px downscale cap   | ❌ **Ruled out** | ⚠️ **This reverses an earlier suspicion in this story.** Android caps the longest edge at **1024 px** and iOS at **2048 px**, so Android degrades the image _more_ — and Android is the platform that works. The cap is not the mechanism; the old "Android decode-headroom" task is retired and Task 6 now targets the iOS gap. |
+| Vision cannot decode this payload             | ❌ **Ruled out** | Measured on macOS Vision with the app's symbology set: decodes at every leading digit 0–9, at 1 px/module, with a 1-module quiet zone, under low-quality JPEG, and from a **194 × 40 px** image. See [Vision is not the limitation](#vision-is-not-the-limitation--measured-not-assumed).                                        |
+| The iOS image path is broadly broken          | ❌ **Ruled out** | ifero (2026-07-30): **only this card** fails on iOS; every other card has always scanned fine. The defect is input-specific, not structural.                                                                                                                                                                                     |
 
 **Reproduce the renderer check:**
 
@@ -175,7 +243,9 @@ All line refs below are `node_modules/react-native-image-code-scanner@1.1.3/ios/
 (Original, Grayscale, Enhanced contrast, Rotated 90°/180°/270°) → try each **sequentially** against a
 `VNDetectBarcodesRequest` → first non-empty result wins → if all six miss, `safeResolve([])`.
 
-Four concrete things to check, in priority order:
+Four concrete things to check, in priority order. ⚠️ **Only reach for these once AC1 Step 0 returns
+`HIT`** — i.e. macOS Vision reads ifero's file but the app does not. A `MISS` or `LOAD_FAILED` means the
+problem is the file, and none of the theories below apply.
 
 1. **`[]` vs a rejection — this is the fork in the road.** `guard let originalImage = UIImage(contentsOfFile: cleanPath) else { safeReject("INVALID_IMAGE", …) }` (`:146-149`). A rejection and a genuine
    Vision miss are **indistinguishable in the app today** — both land in the bare `catch {}` and render
@@ -226,9 +296,22 @@ demonstrably an EAN-13 brand and the hint is missing.
 
 ## Acceptance Criteria
 
-1. **Reproduce on a real iOS device and answer the two forking questions.** Not a simulator — it pins an
-   older Vision revision (see Defect 4.2). Run the supplied Penny card image through
-   **scan-from-image** on iOS and record:
+1. **Start on a Mac, then confirm on a device.**
+
+   **Step 0 — no device needed, do this first.** Obtain **ifero's actual image file** and run it through
+   the [zero-device harness](#zero-device-reproduction-harness). Three outcomes, three different stories:
+   - `LOAD_FAILED` → the file cannot be decoded as an image at all. The iOS bug is `INVALID_IMAGE`
+     (`ImageCodeScanner.swift:146-149`), not a Vision miss. Check format (HEIC?) and URI scheme (`ph://`?).
+   - `MISS` → the **file** is the problem, and it is reproducible on a Mac in one second. Compare it
+     against a working card's image: pixel dimensions, module width in px, quiet zone in modules,
+     contrast, skew, glare. Vision tolerates 194 × 40 px low-quality JPEG, so whatever breaks it is
+     visible.
+   - `HIT` → Vision reads the file fine on macOS, so the fault is in **how the app feeds it to Vision**
+     on iOS — the picker's output file, the URI, or the library's preprocessing (Defect 4). Only now is
+     a device session justified.
+
+   **Then, on a real iOS device** (not a simulator — it pins an older Vision revision, Defect 4.2), run
+   the image through **scan-from-image** and record:
    - **Q1 — did `ImageCodeScanner.scan` resolve `[]`, or reject?** If it rejected, capture the code and
      message verbatim (`INVALID_IMAGE` would mean the file never loaded, which is a completely different
      bug from a Vision miss). The Swift `print` statements at `:120`, `:235`, `:246`, `:317`, `:321`
@@ -263,21 +346,27 @@ demonstrably an EAN-13 brand and the hint is missing.
    recorded in the story (already drafted under [Defect 2](#defect-2--symbology-coverage-is-narrower-than-the-ui-implies-bounded-not-widening)).
 6. **`penny-market` declares `defaultFormat: "EAN13"`** in `catalogue/italy.json`, and
    `catalogue/italy.test.ts` still passes.
-7. **The iOS gap is closed or explicitly deferred with evidence.** Driven by AC1's answers, one of:
-   - **(a) A fix in our code** — e.g. pre-processing the picked image before handing it to the decoder,
-     or an iOS-only second attempt via `expo-camera`'s `scanFromURLAsync` (exported at
-     `expo-camera/build/index.d.ts:56`, currently **unused** in this repo). ⚠️ Spike it before
-     committing: `scanFromURLAsync` is very likely Vision-backed too, so it may reproduce the same
-     miss — that result is worth 30 minutes to establish either way, and it is cheap because no new
-     dependency is involved.
-   - **(b) An upstream report** against `react-native-image-code-scanner` with a minimal repro, plus a
-     `yarn patch` if the fix is small and local (the pattern Story 16-19 established for `burnt`,
-     including the CI guard so a dep refresh cannot silently drop the patch).
-   - **(c) A documented deferral** — if AC1 shows the card is simply beyond Vision's capability, say so
-     with the evidence, and let AC2–AC4 carry the value: the user gets an accurate message and a working
-     manual-entry escape hatch instead of a dead end.
-     **Whichever branch is taken, the manual-entry fallback must be reachable and obvious from the
-     failure state** — that is what actually unblocks the user today.
+7. **The iOS gap is closed or explicitly deferred with evidence.** Selected by AC1 Step 0's outcome:
+   - **(a) `MISS` — the file is marginal for Vision.** Give the user a way to make a better input rather
+     than trying to out-decode Vision. Cheapest lever already in the code: `useImageScan.ts:107-114`
+     calls `launchImageLibraryAsync({ allowsEditing: false })`. Offering a **crop-and-retry** on failure
+     (`allowsEditing: true`) makes the barcode fill the frame, which is exactly what a marginal decode
+     needs — no new dependency, no native change, OTA-safe. Do **not** flip the default; offer it as the
+     recovery action.
+   - **(b) `LOAD_FAILED` — the file never loads.** Then it is a format/URI bug, not a decode bug. Fix it
+     where the URI is produced (`ImagePicker` options) or normalise before the call. AC2/AC3 already
+     make this case visible instead of silent.
+   - **(c) `HIT` — Vision reads it, the app does not.** Now the Defect 4 checks apply. Consider an
+     iOS-only second attempt via `expo-camera`'s `scanFromURLAsync` (exported at
+     `expo-camera/build/index.d.ts:56`, currently **unused** here) — cheap, no new dependency — and an
+     upstream report against `react-native-image-code-scanner` with the minimal repro, plus a
+     CI-guarded `yarn patch` if the fix is small and local (the Story 16-19 `burnt` pattern).
+   - **(d) A documented deferral** is acceptable if the evidence says the input is simply beyond
+     Vision. Say so with the numbers and let AC2–AC4 carry the value.
+
+   **On every branch: the manual-entry escape hatch must be reachable and obvious from the failure
+   state.** That is what actually unblocks the user today, and it is one card, not a class.
+
 8. **Regression-safe.** `yarn lint`, `yarn typecheck`, `yarn test`, and `yarn tokens:check` pass from
    the **main checkout** (see [Testing](#testing)). **Android must not regress** — it is the known-good
    platform; re-verify the Penny card on Android after any change to the shared JS path. No change to
@@ -287,7 +376,13 @@ demonstrably an EAN-13 brand and the hint is missing.
 
 ## Tasks / Subtasks
 
-- [ ] **Task 1 — Reproduce on iOS and answer Q1/Q2 (AC: 1)** ⚠️ do this before writing any fix
+- [ ] **Task 1 — Classify the input on a Mac, then confirm on a device (AC: 1)** ⚠️ before any fix
+  - [ ] **Step 0, no device:** get **ifero's actual file** and run the
+        [zero-device harness](#zero-device-reproduction-harness). `LOAD_FAILED` / `MISS` / `HIT` selects
+        the AC7 branch and may make the device session unnecessary. Do this first — it costs a minute
+  - [ ] If `MISS`: measure the file against a **working** card's image — pixel dimensions, module width
+        in px, quiet zone in modules, contrast, skew, glare. Vision handles 194 × 40 px low-quality
+        JPEG, so the differentiator will be visible
   - [ ] Obtain the Penny card image from ifero; add it to `test-fixtures/` only if licensing is clear
   - [ ] **iOS device** (not simulator): run scan-from-image; log the raw `ImageCodeScanner.scan` return
         value **and** any rejection verbatim. Watch the Xcode console for the Swift `print` trail — it
@@ -315,13 +410,14 @@ demonstrably an EAN-13 brand and the hint is missing.
         `SUPPORTED_IMAGE_SCAN_FORMATS`, or either `barcodeTypes` list
 - [ ] **Task 5 — Catalogue hint (AC: 6)**
   - [ ] Add `"defaultFormat": "EAN13"` to `penny-market`; run `catalogue/italy.test.ts`
-- [ ] **Task 6 — Close or defer the iOS gap, driven by Task 1 (AC: 7)**
-  - [ ] Read `node_modules/react-native-image-code-scanner/ios/ImageCodeScanner.swift` end to end before
-        proposing anything — the four checks in [Defect 4](#defect-4--the-ios-vision-path-this-is-where-the-bug-lives) are ordered by value
-  - [ ] Timeboxed spike (~30 min): does `expo-camera`'s unused `scanFromURLAsync` decode the same image
-        on iOS? Record the answer either way — a negative is useful (it confirms Vision-wide failure)
-  - [ ] Pick branch (a) fix / (b) upstream report + optional `yarn patch` / (c) documented deferral, and
-        write the evidence into the story's Completion Notes
+- [ ] **Task 6 — Close or defer the iOS gap, on the branch Task 1 selected (AC: 7)**
+  - [ ] `MISS` ⇒ implement crop-and-retry as the recovery action (`allowsEditing: true` on the retry
+        only, never the default) and re-test with the cropped input
+  - [ ] `LOAD_FAILED` ⇒ fix where the URI/format is produced; AC2/AC3 already make it visible
+  - [ ] `HIT` ⇒ only now read `node_modules/react-native-image-code-scanner/ios/ImageCodeScanner.swift`
+        end to end and work the four [Defect 4](#defect-4--the-ios-vision-path-this-is-where-the-bug-lives)
+        checks in order; timebox a ~30 min spike on `expo-camera`'s unused `scanFromURLAsync`
+  - [ ] Write the evidence and the chosen branch into the story's Completion Notes
   - [ ] Whichever branch: confirm the manual-entry escape hatch is reachable and obvious from the
         failure state
 - [ ] **Task 7 — Gates + Android non-regression (AC: 8)**
@@ -450,18 +546,21 @@ exposes no reason code when the native call fails.
   `DATAMATRIX` key.
 - **2026-07-30 — platform: iOS.** A Samsung device decodes the same card correctly via **both** the
   camera and the screenshot/image path. This retired the Android-downscale hypothesis (Android
-  downscales harder and still works) and localised the defect to Apple Vision.
+  downscales harder and still works).
+- **2026-07-30 — scope: this card only.** Every other card has always scanned fine on iOS. The iOS image
+  path is not broadly broken, so the fix is input-shaped, not structural. Together with the macOS Vision
+  measurements this is what turned AC1 into a file-classification step rather than a device hunt.
 
 ### Open questions for ifero
 
-1. Was the failing input **that digital card image**, or a **photo of the physical card**? Task 1 tests
-   the supplied file either way, but the answer narrows which of the four Defect-4 checks matters — in
-   particular, the orientation double-apply can only affect camera photos, never screenshots.
-2. Do other cards scan from image fine **on iOS** on the same build — is this Penny-specific, or is the
-   whole iOS image path weak? If several cards fail on iOS and none on Android, AC7 tilts toward a
-   structural fallback rather than a per-card fix.
-3. Does the **iOS camera** read the physical Penny card? (This is AC1's Q2 — ifero may already know from
-   everyday use, which would save a device session.)
+1. **⭐ The blocker: the actual image file.** Everything now hinges on running _ifero's file_ — not a
+   re-render, not a screenshot of it — through the [harness](#zero-device-reproduction-harness). One
+   minute, no device. Until then AC7's branch cannot be chosen.
+2. Was the failing input **that digital card image**, or a **photo of the physical card**? A photo makes
+   capture quality (glare/skew/blur) the leading candidate and makes the Defect-4 orientation theory
+   reachable; a screenshot rules the orientation theory out entirely (screenshots are `.up`).
+3. Does the **iOS camera** read the physical Penny card? ifero may already know from everyday use, which
+   would save a device session.
 
 ## Dev Agent Record
 
