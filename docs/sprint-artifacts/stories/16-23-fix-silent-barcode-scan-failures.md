@@ -27,13 +27,18 @@ Epic: 16 — Platform & Tech Debt
 > **misses**, an _ideal grid at the identical span and height_ **hits**. Full evidence in
 > [ROOT CAUSE](#-root-cause--established-not-hypothesised).
 >
-> **There is no decode fix**, and none is in scope. Upscaling, binarising and all four Vision revisions
-> were tried and fail; ML Kit on iOS is structurally blocked. **The deliverable is honest failure
-> handling** — say what actually happened, point at manual entry and at scanning the physical card, and
-> emit telemetry so the next occurrence is a five-minute diagnosis. That is AC2–AC4 plus AC7(d).
+> **✅ AND THERE IS A FIX — resampling.** ifero confirmed the **iOS camera reads that exact image
+> perfectly**. The camera path is AVFoundation, not Vision, and its optics low-pass the image for free.
+> Reproducing that in software works: **downscaling the file to anywhere between 0.85× and 0.25× makes
+> Vision decode it**, robustly, and is strictly additive (known-good barcodes still decode after the
+> same downscale). This also explains "only this card fails": `scaleImageIfNeeded(maxDimension: 2048)`
+> already resamples anything wider than 2048 px, so most photos get the correction for free —
+> `IMG_0002.JPG` is 806 px and sails through untouched.
 >
-> **The whole story ships as an OTA update** — JS/TS + JSON + locales only, no native change left in
-> scope, so `runtimeVersion: { policy: 'appVersion' }` is not a blocker (unlike Story 16.17).
+> **Two deliverables, different release paths.** AC2–AC6 (honest failure handling + telemetry) are
+> JS-only and **OTA-eligible**. AC7 (the resample retry) is a **native** change — a patch to the
+> library's retry ladder or a new `expo-image-manipulator` dependency — so it needs a **new binary**.
+> They can ship separately.
 >
 > ⚠️ When a device session **is** warranted, use a **real iOS device**, never the simulator — the
 > library pins an older Vision revision under `#if targetEnvironment(simulator)`.
@@ -145,20 +150,48 @@ analysed directly. Findings, in order:
 was destroyed at authoring time, which is why nothing downstream rescues it: upscaling, sharpening and
 binarising cannot recover positions that were never encoded.
 
-#### What this means for the fix
+#### ✅ AND THERE IS A FIX: resample before decoding
 
-- **There is no decode fix.** No preprocessing recovers it, and iOS has no more-tolerant 1D decoder
-  available to us — ML Kit is structurally blocked (see the ⛔ note under Defect 4) and Core Image has no
-  1D detector.
-- **Scope narrows to honest failure handling**, which is exactly what AC2–AC4 already deliver. The user's
-  real complaint is not "Vision is strict" — it is that the app says **"No barcode found in this image"**
-  and dead-ends, when the truthful message is closer to _"this image's barcode is too low-quality to
-  read — scan the physical card, or enter the number manually."_
-- **Scanning the physical PENNY card should work**, since a real printed card is not under-rasterised.
-  That is the recovery to steer the user toward (see the open questions — it is worth confirming).
-- **This will recur.** Any brand publishing a low-resolution digital card will hit it on iOS and not on
-  Android. AC3's telemetry is what turns the next instance into a five-minute diagnosis instead of this
-  one.
+ifero then reported that **the iOS camera reads that exact image perfectly** when pointed at it on a
+screen. That is decisive, and it corrects the conclusion above: the artwork is **marginal**, not
+undecodable. Two things follow.
+
+1. **The camera path is a different decoder.** `expo-camera` uses **AVFoundation**'s metadata output on
+   iOS, not Vision — and AVFoundation additionally gets ~30 attempts per second through optics that
+   **low-pass filter** the image for free.
+2. **That optical blur is the fix.** Resampling reconstructs sub-pixel edge positions from the
+   hard-quantised 4-or-6-px edges, pulling the narrow-element ratio back inside Vision's tolerance.
+
+Measured on the real file, `IMG_0002.JPG`:
+
+| Preprocessing before `VNDetectBarcodesRequest` | Result                                                      |
+| ---------------------------------------------- | ----------------------------------------------------------- |
+| none (today's behaviour)                       | ❌ MISS                                                     |
+| Gaussian blur r = 2.0                          | ✅ `2095110257978` (but r = 1.5 and 2.5 miss — too fragile) |
+| **Downscale to 0.85 → 0.25** (bilinear)        | ✅ **decodes across the whole range**                       |
+| **Downscale to 0.75 → 0.25** (Lanczos)         | ✅ **decodes across the whole range**                       |
+
+**Downscaling is the robust lever** — a wide, stable window rather than a magic number, and it is
+strictly additive: re-tested against known-good barcodes (ideal grid, reconstructed card, clean render)
+at 0.75 and 0.50, all still decode. Only a deliberately extreme 194 × 40 px case degrades, which no
+sane rule would downscale anyway.
+
+**This also explains "only this card fails" exactly.** `scaleImageIfNeeded(maxDimension: 2048)`
+(`ImageCodeScanner.swift:151`) already resamples any image wider than 2048 px — so most real
+photos and screenshots get this correction **for free** and decode. `IMG_0002.JPG` is **806 px** wide,
+so it sails through untouched and its quantisation survives to the decoder. The bug is not "this card is
+special"; it is **"small, marginally-rendered images get no resampling"**.
+
+#### The fix, and its cost
+
+- **Preferred — add downscaled variants to the decoder's retry ladder.** The library already tries
+  Original → Grayscale → Contrast → Rot90/180/270 (`ImageCodeScanner.swift`, `imagesToTry`). It does
+  **not** try rescaling. Adding ~0.7× and ~0.5× variants fixes this whole class for both platforms.
+  Route: upstream PR + a CI-guarded `yarn patch` (the Story 16-19 `burnt` pattern).
+- **Alternative — resize in our own JS before calling `scan`,** via `expo-image-manipulator`. ⚠️ It is
+  **not installed** (`0` yarn.lock hits) and is a native module, so it is a new dependency.
+- ⚠️ **Either route is a NATIVE change → new binary, NOT an OTA update.** AC2–AC6 remain OTA-eligible on
+  their own; AC7 is what forces a build.
 
 #### Zero-device reproduction harness
 
@@ -390,22 +423,27 @@ demonstrably an EAN-13 brand and the hint is missing.
    recorded in the story (already drafted under [Defect 2](#defect-2--symbology-coverage-is-narrower-than-the-ui-implies-bounded-not-widening)).
 6. **`penny-market` declares `defaultFormat: "EAN13"`** in `catalogue/italy.json`, and
    `catalogue/italy.test.ts` still passes.
-7. **The failure state offers a real way forward.** No decode fix exists (see
-   [ROOT CAUSE](#-root-cause--established-not-hypothesised)), so the deliverable is recovery UX:
-   - The failure screen makes **manual entry** reachable and obvious — it is what unblocks the user
-     today. The strings already exist (`addCard.noCodeFound.manualEntry` / `…retry`); the ask is that
-     the new copy actually leads there rather than dead-ending on "No barcode found in this image".
-   - The copy points at **scanning the physical card** as the primary recovery, contingent on AC1's Q2
-     confirming the camera reads it. Do not ship that advice unverified.
-   - ⚠️ **Rejected, with reasons — do not re-propose:** crop-and-retry via `allowsEditing: true` (the
-     defect is baked into the artwork, so a tighter crop changes nothing); upscaling or sharpening
-     before decode (tested to 4836 px — still misses); binarising (tested — still misses); pinning a
-     different `VNDetectBarcodesRequest` revision (all four tested — all miss); ML Kit on iOS
-     (structurally blocked, see the ⛔ note under Defect 4). Each of these is an intuitive fix that has
-     already been measured and failed.
-   - A one-paragraph note lands in the story's Completion Notes recording that Vision's stricter
-     narrow-element tolerance is **working as designed** and the input is out of spec — so a future
-     reader does not reopen this as a Vision bug.
+7. **A resample retry makes the image decode.** The decoder gets a second attempt on a **downscaled**
+   copy when the first pass returns no results. Measured window on `IMG_0002.JPG`: **0.85× → 0.25×
+   decodes**, bilinear or Lanczos. Pick a value mid-window (≈ **0.6×**) rather than an edge.
+   - **Strictly additive** — it runs only after a miss, so it can never turn a hit into a miss.
+     Re-verified: ideal grid, reconstructed card and clean render all still decode at 0.75× and 0.50×.
+   - **Preferred route: extend the library's existing retry ladder.** `ImageCodeScanner.swift` already
+     tries Original → Grayscale → Contrast → Rot90/180/270 (`imagesToTry`) but never rescales. Add
+     downscaled variants — it fixes this class on **both** platforms. Upstream PR plus a CI-guarded
+     `yarn patch` (the Story 16-19 `burnt` pattern).
+   - **Alternative: resize in our JS** before calling `scan`, via `expo-image-manipulator` — ⚠️ **not
+     installed** (0 yarn.lock hits) and a native module, so it is a new dependency.
+   - ⚠️ **Either route needs a NEW BINARY**, not an OTA. Land AC2–AC6 first if a JS-only release is
+     wanted sooner.
+   - Verify on the real device with `IMG_0002.JPG`, and re-verify Android (AC8).
+   - ⚠️ **Rejected, with measured reasons — do not re-propose:** a fixed Gaussian blur (r = 2.0 works but
+     r = 1.5 and r = 2.5 both miss — far too fragile); **up**scaling (tested to 4836 px — still misses);
+     binarising (still misses); pinning a different `VNDetectBarcodesRequest` revision (all four miss);
+     crop-and-retry via `allowsEditing` (the defect is baked into the artwork, a tighter crop changes
+     nothing); ML Kit on iOS (structurally blocked, see the ⛔ note under Defect 4).
+   - Manual entry must **still** be reachable and obvious from the failure state — the retry will not
+     rescue every image, and AC2–AC6 are what make the remaining failures honest.
 
 8. **Regression-safe.** `yarn lint`, `yarn typecheck`, `yarn test`, and `yarn tokens:check` pass from
    the **main checkout** (see [Testing](#testing)). **Android must not regress** — it is the known-good
@@ -440,12 +478,14 @@ demonstrably an EAN-13 brand and the hint is missing.
         `SUPPORTED_IMAGE_SCAN_FORMATS`, or either `barcodeTypes` list
 - [ ] **Task 5 — Catalogue hint (AC: 6)**
   - [ ] Add `"defaultFormat": "EAN13"` to `penny-market`; run `catalogue/italy.test.ts`
-- [ ] **Task 6 — Recovery UX for the unreadable-image case (AC: 7)**
-  - [ ] Make manual entry reachable and obvious from the failure state (strings already exist)
-  - [ ] Add "scan the physical card" as the primary recovery — **only if** Task 1's Q2 confirms it works
-  - [ ] Do **not** implement crop-and-retry, upscaling, sharpening, binarising, a different Vision
-        revision, or ML Kit on iOS — all measured and rejected, reasons recorded in AC7
-  - [ ] Record in Completion Notes that Vision is working as designed and the input is out of spec
+- [ ] **Task 6 — Resample retry + recovery UX (AC: 7)**
+  - [ ] Add a downscaled second attempt after a zero-result scan; ≈0.6× (measured window 0.85×→0.25×)
+  - [ ] Prefer extending `ImageCodeScanner.swift`'s `imagesToTry` ladder (upstream PR + CI-guarded
+        `yarn patch`); `expo-image-manipulator` is the fallback route and is NOT currently installed
+  - [ ] Verify on device against `IMG_0002.JPG`; re-verify Android
+  - [ ] Keep manual entry reachable and obvious — the retry will not rescue every image
+  - [ ] Do **not** implement fixed-radius blur, upscaling, sharpening, binarising, alternate Vision
+        revisions, crop-and-retry, or ML Kit on iOS — all measured and rejected, reasons in AC7
 
 - [ ] **Task 7 — Gates + Android non-regression (AC: 8)**
   - [ ] `yarn lint && yarn typecheck && yarn test && yarn tokens:check` from the main checkout
@@ -582,13 +622,18 @@ exposes no reason code when the native call fails.
 - **2026-07-30 — the input is a synthetic digital graphic**, not a photo of the physical card (crisp
   flat-black bars, no noise or perspective). This killed the capture-quality and orientation hypotheses.
 
+### Answered 2026-07-30 — the camera reads that exact image
+
+ifero pointed the iOS camera at the same image on a screen and it decoded perfectly. That is what
+overturned "there is no decode fix": AVFoundation plus the lens's optical low-pass succeeds where Vision
+on the raw file fails, and reproducing that low-pass in software (a downscale) fixes it. AC7 exists
+because of this data point.
+
 ### Open questions for ifero
 
-1. **Does the iOS camera read the physical PENNY card?** The only open question that changes the
-   deliverable — AC7's recommended recovery ("scan the physical card") is contingent on it. Everything
-   else is settled.
-2. Worth reporting the defective artwork to Penny Market? Their published card image is out of spec for
-   EAN-13 and will fail on any strict decoder, not just ours. Out of scope for this story either way.
+1. Worth reporting the defective artwork to Penny Market? Their published card image is out of spec for
+   EAN-13 — bars drawn at ~2.83 px/module then doubled — and will fail on any strict decoder, not just
+   ours. Out of scope for this story either way.
 
 ## Dev Agent Record
 
