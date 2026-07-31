@@ -463,5 +463,7 @@ Before submitting code, verify:
 - [ ] Tests co-located; no `__tests__/` folder; no tests in `app/`
 - [ ] New strings added to **both** `shared/i18n/locales/en.ts` and `it.ts` (no parity test exists)
 - [ ] Sync messages include `version` where versioned
-- [ ] `yarn lint` / `typecheck` / `test` / `tokens:check` run from the **main checkout**, not a
-      `.claude` worktree
+- [ ] `yarn lint` / `typecheck` / `test` / `tokens:check` run in a checkout with its own
+      `node_modules` (a `.claude` worktree qualifies after `yarn install`); native builds
+      (`yarn watch:build`, `yarn ios`) still need the **main checkout**, and `--no-verify` is forbidden
+      everywhere

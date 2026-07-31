@@ -8,9 +8,12 @@ Status: ready-for-dev
 
 Epic: 10 — Wear OS App
 
-> **Run all gates from the main checkout, never a `.claude` worktree** — `jest.config.js` sets
-> `modulePathIgnorePatterns: ['/.claude/']`, so `yarn test` there finds zero tests and passes
-> vacuously.
+> **Gates run inside a `.claude` worktree too, once you `yarn install` there.** `jest.config.js`
+> anchors its `.claude` ignore patterns to `<rootDir>`, so a worktree runs its own suite instead of
+> finding zero tests. A worktree with no `node_modules` fails on missing dependencies instead — a
+> different problem. Native builds (`yarn watch:build`, `./gradlew`) still need the **main checkout**:
+> `ios/`, `android/` and `.expo/` are gitignored and absent in a fresh worktree. `--no-verify` stays
+> forbidden either way.
 >
 > **This is the enabling story for all of Epic 10.** 10-2 … 10-6 build directly on the module layout,
 > `applicationId` and Gradle setup decided here. Get the Open Decisions right; they are binding.
@@ -256,7 +259,8 @@ approach has drifted — re-read [Why this cannot mirror watchOS](#why-this-cann
 ### Testing requirements
 
 - **Phone-app gates are the regression guard**: `yarn lint`, `yarn typecheck`, `yarn test`,
-  `yarn tokens:check`, `yarn splash:check`, plus `yarn watch:build`, all from the **main checkout**.
+  `yarn tokens:check`, `yarn splash:check` — any checkout with its own `node_modules`, worktree
+  included — plus `yarn watch:build`, which needs the **main checkout** for its prebuilt `ios/`.
 - **Kotlin unit tests are not required by this story** — there is no logic yet beyond a placeholder.
   Do not manufacture tests for a scaffold. 10-2 onward carry real testable logic, and the repo already
   has a precedent for cheap cross-platform guards: `targets/watch/__tests__/watch-layout-contract.test.ts`
