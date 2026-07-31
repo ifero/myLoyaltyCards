@@ -21,6 +21,7 @@ import {
   GUTTER,
   LIST_CONTENT_PADDING,
   LOGO_SLOT_SIZE,
+  MIN_COMFORTABLE_TILE_WIDTH,
   NUM_COLUMNS,
   SCREEN_MARGIN,
   SINGLE_TILE_HEIGHT,
@@ -308,12 +309,16 @@ describe('intra-tile fallback geometry vs the favourite badge', () => {
     badgeLeftEdge(tileWidth) - centredRightEdge(tileWidth, size);
 
   /**
-   * Tile width a grid of `columns` columns yields at a viewport, generalising
-   * `getGridTileWidth` past its hardcoded `NUM_COLUMNS`. Transcribed rather than
-   * reused so a 3-column future is exercised before it is built.
+   * Tile width a grid of `columns` columns yields at a viewport.
+   *
+   * Delegates to the production helper rather than transcribing it, deliberately unlike
+   * `cellContentWidth` above: that one models a *third party* (FlashList), where an
+   * independent copy is the point, while this is the very function under test. Reusing
+   * it means these sweeps automatically follow any change to the tile arithmetic instead
+   * of silently testing a stale copy of it.
    */
   const tileWidthFor = (windowWidth: number, columns: number): number =>
-    Math.floor((windowWidth - 2 * LIST_CONTENT_PADDING - columns * GUTTER) / columns);
+    getGridTileWidth(windowWidth, columns);
 
   /** The proportional size before any capping — the ideal the cap trims. */
   const proportional = (tileWidth: number, referenceSize: number): number =>
@@ -596,6 +601,168 @@ describe('intra-tile fallback geometry vs the favourite badge', () => {
       const { size, fontSize } = getFallbackChildMetrics(136.4, LOGO_SLOT_SIZE);
       expect(Number.isInteger(size)).toBe(true);
       expect(Number.isInteger(fontSize)).toBe(true);
+    });
+  });
+});
+
+/**
+ * The floor a responsive column count must respect.
+ *
+ * Overlap is already impossible at every width — the sweeps above prove that — so this
+ * is not a correctness guard. It exists because "cannot overlap" and "still looks like
+ * the design" are different bars, and the gap between them is where a 2 → 3 column
+ * story would land if nobody wrote the number down. `MIN_COMFORTABLE_TILE_WIDTH` is that
+ * number; these tests pin the degradation stages behind it and the viewport each column
+ * count needs to clear it, so a breakpoint can be chosen from measurements rather than
+ * from taste.
+ *
+ * Deliberately NOT enforced by a runtime guard: the column count is still a constant, so
+ * there is nothing to guard yet. When it becomes responsive, the story should assert its
+ * chosen breakpoint against `MIN_COMFORTABLE_TILE_WIDTH` here.
+ */
+describe('minimum tile width for a responsive column count', () => {
+  /** The proportional plate size before the badge keep-out cap trims it. */
+  const proportional = (tileWidth: number, referenceSize: number): number =>
+    Math.round((tileWidth * referenceSize) / TILE_WIDTH);
+
+  /** True when the badge keep-out cap leaves the proportional size untouched. */
+  const capIsSlack = (tileWidth: number): boolean =>
+    [LOGO_SLOT_SIZE, AVATAR_SIZE].every(
+      (ref) => getFallbackChildMetrics(tileWidth, ref).size === proportional(tileWidth, ref)
+    );
+
+  /** Smallest viewport at which `columns` columns reach the comfortable floor. */
+  const smallestComfortableViewport = (columns: number): number =>
+    widthRange(100, 1400).find((w) => getGridTileWidth(w, columns) >= MIN_COMFORTABLE_TILE_WIDTH)!;
+
+  it('is derived from the badge keep-out, not written down', () => {
+    // Solving T·(LOGO_SLOT_SIZE / TILE_WIDTH) ≤ T − BADGE_KEEP_OUT for T. Deriving it
+    // means changing the badge or the plate ratio moves this floor automatically.
+    expect(MIN_COMFORTABLE_TILE_WIDTH).toBe(
+      Math.ceil((BADGE_KEEP_OUT * TILE_WIDTH) / (TILE_WIDTH - LOGO_SLOT_SIZE))
+    );
+    expect(MIN_COMFORTABLE_TILE_WIDTH).toBe(109);
+  });
+
+  it('carries exactly one point of headroom over the real cap boundary', () => {
+    // Math.round in getFallbackChildMetrics buys a point over the continuous solution
+    // (108.67…), so the cap is already slack at 108. Asserting the headroom rather than
+    // just the floor means it cannot silently vanish under a future rounding change.
+    const capBinds = widthRange(1, 400).filter((t) => !capIsSlack(t));
+    expect(Math.max(...capBinds)).toBe(107);
+    expect(capIsSlack(MIN_COMFORTABLE_TILE_WIDTH - 1)).toBe(true);
+    expect(capIsSlack(MIN_COMFORTABLE_TILE_WIDTH)).toBe(true);
+  });
+
+  it('is the width at and above which the plates are purely proportional', () => {
+    const capped = widthRange(MIN_COMFORTABLE_TILE_WIDTH, 1024).filter((t) => !capIsSlack(t));
+    expect(capped).toEqual([]);
+  });
+
+  describe('the degradation stages below it', () => {
+    // The table in MIN_COMFORTABLE_TILE_WIDTH's docs, made executable. Each stage is
+    // still correct — no overlap anywhere — but progressively further from the design.
+    it('95–108 pt: 18 pt type still fits everywhere in the band', () => {
+      const stage = widthRange(95, MIN_COMFORTABLE_TILE_WIDTH - 1);
+      expect(
+        stage.filter(
+          (t) => getFallbackChildMetrics(t, LOGO_SLOT_SIZE).fontSize !== FALLBACK_TEXT_SIZE
+        )
+      ).toEqual([]);
+    });
+
+    it('95–107 pt: the cap trims the slot — and ONLY the slot', () => {
+      // The asymmetry is worth pinning: `avatarCircle`'s 48/171 share stays under the
+      // keep-out through this whole band, so the abbreviation slot is the only child the
+      // cap ever touches here. Any reasoning about "the plates" at these widths is really
+      // reasoning about the slot. (108 is excluded because it is the headroom point,
+      // where rounding leaves even the slot untrimmed — see the headroom test above.)
+      const band = widthRange(95, 107);
+      expect(
+        band.filter(
+          (t) => getFallbackChildMetrics(t, LOGO_SLOT_SIZE).size === proportional(t, LOGO_SLOT_SIZE)
+        )
+      ).toEqual([]);
+      expect(
+        band.filter(
+          (t) => getFallbackChildMetrics(t, AVATAR_SIZE).size !== proportional(t, AVATAR_SIZE)
+        )
+      ).toEqual([]);
+    });
+
+    it('94 pt and below: the plate is too small for 18 pt, so the glyph shrinks too', () => {
+      const stage = widthRange(61, 94);
+      expect(
+        stage.filter(
+          (t) => getFallbackChildMetrics(t, LOGO_SLOT_SIZE).fontSize >= FALLBACK_TEXT_SIZE
+        )
+      ).toEqual([]);
+    });
+
+    it('85 pt: the plate collapses to 17 pt — correct, but visually poor', () => {
+      expect(getFallbackChildMetrics(85, LOGO_SLOT_SIZE).size).toBe(17);
+    });
+  });
+
+  describe('what each column count needs from the viewport', () => {
+    it.each([
+      { columns: 2, viewport: 266 },
+      { columns: 3, viewport: 391 },
+      { columns: 4, viewport: 516 }
+    ])('$columns columns are comfortable from $viewport dp', ({ columns, viewport }) => {
+      expect(smallestComfortableViewport(columns)).toBe(viewport);
+      expect(getGridTileWidth(viewport, columns)).toBeGreaterThanOrEqual(
+        MIN_COMFORTABLE_TILE_WIDTH
+      );
+      expect(getGridTileWidth(viewport - 1, columns)).toBeLessThan(MIN_COMFORTABLE_TILE_WIDTH);
+    });
+
+    it('leaves the shipped 2-column grid comfortable on every phone', () => {
+      // 266 dp is far below the narrowest width AC7 exercises, so this change asks
+      // nothing of the current layout — the floor only constrains a FUTURE column count.
+      const uncomfortable = widthRange(280, 1024).filter(
+        (w) => getGridTileWidth(w, 2) < MIN_COMFORTABLE_TILE_WIDTH
+      );
+      expect(uncomfortable).toEqual([]);
+    });
+
+    it('rules out 3 columns on the phones a naive breakpoint would catch', () => {
+      // The trap this test exists to close. Each is a plausible "large phone" breakpoint
+      // that still produces a sub-floor tile.
+      for (const viewport of [320, 360, 375, 384, 390]) {
+        expect(getGridTileWidth(viewport, 3)).toBeLessThan(MIN_COMFORTABLE_TILE_WIDTH);
+      }
+    });
+
+    it('splits the modern phone range one dp above the design reference', () => {
+      // The sharpest fact for a breakpoint decision, and not one anybody would guess:
+      // a 390 dp iPhone misses the floor by exactly ONE point, while a 393 dp Pixel
+      // clears it. So "3 columns on large phones" is decidable, but only just — which is
+      // the whole argument for stating the floor as a number instead of eyeballing it.
+      expect(getGridTileWidth(390, 3)).toBe(MIN_COMFORTABLE_TILE_WIDTH - 1);
+      expect(getGridTileWidth(391, 3)).toBe(MIN_COMFORTABLE_TILE_WIDTH);
+
+      // Everything from the Pixel up is comfortable, so a 3-column grid is genuinely
+      // available to most current hardware — it is the narrow tail that must stay at 2.
+      for (const viewport of [393, 402, 412, 430]) {
+        expect(getGridTileWidth(viewport, 3)).toBeGreaterThanOrEqual(MIN_COMFORTABLE_TILE_WIDTH);
+      }
+    });
+
+    it("clears 3 columns at CatalogueGrid's existing 600 dp breakpoint", () => {
+      // features/cards/components/CatalogueGrid.tsx:27 — the in-folder precedent a
+      // future story is most likely to copy. Confirmed safe, with room to spare.
+      const CATALOGUE_COLUMN_BREAKPOINT = 600;
+      expect(getGridTileWidth(CATALOGUE_COLUMN_BREAKPOINT, 3)).toBeGreaterThanOrEqual(
+        MIN_COMFORTABLE_TILE_WIDTH
+      );
+      expect(CATALOGUE_COLUMN_BREAKPOINT).toBeGreaterThanOrEqual(smallestComfortableViewport(3));
+    });
+
+    it('needs a wider viewport for every column it adds', () => {
+      const needed = [2, 3, 4, 5].map(smallestComfortableViewport);
+      expect(needed).toEqual([...needed].sort((a, b) => a - b));
+      expect(new Set(needed).size).toBe(needed.length);
     });
   });
 });

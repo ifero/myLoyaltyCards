@@ -60,7 +60,14 @@
  * is 64 pt".
  */
 
-/** Fixed column count. Deliberately not responsive — see the story's Out of scope. */
+/**
+ * Fixed column count. Deliberately not responsive — see the story's Out of scope.
+ *
+ * If you are here to make it responsive: `getGridTileWidth` already takes a column
+ * count, so no new geometry is needed — but the resulting tile must stay at or above
+ * `MIN_COMFORTABLE_TILE_WIDTH`, which is a hard floor rather than a preference. Read
+ * that constant's docs before choosing a breakpoint; 3 columns needs a 391 dp viewport.
+ */
 export const NUM_COLUMNS = 2;
 
 /** Horizontal screen margin (pt) either side of the grid. */
@@ -115,18 +122,25 @@ const toTileDimension = (value: number): number =>
   Number.isFinite(value) ? Math.max(MIN_TILE_DIMENSION, value) : MIN_TILE_DIMENSION;
 
 /**
- * Width (pt) for one tile in the 2-column grid at the given window width.
+ * Width (pt) for one tile in the grid at the given window width.
  *
- * `floor((W − 48) / 2)` — exactly the space FlashList leaves inside a cell once
- * `LIST_CONTENT_PADDING` and the wrapper's `GUTTER / 2` are spent. Flooring
- * guarantees the fit can never fail to a sub-pixel.
+ * `floor((W − 2 × LIST_CONTENT_PADDING − columns × GUTTER) / columns)` — exactly the
+ * space FlashList leaves inside a cell once `LIST_CONTENT_PADDING` and the wrapper's
+ * `GUTTER / 2` are spent. Flooring guarantees the fit can never fail to a sub-pixel.
  *
- * Returns exactly `TILE_WIDTH` (171) at the 390 dp reference width, so the grid
- * is visually unchanged there.
+ * Returns exactly `TILE_WIDTH` (171) at the 390 dp reference width, so the grid is
+ * visually unchanged there.
+ *
+ * `columns` defaults to `NUM_COLUMNS`, so every current caller is unchanged. It is a
+ * parameter rather than a hardcode because the margin arithmetic generalises exactly:
+ * adjacent wrappers contribute `GUTTER` and the outer edges `SCREEN_MARGIN` at *any*
+ * column count, so a responsive grid needs no new geometry — only a column count and
+ * the `MIN_COMFORTABLE_TILE_WIDTH` check below. Passing it also lets the tests assert
+ * the 3-column case against this function instead of a transcription of it.
  */
-export const getGridTileWidth = (windowWidth: number): number =>
+export const getGridTileWidth = (windowWidth: number, columns: number = NUM_COLUMNS): number =>
   toTileDimension(
-    Math.floor((windowWidth - 2 * LIST_CONTENT_PADDING - NUM_COLUMNS * GUTTER) / NUM_COLUMNS)
+    Math.floor((windowWidth - 2 * LIST_CONTENT_PADDING - columns * GUTTER) / columns)
   );
 
 /**
@@ -314,3 +328,38 @@ export const getFallbackChildMetrics = (
     )
   };
 };
+
+/**
+ * Narrowest tile (pt) at which the grid still looks the way it was designed — the
+ * floor any responsive column count must respect.
+ *
+ * **This is a constraint on the column count, not on this module.** Overlap is already
+ * impossible at every width (`getFallbackChildMetrics` caps the plates), so a narrower
+ * tile is never *broken* — it degrades, in stages that are worth knowing before picking
+ * a breakpoint:
+ *
+ * | tile      | what happens                                                          |
+ * | --------- | --------------------------------------------------------------------- |
+ * | ≥ 109 pt  | pure proportionality; the badge keep-out never engages. The target.    |
+ * | 95–107 pt | the cap trims the abbreviation slot — and only it; the avatar's        |
+ * |           | smaller share stays clear. The 18 pt glyph still fits either way.      |
+ * | ≤ 94 pt   | the plate is too small for 18 pt type, so the glyph shrinks too.       |
+ * | 85 pt     | plate collapses to 17 pt. Still correct, but visually poor.            |
+ *
+ * Derived rather than written as 109: it is the tile at which the proportional plate
+ * stops exceeding its keep-out, `T·(LOGO_SLOT_SIZE / TILE_WIDTH) ≤ T − BADGE_KEEP_OUT`
+ * solved for `T`. Deriving it means a change to the badge or the plate ratio moves this
+ * floor automatically instead of leaving a stale number behind. `Math.round` in
+ * `getFallbackChildMetrics` actually buys one point over the continuous solution, so the
+ * cap is already slack at 108 — the extra point is headroom, and `gridLayout.test.ts`
+ * pins both numbers so the headroom cannot silently disappear.
+ *
+ * With `getGridTileWidth`'s generalised arithmetic, 2 columns clear this from 266 dp up
+ * (so every shipped phone, with room to spare), **3 columns need 391 dp** and 4 need
+ * 516 dp. 391 is the number a responsive breakpoint has to beat: `CatalogueGrid.tsx`'s
+ * existing 600 dp is comfortably safe, but a naive "3 columns above 360 dp" is not — it
+ * would hand a 360 dp phone a 98 pt tile.
+ */
+export const MIN_COMFORTABLE_TILE_WIDTH = Math.ceil(
+  (BADGE_KEEP_OUT * TILE_WIDTH) / (TILE_WIDTH - LOGO_SLOT_SIZE)
+);
