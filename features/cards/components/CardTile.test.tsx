@@ -20,6 +20,13 @@ import {
   SINGLE_TILE_HEIGHT,
   SINGLE_TILE_RADIUS
 } from './CardTile';
+import {
+  AVATAR_SIZE,
+  BADGE_CLEARANCE,
+  LOGO_SLOT_SIZE,
+  getFallbackChildMetrics,
+  getGridTileHeight
+} from '../utils/gridLayout';
 
 // Mock expo-router
 const mockPush = jest.fn();
@@ -223,23 +230,27 @@ describe('CardTile', () => {
     });
 
     /**
-     * The tile's fallback children (`logoSlot`, `avatarCircle`) are FIXED sizes and are
-     * centre-aligned, while `favouriteBadge` is pinned to the right edge. Before this
-     * story the tile never went below 171 pt, so they could never meet. Now that the
-     * tile tracks the viewport there is a width at which the centred fallback reaches
-     * the badge, so the clearance is asserted rather than assumed.
+     * The tile's two fallback children (`logoSlot`, `avatarCircle`) are centre-aligned
+     * while `favouriteBadge` is pinned to the right edge. Story 16.22 made the tile
+     * track the viewport, at which point the children's FIXED 64 / 48 pt became the
+     * same species of frozen measurement the tile itself had been — so they are now
+     * derived from the tile and capped against the badge by
+     * `gridLayout.getFallbackChildMetrics`.
      *
-     * At 136 pt (the tile at 320 dp, the narrowest width AC7 exercises) the abbreviation
-     * slot clears the badge by 6 pt. The collision point is ~124 pt of tile, i.e. a
-     * ~296 dp viewport — below every real device. It matters mainly as a floor for any
-     * future change that shrinks the tile further, a 3-column grid above all.
+     * The widths below deliberately go past what ships today. 136 pt is the tile at
+     * 320 dp (the narrowest width AC7 exercises), but the interesting cases are the
+     * ones a **3-column** grid produces — 116 pt at 412 dp and 98 pt at 360 dp — which
+     * is 16.22's own flagged follow-up and already the pattern in `CatalogueGrid.tsx`.
+     * A fixed 64 pt slot overlaps the badge by 4 pt at 116 pt, so these assertions are
+     * falsifiable against the previous implementation rather than vacuous.
+     *
+     * The exhaustive sweep across every 2- and 3-column width lives in
+     * `utils/gridLayout.test.ts`; these are the integration proof that the component
+     * actually applies it.
      */
     describe('fallback children clear the favourite badge', () => {
-      const NARROWEST_SUPPORTED_TILE_WIDTH = 136;
-
       /** Right-pinned badge: its left edge is tileWidth − (right + width). */
-      const badgeLeftEdge = (tileWidth: number, element: React.ReactElement) => {
-        render(element);
+      const badgeLeftEdge = (tileWidth: number): number => {
         const badge = StyleSheet.flatten(screen.getByTestId('favourite-badge').props.style) as {
           right?: number;
           width?: number;
@@ -250,11 +261,11 @@ describe('CardTile', () => {
       };
 
       /**
-       * Width of the nearest styled ancestor of a text node — the fallback container
-       * that holds it. Walks up rather than assuming a depth, because RNTL interposes
+       * Size of the nearest styled ancestor of a text node — the fallback plate that
+       * holds it. Walks up rather than assuming a depth, because RNTL interposes
        * composite elements that carry no style of their own.
        */
-      const enclosingWidth = (text: string): number | undefined => {
+      const enclosingSize = (text: string): number | undefined => {
         let node = screen.getByText(text).parent;
         while (node) {
           const style = StyleSheet.flatten(node.props?.style) as { width?: number } | undefined;
@@ -264,8 +275,15 @@ describe('CardTile', () => {
         return undefined;
       };
 
-      it('keeps the brand-abbreviation slot clear of the badge at 320 dp', () => {
-        // Catalogue brand whose SVG asset is missing → the abbreviation-slot branch.
+      /** Applied glyph size on the text node itself. */
+      const glyphSize = (text: string): number | undefined =>
+        (
+          StyleSheet.flatten(screen.getByText(text).props.style) as
+            | { fontSize?: number }
+            | undefined
+        )?.fontSize;
+
+      const asBrandWithoutSvg = () => {
         (useBrandLogo as jest.Mock).mockReturnValue({
           id: 'esselunga',
           name: 'Esselunga',
@@ -273,61 +291,133 @@ describe('CardTile', () => {
           logo: 'esselunga',
           aliases: []
         });
+        // Catalogue brand whose SVG asset is missing → the abbreviation-slot branch.
         (getBrandLogo as jest.Mock).mockReturnValue(undefined);
+      };
 
-        const left = badgeLeftEdge(
-          NARROWEST_SUPPORTED_TILE_WIDTH,
-          <CardTile
-            card={{ ...mockCard, brandId: 'esselunga', isFavorite: true }}
-            tileWidth={NARROWEST_SUPPORTED_TILE_WIDTH}
-            tileHeight={111}
-          />
-        );
-        const slotWidth = enclosingWidth('ES');
-        expect(slotWidth).toBeDefined();
+      /** Tile widths worth pinning: the reference, today's narrowest, and 3-column. */
+      const TILE_WIDTHS = [
+        { tileWidth: TILE_WIDTH, note: '390 dp, 2 columns — the design reference' },
+        { tileWidth: 136, note: '320 dp, 2 columns — narrowest shipping width' },
+        { tileWidth: 116, note: '412 dp, 3 columns — was a 4 pt overlap' },
+        { tileWidth: 98, note: '360 dp, 3 columns — the badge cap binds' }
+      ];
 
-        // Centred child, so its right edge is tileWidth / 2 + width / 2.
-        const slotRightEdge = NARROWEST_SUPPORTED_TILE_WIDTH / 2 + slotWidth! / 2;
-        expect(slotRightEdge).toBeLessThan(left);
+      describe.each(TILE_WIDTHS)('at a $tileWidth pt tile ($note)', ({ tileWidth }) => {
+        it('keeps the brand-abbreviation slot clear of the badge', () => {
+          asBrandWithoutSvg();
+          render(
+            <CardTile
+              card={{ ...mockCard, brandId: 'esselunga', isFavorite: true }}
+              tileWidth={tileWidth}
+              tileHeight={getGridTileHeight(tileWidth)}
+            />
+          );
+
+          const slotSize = enclosingSize('ES');
+          expect(slotSize).toBeDefined();
+          // Centred child, so its right edge is tileWidth / 2 + size / 2.
+          const rightEdge = tileWidth / 2 + slotSize! / 2;
+          expect(badgeLeftEdge(tileWidth) - rightEdge).toBeGreaterThanOrEqual(BADGE_CLEARANCE);
+        });
+
+        it('keeps the first-letter avatar clear of the badge', () => {
+          (useBrandLogo as jest.Mock).mockReturnValue(undefined);
+          render(
+            <CardTile
+              card={{ ...mockCard, isFavorite: true }}
+              tileWidth={tileWidth}
+              tileHeight={getGridTileHeight(tileWidth)}
+            />
+          );
+
+          const avatarSize = enclosingSize('T');
+          expect(avatarSize).toBeDefined();
+          const rightEdge = tileWidth / 2 + avatarSize! / 2;
+          expect(badgeLeftEdge(tileWidth) - rightEdge).toBeGreaterThanOrEqual(BADGE_CLEARANCE);
+        });
+
+        it('delegates both plate and glyph sizing to gridLayout', () => {
+          // Not a restatement of the clearance above: this pins that the component
+          // reads the shared arithmetic (and picks the right reference per branch)
+          // instead of carrying a second copy that could drift from the sweep.
+          asBrandWithoutSvg();
+          render(
+            <CardTile
+              card={{ ...mockCard, brandId: 'esselunga', isFavorite: true }}
+              tileWidth={tileWidth}
+              tileHeight={getGridTileHeight(tileWidth)}
+            />
+          );
+          const slot = getFallbackChildMetrics(tileWidth, LOGO_SLOT_SIZE);
+          expect(enclosingSize('ES')).toBe(slot.size);
+          expect(glyphSize('ES')).toBe(slot.fontSize);
+
+          (useBrandLogo as jest.Mock).mockReturnValue(undefined);
+          render(
+            <CardTile
+              card={mockCard}
+              tileWidth={tileWidth}
+              tileHeight={getGridTileHeight(tileWidth)}
+            />
+          );
+          const avatar = getFallbackChildMetrics(tileWidth, AVATAR_SIZE);
+          expect(enclosingSize('T')).toBe(avatar.size);
+          expect(glyphSize('T')).toBe(avatar.fontSize);
+        });
       });
 
-      it('keeps the first-letter avatar clear of the badge at 320 dp', () => {
-        (useBrandLogo as jest.Mock).mockReturnValue(undefined);
-
-        const left = badgeLeftEdge(
-          NARROWEST_SUPPORTED_TILE_WIDTH,
+      it('leaves the 390 dp reference tile pixel-identical to the fixed sizes it replaces', () => {
+        // The counterweight to the tests above: proportional sizing must not change
+        // the design reference. 64 / 48 / 18 pt were the shipped values.
+        asBrandWithoutSvg();
+        render(
           <CardTile
-            card={{ ...mockCard, isFavorite: true }}
-            tileWidth={NARROWEST_SUPPORTED_TILE_WIDTH}
-            tileHeight={111}
+            card={{ ...mockCard, brandId: 'esselunga', isFavorite: true }}
+            tileWidth={TILE_WIDTH}
+            tileHeight={TILE_HEIGHT}
           />
         );
-        const avatarWidth = enclosingWidth('T');
-        expect(avatarWidth).toBeDefined();
+        expect(enclosingSize('ES')).toBe(64);
+        expect(glyphSize('ES')).toBe(18);
 
-        const avatarRightEdge = NARROWEST_SUPPORTED_TILE_WIDTH / 2 + avatarWidth! / 2;
-        expect(avatarRightEdge).toBeLessThan(left);
+        (useBrandLogo as jest.Mock).mockReturnValue(undefined);
+        render(<CardTile card={mockCard} tileWidth={TILE_WIDTH} tileHeight={TILE_HEIGHT} />);
+        expect(enclosingSize('T')).toBe(48);
+        expect(glyphSize('T')).toBe(18);
+      });
+
+      it('shrinks the plates on a narrower tile rather than holding them fixed', () => {
+        // Falsifiability guard: the whole change is that these are no longer constant.
+        asBrandWithoutSvg();
+        render(
+          <CardTile
+            card={{ ...mockCard, brandId: 'esselunga', isFavorite: true }}
+            tileWidth={116}
+            tileHeight={getGridTileHeight(116)}
+          />
+        );
+        const narrow = enclosingSize('ES');
+        expect(narrow).toBeLessThan(64);
+        // ...and the previous fixed 64 pt would have overlapped here, by 4 pt.
+        expect(116 / 2 + 64 / 2).toBeGreaterThan(badgeLeftEdge(116));
       });
     });
 
-    it('keeps single-line tail ellipsis for the name regardless of tile size', () => {
-      // Deliberately NOT a claim about *where* truncation falls — RNTL runs no flex
-      // layout, so no unit test can observe that. What this pins is that passing a size
-      // prop doesn't disturb the name's truncation contract: still one line, still
-      // native tail ellipsis, at the narrow tile as at the reference tile.
-      //
-      // The real consequence — the name gets 136 pt instead of 171 at 320 dp, ~20 %
-      // less, compounded by Android's independent font-scale setting — is a product
-      // decision for ifero and is checked by hand in the AC7 script, not here.
-      for (const size of [{ tileWidth: 136, tileHeight: 111 }, {}]) {
-        const { unmount } = render(
-          <CardTile card={{ ...mockCard, name: 'Supermercato Esselunga Fidaty Plus' }} {...size} />
-        );
-        const name = screen.getByText('Supermercato Esselunga Fidaty Plus');
-        expect(name.props.numberOfLines).toBe(1);
-        expect(name.props.ellipsizeMode).toBe('tail');
-        unmount();
-      }
+    it('still delegates long-name truncation to the platform on a narrow tile', () => {
+      // The name sits BELOW the tile and tracks its width, so it truncates ~20 % sooner
+      // at 320 dp than at the 390 dp reference. Documented rather than changed: going to
+      // two lines or clamping the font scale is a design decision, not a bug fix.
+      render(
+        <CardTile
+          card={{ ...mockCard, name: 'Supermercato Esselunga Fidaty Plus' }}
+          tileWidth={136}
+          tileHeight={111}
+        />
+      );
+      const name = screen.getByText('Supermercato Esselunga Fidaty Plus');
+      expect(name.props.numberOfLines).toBe(1);
+      expect(name.props.ellipsizeMode).toBe('tail');
     });
   });
 
