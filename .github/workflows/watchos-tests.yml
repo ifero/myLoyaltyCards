@@ -42,10 +42,15 @@ jobs:
     runs-on: macos-latest
     # The scheme's dependency graph is now narrowed, so the ceiling that used to
     # need 50m does not any more. `watch:build:ci` builds the watch targets via
-    # `-project … -target watch` instead of `-workspace … -scheme watch`, which
-    # cuts the xcodebuild step from ~19m to ~2m. Budget: ~2.5m setup + ~1m
-    # prebuild + ~2m build + ~0.5m post-steps, so 20m leaves roughly 2.5x
-    # headroom for a slow runner draw while still catching a genuine hang.
+    # `-project … -target watch` instead of `-workspace … -scheme watch`.
+    # Measured on the first green run after that change (30637151382), not
+    # estimated: the xcodebuild step went 18m47s → 45s, the whole job 21m55s →
+    # 4m53s. 20m leaves ~4x headroom while still catching a genuine hang.
+    #
+    # Budget against `expo prebuild --clean`, not the build. Prebuild is now the
+    # dominant step at 2m34s — 53% of the job — and by far the most variable:
+    # the identical step took 1m08s on the run before this change. The build no
+    # longer moves the total; prebuild and the runner draw do.
     #
     # Why -target and not -scheme: no shared `watch` scheme exists (only
     # myLoyaltyCards.xcscheme is shared), so xcodebuild autocreates one — and
