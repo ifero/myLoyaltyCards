@@ -84,6 +84,13 @@ fastlane/.env.default
 # Claude Code local (personal) settings
 .claude/settings.local.json
 
+# Claude Code git worktrees — full nested checkouts of this repo, one per in-flight branch
+# (hundreds of thousands of duplicate files). Ignored here rather than only in .git/info/exclude,
+# which is local to one clone and never committed: tools that read .gitignore but cannot see
+# info/exclude — prettier among them — otherwise walk every copy. Tools that read neither carry
+# their own entry instead (see eslint.config.mjs `ignores` and jest.config.js path guards).
+.claude/worktrees/
+
 # BMAD personal install answers (installer-regenerated per developer; shared config lives in
 # _bmad/config.toml and _bmad/custom/config.toml, which ARE committed)
 _bmad/config.user.toml
