@@ -8,9 +8,11 @@ Status: ready-for-dev
 
 Epic: 16 — Platform & Tech Debt
 
-> **Run all gates from the main checkout, never a `.claude` worktree.** `jest.config.js` sets
-> `modulePathIgnorePatterns: ['/.claude/']` and `testPathIgnorePatterns: [… '/.claude/' …]`, so
-> `yarn test` inside a worktree finds **zero tests** and passes vacuously.
+> **Gates run inside a `.claude` worktree too, once you `yarn install` there.** `jest.config.js`
+> anchors its `.claude` ignore patterns to `<rootDir>`, so a worktree runs its own suite instead of
+> finding zero tests. A worktree with no `node_modules` fails on missing dependencies instead — a
+> different problem. A native iOS build still needs the **main checkout**: `ios/` and `.expo/` are
+> gitignored and absent in a fresh worktree. `--no-verify` stays forbidden either way.
 >
 > **🔴 iOS-only, and input-specific.** Android (Samsung, ifero 2026-07-30) decodes this card via both
 > the camera and the image path, and on iOS **only this one card** fails — every other card has always
@@ -446,7 +448,7 @@ demonstrably an EAN-13 brand and the hint is missing.
      rescue every image, and AC2–AC6 are what make the remaining failures honest.
 
 8. **Regression-safe.** `yarn lint`, `yarn typecheck`, `yarn test`, and `yarn tokens:check` pass from
-   the **main checkout** (see [Testing](#testing)). **Android must not regress** — it is the known-good
+   any installed checkout (see [Testing](#testing)). **Android must not regress** — it is the known-good
    platform; re-verify the Penny card on Android after any change to the shared JS path. No change to
    the successful single-code, multi-code, or cancel paths of `useImageScan`; no change to
    `normalizeBarcode` / `applyExpectedFormat` semantics (both are documented as idempotent and have
@@ -488,7 +490,7 @@ demonstrably an EAN-13 brand and the hint is missing.
         revisions, crop-and-retry, or ML Kit on iOS — all measured and rejected, reasons in AC7
 
 - [ ] **Task 7 — Gates + Android non-regression (AC: 8)**
-  - [ ] `yarn lint && yarn typecheck && yarn test && yarn tokens:check` from the main checkout
+  - [ ] `yarn lint && yarn typecheck && yarn test && yarn tokens:check` (any installed checkout)
   - [ ] Re-verify the Penny card on **Android** after any shared-JS change — it is the known-good
         platform and must not regress
 
@@ -534,8 +536,9 @@ demonstrably an EAN-13 brand and the hint is missing.
   `expo-image-picker` and `react-native-image-code-scanner`, including the `BarcodeFormat` enum — reuse
   that mock shape), `core/utils/inferBarcodeFormat.test.ts`, `catalogue/italy.test.ts`.
 - Coverage gate is **80 % global** over `features/**`, `core/**`, `shared/**`.
-- ⚠️ **Run the gates from the main checkout, not this `.claude` worktree** — a bare `yarn test` inside a
-  worktree finds 0 tests (no `node_modules`), which reads as a pass.
+- ⚠️ **`yarn install` in this worktree before trusting any gate** — the suite runs here now, but without
+  `node_modules` every gate fails on missing dependencies rather than passing vacuously. Never reach for
+  `--no-verify`.
 - ⚠️ **A green Jest run does not prove the fix.** Jest never executes the native decoder; both
   `expo-camera` and `react-native-image-code-scanner` are mocked. AC1's device evidence is the only
   proof that matters here — this is the Story 16.15 lesson (green CI, fatal production crash).

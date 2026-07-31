@@ -8,7 +8,12 @@ Status: ready-for-dev
 
 Epic: 10 — Wear OS App
 
-> **Run all gates from the main checkout, never a `.claude` worktree.**
+> **Gates run inside a `.claude` worktree too, once you `yarn install` there.** `jest.config.js`
+> anchors its `.claude` ignore patterns to `<rootDir>`, so a worktree runs its own suite instead of
+> finding zero tests. A worktree with no `node_modules` fails on missing dependencies instead — a
+> different problem. Native builds (`yarn watch:build`, `./gradlew`) still need the **main checkout**:
+> `ios/`, `android/` and `.expo/` are gitignored and absent in a fresh worktree. `--no-verify` stays
+> forbidden either way.
 >
 > **Depends on 10-1, 10-3, 10-4 and 10-5.** Last in the chain; nothing else in Epic 10 depends on it.
 >

@@ -8,7 +8,12 @@ Status: ready-for-dev
 
 Epic: 10 — Wear OS App
 
-> **Run all gates from the main checkout, never a `.claude` worktree.**
+> **Gates run inside a `.claude` worktree too, once you `yarn install` there.** `jest.config.js`
+> anchors its `.claude` ignore patterns to `<rootDir>`, so a worktree runs its own suite instead of
+> finding zero tests. A worktree with no `node_modules` fails on missing dependencies instead — a
+> different problem. Native builds (`yarn watch:build`, `./gradlew`) still need the **main checkout**:
+> `ios/`, `android/` and `.expo/` are gitignored and absent in a fresh worktree. `--no-verify` stays
+> forbidden either way.
 >
 > **Depends on 10-1** (module) and **10-2** (`Brands.kt`). Pairs with **10-5** (Room) and **10-6**
 > (sync) — this story renders a list; it must work against a local store it does not itself populate.
@@ -261,7 +266,8 @@ and the Kotlin unit tests pass in `watch-android/`.
 
 ### Testing requirements
 
-- Phone-app gates from the **main checkout**; Kotlin tests via Gradle in `watch-android/`.
+- Phone-app gates from any installed checkout (worktree included); Kotlin tests via Gradle in
+  `watch-android/`.
 - **Be honest about what CI runs.** The watchOS precedent is a trap worth naming: Swift XCTests in
   `watch-ios/Tests/` **do not run in CI** — the watch scheme has no `xcodebuild test` step, so
   `yarn watch:build` only proves it _compiles_. The project compensated with

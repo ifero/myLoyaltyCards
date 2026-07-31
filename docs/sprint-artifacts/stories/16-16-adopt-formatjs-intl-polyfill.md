@@ -55,7 +55,7 @@ Place these in a dedicated module (recommend `shared/i18n/intl-polyfill.ts`) imp
 5. A lint rule (`no-restricted-properties` or equivalent) **fails** on any not-yet-polyfilled `Intl.*` API (e.g. `Intl.ListFormat`, `Intl.DisplayNames`, `Intl.Segmenter`) with a message pointing to this story. `yarn lint` fails on a deliberately-added offending line and passes once removed.
 6. A startup/guard test asserts the polyfilled APIs (`Intl.RelativeTimeFormat`, `Intl.PluralRules`) are defined at runtime, so removing the polyfill entry import fails CI.
 7. Existing behaviour is preserved: all current `relative-time` tests (EN + IT, 1-vs-N boundaries) stay green; no user-facing copy changes unless Open decision #3 explicitly approves the migration.
-8. `yarn lint` / `typecheck` / `test` / `test:coverage` pass from the **main checkout** (not a `.claude` worktree); coverage maintained. A remaining-`Intl`-usage audit (grep) confirms no unguarded consumer is left outside the polyfill guarantee.
+8. `yarn lint` / `typecheck` / `test` / `test:coverage` pass from any checkout that has its own `node_modules` (a `.claude` worktree qualifies after `yarn install`); coverage maintained. A remaining-`Intl`-usage audit (grep) confirms no unguarded consumer is left outside the polyfill guarantee.
 
 ## Tasks / Subtasks
 
@@ -65,7 +65,7 @@ Place these in a dedicated module (recommend `shared/i18n/intl-polyfill.ts`) imp
 - [ ] (AC 5) Add the `no-restricted-properties` lint rule for not-yet-polyfilled `Intl.*` APIs with a pointer message; prove it fails on an offending line and passes when removed.
 - [ ] (AC 6) Add a guard test asserting `Intl.RelativeTimeFormat`/`Intl.PluralRules` are defined (fails if the polyfill entry import is removed).
 - [ ] (AC 7,8) Run the remaining-`Intl`-usage audit (`grep -rn "Intl\\." app core shared features`); confirm every consumer is covered by the polyfill or the lint ban.
-- [ ] (AC 7,8) Run `yarn lint`/`typecheck`/`test`/`test:coverage` from the main checkout.
+- [ ] (AC 7,8) Run `yarn lint`/`typecheck`/`test`/`test:coverage` (any installed checkout; `--no-verify` stays forbidden).
 - [ ] (Open decision #3, if approved) Migrate `core/utils/relative-time.ts` to `Intl.RelativeTimeFormat` — only with an explicit copy sign-off, updating the tests to the new strings; otherwise leave 16.15's implementation untouched.
 
 ## Dev Notes

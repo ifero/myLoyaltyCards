@@ -8,7 +8,12 @@ Status: ready-for-dev
 
 Epic: 10 — Wear OS App
 
-> **Run all gates from the main checkout, never a `.claude` worktree.**
+> **Gates run inside a `.claude` worktree too, once you `yarn install` there.** `jest.config.js`
+> anchors its `.claude` ignore patterns to `<rootDir>`, so a worktree runs its own suite instead of
+> finding zero tests. A worktree with no `node_modules` fails on missing dependencies instead — a
+> different problem. Native builds (`yarn watch:build`, `./gradlew`) still need the **main checkout**:
+> `ios/`, `android/` and `.expo/` are gitignored and absent in a fresh worktree. `--no-verify` stays
+> forbidden either way.
 >
 > **Depends on 10-1** — needs `watch-android/` to exist. Do not start before it merges.
 >
@@ -198,7 +203,8 @@ generator and its artifact are untouched.
 - [ ] **Task 5 — Tests and docs (AC: 9, 10, 11)**
   - [ ] Write the AC9 tests.
   - [ ] Update `watch-android/README.md` and the add-a-brand documentation.
-  - [ ] Run the full gate suite from the main checkout.
+  - [ ] Run the full gate suite (JS gates in any installed checkout; native builds from the main
+        checkout).
 
 ## Dev Notes
 
@@ -235,7 +241,7 @@ watchOS generator and its artifact.
 
 ### Testing requirements
 
-- Run from the **main checkout**. `features/**`, `core/**`, `shared/**` are coverage-measured at 80 %
+- `features/**`, `core/**`, `shared/**` are coverage-measured at 80 %
   global; `scripts/` is **not** in `collectCoverageFrom`, so these tests do not move the coverage
   number — write them for correctness, not for the gate.
 - The most valuable test is the **negative** one: mutate the committed artifact, assert `--check` fails.
