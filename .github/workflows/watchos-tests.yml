@@ -40,19 +40,27 @@ jobs:
   watchos-tests:
     name: watchOS (xcodebuild) tests
     runs-on: macos-latest
-    # Job wall-clock for green runs, measured over the last 30 successful runs
-    # (includes the ~2m of cache-save post-steps, which count against this
-    # ceiling): median ~23m, p95 ~28m, slowest ~29m. The old 30m limit sat
-    # inside that noise band, so a slow runner draw surfaced as a red
-    # `cancelled` check with zero failing steps rather than as a real failure.
+    # The scheme's dependency graph is now narrowed, so the ceiling that used to
+    # need 50m does not any more. `watch:build:ci` builds the watch targets via
+    # `-project … -target watch` instead of `-workspace … -scheme watch`, which
+    # cuts the xcodebuild step from ~19m to ~2m. Budget: ~2.5m setup + ~1m
+    # prebuild + ~2m build + ~0.5m post-steps, so 20m leaves roughly 2.5x
+    # headroom for a slow runner draw while still catching a genuine hang.
     #
-    # Nearly all of it is the xcodebuild step: the `watch` scheme depends on the
-    # parent iOS app, so ~23m goes to compiling that app's Pod tree (RNSVG,
-    # RNReanimated, RNScreens, SDWebImage, …) to reach a watch target that
-    # itself compiles in ~17s. Caching does not reach that cost — see the PR
-    # that raised this limit — so headroom is the fix until the scheme's
-    # dependency graph is narrowed.
-    timeout-minutes: 50
+    # Why -target and not -scheme: no shared `watch` scheme exists (only
+    # myLoyaltyCards.xcscheme is shared), so xcodebuild autocreates one — and
+    # autocreation adds the container app. That dragged in the whole iOS Pod
+    # tree (Sentry, ZXingObjC, libwebp, SDWebImage, RNSVG, RNReanimated, …) for
+    # ~17m of every run. The real target graph runs the other way round
+    # (myLoyaltyCards → watch → watchwidget) and the watch targets declare no
+    # pods of their own, so none of it was ever an input to this check.
+    #
+    # -sdk watchsimulator is load-bearing: in -target mode xcodebuild otherwise
+    # defaults to the iOS SDK and fails the watch targets on provisioning.
+    # (Not to be confused with -sdk iphonesimulator on the *app* build, which
+    # breaks the watch widget.) If a targets/*/pods.rb ever appears, these
+    # targets gain CocoaPods deps and this must go back through the workspace.
+    timeout-minutes: 20
 
     steps:
       - name: Checkout

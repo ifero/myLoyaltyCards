@@ -35,7 +35,7 @@
     "prewatch:build": "node scripts/ensure-expo-sqlite-vendor-files.mjs && yarn watch:catalogue:generate",
     "watch:build": "./scripts/watch-build.sh",
     "prewatch:build:ci": "node scripts/ensure-expo-sqlite-vendor-files.mjs && yarn watch:catalogue:generate",
-    "watch:build:ci": "xcodebuild -workspace ios/myLoyaltyCards.xcworkspace -scheme watch -configuration Debug -destination \"generic/platform=watchOS Simulator\" COMPILER_INDEX_STORE_ENABLE=NO build",
+    "watch:build:ci": "xcodebuild -project ios/myLoyaltyCards.xcodeproj -target watch -configuration Debug -sdk watchsimulator COMPILER_INDEX_STORE_ENABLE=NO build",
     "prewatch:run": "node scripts/ensure-expo-sqlite-vendor-files.mjs && yarn watch:catalogue:generate",
     "watch:run": "yarn watch:build && ./scripts/watch-run.sh",
     "ios:watch": "yarn ios && yarn watch:run",
