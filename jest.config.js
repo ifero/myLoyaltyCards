@@ -25,10 +25,25 @@ module.exports = {
     '^@bwip-js/react-native$': '<rootDir>/__mocks__/@bwip-js/react-native.js'
   },
   testMatch: ['**/*.test.[jt]s?(x)'],
-  testPathIgnorePatterns: ['/node_modules/', '/.claude/', 'babel.config.test.js', 'targets/watch/'],
-  // Nested Claude Code worktrees (.claude/worktrees/*) are full repo copies; their
-  // duplicate package.json/modules otherwise crash Jest with Haste name collisions.
-  modulePathIgnorePatterns: ['/.claude/'],
+  // Nested Claude Code worktrees (.claude/worktrees/*) are full repo copies. Left
+  // visible they duplicate every `__mocks__/` and module in the tree, so Jest's Haste
+  // map warns `duplicate manual mock found: svgMock` and discovery balloons from ~170
+  // test files to ~2100 — this checkout would run other branches' suites as its own.
+  //
+  // The `<rootDir>` anchor is load-bearing. Both options are regexes matched against
+  // ABSOLUTE paths, so a bare `/.claude/` also matched the path of the worktree Jest was
+  // running *inside* — every test path under `.claude/worktrees/<branch>/` was ignored,
+  // giving "No tests found" and exit 1, which made `.husky/pre-push` (it runs `yarn test`)
+  // impossible to pass from a worktree and pushed developers toward the forbidden
+  // `--no-verify`. Anchored, the patterns exclude only a `.claude/` nested *under this
+  // rootDir*, wherever the checkout itself happens to live.
+  testPathIgnorePatterns: [
+    '/node_modules/',
+    '<rootDir>/.claude/',
+    'babel.config.test.js',
+    'targets/watch/'
+  ],
+  modulePathIgnorePatterns: ['<rootDir>/.claude/'],
   collectCoverageFrom: [
     'features/**/*.{ts,tsx}',
     'core/**/*.{ts,tsx}',
