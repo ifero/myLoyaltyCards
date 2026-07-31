@@ -12,6 +12,13 @@ on:
 permissions:
   contents: read
 
+# One run per PR, newest wins. `edited` fires on every title and body save, so
+# without this a few quick title fixes queue up several runs that all check the
+# same final text.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   check:
     # Skip drafts, bot PRs (e.g. Dependabot), and already-closed/merged PRs

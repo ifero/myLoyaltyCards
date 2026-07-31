@@ -17,6 +17,15 @@ on:
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: 'true'
 
+# One run per ref, newest wins — see watchos-tests.yml for the key rationale.
+# Cancelling an AdHoc build loses nothing durable: the lane derives its build
+# number from GITHUB_RUN_NUMBER without committing it, `match` runs readonly on
+# CI so no signing assets are minted, and the only output is a run artifact.
+# When several PRs merge in a row, the IPA worth keeping is the tip commit's.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   ios-adhoc:
     name: iOS AdHoc Build

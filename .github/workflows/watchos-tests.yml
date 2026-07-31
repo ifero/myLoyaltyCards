@@ -26,6 +26,16 @@ on:
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: 'true'
 
+# One run per ref, newest wins. `github.ref` is `refs/heads/main` for merges and
+# `refs/pull/N/merge` for PRs, so a PR can only ever cancel its own earlier run.
+# This job holds a macOS runner for ~20 minutes, so superseded runs are the
+# single most expensive thing in the pipeline: merging three PRs back-to-back
+# used to leave three builds racing when only the tip commit's result matters.
+# Cancelling is safe here — the job builds and asserts, it publishes nothing.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   watchos-tests:
     name: watchOS (xcodebuild) tests
