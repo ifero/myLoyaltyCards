@@ -1,11 +1,18 @@
 /**
  * CardTile Component
  * Story 13.2: Restyle Home Screen (AC1, AC7, AC9)
+ * Story 16.22: Fix card-grid tile overlap on narrow screens (AC1, AC5, AC9)
  *
  * Brand-colored tile for the 2-column grid.
  * Catalogue cards show brand logo on brand hex bg.
  * Custom cards show first-letter avatar on user-selected color.
  * Card name displayed below tile.
+ *
+ * Sizing is supplied by the parent (`CardList`), which derives it from the
+ * viewport via `utils/gridLayout`. The constants below are the design reference
+ * at 390 dp and the fallback for callers that pass no size — they are NOT a
+ * viewport-independent layout width. See gridLayout.ts for why that distinction
+ * is the whole bug.
  */
 
 import { MaterialIcons } from '@expo/vector-icons';
@@ -30,16 +37,27 @@ import { TYPOGRAPHY } from '@/shared/theme/typography';
 import { BrandLogo } from './BrandLogo';
 import { useBrandLogo } from '../hooks/useBrandLogo';
 import { getBrandLogo } from '../utils/brandLogos';
+import {
+  SINGLE_TILE_HEIGHT,
+  SINGLE_TILE_RADIUS,
+  SINGLE_TILE_WIDTH,
+  TILE_HEIGHT,
+  TILE_RADIUS,
+  TILE_WIDTH
+} from '../utils/gridLayout';
 
-/** Standard grid tile dimensions (pt) */
-export const TILE_WIDTH = 171;
-export const TILE_HEIGHT = 140;
-export const TILE_RADIUS = 16;
-
-/** Single-card enlarged tile dimensions */
-export const SINGLE_TILE_WIDTH = 220;
-export const SINGLE_TILE_HEIGHT = 180;
-export const SINGLE_TILE_RADIUS = 20;
+/**
+ * Design reference tile dimensions (pt) at 390 dp, re-exported so this
+ * component's public surface is unchanged. Canonical home: utils/gridLayout.ts.
+ */
+export {
+  TILE_WIDTH,
+  TILE_HEIGHT,
+  TILE_RADIUS,
+  SINGLE_TILE_WIDTH,
+  SINGLE_TILE_HEIGHT,
+  SINGLE_TILE_RADIUS
+};
 
 interface CardTileProps {
   /** The loyalty card to display */
@@ -48,12 +66,20 @@ interface CardTileProps {
   enlarged?: boolean;
   /** Green border highlight for newly added card (fades after 2s) */
   highlighted?: boolean;
+  /**
+   * Applied tile width (pt), derived from the viewport by the parent.
+   * Omit to fall back to the design reference constant.
+   */
+  tileWidth?: number;
+  /** Applied tile height (pt). Omit to fall back to the design reference constant. */
+  tileHeight?: number;
 }
 
 /**
  * CardTile Component
  *
- * - Grid mode: 171x140pt with 16pt radius
+ * - Grid mode: viewport-derived width at the 171:140 ratio, 16pt radius
+ *   (exactly 171x140pt at the 390 dp design reference width)
  * - Enlarged (single-card) mode: 220x180pt with 20pt radius
  * - Brand hex background + centered logo / first-letter avatar
  * - Card name below tile (not inside the shell)
@@ -63,7 +89,9 @@ interface CardTileProps {
 export const CardTile: React.FC<CardTileProps> = ({
   card,
   enlarged = false,
-  highlighted = false
+  highlighted = false,
+  tileWidth: tileWidthProp,
+  tileHeight: tileHeightProp
 }) => {
   const { theme, isDark } = useTheme();
   const { t } = useTranslation();
@@ -90,8 +118,11 @@ export const CardTile: React.FC<CardTileProps> = ({
     router.push(`/card/${card.id}`);
   };
 
-  const tileWidth = enlarged ? SINGLE_TILE_WIDTH : TILE_WIDTH;
-  const tileHeight = enlarged ? SINGLE_TILE_HEIGHT : TILE_HEIGHT;
+  // Applied size comes from the parent (viewport-derived). The constants are the
+  // fallback for callers that pass no size — never a viewport-independent width.
+  const tileWidth = tileWidthProp ?? (enlarged ? SINGLE_TILE_WIDTH : TILE_WIDTH);
+  const tileHeight = tileHeightProp ?? (enlarged ? SINGLE_TILE_HEIGHT : TILE_HEIGHT);
+  // Radius is fixed by design and deliberately does not scale with the tile.
   const tileRadius = enlarged ? SINGLE_TILE_RADIUS : TILE_RADIUS;
 
   // Resolve background color: brand hex for catalogue, card palette color for custom

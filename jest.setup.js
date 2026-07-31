@@ -210,7 +210,11 @@ jest.mock('@expo/vector-icons', () => {
 
 // Mock @shopify/flash-list
 // Export state object to allow tests to capture props
-global.mockFlashListState = { numColumns: undefined };
+global.mockFlashListState = {
+  numColumns: undefined,
+  contentContainerStyle: undefined,
+  listHeaderStyle: undefined
+};
 jest.mock('@shopify/flash-list', () => {
   const mockReact = require('react');
   const mockRN = require('react-native');
@@ -225,11 +229,23 @@ jest.mock('@shopify/flash-list', () => {
         testID,
         numColumns,
         onRefresh,
-        refreshing
+        refreshing,
+        contentContainerStyle
       } = props;
 
-      // Store numColumns in global state for test assertions
+      // Store list-level props in global state for test assertions.
+      // contentContainerStyle matters because FlashList measures its grid cells
+      // from a probe view INSIDE this padded container, so the padding is part of
+      // the cell-width arithmetic, not just decoration (Story 16.22).
       global.mockFlashListState.numColumns = numColumns;
+      global.mockFlashListState.contentContainerStyle = contentContainerStyle;
+      // The header is an element, not a component, when a caller passes JSX. Capture
+      // its style so tests can assert the header's own padding — it shares the padded
+      // content container with the grid but has no per-cell wrapper of its own.
+      global.mockFlashListState.listHeaderStyle =
+        ListHeaderComponent && typeof ListHeaderComponent !== 'function'
+          ? ListHeaderComponent.props?.style
+          : undefined;
 
       if (data.length === 0 && ListEmptyComponent) {
         return typeof ListEmptyComponent === 'function'
