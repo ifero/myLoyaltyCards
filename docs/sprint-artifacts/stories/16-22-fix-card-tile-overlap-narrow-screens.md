@@ -4,7 +4,7 @@ baseline_commit: 7837f359540c72c30edcf392e1a897fa99ab9752
 
 # Story 16.22: Fix card-grid tile overlap on narrow screens — derive tile width from the grid cell
 
-Status: review
+Status: done
 
 Epic: 16 — Platform & Tech Debt
 
