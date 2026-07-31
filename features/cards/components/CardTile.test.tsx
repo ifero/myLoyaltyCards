@@ -11,6 +11,8 @@ import Animated from 'react-native-reanimated';
 
 import { LoyaltyCard } from '@/core/schemas';
 
+import { useTheme } from '@/shared/theme';
+
 import {
   CardTile,
   TILE_WIDTH,
@@ -20,6 +22,7 @@ import {
   SINGLE_TILE_HEIGHT,
   SINGLE_TILE_RADIUS
 } from './CardTile';
+import { useBrandLogo } from '../hooks/useBrandLogo';
 import {
   AVATAR_SIZE,
   BADGE_CLEARANCE,
@@ -39,9 +42,6 @@ jest.mock('@/shared/theme', () => ({
   useTheme: jest.fn()
 }));
 
-// eslint-disable-next-line @typescript-eslint/no-require-imports
-const { useTheme } = require('@/shared/theme');
-
 // Mock CARD_COLORS
 jest.mock('@/shared/theme/colors', () => ({
   CARD_COLORS: {
@@ -57,8 +57,6 @@ jest.mock('@/shared/theme/colors', () => ({
 jest.mock('../hooks/useBrandLogo', () => ({
   useBrandLogo: jest.fn()
 }));
-// eslint-disable-next-line @typescript-eslint/no-require-imports
-const { useBrandLogo } = require('../hooks/useBrandLogo');
 
 jest.mock('../utils/brandLogos', () => {
   // eslint-disable-next-line @typescript-eslint/no-require-imports
