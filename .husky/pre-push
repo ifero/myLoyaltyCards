@@ -13,6 +13,11 @@ yarn splash:check || exit 1
 echo "Running lint..."
 yarn lint || exit 1
 
+# Catches files that skipped lint-staged (bot/agent commits, `commit -n`) before
+# CI does. Run `yarn format` to fix.
+echo "Checking formatting..."
+yarn format:check || exit 1
+
 echo "Running tests..."
 yarn test || exit 1
 

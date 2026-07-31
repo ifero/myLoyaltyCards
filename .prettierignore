@@ -7,3 +7,24 @@ _bmad/
 .agents/skills/bmad-*/
 .github/agents/bmad-*
 .github/copilot-instructions.md
+
+# Written by `expo prebuild` back into the tracked source tree.
+# @bacons/apple-targets' watch-icon mod writes this file itself, via
+# writeContentsJsonAsync -> JSON.stringify(…, null, 2) with NO trailing newline
+# (@expo/prebuild-config/build/plugins/icons/AssetContents.js). Prettier wants to
+# add that newline. The two can never agree, so whichever tool writes last, the
+# other reports the file as modified -- which is why `yarn watch:prebuild` used to
+# leave a stray one-byte diff in `git status` for a file nobody touched.
+# prebuild is the generator of record here, so keep prettier (and, via this file,
+# lint-staged) out of it and let the tracked bytes match prebuild exactly.
+targets/watch/Assets.xcassets/AppIcon.appiconset/Contents.json
+
+# Hand-tuned HTML, deliberately left as authored.
+# docs/ is served publicly by GitHub Pages (https://ifero.github.io/myLoyaltyCards/,
+# source main:/docs) and supabase/templates/ are the transactional auth emails.
+# Prettier's HTML printer explodes every inline style="…" attribute across multiple
+# lines and reflows inline elements: ~1.2k lines of churn, no functional gain, and
+# multi-line attributes are exactly what older email clients mishandle. All risk,
+# no upside. Sibling CSS is NOT ignored -- prettier's CSS output is safe.
+docs/*.html
+supabase/templates/*.html
