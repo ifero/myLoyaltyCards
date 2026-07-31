@@ -69,6 +69,7 @@
 6. **Testing**: Comprehensive unit and integration tests covering full brand flow
 
 **Red-Green-Refactor Cycle:**
+
 - ✅ RED: Created failing tests for brandId persistence
 - ✅ GREEN: Implemented brandId support in useAddCard hook
 - ✅ REFACTOR: Clean implementation with proper TypeScript types
@@ -80,6 +81,7 @@
 ### Completion Notes
 
 **Implementation Complete:**
+
 - All acceptance criteria satisfied
 - Brand context flows through: Catalogue → Scanner → Add Card → Database
 - UI shows brand name when brand selected
@@ -89,6 +91,7 @@
 - All 290 tests pass (added 3 new integration tests)
 
 **Technical Details:**
+
 - `useAddCard`: Now accepts optional `brandId` in AddCardInput interface
 - `scan.tsx`: Forwards brand params (`brandId`, `brandName`, `brandColor`, `brandFormat`) to add-card
 - `add-card.tsx`: Shows "Adding [Brand Name] Card" header, prefills form with brand data

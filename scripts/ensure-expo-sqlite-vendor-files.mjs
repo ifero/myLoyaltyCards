@@ -41,5 +41,7 @@ for (const fileName of requiredFiles) {
 }
 
 if (restoredFiles > 0) {
-  console.log(`[ensure-expo-sqlite-vendor-files] Restored ${restoredFiles} ExpoSQLite vendored sqlite file(s).`);
+  console.log(
+    `[ensure-expo-sqlite-vendor-files] Restored ${restoredFiles} ExpoSQLite vendored sqlite file(s).`
+  );
 }

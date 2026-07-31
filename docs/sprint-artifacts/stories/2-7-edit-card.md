@@ -213,7 +213,7 @@ async function updateCard(id: string, input: CardFormInput): Promise<LoyaltyCard
     barcode: input.barcode.trim(),
     barcodeFormat: input.barcodeFormat,
     color: input.color,
-    updatedAt: now,
+    updatedAt: now
   };
   await cardRepository.update(id, updates);
   return cardRepository.getById(id);
@@ -227,9 +227,9 @@ Burnt.toast({ title: 'Card saved', preset: 'done' });
 
 ```typescript
 const {
-  formState: { isDirty },
+  formState: { isDirty }
 } = useForm({
-  defaultValues: existingCard,
+  defaultValues: existingCard
 });
 
 // isDirty = true when any field has changed from default

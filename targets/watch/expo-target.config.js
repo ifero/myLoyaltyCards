@@ -7,6 +7,8 @@ module.exports = {
   icon: './AppIcon.png',
   frameworks: ['SwiftUI', 'SwiftData', 'WatchConnectivity', 'WidgetKit'],
   entitlements: {
-    'com.apple.security.application-groups': ['group.com.iferoporefi.myloyaltycards.watch-complication'],
-  },
+    'com.apple.security.application-groups': [
+      'group.com.iferoporefi.myloyaltycards.watch-complication'
+    ]
+  }
 };

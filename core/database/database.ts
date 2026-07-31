@@ -78,9 +78,7 @@ export async function initializeDatabase(): Promise<SQLiteDatabase> {
  */
 export function getDatabase(): SQLiteDatabase {
   if (!db) {
-    throw new Error(
-      'Database not initialized. Call initializeDatabase() first.'
-    );
+    throw new Error('Database not initialized. Call initializeDatabase() first.');
   }
   return db;
 }
