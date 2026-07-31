@@ -8,6 +8,14 @@ _bmad/
 .github/agents/bmad-*
 .github/copilot-instructions.md
 
+# Claude Code worktrees: full checkouts of this repo nested inside it.
+# git excludes them via .git/info/exclude, which is local-only and NOT something
+# prettier can read (it honours .gitignore and .prettierignore, nothing else), so
+# without this entry prettier walks every worktree. Two consequences, both real:
+# `prettier --check .` goes from ~11s to over six minutes (239k extra files), and
+# `yarn format` would rewrite files inside other in-flight branches.
+.claude/worktrees/
+
 # Written by `expo prebuild` back into the tracked source tree.
 # @bacons/apple-targets' watch-icon mod writes this file itself, via
 # writeContentsJsonAsync -> JSON.stringify(…, null, 2) with NO trailing newline
