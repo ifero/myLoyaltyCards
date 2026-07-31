@@ -4,6 +4,7 @@ import tsParser from '@typescript-eslint/parser';
 import importPlugin from 'eslint-plugin-import';
 import boundariesPlugin from 'eslint-plugin-boundaries';
 import i18nextPlugin from 'eslint-plugin-i18next';
+import reactHooksPlugin from 'eslint-plugin-react-hooks';
 
 export default [
   eslint.configs.recommended,
@@ -21,7 +22,8 @@ export default [
       '@typescript-eslint': tseslint,
       import: importPlugin,
       boundaries: boundariesPlugin,
-      i18next: i18nextPlugin
+      i18next: i18nextPlugin,
+      'react-hooks': reactHooksPlugin
     },
     settings: {
       'import/resolver': {
@@ -46,6 +48,28 @@ export default [
       // (core/utils/logger.ts) is the single sanctioned logging sink so that
       // production errors are routed to Sentry and dev noise is gated.
       'no-console': 'error',
+      // React hook correctness. Until now NEITHER of these ran, so `yarn lint`
+      // and CI gave zero assurance about the ~178 dependency-array hook call
+      // sites across 66 files.
+      //
+      // Motivating incident (Story 16.22, card-grid tile overlap): the fix
+      // hinged on `renderItem`'s useCallback deps in
+      // features/cards/components/CardList.tsx including the derived tile size.
+      // A narrowed dep array silently reintroduces the overlap for the whole
+      // lifetime of the mounted screen — `useFocusEffect` keeps that screen
+      // alive rather than remounting it, so a stale closure never gets flushed.
+      // It was caught by manual review plus a hand-written regression test;
+      // `exhaustive-deps` flags it mechanically.
+      //
+      // We register only these two rules rather than spreading the plugin's
+      // `recommended` config: v7 bundles ~30 React Compiler lints
+      // (set-state-in-effect, purity, immutability, …) that are a separate,
+      // much larger migration.
+      'react-hooks/rules-of-hooks': 'error',
+      // Starts at 'warn' on purpose: there is a pre-existing backlog and CI's
+      // `lint` step must stay green while it is worked down. Promote to 'error'
+      // once the count reaches zero.
+      'react-hooks/exhaustive-deps': 'warn',
       // Feature boundary enforcement
       'boundaries/element-types': [
         'error',
