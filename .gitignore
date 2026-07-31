@@ -36,6 +36,10 @@ yarn-error.*
 # Testing
 coverage/
 
+# Root-level scratch output (e.g. `jest --json --outputFile=tmp-*.json` while debugging a single
+# suite). Anchored to the repo root so nested source files are never silently ignored.
+/tmp-*
+
 # Storybook (web component gallery — build artifacts, Story 16.5)
 storybook-static/
 build-storybook.log
