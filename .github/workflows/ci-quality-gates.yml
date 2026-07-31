@@ -9,6 +9,14 @@ on:
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: 'true'
 
+# One run per ref — but only PRs cancel. A superseded PR run is pure waste, while
+# on main every commit keeps its own gate result: this is the job that tells you
+# *which* merge broke the branch, and collapsing three merges into one run throws
+# that away. It is a short ubuntu job, so letting main runs finish costs little.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
 jobs:
   quality-gates:
     name: Quality gates (lint, typecheck, test, coverage)

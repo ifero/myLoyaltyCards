@@ -40,6 +40,15 @@ on:
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: 'true'
 
+# One run per ref — but only PRs cancel. Chromatic runs on main are not throwaway
+# CI: each one publishes the baseline that later PRs diff against, and
+# `--only-changed` walks git ancestry to the last completed build. Cancelling
+# main runs would push that baseline further back on every merge, so main always
+# finishes and only superseded PR runs are dropped.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
 jobs:
   chromatic:
     name: Publish Storybook to Chromatic

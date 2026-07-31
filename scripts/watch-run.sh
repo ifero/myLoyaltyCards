@@ -32,10 +32,19 @@ fi
 
 echo "Using booted Apple Watch simulator: $WATCH_UDID"
 
+# Ask xcodebuild where watch-build.sh put the app, using the *same* selector it
+# built with — sourcing rather than restating the args, because the two modes
+# resolve to different roots (-target defaults SYMROOT to ios/build, a scheme
+# build uses DerivedData) and a silent disagreement here installs a stale app.
+#
+# Selecting a single target also makes the `exit` below unambiguous. The old
+# scheme query emitted two BUILT_PRODUCTS_DIR lines — Debug-watchsimulator and
+# Debug-iphonesimulator — and picked the right one only because the watch entry
+# happened to be printed first.
+source "$(dirname "${BASH_SOURCE[0]}")/lib/watch-xcodebuild.sh"
+
 BUILT_DIR=$(
-  xcodebuild -workspace ios/myLoyaltyCards.xcworkspace -scheme watch \
-    -configuration Debug -destination "generic/platform=watchOS Simulator" \
-    -showBuildSettings 2>/dev/null \
+  xcodebuild "${watch_xcodebuild_args[@]}" -showBuildSettings 2>/dev/null \
     | awk '/ BUILT_PRODUCTS_DIR =/ {print $3; exit}'
 )
 

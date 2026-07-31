@@ -17,6 +17,14 @@ on:
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: 'true'
 
+# One run per ref, newest wins — see watchos-tests.yml for the key rationale.
+# Cancelling an AdHoc build loses nothing durable: the lane signs from a keystore
+# decoded per-run and the only output is a run artifact. When several PRs merge
+# in a row, the APK worth keeping is the tip commit's.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   android-adhoc:
     name: Android AdHoc Build

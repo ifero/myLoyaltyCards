@@ -26,23 +26,46 @@ on:
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: 'true'
 
+# One run per ref, newest wins. `github.ref` is `refs/heads/main` for merges and
+# `refs/pull/N/merge` for PRs, so a PR can only ever cancel its own earlier run.
+# This job holds a macOS runner for ~20 minutes, so superseded runs are the
+# single most expensive thing in the pipeline: merging three PRs back-to-back
+# used to leave three builds racing when only the tip commit's result matters.
+# Cancelling is safe here — the job builds and asserts, it publishes nothing.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   watchos-tests:
     name: watchOS (xcodebuild) tests
     runs-on: macos-latest
-    # Job wall-clock for green runs, measured over the last 30 successful runs
-    # (includes the ~2m of cache-save post-steps, which count against this
-    # ceiling): median ~23m, p95 ~28m, slowest ~29m. The old 30m limit sat
-    # inside that noise band, so a slow runner draw surfaced as a red
-    # `cancelled` check with zero failing steps rather than as a real failure.
+    # The scheme's dependency graph is now narrowed, so the ceiling that used to
+    # need 50m does not any more. `watch:build:ci` builds the watch targets via
+    # `-project … -target watch` instead of `-workspace … -scheme watch`.
+    # Measured on the first green run after that change (30637151382), not
+    # estimated: the xcodebuild step went 18m47s → 45s, the whole job 21m55s →
+    # 4m53s. 20m leaves ~4x headroom while still catching a genuine hang.
     #
-    # Nearly all of it is the xcodebuild step: the `watch` scheme depends on the
-    # parent iOS app, so ~23m goes to compiling that app's Pod tree (RNSVG,
-    # RNReanimated, RNScreens, SDWebImage, …) to reach a watch target that
-    # itself compiles in ~17s. Caching does not reach that cost — see the PR
-    # that raised this limit — so headroom is the fix until the scheme's
-    # dependency graph is narrowed.
-    timeout-minutes: 50
+    # Budget against `expo prebuild --clean`, not the build. Prebuild is now the
+    # dominant step at 2m34s — 53% of the job — and by far the most variable:
+    # the identical step took 1m08s on the run before this change. The build no
+    # longer moves the total; prebuild and the runner draw do.
+    #
+    # Why -target and not -scheme: no shared `watch` scheme exists (only
+    # myLoyaltyCards.xcscheme is shared), so xcodebuild autocreates one — and
+    # autocreation adds the container app. That dragged in the whole iOS Pod
+    # tree (Sentry, ZXingObjC, libwebp, SDWebImage, RNSVG, RNReanimated, …) for
+    # ~17m of every run. The real target graph runs the other way round
+    # (myLoyaltyCards → watch → watchwidget) and the watch targets declare no
+    # pods of their own, so none of it was ever an input to this check.
+    #
+    # -sdk watchsimulator is load-bearing: in -target mode xcodebuild otherwise
+    # defaults to the iOS SDK and fails the watch targets on provisioning.
+    # (Not to be confused with -sdk iphonesimulator on the *app* build, which
+    # breaks the watch widget.) If a targets/*/pods.rb ever appears, these
+    # targets gain CocoaPods deps and this must go back through the workspace.
+    timeout-minutes: 20
 
     steps:
       - name: Checkout
