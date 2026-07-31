@@ -13,14 +13,7 @@ import * as z from 'zod';
  * Barcode format enum - supported barcode types
  * Matches cross-platform serialization (Swift/Kotlin use same string values)
  */
-export const barcodeFormatSchema = z.enum([
-  'CODE128',
-  'EAN13',
-  'EAN8',
-  'QR',
-  'CODE39',
-  'UPCA',
-]);
+export const barcodeFormatSchema = z.enum(['CODE128', 'EAN13', 'EAN8', 'QR', 'CODE39', 'UPCA']);
 
 /**
  * Card color keys - 5-color palette for Virtual Logo system
@@ -73,7 +66,7 @@ export const loyaltyCardSchema = z.object({
   createdAt: z.string().datetime(),
 
   /** When card was last modified (ISO 8601) */
-  updatedAt: z.string().datetime(),
+  updatedAt: z.string().datetime()
 });
 
 /**

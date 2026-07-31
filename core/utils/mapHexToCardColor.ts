@@ -28,7 +28,7 @@ function hexToRgb(hex: string): { r: number; g: number; b: number } | null {
  */
 export function mapHexToCardColor(hex: string): CardColor {
   const rgb = hexToRgb(hex);
-  
+
   if (!rgb) {
     return 'grey'; // Fallback for invalid hex
   }

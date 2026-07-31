@@ -163,18 +163,20 @@ export function VirtualLogo({ name, color, size = 80, style }: VirtualLogoProps)
           backgroundColor,
           borderRadius: size * 0.1,
           alignItems: 'center',
-          justifyContent: 'center',
+          justifyContent: 'center'
         },
-        style,
+        style
       ]}
-      accessibilityLabel={`${name} card logo`}>
+      accessibilityLabel={`${name} card logo`}
+    >
       <Text
         style={{
           color: '#FFFFFF',
           fontSize,
           fontWeight: '700',
-          letterSpacing: 1,
-        }}>
+          letterSpacing: 1
+        }}
+      >
         {initials}
       </Text>
     </View>

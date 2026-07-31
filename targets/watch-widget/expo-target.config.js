@@ -6,6 +6,8 @@ module.exports = {
   deploymentTarget: '10.0',
   frameworks: ['WidgetKit', 'SwiftUI'],
   entitlements: {
-    'com.apple.security.application-groups': ['group.com.iferoporefi.myloyaltycards.watch-complication'],
-  },
+    'com.apple.security.application-groups': [
+      'group.com.iferoporefi.myloyaltycards.watch-complication'
+    ]
+  }
 };
