@@ -12,14 +12,23 @@
  */
 
 import {
+  AVATAR_SIZE,
+  BADGE_CLEARANCE,
+  BADGE_INSET,
+  BADGE_KEEP_OUT,
+  BADGE_SIZE,
+  FALLBACK_TEXT_SIZE,
   GUTTER,
   LIST_CONTENT_PADDING,
+  LOGO_SLOT_SIZE,
+  MIN_COMFORTABLE_TILE_WIDTH,
   NUM_COLUMNS,
   SCREEN_MARGIN,
   SINGLE_TILE_HEIGHT,
   SINGLE_TILE_WIDTH,
   TILE_HEIGHT,
   TILE_WIDTH,
+  getFallbackChildMetrics,
   getGridTileHeight,
   getGridTileWidth,
   getSingleTileHeight,
@@ -271,6 +280,489 @@ describe('card-grid layout contract (Story 16.22)', () => {
 
     it.each([0, -100])('never returns a width below 1 for %p', (input) => {
       expect(getSingleTileWidth(input)).toBeGreaterThanOrEqual(1);
+    });
+  });
+});
+
+/**
+ * Intra-tile geometry contract — follow-up to Story 16.22's QA finding 3.
+ *
+ * Story 16.22 made the tile track the viewport, which turned `CardTile`'s two FIXED
+ * centred children (`logoSlot` 64 pt, `avatarCircle` 48 pt) into the same species of
+ * frozen measurement the tile itself had been. A 3-column grid — 16.22's own flagged
+ * follow-up, already implemented in `CatalogueGrid.tsx` — reaches the collision at
+ * ≈116 pt on a 412 dp phone.
+ *
+ * As above, the invariant under test is the RELATIONSHIP ("a centred child clears the
+ * right-pinned badge"), swept across every tile a 2- OR 3-column grid can produce,
+ * rather than a spot check at whatever width happens to ship today.
+ */
+describe('intra-tile fallback geometry vs the favourite badge', () => {
+  /** Left edge (pt) of the right-pinned badge on a tile of the given width. */
+  const badgeLeftEdge = (tileWidth: number): number => tileWidth - BADGE_INSET - BADGE_SIZE;
+
+  /** Right edge (pt) of a centre-aligned child — it grows from the tile's middle. */
+  const centredRightEdge = (tileWidth: number, size: number): number => tileWidth / 2 + size / 2;
+
+  /** Gap (pt) between the two. Negative means they overlap. */
+  const gap = (tileWidth: number, size: number): number =>
+    badgeLeftEdge(tileWidth) - centredRightEdge(tileWidth, size);
+
+  /**
+   * Tile width a grid of `columns` columns yields at a viewport.
+   *
+   * Delegates to the production helper rather than transcribing it, deliberately unlike
+   * `cellContentWidth` above: that one models a *third party* (FlashList), where an
+   * independent copy is the point, while this is the very function under test. Reusing
+   * it means these sweeps automatically follow any change to the tile arithmetic instead
+   * of silently testing a stale copy of it.
+   */
+  const tileWidthFor = (windowWidth: number, columns: number): number =>
+    getGridTileWidth(windowWidth, columns);
+
+  /** The proportional size before any capping — the ideal the cap trims. */
+  const proportional = (tileWidth: number, referenceSize: number): number =>
+    Math.round((tileWidth * referenceSize) / TILE_WIDTH);
+
+  const REFERENCES = [
+    { name: 'logoSlot', referenceSize: LOGO_SLOT_SIZE },
+    { name: 'avatarCircle', referenceSize: AVATAR_SIZE }
+  ];
+
+  /** Worst gap across both children at a given tile width. */
+  const worstGap = (tileWidth: number): number =>
+    Math.min(
+      ...REFERENCES.map(({ referenceSize }) =>
+        gap(tileWidth, getFallbackChildMetrics(tileWidth, referenceSize).size)
+      )
+    );
+
+  describe('the keep-out constant', () => {
+    it('is derived from the badge geometry, doubled because the child is centred', () => {
+      expect(BADGE_SIZE).toBe(24);
+      expect(BADGE_INSET).toBe(6);
+      expect(BADGE_CLEARANCE).toBe(4);
+      // Derived, not 68 written down — the badge style and this arithmetic must not
+      // be able to drift apart, exactly as with LIST_CONTENT_PADDING above.
+      expect(BADGE_KEEP_OUT).toBe(2 * (BADGE_INSET + BADGE_SIZE + BADGE_CLEARANCE));
+      expect(BADGE_KEEP_OUT).toBe(68);
+    });
+
+    it('keeps the fallback design references at their 390 dp values', () => {
+      expect(LOGO_SLOT_SIZE).toBe(64);
+      expect(AVATAR_SIZE).toBe(48);
+      expect(FALLBACK_TEXT_SIZE).toBe(18);
+    });
+
+    it("cannot be satisfied by the tile's own 0.85 logo factor at any real width", () => {
+      // Guards the REASONING, not just the result. The obvious move is to copy
+      // `logoWidth = round(tileWidth * 0.85)` from the SVG branch. For a CENTRED
+      // child that needs 0.85·T ≤ T − 68, i.e. a tile wider than 450 pt — no phone is
+      // close. The SVG logo overlaps the badge today for exactly this reason, which
+      // is accepted there (opaque plate over a transparent logo) but would not be for
+      // two translucent plates.
+      const satisfied = widthRange(1, 450).filter(
+        (t) => Math.round(t * 0.85) <= t - BADGE_KEEP_OUT
+      );
+      expect(satisfied).toEqual([]);
+      expect(gap(TILE_WIDTH, Math.round(TILE_WIDTH * 0.85))).toBeLessThan(0);
+    });
+  });
+
+  describe('zero visual change at the design reference width', () => {
+    it.each(REFERENCES)('reproduces $name exactly at the 390 dp tile', ({ referenceSize }) => {
+      expect(getGridTileWidth(390)).toBe(TILE_WIDTH);
+      const metrics = getFallbackChildMetrics(TILE_WIDTH, referenceSize);
+      expect(metrics.size).toBe(referenceSize);
+      expect(metrics.fontSize).toBe(FALLBACK_TEXT_SIZE);
+    });
+  });
+
+  describe('applied sizes by device and column count', () => {
+    // Documents the visual change this makes, so a "my avatars look smaller" report
+    // from a 320 dp phone — or a larger one from a Pro Max — is recognisable as
+    // intended rather than mistaken for a regression.
+    const cases: {
+      width: number;
+      columns: number;
+      tileWidth: number;
+      slot: number;
+      avatar: number;
+      note: string;
+    }[] = [
+      { width: 320, columns: 2, tileWidth: 136, slot: 51, avatar: 38, note: 'small Android' },
+      { width: 360, columns: 2, tileWidth: 156, slot: 58, avatar: 44, note: 'common Android' },
+      {
+        width: 390,
+        columns: 2,
+        tileWidth: 171,
+        slot: 64,
+        avatar: 48,
+        note: 'reference — no change'
+      },
+      { width: 430, columns: 2, tileWidth: 191, slot: 71, avatar: 54, note: 'iPhone Pro Max' },
+      {
+        width: 412,
+        columns: 3,
+        tileWidth: 116,
+        slot: 43,
+        avatar: 33,
+        note: '3-col — was overlapping'
+      },
+      { width: 360, columns: 3, tileWidth: 98, slot: 30, avatar: 28, note: '3-col, cap binding' }
+    ];
+
+    it.each(cases)(
+      '$width dp x$columns → tile $tileWidth, slot $slot, avatar $avatar ($note)',
+      ({ width, columns, tileWidth, slot, avatar }) => {
+        expect(tileWidthFor(width, columns)).toBe(tileWidth);
+        expect(getFallbackChildMetrics(tileWidth, LOGO_SLOT_SIZE).size).toBe(slot);
+        expect(getFallbackChildMetrics(tileWidth, AVATAR_SIZE).size).toBe(avatar);
+      }
+    );
+  });
+
+  describe('clearance is arithmetically impossible to lose', () => {
+    it.each(REFERENCES)(
+      'keeps $name clear of the badge at every 2- and 3-column tile from 280–1024 dp',
+      ({ referenceSize }) => {
+        const violations: { columns: number; windowWidth: number; tile: number; gap: number }[] =
+          [];
+        for (const columns of [2, 3]) {
+          for (const windowWidth of widthRange(280, 1024)) {
+            const tile = tileWidthFor(windowWidth, columns);
+            const { size } = getFallbackChildMetrics(tile, referenceSize);
+            const measured = gap(tile, size);
+            if (measured < BADGE_CLEARANCE) {
+              violations.push({ columns, windowWidth, tile, gap: measured });
+            }
+          }
+        }
+        expect(violations).toEqual([]);
+      }
+    );
+
+    it('would have caught the shipped fixed sizes on a 3-column tile', () => {
+      // Guards the guard, as the 374 dp cliff test does above. Without this, the
+      // sweep could pass vacuously against sizes that were never at risk.
+      const tile = tileWidthFor(412, 3);
+      expect(tile).toBe(116);
+
+      // The defect: a fixed 64 pt slot overlaps the badge by 4 pt here.
+      expect(gap(tile, LOGO_SLOT_SIZE)).toBeLessThan(0);
+      // ...while a fixed 48 pt avatar still cleared, which is precisely why a single
+      // assertion at 116 pt was not enough — only the slot's was falsifiable.
+      expect(gap(tile, AVATAR_SIZE)).toBeGreaterThan(0);
+
+      // Both now clear by at least the nominal gap.
+      for (const { referenceSize } of REFERENCES) {
+        expect(gap(tile, getFallbackChildMetrics(tile, referenceSize).size)).toBeGreaterThanOrEqual(
+          BADGE_CLEARANCE
+        );
+      }
+    });
+
+    it('states all three clearance thresholds exactly', () => {
+      // ≥ BADGE_CLEARANCE wherever the cap is satisfiable — a 1 pt plate needs T ≥ 69.
+      expect(widthRange(69, 1024).filter((t) => worstGap(t) < BADGE_CLEARANCE)).toEqual([]);
+      // 61–68: the cap asks for a sub-1 pt plate, so toTileDimension's 1 pt floor
+      // takes over. Still no overlap, just less than the nominal gap.
+      expect(widthRange(61, 68).filter((t) => worstGap(t) < 0)).toEqual([]);
+      // 60 and below: the badge's own 30 pt footprint has crossed the tile's centre
+      // line, so NO centred child can clear it — the badge would have to change.
+      expect(worstGap(60)).toBeLessThan(0);
+      expect(worstGap(61)).toBe(0);
+    });
+  });
+
+  describe('how the cap and the proportion divide the range', () => {
+    it('is pure proportionality on every 2-column tile that ships today', () => {
+      // The cap is a guard for a grid nobody has built yet, not a change to the
+      // current one: at 320 dp (the narrowest width AC7 exercises) it is slack.
+      const narrowest = tileWidthFor(320, 2);
+      expect(narrowest).toBe(136);
+      for (const { referenceSize } of REFERENCES) {
+        expect(getFallbackChildMetrics(narrowest, referenceSize).size).toBe(
+          proportional(narrowest, referenceSize)
+        );
+      }
+    });
+
+    it('only overrides the proportion on tiles narrower than any 2-column phone', () => {
+      const capped = widthRange(1, 400).filter(
+        (t) => getFallbackChildMetrics(t, LOGO_SLOT_SIZE).size !== proportional(t, LOGO_SLOT_SIZE)
+      );
+      // Non-empty, so the cap is not vacuous...
+      expect(capped.length).toBeGreaterThan(0);
+      // ...but never reached by a 2-column layout on a real phone.
+      expect(Math.max(...capped)).toBeLessThan(tileWidthFor(320, 2));
+    });
+
+    it.each(REFERENCES)('never shrinks $name as the tile grows', ({ referenceSize }) => {
+      const sizes = widthRange(1, 1024).map((t) => getFallbackChildMetrics(t, referenceSize).size);
+      expect(sizes.filter((size, i) => i > 0 && size < sizes[i - 1]!)).toEqual([]);
+    });
+  });
+
+  describe('the glyph inside the plate', () => {
+    const tilesFor = (columns: number, from: number, to: number): number[] =>
+      widthRange(from, to).map((windowWidth) => tileWidthFor(windowWidth, columns));
+
+    const shrunkAmong = (tiles: number[]): number[] =>
+      tiles.filter((tile) =>
+        REFERENCES.some(
+          ({ referenceSize }) =>
+            getFallbackChildMetrics(tile, referenceSize).fontSize !== FALLBACK_TEXT_SIZE
+        )
+      );
+
+    it('holds the design size on every 2-column tile from 280–1024 dp', () => {
+      // The plate scales; the type does NOT follow it down while the plate can still
+      // hold it. So on real hardware the abbreviation and the avatar letter stay at
+      // 18 pt and consistent with the rest of the app, even where the plate has shrunk
+      // by 20 % at 320 dp.
+      const tiles = tilesFor(2, 280, 1024);
+      expect(shrunkAmong(tiles)).toEqual([]);
+
+      // Non-vacuous: those same tiles carry a wide range of plate sizes, so the
+      // assertion above reads "type held while plates moved", not "nothing moved".
+      const plates = new Set(tiles.map((t) => getFallbackChildMetrics(t, LOGO_SLOT_SIZE).size));
+      expect(plates.size).toBeGreaterThan(10);
+    });
+
+    it('holds it for 3 columns too, down to a 349 dp viewport', () => {
+      // 3 columns needs a 95 pt tile for the plate to still hold 18 pt, which is a
+      // 349 dp viewport. Above that, type is untouched...
+      expect(shrunkAmong(tilesFor(3, 349, 1024))).toEqual([]);
+      expect(tileWidthFor(349, 3)).toBe(95);
+
+      // ...and below it every width shrinks, so the boundary is exact rather than
+      // approximate. A 3-column grid on a sub-349 dp phone is a layout the column-count
+      // story should decline to produce (a minimum tile width); this records what the
+      // type would do if it did.
+      expect(shrunkAmong(tilesFor(3, 280, 348))).toEqual(tilesFor(3, 280, 348));
+    });
+
+    it('shrinks only once the plate can no longer hold 18 pt', () => {
+      // The fit rule engages at a 26 pt plate and below, which the badge cap only
+      // produces on a tile of ~94 pt — narrower than any 2- or 3-column grid above.
+      // 340 dp across 3 columns (a 92 pt tile) is the kind of layout that gets there.
+      const tile = tileWidthFor(340, 3);
+      expect(tile).toBe(92);
+      const { size, fontSize } = getFallbackChildMetrics(tile, LOGO_SLOT_SIZE);
+      expect(size).toBe(24);
+      expect(fontSize).toBe(16);
+      expect(fontSize).toBeLessThan(FALLBACK_TEXT_SIZE);
+    });
+
+    it('never scales the glyph above its design size', () => {
+      // The plate grows on a Pro Max; the type deliberately does not follow it up.
+      const oversized = widthRange(1, 1024).filter((t) =>
+        REFERENCES.some(
+          ({ referenceSize }) =>
+            getFallbackChildMetrics(t, referenceSize).fontSize > FALLBACK_TEXT_SIZE
+        )
+      );
+      expect(oversized).toEqual([]);
+      expect(getFallbackChildMetrics(tileWidthFor(430, 2), LOGO_SLOT_SIZE).size).toBe(71);
+      expect(getFallbackChildMetrics(tileWidthFor(430, 2), LOGO_SLOT_SIZE).fontSize).toBe(
+        FALLBACK_TEXT_SIZE
+      );
+    });
+
+    it('floors at the smallest size the type scale ships (TYPOGRAPHY.caption2)', () => {
+      // Reachable, unlike a plate floor: a 15 pt plate would want 10 pt type, and the
+      // floor outranks the fit ratio so it gets 11 pt and is allowed to overhang. Only
+      // degenerate tiles get here, but it keeps type from scaling to nothing.
+      const sizes = widthRange(1, 1024).map(
+        (t) => getFallbackChildMetrics(t, LOGO_SLOT_SIZE).fontSize
+      );
+      expect(Math.min(...sizes)).toBe(11);
+      expect(getFallbackChildMetrics(83, LOGO_SLOT_SIZE).size).toBe(15);
+      expect(getFallbackChildMetrics(83, LOGO_SLOT_SIZE).fontSize).toBe(11);
+    });
+  });
+
+  describe('degenerate inputs', () => {
+    it.each([Number.NaN, Number.POSITIVE_INFINITY, Number.NEGATIVE_INFINITY, 0, -100])(
+      'clamps to a finite, positive plate and glyph for %p',
+      (input) => {
+        for (const { referenceSize } of REFERENCES) {
+          const { size, fontSize } = getFallbackChildMetrics(input, referenceSize);
+          expect(Number.isFinite(size)).toBe(true);
+          expect(size).toBeGreaterThanOrEqual(1);
+          expect(Number.isFinite(fontSize)).toBe(true);
+          expect(fontSize).toBeGreaterThanOrEqual(1);
+        }
+      }
+    );
+
+    it('returns whole-pixel sizes for a fractional tile width', () => {
+      const { size, fontSize } = getFallbackChildMetrics(136.4, LOGO_SLOT_SIZE);
+      expect(Number.isInteger(size)).toBe(true);
+      expect(Number.isInteger(fontSize)).toBe(true);
+    });
+  });
+});
+
+/**
+ * The floor a responsive column count must respect.
+ *
+ * Overlap is already impossible at every width — the sweeps above prove that — so this
+ * is not a correctness guard. It exists because "cannot overlap" and "still looks like
+ * the design" are different bars, and the gap between them is where a 2 → 3 column
+ * story would land if nobody wrote the number down. `MIN_COMFORTABLE_TILE_WIDTH` is that
+ * number; these tests pin the degradation stages behind it and the viewport each column
+ * count needs to clear it, so a breakpoint can be chosen from measurements rather than
+ * from taste.
+ *
+ * Deliberately NOT enforced by a runtime guard: the column count is still a constant, so
+ * there is nothing to guard yet. When it becomes responsive, the story should assert its
+ * chosen breakpoint against `MIN_COMFORTABLE_TILE_WIDTH` here.
+ */
+describe('minimum tile width for a responsive column count', () => {
+  /** The proportional plate size before the badge keep-out cap trims it. */
+  const proportional = (tileWidth: number, referenceSize: number): number =>
+    Math.round((tileWidth * referenceSize) / TILE_WIDTH);
+
+  /** True when the badge keep-out cap leaves the proportional size untouched. */
+  const capIsSlack = (tileWidth: number): boolean =>
+    [LOGO_SLOT_SIZE, AVATAR_SIZE].every(
+      (ref) => getFallbackChildMetrics(tileWidth, ref).size === proportional(tileWidth, ref)
+    );
+
+  /** Smallest viewport at which `columns` columns reach the comfortable floor. */
+  const smallestComfortableViewport = (columns: number): number =>
+    widthRange(100, 1400).find((w) => getGridTileWidth(w, columns) >= MIN_COMFORTABLE_TILE_WIDTH)!;
+
+  it('is derived from the badge keep-out, not written down', () => {
+    // Solving T·(LOGO_SLOT_SIZE / TILE_WIDTH) ≤ T − BADGE_KEEP_OUT for T. Deriving it
+    // means changing the badge or the plate ratio moves this floor automatically.
+    expect(MIN_COMFORTABLE_TILE_WIDTH).toBe(
+      Math.ceil((BADGE_KEEP_OUT * TILE_WIDTH) / (TILE_WIDTH - LOGO_SLOT_SIZE))
+    );
+    expect(MIN_COMFORTABLE_TILE_WIDTH).toBe(109);
+  });
+
+  it('carries exactly one point of headroom over the real cap boundary', () => {
+    // Math.round in getFallbackChildMetrics buys a point over the continuous solution
+    // (108.67…), so the cap is already slack at 108. Asserting the headroom rather than
+    // just the floor means it cannot silently vanish under a future rounding change.
+    const capBinds = widthRange(1, 400).filter((t) => !capIsSlack(t));
+    expect(Math.max(...capBinds)).toBe(107);
+    expect(capIsSlack(MIN_COMFORTABLE_TILE_WIDTH - 1)).toBe(true);
+    expect(capIsSlack(MIN_COMFORTABLE_TILE_WIDTH)).toBe(true);
+  });
+
+  it('is the width at and above which the plates are purely proportional', () => {
+    const capped = widthRange(MIN_COMFORTABLE_TILE_WIDTH, 1024).filter((t) => !capIsSlack(t));
+    expect(capped).toEqual([]);
+  });
+
+  describe('the degradation stages below it', () => {
+    // The table in MIN_COMFORTABLE_TILE_WIDTH's docs, made executable. Each stage is
+    // still correct — no overlap anywhere — but progressively further from the design.
+    it('95–108 pt: 18 pt type still fits everywhere in the band', () => {
+      const stage = widthRange(95, MIN_COMFORTABLE_TILE_WIDTH - 1);
+      expect(
+        stage.filter(
+          (t) => getFallbackChildMetrics(t, LOGO_SLOT_SIZE).fontSize !== FALLBACK_TEXT_SIZE
+        )
+      ).toEqual([]);
+    });
+
+    it('95–107 pt: the cap trims the slot — and ONLY the slot', () => {
+      // The asymmetry is worth pinning: `avatarCircle`'s 48/171 share stays under the
+      // keep-out through this whole band, so the abbreviation slot is the only child the
+      // cap ever touches here. Any reasoning about "the plates" at these widths is really
+      // reasoning about the slot. (108 is excluded because it is the headroom point,
+      // where rounding leaves even the slot untrimmed — see the headroom test above.)
+      const band = widthRange(95, 107);
+      expect(
+        band.filter(
+          (t) => getFallbackChildMetrics(t, LOGO_SLOT_SIZE).size === proportional(t, LOGO_SLOT_SIZE)
+        )
+      ).toEqual([]);
+      expect(
+        band.filter(
+          (t) => getFallbackChildMetrics(t, AVATAR_SIZE).size !== proportional(t, AVATAR_SIZE)
+        )
+      ).toEqual([]);
+    });
+
+    it('94 pt and below: the plate is too small for 18 pt, so the glyph shrinks too', () => {
+      const stage = widthRange(61, 94);
+      expect(
+        stage.filter(
+          (t) => getFallbackChildMetrics(t, LOGO_SLOT_SIZE).fontSize >= FALLBACK_TEXT_SIZE
+        )
+      ).toEqual([]);
+    });
+
+    it('85 pt: the plate collapses to 17 pt — correct, but visually poor', () => {
+      expect(getFallbackChildMetrics(85, LOGO_SLOT_SIZE).size).toBe(17);
+    });
+  });
+
+  describe('what each column count needs from the viewport', () => {
+    it.each([
+      { columns: 2, viewport: 266 },
+      { columns: 3, viewport: 391 },
+      { columns: 4, viewport: 516 }
+    ])('$columns columns are comfortable from $viewport dp', ({ columns, viewport }) => {
+      expect(smallestComfortableViewport(columns)).toBe(viewport);
+      expect(getGridTileWidth(viewport, columns)).toBeGreaterThanOrEqual(
+        MIN_COMFORTABLE_TILE_WIDTH
+      );
+      expect(getGridTileWidth(viewport - 1, columns)).toBeLessThan(MIN_COMFORTABLE_TILE_WIDTH);
+    });
+
+    it('leaves the shipped 2-column grid comfortable on every phone', () => {
+      // 266 dp is far below the narrowest width AC7 exercises, so this change asks
+      // nothing of the current layout — the floor only constrains a FUTURE column count.
+      const uncomfortable = widthRange(280, 1024).filter(
+        (w) => getGridTileWidth(w, 2) < MIN_COMFORTABLE_TILE_WIDTH
+      );
+      expect(uncomfortable).toEqual([]);
+    });
+
+    it('rules out 3 columns on the phones a naive breakpoint would catch', () => {
+      // The trap this test exists to close. Each is a plausible "large phone" breakpoint
+      // that still produces a sub-floor tile.
+      for (const viewport of [320, 360, 375, 384, 390]) {
+        expect(getGridTileWidth(viewport, 3)).toBeLessThan(MIN_COMFORTABLE_TILE_WIDTH);
+      }
+    });
+
+    it('splits the modern phone range one dp above the design reference', () => {
+      // The sharpest fact for a breakpoint decision, and not one anybody would guess:
+      // a 390 dp iPhone misses the floor by exactly ONE point, while a 393 dp Pixel
+      // clears it. So "3 columns on large phones" is decidable, but only just — which is
+      // the whole argument for stating the floor as a number instead of eyeballing it.
+      expect(getGridTileWidth(390, 3)).toBe(MIN_COMFORTABLE_TILE_WIDTH - 1);
+      expect(getGridTileWidth(391, 3)).toBe(MIN_COMFORTABLE_TILE_WIDTH);
+
+      // Everything from the Pixel up is comfortable, so a 3-column grid is genuinely
+      // available to most current hardware — it is the narrow tail that must stay at 2.
+      for (const viewport of [393, 402, 412, 430]) {
+        expect(getGridTileWidth(viewport, 3)).toBeGreaterThanOrEqual(MIN_COMFORTABLE_TILE_WIDTH);
+      }
+    });
+
+    it("clears 3 columns at CatalogueGrid's existing 600 dp breakpoint", () => {
+      // features/cards/components/CatalogueGrid.tsx:27 — the in-folder precedent a
+      // future story is most likely to copy. Confirmed safe, with room to spare.
+      const CATALOGUE_COLUMN_BREAKPOINT = 600;
+      expect(getGridTileWidth(CATALOGUE_COLUMN_BREAKPOINT, 3)).toBeGreaterThanOrEqual(
+        MIN_COMFORTABLE_TILE_WIDTH
+      );
+      expect(CATALOGUE_COLUMN_BREAKPOINT).toBeGreaterThanOrEqual(smallestComfortableViewport(3));
+    });
+
+    it('needs a wider viewport for every column it adds', () => {
+      const needed = [2, 3, 4, 5].map(smallestComfortableViewport);
+      expect(needed).toEqual([...needed].sort((a, b) => a - b));
+      expect(new Set(needed).size).toBe(needed.length);
     });
   });
 });

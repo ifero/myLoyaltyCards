@@ -13,6 +13,11 @@
  * at 390 dp and the fallback for callers that pass no size — they are NOT a
  * viewport-independent layout width. See gridLayout.ts for why that distinction
  * is the whole bug.
+ *
+ * The tile's own children follow the same rule: the two centred fallback plates
+ * (brand abbreviation, first-letter avatar) are sized from the tile and capped so
+ * they clear the right-pinned favourite badge, which stays fixed for legibility.
+ * `gridLayout.getFallbackChildMetrics` owns that arithmetic.
  */
 
 import { MaterialIcons } from '@expo/vector-icons';
@@ -38,12 +43,17 @@ import { BrandLogo } from './BrandLogo';
 import { useBrandLogo } from '../hooks/useBrandLogo';
 import { getBrandLogo } from '../utils/brandLogos';
 import {
+  AVATAR_SIZE,
+  BADGE_INSET,
+  BADGE_SIZE,
+  LOGO_SLOT_SIZE,
   SINGLE_TILE_HEIGHT,
   SINGLE_TILE_RADIUS,
   SINGLE_TILE_WIDTH,
   TILE_HEIGHT,
   TILE_RADIUS,
-  TILE_WIDTH
+  TILE_WIDTH,
+  getFallbackChildMetrics
 } from '../utils/gridLayout';
 
 /**
@@ -140,6 +150,18 @@ export const CardTile: React.FC<CardTileProps> = ({
   const logoWidth = Math.round(tileWidth * 0.85);
   const logoHeight = Math.round(tileHeight * 0.85);
 
+  // The two centred fallback plates track the tile and are capped so they cannot
+  // reach the right-pinned favourite badge; the glyph inside holds 18 pt unless the
+  // plate becomes too small for it. Only one branch renders, so only its reference
+  // size is needed: a brand means the abbreviation slot, no brand means the
+  // first-letter avatar. See gridLayout.getFallbackChildMetrics for the arithmetic.
+  //
+  // Note this does NOT apply to the SVG branch above: `logoWidth` is 85 % of the
+  // tile and has always run under the badge (145 pt of 171 at the design reference).
+  // That overlap is pre-existing and accepted — the badge's opaque plate reads fine
+  // over a largely transparent logo, where two translucent plates would not.
+  const fallback = getFallbackChildMetrics(tileWidth, brand ? LOGO_SLOT_SIZE : AVATAR_SIZE);
+
   return (
     <Pressable
       onPress={handlePress}
@@ -176,15 +198,24 @@ export const CardTile: React.FC<CardTileProps> = ({
           <BrandLogo source={logo} width={logoWidth} height={logoHeight} color={foregroundColor} />
         ) : brand ? (
           /* Catalogue card without SVG: brand name abbreviation fallback */
-          <View style={styles.logoSlot}>
-            <Text style={[styles.brandAbbreviation, { color: foregroundColor }]}>
+          <View style={[styles.logoSlot, { width: fallback.size, height: fallback.size }]}>
+            <Text
+              style={[
+                styles.brandAbbreviation,
+                { color: foregroundColor, fontSize: fallback.fontSize }
+              ]}
+            >
               {brand.name.substring(0, 2).toUpperCase()}
             </Text>
           </View>
         ) : (
           /* Custom card: first-letter circular avatar */
-          <View style={styles.avatarCircle}>
-            <Text style={[styles.avatarText, { color: foregroundColor }]}>{firstLetter}</Text>
+          <View style={[styles.avatarCircle, { width: fallback.size, height: fallback.size }]}>
+            <Text
+              style={[styles.avatarText, { color: foregroundColor, fontSize: fallback.fontSize }]}
+            >
+              {firstLetter}
+            </Text>
           </View>
         )}
 
@@ -215,11 +246,14 @@ const styles = StyleSheet.create({
   },
   favouriteBadge: {
     position: 'absolute',
-    top: 6,
-    right: 6,
-    width: 24,
-    height: 24,
-    borderRadius: 12,
+    // Sized from gridLayout's constants rather than literals, because the same two
+    // numbers define the keep-out that the fallback plates are capped against. If
+    // they could drift apart, the cap would silently stop matching the badge.
+    top: BADGE_INSET,
+    right: BADGE_INSET,
+    width: BADGE_SIZE,
+    height: BADGE_SIZE,
+    borderRadius: BADGE_SIZE / 2,
     backgroundColor: 'rgba(255, 255, 255, 0.95)',
     alignItems: 'center',
     justifyContent: 'center'
@@ -242,28 +276,27 @@ const styles = StyleSheet.create({
       }
     })
   },
+  // `width`/`height` and `fontSize` for both fallback plates are applied inline from
+  // getFallbackChildMetrics(), because they depend on the tile. The reference values
+  // (64 / 48 / 18 pt at a 171 pt tile) live in gridLayout.ts as the ratio source.
   logoSlot: {
-    width: 64,
-    height: 64,
+    // Fixed, like TILE_RADIUS — it degrades to a circle if the plate ever gets small
+    // enough for that to bite, which is a graceful failure rather than a broken one.
     borderRadius: 12,
     backgroundColor: 'rgba(255,255,255,0.16)',
     justifyContent: 'center',
     alignItems: 'center'
   },
   brandAbbreviation: {
-    fontWeight: '700',
-    fontSize: 18
+    fontWeight: '700'
   },
   avatarCircle: {
-    width: 48,
-    height: 48,
     borderRadius: 999,
     backgroundColor: 'rgba(255,255,255,0.28)',
     alignItems: 'center',
     justifyContent: 'center'
   },
   avatarText: {
-    fontSize: 18,
     fontWeight: '700'
   },
   cardName: {
