@@ -14,29 +14,29 @@ export default [
       parserOptions: {
         ecmaVersion: 'latest',
         sourceType: 'module',
-        project: './tsconfig.json',
-      },
+        project: './tsconfig.json'
+      }
     },
     plugins: {
       '@typescript-eslint': tseslint,
       import: importPlugin,
       boundaries: boundariesPlugin,
-      i18next: i18nextPlugin,
+      i18next: i18nextPlugin
     },
     settings: {
       'import/resolver': {
         typescript: {
-          project: './tsconfig.json',
-        },
+          project: './tsconfig.json'
+        }
       },
       'boundaries/elements': [
         { type: 'app', pattern: 'app/*' },
         { type: 'feature', pattern: 'features/*', capture: ['featureName'] },
         { type: 'shared', pattern: 'shared/*' },
         { type: 'core', pattern: 'core/*' },
-        { type: 'catalogue', pattern: 'catalogue/*' },
+        { type: 'catalogue', pattern: 'catalogue/*' }
       ],
-      'boundaries/ignore': ['**/*.test.ts', '**/*.test.tsx', '**/*.spec.ts', '**/*.spec.tsx'],
+      'boundaries/ignore': ['**/*.test.ts', '**/*.test.tsx', '**/*.spec.ts', '**/*.spec.tsx']
     },
     rules: {
       ...tseslint.configs.recommended.rules,
@@ -55,7 +55,7 @@ export default [
             // app can import from any module
             {
               from: 'app',
-              allow: ['feature', 'shared', 'core', 'catalogue'],
+              allow: ['feature', 'shared', 'core', 'catalogue']
             },
             // features can import from shared, core, catalogue, and same feature
             {
@@ -64,15 +64,13 @@ export default [
                 'shared',
                 'core',
                 'catalogue',
-                ['feature', { featureName: '${from.featureName}' }],
-              ],
+                ['feature', { featureName: '${from.featureName}' }]
+              ]
             },
             // add-card feature depends on cards feature (shared hooks and utils)
             {
               from: [['feature', { featureName: 'add-card' }]],
-              allow: [
-                ['feature', { featureName: 'cards' }],
-              ],
+              allow: [['feature', { featureName: 'cards' }]]
             },
             // Story 16.9 (AD-2): cards feature depends on auth feature. The
             // relocated HomeScreen composes auth's guest-mode + migration
@@ -82,69 +80,62 @@ export default [
             // mirroring the add-card → cards exception above.
             {
               from: [['feature', { featureName: 'cards' }]],
-              allow: [
-                ['feature', { featureName: 'auth' }],
-              ],
+              allow: [['feature', { featureName: 'auth' }]]
             },
             // shared can import from core, catalogue, and other shared modules
             {
               from: 'shared',
-              allow: ['core', 'catalogue', 'shared'],
+              allow: ['core', 'catalogue', 'shared']
             },
             // core can import from catalogue and other core modules
             {
               from: 'core',
-              allow: ['catalogue', 'core'],
+              allow: ['catalogue', 'core']
             },
             // catalogue is standalone
             {
               from: 'catalogue',
-              allow: [],
-            },
-          ],
-        },
+              allow: []
+            }
+          ]
+        }
       ],
       // Import organization
       'import/order': [
         'warn',
         {
-          groups: [
-            'builtin',
-            'external',
-            'internal',
-            ['parent', 'sibling', 'index'],
-          ],
+          groups: ['builtin', 'external', 'internal', ['parent', 'sibling', 'index']],
           pathGroups: [
             {
               pattern: '@/core/**',
               group: 'internal',
-              position: 'before',
+              position: 'before'
             },
             {
               pattern: '@/shared/**',
               group: 'internal',
-              position: 'before',
+              position: 'before'
             },
             {
               pattern: '@/features/**',
               group: 'internal',
-              position: 'after',
+              position: 'after'
             },
             {
               pattern: '@/catalogue/**',
               group: 'internal',
-              position: 'after',
-            },
+              position: 'after'
+            }
           ],
           pathGroupsExcludedImportTypes: ['builtin'],
           'newlines-between': 'always',
           alphabetize: {
             order: 'asc',
-            caseInsensitive: true,
-          },
-        },
-      ],
-    },
+            caseInsensitive: true
+          }
+        }
+      ]
+    }
   },
   {
     files: ['**/*.tsx'],
@@ -168,12 +159,12 @@ export default [
               'description',
               'actionText',
               'prefixText',
-              'suffixText',
-            ],
-          },
-        },
-      ],
-    },
+              'suffixText'
+            ]
+          }
+        }
+      ]
+    }
   },
   {
     // Story 16.9 (AD-3): route files must only re-export from features — no
@@ -202,27 +193,27 @@ export default [
             {
               name: 'react',
               importNames: ['useState', 'useEffect', 'useCallback', 'useMemo'],
-              message: 'Route files should only re-export from features. No hooks allowed.',
-            },
-          ],
-        },
-      ],
-    },
+              message: 'Route files should only re-export from features. No hooks allowed.'
+            }
+          ]
+        }
+      ]
+    }
   },
   {
     // The logging wrapper is the one place direct console use is allowed — it
     // IS the sanctioned sink the no-console rule funnels everything else into.
     files: ['core/utils/logger.ts'],
     rules: {
-      'no-console': 'off',
-    },
+      'no-console': 'off'
+    }
   },
   {
     // Tests legitimately spy on / assert against console; don't ban it there.
     files: ['**/*.test.{ts,tsx,js,jsx}', '**/*.spec.{ts,tsx,js,jsx}', '**/__tests__/**'],
     rules: {
-      'no-console': 'off',
-    },
+      'no-console': 'off'
+    }
   },
   {
     // Node scripts (build/CI tooling): the Node runtime provides process, console,
@@ -230,13 +221,13 @@ export default [
     files: ['scripts/**/*.{mjs,js}'],
     languageOptions: {
       ecmaVersion: 'latest',
-      sourceType: 'module',
+      sourceType: 'module'
     },
     rules: {
       'no-undef': 'off',
       // Build/CI scripts log to stdout/stderr by design; the wrapper is for app code.
-      'no-console': 'off',
-    },
+      'no-console': 'off'
+    }
   },
   {
     // Story 16.5: Storybook stories + `.storybook` config. Stories intentionally
@@ -247,8 +238,8 @@ export default [
     files: ['**/*.stories.{ts,tsx}', '.storybook/**/*.{ts,tsx}'],
     rules: {
       'i18next/no-literal-string': 'off',
-      'boundaries/element-types': 'off',
-    },
+      'boundaries/element-types': 'off'
+    }
   },
   {
     ignores: [
@@ -270,7 +261,7 @@ export default [
       'babel.config.js',
       'babel.config.test.js',
       'jest.setup.js',
-      'supabase/functions/**',
-    ],
-  },
+      'supabase/functions/**'
+    ]
+  }
 ];
