@@ -2,7 +2,7 @@
 
 **Epic:** 15 - Internationalisation & Public Presence
 **Type:** User-Facing (Portfolio / Discovery)
-**Status:** review
+**Status:** done
 
 ## Story
 

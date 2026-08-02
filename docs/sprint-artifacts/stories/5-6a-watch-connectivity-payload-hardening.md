@@ -1,6 +1,6 @@
 # Story 5.6a: WatchConnectivity Payload Hardening
 
-Status: review
+Status: done
 
 ## Story
 

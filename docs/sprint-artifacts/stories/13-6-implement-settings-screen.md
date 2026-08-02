@@ -1,6 +1,6 @@
 # Story 13.6: Implement Settings Screen (Absorbs Epic 8)
 
-Status: review
+Status: done
 
 ## Story
 

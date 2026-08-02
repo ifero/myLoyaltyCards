@@ -1,6 +1,6 @@
 # Story 13.5: Restyle Auth Screens
 
-Status: review
+Status: done
 
 ## Story
 

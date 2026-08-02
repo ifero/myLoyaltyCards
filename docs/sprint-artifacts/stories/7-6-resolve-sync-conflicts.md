@@ -2,7 +2,7 @@
 
 **Epic:** 7 - Cloud Synchronization
 **Type:** User-Facing
-**Status:** review
+**Status:** done
 **Sprint:** 9
 **FRs Covered:** FR52
 
