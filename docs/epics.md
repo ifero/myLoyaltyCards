@@ -11,8 +11,8 @@ completedDate: '2025-01-03'
 project_name: 'myLoyaltyCards'
 user_name: 'Ifero'
 date: '2025-01-03'
-totalEpics: 18
-totalStories: 158
+totalEpics: 19
+totalStories: 169 # counted from `### Story` headings on 2026-08-02
 aligned_with_tracker: '2026-08-02'
 authoritative_source: 'docs/sprint-artifacts/sprint-status.yaml'
 ---
@@ -166,6 +166,19 @@ This document provides the complete epic and story breakdown for myLoyaltyCards,
 - FR73: Users can access help documentation or FAQs
 - FR74: The system can provide onboarding guidance for first-time card addition
 
+**Personal Cloud Sync — Bring-Your-Own Storage (FR77-FR84)**
+
+- FR77: Users can connect a folder in their own cloud storage (iCloud Drive, Dropbox, Google Drive, OneDrive) as a sync target without creating an account
+- FR78: The system can sync cards bidirectionally through the connected folder
+- FR79: The system can converge one user's multiple devices on a single card set through the folder
+- FR80: The system can converge multiple people sharing one folder on a common card set
+- FR81: Users can disconnect the sync folder while retaining all cards on the device
+- FR82: Users can view folder-sync status, the last-synced time, and which folder is connected
+- FR83: The system can enforce exactly one active sync backend (local, account, or folder) and switch between them without data loss
+- FR84: The system can degrade gracefully when the folder is unreachable and resume syncing when access is restored
+
+> **Note on the FR74 → FR77 gap:** FR75 and FR76 exist in `docs/prd.md` only — they were assigned to Smart Card Sorting (sort-mode selection and usage recording) by the 2026-06-09 correct-course and never backfilled into this inventory. They are listed here for numbering continuity, not as new scope: **FR75** users can select the card sort mode per surface; **FR76** card usage is recorded whenever a barcode is displayed on any surface. See the note in the PRD's Smart Card Sorting section.
+
 ### NonFunctional Requirements
 
 **Performance (NFR-P1 to NFR-P9)**
@@ -180,7 +193,7 @@ This document provides the complete epic and story breakdown for myLoyaltyCards,
 - NFR-P8: Background sync operations must not noticeably impact device battery life
 - NFR-P9: Catalogue caching must optimize storage usage without degrading performance
 
-**Security & Privacy (NFR-S1 to NFR-S12)**
+**Security & Privacy (NFR-S1 to NFR-S14)**
 
 - NFR-S1: All user data must be encrypted at rest in cloud database using AES-256
 - NFR-S2: All API communication must use HTTPS/TLS 1.2 or higher
@@ -194,8 +207,10 @@ This document provides the complete epic and story breakdown for myLoyaltyCards,
 - NFR-S10: Guest mode users must have full feature access with data stored locally only
 - NFR-S11: Authenticated users' cloud data must be accessible only by the account owner
 - NFR-S12: Social login must follow platform security best practices
+- NFR-S13: Folder-sync data must never transit or be stored on myLoyaltyCards-controlled infrastructure
+- NFR-S14: Because folder-sync files are written in plaintext into storage the user already trusts with their files, the app must disclose that the storage provider can read them
 
-**Reliability & Availability (NFR-R1 to NFR-R10)**
+**Reliability & Availability (NFR-R1 to NFR-R12)**
 
 - NFR-R1: 100% of core features must function without network connectivity
 - NFR-R2: Offline data operations must succeed with zero data loss
@@ -207,6 +222,8 @@ This document provides the complete epic and story breakdown for myLoyaltyCards,
 - NFR-R8: No data loss during app updates or device sync operations
 - NFR-R9: Local data must persist across app restarts and device reboots
 - NFR-R10: Sync operations must maintain data consistency across devices
+- NFR-R11: Concurrent writers sharing one sync folder must converge on the same card set without any writer losing data
+- NFR-R12: Switching the active sync backend must never delete or orphan cards held on the device
 
 **Usability (NFR-U1 to NFR-U8)**
 
@@ -365,11 +382,14 @@ This document provides the complete epic and story breakdown for myLoyaltyCards,
 | FR66-FR69       | Epic 8              | App Settings & Preferences                           |
 | FR70-FR71       | Future Enhancements | Data Validation (Post-MVP, not in scope)             |
 | FR72-FR74       | Epic 4              | Onboarding & Help                                    |
+| FR75-FR76       | Epic 9              | Sort-mode selection & usage recording (PRD-only)     |
+| FR77-FR84       | Epic 19             | Personal Cloud Sync — Bring-Your-Own Storage         |
 
 **Coverage Summary:**
 
 - Phase 1 (Epics 1-8): 68 FRs covered
 - Phase 2 (Epics 9-10): 4 FRs (FR21-24 sorting) + FR43-47/FR52 for Wear OS
+- Phase 3 (Epic 19): 8 FRs (FR77-FR84 personal cloud sync)
 - Post-MVP: FR70-FR71 (data validation)
 
 ## Epic List
@@ -394,6 +414,7 @@ This document provides the complete epic and story breakdown for myLoyaltyCards,
 | 16   | Platform & Tech Debt (standing bucket) | —     | in-progress (16-22 in Sprint 18)                  |
 | 17   | Apple Wallet Pass Support              | 3     | backlog (parked — spike first)                    |
 | 18   | Card Sharing & Web Handoff             | 3     | backlog (absorbs 14-2)                            |
+| 19   | Personal Cloud Sync (BYO Storage)      | 3     | backlog (gated on 19-1 spike)                     |
 
 ---
 
@@ -3292,3 +3313,155 @@ This is the same defect as 18.6 one layer down, but it lands on the opposite sid
 - Verified on **real devices** on both platforms for: warm tap, cold-start tap, tap from a messaging app, and tap when the app is not installed (which must fall through to the web page).
 - The custom-scheme path from 18.5 keeps working — this is additive, not a replacement.
 - A recipient on an app version predating the associated-domain entitlement still gets the web page, and its "Open in app" button still works.
+
+---
+
+## Epic 19: Personal Cloud Sync (Bring-Your-Own Storage)
+
+Let users sync their cards through a folder in their **own** cloud storage — no account, no data on our servers — and, when a household shares that folder, share one card set across the family.
+
+Today the app offers only two postures: local-only (guest mode + phone↔watch Bluetooth) or our cloud (a Supabase account, Epics 6–7). A user who wants their cards on a second device has to hand us their data. Epic 19 adds a third posture: the user points the app at one folder in iCloud Drive, Dropbox, Google Drive or OneDrive, and that folder becomes the sync channel. Because a shared folder is just a folder, a family that already shares one converges on a common card set for free.
+
+**Architecture spine (decided 2026-08-02, validated by story 19-1):**
+
+- **One OS file-provider folder, not four SDKs.** The user picks a folder through the system file UI, where all four providers already appear. No OAuth, no API keys, no per-provider SDK to maintain, and nothing for a provider to revoke. This is the decision that keeps the epic small.
+- **Per-device files.** Device `D` only ever writes `mlc-<D>.json`; every device reads all `mlc-*.json` and merges N-way. Dropbox/Drive/OneDrive resolve concurrent writes to one file by keeping a "conflicted copy", never by merging — writing per-device makes that failure mode structurally impossible.
+- **Plaintext JSON**, a sibling of the existing export format (`core/settings/importCards.ts`, `EXPORT_FORMAT_VERSION`). Portable, inspectable, no key management, and family setup is just "share the folder".
+- **Mutually exclusive backends.** Exactly one of `local` / `account` / `folder` is active, so two engines never race on the same SQLite rows.
+- **Complements Epic 14, does not replace it.** Folder sync serves no-account families; Epic 14 households serve account users with realtime and per-card visibility. Both ship.
+
+**Reuse, not reinvention:** the merge brain already exists. `mergeWithDeletions` in `core/sync/cloud-sync.ts` does LWW-on-`updatedAt` with delete-wins and is pure; `processPendingSync` in `core/sync/sync-trigger.ts` already models the download→merge→persist→upload→drain pipeline behind injected dependencies. Epic 19 generalises those rather than adding a second sync engine.
+
+Story 19-1 is a feasibility gate: 19-3 onward must not start until it reports. Story 19-2 is pure `core/` logic with no I/O and deliberately runs in parallel, so the spike is not the sole critical path.
+
+### Story 19.1: Spike — Persistent Folder Handle Feasibility (iOS + Android) [Enabling]
+
+**As a** product engineer, **I want** to establish whether the app can hold a durable read/write handle to a user-picked cloud folder on both platforms, **So that** we know the real cost and provider coverage before committing to the epic.
+
+**Acceptance Criteria:**
+
+- The spike proves or disproves, on a throwaway build, that a folder handle picked once survives an app restart with read, write and list access still working — separately on iOS and Android.
+- Android is assessed against `StorageAccessFramework.requestDirectoryPermissionsAsync()` from `expo-file-system/legacy` (present in SDK 55): the spike confirms whether it still grants persistable URI permission, and records the migration risk of depending on the **legacy** API.
+- iOS is assessed against a custom Expo module wrapping `UIDocumentPickerViewController` in folder mode plus `bookmarkData(.withSecurityScope)` persistence, since `expo-document-picker` offers no directory mode and no bookmark persistence; the spike sizes that module in engineer-days.
+- Each of the four providers is tested for **write** through the picker, not just read: iCloud Drive (including `.icloud` placeholder / download-on-demand behaviour), Dropbox, Google Drive and OneDrive. The result is a go / no-go grid of provider × platform.
+- Propagation latency is measured for a folder shared between two different accounts on two physical devices, and the observed worst case is recorded.
+- The spike confirms or revises the per-device-file model, including what happens when a provider writes its own "conflicted copy" file into the folder.
+- Findings land in a standalone ADR under `docs/` (following `docs/adr-2026-06-09-watch-usage-events.md`), with a go / no-go recommendation and any revision to stories 19-2 through 19-9.
+- The epic stays gated until the ADR is reviewed by Ifero; stories 19-3 onward do not start before that.
+
+### Story 19.2: Folder-Sync Data Contract & N-Way Merge [Enabling]
+
+**As a** developer, **I want** a versioned file format and an N-source merge function, **So that** any number of devices writing into one folder converge on the same card set with no data loss.
+
+**Acceptance Criteria:**
+
+- A Zod schema defines the per-device file `mlc-<deviceId>.json`: format version, device id, human-readable device label, written-at timestamp, the full card set, and tombstones. All fields are present with explicit `null` rather than omitted, per the project's JSON rules.
+- `mergeWithDeletions` is extended (not duplicated) to fold N sources: last-write-wins on `updatedAt`, delete-wins over update, deterministic tie-break, and the existing malformed / future-timestamp handling from `normalizeTimestamp` preserved unchanged.
+- Merging is proven commutative and associative by test — the same N files in any order produce the same result.
+- **`usageCount` merges commutatively, not by last-write-wins.** A card used twice on one device and twice on another must end at four, not two; the approach follows `docs/adr-2026-06-09-watch-usage-events.md`. `lastUsedAt` takes the maximum.
+- Tombstones carry a retention window (proposed 90 days) with the rationale documented, so a deletion survives long enough for a family member's device that has been offline for weeks to observe it; expired tombstones are pruned.
+- A file with an unknown future format version is skipped safely with a `logger.notify` signal, never partially applied and never fatal.
+- A truncated, malformed or non-JSON file in the folder is skipped without failing the whole merge.
+- The module lives in `core/` with no React and no platform imports, and is covered by unit tests; cross-platform fixtures are added under `test-fixtures/`.
+
+### Story 19.3: FolderStore Port & Platform Adapters [Enabling]
+
+**As a** developer, **I want** a narrow storage port with per-platform adapters behind it, **So that** the sync engine stays platform-agnostic and testable in the same way the Supabase path already is.
+
+**Acceptance Criteria:**
+
+- A `FolderStore` port is defined in `core/sync/folder/` exposing `list()`, `read(name)`, `write(name, contents)`, `remove(name)` and `isAvailable()`, with zero platform imports — mirroring how `CloudUpsertFn` / `CloudFetchSinceFn` keep `core/` backend-agnostic today.
+- An Android adapter implements the port over the Storage Access Framework, and an iOS adapter implements it over the mechanism story 19-1 selected. Both live in `shared/` and respect the ESLint layer boundaries (`core/` must not import them).
+- The persisted folder handle is stored and restored across launches, and its resolved provider name and display path are readable for the UI.
+- A revoked, moved or deleted folder produces a typed error (`AppError` shape) that callers can act on — never an unhandled throw and never a crash.
+- Partial writes are avoided: a write either lands completely or leaves the previous file intact.
+- An in-memory fake implementation of the port ships alongside, so stories 19-5 through 19-8 are unit-testable without touching a real filesystem.
+
+### Story 19.4: Connect and Disconnect a Sync Folder
+
+**As a** user who does not want an account, **I want** to point the app at a folder in my own cloud storage, **So that** my cards sync between my devices without giving my data to anyone else.
+
+**Acceptance Criteria:**
+
+- A "Sync folder" entry point is added to the existing `DataManagementSection` on the Settings screen, alongside export and import.
+- Choosing it opens the system folder picker; on success the screen shows which provider and folder are connected.
+- Connecting to a folder that **already contains** card data shows a preview of what will be merged before anything is written, following the existing `ImportPreviewSheet` preview-then-commit pattern — no silent merge on first connect.
+- Connecting to an empty folder seeds it with this device's file and reports how many cards were published.
+- Disconnecting always leaves every card on the device untouched, and the confirmation sheet says so explicitly before the user commits.
+- Disconnecting does not delete this device's file from the folder; the user is told the file remains in their storage and how to remove it themselves.
+- If folder access has been revoked or the folder has been moved or deleted, the row shows a clear reconnect affordance instead of failing silently or looping on errors.
+- All new copy is added to **both** `shared/i18n/locales/en.ts` and `it.ts`.
+- The visual treatment follows the existing design system and Unistyles conventions; screens or annotations are captured in `docs/ux-designs/` before implementation.
+
+### Story 19.5: Folder Sync Engine — Pull, Merge, Push
+
+**As a** user with a connected sync folder, **I want** my card changes to travel through that folder, **So that** every device of mine ends up with the same cards.
+
+**Acceptance Criteria:**
+
+- A sync run reads every `mlc-*.json` in the folder, merges them N-way with local state per story 19-2, persists the result through the existing `batchUpsertCards`, and then writes **only this device's own file**.
+- The engine reuses the existing dirty-flag semantics (`markDirty` / `isDirty` / `clearDirty`) and a throttle consistent with the cloud path, so idle app use does not thrash the provider.
+- Adding, editing and deleting a card on device A appears on device B after B's next sync run.
+- Deleting a card writes a tombstone that persists for the retention window rather than draining on first success — the current `deletion-tracker` drain-on-success behaviour is explicitly **not** sufficient here and the story documents why.
+- A deleted card never resurrects, including when a peer file still contains an older copy of it.
+- With the folder unreachable (offline, provider signed out, permission revoked), the run is a no-op that leaves local data intact and retries later; it does not surface as a hard error.
+- A corrupt or partially written peer file is skipped with `logger.notify` and the rest of the merge still completes.
+- The state after a run is idempotent: an immediate second run with no changes writes nothing new and reports no work.
+- Verified end-to-end on at least real iCloud Drive **and** real Dropbox on physical devices — not only against a local folder.
+
+### Story 19.6: Folder-Sync Triggers and Status
+
+**As a** user, **I want** folder sync to run on its own and tell me where it stands, **So that** I can trust my cards are current without thinking about it.
+
+**Acceptance Criteria:**
+
+- Sync runs automatically on app foreground / resume and after local card mutations, subject to the throttle from story 19-5.
+- Status is surfaced through the **existing** `SyncIndicator`, `SyncErrorBanner` and `SyncStatusContainer` components and the `shared/types/sync-ui.ts` types — no parallel set of status components is introduced.
+- The Settings screen shows the last successful sync time and which folder is connected.
+- A manual "Sync now" action bypasses the throttle, matching the existing force-sync behaviour.
+- Failures show an actionable message (reconnect, check connectivity) rather than a raw error string, per NFR-U4.
+- Repeated failures do not produce a retry storm or a permanently stuck spinner; the retry policy reuses `retryWithBackoff`.
+- Sync state is consistent across every screen that shows it, following the single-store approach already used in `shared/hooks/useCloudSync.ts`.
+
+### Story 19.7: Shared-Folder Family Sync
+
+**As a** member of a household that already shares a cloud folder, **I want** our loyalty cards to live in that shared folder, **So that** everyone at home can use the same cards without anyone creating an account.
+
+**Acceptance Criteria:**
+
+- Two devices belonging to different people, both pointed at the same shared folder, converge on the same card set.
+- A third device joining a folder that already holds data adopts the existing cards without duplicating them.
+- Concurrent edits made on different devices while offline all survive and resolve per story 19-2, with no member's change silently lost.
+- A device that stops syncing leaves a stale file behind that ages out under the retention rules; its cards do not resurrect after being deleted by another member.
+- A provider-generated "conflicted copy" file appearing in the folder is ignored or handled explicitly, never merged as if it were a peer device.
+- The practical device count and the folder's file-count growth over time are documented, along with the point at which performance degrades.
+- **The watch is verified unaffected:** phone↔watch remains the transport, and `CARD_USED` usage events still reconcile correctly when several family phones sync usage through the folder (per ADR-2026-06-09-001).
+- Documentation explains the trust model plainly — anyone with access to the folder can see and change every card in it, and there are no per-card permissions in this mechanism (that is Epic 14's job).
+
+### Story 19.8: Sync-Backend Exclusivity and Switching
+
+**As a** user, **I want** one obvious answer to "where are my cards syncing", **So that** I can change my mind without risking my data.
+
+**Acceptance Criteria:**
+
+- The active backend is exactly one of `local`, `account` or `folder`, persisted through `core/settings/settings-repository.ts`, and the Settings screen makes the current choice unambiguous.
+- Enabling one backend provably stops the other: no double-sync, no echo loop, and only one engine writes the local card rows at a time.
+- Every transition — `local→folder`, `account→folder`, `folder→account`, `folder→local` — preserves all cards held on the device, each covered by a test.
+- Switching away from account sync does not delete the user's cloud data; switching away from folder sync does not delete their folder file. Removing either is a separate, explicit user action.
+- Choosing folder sync while signed in explains what will happen to account sync before the user commits.
+- Where the guest-to-account path already solves an equivalent problem, `core/auth/guest-migration.ts` is reused rather than reimplemented.
+- An interrupted switch (app killed mid-transition) leaves a consistent state on next launch — never two active backends and never none with cards stranded.
+
+### Story 19.9: Privacy, GDPR and Documentation for Folder Sync
+
+**As a** privacy-conscious user, **I want** to understand exactly where my cards go when I use folder sync, **So that** I can make an informed choice.
+
+**Acceptance Criteria:**
+
+- The privacy policy and an in-app disclosure state plainly that folder-sync data is written into storage the user controls and never transits or rests on myLoyaltyCards infrastructure (NFR-S13).
+- The plaintext trade-off is disclosed honestly: the storage provider can technically read the file, and anyone with folder access can read every card in it (NFR-S14).
+- The disclosure is shown at the point of connecting a folder, not buried in a policy document.
+- Folder sync does not weaken the existing data-export right (FR54) or the account-deletion right (FR55); the story confirms both still behave correctly when folder sync is the active backend.
+- The GDPR position is recorded for the case where a user syncs another household member's data into a folder they control.
+- `docs/project-context.md` gains folder sync in its Sync Patterns section, and the README describes the feature and its trust model.
+- Copy is provided in **both** `en.ts` and `it.ts`.

@@ -523,6 +523,44 @@ development_status:
   18-10-universal-links-and-app-links: backlog # Depends on 18-9. NATIVE change — runtimeVersion.policy is appVersion, so this CANNOT ship as an OTA update; plan it against a release.
   epic-18-retrospective: optional
 
+  # --- Epic 19: Personal Cloud Sync (Bring-Your-Own Storage) — scoped 2026-08-02 ---
+  # A third sync posture beside local-only and account sync: the user connects ONE folder in their
+  # own cloud storage through the OS file provider, which covers iCloud Drive, Dropbox, Google Drive
+  # and OneDrive with no per-provider SDK, no OAuth and no API keys. A shared folder gives a family a
+  # common card set with no accounts at all.
+  #
+  # Decisions taken at scoping (2026-08-02, ifero):
+  #   - OS file-provider folder, NOT per-provider SDKs.
+  #   - Plaintext JSON, a sibling of the existing export format.
+  #   - Exactly one active backend: local | account | folder.
+  #   - COMPLEMENTS Epic 14 households (account-based) — does not replace them; both ship.
+  #
+  # NOT the same thing as Epic 18 (Card Sharing & Web Handoff), despite both touching "sharing":
+  # Epic 18 hands ONE card to someone else via a link; Epic 19 keeps a WHOLE card set in sync across
+  # devices and household members through a folder. They are independent and can ship in either order.
+  #
+  # Design spine: per-device files (`mlc-<deviceId>.json`) so two writers never touch one file —
+  # providers resolve concurrent writes with a "conflicted copy", never a merge. Reuses
+  # `mergeWithDeletions` (core/sync/cloud-sync.ts) generalised 2-source → N-source rather than
+  # adding a second sync engine.
+  #
+  # GATED: 19-3 onward must not start until the 19-1 spike ADR is reviewed. 19-2 is pure core/ logic
+  # with no I/O and runs in parallel deliberately, so the spike is not the sole critical path.
+  # Known unknowns for the spike: iOS has NO directory picker or security-scoped bookmark
+  # persistence in expo-document-picker (likely needs a small custom Expo module), while Android has
+  # StorageAccessFramework in expo-file-system/LEGACY (works today, deprecation risk to assess).
+  epic-19: backlog
+  19-1-spike-folder-handle-feasibility: backlog # GATES 19-3..19-9; produces an ADR
+  19-2-folder-sync-data-contract-and-merge: backlog # pure core/, parallel to the spike
+  19-3-folderstore-port-and-adapters: backlog
+  19-4-connect-disconnect-sync-folder: backlog
+  19-5-folder-sync-engine: backlog
+  19-6-folder-sync-triggers-and-status: backlog
+  19-7-shared-folder-family-sync: backlog
+  19-8-sync-backend-exclusivity: backlog
+  19-9-folder-sync-privacy-and-docs: backlog
+  epic-19-retrospective: optional
+
 # ============================================
 # ACTION ITEMS
 # ============================================
