@@ -248,6 +248,13 @@ This is a **community-driven, open-source passion project** with no monetization
 - Community voting on card additions
 - Automated logo scraping pipeline (from brainstorming session)
 
+**Personal Cloud Sync (Bring-Your-Own Storage) — Epic 18:**
+
+- Sync through a folder in the user's own cloud storage (iCloud Drive, Dropbox, Google Drive, OneDrive) with no account and no data on our servers
+- One OS file-provider folder covers all four providers — no per-provider SDKs, OAuth or API keys
+- A household sharing that folder converges on a common card set, giving family sharing without accounts
+- Complements (does not replace) the account-based household layer in Epic 14
+
 **Advanced Features:**
 
 - Contextual card detection using location services
@@ -978,6 +985,19 @@ _Key decisions recorded (2026-06-05):_
 - **FR73:** Users can access help documentation or FAQs
 - **FR74:** The system can provide onboarding guidance for first-time card addition
 
+### Personal Cloud Sync — Bring-Your-Own Storage (Epic 18)
+
+- **FR77:** Users can connect a folder in their own cloud storage (iCloud Drive, Dropbox, Google Drive, OneDrive) as a sync target without creating an account
+- **FR78:** The system can sync cards bidirectionally through the connected folder
+- **FR79:** The system can converge one user's multiple devices on a single card set through the folder
+- **FR80:** The system can converge multiple people sharing one folder on a common card set
+- **FR81:** Users can disconnect the sync folder while retaining all cards on the device
+- **FR82:** Users can view folder-sync status, the last-synced time, and which folder is connected
+- **FR83:** The system can enforce exactly one active sync backend (local, account, or folder) and switch between them without data loss
+- **FR84:** The system can degrade gracefully when the folder is unreachable and resume syncing when access is restored
+
+> **Note (FR77-FR84):** Numbered from 77 as the next free IDs — FR75/FR76 are already assigned to Smart Card Sorting (see that section's note).
+
 ## Non-Functional Requirements
 
 ### Performance
@@ -1019,6 +1039,8 @@ _Key decisions recorded (2026-06-05):_
 - **NFR-S10:** Guest mode users must have full feature access with data stored locally only
 - **NFR-S11:** Authenticated users' cloud data must be accessible only by the account owner
 - **NFR-S12:** Social login (Sign in with Apple, Google) must follow platform security best practices
+- **NFR-S13:** Folder-sync data must never transit or be stored on myLoyaltyCards-controlled infrastructure
+- **NFR-S14:** Because folder-sync files are written in plaintext into storage the user already trusts with their files, the app must disclose that the storage provider can read them
 
 ### Reliability & Availability
 
@@ -1040,6 +1062,8 @@ _Key decisions recorded (2026-06-05):_
 - **NFR-R8:** No data loss during app updates or device sync operations
 - **NFR-R9:** Local data must persist across app restarts and device reboots
 - **NFR-R10:** Sync operations must maintain data consistency across devices
+- **NFR-R11:** Concurrent writers sharing one sync folder must converge on the same card set without any writer losing data
+- **NFR-R12:** Switching the active sync backend must never delete or orphan cards held on the device
 
 ### Usability
 
@@ -1089,9 +1113,10 @@ _Key decisions recorded (2026-06-05):_
 
 ## Revision History
 
-| Date       | Section(s)                   | Change                                                                                                                                                                                                                                                                                                                      | Decision Ref                         |
-| ---------- | ---------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------ |
-| 2026-04-11 | Technical Platform Decision  | **watchOS distribution model clarified.** watchOS apps must be embedded in the iOS IPA archive (Apple requirement). Using `@bacons/apple-targets` Expo Config Plugin for Continuous Native Generation. Source at `targets/watch/`, auto-embedded during `expo prebuild`. No standalone watchOS binary or separate pipeline. | ADR-2026-04-11-002, Story 11-6       |
-| 2026-04-11 | Technical Platform Decision  | **NativeWind under evaluation.** Sprint 11 (Epic 13) showed ~23% rework rate from NativeWind interactions. Evaluating alternatives (pure StyleSheet + design tokens, Unistyles, Tamagui) before next UI implementation epic. Current AGENTS.md Pressable restrictions remain in force.                                      | DEC-S11-RETRO-001                    |
-| 2026-04-11 | (Process — not in PRD body)  | **Definition of Ready (7 gates) and Definition of Done (8 gates) adopted** as mandatory process gates. Party mode is the default for story refinement. See [Epic 13 Retro](sprint-artifacts/epic-13-retro-2026-04-11.md) for full definitions.                                                                              | DEC-S11-RETRO-002, DEC-S11-RETRO-003 |
-| 2026-04-11 | Key Technical Considerations | **Wearable independence note updated.** Future plan: watchOS app becomes a "standalone-companion" with on-watch login for registered users. Distribution model remains the same (embedded in iOS IPA).                                                                                                                      | Sprint 12 planning                   |
+| Date       | Section(s)                                     | Change                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          | Decision Ref                         |
+| ---------- | ---------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------ |
+| 2026-04-11 | Technical Platform Decision                    | **watchOS distribution model clarified.** watchOS apps must be embedded in the iOS IPA archive (Apple requirement). Using `@bacons/apple-targets` Expo Config Plugin for Continuous Native Generation. Source at `targets/watch/`, auto-embedded during `expo prebuild`. No standalone watchOS binary or separate pipeline.                                                                                                                                                                                                                                                                     | ADR-2026-04-11-002, Story 11-6       |
+| 2026-04-11 | Technical Platform Decision                    | **NativeWind under evaluation.** Sprint 11 (Epic 13) showed ~23% rework rate from NativeWind interactions. Evaluating alternatives (pure StyleSheet + design tokens, Unistyles, Tamagui) before next UI implementation epic. Current AGENTS.md Pressable restrictions remain in force.                                                                                                                                                                                                                                                                                                          | DEC-S11-RETRO-001                    |
+| 2026-04-11 | (Process — not in PRD body)                    | **Definition of Ready (7 gates) and Definition of Done (8 gates) adopted** as mandatory process gates. Party mode is the default for story refinement. See [Epic 13 Retro](sprint-artifacts/epic-13-retro-2026-04-11.md) for full definitions.                                                                                                                                                                                                                                                                                                                                                  | DEC-S11-RETRO-002, DEC-S11-RETRO-003 |
+| 2026-04-11 | Key Technical Considerations                   | **Wearable independence note updated.** Future plan: watchOS app becomes a "standalone-companion" with on-watch login for registered users. Distribution model remains the same (embedded in iOS IPA).                                                                                                                                                                                                                                                                                                                                                                                          | Sprint 12 planning                   |
+| 2026-08-02 | Functional Requirements, Growth Features, NFRs | **Epic 18 (Personal Cloud Sync — Bring-Your-Own Storage) added.** A third sync posture alongside local-only and account sync: the user connects one folder in their own cloud storage via the OS file provider (covering iCloud Drive, Dropbox, Google Drive and OneDrive with no SDKs or OAuth), and a shared folder gives family sync with no accounts. Adds FR77-FR84 (FR75/FR76 were already taken by Smart Card Sorting), NFR-S13/S14, NFR-R11/R12. Decisions: plaintext JSON, mutually exclusive backends, complements rather than replaces Epic 14. Gated on the 18-1 feasibility spike. | Epic 18 scoping, 2026-08-02          |

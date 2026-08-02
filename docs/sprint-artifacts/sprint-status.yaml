@@ -47,7 +47,7 @@
 # - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
 
 generated: 2026-01-03
-last_updated: 2026-07-31
+last_updated: 2026-08-02
 project: myLoyaltyCards
 project_key: NOKEY
 tracking_system: file-system
@@ -492,6 +492,40 @@ development_status:
   epic-17: backlog
   17-1-spike-apple-wallet-feasibility: backlog # PARKED — full story NOT yet drafted; spike to be written during a future refinement
   epic-17-retrospective: optional
+
+  # --- Epic 18: Personal Cloud Sync (Bring-Your-Own Storage) — scoped 2026-08-02 ---
+  # A third sync posture beside local-only and account sync: the user connects ONE folder in their
+  # own cloud storage through the OS file provider, which covers iCloud Drive, Dropbox, Google Drive
+  # and OneDrive with no per-provider SDK, no OAuth and no API keys. A shared folder gives a family a
+  # common card set with no accounts at all.
+  #
+  # Decisions taken at scoping (2026-08-02, ifero):
+  #   - OS file-provider folder, NOT per-provider SDKs.
+  #   - Plaintext JSON, a sibling of the existing export format.
+  #   - Exactly one active backend: local | account | folder.
+  #   - COMPLEMENTS Epic 14 households (account-based) — does not replace them; both ship.
+  #
+  # Design spine: per-device files (`mlc-<deviceId>.json`) so two writers never touch one file —
+  # providers resolve concurrent writes with a "conflicted copy", never a merge. Reuses
+  # `mergeWithDeletions` (core/sync/cloud-sync.ts) generalised 2-source → N-source rather than
+  # adding a second sync engine.
+  #
+  # GATED: 18-3 onward must not start until the 18-1 spike ADR is reviewed. 18-2 is pure core/ logic
+  # with no I/O and runs in parallel deliberately, so the spike is not the sole critical path.
+  # Known unknowns for the spike: iOS has NO directory picker or security-scoped bookmark
+  # persistence in expo-document-picker (likely needs a small custom Expo module), while Android has
+  # StorageAccessFramework in expo-file-system/LEGACY (works today, deprecation risk to assess).
+  epic-18: backlog
+  18-1-spike-folder-handle-feasibility: backlog # GATES 18-3..18-9; produces an ADR
+  18-2-folder-sync-data-contract-and-merge: backlog # pure core/, parallel to the spike
+  18-3-folderstore-port-and-adapters: backlog
+  18-4-connect-disconnect-sync-folder: backlog
+  18-5-folder-sync-engine: backlog
+  18-6-folder-sync-triggers-and-status: backlog
+  18-7-shared-folder-family-sync: backlog
+  18-8-sync-backend-exclusivity: backlog
+  18-9-folder-sync-privacy-and-docs: backlog
+  epic-18-retrospective: optional
 
 # ============================================
 # ACTION ITEMS
