@@ -67,6 +67,7 @@ enum WatchBrands {
     .init(id: "leroy-merlin", name: "Leroy Merlin", aliases: ["bricolage", "fai da te", "casa", "giardino"]),
     .init(id: "paghi-poco", name: "Paghi Poco", aliases: ["supermarket", "grocery", "supermercati", "gruppo rocchetta", "sicilia"]),
     .init(id: "il-centesimo", name: "il Centesimo", aliases: ["supermarket", "grocery", "discount", "spicciolo d'oro", "sicilia"]),
-    .init(id: "codice-fiscale", name: "Codice Fiscale", aliases: ["tessera sanitaria", "cf", "partita iva", "documenti"])
+    .init(id: "codice-fiscale", name: "Codice Fiscale", aliases: ["tessera sanitaria", "cf", "partita iva", "documenti"]),
+    .init(id: "upim", name: "Upim", aliases: ["department", "fashion", "home", "grandi magazzini"])
   ]
 }

@@ -57,6 +57,7 @@ import TommyHilfigerLogo from '@/assets/images/brands/tommy-hilfiger.svg';
 import ToysCenterLogo from '@/assets/images/brands/toys-center.svg';
 import UniclubLogo from '@/assets/images/brands/uniclub.png';
 import UnieuroLogo from '@/assets/images/brands/unieuro.svg';
+import UpimLogo from '@/assets/images/brands/upim.png';
 import ZaraLogo from '@/assets/images/brands/zara.svg';
 
 /** SVG component or static image source — consumers render via <BrandLogo /> */
@@ -118,6 +119,7 @@ const BRAND_LOGOS: Record<string, BrandLogoSource> = {
   'toys-center': ToysCenterLogo,
   uniclub: UniclubLogo,
   unieuro: UnieuroLogo,
+  upim: UpimLogo,
   zara: ZaraLogo
 };
 

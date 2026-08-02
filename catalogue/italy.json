@@ -1,5 +1,5 @@
 {
-  "version": "2026-07-29",
+  "version": "2026-08-02",
   "brands": [
     {
       "id": "esselunga",
@@ -401,6 +401,13 @@
       "aliases": ["tessera sanitaria", "cf", "partita iva", "documenti"],
       "logo": "codice-fiscale",
       "color": "#FFFFFF"
+    },
+    {
+      "id": "upim",
+      "name": "Upim",
+      "aliases": ["department", "fashion", "home", "grandi magazzini"],
+      "logo": "upim",
+      "color": "#333F48"
     }
   ]
 }
