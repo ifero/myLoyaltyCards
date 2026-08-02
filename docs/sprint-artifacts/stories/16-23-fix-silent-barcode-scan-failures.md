@@ -4,7 +4,7 @@ baseline_commit: 93f1770f9a1a8c33fe7fb00bf95389b07aed66c9
 
 # Story 16.23: Fix silent barcode-scan failures on iOS — reported as "PENNY Card EAN-13 not recognised by the library"
 
-Status: review
+Status: done
 
 Epic: 16 — Platform & Tech Debt
 
