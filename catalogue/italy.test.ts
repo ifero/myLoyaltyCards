@@ -19,4 +19,18 @@ describe('Italian Catalogue Data', () => {
     const uniqueIds = new Set(ids);
     expect(uniqueIds.size).toBe(ids.length);
   });
+
+  // Story 16.23 (AC6). The hint is derived from the card's own printed payload —
+  // `2095110257978`, a checksum-valid EAN-13 — not guessed. That distinction
+  // matters: Story 2.9 REMOVED `defaultFormat` from 11 brands precisely because
+  // CODE-128 had been assumed for them, so the precedent is "don't guess a
+  // brand's format". Without the hint, `applyExpectedFormat` is a no-op for
+  // every Penny scan.
+  it('declares EAN13 as the default format for penny-market', () => {
+    const parsed = catalogueDataSchema.parse(italyCatalogue);
+    const penny = parsed.brands.find((brand) => brand.id === 'penny-market');
+
+    expect(penny).toBeDefined();
+    expect(penny?.defaultFormat).toBe('EAN13');
+  });
 });

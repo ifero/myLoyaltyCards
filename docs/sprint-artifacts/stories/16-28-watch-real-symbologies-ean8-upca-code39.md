@@ -1,5 +1,5 @@
 ---
-baseline_commit: 011dadfb378e749b85a598dce6f705b04ac799bd
+baseline_commit: 115709db1516be13e449145bcc6ac9ac139e5c97
 ---
 
 # Story 16.28: Render EAN-8, UPC-A and Code39 with their real symbologies on Apple Watch
@@ -34,7 +34,9 @@ Epic: 16 — Platform & Tech Debt
 > substitution — harder to notice and arguably worse, because the user sees a plausible barcode that the
 > lane may refuse. Story 16.25 (UPC-E) independently found and corrected the same stale claim.
 >
-> **⚠️ SCOPE DEPENDS ON STORY 16.25 — CHECK BEFORE SIZING.** See [Interaction with 16.25](#interaction-with-story-1625--check-this-before-sizing).
+> **⚠️ SCOPE DEPENDS ON STORY 16.25, WHICH IS NOW ON `main` BUT NOT YET IMPLEMENTED.** It ships three
+> options and picks none; the one that lands decides whether a fourth encoder is needed here. See
+> [Interaction with 16.25](#interaction-with-story-1625--check-this-before-sizing).
 >
 > **Native change → NOT OTA-eligible.** Shares `BarcodeGenerator.swift` with **16.27** —
 > **land 16.27 first** so these encoders are written against the corrected renderer.
@@ -78,9 +80,8 @@ The comment says _"so scanners can still read it"_ — and a Code128 symbol **is
 
 ### Interaction with Story 16.25 — check this before sizing
 
-Story **16.25** ("map UPC-E instead of storing it as Code 128") is drafted concurrently on
-`docs/16-25-map-upce-story` (commit `8b10f4f`, pushed to origin) and is **the phone-side sibling of this
-defect**:
+Story **16.25** ("map UPC-E instead of storing it as Code 128") **merged to `main` on 2026-08-02**
+(PR #189) and now sits at `ready-for-dev`. It is **the phone-side sibling of this defect**:
 
 - **16.25** — a UPC-E scan is **stored** with `barcodeFormat: CODE128`, because `BARCODE_FORMAT_MAP` has
   no `upc_e` key and `mapFormat` falls through to `?? 'CODE128'`.
@@ -94,7 +95,7 @@ Complementary, not duplicates. **But which option 16.25 lands changes this story
 | **(b)** expand UPC-E → 12-digit UPC-A _(their recommendation)_ | nothing extra needed                     |
 | **(c)** stop requesting `UPC_A` _(rejected there)_             | n/a                                      |
 
-**Confirm which option landed before sizing this story.**
+**16.25 is drafted, not implemented — confirm which option it lands before sizing this story.**
 
 ## Acceptance Criteria
 

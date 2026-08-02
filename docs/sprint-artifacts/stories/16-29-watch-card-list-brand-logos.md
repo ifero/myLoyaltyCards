@@ -1,5 +1,5 @@
 ---
-baseline_commit: 011dadfb378e749b85a598dce6f705b04ac799bd
+baseline_commit: 115709db1516be13e449145bcc6ac9ac139e5c97
 ---
 
 # Story 16.29: Show brand logos instead of initials in the Apple Watch card list
@@ -10,8 +10,9 @@ Epic: 16 — Platform & Tech Debt
 
 > **✅ MOST OF THIS ALREADY EXISTS — IN THE WRONG TARGET. DO NOT BUILD IT FROM SCRATCH.**
 > The watch **complication** already renders real brand logos. `targets/watch-widget/Assets.xcassets`
-> ships **56 `BrandLogo-*.imageset` assets covering all 56 catalogue brands** (verified: 56 imagesets,
-> `catalogue/italy.json` has 56 brands — **full coverage today**), resolved through
+> ships **57 `BrandLogo-*.imageset` assets covering all 57 catalogue brands** (verified 2026-08-02
+> against `origin/main` after Upim landed: 57 imagesets, `catalogue/italy.json` has 57 brands —
+> **full coverage today, and the generator is what keeps it that way**), resolved through
 > `BrandLogoCatalog` (`targets/watch-widget/BrandLogoCatalog.swift`) with `assetName(for:)` and
 > `prefersDarkBacking(for:)`, backed by `knownBrandIds` / `lightLogoBrandIds` in
 > `Generated/BrandLogoCatalog.generated.swift`. Both generated files come from
@@ -23,7 +24,7 @@ Epic: 16 — Platform & Tech Debt
 > `initials(from:)` on a brand-coloured circle.
 >
 > **So this is an asset- and target-membership problem, not a design problem.** Reuse
-> `BrandLogoCatalog`; do not re-derive light/dark logic, and do not hand-copy 56 imagesets.
+> `BrandLogoCatalog`; do not re-derive light/dark logic, and do not hand-copy the imagesets.
 >
 > **Native change → NOT OTA-eligible.**
 > **✅ INDEPENDENT of Stories 16.26 / 16.27 / 16.28** — it touches `CardListView.swift`, the asset
@@ -73,7 +74,7 @@ into the widget only.
 - **AC2 — Initials remain the fallback, on two distinct paths.** (a) A **custom card** (`brandId` nil —
   the `else` branch at `:381-392`). (b) A **catalogue brand with no bundled imageset**:
   `BrandLogoCatalog.normalized(_:)` gates on `knownBrandIds` and returns `nil` for unknown brands, so this
-  is a **real branch even at today's 56-of-56 coverage** — a brand added to `catalogue/italy.json` without
+  is a **real branch even at today's 57-of-57 coverage** — a brand added to `catalogue/italy.json` without
   a PNG must degrade to initials, **not to an empty circle**.
 - **AC3 — Light and white logos stay legible** via the existing `prefersDarkBacking(for:)` dark chip. The
   row background is `#1C1C1F` (`:359`), so white-on-transparent artwork would otherwise vanish.
@@ -84,11 +85,11 @@ into the widget only.
   `cardRowAccessibilityKey(isFavorite:)` (`:283-287`, `:366`). The logo is **decorative** — it must not add
   a second VoiceOver element and must not replace the card name in the label.
 - **AC6 — The assets reach the watch app target without a second source of truth.** Extend
-  `watch-ios/Scripts/generate-catalogue.swift` to emit for **both** targets rather than hand-copying 56
+  `watch-ios/Scripts/generate-catalogue.swift` to emit for **both** targets rather than hand-copying the
   imagesets, and make `BrandLogoCatalog` reachable from both **without duplicating its logic**.
   `yarn watch:catalogue:generate` must remain the single command that regenerates everything.
 - **AC7 — The watch app's binary size increase is measured and recorded** in the story's completion notes.
-  56 imagesets are being added to a target that has none, and the watch app is size-sensitive.
+  57 imagesets are being added to a target that has none, and the watch app is size-sensitive.
 - **AC8 — The add-a-brand checklist is updated** to name the new asset location, so a future brand cannot
   ship with a complication logo and an initials-only list row.
 - **AC9 — Verified on device** in both a light and a dark watch face context, with at least one

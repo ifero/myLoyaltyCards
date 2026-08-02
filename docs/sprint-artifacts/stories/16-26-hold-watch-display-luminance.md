@@ -1,5 +1,5 @@
 ---
-baseline_commit: 011dadfb378e749b85a598dce6f705b04ac799bd
+baseline_commit: 115709db1516be13e449145bcc6ac9ac139e5c97
 ---
 
 # Story 16.26: Hold the Apple Watch display at full luminance while a barcode is shown
@@ -150,7 +150,7 @@ rather than executing it (see `watch-layout-contract.test.ts`).
 
 ### Previous story intelligence
 
-- **16.23** (in-progress, barcode scanning): established the house rule that **decoder/display behaviour
+- **16.23** (**done** — shipped 2026-08-02, PR #187): established the house rule that **decoder/display behaviour
   must be proven on real hardware** — a green Jest suite proved nothing there because both decoders are
   mocked. Same principle applies here for a display state the simulator does not model.
 - **16.15**: shipped a **fatal production crash** behind a green CI run (`Intl.RelativeTimeFormat`

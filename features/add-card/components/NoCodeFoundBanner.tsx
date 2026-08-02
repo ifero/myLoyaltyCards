@@ -1,8 +1,9 @@
 /**
  * NoCodeFoundBanner
  * Story 2.9: Scan Cards from Image or Screenshot (AC6)
+ * Story 16.23: says WHICH failure occurred instead of one message for all of them
  *
- * Inline error banner shown when no barcode is detected in the selected image.
+ * Inline error banner shown when an image scan does not yield a usable barcode.
  * Auto-dismisses after 5 seconds. Positioned inside the scanner overlay.
  */
 
@@ -15,9 +16,46 @@ import { useTheme } from '@/shared/theme';
 import { SPACING, TOUCH_TARGET } from '@/shared/theme/spacing';
 import { TYPOGRAPHY } from '@/shared/theme/typography';
 
+import type { ImageScanErrorReason } from '../hooks/useImageScan';
+
 const AUTO_DISMISS_MS = 5000;
 
+/**
+ * Message key per failure reason (Story 16.23).
+ *
+ * A `Record` over the reason union rather than a conditional, so adding a reason
+ * is a compile error here until a key is named for it.
+ *
+ * ⚠️ That is all it guarantees. It does NOT prove the copy exists in either
+ * locale: this repo has no `i18next` module augmentation, so `t()`'s argument is
+ * an unchecked `string` and a key naming a missing translation compiles happily.
+ * Locale parity is still manual discipline — see `project-context.md`, "no parity
+ * test exists".
+ */
+const MESSAGE_KEY: Record<ImageScanErrorReason, string> = {
+  notFound: 'addCard.noCodeFound.notFoundMessage',
+  scanFailed: 'addCard.noCodeFound.scanFailedMessage',
+  pickerFailed: 'addCard.noCodeFound.pickerFailedMessage'
+};
+
+/**
+ * Retry-label override per reason.
+ *
+ * The shared label is "Try another image", which presumes a first image — false
+ * for `pickerFailed`, where the picker never opened and nothing was selected. The
+ * button's behaviour is identical in every case (it re-invokes the picker); only
+ * the wording needs to stop claiming something that did not happen.
+ */
+const RETRY_KEY: Partial<Record<ImageScanErrorReason, string>> = {
+  pickerFailed: 'addCard.noCodeFound.pickerFailedRetry'
+};
+
 interface NoCodeFoundBannerProps {
+  /**
+   * Which failure to describe. Defaults to `notFound` — the overwhelmingly
+   * common case, and the one this banner was originally written for.
+   */
+  reason?: ImageScanErrorReason;
   onDismiss: () => void;
   onRetry: () => void;
   onManualEntry: () => void;
@@ -25,6 +63,7 @@ interface NoCodeFoundBannerProps {
 }
 
 export const NoCodeFoundBanner: React.FC<NoCodeFoundBannerProps> = ({
+  reason = 'notFound',
   onDismiss,
   onRetry,
   onManualEntry,
@@ -32,6 +71,8 @@ export const NoCodeFoundBanner: React.FC<NoCodeFoundBannerProps> = ({
 }) => {
   const { theme } = useTheme();
   const { t } = useTranslation();
+  const message = t(MESSAGE_KEY[reason]);
+  const retryLabel = t(RETRY_KEY[reason] ?? 'addCard.noCodeFound.retry');
 
   useEffect(() => {
     const timer = setTimeout(onDismiss, AUTO_DISMISS_MS);
@@ -42,13 +83,13 @@ export const NoCodeFoundBanner: React.FC<NoCodeFoundBannerProps> = ({
     <View
       testID={testID}
       accessibilityLiveRegion="polite"
-      accessibilityLabel={t('addCard.noCodeFound.message')}
+      accessibilityLabel={message}
       style={styles.container}
     >
       {/* Header row: icon + message + close */}
       <View style={styles.headerRow}>
         <MaterialIcons name="warning-amber" size={20} color={theme.warning} />
-        <Text style={styles.message}>{t('addCard.noCodeFound.message')}</Text>
+        <Text style={styles.message}>{message}</Text>
         <Pressable
           onPress={onDismiss}
           accessibilityRole="button"
@@ -69,9 +110,7 @@ export const NoCodeFoundBanner: React.FC<NoCodeFoundBannerProps> = ({
           testID="banner-retry-image"
           style={styles.actionLink}
         >
-          <Text style={[styles.actionText, { color: theme.primary }]}>
-            {t('addCard.noCodeFound.retry')}
-          </Text>
+          <Text style={[styles.actionText, { color: theme.primary }]}>{retryLabel}</Text>
         </Pressable>
         <Pressable
           onPress={onManualEntry}

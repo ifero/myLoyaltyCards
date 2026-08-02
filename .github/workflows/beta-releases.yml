@@ -57,6 +57,15 @@ jobs:
             echo "::warning::SENTRY_AUTH_TOKEN not set — skipping Sentry symbol upload (crashes won't be symbolicated). Add the SENTRY_AUTH_TOKEN repo secret to enable."
             echo "SENTRY_DISABLE_AUTO_UPLOAD=true" >> "$GITHUB_ENV"
           fi
+      # A `patch-package` patch lives in the uncommitted `node_modules`, so a build
+      # can silently ship WITHOUT it: `patch-package --error-on-fail` only fails on a
+      # CONFLICT, and a patch file that is simply absent (bad merge, or a
+      # workflow_dispatch on a branch that never ran the PR gates) makes it a
+      # successful no-op. That would ship an iOS binary missing the barcode resample
+      # retry with nothing red anywhere (Story 16.23 AC7). Verified here, in the
+      # pipelines that actually produce a binary, not only at PR time.
+      - name: Verify native patches are applied
+        run: yarn check:native-patches
       - name: Prebuild native projects
         run: npx expo prebuild --platform ios
       - name: Generate watchOS catalogue (Brands.swift)

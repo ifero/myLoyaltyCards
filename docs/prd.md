@@ -732,7 +732,7 @@ Epic 14 is split into two phases. Bill splitting is explicitly out of scope.
 
 _Phase A — Single user (no account required):_
 
-- Card sharing via deeplink: encode card data as base64 payload, share via native share sheet, recipient imports card on tap; "Copy card code" plain-text fallback for when the app is not installed
+- ~~Card sharing via deeplink~~ — **moved to Epic 18 (2026-08-02)**; see **Card Sharing & Web Handoff** below
 - Shopping list: single-user local list (add, tick, delete); persists in SQLite; cloud-migrateable schema from day one
 
 _Phase B — Household (cloud account required):_
@@ -743,10 +743,27 @@ _Phase B — Household (cloud account required):_
 
 _Key decisions recorded (2026-06-05):_
 
-- Deeplink HTTPS fallback: silent failure accepted for MVP; "Copy card code" plain-text fallback mitigates this
+- ~~Deeplink HTTPS fallback: silent failure accepted for MVP~~ — **reversed 2026-08-02.** The HTTPS fallback is now the centrepiece of the feature, not an accepted gap; see Epic 18 below
 - Household ownership transfer: two-prompt flow on owner account deletion (nominate successor + shared card disposition); personal cards deleted with account (GDPR)
 - Max household members: 6 (owner + 5), enforced server-side
 - Bill splitting: descoped from Epic 14; may be revisited as a separate epic
+
+**Card Sharing & Web Handoff (Epic 18):**
+
+Share any loyalty card as one HTTPS link. A recipient with the app installed lands on a pre-filled add-card screen; a recipient without it sees a web page that renders the barcode, so the card is usable at a till either way. Absorbs and supersedes Epic 14's Phase A deeplink story, whose custom-scheme-only design left the app-not-installed case unsolved. No account is required on either side.
+
+- Link shape: `https://<domain>/card/#<token>`, where the token is a versioned, checksummed, base64url-encoded payload carrying brand ID, colour, barcode value, barcode format, and name
+- No backend: the card details travel inside the link, keeping the feature consistent with the offline-first architecture and the zero-build static site. The trade-off, accepted deliberately, is that a shared link cannot be revoked or expired
+- Web fallback: a static page decodes the token client-side and renders the same six barcode formats the app supports, with store badges and an "Open in app" button
+- Forward compatibility: an app that does not recognise the shared brand ID or barcode format still saves the card, preserving the real values verbatim and rendering a generic placeholder until an update makes them resolvable
+
+_Key decisions recorded (2026-08-02):_
+
+- Token lives in the URL **fragment**, so it is never transmitted to the web server, never written to an access log, and never leaks via a `Referer` header. Universal and App Links still match, because they match on the `/card/` path
+- The token is **encoded, not hashed** — a one-way hash could not be decoded by the web page, which has no server to look it up against. Consequently the link is a **bearer credential**: anyone holding it can use the card, and every surface that produces one says so
+- The checksum is corruption detection, not tamper-proofing. Unforgeable links would require a server secret, which this architecture deliberately does not have
+- Hosting: a custom domain on a European host, selected by a spike evaluating Netsons, Namecheap, Spaceship, Infomaniak and OVHcloud against data residency and reliability. The current GitHub Pages project page cannot serve `/.well-known/` at a domain root and therefore cannot support Universal Links
+- Data residency: **EU/EEA only**, not geographic Europe. This excludes Infomaniak (Switzerland-only datacentres) despite Switzerland's GDPR adequacy decision — a digital-sovereignty preference rather than a compliance necessity, chosen deliberately. Namecheap and Spaceship remain eligible via their Amsterdam region but must have it explicitly selected, and both carry post-_Schrems II_ CLOUD Act exposure through their shared US parent
 
 **User Experience Enhancements:**
 

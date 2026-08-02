@@ -4,7 +4,7 @@
 
 **Title:** Block PR merge if lint/typecheck/test/coverage fail
 
-**Status:** review
+**Status:** done
 
 **PR:** ready for review (branch: `feature/11-1-block-pr-on-quality-gates`)
 

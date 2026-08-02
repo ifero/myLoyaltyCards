@@ -1,5 +1,5 @@
 ---
-baseline_commit: 011dadfb378e749b85a598dce6f705b04ac799bd
+baseline_commit: 115709db1516be13e449145bcc6ac9ac139e5c97
 ---
 
 # Story 16.27: Fix Apple Watch barcode geometry — uniform module width, spec quiet zones, adaptive rotation
@@ -187,8 +187,9 @@ magnification on every watch and that cannot be fixed** — see the banner. Opti
 
 ### Previous story intelligence
 
-- **16.23** — the source of the mechanism. Read its ROOT CAUSE section for how bar-width spread was
-  measured and A/B-proven. Note the retraction discipline there: an early theory (Android downscale cap)
+- **16.23** — the source of the mechanism, and **now shipped** (PR #187), so its story file carries
+  completion notes and a landed fix, not just analysis. Read its ROOT CAUSE section for how bar-width
+  spread was measured and A/B-proven. Note the retraction discipline there: an early theory (Android downscale cap)
   was **reversed** by evidence and retired. Apply the same standard to the table in this story.
 - **16.22** — the closest structural analogue: a **frozen derivation** (`TILE_WIDTH = 171`) that stopped
   being a function of the viewport. Same bug family; its fix (a pure helper + a layout contract test

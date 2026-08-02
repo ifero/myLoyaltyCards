@@ -65,6 +65,7 @@ enum BrandLogoCatalogData {
     "toys-center",
     "uniclub",
     "unieuro",
+    "upim",
     "zara",
   ]
 

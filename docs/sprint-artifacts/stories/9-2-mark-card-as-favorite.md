@@ -1,6 +1,6 @@
 # Story 9.2: Mark Card as Favorite
 
-Status: review
+Status: done
 
 ## Story
 

@@ -522,12 +522,22 @@ export const en = {
         EAN8: 'EAN-8',
         QR: 'QR Code',
         CODE39: 'Code 39',
-        UPCA: 'UPC-A',
-        DATAMATRIX: 'Data Matrix'
+        UPCA: 'UPC-A'
       }
     },
     noCodeFound: {
-      message: 'No barcode found in this image',
+      // Two messages, not one (Story 16.23). The single "No barcode found in
+      // this image" was shown for a decoder miss, for a genuinely code-free
+      // image, AND for a file the decoder never managed to open. It was also
+      // demonstrably false in the case that motivated the split: a Penny Market
+      // card whose barcode Android reads without trouble.
+      notFoundMessage: "We couldn't read a barcode in this image — try scanning the card itself",
+      scanFailedMessage: 'Something went wrong reading that image',
+      // Deliberately does not say "that image": the picker never handed us one,
+      // so there is nothing for the user to reconsider about their choice.
+      pickerFailedMessage: "We couldn't open your photos",
+      // "Try another image" would presume a first image; none was ever picked.
+      pickerFailedRetry: 'Try again',
       dismissAccessibilityLabel: 'Dismiss error message',
       retryAccessibilityLabel: 'Try scanning a different image',
       retry: 'Try another image',

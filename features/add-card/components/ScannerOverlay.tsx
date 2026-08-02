@@ -8,13 +8,14 @@
 
 import { MaterialIcons } from '@expo/vector-icons';
 import { CameraView } from 'expo-camera';
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
   View,
   Text,
   Pressable,
   Linking,
+  Platform,
   StyleSheet,
   useWindowDimensions,
   ActivityIndicator
@@ -29,6 +30,7 @@ import Animated, {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { BarcodeFormat } from '@/core/schemas';
+import { logger } from '@/core/utils';
 
 import { Button } from '@/shared/components/ui/Button';
 import { useTheme } from '@/shared/theme';
@@ -38,6 +40,7 @@ import { useBarcodeScanner, ScanResult } from '@/features/cards/hooks/useBarcode
 
 import { FloatingBackButton } from './FloatingBackButton';
 import { NoCodeFoundBanner } from './NoCodeFoundBanner';
+import type { ImageScanErrorReason } from '../hooks/useImageScan';
 
 interface ScannerOverlayProps {
   onScan: (result: ScanResult) => void;
@@ -51,6 +54,11 @@ interface ScannerOverlayProps {
   isProcessingImage?: boolean;
   /** Shows the NoCodeFoundBanner when true */
   imageError?: boolean;
+  /**
+   * Which failure the banner should describe (Story 16.23). Omitted falls back
+   * to the banner's own `notFound` default.
+   */
+  imageErrorReason?: ImageScanErrorReason;
   onImageErrorDismiss?: () => void;
   onImageErrorRetry?: () => void;
   onImageErrorManualEntry?: () => void;
@@ -60,6 +68,38 @@ interface ScannerOverlayProps {
    */
   expectedFormat?: BarcodeFormat;
 }
+
+/**
+ * Classify an `onMountError` message into a bounded, indexable Sentry tag.
+ *
+ * `CameraMountError` carries a `message` and nothing else — `expo-camera` provides
+ * no error code — so a prefix match is the only classification available. It is
+ * still worth doing rather than forwarding the raw string: the message is free
+ * text from a third party, and one of `expo-camera`'s four emitters interpolates
+ * an `AVError` description into it. That is harmless today, but "safe because of
+ * what this version happens to interpolate" is not the same as safe by
+ * construction, and tag values are the one field the PII scrubber never touches.
+ *
+ * Prefixes verified against `expo-camera`'s own emitters — `CameraSessionManager`
+ * (iOS) and `ExpoCameraView` (Android). An unrecognised message reports `'other'`,
+ * which is itself the signal that upstream changed and this list needs revisiting.
+ *
+ * ⚠️ These prefixes are duplicated, deliberately, in two other places that must
+ * move with them: `EXPECTED_STRINGS` in `scripts/verify-native-strings.mjs` (the
+ * gate asserting they still exist upstream) and the classification cases in
+ * `ScannerOverlay.test.tsx`. Nothing links the three mechanically — a shared
+ * constant would have to span a component and a bare-Node script — so changing a
+ * prefix here means changing all three.
+ */
+const classifyMountError = (
+  message: string
+): 'in-use' | 'permission' | 'session-reset' | 'start-failed' | 'other' => {
+  if (message.startsWith('Camera component could not be rendered')) return 'in-use';
+  if (message.startsWith('Camera permissions not granted')) return 'permission';
+  if (message.startsWith('Camera session was reset')) return 'session-reset';
+  if (message.startsWith('Camera could not be started')) return 'start-failed';
+  return 'other';
+};
 
 const VIEWFINDER_WIDTH_RATIO = 0.7;
 const CORNER_SIZE = 32;
@@ -189,6 +229,7 @@ export const ScannerOverlay: React.FC<ScannerOverlayProps> = ({
   onImageScan,
   isProcessingImage = false,
   imageError = false,
+  imageErrorReason,
   onImageErrorDismiss,
   onImageErrorRetry,
   onImageErrorManualEntry,
@@ -200,6 +241,7 @@ export const ScannerOverlay: React.FC<ScannerOverlayProps> = ({
   const { width: screenWidth } = useWindowDimensions();
   const viewfinderSize = screenWidth * VIEWFINDER_WIDTH_RATIO;
   const [cameraMountError, setCameraMountError] = useState<string | null>(null);
+  const hasReportedMountErrorRef = useRef(false);
 
   const { permission, hasScanned, error, handleBarcodeScanned, requestCameraPermission, reset } =
     useBarcodeScanner({ onScan, enabled: true, expectedFormat });
@@ -208,6 +250,27 @@ export const ScannerOverlay: React.FC<ScannerOverlayProps> = ({
 
   const handleCameraMountError = useCallback(
     (event: { message: string }) => {
+      // A camera that will not start is a total scan failure, and it previously
+      // left no production trace — only the on-screen message below. Reported once
+      // per mount: `onMountError` can fire repeatedly for one broken session.
+      if (!hasReportedMountErrorRef.current) {
+        hasReportedMountErrorRef.current = true;
+        logger.notify('Camera preview failed to mount', {
+          tags: {
+            surface: 'camera',
+            outcome: 'mount-error',
+            reason: classifyMountError(event.message),
+            platform: Platform.OS
+          },
+          // A single integer, so a `reason: 'other'` event is not a total black
+          // hole the way it would be with no residual signal at all: two unknown
+          // messages of different lengths are visibly different causes, and a
+          // recurring unknown is distinguishable from a one-off. Its two sibling
+          // classifiers keep `nativeCode` for the same purpose; this is the most
+          // that can be kept here without reintroducing the free text.
+          context: [{ messageLength: event.message.length }]
+        });
+      }
       setCameraMountError(event.message || t('addCard.scanner.cameraStartError'));
     },
     [t]
@@ -362,6 +425,7 @@ export const ScannerOverlay: React.FC<ScannerOverlayProps> = ({
       {imageError && onImageErrorDismiss && (
         <View style={styles.bannerContainer}>
           <NoCodeFoundBanner
+            reason={imageErrorReason}
             onDismiss={onImageErrorDismiss}
             onRetry={onImageErrorRetry ?? onImageErrorDismiss}
             onManualEntry={onImageErrorManualEntry ?? onManualEntry}

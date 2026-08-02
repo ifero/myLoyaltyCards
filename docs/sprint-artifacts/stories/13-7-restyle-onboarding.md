@@ -1,6 +1,6 @@
 # Story 13.7: Restyle Onboarding Flow
 
-Status: review
+Status: done
 
 ## Story
 
