@@ -103,6 +103,7 @@ export const BrandScannerScreen: React.FC = () => {
   const {
     isProcessing: isProcessingImage,
     showError: imageError,
+    errorReason: imageErrorReason,
     multiCodes,
     pickAndScan,
     dismissError,
@@ -121,6 +122,7 @@ export const BrandScannerScreen: React.FC = () => {
         onImageScan={pickAndScan}
         isProcessingImage={isProcessingImage}
         imageError={imageError}
+        imageErrorReason={imageErrorReason ?? undefined}
         onImageErrorDismiss={dismissError}
         onImageErrorRetry={pickAndScan}
         onImageErrorManualEntry={handleManualEntry}

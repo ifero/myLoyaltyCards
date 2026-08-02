@@ -5,8 +5,16 @@
 
 import { act, render, screen, fireEvent } from '@testing-library/react-native';
 
+import { logger } from '@/core/utils';
+
 import { ScannerOverlay } from './ScannerOverlay';
 
+jest.mock('@/core/utils', () => {
+  const actual = jest.requireActual('@/core/utils');
+  return { ...actual, logger: { ...actual.logger, notify: jest.fn() } };
+});
+
+const mockNotify = logger.notify as jest.Mock;
 const mockCameraView = jest.fn();
 
 // Mock theme
@@ -138,6 +146,109 @@ describe('ScannerOverlay', () => {
       expect(screen.queryByTestId('camera-view')).toBeNull();
     });
 
+    // Story 16.23 follow-up: a camera that will not start is a total scan failure,
+    // and it left no production trace at all — only an on-screen message.
+    it('notifies when the camera preview fails to mount', () => {
+      render(<ScannerOverlay {...defaultProps} />);
+
+      const cameraProps = mockCameraView.mock.calls.at(-1)?.[0] as {
+        onMountError?: (event: { message: string }) => void;
+      };
+
+      act(() => {
+        cameraProps.onMountError?.({ message: 'Failed to start camera preview' });
+      });
+
+      expect(mockNotify).toHaveBeenCalledWith(
+        'Camera preview failed to mount',
+        expect.objectContaining({
+          tags: expect.objectContaining({ surface: 'camera', outcome: 'mount-error' })
+        })
+      );
+    });
+
+    it.each([
+      ['Camera component could not be rendered - is there any other instance running?', 'in-use'],
+      ['Camera permissions not granted - component could not be rendered.', 'permission'],
+      ['Camera session was reset', 'session-reset'],
+      ['Camera could not be started - The operation could not be completed', 'start-failed'],
+      ['Something upstream changed', 'other']
+    ])('classifies the mount error %# as reason "%s"', (message, expectedReason) => {
+      render(<ScannerOverlay {...defaultProps} />);
+      const cameraProps = mockCameraView.mock.calls.at(-1)?.[0] as {
+        onMountError?: (event: { message: string }) => void;
+      };
+
+      act(() => {
+        cameraProps.onMountError?.({ message });
+      });
+
+      expect(mockNotify.mock.calls[0]?.[1]?.tags?.reason).toBe(expectedReason);
+    });
+
+    it('never forwards the raw mount-error message to telemetry', () => {
+      // `CameraMountError` carries only a free-text `message`, and one of
+      // expo-camera's emitters interpolates an AVError description into it. Safe
+      // today, but tag values are the one field the PII scrubber never touches, so
+      // the message is classified rather than forwarded. This is the lock on that.
+      render(<ScannerOverlay {...defaultProps} />);
+      const cameraProps = mockCameraView.mock.calls.at(-1)?.[0] as {
+        onMountError?: (event: { message: string }) => void;
+      };
+
+      act(() => {
+        cameraProps.onMountError?.({
+          message: 'Camera could not be started - /var/mobile/secret-detail.txt'
+        });
+      });
+
+      const serialised = JSON.stringify(mockNotify.mock.calls);
+      expect(serialised).not.toContain('/var/mobile');
+      expect(serialised).not.toContain('secret-detail');
+      // The classification still landed, so this is not passing by emitting nothing.
+      expect(mockNotify.mock.calls[0]?.[1]?.tags?.reason).toBe('start-failed');
+    });
+
+    it('records the message length so an unknown reason is not a black hole', () => {
+      // The two sibling classifiers keep `nativeCode` for their `other` bucket;
+      // this has no code to keep, so a single integer is the most that can be
+      // retained without reintroducing the free text. It still separates two
+      // different unknown causes, and a recurring one from a one-off.
+      render(<ScannerOverlay {...defaultProps} />);
+      const cameraProps = mockCameraView.mock.calls.at(-1)?.[0] as {
+        onMountError?: (event: { message: string }) => void;
+      };
+
+      act(() => {
+        cameraProps.onMountError?.({ message: 'Some upstream wording we do not know' });
+      });
+
+      expect(mockNotify.mock.calls[0]?.[1]?.tags?.reason).toBe('other');
+      expect(mockNotify.mock.calls[0]?.[1]?.context?.[0]).toEqual({
+        messageLength: 'Some upstream wording we do not know'.length
+      });
+    });
+
+    it('notifies only once when the camera reports repeated mount errors', () => {
+      render(<ScannerOverlay {...defaultProps} />);
+
+      const cameraProps = mockCameraView.mock.calls.at(-1)?.[0] as {
+        onMountError?: (event: { message: string }) => void;
+      };
+
+      act(() => {
+        cameraProps.onMountError?.({ message: 'Failed to start camera preview' });
+        cameraProps.onMountError?.({ message: 'Failed to start camera preview' });
+      });
+
+      expect(mockNotify).toHaveBeenCalledTimes(1);
+    });
+
+    it('does not notify when the camera mounts successfully', () => {
+      render(<ScannerOverlay {...defaultProps} />);
+      expect(mockNotify).not.toHaveBeenCalled();
+    });
+
     it('uses image scan from the fallback camera error UI', () => {
       const onImageScan = jest.fn();
       render(<ScannerOverlay {...defaultProps} onImageScan={onImageScan} />);
@@ -256,6 +367,30 @@ describe('ScannerOverlay', () => {
         );
         fireEvent.press(screen.getByTestId('banner-manual-entry'));
         expect(onImageErrorManualEntry).toHaveBeenCalledTimes(1);
+      });
+
+      // Story 16.23 (AC2): the overlay is the seam that carries the reason from
+      // useImageScan to the banner, so a broken hand-off would silently restore
+      // the old one-message-for-everything behaviour.
+      it('forwards imageErrorReason to the banner', () => {
+        render(
+          <ScannerOverlay
+            {...defaultProps}
+            imageError
+            imageErrorReason="scanFailed"
+            onImageErrorDismiss={jest.fn()}
+          />
+        );
+        expect(screen.getByText('Something went wrong reading that image')).toBeTruthy();
+      });
+
+      it("falls back to the banner's notFound copy when no reason is given", () => {
+        render(<ScannerOverlay {...defaultProps} imageError onImageErrorDismiss={jest.fn()} />);
+        expect(
+          screen.getByText(
+            "We couldn't read a barcode in this image — try scanning the card itself"
+          )
+        ).toBeTruthy();
       });
     });
   });

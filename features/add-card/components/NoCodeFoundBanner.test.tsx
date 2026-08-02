@@ -47,9 +47,74 @@ describe('NoCodeFoundBanner', () => {
     expect(getByTestId('custom-banner')).toBeTruthy();
   });
 
-  it('renders the error message text', () => {
+  it('renders the notFound message by default', () => {
     const { getByText } = render(<NoCodeFoundBanner {...defaultProps} />);
-    expect(getByText('No barcode found in this image')).toBeTruthy();
+    expect(
+      getByText("We couldn't read a barcode in this image — try scanning the card itself")
+    ).toBeTruthy();
+  });
+
+  // Story 16.23 (AC2): the two failure modes must not read the same. The old
+  // single message claimed the image held no barcode even when it demonstrably
+  // did, and even when the decoder never managed to open the file at all.
+  it('renders the notFound message when reason is notFound', () => {
+    const { getByText } = render(<NoCodeFoundBanner {...defaultProps} reason="notFound" />);
+    expect(
+      getByText("We couldn't read a barcode in this image — try scanning the card itself")
+    ).toBeTruthy();
+  });
+
+  it('renders a distinct message when reason is scanFailed', () => {
+    const { getByText, queryByText } = render(
+      <NoCodeFoundBanner {...defaultProps} reason="scanFailed" />
+    );
+    expect(getByText('Something went wrong reading that image')).toBeTruthy();
+    expect(
+      queryByText("We couldn't read a barcode in this image — try scanning the card itself")
+    ).toBeNull();
+  });
+
+  it('renders a distinct message when reason is pickerFailed', () => {
+    // Deliberately does not mention "that image": the picker never handed us one,
+    // so there is nothing about the user's choice for them to reconsider.
+    const { getByText, queryByText } = render(
+      <NoCodeFoundBanner {...defaultProps} reason="pickerFailed" />
+    );
+    expect(getByText("We couldn't open your photos")).toBeTruthy();
+    expect(queryByText('Something went wrong reading that image')).toBeNull();
+  });
+
+  it('uses a retry label that does not presume a first image for pickerFailed', () => {
+    const { getByText, queryByText } = render(
+      <NoCodeFoundBanner {...defaultProps} reason="pickerFailed" />
+    );
+    expect(getByText('Try again')).toBeTruthy();
+    expect(queryByText('Try another image')).toBeNull();
+  });
+
+  it.each(['notFound', 'scanFailed'] as const)(
+    'keeps the shared retry label for reason %s',
+    (reason) => {
+      const { getByText } = render(<NoCodeFoundBanner {...defaultProps} reason={reason} />);
+      expect(getByText('Try another image')).toBeTruthy();
+    }
+  );
+
+  it('still calls onRetry from the pickerFailed retry button', () => {
+    // Only the wording changes; the behaviour must be identical.
+    const onRetry = jest.fn();
+    const { getByTestId } = render(
+      <NoCodeFoundBanner {...defaultProps} reason="pickerFailed" onRetry={onRetry} />
+    );
+    fireEvent.press(getByTestId('banner-retry-image'));
+    expect(onRetry).toHaveBeenCalledTimes(1);
+  });
+
+  it('announces the reason-specific message to screen readers', () => {
+    const { getByTestId } = render(<NoCodeFoundBanner {...defaultProps} reason="scanFailed" />);
+    expect(getByTestId('no-code-found-banner').props.accessibilityLabel).toBe(
+      'Something went wrong reading that image'
+    );
   });
 
   it('renders close, retry, and manual entry controls', () => {

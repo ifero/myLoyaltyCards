@@ -1,0 +1,89 @@
+diff --git a/node_modules/react-native-image-code-scanner/ios/ImageCodeScanner.swift b/node_modules/react-native-image-code-scanner/ios/ImageCodeScanner.swift
+index 9ddf4a7..ef8d8c9 100644
+--- a/node_modules/react-native-image-code-scanner/ios/ImageCodeScanner.swift
++++ b/node_modules/react-native-image-code-scanner/ios/ImageCodeScanner.swift
+@@ -92,6 +92,53 @@ class ImageCodeScanner: NSObject, RCTBridgeModule {
+     return UIImage(cgImage: rendered.cgImage!, scale: image.scale, orientation: image.imageOrientation)
+   }
+ 
++  // MARK: - Resample Retry
++
++  /// Minimum longest edge, in pixels, for the resample retry to be worth trying.
++  ///
++  /// Below this a downscaled copy has too few pixels left to hold a scannable
++  /// barcode, so the extra Vision passes would cost time and find nothing.
++  private static let resampleMinimumEdge: CGFloat = 400
++
++  /// Downscale factors tried after every other candidate has missed.
++  ///
++  /// Measured against a real failing card: every factor from 0.85x down to 0.25x
++  /// made Vision decode it, bilinear and Lanczos alike, so these are points
++  /// inside a wide stable window rather than magic numbers. Two rather than one
++  /// because the underlying defect is "rasterised at 1/N of the needed size then
++  /// upscaled N times", and N varies between cards.
++  ///
++  /// A fixed-radius blur was measured and rejected: r=2.0 decodes but r=1.5 and
++  /// r=2.5 both miss, which is far too fragile. Upscaling (tested to 4836px) and
++  /// binarising never decode at all — once edge positions are quantised away
++  /// they cannot be recovered by adding pixels, only by resampling.
++  private static let resampleFactors: [CGFloat] = [0.6, 0.45]
++
++  /// Downscale by an explicit factor, for the resample retry.
++  ///
++  /// Deliberately distinct from `scaleImageIfNeeded`, which fires only ABOVE a
++  /// size ceiling. That ceiling is why this retry is needed at all: anything
++  /// wider than 2048px already gets resampled on the way in and decodes, so it
++  /// is specifically SMALL, marginally-rendered images that reach the decoder
++  /// with their quantisation intact.
++  ///
++  /// Returns an `.up` image — `draw(in:)` bakes orientation into the pixels —
++  /// which is the same contract `rotateImage` above already produces.
++  private func downscale(_ image: UIImage, factor: CGFloat) -> UIImage? {
++    guard let currentCGImage = image.cgImage else { return nil }
++
++    let newW = floor(CGFloat(currentCGImage.width) * factor)
++    let newH = floor(CGFloat(currentCGImage.height) * factor)
++    guard newW >= 1, newH >= 1 else { return nil }
++
++    let newSizePx = CGSize(width: newW, height: newH)
++    let format = UIGraphicsImageRendererFormat.default()
++    format.scale = 1 // render size is in pixels
++    return UIGraphicsImageRenderer(size: newSizePx, format: format).image { _ in
++      image.draw(in: CGRect(origin: .zero, size: newSizePx))
++    }
++  }
++
+   private func cgImagePropertyOrientation(from o: UIImage.Orientation) -> CGImagePropertyOrientation {
+     switch o {
+     case .up: return .up
+@@ -176,6 +223,30 @@ class ImageCodeScanner: NSObject, RCTBridgeModule {
+     }
+     print("ImageCodeScanner iOS - Added rotated versions")
+ 
++    // Resampled retries, appended LAST so they are reached only after every other
++    // candidate has missed. That ordering is what makes them strictly additive:
++    // they can turn a miss into a hit, but can never displace an existing hit.
++    //
++    // Why they help: an under-rasterised barcode — drawn at a fraction of the
++    // size it needed and then upscaled — has its bar edges quantised to whole
++    // pixels, so the narrow element that every EAN-13 digit's classification is
++    // normalised against swings far enough to defeat Vision. Downscaling
++    // reconstructs sub-pixel edge positions. It is the same correction a camera
++    // lens performs optically for free, which is why the live camera reads such
++    // artwork while a direct scan of the same file does not.
++    let baseLongestEdge = max(
++      CGFloat(baseImage.cgImage?.width ?? 0),
++      CGFloat(baseImage.cgImage?.height ?? 0)
++    )
++    if baseLongestEdge >= ImageCodeScanner.resampleMinimumEdge {
++      for factor in ImageCodeScanner.resampleFactors {
++        if let resampled = downscale(baseImage, factor: factor) {
++          imagesToTry.append(("Downscaled \(factor)x", resampled))
++        }
++      }
++      print("ImageCodeScanner iOS - Added downscaled versions")
++    }
++
+     // Convert formats array to Vision symbologies
+     var symbologies: [VNBarcodeSymbology] = []
+     let requestedUPCA = formats.contains("UPC_A")

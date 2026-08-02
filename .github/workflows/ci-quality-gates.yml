@@ -52,6 +52,24 @@ jobs:
       - name: Install dependencies
         run: yarn install --frozen-lockfile
 
+      # `patch-package` rewrites files inside node_modules, which is uncommitted,
+      # rebuilt on every install and RESTORED FROM THE CACHE ABOVE. A patch can
+      # therefore vanish in total silence — patches/ deleted, patch-package
+      # dropped from postinstall, the patched package bumped, or a cache built
+      # before the patch existed — and the app just reverts to upstream behaviour
+      # with every gate still green. This asserts the patched CODE is present, not
+      # merely that the patch file is, so none of those routes goes unnoticed.
+      - name: Verify native patches are applied
+        run: yarn check:native-patches
+
+      # `classifyMountError` matches on `expo-camera`'s mount-error message text,
+      # because `CameraMountError` carries no error code. That degrades in silence:
+      # an upstream reword reclassifies every event to `other` with no test failing
+      # and no build breaking, visible only as a drifting tag distribution weeks
+      # later. This asserts at build time what that classifier assumes at runtime.
+      - name: Verify upstream native strings still exist
+        run: yarn check:native-strings
+
       - name: Lint
         run: yarn lint
 
