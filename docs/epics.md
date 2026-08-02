@@ -374,25 +374,26 @@ This document provides the complete epic and story breakdown for myLoyaltyCards,
 
 ## Epic List
 
-| Epic | Title                                  | Phase | Status                                         |
-| ---- | -------------------------------------- | ----- | ---------------------------------------------- |
-| 1    | Project Foundation & App Shell         | 1     | done                                           |
-| 2    | Card Management & Barcode Display      | 1     | done                                           |
-| 3    | Italian Brand Catalogue                | 1     | done                                           |
-| 4    | Onboarding Experience                  | 1     | done                                           |
-| 5    | Apple Watch App                        | 1     | done                                           |
-| 6    | User Authentication & Privacy          | 1     | in-progress (6-12/6-13 social sign-in backlog) |
-| 7    | Cloud Synchronization                  | 1     | done                                           |
-| 8    | Settings & Preferences                 | 1     | absorbed → Epic 13                             |
-| 9    | Smart Card Sorting                     | 2     | done                                           |
-| 10   | Wear OS App                            | 2     | in-progress (Sprint 18)                        |
-| 11   | CI/CD & Quality Gates                  | 1     | done                                           |
-| 12   | App-Wide Design Overhaul (Figma)       | 2     | done                                           |
-| 13   | UI Implementation                      | 2     | done                                           |
-| 14   | Household Collaboration                | 3     | in-progress (14-5a UX gates impl)              |
-| 15   | Internationalisation & Public Presence | 2     | done                                           |
-| 16   | Platform & Tech Debt (standing bucket) | —     | in-progress (16-22 in Sprint 18)               |
-| 17   | Apple Wallet Pass Support              | 3     | backlog (parked — spike first)                 |
+| Epic | Title                                  | Phase | Status                                            |
+| ---- | -------------------------------------- | ----- | ------------------------------------------------- |
+| 1    | Project Foundation & App Shell         | 1     | done                                              |
+| 2    | Card Management & Barcode Display      | 1     | done                                              |
+| 3    | Italian Brand Catalogue                | 1     | done                                              |
+| 4    | Onboarding Experience                  | 1     | done                                              |
+| 5    | Apple Watch App                        | 1     | done                                              |
+| 6    | User Authentication & Privacy          | 1     | in-progress (6-12/6-13 social sign-in backlog)    |
+| 7    | Cloud Synchronization                  | 1     | done                                              |
+| 8    | Settings & Preferences                 | 1     | absorbed → Epic 13                                |
+| 9    | Smart Card Sorting                     | 2     | done                                              |
+| 10   | Wear OS App                            | 2     | in-progress (Sprint 18)                           |
+| 11   | CI/CD & Quality Gates                  | 1     | done                                              |
+| 12   | App-Wide Design Overhaul (Figma)       | 2     | done                                              |
+| 13   | UI Implementation                      | 2     | done                                              |
+| 14   | Household Collaboration                | 3     | in-progress (14-5a UX gates impl; 14-2 → Epic 18) |
+| 15   | Internationalisation & Public Presence | 2     | done                                              |
+| 16   | Platform & Tech Debt (standing bucket) | —     | in-progress (16-22 in Sprint 18)                  |
+| 17   | Apple Wallet Pass Support              | 3     | backlog (parked — spike first)                    |
+| 18   | Card Sharing & Web Handoff             | 3     | backlog (absorbs 14-2)                            |
 
 ---
 
@@ -2491,6 +2492,8 @@ Let users share loyalty cards and shopping lists within a household, building on
 
 Epic 14 evolves myLoyaltyCards from a single-user loyalty card manager into a lightweight collaborative tool, split into two phases. Phase A ships single-user features that work fully in local mode with no account (card sharing via deeplink, a local shopping list). Phase B adds the cloud household layer (membership, household card visibility, shopping list sync) as an additive experience that never gates the single-user flows. Bill splitting is explicitly descoped and may return as its own epic. Story 14.5a is a UX-design prerequisite that gates 14.5.
 
+> **Scope change, 2026-08-02:** Story 14.2 (card sharing via deeplink) is **absorbed into [Epic 18: Card Sharing & Web Handoff](#epic-18-card-sharing--web-handoff)** and is not delivered here. Its custom-scheme-only design does nothing for a recipient without the app installed, and Epic 18 replaces it with an HTTPS link plus a web fallback that renders the barcode. Epic 14 retains the household and shopping-list scope. The 14.2 specification below is kept for history, not for implementation.
+
 ### Story 14.1: Household Collaboration — Epic Scoping & Discovery
 
 **As a** product owner, **I want** to define and align on the scoped Epic 14 plan covering card sharing, shopping list, and the household layer, **So that** the team has clear phases, resolved caveats, and ready-to-refine stories before any implementation begins.
@@ -2504,7 +2507,9 @@ Epic 14 evolves myLoyaltyCards from a single-user loyalty card manager into a li
 - All Phase B caveats (privacy rules, household ownership transfer, invite token, GDPR) captured and assigned to stories.
 - Deeplink HTTPS-fallback decision recorded: silent failure accepted; a "Copy card code" plain-text fallback is included in the share sheet.
 
-### Story 14.2: Card Sharing via Deeplink
+### Story 14.2: Card Sharing via Deeplink — SUPERSEDED by Epic 18
+
+> **Not for implementation.** Absorbed into Epic 18 on 2026-08-02 (`absorbed-into-epic-18`). Retained verbatim below so the reasoning that led to Epic 18 stays legible. Epic 18 keeps the versioned-payload and duplicate-detection ideas from these criteria and replaces the custom-scheme-only transport.
 
 **As a** user, **I want** to share a loyalty card with someone via a link, **So that** they can add it to their own myLoyaltyCards app without scanning the card manually.
 
@@ -2991,3 +2996,208 @@ This epic is parked. Before any build story is written, a feasibility spike must
 - The spike verifies that PassKit barcode formats (QR, PDF417, Aztec, Code128) cover the loyalty-card formats the app uses.
 - The spike identifies the entitlements the feature likely touches and any provisioning implications.
 - The spike concludes with a go / no-go recommendation and, if go, a proposed breakdown of build stories; the epic stays parked until that recommendation is reviewed.
+
+---
+
+## Epic 18: Card Sharing & Web Handoff
+
+**Goal:** Let a user share any loyalty card as a single HTTPS link. Recipients with the app land on a pre-filled add-card screen; recipients without it see a scannable barcode on the web. Links stay readable by app versions older than the brands and formats they carry.
+
+**Phase:** 3 · **Epic Type:** User-Facing · **Dependencies:** Epic 2 (cards + barcode rendering), Epic 3 (catalogue), Epic 15 (public site) · **Absorbs:** Story 14.2
+
+Adding a card today means scanning a physical card or typing a barcode by hand; there is no way to pass a card to a partner or a housemate. Story 14.2 proposed a `myloyaltycards://` custom-scheme deeplink for this, but a custom scheme is a dead end for real-world sharing: it does nothing for a recipient without the app installed, and messaging apps generally will not linkify it. Epic 18 supersedes and absorbs 14.2 with an HTTPS link that degrades gracefully — app installed, app absent, or app too old to understand the payload.
+
+**Design decisions taken up front (ifero, 2026-08-02):**
+
+| Decision         | Choice                                                                                                                                                                                                                                                                    |
+| ---------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Token in the URL | Fragment — `https://<domain>/card/#<token>`. Everything after `#` is never transmitted to the server, so barcode numbers never reach an access log, a `Referer` header, or an analytics beacon. Universal/App Links still match, because they match on the `/card/` path. |
+| Hosting          | Custom domain on a European host, chosen by the Story 18.1 spike across Netsons, Namecheap, Spaceship, Infomaniak and OVHcloud. Hard constraints: servers in Europe, maximum reliability.                                                                                 |
+| Story 14.2       | Absorbed into this epic (`absorbed-into-epic-18` in `sprint-status.yaml`).                                                                                                                                                                                                |
+| Forward-compat   | Covers unknown **brand IDs** and unknown **barcode formats**, on the reasoning that they are the same defect one layer apart.                                                                                                                                             |
+
+**The token is encoded, not hashed.** A cryptographic hash is one-way — the barcode could never be recovered from it, and the web page has no server to look it up against. The token is an opaque base64url payload, which means anyone holding the link can decode the card: it is a **bearer link**. Every surface that produces or renders one says so.
+
+**Zero backend.** The card details travel inside the link. Nothing is stored server-side, which keeps the epic consistent with the app's offline-first architecture and with Epic 15's zero-build static site. The trade-off, accepted deliberately, is that a shared link cannot be revoked or expired.
+
+**Dependency order.** Wave 1 (parallel): 18.1, 18.2, 18.3. Wave 2: 18.4, 18.5, 18.6. Wave 3: 18.7, 18.8. Wave 4: 18.9 then 18.10. Only 18.9 and 18.10 depend on the hosting spike — everything else can be built and tested before a domain exists.
+
+### Story 18.1: Spike — European Hosting & Custom Domain for the Share Page
+
+**As a** developer, **I want** a decided European host and registered domain, **So that** Universal Links and App Links can be verified at a domain root we control, on infrastructure we trust to stay up.
+
+Vendors to evaluate, specified by ifero: **Netsons**, **Namecheap**, **Spaceship**, **Infomaniak**, **OVHcloud**. The incumbent (GitHub Pages) is scored as the baseline to beat, not as a candidate — it structurally cannot serve `/.well-known/` from a project page.
+
+**Residency rule, decided by ifero 2026-08-02: EU/EEA only.** Not "geographic Europe". A desk check of the five vendors on the day the epic was written gives the following starting position — the spike **re-verifies each one**, because hosting footprints and product-by-product region availability both change:
+
+| Vendor         | EU/EEA hosting                                        | Standing under the rule                                                                                                                                              |
+| -------------- | ----------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Netsons**    | Milan, Italy — Data4 Tier IV campus, plus Seeweb      | In. Italian company, Italian datacentres.                                                                                                                            |
+| **OVHcloud**   | France, Germany, Poland                               | In. Strongest EU-sovereignty story of the five; carries the SBG2 caveat below.                                                                                       |
+| **Namecheap**  | Amsterdam, NL — **shared hosting only**, small uplift | In on location, but the EU region must be **explicitly selected** (the default is US, and the UK option is not EEA post-Brexit). US parent ⇒ CLOUD Act caveat below. |
+| **Spaceship**  | Amsterdam, NL (also Farnborough, UK — **not EEA**)    | Same as Namecheap: EU region must be pinned, never UK. Same US parent.                                                                                               |
+| **Infomaniak** | **None — Switzerland only** (Geneva, Zurich)          | **Excluded by the residency rule.** Recorded rather than dropped, so it is not re-proposed later.                                                                    |
+
+Excluding Infomaniak has a real cost worth stating: Switzerland holds a GDPR adequacy decision, and Infomaniak is the only pure-play independent European provider on the list, with the strongest privacy and sustainability posture. The exclusion is a **digital-sovereignty preference, not a compliance necessity** — ifero's call, made deliberately.
+
+**Acceptance Criteria:**
+
+- Each surviving candidate's actual datacentre location **for the specific product being bought** is re-verified against its marketing and recorded; a vendor having an EU region somewhere does not mean the plan under consideration runs there.
+- The **CLOUD Act caveat** is assessed for Namecheap and Spaceship, which share a US parent: post-_Schrems II_, a US-incorporated processor carries exposure even when the servers sit in the EEA, so "Amsterdam datacentre" is not sufficient on its own. The ADR records the contracting entity, not just the server location.
+- The assessment is weighed against a mitigating fact the fragment design supplies: **no personal data ever reaches the host** — the token stays in the browser, and the site is otherwise public marketing content. If the ADR concludes the residency rule should be relaxed for a specific candidate on that basis, it says so explicitly and routes the decision back to ifero rather than deciding unilaterally.
+- Reliability is scored on published uptime **SLA percentage and whether it carries service credits**, public status-page history over the last 12 months, backup and restore guarantees, and redundancy across more than one facility.
+- **The SLA is per plan tier, not per vendor, and the cheap tier is often much weaker than the brand suggests.** Netsons illustrates the trap: its shared hosting advertises 99.50% (≈3.6 hours of permitted downtime a month), while its dedicated Classic tier is 99.90% annual and Premium is 99.99% monthly. Score the tier actually being bought, and convert every percentage into permitted downtime per month so the numbers are comparable.
+- The ADR states plainly that **no host is "exempt from downtime"** — that is not a purchasable property. The achievable goal is a credited SLA plus architectural redundancy.
+- **OVHcloud's March 2021 Strasbourg SBG2 fire** — which destroyed a datacentre and permanently lost data for customers without their own backups — is recorded, along with what has changed since and which facility the candidate plan would land in. OVH is not disqualified by it; it is Europe's largest cloud provider with a strong EU-sovereignty story.
+- The spike evaluates "modest EU host + CDN in front" against "premium hosting plan" on both cost and real-world availability **before** recommending spend. The share page is fully static and, because of the fragment design, the token never reaches the server at all — so it can be cached at an edge or mirrored with no correctness risk and no personal data leaving the browser.
+- Universal Links serving requirements are verified per candidate: `/.well-known/apple-app-site-association` served with `Content-Type: application/json` (achievable via `.htaccess` or nginx config on a traditional host, but **not** reliably on GitHub Pages, which serves the extensionless file as `application/octet-stream`), and `/.well-known/assetlinks.json` reachable at the domain root.
+- The ADR records that Apple fetches the AASA through its own CDN (`app-site-association.cdn-apple.com`) and caches it, so brief origin downtime does not immediately break existing installs — this lowers, but does not remove, the availability requirement.
+- For each candidate, the concrete CI deploy mechanism from GitHub Actions is identified — SFTP/rsync, git-push-to-deploy, or an API — including where credentials live as repository secrets. This is the main thing traditional hosting gives up versus GitHub Pages, and the ADR must show it solved rather than hand-waved. **No build step may be introduced** (Epic 15 AC1).
+- Registrar and host are evaluated as separable choices; all five candidates sell both, and the recommendation may split them provided it says why.
+- Total annual cost, renewal-price cliffs (registrars routinely discount year one), free-TLS auto-renewal, control-panel and DNS quality, and support responsiveness are also scored.
+- A redirect strategy from `ifero.github.io/myLoyaltyCards` to the new domain is specified — that URL already ships in `og:url` metadata in the wild.
+- Output is an ADR at `docs/adr-<date>-share-page-hosting.md` containing the scored comparison matrix, one recommendation for registrar and one for host, and the rejected alternatives with reasons.
+- A domain name is shortlisted and agreed with ifero; registration and payment are an ifero action item tracked in `sprint-status.yaml`.
+- **Gates 18.9 and 18.10 only.** Does not gate 18.2 through 18.8.
+
+### Story 18.2: Share-Link Payload Codec (Enabling)
+
+**As a** developer, **I want** one versioned encoder and decoder for share tokens, **So that** the app, the web page, and any future platform agree byte-for-byte on what a link means.
+
+Payload v1 uses compact keys, with all fields always present (`null`, never omitted, per the project's JSON rules): `v` schema version, `n` name (≤50), `b` barcode value, `f` barcode format, `i` brandId or null, `c` colour key or null. The token is `base64url(JSON)` + `.` + a CRC-32 checksum as 8 lowercase hex characters — roughly 127 characters, giving a full URL around 160.
+
+**Acceptance Criteria:**
+
+- The codec lives in `core/sharing/` as pure TypeScript with **no React import**, so the existing ESLint layer boundary permits it.
+- `encodeShareToken` and `decodeShareToken` round-trip losslessly for every field, including a `null` `brandId` and a 50-character name.
+- The checksum is **CRC-32 or FNV-1a implemented in plain TypeScript — not SHA-256**. Hermes has no WebCrypto and `expo-crypto` is not a dependency, and the identical code must run in Hermes, Node/Jest and a browser. This is the Story 16.15 lesson applied in advance: a green Jest run on Node proves nothing about Hermes.
+- `decodeShareToken` never throws; it returns a typed result distinguishing valid, malformed base64, checksum mismatch, unsupported version, and missing required field.
+- Forward-compatibility is built into the codec: `f` and `i` are decoded as **plain strings**, not validated against the current enum or catalogue, so an unrecognised value survives the round-trip intact. This is the mechanism stories 18.6 and 18.7 rely on.
+- Unknown top-level keys in a future payload version are ignored rather than rejected, so a v1 reader stays forward-tolerant where it safely can.
+- A `v` greater than the reader's supported version yields the unsupported-version result, and callers show "Update the app to open this link" — never a silent failure.
+- The codec has no dependencies (no compression, no crypto library) so the browser can run the identical logic with no build step.
+- A cross-platform fixture `test-fixtures/share-link-v1.json` is added alongside `card-valid.json` and `card-all-formats.json`, holding canonical token ⇄ payload pairs including an unknown-brand and an unknown-format case.
+- The checksum is documented as **corruption detection, not tamper-proofing** — anyone can recompute it. Unforgeable links would require a server secret, which this architecture deliberately does not have.
+- Unit tests are co-located as `core/sharing/*.test.ts` and meet the 80% global coverage gate.
+
+### Story 18.3: UX Design — Share, Import Preview & Web Share Page
+
+**As a** UX designer, **I want** approved designs for the three new surfaces, **So that** stories 18.4, 18.5 and 18.8 build against a settled design rather than inventing one.
+
+**Acceptance Criteria:**
+
+- The design covers the "Share card" entry point on the card detail screen, the in-app import preview screen including its duplicate and error states, and the public web share page in both light and dark, EN and IT.
+- It answers explicitly: where the share action lives on card detail; how the bearer-link warning is worded and placed; what an unknown brand looks like in the preview; what an unknown barcode format looks like; and what the web page shows when the token is corrupt.
+- It is consistent with the existing design system — Unistyles theme tokens for the app, the `docs/style.css` CSS-variable palette for the web page.
+- It is reviewed and approved by ifero. **This story blocks 18.4, 18.5 and 18.8.**
+- The approved design is stored under `docs/ux-designs/` and linked from each dependent story.
+
+### Story 18.4: Share a Card from the App
+
+**As a** user, **I want** to share one of my cards as a link, **So that** someone else can add it without typing the number.
+
+**Acceptance Criteria:**
+
+- A "Share card" action is available on the card detail screen, matching the 18.3 design.
+- Tapping it builds `https://<domain>/card/#<token>` via `core/sharing` and opens the **native share sheet** using React Native's `Share.share({ message, url })`. Note that `expo-sharing`, despite being a dependency, shares _files_ and is the wrong API here.
+- A "Copy link" action copies the same URL via `expo-clipboard` (already a dependency) with a toast confirmation.
+- A plain-language bearer-link warning accompanies the share action: anyone with the link can see and use this card number. Exact copy per 18.3.
+- The feature works identically in local mode and cloud mode, with no auth check.
+- Cards with a `null` `brandId` (custom cards) share correctly, carrying `name` and `color` so the recipient sees a sensible virtual logo.
+- New strings are added to **both** `shared/i18n/locales/en.ts` and `it.ts`.
+- Tests cover URL construction, the clipboard path, share-sheet invocation, and a custom brand-less card.
+
+### Story 18.5: Import a Shared Card in the App
+
+**As a** recipient, **I want** a tapped share link to open my app on a pre-filled add-card screen, **So that** I only have to confirm.
+
+**Acceptance Criteria:**
+
+- A new route `app/card/import.tsx` is added as a thin re-export per the project's route-file rule, with all logic in `features/`.
+- It accepts the token from **both** `myloyaltycards://card/import#<token>` (which works today) and `https://<domain>/card/#<token>` (live after 18.10). The HTTPS path is wired now and simply inert until the domain is verified.
+- Warm launch (app already running) and cold start are both handled; cold-start routing is validated on a **real device**, not a simulator.
+- The preview screen shows name, brand logo resolved by `brandId`, colour, barcode value, and a rendered barcode before anything is saved.
+- "Add to my cards" creates the card through the existing `useAddCard` hook, generating a fresh client-side UUID and current timestamps — the sender's IDs and dates are never copied.
+- If a card with the same barcode value already exists, a conflict prompt is shown ("You already have this card"); the duplicate is created only on explicit confirmation.
+- A malformed token, checksum mismatch, or unsupported version shows a specific user-facing message matching the 18.2 result type, and never crashes.
+- The flow works in local mode and cloud mode with no auth check.
+- Cancelling leaves no partial state.
+- Strings are added to `en.ts` and `it.ts`; tests cover each decode-failure branch and the duplicate path.
+
+### Story 18.6: Tolerate Unknown Brand IDs
+
+**As a** user on an older app version, **I want** a card for a brand my app doesn't know to still save correctly, **So that** the real logo appears by itself once my catalogue updates.
+
+Most of this behaviour already exists and this story's job is largely to fix one real bug and lock the rest with tests. `brand_id` is unconstrained `TEXT` in both SQLite (`core/database/migrations.ts`) and Supabase (`001_initial_schema.sql`), so an unknown ID already persists and cloud-syncs; `useBrandLogo` re-resolves the brand from the catalogue on every render, so the logo appears automatically after a catalogue OTA; and `CardTile` already falls back to the virtual logo when the brand does not resolve.
+
+**Acceptance Criteria:**
+
+- A card imported with a `brandId` absent from the bundled catalogue is stored with the **real brand ID preserved verbatim** — never nulled, never rewritten to a placeholder.
+- Such a card renders with the generic virtual logo (initials plus the shared colour) everywhere it appears: card list tile, card detail, and barcode screen.
+- **Bug fix:** `features/add-card/screens/CardSetupScreen.tsx` currently saves `name: brand?.name ?? ''` and `brandId: brand?.id`, so an unknown brand yields an **empty card name and a silently dropped brand ID**. Both are fixed — the shared `name` becomes the fallback, and the brand ID always persists.
+- A regression test proves the auto-upgrade: a card saved with an unknown `brandId`, then a catalogue that gains that brand, renders the real logo with **no migration and no user action**.
+- Cloud sync round-trips an unknown brand ID unchanged (already unconstrained `text`; the test asserts it rather than assuming it).
+- Watch sync tolerates an unknown brand ID and degrades to a generic tile; the watch already receives a pre-rendered barcode image, so no watch change is needed.
+- **No schema migration is required.** If the implementation appears to need one, stop and re-scope.
+
+### Story 18.7: Tolerate Unknown Barcode Formats
+
+**As a** user on an older app version, **I want** a card using a barcode format my app cannot draw yet to still be saved, **So that** I don't lose the card number and it starts rendering after an update.
+
+This is the same defect as 18.6 one layer down, but it lands on the opposite side of the type system: `barcodeFormat` is enum-locked (`z.enum` in `core/schemas/card.ts`, feeding a `Record<BarcodeFormat, string>` in `BarcodeRenderer`), so tolerance requires a real schema change rather than a bug fix.
+
+**Acceptance Criteria:**
+
+- `loyaltyCardSchema.barcodeFormat` is relaxed from a strict `z.enum` to a validated `string`, with an exported `KNOWN_BARCODE_FORMATS` constant and an `isKnownBarcodeFormat()` type guard used at every render site. The `BarcodeFormat` union is retained for code that legitimately requires a known format.
+- An imported card with an unrecognised format saves with the **format string preserved verbatim**.
+- `BarcodeRenderer` renders a graceful placeholder for an unknown format — the barcode number as large selectable text plus "Update the app to display this code" — instead of throwing or rendering blank.
+- After an app update that adds the format, the existing card renders normally with no migration.
+- The blast radius is enumerated and each site handled: `core/schemas/card.ts`, `BarcodeRenderer`'s `BWIPJS_FORMAT_MAP`, `FormatPicker`, `core/sync/mappers.ts`, and `core/watch-connectivity.ts`. **The format picker still offers only known formats** — this story adds tolerance on read, not new choices on write.
+- The watch path is confirmed safe without watch changes: `buildWatchQRCodeBase64` pre-renders the barcode on the phone, so an unknown format sends no image rather than crashing the watch.
+- **Architect sign-off is required before implementation** — relaxing the core schema is the widest-blast-radius change in this epic.
+- Tests cover an unknown format saved, the placeholder rendered, known formats unaffected, the sync round-trip, and the watch payload.
+
+### Story 18.8: Public Share Page Renders the Barcode
+
+**As a** recipient without the app, **I want** the link to show me a scannable barcode, **So that** the card is usable at the till right away.
+
+**Acceptance Criteria:**
+
+- A new `docs/card/index.html` (plus any assets) is served at `/card/`, decoding the token from `location.hash` entirely **client-side**. The token is never sent to the server, never logged, and never placed in a network request.
+- The page renders the card name, the shared colour, and the barcode using a **locally vendored `bwip-js` browser build** — no CDN and no npm build step, honouring Story 15.1 AC1. All six current formats are supported.
+- No brand logos are shown on the web page: the token carries the display name and colour, so no catalogue lookup is needed and `docs/` stays free of a build step.
+- An "Open in myLoyaltyCards" button fires `myloyaltycards://card/import#<token>`. This makes the page useful **before** Universal Links exist (18.10) and remains the fallback afterwards.
+- App Store and Google Play badges appear below, reusing the existing landing-page badge treatment.
+- A corrupt, truncated, or missing token renders a friendly error page — never a blank screen or a JavaScript console error.
+- EN/IT uses the **exact existing mechanism** from `docs/index.html`: `data-active-language`, `data-language-button`, `localStorage['mlc-landing-language']`, and `navigator.language` detection.
+- The page is responsive with light and dark support via the existing `docs/style.css` CSS variables, and the barcode is legible and high-contrast on a phone screen at arm's length.
+- A bearer-link notice is visible on the page.
+- Note the prettier boundary: `.prettierignore` excludes `docs/*.html` only, which does **not** match `docs/card/index.html`. Either author the new page prettier-clean or extend the ignore pattern deliberately, with the reason recorded — `prettier --check` has been a CI gate since PR #181.
+
+### Story 18.9: Migrate the Public Site to the Custom Domain (Enabling)
+
+**As a** developer, **I want** the site on the domain chosen in 18.1, **So that** `/.well-known/` is under our control.
+
+**Acceptance Criteria:**
+
+- The existing `docs/` site is deployed to the host recommended by the 18.1 ADR, on the registered domain, with automatic TLS — **byte-identical content, no build step introduced**.
+- `ifero.github.io/myLoyaltyCards` redirects to the new domain; that URL ships in `og:url` metadata already in the wild.
+- Deploys are automated on merge to `main` via the mechanism the ADR selected, with credentials held as GitHub Actions secrets and **no secrets in the repository**. The process is documented in `docs/cicd.md`.
+- If the ADR recommended a CDN in front of the origin, it is configured here with cache invalidation on deploy, so a published change is actually visible.
+- **Uptime monitoring** is set up against `/` and `/.well-known/apple-app-site-association` with alerts to ifero — the reliability requirement is worth nothing if an outage goes unnoticed.
+- `og:url` and any hard-coded site URLs are updated across `docs/` and the app's Help screen.
+- A rollback path is documented and exercised once.
+
+### Story 18.10: Universal Links & Android App Links
+
+**As a** recipient with the app installed, **I want** tapping a share link to open the app directly, **So that** I never see the web page at all.
+
+**Acceptance Criteria:**
+
+- `/.well-known/apple-app-site-association` is served from the domain root with `Content-Type: application/json`, declaring appID `7KU8K25XK5.com.iferoporefi.myloyaltycards` and path `/card/*`.
+- `/.well-known/assetlinks.json` is served with the release **and** debug SHA-256 signing fingerprints for `com.iferoporefi.myloyaltycards`.
+- `ios.associatedDomains: ["applinks:<domain>"]` and Android `intentFilters` for the domain are added to `app.json`.
+- **A new native binary is required.** `runtimeVersion.policy` is `appVersion`, so this cannot ship as an OTA update; the story is sprint-planned against a release.
+- Verified on **real devices** on both platforms for: warm tap, cold-start tap, tap from a messaging app, and tap when the app is not installed (which must fall through to the web page).
+- The custom-scheme path from 18.5 keeps working — this is additive, not a replacement.
+- A recipient on an app version predating the associated-domain entitlement still gets the web page, and its "Open in app" button still works.
