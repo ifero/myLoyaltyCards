@@ -4,7 +4,7 @@ baseline_commit: 93f1770f9a1a8c33fe7fb00bf95389b07aed66c9
 
 # Story 16.23: Fix silent barcode-scan failures on iOS — reported as "PENNY Card EAN-13 not recognised by the library"
 
-Status: ready-for-dev
+Status: review
 
 Epic: 16 — Platform & Tech Debt
 
@@ -456,43 +456,53 @@ demonstrably an EAN-13 brand and the hint is missing.
 
 ## Tasks / Subtasks
 
-- [ ] **Task 1 — Device verification (AC: 1)** — the root-cause investigation is DONE, do not redo it
-  - [ ] Real iOS device (never the simulator): run `IMG_0002.JPG` through scan-from-image and confirm
-        `ImageCodeScanner.scan` resolves `[]` rather than rejecting (**Q1**). A rejection = a separate
-        bug; record it verbatim
-  - [ ] Add-card camera against the **physical** Penny card (**Q2**). This is the recovery the new copy
-        will recommend, so verify it before shipping that advice
-  - [ ] Record iOS version, device model, build type
-  - [ ] Do not re-derive the Android result and do not regress it
+- [x] **Task 1 — Device verification (AC: 1)** — ✅ **VERIFIED BY ifero 2026-08-02** on a real iOS
+      phone and a real Android phone. Reported as: fixed on iOS, no regressions on Android. The dev
+      agent could not run this (no device, no `IMG_0002.JPG`, no physical card) — the confirmation is
+      ifero's, recorded here as supplied. Device model / OS version / build type were not supplied; see
+      Completion Notes.
+  - [x] Real iOS phone — ifero confirms the scan is fixed. ⚠️ Not separately recorded: whether
+        `ImageCodeScanner.scan` resolved `[]` versus rejecting (**Q1**). Moot in practice, since a fixed
+        scan means the resample retry decoded it rather than any branch reporting a failure
+  - [x] Physical Penny card via the add-card camera (**Q2**) — covered by ifero's confirmation
+  - [ ] Record iOS version, device model, build type — **not supplied; the one gap left in AC1's record**
+  - [x] Android not regressed — ifero confirms no regressions on a real Android phone
 
-- [ ] **Task 2 — Split and surface the image-scan failure modes (AC: 2, 3)**
-  - [ ] `useImageScan.ts`: replace bare `catch {}` with `catch (err)`; distinguish no-results from thrown
-  - [ ] Add a `logger.notify` at each path — literal message, safe tags only, **no barcode/URI/filename**
-  - [ ] Add the differentiated copy to `en.ts` **and** `it.ts` (no parity test exists — check by hand)
-  - [ ] Extend `useImageScan.test.ts` with a rejected-`scan` case asserting the notify call and the copy
-- [ ] **Task 3 — Make the format fallback observable (AC: 4)**
-  - [ ] Add `logger.notify` on the `?? 'CODE128'` branch in `useImageScan.ts` and `useBarcodeScanner.ts`
-  - [ ] Assert it fires for an unmapped label and does **not** fire for every mapped label
-- [ ] **Task 4 — Remove the dead `DATAMATRIX` locale key (AC: 5)** — the symbology set stays at 6
-  - [ ] `grep -rn "DATAMATRIX" --include='*.ts' --include='*.tsx' .` to confirm the key is unreferenced
-  - [ ] Delete it from `en.ts:526` and `it.ts:529`; run the i18n-consuming suites
-  - [ ] Do **not** touch `barcodeFormatSchema`, `BWIPJS_FORMAT_MAP`, `FormatPicker`,
+- [x] **Task 2 — Split and surface the image-scan failure modes (AC: 2, 3)**
+  - [x] `useImageScan.ts`: replace bare `catch {}` with `catch (err)`; distinguish no-results from thrown
+  - [x] Add a `logger.notify` at each path — literal message, safe tags only, **no barcode/URI/filename**
+  - [x] Add the differentiated copy to `en.ts` **and** `it.ts` (no parity test exists — check by hand)
+  - [x] Extend `useImageScan.test.ts` with a rejected-`scan` case asserting the notify call and the copy
+- [x] **Task 3 — Make the format fallback observable (AC: 4)**
+  - [x] Add `logger.notify` on the `?? 'CODE128'` branch in `useImageScan.ts` and `useBarcodeScanner.ts`
+  - [x] Assert it fires for an unmapped label and does **not** fire for every mapped label
+- [x] **Task 4 — Remove the dead `DATAMATRIX` locale key (AC: 5)** — the symbology set stays at 6
+  - [x] `grep -rn "DATAMATRIX" --include='*.ts' --include='*.tsx' .` to confirm the key is unreferenced
+        — ⚠️ **the grep found a LIVE consumer the story did not expect**; see Completion Notes
+  - [x] Delete it from `en.ts:526` and `it.ts:529`; run the i18n-consuming suites
+  - [x] Do **not** touch `barcodeFormatSchema`, `BWIPJS_FORMAT_MAP`, `FormatPicker`,
         `SUPPORTED_IMAGE_SCAN_FORMATS`, or either `barcodeTypes` list
-- [ ] **Task 5 — Catalogue hint (AC: 6)**
-  - [ ] Add `"defaultFormat": "EAN13"` to `penny-market`; run `catalogue/italy.test.ts`
-- [ ] **Task 6 — Resample retry + recovery UX (AC: 7)**
-  - [ ] Add a downscaled second attempt after a zero-result scan; ≈0.6× (measured window 0.85×→0.25×)
-  - [ ] Prefer extending `ImageCodeScanner.swift`'s `imagesToTry` ladder (upstream PR + CI-guarded
+- [x] **Task 5 — Catalogue hint (AC: 6)**
+  - [x] Add `"defaultFormat": "EAN13"` to `penny-market`; run `catalogue/italy.test.ts`
+- [x] **Task 6 — Resample retry + recovery UX (AC: 7)**
+  - [x] Add a downscaled second attempt after a zero-result scan; ≈0.6× (measured window 0.85×→0.25×)
+        — shipped as `[0.6, 0.45]`, appended at the END of the ladder so it is strictly additive
+  - [x] Prefer extending `ImageCodeScanner.swift`'s `imagesToTry` ladder (upstream PR + CI-guarded
         `yarn patch`); `expo-image-manipulator` is the fallback route and is NOT currently installed
-  - [ ] Verify on device against `IMG_0002.JPG`; re-verify Android
-  - [ ] Keep manual entry reachable and obvious — the retry will not rescue every image
-  - [ ] Do **not** implement fixed-radius blur, upscaling, sharpening, binarising, alternate Vision
+        — ⚠️ **`yarn patch` does not exist on Yarn 1**; delivered via `patch-package`, see Completion Notes
+  - [x] Verify on device against `IMG_0002.JPG`; re-verify Android — ✅ **VERIFIED BY ifero 2026-08-02**.
+        Note this required a build carrying the native patch, so the resample retry is confirmed working
+        on a real device — it still cannot ship as an OTA
+  - [x] Keep manual entry reachable and obvious — the retry will not rescue every image
+  - [x] Do **not** implement fixed-radius blur, upscaling, sharpening, binarising, alternate Vision
         revisions, crop-and-retry, or ML Kit on iOS — all measured and rejected, reasons in AC7
 
-- [ ] **Task 7 — Gates + Android non-regression (AC: 8)**
-  - [ ] `yarn lint && yarn typecheck && yarn test && yarn tokens:check` (any installed checkout)
-  - [ ] Re-verify the Penny card on **Android** after any shared-JS change — it is the known-good
-        platform and must not regress
+- [x] **Task 7 — Gates + Android non-regression (AC: 8)**
+  - [x] `yarn lint && yarn typecheck && yarn test && yarn tokens:check` (any installed checkout)
+        — all green, plus `format:check`, `splash:check`, `check:no-tests-folders`,
+        `check:native-patches`, `check:native-strings`
+  - [x] Re-verify the Penny card on **Android** after any shared-JS change — ✅ **VERIFIED BY ifero
+        2026-08-02**: no regressions on a real Android phone
 
 ## Dev Notes
 
@@ -642,10 +652,525 @@ because of this data point.
 
 ### Agent Model Used
 
+`claude-opus-5` (Claude Code, `bmad-dev-story`) — 2026-07-31.
+
 ### Debug Log References
+
+Every gate below was run in the main checkout with its own `node_modules`. No `--no-verify`.
+
+| Gate                                                | Result                                                                                   |
+| --------------------------------------------------- | ---------------------------------------------------------------------------------------- |
+| `yarn lint`                                         | ✅ clean (0 errors, 0 warnings)                                                          |
+| `yarn typecheck`                                    | ✅ clean                                                                                 |
+| `yarn format:check`                                 | ✅ clean                                                                                 |
+| `yarn test`                                         | ✅ **2012 passed / 2012**, 170 suites (**1947** before this story — measured, see below) |
+| `yarn test:coverage`                                | ✅ 80 % global threshold held                                                            |
+| `yarn tokens:check`                                 | ✅                                                                                       |
+| `yarn splash:check`                                 | ✅                                                                                       |
+| `yarn check:no-tests-folders`                       | ✅                                                                                       |
+| `yarn check:native-patches` _(new)_                 | ✅ 1 native patch verified as applied                                                    |
+| `yarn check:native-strings` _(new)_                 | ✅ 4 upstream native strings still present                                               |
+| `xcrun swiftc -frontend -parse` on the patched file | ✅ parses (checker itself proven by a deliberate syntax error → non-zero)                |
+
+**The baseline was measured, not assumed.** An earlier draft of this table said "1969 on `main`",
+which was wrong — that number had been taken mid-implementation, after Tasks 2–5 had already added
+tests. The real pre-story total is **1947**, obtained by restoring the `HEAD` version of all five
+changed test files (source left patched) and re-running the suite: `1947 total`, which reconciles
+exactly with the per-file deltas in the File List (28 at code-review close → 1975; QA rounds +6 → 1981; ifero's three telemetry gaps +14 → 1995; round-4 review fixes +16 → 2011; round-5 +1 → 2012). That run
+also reported exactly **one failure** — the old `NoCodeFoundBanner` assertion on the retired
+"No barcode found in this image" string — which is independent proof the AC2 copy change is genuinely
+covered rather than merely asserted.
+
+Per-file coverage of the changed logic: `useImageScan.ts` **100 % / 100 % branch**,
+`NoCodeFoundBanner.tsx` **100 %**, `useBarcodeScanner.ts` **100 % statements** / 96.55 % branch — the single remaining
+uncovered branch is `reset`'s timeout guard, pre-existing Story 2.3 code this change never touches.
+`ScannerOverlay.tsx` rose from 86.04 % to **88.67 %** as a side effect of the mount-error tests; its three
+remaining gaps (the permission-on-mount effect, the Settings button, the Retry handler) are all
+pre-existing and byte-identical to `main`.
+
+Red-green was followed per task: the new tests were run and observed FAILING before each
+implementation (Task 2/3 → 9 failures, camera half → 2, AC6 → 1), then green.
+
+**The patch chain was verified end to end, not just generated.** With the package deleted and
+re-extracted pristine, `yarn install` → `postinstall` → `patch-package` re-applied it and the guard
+went green. The guard was also proven to FAIL (exit 1) on three separate silent-drop routes: a
+reverted marker, a missing patched file, and a patch that no longer applies.
 
 ### Completion Notes List
 
+**Delivered: AC2–AC7 in code. Outstanding: the device verification in AC1, AC7 and AC8 — see below.**
+
+✅ **AC2/AC3 — failures are distinguishable and visible.** `useImageScan`'s bare `catch {}` is now
+`catch (err)`, and a new `ImageScanErrorReason` (`'notFound' | 'scanFailed'`) replaces the `showError`
+boolean as the single source of truth (`showError` is retained, derived, so no caller broke). Each path
+emits `logger.notify` with a literal message and literal tags (`surface`, `outcome`, `reason`,
+`platform`). The `reason` tag comes from a `classifyScanFailure` classifier with an explicit
+`'invalid-image' | 'other'` return type — the same shape as Story 16.14's `classifyOtaFailure`, and the
+only way a variant becomes chartable given that the message is a fixed grouping key. **`reason:
+'invalid-image'` is precisely the answer to AC1 Q1**, so once this ships the field reports it instead of
+a human having to.
+
+🔒 **PII: `err.message` is deliberately never captured.** The native rejection message interpolates the
+file path (`"Cannot load image from path: …"`), and `scrubEvent` redacts by **key**, not by value — so a
+path carried inside a message would ship verbatim. Only `err.name` and the native `code` are recorded.
+A regression-lock test serialises every `notify` call and asserts the path, filename and scanned value
+are all absent. Same reason `unmappedFormat` is **not** named `unmappedBarcodeFormat`: `barcode` is in
+`SENSITIVE_KEY_PATTERN`, so that key would have been redacted to `[Redacted]` and the tag would have
+recorded nothing.
+
+✅ **AC4 — the CODE128 fallback is observable** on both hooks. Behaviour is unchanged. Found while
+testing: **the fallback is reachable in production, not hypothetical.** `ImageCodeScanner.swift` registers
+`.upce` whenever `UPC_A` is requested and reports it back as `UPC_E`, for which `BARCODE_FORMAT_MAP` has
+no entry — so a UPC-E detection is stored as Code 128 today. AC4's telemetry now catches that; the
+deeper fix would be a `barcodeFormatSchema` member, which AC5 puts out of scope by decision.
+
+⚠️ **AC5 — the story's grep claim was wrong, in a way that mattered.** AC5 says "a grep confirms nothing
+references `multiCode.formats.DATAMATRIX`". There **was** a live consumer:
+`MultiCodePickerSheet.tsx:115` called `t('addCard.multiCode.formats.DATAMATRIX')`. It was unreachable in
+effect — `formatDisplayNames` is a `Record<string, string>` and `DetectedCode.format` is a
+`BarcodeFormat`, which has no such member — but deleting only the locale key would have left a `t()`
+call for a missing key. Both were removed. `MultiCodePickerSheet.tsx` is not on the ⛔ DO-NOT-TOUCH
+list, and the six real formats are untouched; `barcodeFormatSchema`, `BWIPJS_FORMAT_MAP`, `FormatPicker`
+and `SUPPORTED_IMAGE_SCAN_FORMATS` are byte-identical.
+
+✅ **AC6 — `penny-market` declares `defaultFormat: "EAN13"`.**
+
+⚠️ **AC7 — the preferred route was blocked; ifero chose the replacement.** Two story assumptions did not
+hold:
+
+1. **`yarn patch` does not exist on Yarn 1.** This repo is Yarn **1.22.22** (`yarn.lock` v1, no
+   `packageManager` field); `yarn patch` is a Yarn **Berry** command. `yarn patch --help` → "Command
+   patch not found".
+2. **The "Story 16-19 `burnt` pattern" was never built.** Story 16-19 is still `backlog`, there is no
+   `patches/` directory and no CI guard — the cited precedent is a plan, not a precedent.
+
+Presented to ifero, who chose **`patch-package`** (over adding `expo-image-manipulator`, and over
+shipping AC2–AC6 alone). That keeps AC7's actual intent: the fix lands in the decoder's own retry
+ladder, so it fixes this whole class on **both** platforms and is upstreamable as-is.
+
+Implementation: `patches/react-native-image-code-scanner+1.1.3.patch` appends downscaled variants
+(`[0.6, 0.45]`, both inside the measured 0.85×–0.25× window) to `imagesToTry`, **at the end of the
+ladder**. That ordering is what makes it strictly additive as AC7 requires — the variants are reached
+only after all six existing candidates miss, so they can add a hit but never displace one. Two factors
+rather than one because the defect is "rasterised at 1/N then upscaled N×" and N varies per card. A
+`resampleMinimumEdge` of 400 px skips images too small to be worth the extra passes (the story's own
+"no sane rule would downscale a 194 × 40 px image"). The patch is **additive only** — it modifies no
+existing line — which is what should let it survive a version bump and go upstream unmodified.
+
+🛡️ **The CI guard checks the patched CODE, not the patch file.** `scripts/verify-native-patches.mjs`
+asserts a marker the patch introduces is present in the installed package, because `node_modules` is
+uncommitted, rebuilt on every install, **and restored from cache in CI** — so a patch can vanish in
+total silence (patch deleted, `postinstall` un-wired, package bumped, or a pre-patch cache restored)
+with every other gate still green. Checking only that `patches/*.patch` exists would not catch any of
+those. It also refuses to pass when `node_modules` is absent, rather than passing vacuously. Wired into
+`ci-quality-gates.yml` immediately after install, and `postinstall` uses
+`patch-package --error-on-fail` so a failed apply breaks local installs too, not just CI.
+
+✅ **DEVICE VERIFICATION PASSED — ifero, 2026-08-02.** Reported as: **fixed on an iOS phone, no
+regressions on an Android phone.** This closes AC1, AC7's device half and AC8's Android half — the only
+evidence that ever counted here, since Jest mocks both decoders and 2012 green tests said nothing about
+the decode path (the Story 16.15 lesson). The confirmation is ifero's; the dev agent had no device, no
+`IMG_0002.JPG` and no physical card, and this record does not claim otherwise.
+
+Two details AC1 asked for are **not** in the record, and are worth adding before the retro rather than
+reconstructing later:
+
+- **Device model, OS version and build type.** AC1 requires these recorded alongside the results. Not
+  supplied.
+- **Which path fixed the image scan.** "Fixed on iOS" is consistent with the AC7 resample retry decoding
+  `IMG_0002.JPG` directly, which is the outcome the story predicted and the more valuable one to have
+  confirmed. It is also consistent with the camera route the new copy recommends. Both were verified as
+  working; which one carried the image case is simply not distinguished in the report.
+
+Neither gap changes the outcome. Both are noted so the next reader knows the difference between what was
+measured and what was inferred.
+
+🔵 **What the agent could not verify, for the record.**
+
+- **AC1, AC7's device half and AC8's Android half** were outside an agent session entirely — they need a
+  **real iOS device** (never the simulator — the library pins an older Vision revision under
+  `#if targetEnvironment(simulator)`), ifero's **`IMG_0002.JPG`**, and a **physical Penny card**. All three
+  were run by ifero on 2026-08-02 and passed; see above.
+- **AC7 needs a new binary.** `runtimeVersion.policy` is `appVersion` and this is a native change, so it
+  is **not OTA-eligible**. AC2–AC6 are JS-only and could ship OTA ahead of it if wanted.
+- **One copy decision rests on AC1 Q2.** The new `notFound` message recommends scanning the physical
+  card. That is well-supported — ifero confirmed the iOS camera reads that exact image off a screen, and
+  a printed card is strictly easier — but AC1 says to verify rather than assume. If Q2 fails, revise the
+  copy before release; it is one string in each locale.
+
+🔁 **Code review round 1 (Sonnet subagent) — 5 findings, all addressed.** It independently re-ran every
+gate rather than trusting this record, and verified the Swift patch three ways (diff against a freshly
+downloaded pristine 1.1.3 tarball, a real `patch-package` apply reproducing the file byte-for-byte, and
+`swiftc -parse`).
+
+1. **[Medium] The `sprint-status.yaml` edit had silently vanished.** It was applied earlier in the
+   session and reverted by a concurrent process in this checkout — `git status` showed no change at all,
+   while this File List claimed the edit existed. Re-applied (`16-23` → `review`) and the claim
+   corrected. Everything else was spot-checked and had survived.
+2. **[Low] The CODE128 fallback could emit up to six identical Sentry events for one user action.**
+   `mapFormat` now takes a per-scan `reportedFormats` set: duplicates of the same label collapse within a
+   scan, distinct labels still report separately, and a later scan reports again so a recurring problem
+   stays countable. Three tests pin all three behaviours.
+3. **[Low] `classifyScanFailure` collapsed Android's richer taxonomy into `'other'`.** Verified against
+   the Android module: it also rejects with `INVALID_PATH` and `IMAGE_LOAD_ERROR`. Both now get their own
+   tag value, because "the path does not exist" and "the file will not decode" are different problems.
+   Notably every one of those native messages interpolates a path or an inner `e.message` — which
+   independently confirms the decision never to capture `message`.
+4. **[Nit] The new gate ran only in CI.** Mirrored into `.husky/pre-push`, deliberately, given how
+   quietly this particular patch can disappear. (`check:no-tests-folders` has the same gap; pre-existing,
+   left alone.)
+5. **[Nit] The patch-filename version parse assumed an unscoped package.** Now reads from the last `+`,
+   so `@scope+name+version.patch` parses correctly too.
+
+Re-verified after the fixes: all gates green, **1975 tests**, `useImageScan.ts` back to 100 % branch
+coverage.
+
+🔁 **Code review round 2 — 1 new finding.** A stale `+11 tests` annotation in the File List. Rather than
+patch that one line, every test-count claim was re-measured against actual Jest runs, which surfaced a
+second inaccuracy the reviewer had not reached (`NoCodeFoundBanner.test.tsx` was `+4` when one of the
+four was a rename of the pre-existing copy assertion, so `+3`). All five annotations now carry measured
+before → after counts.
+
+🔁 **Code review round 3 — the reviewer was asked to audit the arithmetic, and it did not reconcile.**
+28 new tests against a claimed 1969 baseline implies 1997, not 1975. The `1969` figure was wrong: it had
+been captured mid-implementation. The true baseline of **1947** was then measured directly (see the
+Debug Log) and the record corrected. The reviewer independently confirmed 1947 via a different method —
+per-file `git show HEAD:` counts rather than re-deriving from the same experiment.
+
+✅ **Code review: APPROVED — ZERO COMMENTS** (round 3). Across all three rounds the reviewer re-ran every
+gate itself rather than trusting this record, and verified the Swift patch three independent ways: a diff
+against a freshly downloaded pristine `1.1.3` tarball from npm, a real `patch-package` apply reproducing
+the installed file byte-for-byte, and `swiftc -parse`. It also confirmed the marker string
+`resampleFactors` is genuinely absent from upstream, so the CI guard cannot pass against unpatched code.
+
+🧪 **QA review round 1 (Sonnet subagent) — 4 findings, all addressed.** It produced an AC-by-AC
+traceability table and re-ran every gate independently. Two findings were things the code review had no
+reason to look for, which is the point of running both:
+
+1. **[Medium] The one seam that mattered was untested.** `BrandScannerScreen` is the only place the
+   hook's `errorReason` meets the banner, and `imageErrorReason` is an OPTIONAL prop — so breaking that
+   hand-off would compile cleanly and leave the hook, overlay and banner unit tests all green while the
+   app silently reverted to one message for both failures. Exactly the defect this story exists to
+   remove. Two tests added, and **proven falsifiable**: deleting the prop from the JSX makes them fail,
+   restoring it makes them pass.
+2. **[Medium] The release pipelines did not run the new gate.** Only `ci-quality-gates.yml` (PR-time) and
+   `pre-push` did. `patch-package --error-on-fail` fails on a CONFLICT but treats a patch file that is
+   simply ABSENT as a successful no-op — so a bad merge, or a `workflow_dispatch` on a branch that never
+   ran the PR gates, could have shipped an iOS binary with no resample retry and nothing red anywhere.
+   The gate now runs in `ios-release.yml`, `beta-releases.yml` and `store-upload.yml` before
+   `expo prebuild`. Deliberately NOT added to `watchos-tests.yml` (builds only the watch target, which
+   never compiles this pod) or `android-release.yml` (the patch is iOS-only and inert there).
+3. **[Low] The `no-results` event omitted image dimensions** — the one attribute this failure class turns
+   on, since the root cause is a small under-rasterised image and the native decoder only resamples above
+   2048 px. `imageWidth` / `imageHeight` are now in the context: technical metadata about the asset, never
+   its content. Without them a future spike says "iOS, no results" but not "is this the known pattern".
+4. **[Low] The camera hook had no dedupe**, unlike the image hook after code-review round 1. `hasScanned`
+   re-arms every 2 s, so an unmapped barcode left in frame would emit one event every two seconds.
+   Fixed with a per-hook-instance ref — scoped to the mounted scanner rather than to a single scan, so a
+   remount still reports. Three tests pin it, including that a DIFFERENT label still reports.
+
+QA also confirmed independently what matters most here: **no test claims to validate the native decode
+path.** The `swiftc -parse` check is characterised as a syntax check only, and the real proof is left to
+the pending device test — so nothing in this change manufactures false confidence about AC7.
+
+Re-verified after the QA fixes: all gates green, **1981 tests**, and `useBarcodeScanner.ts` coverage rose
+from 95.9 % to **100 % statements** as a side effect.
+
+🧪 **QA review round 2 — 2 nits.** `imageWidth`/`imageHeight` were correct in the code but not asserted
+by name in any test (only implicitly, via line coverage), and the coverage note described the residual
+branch gap as singular when Istanbul had merged **two** pre-existing branch points into one displayed
+`165-177` range. Both fixed: a dedicated assertion against the fixture's 800 × 600, and the note reworded
+to name both branch points.
+
+✅ **QA review: PASS — ZERO COMMENTS** (round 3). Like the code reviewer, it re-ran every gate itself
+rather than trusting this record, re-derived all six per-file test deltas from `git show HEAD:`, and sanity
+-checked the two workflows deliberately left without the patch gate. It also confirmed the numbers still
+present in the review-round narrative above (`1969`, `1975`) are correct _historical_ snapshots rather
+than stale claims — scrubbing them would falsify the trail.
+
+**Both review loops therefore closed at zero comments, three rounds each.** Every numeric claim in this
+record has been independently re-derived by a second party. Final reconciliation: 1947 baseline + 65 new
+tests (29 + 13 + 12 + 8 + 2 + 1) = **2012**.
+
+➕ **Scope extension by ifero: three remaining silent scanner failures, all closed.** On review ifero
+asked "are we sending a Sentry notification whenever there is an error with the scanner?" — the honest
+answer was no. AC2–AC4 covered the decode paths; three other ways a scan can fail still reached
+production invisibly. All three are now reported, and the first was a genuine robustness bug rather than
+just missing telemetry:
+
+1. **The image picker itself rejecting produced NOTHING — no banner, no telemetry, no screen change.**
+   `ImagePicker.launchImageLibraryAsync` sat OUTSIDE `pickAndScan`'s `try`, and `onPress={onImageScan}`
+   does not await, so a rejection escaped as an **unhandled promise rejection**. The most reachable
+   trigger is a declined photo-library permission. **Pre-existing, not introduced by this story** — but
+   note the story's own Defect 1 claims permission/IO failures are "collapsed into one message", when in
+   fact they produced no message at all.
+
+   ⚠️ **A claim in an earlier draft of this section was wrong and is corrected here.** It said the trigger
+   was double-tapping "Scan from image", making expo-image-picker throw "Different image picker is already
+   in progress". **That string does not exist in `expo-image-picker@55`** — searched across its `src/`,
+   `ios/` and `android/` trees. The genuinely reachable rejections, read from the package's own exception
+   classes, are `UserRejectedPermissionsException` (Android), `MissingPhotoLibraryPermissionException` and
+   `MissingCurrentViewControllerException` (iOS). Expo derives codes as `ERR_<CLASS_NAME_SNAKE_CASED>`
+   (`CodedException.kt`), which is what `classifyPickerFailure` now switches on. The bug being fixed is
+   real either way — the path was genuinely unguarded — but the trigger named was invented, and a QA
+   reviewer was right to mark that claim as resting on this document's narrative rather than on evidence.
+   Fixed with a dedicated `pickerFailed` reason rather than reusing `scanFailed`, because the copy must
+   not say "that image" when the picker never handed us one: `"We couldn't open your photos"` /
+   `"Non è stato possibile aprire le tue foto"`. Its own Sentry group (`Image picker failed`,
+   `outcome: 'picker-error'`), since nothing was decoded and nothing was even opened. Three tests,
+   including one asserting `pickAndScan` **resolves** rather than rejecting to a caller that cannot catch.
+
+2. **Camera permission denial and a failed permission request** now emit `Camera permission denied` /
+   `Camera permission request failed` (`outcome: 'permission-denied'` / `'permission-error'`). Kept
+   distinct because "the user said no" and "the OS never answered" have different fixes. Deduped one per
+   mounted scanner via a ref — `ScannerOverlay` re-requests on every mount where `permission` is null, so
+   a permanently-denied user would otherwise emit an event each time they open the screen.
+3. **A camera preview that fails to mount** now emits `Camera preview failed to mount`
+   (`outcome: 'mount-error'`), also deduped per mount. This one DOES carry its `message` in context,
+   diverging from the no-`message` rule used elsewhere — deliberately, and the reason differs: the rule
+   exists because the image DECODER interpolates the file path into its message, whereas `onMountError`
+   supplies no code at all, its message comes from the camera subsystem rather than from user data, and
+   it is already displayed on screen.
+
+Also recorded for ifero, not fixed: **this changes the shape of the Sentry signal.** The `no-results`
+event fires on every failed image scan, including a user who simply picks a photo with no barcode in it.
+That is ordinary behaviour, not a defect, and it will dominate the volume — against a current baseline of
+roughly 10 events per 90 days. `imageWidth`/`imageHeight` are what separate "under-rasterised card" from
+"no barcode present", so the noise is triageable, but the absolute number will look alarming at first.
+
+🔁🧪 **Round 4 — both loops re-run on the new scope. 7 findings across them, all addressed.** Both
+reviewers independently reached the same conclusion about the PII exception, which settled it:
+
+1. **[Medium, code review] The one deliberate PII exception had no regression-lock test** — every other
+   message-adjacent site had one. Both reviewers also proposed the same stronger fix: classify rather than
+   forward. Done. `classifyMountError` maps the message to a bounded literal tag
+   (`in-use` / `permission` / `session-reset` / `start-failed` / `other`) using prefixes read from
+   `expo-camera`'s four actual emitters, and **the raw message is no longer sent at all**. The code
+   reviewer had verified the message is safe in this version; the point is that it was safe _because of
+   what this third-party version happens to interpolate_, not safe by construction. An `'other'` tag is
+   now the signal that upstream changed. Six tests, including a lock asserting an interpolated path never
+   reaches telemetry while the classification still lands (so it cannot pass by emitting nothing).
+2. **[Low, code review] The permission dedupe conflated two outcomes.** One shared boolean guarded both
+   the denied and the threw branches, so within a single mount whichever happened _second_ was silently
+   dropped — despite the code's own comment calling them different problems. Now a `Set` keyed by outcome
+   tag, matching the format-fallback dedupe in the same file. A test asserts an error-then-denial sequence
+   reports **both**, in order.
+3. **[Low, QA] The picker failure did not classify its causes.** Added `classifyPickerFailure`
+   (`permission` / `no-presenter` / `other`), mirroring `classifyScanFailure`, from codes verified in
+   `expo-image-picker`'s own exception classes.
+4. **[Low, QA] The retry button read "Try another image" for `pickerFailed`** — presuming a first image
+   that was never picked. Now a reason-specific label (`Try again` / `Riprova`) via a `Partial<Record<…>>`
+   override, with tests confirming the other two reasons keep the shared label and that the button's
+   behaviour is unchanged.
+5. **[Nit, code review] The picker catch did not clear `multiCodes`** — a stale multi-code sheet could
+   have competed with the new failure banner. Fixed, with a test.
+6. **[Nit, code review] A comment in `it.ts` was written in Italian**, against the file's own
+   English-comment convention. Fixed.
+7. **[Correction, mine]** The trigger I attributed to gap 1 was invented — see the ⚠️ note above.
+
+The code reviewer also corrected a claim of mine worth recording: `MESSAGE_KEY`'s
+`Record<ImageScanErrorReason, string>` does **not** guarantee the copy exists in both locales. There is no
+`i18next` module augmentation in this repo, so `t()`'s argument is unchecked; the Record only forces the
+component to name a key per reason. Locale parity remains manual discipline, exactly as
+`project-context.md` says. Both keys were verified present by hand.
+
+🔁🧪 **Round 5 — 5 findings across both loops, all addressed. The headline one is a process failure, not
+a code one.**
+
+1. **[Low code review + Medium QA] The corrections reached this document but NOT the code.** Both
+   reviewers independently found the same thing, and QA correctly called it a **pattern rather than a
+   slip**: two claims were retracted in the narrative above while three source locations went on stating
+   them as fact. A wrong comment in a `.ts` file is worse than a wrong line in a 900-line story doc —
+   nobody consults the doc to decide whether to trust an inline comment. Fixed in all three:
+   - `useImageScan.ts` — the picker comment no longer cites the invented double-tap string; it names
+     `MissingCurrentViewControllerException`, which is what is actually reachable.
+   - `useImageScan.test.ts` — the mock no longer rejects with the fabricated message; it uses the real
+     `ERR_MISSING_CURRENT_VIEW_CONTROLLER` code.
+   - `NoCodeFoundBanner.tsx` — the `MESSAGE_KEY` comment claimed the `Record` makes a missing reason "a
+     compile error until copy exists for it in both locales". That is the exact overclaim retracted
+     above. It now states what the Record does guarantee (a key is named) and what it does not (that any
+     copy exists), and points at the manual-parity rule.
+2. **[Low, code review] `classifyPickerFailure`'s `'permission'` case is unreachable today.** The
+   reviewer went past deriving the codes to checking reachability _from `launchImageLibraryAsync`
+   specifically_: iOS's `PHPickerViewController` path performs no permission check at all, and Android
+   throws `UserRejectedPermissionsException` only from its camera path. So `'permission'` will not appear
+   in field data with this library version. Kept for forward-compatibility — it is a harmless unreached
+   `switch` case, and a future version that does check should report better than `'other'` — but the
+   comment now says so plainly, so nobody reads its absence from Sentry as evidence of anything.
+3. **[Low, QA] `classifyMountError`'s `'other'` bucket was a black hole.** Its two sibling classifiers
+   keep `nativeCode` in context even when the reason is `'other'`; removing the raw message left this one
+   with nothing at all. Now carries `messageLength` — a single integer, no free text — which is enough to
+   tell two different unknown causes apart, and a recurring unknown from a one-off.
+4. **[Low, QA] The four message prefixes had no build-time assertion**, so an upstream reword would
+   degrade telemetry to `'other'` in total silence — discoverable only as a drifting tag distribution
+   weeks later. QA pointed at this repo's own precedent for exactly this shape of problem, and it applies
+   cleanly: **`scripts/verify-native-strings.mjs`** + `yarn check:native-strings` now assert at build time
+   what the classifier assumes at runtime, naming both the upstream file and the consuming function in the
+   failure. Wired into `ci-quality-gates.yml` and `pre-push` — deliberately NOT the release pipelines,
+   since a reworded camera message degrades telemetry rather than breaking a build, and failing a release
+   for it would be disproportionate. Proven by rewording the string in `node_modules` and watching the
+   gate go red with the right message, then restoring it.
+5. **[QA] Taxonomy reviewed and judged sound, not sprawl.** Seven Sentry messages, each mapping 1:1 to one
+   `outcome`; `reason` present only on the three sites with genuinely distinguishable sub-causes and
+   correctly absent from the other four. QA's summary of how to read it: the issue list says _what_
+   happened, `surface`/`outcome` build cross-cutting views, `reason` is for drilling into the three that
+   have it.
+
+🔁 **Round 6 — 2 findings, both against the gate added in round 5, both fixed.** The reviewer turned the
+new gate's own logic on itself, which is the right instinct:
+
+1. **[Medium] The gate did not actually verify what the classifier relies on.** `classifyMountError`
+   matches with `startsWith` — position-sensitive — while the gate used `includes`, which is not. So an
+   upstream **prepend** (`"Camera could not be started"` → `"Warning: Camera could not be started"`) would
+   leave the substring in the file, keep the gate green, and still break the runtime match: precisely the
+   silent reclassification-to-`'other'` the gate was written to prevent. Now anchored to an opening quote
+   (`"${expected}`). **Proven on the actual failure mode**: after prepending `Warning: ` to the real
+   `expo-camera` source, the substring is still present (grep count 1) and the gate correctly exits 1. The
+   residual limit is stated in the script rather than hidden — a message built by concatenation or moved
+   into a constant would still slip past, and closing that needs a Swift/Kotlin parser.
+2. **[Low] Both native gates could pass vacuously on an emptied registry.** Neither asserted it had
+   checked anything, so a bad merge clearing the array would print `OK — 0 …` and exit 0. The reviewer
+   noted this was pre-existing in `verify-native-patches.mjs` too, so both now fail on an empty registry —
+   and the patches one says what to do if the last patch was removed deliberately (remove the gate from
+   `package.json`, CI and pre-push in the same change). Both verified by emptying each registry in turn.
+
+The reviewer also answered two questions put to it directly: `messageLength` is non-PII (every message
+`onMountError` can emit is a fixed string or interpolates a generic OS error description, so a character
+count carries no reconstructive risk), and the four-places-lockstep is **not** over-engineered — small,
+targeted at a measured fragility, correctly scoped to CI and pre-push rather than release gates. Its one
+style preference, explicitly not requested: the two native gates could have been one script with two
+registries. Left as two, because they fail for different reasons and belong in different pipelines — the
+patch gate guards a shipped binary and runs in the release workflows; the string gate guards telemetry
+quality and deliberately does not.
+
+✅ **QA review round 6: PASS — ZERO COMMENTS.** It verified the round-5 claims against primary sources
+rather than re-reading this document, and on one point found the claim **understated**:
+`MissingPhotoLibraryPermissionException` is not merely unreachable from `launchImageLibraryAsync`, it is
+never thrown anywhere in `expo-image-picker@55`'s iOS source at all.
+
+⚠️ **A residual gap QA identified and deliberately left alone — recorded so it is not "fixed" later
+without the reasoning.** `verify-native-strings.mjs`'s registry and `classifyMountError`'s prefixes are
+two hand-maintained lists with nothing mechanically tying them together. The gate proves "the registry's
+assumption about upstream still holds"; it does not prove "the classifier still implements what the
+registry assumes". An edit changing the classifier's prefix _and_ its own Jest fixture consistently, while
+leaving the registry untouched, would pass every gate while the classifier quietly stopped matching real
+messages. QA's judgement, which this story accepts: the trigger requires a compound deliberate mistake,
+the likely single-file drift is already caught by `ScannerOverlay.test.tsx`'s independent real-string
+fixtures, and a shared source of truth spanning a `.tsx` component and a bare-Node `.mjs` script would
+cost more ceremony than the risk justifies.
+
+✅ **QA review round 7: PASS — ZERO COMMENTS.** Run because QA's round-6 PASS had been given on a version
+of `verify-native-strings.mjs` that the code review then changed — a pass cannot be claimed for code that
+has since moved. QA reproduced the position-insensitivity bug itself rather than accepting the account
+(`includes` returns true on the prepended string, the quote-anchored check returns false), then checked all
+four registry strings — not just the one simulated — and confirmed every message is a plain double-quoted
+literal, so the anchor holds universally. It also revised its own earlier verdict rather than defending it:
+_"this changes my answer from 'closes the hole' to 'closes the hole I tested, plus the one the reviewer
+found that I hadn't.'"_
+
+🔁 **Round 7 — 1 nit, fixed.** The code reviewer independently reached QA's conclusion on the
+registry/classifier coupling (leave it) but noticed the mitigation nobody had added: the cross-reference was
+**one-directional**. The gate's `consumer:` field points at `classifyMountError`, so someone editing the
+registry is nudged toward the classifier — but the classifier's own comment named only the upstream
+`expo-camera` files, so someone editing it had no nudge back toward the gate or the tests. Both comments now
+point at each other, and the classifier's names all three places that must move together. A sentence, not
+an architecture.
+
+It also withdrew its own earlier style preference about merging the two gate scripts, on a broader reason
+than the one offered: the two have now diverged in mechanism (postinstall-wiring checks and version-drift
+warnings on one side, quote-anchoring on the other) enough that merging would trade a smaller file count
+for a script doing two unrelated things.
+
+✅ **Code review round 8: APPROVED — ZERO COMMENTS. Both loops are closed.**
+
+**Review ledger — 8 rounds, 24 findings, all addressed.**
+
+| Round | Code review           | QA            |
+| ----- | --------------------- | ------------- |
+| 1     | changes requested (5) | concerns (4)  |
+| 2     | changes requested (1) | concerns (2)  |
+| 3     | ✅ approved           | ✅ pass       |
+| 4     | changes requested (4) | concerns (3)  |
+| 5     | changes requested (2) | concerns (3)  |
+| 6     | changes requested (2) | ✅ pass       |
+| 7     | changes requested (1) | ✅ pass       |
+| 8     | ✅ **approved**       | — (see below) |
+
+Rounds 1–3 closed the original scope. Round 4 reopened both loops because ifero then asked for the three
+telemetry gaps — new code needs a new review, and an earlier approval cannot cover work that did not exist
+when it was given.
+
+⚠️ **Precise coverage, since it matters more than a tidy claim.** Code review's approval is against the
+exact current state. QA's PASS is against round 7 — everything except the **two doc comments** added in
+round 8, which change no logic and left the suite at an identical 2012 tests. Those comments were verified
+by the code reviewer, whose remit they fall under. QA was re-run in round 7 under precisely this principle
+when the gate's _logic_ changed; a comment-only delta was judged not to warrant a further pass, and that
+judgement is recorded here rather than hidden behind "both approved".
+
+**What the two remits caught differently** — the reason both were worth running:
+
+- **Code review found defects inside the code**: a dedupe that silently dropped a second, different
+  outcome; `includes` where the runtime uses `startsWith`; two scripts that could pass having verified
+  nothing.
+- **QA found defects in the relationship between code and its surroundings**: a seam between two
+  individually-tested units that no test crossed; a gate wired to the wrong pipelines; a correction applied
+  to prose but not to the comments repeating it.
+
+Neither remit would have found the other's set. Twice they converged independently — on classifying the
+mount error rather than forwarding free text, and on leaving the registry/classifier coupling alone — and
+that convergence is what settled both, since a lone objection could have been argued with.
+
+📌 **Flagged, not fixed** (out of scope per the story):
+
+- **`UPC_E` is unmapped** but reachable — see AC4 above. Needs a schema decision.
+- **The upstream PR for AC7 was not opened.** Contributing to a third-party repository is ifero's call,
+  not the agent's. The patch is written to be upstreamable verbatim, and
+  `npx patch-package react-native-image-code-scanner --create-issue` will draft the issue.
+- **The latent orientation double-apply** in `scaleImageIfNeeded` is untouched, as the story directs. The
+  new `downscale` helper deliberately does not replicate it — it returns `.up`, matching `rotateImage`.
+
 ### File List
 
+**Modified**
+
+- `features/add-card/hooks/useImageScan.ts` — failure-reason split, both `logger.notify` paths, native-code classifier
+- `features/add-card/hooks/useImageScan.test.ts` — +29 tests, 18 → 47 (failure modes, PII lock, format fallback, dedupe)
+- `features/cards/hooks/useBarcodeScanner.ts` — observable CODE128 fallback
+- `features/cards/hooks/useBarcodeScanner.test.ts` — +13 tests, 16 → 29
+- `features/add-card/components/NoCodeFoundBanner.tsx` — reason-driven message
+- `features/add-card/components/NoCodeFoundBanner.test.tsx` — +8 tests, 11 → 19, plus an updated copy assertion
+- `features/add-card/components/ScannerOverlay.tsx` — `imageErrorReason` prop forwarded to the banner; camera mount-error telemetry
+- `features/add-card/components/ScannerOverlay.test.tsx` — +12 tests, 28 → 40 (forwarding seam + mount-error telemetry)
+- `features/add-card/components/MultiCodePickerSheet.tsx` — dropped the dangling `DATAMATRIX` lookup
+- `features/add-card/screens/BrandScannerScreen.tsx` — passes `errorReason` through
+- `features/add-card/screens/BrandScannerScreen.test.tsx` — +2 tests, 15 → 17 (the hand-off seam; QA round)
+- `shared/i18n/locales/en.ts` — two messages replace one; `DATAMATRIX` removed
+- `shared/i18n/locales/it.ts` — same
+- `catalogue/italy.json` — `penny-market` gains `defaultFormat: "EAN13"`
+- `catalogue/italy.test.ts` — +1 test, 3 → 4
+- `package.json` — `patch-package` + `postinstall-postinstall` devDeps; `postinstall` runs `patch-package --error-on-fail`; new `check:native-patches` + `check:native-strings`
+- `yarn.lock` — the two new devDependencies
+- `.github/workflows/ci-quality-gates.yml` — native-patch gate after install
+- `.github/workflows/ios-release.yml`, `beta-releases.yml`, `store-upload.yml` — same gate before
+  `expo prebuild`, so a pipeline that actually ships a binary cannot omit the patch (QA round)
+- `.husky/pre-push` — native-patch gate mirrored locally (review round 1)
+- `docs/sprint-artifacts/sprint-status.yaml` — `16-23` → `review`, `last_updated` → 2026-07-31
+
+**Added**
+
+- `patches/react-native-image-code-scanner+1.1.3.patch` — resample retries in the iOS ladder (AC7)
+- `scripts/verify-native-patches.mjs` — CI guard proving patches are applied, not merely present
+- `scripts/verify-native-strings.mjs` — CI guard proving the upstream message strings `classifyMountError` matches on still exist (round 5)
+
 ### Change Log
+
+| Date       | Change                                                                                                                                                                                                                                                                     |
+| ---------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 2026-07-31 | AC2/AC3: split image-scan failure modes into `notFound` / `scanFailed`, differentiated copy in both locales, `logger.notify` on both paths with a PII-safe payload.                                                                                                        |
+| 2026-07-31 | AC4: the `?? 'CODE128'` fallback now reports via `logger.notify` on both scanner hooks. Behaviour unchanged. Found `UPC_E` reaches it in production.                                                                                                                       |
+| 2026-07-31 | AC5: removed the unbacked `DATAMATRIX` locale key — and its live `t()` consumer in `MultiCodePickerSheet.tsx`, which the story's grep claim had missed.                                                                                                                    |
+| 2026-07-31 | AC6: `penny-market` declares `defaultFormat: "EAN13"`.                                                                                                                                                                                                                     |
+| 2026-07-31 | AC7: resample retries added to the iOS decoder ladder via `patch-package` (Yarn 1 has no `yarn patch`), with a CI guard that verifies the patch is applied.                                                                                                                |
+| 2026-07-31 | Scope extension per ifero: closed the three remaining silent scanner failures — an unguarded image-picker rejection (a real unhandled-rejection bug, new `pickerFailed` reason + copy), camera permission denial/error, and a camera mount failure. All deduped per mount. |
+| 2026-08-02 | ✅ Device verification passed (ifero): fixed on an iOS phone, no regressions on an Android phone. Closes AC1, AC7's device half and AC8's Android half — the only evidence Jest could not provide. Device model / OS version / build type not supplied.                    |
+| 2026-07-31 | AC8: lint, typecheck, format, 2012 tests, tokens, splash, co-location and native-patch gates all green. Device/Android verification remains with ifero.                                                                                                                    |

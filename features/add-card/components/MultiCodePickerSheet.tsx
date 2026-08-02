@@ -111,8 +111,11 @@ export const MultiCodePickerSheet: React.FC<MultiCodePickerSheetProps> = ({
     EAN8: t('addCard.multiCode.formats.EAN8'),
     QR: t('addCard.multiCode.formats.QR'),
     CODE39: t('addCard.multiCode.formats.CODE39'),
-    UPCA: t('addCard.multiCode.formats.UPCA'),
-    DATAMATRIX: t('addCard.multiCode.formats.DATAMATRIX')
+    UPCA: t('addCard.multiCode.formats.UPCA')
+    // No DATAMATRIX entry: `barcodeFormatSchema` has no such member, so
+    // `DetectedCode.format` could never take that value and the lookup was
+    // unreachable. Removed with its locale key in Story 16.23 (AC5), which also
+    // records why the symbology set deliberately stays at six.
   };
 
   const translateY = useSharedValue(400);

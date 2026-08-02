@@ -13,6 +13,19 @@ yarn splash:check || exit 1
 echo "Running lint..."
 yarn lint || exit 1
 
+# Mirrored from CI deliberately, unlike most gates: a `patch-package` patch lives in
+# the uncommitted `node_modules`, so it can be lost by a dep refresh or a stale
+# install with nothing else complaining — and the loss reintroduces a bug that
+# already cost one forensics session to diagnose (Story 16.23). Catching that
+# before the push is worth the second or two it takes.
+echo "Verifying native patches are applied..."
+yarn check:native-patches || exit 1
+
+# Same reasoning, different fragility: a classifier matches on upstream message
+# text, so an `expo-camera` reword would silently degrade telemetry to `other`.
+echo "Verifying upstream native strings still exist..."
+yarn check:native-strings || exit 1
+
 # Catches files that skipped lint-staged (bot/agent commits, `commit -n`) before
 # CI does. Run `yarn format` to fix.
 echo "Checking formatting..."

@@ -9,6 +9,8 @@ import ImageCodeScanner, {
   BarcodeFormat as ImageBarcodeFormat
 } from 'react-native-image-code-scanner';
 
+import { logger } from '@/core/utils';
+
 import { ScanResult } from '@/features/cards/hooks/useBarcodeScanner';
 
 import { useImageScan } from './useImageScan';
@@ -16,6 +18,14 @@ import { useImageScan } from './useImageScan';
 jest.mock('expo-image-picker', () => ({
   launchImageLibraryAsync: jest.fn()
 }));
+
+// Only `logger.notify` is stubbed; `normalizeBarcode` / `applyExpectedFormat`
+// stay REAL because most assertions below depend on their actual behaviour
+// (the Conad leading-zero recovery in particular).
+jest.mock('@/core/utils', () => {
+  const actual = jest.requireActual('@/core/utils');
+  return { ...actual, logger: { ...actual.logger, notify: jest.fn() } };
+});
 
 jest.mock('react-native-image-code-scanner', () => ({
   __esModule: true,
@@ -34,6 +44,11 @@ jest.mock('react-native-image-code-scanner', () => ({
 
 const mockLaunch = ImagePicker.launchImageLibraryAsync as jest.Mock;
 const mockScanImage = ImageCodeScanner.scan as jest.Mock;
+const mockNotify = logger.notify as jest.Mock;
+
+/** Shape of a React Native native-module rejection: an Error carrying a `code`. */
+const nativeRejection = (code: string, message: string): Error =>
+  Object.assign(new Error(message), { code });
 
 const CANCELLED_RESULT: ImagePicker.ImagePickerResult = {
   canceled: true,
@@ -406,5 +421,499 @@ describe('useImageScan', () => {
       { value: '0226007855218', format: 'EAN13' },
       { value: 'OTHER', format: 'CODE128' }
     ]);
+  });
+
+  // ─── Story 16.23 — honest, observable failure handling ──────────────────────
+  // Before this story a decoder that ran and saw nothing, a native module that
+  // threw, and a file that could not be opened at all were one `showError`
+  // boolean rendering one message, with no telemetry. Diagnosing a single field
+  // report cost an image-forensics session.
+
+  describe('failure modes (Story 16.23, AC2/AC3)', () => {
+    it('reports notFound when the decoder ran and returned zero results', async () => {
+      mockLaunch.mockResolvedValueOnce(assetResult('file://test.jpg'));
+      mockScanImage.mockResolvedValueOnce([]);
+
+      const { result } = renderHook(() => useImageScan({ onCodeResolved }));
+
+      await act(async () => {
+        await result.current.pickAndScan();
+      });
+
+      expect(result.current.errorReason).toBe('notFound');
+      expect(result.current.showError).toBe(true);
+    });
+
+    it('reports scanFailed when the native call throws', async () => {
+      mockLaunch.mockResolvedValueOnce(assetResult('file://test.jpg'));
+      mockScanImage.mockRejectedValueOnce(new Error('Decode failed'));
+
+      const { result } = renderHook(() => useImageScan({ onCodeResolved }));
+
+      await act(async () => {
+        await result.current.pickAndScan();
+      });
+
+      expect(result.current.errorReason).toBe('scanFailed');
+      expect(result.current.showError).toBe(true);
+    });
+
+    it('notifies with a no-results outcome tag when the decoder finds nothing', async () => {
+      mockLaunch.mockResolvedValueOnce(assetResult('file://test.jpg'));
+      mockScanImage.mockResolvedValueOnce([]);
+
+      const { result } = renderHook(() => useImageScan({ onCodeResolved }));
+
+      await act(async () => {
+        await result.current.pickAndScan();
+      });
+
+      expect(mockNotify).toHaveBeenCalledTimes(1);
+      expect(mockNotify).toHaveBeenCalledWith(
+        'Image barcode scan found no codes',
+        expect.objectContaining({
+          tags: expect.objectContaining({ surface: 'image-scan', outcome: 'no-results' })
+        })
+      );
+    });
+
+    it('records the image dimensions on a no-results scan', async () => {
+      // Dimensions are the attribute this failure class actually turns on — the
+      // known root cause is a SMALL under-rasterised image, and the native decoder
+      // only resamples above 2048 px. Asserted by name so a future refactor cannot
+      // drop them and leave a triager unable to tell the known pattern from a new
+      // one. `assetResult` reports 800 × 600.
+      mockLaunch.mockResolvedValueOnce(assetResult('file://test.jpg'));
+      mockScanImage.mockResolvedValueOnce([]);
+
+      const { result } = renderHook(() => useImageScan({ onCodeResolved }));
+
+      await act(async () => {
+        await result.current.pickAndScan();
+      });
+
+      expect(mockNotify.mock.calls[0]?.[1]?.context?.[0]).toEqual(
+        expect.objectContaining({ imageWidth: 800, imageHeight: 600 })
+      );
+    });
+
+    it('tags an invalid-image reason when the native module cannot open the file', async () => {
+      mockLaunch.mockResolvedValueOnce(assetResult('file://test.jpg'));
+      mockScanImage.mockRejectedValueOnce(
+        nativeRejection('INVALID_IMAGE', 'Cannot load image from path: /var/mobile/IMG_0002.JPG')
+      );
+
+      const { result } = renderHook(() => useImageScan({ onCodeResolved }));
+
+      await act(async () => {
+        await result.current.pickAndScan();
+      });
+
+      // This tag is the fork in the road AC1 Q1 asks about: it separates "the
+      // decoder looked and saw nothing" from "the decoder never got to look".
+      expect(mockNotify).toHaveBeenCalledWith(
+        'Image barcode scan failed',
+        expect.objectContaining({
+          tags: expect.objectContaining({
+            surface: 'image-scan',
+            outcome: 'native-error',
+            reason: 'invalid-image'
+          })
+        })
+      );
+    });
+
+    it('reports pickerFailed when the image picker itself rejects', async () => {
+      // The picker call used to sit OUTSIDE the try block, so a rejection here
+      // escaped as an unhandled promise rejection: no banner, no telemetry, and
+      // nothing on screen at all. The reachable trigger is iOS having no view
+      // controller to present the picker from (`classifyPickerFailure`).
+      mockLaunch.mockRejectedValueOnce(
+        nativeRejection('ERR_MISSING_CURRENT_VIEW_CONTROLLER', 'No current view controller')
+      );
+
+      const { result } = renderHook(() => useImageScan({ onCodeResolved }));
+
+      await act(async () => {
+        await result.current.pickAndScan();
+      });
+
+      expect(result.current.errorReason).toBe('pickerFailed');
+      expect(result.current.showError).toBe(true);
+      // The scan never started, so the spinner must never have been left on.
+      expect(result.current.isProcessing).toBe(false);
+      expect(mockScanImage).not.toHaveBeenCalled();
+    });
+
+    it('does not reject to the caller when the picker fails', async () => {
+      // `onPress={onImageScan}` does not await, so a rejection escaping this hook
+      // becomes an unhandled rejection rather than anything a user or Sentry sees.
+      mockLaunch.mockRejectedValueOnce(new Error('picker exploded'));
+
+      const { result } = renderHook(() => useImageScan({ onCodeResolved }));
+
+      await act(async () => {
+        await expect(result.current.pickAndScan()).resolves.toBeUndefined();
+      });
+    });
+
+    it('notifies with a picker-error outcome when the picker rejects', async () => {
+      mockLaunch.mockRejectedValueOnce(
+        nativeRejection('E_PICKER_CANCELLED', 'failed at /var/mobile/Media/x.jpg')
+      );
+
+      const { result } = renderHook(() => useImageScan({ onCodeResolved }));
+
+      await act(async () => {
+        await result.current.pickAndScan();
+      });
+
+      expect(mockNotify).toHaveBeenCalledWith(
+        'Image picker failed',
+        expect.objectContaining({
+          tags: expect.objectContaining({ surface: 'image-scan', outcome: 'picker-error' })
+        })
+      );
+      expect(JSON.stringify(mockNotify.mock.calls)).not.toContain('/var/mobile');
+    });
+
+    it.each([
+      ['ERR_USER_REJECTED_PERMISSIONS', 'permission'],
+      ['ERR_MISSING_PHOTO_LIBRARY_PERMISSION', 'permission'],
+      ['ERR_MISSING_CURRENT_VIEW_CONTROLLER', 'no-presenter'],
+      ['ERR_SOMETHING_NEW', 'other']
+    ])('classifies picker code %s as reason "%s"', async (code, expectedReason) => {
+      // Codes verified against expo-image-picker's own exception classes. A denied
+      // photo library and a picker that could not be presented need different
+      // fixes, so a single bucket would hide the distinction.
+      mockLaunch.mockRejectedValueOnce(nativeRejection(code, 'native detail'));
+
+      const { result } = renderHook(() => useImageScan({ onCodeResolved }));
+
+      await act(async () => {
+        await result.current.pickAndScan();
+      });
+
+      expect(mockNotify.mock.calls[0]?.[1]?.tags?.reason).toBe(expectedReason);
+    });
+
+    it('clears a stale multi-code sheet when the picker fails', async () => {
+      // Otherwise an open picker sheet and the new failure banner would compete.
+      mockLaunch.mockResolvedValueOnce(assetResult('file://test.jpg'));
+      mockScanImage.mockResolvedValueOnce([
+        { content: 'A', format: ImageBarcodeFormat.CODE_128 },
+        { content: 'B', format: ImageBarcodeFormat.CODE_39 }
+      ]);
+
+      const { result } = renderHook(() => useImageScan({ onCodeResolved }));
+
+      await act(async () => {
+        await result.current.pickAndScan();
+      });
+      expect(result.current.multiCodes).toHaveLength(2);
+
+      mockLaunch.mockRejectedValueOnce(new Error('picker failed'));
+      await act(async () => {
+        await result.current.pickAndScan();
+      });
+
+      expect(result.current.multiCodes).toHaveLength(0);
+      expect(result.current.errorReason).toBe('pickerFailed');
+    });
+
+    it('survives a picker rejection that is not an Error', async () => {
+      mockLaunch.mockRejectedValueOnce('picker string rejection');
+
+      const { result } = renderHook(() => useImageScan({ onCodeResolved }));
+
+      await act(async () => {
+        await result.current.pickAndScan();
+      });
+
+      expect(result.current.errorReason).toBe('pickerFailed');
+      expect(mockNotify.mock.calls[0]?.[1]?.context?.[0]).toEqual({
+        errorName: 'string',
+        nativeCode: undefined
+      });
+    });
+
+    it('survives a rejection that is not an Error at all', async () => {
+      // A TurboModule can reject with a bare value rather than an Error, so the
+      // telemetry path must not assume `.name` exists.
+      mockLaunch.mockResolvedValueOnce(assetResult('file://test.jpg'));
+      mockScanImage.mockRejectedValueOnce('decoder exploded');
+
+      const { result } = renderHook(() => useImageScan({ onCodeResolved }));
+
+      await act(async () => {
+        await result.current.pickAndScan();
+      });
+
+      expect(result.current.errorReason).toBe('scanFailed');
+      expect(mockNotify.mock.calls[0]?.[1]?.context?.[0]).toEqual({
+        errorName: 'string',
+        nativeCode: undefined
+      });
+    });
+
+    it('ignores a non-string native code', async () => {
+      mockLaunch.mockResolvedValueOnce(assetResult('file://test.jpg'));
+      mockScanImage.mockRejectedValueOnce(Object.assign(new Error('boom'), { code: 500 }));
+
+      const { result } = renderHook(() => useImageScan({ onCodeResolved }));
+
+      await act(async () => {
+        await result.current.pickAndScan();
+      });
+
+      const [, options] = mockNotify.mock.calls[0] ?? [];
+      expect(options?.tags?.reason).toBe('other');
+      expect(options?.context?.[0]?.nativeCode).toBeUndefined();
+    });
+
+    it.each([
+      ['INVALID_PATH', 'invalid-path'],
+      ['IMAGE_LOAD_ERROR', 'load-error']
+    ])('classifies the %s native code as reason "%s"', async (code, expectedReason) => {
+      // Android emits these two alongside INVALID_IMAGE. They mean different
+      // things — a missing path is a picker/URI problem, an undecodable file is a
+      // file problem — so they must not collapse into one bucket.
+      mockLaunch.mockResolvedValueOnce(assetResult('file://test.jpg'));
+      mockScanImage.mockRejectedValueOnce(nativeRejection(code, 'native detail with /a/path.jpg'));
+
+      const { result } = renderHook(() => useImageScan({ onCodeResolved }));
+
+      await act(async () => {
+        await result.current.pickAndScan();
+      });
+
+      expect(mockNotify.mock.calls[0]?.[1]?.tags?.reason).toBe(expectedReason);
+      expect(JSON.stringify(mockNotify.mock.calls)).not.toContain('/a/path.jpg');
+    });
+
+    it('classifies a throw carrying no native code as reason "other"', async () => {
+      mockLaunch.mockResolvedValueOnce(assetResult('file://test.jpg'));
+      mockScanImage.mockRejectedValueOnce(new Error('Decode failed'));
+
+      const { result } = renderHook(() => useImageScan({ onCodeResolved }));
+
+      await act(async () => {
+        await result.current.pickAndScan();
+      });
+
+      expect(mockNotify.mock.calls[0]?.[1]?.tags?.reason).toBe('other');
+    });
+
+    it('never sends the image path, file name or scanned value to telemetry', async () => {
+      // The real native rejection interpolates the FILE PATH into its message,
+      // and `scrubEvent` redacts by KEY, not by value — so a message copied into
+      // tags or context would ship that path verbatim. This is the regression
+      // lock on AC3's PII boundary.
+      mockLaunch.mockResolvedValueOnce(
+        assetResult('file:///var/mobile/Media/DCIM/100APPLE/IMG_0002.JPG')
+      );
+      mockScanImage.mockRejectedValueOnce(
+        nativeRejection(
+          'INVALID_IMAGE',
+          'Cannot load image from path: /var/mobile/Media/DCIM/100APPLE/IMG_0002.JPG'
+        )
+      );
+
+      const { result } = renderHook(() => useImageScan({ onCodeResolved }));
+
+      await act(async () => {
+        await result.current.pickAndScan();
+      });
+
+      const serialised = JSON.stringify(mockNotify.mock.calls);
+      expect(serialised).not.toContain('IMG_0002');
+      expect(serialised).not.toContain('/var/mobile');
+      expect(serialised).not.toContain('test.jpg');
+      expect(serialised).not.toContain('Cannot load image from path');
+    });
+
+    it('emits no telemetry when a scan succeeds', async () => {
+      mockLaunch.mockResolvedValueOnce(assetResult('file://test.jpg'));
+      mockScanImage.mockResolvedValueOnce([
+        { content: '1234567890128', format: ImageBarcodeFormat.EAN_13 }
+      ]);
+
+      const { result } = renderHook(() => useImageScan({ onCodeResolved }));
+
+      await act(async () => {
+        await result.current.pickAndScan();
+      });
+
+      expect(mockNotify).not.toHaveBeenCalled();
+    });
+
+    it('emits no telemetry when the user cancels the picker', async () => {
+      mockLaunch.mockResolvedValueOnce(CANCELLED_RESULT);
+
+      const { result } = renderHook(() => useImageScan({ onCodeResolved }));
+
+      await act(async () => {
+        await result.current.pickAndScan();
+      });
+
+      expect(mockNotify).not.toHaveBeenCalled();
+    });
+
+    it('dismissError clears errorReason as well as showError', async () => {
+      mockLaunch.mockResolvedValueOnce(assetResult('file://test.jpg'));
+      mockScanImage.mockResolvedValueOnce([]);
+
+      const { result } = renderHook(() => useImageScan({ onCodeResolved }));
+
+      await act(async () => {
+        await result.current.pickAndScan();
+      });
+
+      expect(result.current.errorReason).toBe('notFound');
+
+      act(() => {
+        result.current.dismissError();
+      });
+
+      expect(result.current.errorReason).toBeNull();
+      expect(result.current.showError).toBe(false);
+    });
+
+    it('clears a previous error when a later scan succeeds', async () => {
+      mockLaunch.mockResolvedValueOnce(assetResult('file://test.jpg'));
+      mockScanImage.mockResolvedValueOnce([]);
+
+      const { result } = renderHook(() => useImageScan({ onCodeResolved }));
+
+      await act(async () => {
+        await result.current.pickAndScan();
+      });
+      expect(result.current.errorReason).toBe('notFound');
+
+      mockLaunch.mockResolvedValueOnce(assetResult('file://test.jpg'));
+      mockScanImage.mockResolvedValueOnce([
+        { content: '1234567890128', format: ImageBarcodeFormat.EAN_13 }
+      ]);
+
+      await act(async () => {
+        await result.current.pickAndScan();
+      });
+
+      expect(result.current.errorReason).toBeNull();
+      expect(result.current.showError).toBe(false);
+    });
+  });
+
+  describe('unmapped format fallback (Story 16.23, AC4)', () => {
+    it('notifies when a decoder format falls through to CODE128', async () => {
+      // UPC_E is genuinely reachable, not hypothetical: the iOS side registers
+      // `.upce` whenever UPC_A is requested (ImageCodeScanner.swift), and
+      // BARCODE_FORMAT_MAP has no `upc_e` key — so a UPC-E detection is stored
+      // as Code 128 today. AC4 makes that visible instead of silent.
+      mockLaunch.mockResolvedValueOnce(assetResult('file://test.jpg'));
+      mockScanImage.mockResolvedValueOnce([{ content: '01234565', format: 'UPC_E' }]);
+
+      const { result } = renderHook(() => useImageScan({ onCodeResolved }));
+
+      await act(async () => {
+        await result.current.pickAndScan();
+      });
+
+      expect(mockNotify).toHaveBeenCalledWith(
+        'Barcode format fell back to CODE128',
+        expect.objectContaining({
+          tags: expect.objectContaining({ surface: 'image-scan' }),
+          context: [expect.objectContaining({ unmappedFormat: 'UPC_E' })]
+        })
+      );
+      // AC4 is observability only — the stored format must not change.
+      expect(onCodeResolved).toHaveBeenCalledWith({ barcode: '01234565', format: 'CODE128' });
+    });
+
+    it('does not notify for any mapped format label', async () => {
+      const mapped = [
+        ImageBarcodeFormat.CODE_128,
+        ImageBarcodeFormat.EAN_13,
+        ImageBarcodeFormat.EAN_8,
+        ImageBarcodeFormat.QR_CODE,
+        ImageBarcodeFormat.CODE_39,
+        ImageBarcodeFormat.UPC_A
+      ];
+
+      for (const format of mapped) {
+        jest.clearAllMocks();
+        mockLaunch.mockResolvedValueOnce(assetResult('file://test.jpg'));
+        mockScanImage.mockResolvedValueOnce([{ content: 'VALUE', format }]);
+
+        const { result } = renderHook(() => useImageScan({ onCodeResolved: jest.fn() }));
+
+        await act(async () => {
+          await result.current.pickAndScan();
+        });
+
+        expect(mockNotify).not.toHaveBeenCalled();
+      }
+    });
+
+    it('reports each DISTINCT unmapped code in a multi-code result', async () => {
+      mockLaunch.mockResolvedValueOnce(assetResult('file://test.jpg'));
+      mockScanImage.mockResolvedValueOnce([
+        { content: 'A', format: 'UPC_E' },
+        { content: 'B', format: ImageBarcodeFormat.CODE_128 },
+        { content: 'C', format: 'CODE_93' }
+      ]);
+
+      const { result } = renderHook(() => useImageScan({ onCodeResolved }));
+
+      await act(async () => {
+        await result.current.pickAndScan();
+      });
+
+      expect(mockNotify).toHaveBeenCalledTimes(2);
+      expect(result.current.multiCodes).toHaveLength(3);
+    });
+
+    it('reports a repeated unmapped label only once per scan', async () => {
+      // A multi-code image holds up to six codes. Six identical events for one
+      // user action would inflate the Sentry count without adding information,
+      // so duplicates collapse WITHIN a scan while distinct labels do not.
+      mockLaunch.mockResolvedValueOnce(assetResult('file://test.jpg'));
+      mockScanImage.mockResolvedValueOnce([
+        { content: 'A', format: 'UPC_E' },
+        { content: 'B', format: 'UPC_E' },
+        { content: 'C', format: 'UPC_E' }
+      ]);
+
+      const { result } = renderHook(() => useImageScan({ onCodeResolved }));
+
+      await act(async () => {
+        await result.current.pickAndScan();
+      });
+
+      expect(mockNotify).toHaveBeenCalledTimes(1);
+      // All three codes are still mapped and surfaced — dedupe is telemetry-only.
+      expect(result.current.multiCodes).toHaveLength(3);
+    });
+
+    it('reports again on a later scan, so a recurring problem stays countable', async () => {
+      mockLaunch.mockResolvedValueOnce(assetResult('file://test.jpg'));
+      mockScanImage.mockResolvedValueOnce([{ content: 'A', format: 'UPC_E' }]);
+
+      const { result } = renderHook(() => useImageScan({ onCodeResolved }));
+
+      await act(async () => {
+        await result.current.pickAndScan();
+      });
+      expect(mockNotify).toHaveBeenCalledTimes(1);
+
+      mockLaunch.mockResolvedValueOnce(assetResult('file://test.jpg'));
+      mockScanImage.mockResolvedValueOnce([{ content: 'A', format: 'UPC_E' }]);
+
+      await act(async () => {
+        await result.current.pickAndScan();
+      });
+
+      expect(mockNotify).toHaveBeenCalledTimes(2);
+    });
   });
 });

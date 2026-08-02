@@ -1,6 +1,7 @@
 /**
  * useBarcodeScanner Hook
  * Story 2.3: Scan Barcode with Camera
+ * Story 16.23: the CODE128 format fallback is no longer silent
  *
  * Hook for managing camera permissions, barcode detection, and scanner state.
  */
@@ -8,9 +9,10 @@
 import { useCameraPermissions } from 'expo-camera';
 import * as Haptics from 'expo-haptics';
 import { useState, useEffect, useRef } from 'react';
+import { Platform } from 'react-native';
 
 import { BarcodeFormat } from '@/core/schemas';
-import { applyExpectedFormat, normalizeBarcode } from '@/core/utils';
+import { applyExpectedFormat, logger, normalizeBarcode } from '@/core/utils';
 
 /**
  * Map expo-camera barcode types to our schema format
@@ -25,10 +27,45 @@ const BARCODE_FORMAT_MAP: Record<string, BarcodeFormat> = {
 };
 
 /**
- * Map barcode format from expo-camera to our schema
+ * Sentry tag identifying the scan surface (Story 16.23).
+ *
+ * `'camera'` rather than a screen name on purpose: this hook backs BOTH the
+ * add-card camera and the edit/rescan camera, and it has no way to know which
+ * one mounted it. Claiming otherwise would make the tag wrong half the time.
  */
-function mapBarcodeFormat(expoFormat: string): BarcodeFormat {
-  return BARCODE_FORMAT_MAP[expoFormat.toLowerCase()] ?? 'CODE128';
+const SCAN_SURFACE = 'camera';
+
+/**
+ * Map barcode format from expo-camera to our schema.
+ *
+ * `reportedFormats` accumulates the labels already reported by this scanner
+ * instance, so an unmapped barcode left sitting in frame cannot emit the same
+ * event indefinitely: `hasScanned` re-arms every 2 s, which would otherwise mean
+ * one Sentry event every two seconds for as long as the user holds still. Scoped
+ * per hook instance rather than per scan, because the scanner screen is transient
+ * — remounting it reports again, which keeps a recurring problem countable.
+ */
+function mapBarcodeFormat(expoFormat: string, reportedFormats: Set<string>): BarcodeFormat {
+  const normalizedFormat = expoFormat.toLowerCase();
+  const mapped = BARCODE_FORMAT_MAP[normalizedFormat];
+
+  if (mapped === undefined) {
+    // CODE128 stays the fallback (Story 16.23 AC4 is observability only), but a
+    // card stored under the wrong format is re-rendered as Code 128 for good:
+    // `normalizeBarcode` Rule 3 rescues only the 13-digit-valid-EAN-13 case.
+    if (!reportedFormats.has(normalizedFormat)) {
+      reportedFormats.add(normalizedFormat);
+      logger.notify('Barcode format fell back to CODE128', {
+        tags: { surface: SCAN_SURFACE, platform: Platform.OS },
+        // A decoder constant, not user data — but runtime data all the same, so it
+        // cannot be a tag: tag values must be literals and are NOT scrubbed.
+        context: [{ unmappedFormat: expoFormat }]
+      });
+    }
+    return 'CODE128';
+  }
+
+  return mapped;
 }
 
 export interface ScanResult {
@@ -65,6 +102,15 @@ export function useBarcodeScanner({
   const [hasScanned, setHasScanned] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const scanTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // Deliberately a ref, not per-call state: see `mapBarcodeFormat`. It must
+  // outlive individual scans (the 2 s re-arm would otherwise re-report) but not
+  // the mounted scanner.
+  const reportedFormatsRef = useRef<Set<string>>(new Set());
+  // Same one-per-mounted-scanner scope as the formats above, and a Set for the
+  // same reason: a denial and a failed request are DIFFERENT outcomes with
+  // different fixes, so one shared boolean would let whichever happened second go
+  // unreported. Keyed by the outcome tag.
+  const reportedPermissionOutcomesRef = useRef<Set<string>>(new Set());
 
   // Reset scan state when enabled changes
   useEffect(() => {
@@ -95,7 +141,7 @@ export function useBarcodeScanner({
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
 
     // Map format → canonical normalization → optional catalogue-driven hint
-    const baseFormat = mapBarcodeFormat(event.type);
+    const baseFormat = mapBarcodeFormat(event.type, reportedFormatsRef.current);
     const canonical = normalizeBarcode(event.data, baseFormat);
     const final = applyExpectedFormat(canonical, expectedFormat);
     onScan({
@@ -117,10 +163,32 @@ export function useBarcodeScanner({
       setError(null);
       const result = await requestPermission();
       if (!result.granted) {
+        // A denied camera is a scan failure the field could not previously see:
+        // the user gets clear UI, but production telemetry had nothing, so a
+        // "scanning is broken for me" report had no counterpart in Sentry.
+        // Reported once per mounted scanner — `ScannerOverlay` re-requests on
+        // mount whenever `permission` is null, so a permanently-denied user would
+        // otherwise emit an event every time they open the screen.
+        if (!reportedPermissionOutcomesRef.current.has('permission-denied')) {
+          reportedPermissionOutcomesRef.current.add('permission-denied');
+          logger.notify('Camera permission denied', {
+            tags: { surface: SCAN_SURFACE, outcome: 'permission-denied', platform: Platform.OS }
+          });
+        }
         setError('Camera permission denied');
       }
       return result.granted;
     } catch (err) {
+      if (!reportedPermissionOutcomesRef.current.has('permission-error')) {
+        reportedPermissionOutcomesRef.current.add('permission-error');
+        // Distinct from a denial: the OS never gave us an answer at all, which is
+        // a different problem with a different fix — and tracked under its own key
+        // so a denial later in the same mount is still reported.
+        logger.notify('Camera permission request failed', {
+          tags: { surface: SCAN_SURFACE, outcome: 'permission-error', platform: Platform.OS },
+          context: [{ errorName: err instanceof Error ? err.name : typeof err }]
+        });
+      }
       const message = err instanceof Error ? err.message : 'Failed to request camera permission';
       setError(message);
       return false;

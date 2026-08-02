@@ -525,12 +525,19 @@ export const it = {
         EAN8: 'EAN-8',
         QR: 'Codice QR',
         CODE39: 'Code 39',
-        UPCA: 'UPC-A',
-        DATAMATRIX: 'Data Matrix'
+        UPCA: 'UPC-A'
       }
     },
     noCodeFound: {
-      message: 'Nessun codice a barre trovato in questa immagine',
+      // See the note in en.ts — two messages replace one that conflated a
+      // decoder miss with an unreadable file (Story 16.23).
+      notFoundMessage:
+        'Non è stato possibile leggere un codice a barre in questa immagine — prova a inquadrare la carta',
+      scanFailedMessage: 'Si è verificato un problema durante la lettura di questa immagine',
+      // See the note in en.ts — deliberately does not mention "this image".
+      pickerFailedMessage: 'Non è stato possibile aprire le tue foto',
+      // "Prova un'altra immagine" would presume a first image; none was picked.
+      pickerFailedRetry: 'Riprova',
       dismissAccessibilityLabel: 'Chiudi il messaggio di errore',
       retryAccessibilityLabel: "Prova a scansionare un'altra immagine",
       retry: "Prova un'altra immagine",

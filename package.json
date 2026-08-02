@@ -25,6 +25,8 @@
     "splash:build": "node scripts/build-splash-icon.mjs",
     "splash:check": "node scripts/build-splash-icon.mjs --check",
     "check:no-tests-folders": "node scripts/check-no-tests-folders.mjs",
+    "check:native-patches": "node scripts/verify-native-patches.mjs",
+    "check:native-strings": "node scripts/verify-native-strings.mjs",
     "test": "jest",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
@@ -46,7 +48,7 @@
     "supabase:reset": "npx supabase db reset",
     "supabase:functions:serve": "npx supabase functions serve --env-file supabase/.env.local",
     "supabase:functions:deploy": "npx supabase functions deploy delete-account",
-    "postinstall": "node scripts/ensure-expo-sqlite-vendor-files.mjs",
+    "postinstall": "patch-package --error-on-fail && node scripts/ensure-expo-sqlite-vendor-files.mjs",
     "prepare": "husky"
   },
   "dependencies": {
@@ -124,6 +126,8 @@
     "jest": "~29.7.0",
     "jest-expo": "~55.0.16",
     "lint-staged": "^16.2.7",
+    "patch-package": "^8.0.1",
+    "postinstall-postinstall": "^2.1.0",
     "prettier": "^3.2.5",
     "react-native-svg-transformer": "^1.5.3",
     "storybook": "^10",

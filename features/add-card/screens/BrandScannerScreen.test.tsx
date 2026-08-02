@@ -121,6 +121,7 @@ const mockSelectCode = jest.fn();
 const mockUseImageScan = {
   isProcessing: false,
   showError: false,
+  errorReason: null,
   multiCodes: [],
   pickAndScan: mockPickAndScan,
   dismissError: mockDismissError,
@@ -232,6 +233,34 @@ describe('BrandScannerScreen', () => {
       });
       render(<BrandScannerScreen />);
       expect(screen.getByTestId('no-code-found-banner')).toBeTruthy();
+    });
+
+    // Story 16.23 (AC2). This screen is the ONLY place the hook's `errorReason`
+    // meets the banner, and the prop is optional — so breaking the hand-off
+    // (wrong variable, dropped `?? undefined`, deleted prop) would compile
+    // cleanly and leave the hook, overlay and banner unit tests all green while
+    // the app silently reverted to one message for both failures. That is the
+    // defect this story exists to remove, so it gets an assertion of its own.
+    it('renders the scanFailed copy when the hook reports errorReason scanFailed', () => {
+      (useImageScan as jest.Mock).mockReturnValueOnce({
+        ...mockUseImageScan,
+        showError: true,
+        errorReason: 'scanFailed'
+      });
+      render(<BrandScannerScreen />);
+      expect(screen.getByText('Something went wrong reading that image')).toBeTruthy();
+    });
+
+    it('renders the notFound copy when the hook reports errorReason notFound', () => {
+      (useImageScan as jest.Mock).mockReturnValueOnce({
+        ...mockUseImageScan,
+        showError: true,
+        errorReason: 'notFound'
+      });
+      render(<BrandScannerScreen />);
+      expect(
+        screen.getByText("We couldn't read a barcode in this image — try scanning the card itself")
+      ).toBeTruthy();
     });
 
     it('calls dismissError when banner close is pressed', () => {
