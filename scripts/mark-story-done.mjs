@@ -12,7 +12,12 @@
 // Story reference resolution (first that matches wins):
 //   0. An exact slug passed as an arg (e.g. "5-9-edit-card").
 //   1. Any `docs/sprint-artifacts/stories/<slug>.md` path found in the input.
-//   2. A "Story X.Y" / "X-Y" reference, resolved by globbing the stories dir.
+//   2. A "Story X.Y" reference, resolved by globbing the stories dir.
+//
+// A keyword-less "X-Y" is accepted ONLY from an explicit CLI arg, where the input
+// is a story id a human deliberately typed. PR title/body is prose: a bare "16.24"
+// there is far more likely to be a version, a percentage or a date fragment than a
+// story reference, and resolving it would mark an unrelated in-flight story done.
 //
 // Input comes from CLI args, or the PR_TITLE / PR_BODY env vars (used in CI).
 // Set DRY_RUN=1 to preview changes without writing.
@@ -100,11 +105,12 @@ const markSprintStatus = (slug) => {
 
 // ---- main -------------------------------------------------------------------
 
-const input =
-  process.argv.slice(2).join(' ').trim() ||
-  `${process.env.PR_TITLE ?? ''}\n${process.env.PR_BODY ?? ''}`;
+const argvInput = process.argv.slice(2).join(' ').trim();
+const input = argvInput || `${process.env.PR_TITLE ?? ''}\n${process.env.PR_BODY ?? ''}`;
 
-const slugs = resolveStorySlugs(input);
+// Bare "5-9" is honoured for a CLI arg only — see the header note on why PR prose
+// must spell the reference out as "Story X.Y" or link the story file.
+const slugs = resolveStorySlugs(input, STORIES_DIR, { allowBareNumeric: argvInput !== '' });
 
 if (slugs.length === 0) {
   log('No story reference found in input — nothing to do.');
