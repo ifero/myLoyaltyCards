@@ -1,6 +1,6 @@
 # Story 13.3: Restyle Card Detail Screen
 
-Status: review
+Status: done
 
 ## Story
 

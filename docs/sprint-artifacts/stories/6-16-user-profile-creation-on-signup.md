@@ -2,7 +2,7 @@
 
 **Epic:** 6 - User Authentication & Privacy
 **Type:** Bug Fix + Enabling
-**Status:** review
+**Status:** done
 
 ## Story
 

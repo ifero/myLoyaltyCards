@@ -7,7 +7,7 @@
 | **Story ID** | 5-10                          |
 | **Epic**     | 5 - Apple Watch App           |
 | **Sprint**   | 14                            |
-| **Status**   | review                        |
+| **Status**   | done                          |
 | **Priority** | High                          |
 | **Estimate** | 2 points (Dev: ~1d, QA: 0.5d) |
 | **Owners**   | PM: Ifero · Dev: — · QA: —    |

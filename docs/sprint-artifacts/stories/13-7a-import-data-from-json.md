@@ -1,6 +1,6 @@
 # Story 13.7a: Import Data from JSON
 
-Status: review
+Status: done
 
 ## Story
 
