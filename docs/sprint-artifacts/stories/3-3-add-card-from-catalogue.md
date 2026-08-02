@@ -1,5 +1,7 @@
 # Story 3.3: Add Card from Catalogue
 
+**Status:** done
+
 **As a** user,
 **I want** to select a brand and scan my card,
 **So that** my card is saved with the official brand logo.

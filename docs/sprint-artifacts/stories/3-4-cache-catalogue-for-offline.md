@@ -1,5 +1,7 @@
 # Story 3.4: Cache Catalogue for Offline
 
+**Status:** done
+
 **As a** user,
 **I want** the catalogue to work without internet,
 **So that** I can add cards from known brands anywhere.

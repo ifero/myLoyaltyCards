@@ -1,5 +1,7 @@
 # Story 3.5: Update Catalogue via OTA
 
+**Status:** done
+
 **As a** user,
 **I want** to receive new brands without updating the app,
 **So that** my catalogue stays current.

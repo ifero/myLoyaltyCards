@@ -1,5 +1,7 @@
 # Story 3.2: Browse Catalogue Grid
 
+**Status:** done
+
 **As a** user,
 **I want** to browse Italian brands with their logos,
 **So that** I can quickly find and add my loyalty cards.

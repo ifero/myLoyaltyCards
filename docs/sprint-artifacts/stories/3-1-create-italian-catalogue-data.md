@@ -1,5 +1,7 @@
 # Story 3.1: Create Italian Catalogue Data
 
+**Status:** done
+
 **As a** developer,
 **I want** a structured catalogue of Italian loyalty brands,
 **So that** users can add cards with recognizable logos.
