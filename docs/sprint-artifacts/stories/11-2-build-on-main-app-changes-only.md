@@ -1,6 +1,7 @@
 # Story 11-2: Build on main only if app code changes
 
 **Epic:** 11 (CI/CD & Quality Gates)
+**Status:** done
 
 ## Description
 
