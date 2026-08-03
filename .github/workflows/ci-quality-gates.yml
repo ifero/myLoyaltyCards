@@ -100,6 +100,20 @@ jobs:
       - name: Check tests are co-located (no __tests__ folders)
         run: yarn check:no-tests-folders
 
+      # docs/sprint-artifacts/README.md states that every `### Story N.M` in
+      # docs/epics.md maps 1:1 to a `development_status` key in sprint-status.yaml.
+      # Nothing enforced it, and it broke twice in a row: a drafting PR added the
+      # tracker key and the story file but not the catalogue section (Story 16.24,
+      # fixed by PR #190; Story 16.25, fixed by PR #198). Both gaps were found by
+      # hand. The failure is quiet and downstream — `create-story` happily reads a
+      # tracker key with no content behind it and drafts against a story whose
+      # goal and acceptance criteria exist nowhere. This also pins the
+      # `totalStories` frontmatter field to the literal `### Story ` heading count,
+      # the rule epics.md records inline, after three different counting rules let
+      # the number drift.
+      - name: Check the story catalogue matches the sprint tracker
+        run: yarn check:story-catalogue-sync
+
       - name: Run tests (with coverage)
         run: yarn test:coverage --watchAll=false --runInBand
 
