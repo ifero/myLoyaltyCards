@@ -174,7 +174,7 @@ Commit small, logical units using [Conventional Commits](#commit-conventions). R
 
 ### 6. Pass the quality gates locally
 
-The pre-push hook runs them automatically, but you can run them yourself:
+The pre-push hook runs these — plus the rest of the [quality gates](#quality-gates-never-bypass) — automatically, but you can run them yourself:
 
 ```bash
 yarn lint
@@ -256,12 +256,42 @@ feat(watch): render barcode complication on the watch face (Story 5.9)
 
 Quality is enforced at three levels. **All must pass — bypassing them is forbidden.**
 
-| Gate                    | When                      | What runs                                                                                  |
-| ----------------------- | ------------------------- | ------------------------------------------------------------------------------------------ |
-| **pre-commit**          | `git commit`              | `lint-staged` → ESLint `--fix` + Prettier on staged files                                  |
-| **pre-push**            | `git push`                | `yarn typecheck` → `tokens:check` → `splash:check` → `lint` → `format:check` → `test`      |
-| **CI — quality**        | every PR & push to `main` | `lint` → `format:check` → `typecheck` → `tokens:check` → `test:coverage` (+ watchOS tests) |
-| **CI — PR conventions** | every PR                  | Conventional-Commit title, branch naming, and spec-first story link (see note below)       |
+| Gate                    | When                                | What runs                                                                            |
+| ----------------------- | ----------------------------------- | ------------------------------------------------------------------------------------ |
+| **pre-commit**          | `git commit`                        | `lint-staged` → ESLint `--fix` + Prettier on staged files                            |
+| **pre-push**            | `git push`                          | Typecheck, lint, format, drift checks, full test suite                               |
+| **CI — quality**        | every PR & push to `main`           | Everything `pre-push` runs, plus `check:no-tests-folders`, with coverage             |
+| **CI — watchOS**        | PR/push touching watch or iOS paths | Watch contract tests, `Brands.swift` catalogue sync, watch-target build              |
+| **CI — PR conventions** | every PR                            | Conventional-Commit title, branch naming, and spec-first story link (see note below) |
+
+### Exactly what runs, in order
+
+The pre-push hook and the quality-gates workflow run the **same set of checks in a different order** — CI adds the test-layout check and collects coverage. If you add or remove a check, update both the file and this list.
+
+**pre-push** ([`.husky/pre-push`](.husky/pre-push)) — stops at the first failure:
+
+1. `yarn typecheck`
+2. `yarn tokens:check`
+3. `yarn splash:check`
+4. `yarn lint`
+5. `yarn check:native-patches`
+6. `yarn check:native-strings`
+7. `yarn format:check`
+8. `yarn test`
+
+**CI — quality** ([`ci-quality-gates.yml`](.github/workflows/ci-quality-gates.yml)):
+
+1. `yarn check:native-patches`
+2. `yarn check:native-strings`
+3. `yarn lint`
+4. `yarn format:check`
+5. `yarn typecheck`
+6. `yarn tokens:check`
+7. `yarn splash:check`
+8. `yarn check:no-tests-folders`
+9. `yarn test:coverage`
+
+**CI — watchOS** ([`watchos-tests.yml`](.github/workflows/watchos-tests.yml)) is a **separate, path-filtered workflow** — it runs only when `targets/watch/**`, `watch-ios/**`, `ios/**`, `app.json`, `fastlane/Fastfile`, or the workflow itself changes, so most PRs never trigger it. It runs the watch catalogue Jest tests, then `expo prebuild`, regenerates `Brands.swift`, verifies it with `yarn check:catalogue-generated`, and builds the watch target via `yarn watch:build:ci`. Locally, `yarn test:all` covers the watch tests.
 
 The **PR conventions** check ([`pr-conventions.yml`](.github/workflows/pr-conventions.yml)) fails the PR if the title isn't a Conventional Commit, the branch doesn't use an allowed prefix, or a **code change** references no story. `docs:`/`chore:` titles and catalogue- or `design`-labelled PRs are exempt from the story requirement (the `design` label covers token/visual polish — see [Design / UI Changes](#design--ui-changes)).
 
