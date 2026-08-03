@@ -412,15 +412,15 @@ Key documentation points for watchOS:
 
 ### Environment Strategy (Dev + Production)
 
-| Aspect                   | Dev                        | Production                    |
-| ------------------------ | -------------------------- | ----------------------------- |
-| **Purpose**              | Testing, PR previews       | App Store releases            |
-| **Supabase**             | `myloyaltycards-dev`       | `myloyaltycards-prod`         |
-| **iOS Distribution**     | TestFlight                 | App Store                     |
-| **Android Distribution** | Internal Track             | Google Play                   |
-| **Trigger**              | Push to main, PRs          | Manual / git tags (v\*)       |
-| **Approval**             | None                       | Required (GitHub Environment) |
-| **Logging**              | Verbose (console + Sentry) | Errors only (Sentry)          |
+| Aspect                   | Dev                        | Production                     |
+| ------------------------ | -------------------------- | ------------------------------ |
+| **Purpose**              | Testing, PR previews       | App Store releases             |
+| **Supabase**             | `myloyaltycards-dev`       | `myloyaltycards-prod`          |
+| **iOS Distribution**     | TestFlight                 | App Store                      |
+| **Android Distribution** | Internal Track             | Google Play                    |
+| **Trigger**              | Push to main, PRs          | Published GitHub Release (v\*) |
+| **Approval**             | None                       | Required (GitHub Environment)  |
+| **Logging**              | Verbose (console + Sentry) | Errors only (Sentry)           |
 
 **CI/CD Workflow Files:**
 

@@ -354,6 +354,7 @@ Run `yarn lint` and `yarn typecheck` to catch most violations automatically.
 
 - **Do not merge your own PR.** A maintainer reviews and merges to `main`.
 - **Status update is automated.** When a PR is **merged**, the [`mark-story-done`](.github/workflows/mark-story-done.yml) workflow reads the story referenced in the PR and commits its status → `done` (in both `sprint-status.yaml` and the story file) directly to the default branch. The commit is tagged `[skip ci]` so it doesn't re-run any pipelines. This works for fork PRs too. _(Maintainers can also apply it by hand: `node scripts/mark-story-done.mjs <story-id>`.)_
+  - **Consequence for releases:** because that commit is usually `main`'s tip, a bare `git tag && git push --tags` will silently create no workflow run — GitHub applies the skip marker to tag pushes too. Cut releases with `gh release create` instead; see [Why releases are published, not just tagged](docs/cicd.md#why-releases-are-published-not-just-tagged).
 - When an epic completes, run a **retrospective** and capture lessons in `docs/sprint-artifacts/`.
 
 ---
