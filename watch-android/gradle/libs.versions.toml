@@ -1,0 +1,36 @@
+## Version catalogue for the Wear OS companion app.
+##
+## These versions are recorded in the story 10.1 Dev Agent Record. They are the
+## current stable releases at the time of scaffolding, not an arbitrary pin —
+## bump them deliberately and re-run `./gradlew assembleDebug` when you do.
+##
+## Compatibility constraints that are NOT free to change independently:
+##   * AGP 9.3.x requires Gradle >= 9.5 and JDK >= 17 (see gradle/wrapper).
+##   * `composeCompiler` is the Kotlin version. AGP's built-in Kotlin support and
+##     the Compose compiler plugin must agree, so this single value drives both.
+
+[versions]
+agp = "9.3.1"
+# Kotlin version used by AGP's built-in Kotlin support AND by the Compose
+# compiler plugin (they share a version by design since Kotlin 2.0).
+kotlin = "2.4.10"
+androidxActivity = "1.13.0"
+androidxComposeBom = "2026.06.01"
+# compose-foundation, compose-material3 and compose-ui-tooling ship together.
+androidxWearCompose = "1.6.2"
+playServicesWearable = "20.0.1"
+
+[libraries]
+androidx-activity-compose = { module = "androidx.activity:activity-compose", version.ref = "androidxActivity" }
+androidx-compose-bom = { module = "androidx.compose:compose-bom", version.ref = "androidxComposeBom" }
+# Debug-only Compose preview renderer; version comes from the BOM.
+androidx-compose-ui-tooling = { module = "androidx.compose.ui:ui-tooling" }
+# Wear-specific @Preview annotations (WearPreviewDevices, WearPreviewFontScales).
+wear-compose-ui-tooling = { module = "androidx.wear.compose:compose-ui-tooling", version.ref = "androidxWearCompose" }
+wear-compose-foundation = { module = "androidx.wear.compose:compose-foundation", version.ref = "androidxWearCompose" }
+wear-compose-material3 = { module = "androidx.wear.compose:compose-material3", version.ref = "androidxWearCompose" }
+play-services-wearable = { module = "com.google.android.gms:play-services-wearable", version.ref = "playServicesWearable" }
+
+[plugins]
+android-application = { id = "com.android.application", version.ref = "agp" }
+compose-compiler = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }

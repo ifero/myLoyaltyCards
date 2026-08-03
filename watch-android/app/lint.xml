@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<lint>
+    <!--
+      Both checks below compare the pinned versions against whatever is newest
+      *today*, so their result changes without the source changing — one of them
+      (NewerVersionAvailable) even reaches out to the network to do it. That
+      makes a lint run non-reproducible, which is the one property a gate needs.
+
+      Dependency freshness is handled deliberately instead: the versions live in
+      gradle/libs.versions.toml with the constraints that bind them, and bumping
+      them is a change you make and re-verify with `./gradlew assembleDebug`.
+    -->
+    <issue id="GradleDependency" severity="ignore" />
+    <issue id="NewerVersionAvailable" severity="ignore" />
+
+    <!--
+      ObsoleteSdkInt fires on res/mipmap-anydpi-v26/ and advises merging it into
+      an unqualified `mipmap-anydpi`, since minSdk 30 already implies v26.
+
+      Do not take that advice: it was tried and it breaks the build. <adaptive-icon>
+      is a v26 element, so in an unqualified folder aapt2 does not resolve the
+      reference and linking fails with
+
+          AAPT: error: resource mipmap/ic_launcher
+          (aka com.iferoporefi.myloyaltycards:mipmap/ic_launcher) not found
+
+      The -v26 qualifier is load-bearing regardless of minSdk.
+    -->
+    <issue id="ObsoleteSdkInt" severity="ignore">
+        <ignore path="src/main/res/mipmap-anydpi-v26" />
+    </issue>
+
+    <!--
+      DataExtractionRules asks for an `android:fullBackupContent` resource
+      alongside `android:dataExtractionRules`, because the latter is ignored
+      below Android 12 and minSdk here is 30.
+
+      It is moot for this app: `android:allowBackup="false"` already disables
+      backup and restore outright on Android 11, and `fullBackupContent` is only
+      consulted when a backup actually runs. Adding the file would be dead config
+      that implies backup is enabled when it is not. Android 12+ is covered by
+      data_extraction_rules.xml, which excludes root from cloud backup AND from
+      device-to-device transfer.
+    -->
+    <issue id="DataExtractionRules" severity="ignore" />
+
+    <!--
+      MonochromeLauncherIcon is deliberately NOT suppressed. The adaptive icon
+      has no <monochrome> layer, which means no themed icon on Android 13+, and
+      that is a real (small) gap: it needs a flat silhouette asset that does not
+      exist yet in this repo. See README.md § Known gaps.
+    -->
+</lint>

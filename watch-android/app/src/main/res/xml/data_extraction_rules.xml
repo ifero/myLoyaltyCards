@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Backup / transfer policy for the Wear OS companion app (Android 12+).
+
+  Nothing here is worth backing up: every card on the watch is a replica the
+  phone re-sends on the next sync, and restoring a stale replica onto a watch
+  that is not paired to the original phone would resurrect card data the user
+  may have since deleted. So both cloud backup and device-to-device transfer
+  exclude everything.
+
+  `android:allowBackup="false"` in the manifest covers Android 11 (minSdk 30),
+  where this file is ignored.
+-->
+<data-extraction-rules>
+    <cloud-backup>
+        <exclude domain="root" />
+    </cloud-backup>
+    <device-transfer>
+        <exclude domain="root" />
+    </device-transfer>
+</data-extraction-rules>

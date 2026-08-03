@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Default (English) strings for the Wear OS companion app.
+
+  Localisation is deliberately not set up here: Story 10-3 brings the first real
+  user-facing copy, and it should decide how the watch shares (or does not share)
+  the phone app's i18n catalogue.
+-->
+<resources>
+    <string name="app_name">myLoyaltyCards</string>
+    <string name="placeholder_no_cards">No cards yet</string>
+</resources>

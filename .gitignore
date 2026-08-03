@@ -81,6 +81,17 @@ watch-ios/build/
 watch-ios/test-results.xcresult/
 watch-ios/MyLoyaltyCardsWatch.xcodeproj/xcuserdata/
 
+# Wear OS build artifacts (watch-android/ — a STANDALONE Gradle project, not part
+# of the gitignored prebuild-generated android/). Only build output is ignored:
+# every source file AND the Gradle wrapper (gradlew, gradlew.bat,
+# gradle/wrapper/*) stay tracked, or the build stops being reproducible.
+watch-android/**/build/
+watch-android/.gradle/
+watch-android/.kotlin/
+watch-android/local.properties
+watch-android/**/*.apk
+watch-android/**/*.aab
+
 # Fastlane
 bundler/
 fastlane/.env.default
