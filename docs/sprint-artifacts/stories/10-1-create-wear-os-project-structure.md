@@ -4,7 +4,7 @@ baseline_commit: 7837f359540c72c30edcf392e1a897fa99ab9752
 
 # Story 10.1: Create Wear OS project structure [Enabling]
 
-Status: review
+Status: done
 
 Epic: 10 — Wear OS App
 
