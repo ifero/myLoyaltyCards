@@ -1,0 +1,85 @@
+name: CI — Wear OS build
+
+# Compiles the standalone Wear OS Gradle project (Story 10.1, Open Decision 5).
+#
+# Path-filtered to `watch-android/**` so it stays OFF the phone app's critical
+# path — the same shape as chromatic.yml's filtering and watchos-tests.yml's
+# scoping. `ci-quality-gates.yml` never compiles Kotlin: `yarn lint` is
+# `eslint . --ext .ts,.tsx` and jest matches only `**/*.test.[jt]s?(x)`, so `.kt`
+# is invisible to both.
+#
+# What this proves, precisely: the module COMPILES. It runs no unit tests (there
+# are none yet — 10.1 is a scaffold), no lint, and nothing on a device. The
+# install-and-launch check was done by hand on a Wear OS 3 / API 30 emulator.
+# See watch-android/README.md § CI before assuming this job covers more.
+#
+# The reason it exists at all: the phone app's Android surface already has
+# effectively no telemetry, and an uncompiled module rots silently. If Gradle
+# ever gets slow enough to hurt, downgrade this to a nightly and say so in the
+# README — do not leave Epic 10's foundation with nothing compiling it.
+
+on:
+  # Lets a maintainer re-measure the job duration on demand when re-tuning
+  # timeout-minutes, without pushing a throwaway commit to a trigger path.
+  workflow_dispatch:
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+    paths:
+      - 'watch-android/**'
+      - '.github/workflows/wear-os-build.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'watch-android/**'
+      - '.github/workflows/wear-os-build.yml'
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: 'true'
+
+# Mirrors ci-quality-gates.yml rather than watchos-tests.yml: only PR runs
+# cancel. A superseded PR run is pure waste, but on main every commit keeps its
+# own result, which is what tells you *which* merge broke the build. This is a
+# short ubuntu job, so letting main runs finish costs little.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  wear-os-build:
+    name: Wear OS (Gradle) build
+    runs-on: ubuntu-latest
+    # Measured at ~1m20s locally from a cold Gradle cache. 20m is deliberate
+    # headroom for a cold CI cache plus SDK downloads on the first run, and
+    # still short enough to catch a genuine hang. Re-measure with
+    # workflow_dispatch before tightening it.
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # AGP 9.3 requires JDK 17 as a minimum, and the build compiles to Java 17
+      # bytecode. Pin it rather than inheriting whatever the runner image ships.
+      - name: Set up JDK 17
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      # The runner image's preinstalled platforms drift over time; install the
+      # two SDK components this build actually needs so a runner-image bump
+      # cannot silently break the job. Both are no-ops when already present.
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v4
+        with:
+          packages: 'platforms;android-36 build-tools;36.0.0'
+
+      # Also validates every Gradle wrapper JAR in the repo against Gradle's
+      # published checksums (validate-wrappers defaults to true) — a real
+      # supply-chain check, since the wrapper JAR is a tracked binary.
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v6
+
+      - name: Build Wear OS debug APK
+        working-directory: watch-android
+        run: ./gradlew assembleDebug --no-daemon

@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!--
+      Together with the com.google.android.wearable <uses-library> below, this
+      makes the APK installable on Wear OS devices only. The phone app is a
+      separate APK with the same applicationId; Play distributes them to the
+      right form factor from this declaration.
+    -->
+    <uses-feature android:name="android.hardware.type.watch" />
+
+    <!--
+      No backup: everything on the watch is a replica the phone re-sends on the
+      next sync. `allowBackup` covers Android 11; `dataExtractionRules` is the
+      Android 12+ replacement and excludes both cloud backup and device transfer.
+    -->
+    <application
+        android:allowBackup="false"
+        android:dataExtractionRules="@xml/data_extraction_rules"
+        android:icon="@mipmap/ic_launcher"
+        android:label="@string/app_name"
+        android:supportsRtl="true"
+        android:theme="@android:style/Theme.DeviceDefault">
+
+        <uses-library
+            android:name="com.google.android.wearable"
+            android:required="true" />
+
+        <!--
+          NON-STANDALONE, deliberately.
+
+          This app is companion-only and read-only for card data (the CARD_USED
+          usage event is the single ratified exception — ADR-2026-06-09-001).
+          It has no account, no card editor and no network path of its own, so
+          without a paired phone it can never obtain a card: advertising
+          standalone operation would simply be false.
+
+          The accepted consequence is that Play surfaces this app only to users
+          with a compatible paired phone — which is exactly the addressable
+          audience. Do not flip this to `true` before the watch can acquire
+          cards on its own.
+        -->
+        <meta-data
+            android:name="com.google.android.wearable.standalone"
+            android:value="false" />
+
+        <!--
+          `taskAffinity` is required, not decorative: the Wear launcher needs a
+          unique affinity per launcher activity and its children, or the app can
+          fail to appear in Recents and render with the wrong label/icon when it
+          is opened from a tile or notification.
+        -->
+        <activity
+            android:name=".MainActivity"
+            android:exported="true"
+            android:taskAffinity=".main">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+    </application>
+
+</manifest>

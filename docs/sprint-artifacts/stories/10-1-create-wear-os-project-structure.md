@@ -4,7 +4,7 @@ baseline_commit: 7837f359540c72c30edcf392e1a897fa99ab9752
 
 # Story 10.1: Create Wear OS project structure [Enabling]
 
-Status: ready-for-dev
+Status: review
 
 Epic: 10 — Wear OS App
 
@@ -165,50 +165,52 @@ perturb any of them.
 
 ## Tasks / Subtasks
 
-- [ ] **Task 1 — Scaffold the module (AC: 1, 2, 3)**
-  - [ ] Create `watch-android/` with a Wear OS app project (Android Studio's Wear OS template, or an
+- [x] **Task 1 — Scaffold the module (AC: 1, 2, 3)**
+  - [x] Create `watch-android/` with a Wear OS app project (Android Studio's Wear OS template, or an
         equivalent hand-rolled Gradle project). Include the Gradle wrapper so the build is
         reproducible without a system Gradle.
-  - [ ] Set `applicationId = "com.iferoporefi.myloyaltycards"` — **no suffix**. Cross-check against
+  - [x] Set `applicationId = "com.iferoporefi.myloyaltycards"` — **no suffix**. Cross-check against
         `app.json` `expo.android.package` rather than typing it from memory.
-  - [ ] Set `minSdk 30`, `targetSdk 35`, `compileSdk ≥ 35`. Kotlin + Compose for Wear OS.
-  - [ ] Placeholder Compose screen — app name and a "no cards yet" line. 10-3 replaces it. Do **not**
+  - [x] Set `minSdk 30`, `targetSdk 35`, `compileSdk ≥ 35`. Kotlin + Compose for Wear OS.
+  - [x] Placeholder Compose screen — app name and a "no cards yet" line. 10-3 replaces it. Do **not**
         pre-build card UI here.
-  - [ ] Record the resolved AGP / Gradle / Kotlin / Compose-BOM versions in the Dev Agent Record.
+  - [x] Record the resolved AGP / Gradle / Kotlin / Compose-BOM versions in the Dev Agent Record.
 
-- [ ] **Task 2 — Manifest and dependencies (AC: 4, 5)**
-  - [ ] Declare the Wear OS app: the wearable hardware feature and
+- [x] **Task 2 — Manifest and dependencies (AC: 4, 5)**
+  - [x] Declare the Wear OS app: the wearable hardware feature and
         `<meta-data android:name="com.google.android.wearable.standalone" android:value="false" />`
         with a comment explaining the companion-only rationale.
-  - [ ] Add the Play Services Wearable dependency, commented as reserved for 10-6.
-  - [ ] Add the Room dependency **only if** it costs nothing to leave unused; otherwise leave it to
+  - [x] Add the Play Services Wearable dependency, commented as reserved for 10-6.
+  - [x] Add the Room dependency **only if** it costs nothing to leave unused; otherwise leave it to
         10-5, which owns the schema. Prefer leaving it to 10-5 — an unused ORM invites someone to
-        invent a schema out of scope.
+        invent a schema out of scope. → **Not added**, per Open Decision 6.
 
-- [ ] **Task 3 — Repo hygiene (AC: 7, 10)**
-  - [ ] Extend `.gitignore` with a `watch-android/` build-artifact block, mirroring the comment style
+- [x] **Task 3 — Repo hygiene (AC: 7, 10)**
+  - [x] Extend `.gitignore` with a `watch-android/` build-artifact block, mirroring the comment style
         of the watchOS block at `.gitignore:73-78`. Verify with `git status --porcelain` that no build
         output is tracked and that `gradlew` **is**.
-  - [ ] Confirm `jest.config.js` needs no change — `testMatch` is `**/*.test.[jt]s?(x)`, so Kotlin is
+  - [x] Confirm `jest.config.js` needs no change — `testMatch` is `**/*.test.[jt]s?(x)`, so Kotlin is
         invisible to it. Verify rather than assume; do not add `watch-android` to
-        `testPathIgnorePatterns` unless a real collision appears.
-  - [ ] Confirm ESLint ignores `watch-android/` (it lints `.ts`/`.tsx` only via
+        `testPathIgnorePatterns` unless a real collision appears. → Verified, unchanged.
+  - [x] Confirm ESLint ignores `watch-android/` (it lints `.ts`/`.tsx` only via
         `yarn lint`). If anything picks it up, add an ignore rather than reformatting Kotlin.
-  - [ ] Run the full phone-app gate suite plus `yarn watch:build`.
+        → Verified, unchanged.
+  - [x] Run the full phone-app gate suite plus `yarn watch:build`.
 
-- [ ] **Task 4 — Documentation (AC: 6, 9)**
-  - [ ] Write `watch-android/README.md` covering every point in AC6 and AC9.
-  - [ ] State the separate-APK distribution model prominently — it is the single most
+- [x] **Task 4 — Documentation (AC: 6, 9)**
+  - [x] Write `watch-android/README.md` covering every point in AC6 and AC9.
+  - [x] State the separate-APK distribution model prominently — it is the single most
         counter-intuitive fact for anyone arriving from the watchOS side of this repo.
-  - [ ] Cross-link `targets/watch/README.md` and note which parts of the watchOS setup deliberately do
+  - [x] Cross-link `targets/watch/README.md` and note which parts of the watchOS setup deliberately do
         **not** apply (`@bacons/apple-targets`, the `.watch` suffix, bundle embedding).
 
-- [ ] **Task 5 — CI decision (AC: 8)**
-  - [ ] Implement Open Decision 5. If a build job is added, path-filter it to `watch-android/**` so it
+- [x] **Task 5 — CI decision (AC: 8)**
+  - [x] Implement Open Decision 5. If a build job is added, path-filter it to `watch-android/**` so it
         stays off the phone app's critical path, mirroring how `chromatic.yml` is path-filtered and
-        `watchos-tests.yml` is scoped.
-  - [ ] If deferred, record it in the README **and** raise it as a follow-up story rather than leaving
-        it undocumented.
+        `watchos-tests.yml` is scoped. → Added `.github/workflows/wear-os-build.yml`.
+  - [x] If deferred, record it in the README **and** raise it as a follow-up story rather than leaving
+        it undocumented. → Not deferred; the README still states precisely what the job does **not**
+        cover (no tests, no lint, no device run) so its presence is not mistaken for broader coverage.
 
 ## Dev Notes
 
@@ -376,27 +378,247 @@ release pipeline. Do not treat the SDK 57 thread as a blocker for this story.
 
 ### Agent Model Used
 
-_To be filled by the dev agent._
+claude-opus-5 (Claude Code, `bmad-dev-story`)
 
 ### Toolchain Versions Used (AC2)
 
-| Component             | Version |
-| --------------------- | ------- |
-| JDK                   |         |
-| Gradle                |         |
-| Android Gradle Plugin |         |
-| Kotlin                |         |
-| Compose BOM (Wear OS) |         |
-| `compileSdk`          |         |
+Every version was resolved from the upstream metadata at implementation time (Google Maven,
+Maven Central, `services.gradle.org`) rather than from memory, then verified by an actual build.
+
+| Component              | Version                                                                             |
+| ---------------------- | ----------------------------------------------------------------------------------- |
+| JDK                    | 17.0.19 (Homebrew `openjdk@17`) — AGP 9.3's documented minimum                      |
+| Gradle                 | 9.6.1 (wrapper pins `distributionSha256Sum`)                                        |
+| Android Gradle Plugin  | 9.3.1                                                                               |
+| Kotlin                 | 2.4.10 — drives AGP's built-in Kotlin **and** `org.jetbrains.kotlin.plugin.compose` |
+| Compose BOM            | 2026.06.01 (`androidx.compose:compose-bom`)                                         |
+| Compose for Wear OS    | 1.6.2 (`compose-material3`, `compose-foundation`, `compose-ui-tooling`)             |
+| Play Services Wearable | 20.0.1 (declared, unused — reserved for 10-6)                                       |
+| `compileSdk`           | 36                                                                                  |
+| `minSdk` / `targetSdk` | 30 / 35                                                                             |
+
+There is **no `androidx.wear.compose:compose-bom`** — that artifact does not exist. Wear Compose
+ships as individually-versioned artifacts that move together, so the catalogue uses one
+`androidxWearCompose` ref for all three, alongside the general `androidx.compose:compose-bom`.
 
 ### Debug Log References
 
+Findings worth keeping, each established by running something rather than by reasoning about it:
+
+1. **AGP 9.3.1 bundles KGP 2.2.10, but the Compose compiler plugin's version wins.** Declaring
+   Kotlin 2.4.10 was verified to actually take effect, not silently fall back: the Kotlin daemon's
+   compiler classpath shows `kotlin-compiler-embeddable-2.4.10.jar` and every other `kotlin-*` jar
+   at 2.4.10, so there is no version skew between AGP's built-in Kotlin and the Compose compiler.
+2. **`jvmTarget` is deliberately absent** from the build file. AGP's built-in Kotlin defaults it to
+   `compileOptions.targetCompatibility`. Verified rather than trusted: `javap -verbose` on the
+   compiled `MainActivity.class` reports **major version 61** (Java 17), and the class comes from
+   `build/intermediates/built_in_kotlinc/...`, which also confirms built-in Kotlin did the compiling.
+3. **Android lint's `ObsoleteSdkInt` advice is wrong here and must not be followed.** It suggests
+   merging `res/mipmap-anydpi-v26/` into an unqualified `mipmap-anydpi/` because minSdk 30 already
+   implies v26. Tried it; the build fails with
+   `AAPT: error: resource mipmap/ic_launcher (aka com.iferoporefi.myloyaltycards:mipmap/ic_launcher) not found`
+   because `<adaptive-icon>` is a v26 element. The qualifier is load-bearing regardless of minSdk.
+   Recorded in `app/lint.xml` so it is not "fixed" again.
+4. **Lint caught a genuine omission: `WearRecents`.** `android:taskAffinity` had been left off as
+   presumed cargo-cult. Google's Wear launcher guidance confirms it is required — without a unique
+   affinity per launcher activity, the app can fail to appear in Recents and render with the wrong
+   label/icon when opened from a tile or notification. Added with the rationale inline.
+5. **Gradle wrapper provenance is verified end to end.** The 9.6.1 distribution was checksum-matched
+   against `services.gradle.org` (`9c0f7fae…9e14`) before use, and the generated
+   `gradle-wrapper.jar` matches Gradle's published wrapper checksum
+   (`497c8c2a…a9c7`) bit-for-bit. CI re-checks this on every run: `gradle/actions/setup-gradle`
+   validates wrapper jars by default.
+6. **`monkey` is not a reliable launcher** — it raced the install and exited `-5`. `am start -W` is
+   deterministic and was used for the AC3 verification.
+
 ### Completion Notes List
+
+- `watch-android/` is a standalone Gradle project with its own wrapper, version catalogue and
+  `settings.gradle.kts`. **No Expo config plugin exists or was needed** — and this is stronger than
+  the story anticipated: **AGP 9.0 removed embedded-Wear-app support outright** (the `wearApp`
+  configurations are gone), so embedding is not merely unnecessary, it is unsupported. Nothing was
+  written into `android/`, and `app.json` / `app.config.ts` / `targets/**` / `watch-ios/**` /
+  `jest.config.js` / `package.json` were all left untouched.
+- **No `org.jetbrains.kotlin.android` plugin** appears anywhere: AGP 9 ships built-in Kotlin and
+  enables it by default. Only `com.android.application` and the Compose compiler plugin are applied.
+- Sources live in `src/main/kotlin` (not `src/main/java`); confirmed picked up by built-in Kotlin.
+- `versionCode` implements Open Decision 4's `2_000_000` band, read from a **`WEAR_VERSION_CODE`** env
+  var — deliberately a different name from the phone's `ANDROID_VERSION_CODE` so a Wear build can
+  never silently inherit the phone's counter. Read via `providers.environmentVariable` rather than
+  `System.getenv` so it is a tracked configuration-cache input.
+- **The counter fails loudly on a present-but-unusable value** (QA round 1, finding 3). Absent → the
+  bare band, which is the local-build case. Empty, `0`, negative or non-numeric → the build fails,
+  because falling back would emit a plausible-looking `versionCode` indistinguishable from a genuine
+  first upload — the exact Story 16.7 failure, merely deferred to Play-upload time. An unset GitHub
+  Actions variable interpolates to the empty string, so that case matters in practice. The sum is
+  computed in `Long` and checked against Play's `2_100_000_000` ceiling before narrowing to `Int`, so
+  a large counter cannot overflow into a negative `versionCode`. Verified by running each case:
+  unset → `2000000`; `42` → `2000042`; `abc`, `""`, `-5`, `0` → `BUILD FAILED` with the explanatory
+  message.
+- **Release path was exercised on the final configuration** (QA round 1, finding 1): `assembleRelease`
+  succeeds with R8 minification and resource shrinking (unsigned, as AC9 requires). It had first been
+  run against the earlier Kotlin 2.2.10 pin and then wiped by a `clean` during the 2.4.10 evaluation,
+  so the original claim was true-when-made but stale for the shipped config. Re-run and now backed by
+  artifacts: `app/build/outputs/apk/release/app-release-unsigned.apk` plus an R8
+  `outputs/mapping/release/mapping.txt`, and the release APK badges `versionCode='2000000'`.
+- **Scope additions, both small and both flagged:** a launcher icon (the app would otherwise show the
+  default Android robot in the Wear launcher) derived from the repo's existing
+  `assets/adaptive-icon.png` rather than invented, and `data_extraction_rules.xml` to close the
+  `allowBackup` deprecation on Android 12+. The icon is a **copy with no sync gate** — recorded under
+  README § Known gaps.
+- **Lint is clean except one warning left deliberately visible**: `MonochromeLauncherIcon`. Silencing
+  it would hide a real gap (no themed icon on Android 13+), and fixing it needs a flat silhouette
+  design asset that does not exist in this repo. Every suppression in `app/lint.xml` carries its
+  reasoning; `GradleDependency` and `NewerVersionAvailable` are off because they are time- and
+  network-dependent and make a lint run non-reproducible. **This count is post-re-run** (QA round 1,
+  finding 2): the `DataExtractionRules` suppression had been added _after_ the previous `lintDebug`,
+  so the report on disk still showed 2 warnings and the claim was unverified at the time it was
+  written. `lintDebug` was re-run against the final tree and now genuinely reports 0 errors and this
+  one warning.
+- **`compileSdk` stayed at 36** although AGP 9.3 supports 37 and lint suggested it: 36 is what the
+  phone app's Expo SDK compiles against and what CI runners provide, so 37 would mean provisioning a
+  platform everywhere for no current benefit.
+- AC8 honesty: the new CI job compiles and nothing more. The README states explicitly that no unit
+  tests, no lint and no device run happen in CI, so the job's existence cannot be mistaken for
+  broader coverage.
 
 ### Device / Emulator Verification (AC3)
 
-| Target | API level | Result |
-| ------ | --------- | ------ |
-|        |           |        |
+| Target                                             | API level           | Result                                                                                                                                                                                                                 |
+| -------------------------------------------------- | ------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `./gradlew assembleDebug` (macOS, JDK 17)          | compileSdk 36       | ✅ BUILD SUCCESSFUL                                                                                                                                                                                                    |
+| `./gradlew assembleRelease` (R8 + resource shrink) | compileSdk 36       | ✅ BUILD SUCCESSFUL (unsigned, as intended)                                                                                                                                                                            |
+| `./gradlew lintDebug`                              | compileSdk 36       | ✅ 0 errors; 1 deliberate warning (`MonochromeLauncherIcon`)                                                                                                                                                           |
+| Wear OS 3 emulator `wearos30_arm64` (small round)  | **30** (Android 11) | ✅ Installed (`adb install -r` → Success) and launched (`am start -W` → `Status: ok`, `mResumedActivity: …/.wear.MainActivity`); placeholder screen renders the app name, "No cards yet" and the Wear `TimeText` clock |
+| `WEAR_VERSION_CODE` contract (6 cases)             | n/a                 | ✅ unset → `2000000`; `42` → `2000042`; `abc` / `""` / `-5` / `0` → `BUILD FAILED` with the explanatory message. Re-verified after the round-2 refactor.                                                               |
+
+APK badging read back from the built artifact (`aapt2 dump badging`), i.e. verified as shipped rather
+than as written: `package: name='com.iferoporefi.myloyaltycards'` (**no suffix**),
+`versionCode='2000000'`, `minSdkVersion:'30'`, `targetSdkVersion:'35'`, `compileSdkVersion='36'`,
+`uses-feature: android.hardware.type.watch`, and the merged manifest carries
+`com.google.android.wearable.standalone` = `false`.
+
+### Regression evidence (AC10)
+
+Run from the main checkout, all green. **Re-run in full after the last review-round edit**, so these
+figures describe the tree as it stands rather than an earlier state — twice in this story a claim was
+true when written and went stale under a later change, and that is the failure mode being closed here:
+
+| Gate                | Result                                                           |
+| ------------------- | ---------------------------------------------------------------- |
+| `yarn typecheck`    | ✅ pass                                                          |
+| `yarn lint`         | ✅ 0 errors (3 pre-existing warnings, in files not touched here) |
+| `yarn test`         | ✅ 171 suites / 2026 tests passed                                |
+| `yarn tokens:check` | ✅ in sync                                                       |
+| `yarn splash:check` | ✅ in sync                                                       |
+| `yarn format:check` | ✅ all matched files use Prettier style                          |
+| `yarn watch:build`  | ✅ `** BUILD SUCCEEDED **` (watchOS unperturbed)                 |
+
+`git status --porcelain` confirms AC7 exactly: every source file **and** the Gradle wrapper
+(`gradlew`, `gradlew.bat`, `gradle/wrapper/*`) is tracked, while `build/`, `.gradle/`, `.kotlin/`,
+`local.properties`, `*.apk` and `*.aab` under `watch-android/` are ignored.
+
+### Review rounds
+
+Two independent Sonnet review passes were run against the implementation before human review.
+
+**Code review — round 1: `APPROVED — ZERO COMMENTS`.** It independently re-derived the `.gitignore`
+result with `git check-ignore` against every on-disk file, recomputed the wrapper JAR checksum, and
+chased two suspected defects to ground before dropping both (a `gradlew` diff that turned out to
+compare against Gradle's self-hosting script rather than the consumer wrapper template, and the
+`sprint-status.yaml` question resolved below).
+
+**QA review — round 1: 4 findings. Three accepted and fixed, one rejected on evidence.**
+
+| #   | Finding                                                         | Outcome                                                                                                                      |
+| --- | --------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
+| 1   | `assembleRelease` claim unsupported by on-disk artifacts        | **Accepted.** Genuinely stale — see Completion Notes. Re-run on the final config; artifacts now exist.                       |
+| 2   | Lint claim of 1 warning contradicted by the report (2 warnings) | **Accepted.** The suppression post-dated the last run. Re-ran `lintDebug`; now genuinely 1.                                  |
+| 3   | `WEAR_VERSION_CODE` silently swallows invalid input             | **Accepted.** Hardened to fail loudly, plus a Play-ceiling check. Verified across the full input matrix — see the AC3 table. |
+| 4   | `sprint-status.yaml` should read `done`, not `in-progress`      | Rejected in round 1, then **partly upheld in round 2** — see below. Now set to `review`.                                     |
+
+**Round 2 (both reviewers re-run, because the fixes changed build logic).**
+
+_Code review — round 2: 3 comments, all accepted and fixed._
+
+1. **The comment justifying the new fail-fast claimed `app.config.ts`'s `resolveAndroidVersionCode`
+   "takes the same stance". It is the exact opposite** — that function falls back to a Unix timestamp
+   on a present-but-invalid `ANDROID_VERSION_CODE`, deliberately and with tests
+   (`app.config.test.ts`) covering the empty/non-numeric/zero/negative cases. The comment now records
+   the divergence instead of inventing a precedent. A good catch: it cited the phone's behaviour as
+   reassurance when that behaviour is a live instance of the very thing being guarded against.
+2. The invalid-value list omitted `0`, which is also rejected. Added.
+3. `orNull?.trim().let { }` (no `?.` before `let`) was correct but relies on `let`'s unconstrained
+   receiver, and a future reader "fixing" it to `?.let` would silently break the null branch.
+   Rewritten as `orNull?.trim()?.let { … } ?: 0`, which is behaviourally identical across all six
+   verified cases and needs no such reasoning.
+
+_QA — round 2: findings 1–3 confirmed fixed from artifacts; finding 4 maintained in corrected form._
+
+On finding 4, QA was right and the round-1 rejection was wrong. Round 1 correctly established that
+`done` pre-merge would be wrong, but then drew the wrong conclusion. The tracker's own
+`STATUS DEFINITIONS` block lists `review` as a distinct Story Status, this workflow's Step 9 instructs
+setting it, and — decisively — **git history shows the tracker does hold `review` pre-merge**:
+`16-23` went `ready-for-dev → in-progress → review → done` (`review` at `8aa4be9`), and `9-5` and
+`16-12` follow the same path. The `mark-story-done.mjs` header comment quoted in round 1 accurately
+describes what that script _writes_, not the file's status vocabulary; conflating the two was the
+error. `sprint-status.yaml` is now `review`, matching the story file. No automation is affected either
+way — `markSprintStatus` overwrites whatever token it finds on merge.
+
+**Rounds 3–5: documentation staleness only, now closed.** Round 3 (code review) found the invalid-value
+description had gained `0` while two case-count references still said "five". Round 4 (QA) found two
+more of the same shape: a "Five cases verified" cell and a File List entry still reading
+`10-1 → in-progress` after the tracker had moved to `review`. All fixed — and where a count could drift
+again it was removed rather than bumped.
+
+That pattern is the honest lesson of this story: **three separate findings were claims that were true
+when written and went stale under a later change** (the release build wiped by a `clean`, the lint
+count invalidated by a suppression added afterwards, the case counts overtaken by an added test case).
+To close it rather than leave a sixth round to find more, the whole record was swept for numeric and
+status claims and **every AC10 gate was re-run on the final tree**.
+
+**Final state: code review `APPROVED — ZERO COMMENTS`; QA `PASS — ZERO FINDINGS`.** Both independently
+re-derived the File List from `git status` (24 new + 3 modified, exact match), re-confirmed the wrapper
+JAR checksum, and checked that every build artifact post-dates the last edit to
+`app/build.gradle.kts`.
 
 ### File List
+
+**New**
+
+- `.github/workflows/wear-os-build.yml`
+- `watch-android/README.md`
+- `watch-android/settings.gradle.kts`
+- `watch-android/build.gradle.kts`
+- `watch-android/gradle.properties`
+- `watch-android/gradle/libs.versions.toml`
+- `watch-android/gradle/wrapper/gradle-wrapper.jar`
+- `watch-android/gradle/wrapper/gradle-wrapper.properties`
+- `watch-android/gradlew`
+- `watch-android/gradlew.bat`
+- `watch-android/app/build.gradle.kts`
+- `watch-android/app/lint.xml`
+- `watch-android/app/proguard-rules.pro`
+- `watch-android/app/src/main/AndroidManifest.xml`
+- `watch-android/app/src/main/kotlin/com/iferoporefi/myloyaltycards/wear/MainActivity.kt`
+- `watch-android/app/src/main/kotlin/com/iferoporefi/myloyaltycards/wear/presentation/WearApp.kt`
+- `watch-android/app/src/main/res/mipmap-anydpi-v26/ic_launcher.xml`
+- `watch-android/app/src/main/res/mipmap-hdpi/ic_launcher_foreground.png`
+- `watch-android/app/src/main/res/mipmap-xhdpi/ic_launcher_foreground.png`
+- `watch-android/app/src/main/res/mipmap-xxhdpi/ic_launcher_foreground.png`
+- `watch-android/app/src/main/res/mipmap-xxxhdpi/ic_launcher_foreground.png`
+- `watch-android/app/src/main/res/values/colors.xml`
+- `watch-android/app/src/main/res/values/strings.xml`
+- `watch-android/app/src/main/res/xml/data_extraction_rules.xml`
+
+**Modified**
+
+- `.gitignore` — Wear OS build-artifact block (AC7)
+- `docs/sprint-artifacts/sprint-status.yaml` — `10-1`: `ready-for-dev` → `review`
+- `docs/sprint-artifacts/stories/10-1-create-wear-os-project-structure.md` — this record
+
+## Change Log
+
+| Date       | Change                                                                                                                                                                                                                                                              |
+| ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 2026-08-02 | Implemented Story 10.1: standalone `watch-android/` Gradle project (Kotlin + Compose for Wear OS), non-standalone manifest, `versionCode` band `2_000_000`, README, `.gitignore` block and a path-filtered CI build job. Verified on a Wear OS 3 / API 30 emulator. |
