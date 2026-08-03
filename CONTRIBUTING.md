@@ -256,13 +256,13 @@ feat(watch): render barcode complication on the watch face (Story 5.9)
 
 Quality is enforced at three levels. **All must pass — bypassing them is forbidden.**
 
-| Gate                    | When                                | What runs                                                                            |
-| ----------------------- | ----------------------------------- | ------------------------------------------------------------------------------------ |
-| **pre-commit**          | `git commit`                        | `lint-staged` → ESLint `--fix` + Prettier on staged files                            |
-| **pre-push**            | `git push`                          | Typecheck, lint, format, drift checks, full test suite                               |
-| **CI — quality**        | every PR & push to `main`           | Everything `pre-push` runs, plus `check:no-tests-folders`, with coverage             |
-| **CI — watchOS**        | PR/push touching watch or iOS paths | Watch contract tests, `Brands.swift` catalogue sync, watch-target build              |
-| **CI — PR conventions** | every PR                            | Conventional-Commit title, branch naming, and spec-first story link (see note below) |
+| Gate                    | When                                | What runs                                                                                               |
+| ----------------------- | ----------------------------------- | ------------------------------------------------------------------------------------------------------- |
+| **pre-commit**          | `git commit`                        | `lint-staged` → ESLint `--fix` + Prettier on staged files                                               |
+| **pre-push**            | `git push`                          | Typecheck, lint, format, drift checks, full test suite                                                  |
+| **CI — quality**        | every PR & push to `main`           | Everything `pre-push` runs, plus `check:no-tests-folders`, with coverage                                |
+| **CI — watchOS**        | PR/push touching watch or iOS paths | Watch contract tests, `Brands.swift` catalogue sync, watch-target build                                 |
+| **CI — PR conventions** | every PR                            | Conventional-Commit title, branch naming, spec-first story link, and no CI-skip marker (see note below) |
 
 ### Exactly what runs, in order
 
@@ -294,6 +294,8 @@ The pre-push hook and the quality-gates workflow run the **same set of checks in
 **CI — watchOS** ([`watchos-tests.yml`](.github/workflows/watchos-tests.yml)) is a **separate, path-filtered workflow** — it runs only when `targets/watch/**`, `watch-ios/**`, `ios/**`, `app.json`, `fastlane/Fastfile`, or the workflow itself changes, so most PRs never trigger it. It runs the watch catalogue Jest tests, then `expo prebuild`, regenerates `Brands.swift`, verifies it with `yarn check:catalogue-generated`, and builds the watch target via `yarn watch:build:ci`. Locally, `yarn test:all` covers the watch tests.
 
 The **PR conventions** check ([`pr-conventions.yml`](.github/workflows/pr-conventions.yml)) fails the PR if the title isn't a Conventional Commit, the branch doesn't use an allowed prefix, or a **code change** references no story. `docs:`/`chore:` titles and catalogue- or `design`-labelled PRs are exempt from the story requirement (the `design` label covers token/visual polish — see [Design / UI Changes](#design--ui-changes)).
+
+It also fails the PR if the **title or body** contains a CI-skip marker: any of GitHub's five bracketed instructions (`skip ci`, `ci skip`, `no ci`, `skip actions`, `actions skip` — written in square brackets) or a `skip-checks` trailer. A squash merge copies the PR title into the commit subject and the PR body into the commit body, and GitHub honours a skip instruction **anywhere** in a commit message — so a marker written as nothing more than prose silently suppresses the push-to-`main` run of the gates above. That is not hypothetical: `115709d` mentioned one in passing on body line 12, and its gate run never happened. Backticks are no protection — to GitHub's scanner they are ordinary adjacent characters. To write **about** a marker, hyphenate it (`skip-ci`) or split it across two code spans so a backtick lands between the words: `[skip` `ci]`.
 
 🚫 **`--no-verify` is strictly forbidden** for both `git commit` and `git push`. If a hook fails:
 
@@ -353,7 +355,7 @@ Run `yarn lint` and `yarn typecheck` to catch most violations automatically.
 ### Merging
 
 - **Do not merge your own PR.** A maintainer reviews and merges to `main`.
-- **Status update is automated.** When a PR is **merged**, the [`mark-story-done`](.github/workflows/mark-story-done.yml) workflow reads the story referenced in the PR and commits its status → `done` (in both `sprint-status.yaml` and the story file) directly to the default branch. The commit is tagged `[skip ci]` so it doesn't re-run any pipelines. This works for fork PRs too. _(Maintainers can also apply it by hand: `node scripts/mark-story-done.mjs <story-id>`.)_
+- **Status update is automated.** When a PR is **merged**, the [`mark-story-done`](.github/workflows/mark-story-done.yml) workflow reads the story referenced in the PR and commits its status → `done` (in both `sprint-status.yaml` and the story file) directly to the default branch. The commit carries a skip-ci marker so it doesn't re-run any pipelines — that marker belongs in the bot's own commit message and must never appear in a PR title or body, which a squash merge would copy onto `main` (see [Quality Gates](#quality-gates-never-bypass)). This works for fork PRs too. _(Maintainers can also apply it by hand: `node scripts/mark-story-done.mjs <story-id>`.)_
   - **Consequence for releases:** because that commit is usually `main`'s tip, a bare `git tag && git push --tags` will silently create no workflow run — GitHub applies the skip marker to tag pushes too. Cut releases with `gh release create` instead; see [Why releases are published, not just tagged](docs/cicd.md#why-releases-are-published-not-just-tagged).
 - When an epic completes, run a **retrospective** and capture lessons in `docs/sprint-artifacts/`.
 
