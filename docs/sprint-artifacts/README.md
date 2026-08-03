@@ -18,6 +18,18 @@ for those extensions — it is loaded as a persistent fact by the customized spr
 `development_status` key here). The **tracker is source of truth** for live status; `epics.md` is
 regenerated _from_ the tracker, never the reverse.
 
+That 1:1 mapping is **enforced in CI** by `yarn check:story-catalogue-sync`
+([`scripts/check-story-catalogue-sync.mjs`](../../scripts/check-story-catalogue-sync.mjs)), which
+reports gaps in both directions and also pins `epics.md`'s `totalStories` frontmatter to the literal
+`### Story ` heading count. It exists because the invariant broke twice in a row — a drafting PR added
+the tracker key and the story file but not the catalogue section, leaving `create-story` reading a key
+with no content behind it.
+
+A heading whose id does **not** derive from its tracker key — today `### Story 12.IC:` and
+`### Story 12.FI:`, whose keys are `12-icon-doc-cleanup` and `12-figma-icon-update` — declares the
+mapping in its own section body on a `Tracker key:` line (see either section for the exact form). Add
+that line for any future oddity rather than special-casing the script.
+
 ## Why story files live in `stories/`
 
 The story-status automation hardcodes this path — `scripts/lib/story-refs.mjs`,

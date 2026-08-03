@@ -27,6 +27,7 @@
     "check:no-tests-folders": "node scripts/check-no-tests-folders.mjs",
     "check:native-patches": "node scripts/verify-native-patches.mjs",
     "check:native-strings": "node scripts/verify-native-strings.mjs",
+    "check:story-catalogue-sync": "node scripts/check-story-catalogue-sync.mjs",
     "test": "jest",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
