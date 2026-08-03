@@ -1,6 +1,6 @@
 # CI/CD Pipeline & Quality Gates
 
-_Last updated: 2026-04-16_
+_Last updated: 2026-08-03_
 
 This document describes the current GitHub Actions and Fastlane CI/CD pipeline for the myLoyaltyCards repository. It is the single source of truth for how builds, tests, tags, and deploys run across iOS, Android, and watchOS.
 
@@ -16,6 +16,7 @@ This document describes the current GitHub Actions and Fastlane CI/CD pipeline f
   - [Store Upload (Final Release)](#store-upload-final-release)
 - [Fastlane & Native Build Notes](#fastlane--native-build-notes)
 - [Release Runbooks](#release-runbooks)
+  - [Why releases are published, not just tagged](#why-releases-are-published-not-just-tagged)
   - [Ship to TestFlight](#ship-to-testflight)
   - [Release to Production](#release-to-production)
   - [Manual / AdHoc Build](#manual--adhoc-build)
@@ -30,10 +31,10 @@ This document describes the current GitHub Actions and Fastlane CI/CD pipeline f
 flowchart LR
   PR["PR opened / updated"] -->|checks| QG["ci-quality-gates.yml"]
   PR -->|watchOS path changes| WT["watchos-tests.yml"]
-  PUSH["Push to main"] -->|app/core/features/shared/ios changes| IOSA["ios-release.yml"]
-  PUSH -->|app/core/features/shared/android changes| ANDA["android-release.yml"]
-  RCTAG["RC tag v*.*.*-rc.*"] --> BETA["beta-releases.yml"]
-  RELTAG["Release tag v*.*.*"] --> STORE["store-upload.yml"]
+  PUSH["Push to main"] -->|binary-affecting paths change| IOSA["ios-release.yml"]
+  PUSH -->|binary-affecting paths change| ANDA["android-release.yml"]
+  RCREL["Published pre-release v*.*.*-rc.*"] --> BETA["beta-releases.yml"]
+  RELREL["Published release v*.*.*"] --> STORE["store-upload.yml"]
   BETA -->|builds| TF["TestFlight + Android Beta"]
   STORE -->|uploads| STORE2["App Store + Play Store"]
 ```
@@ -108,13 +109,16 @@ File: `.github/workflows/ios-release.yml`
 
 Triggers:
 
-- `push` to `main` when any of these paths change:
-  - `app/**`
-  - `core/**`
-  - `features/**`
-  - `shared/**`
-  - `ios/**`
+- `push` to `main` when any path that can change the shipped binary changes:
+  - JS bundle source — `app/**`, `core/**`, `features/**`, `shared/**`
+  - native + watch companion — `ios/**`, `targets/**`, `watch-ios/**`
+  - compiled-in data and assets — `catalogue/**`, `assets/**`, `tokens/**`
+  - build inputs — `app.json`, `app.config.ts`, `package.json`, `yarn.lock`, `babel.config.js`, `metro.config.js`, `patches/**`, `fastlane/**`
+  - this workflow itself — `.github/workflows/ios-release.yml`
+- …but **not** for files that cannot reach the binary, excluded with negative patterns: `!**/*.test.ts`, `!**/*.test.tsx`, `!**/*.stories.tsx`. Tests are co-located beside their subject and stories are Storybook-only, so a test- or story-only change no longer costs a native build. A commit that _also_ touches real source still builds.
 - `workflow_dispatch` for manual runs on any branch
+
+Note: `catalogue/italy.json` is in the trigger list because `watch-ios/Scripts/generate-catalogue.swift` reads it during this build — a brand added to the catalogue alone still changes what ships.
 
 What it runs:
 
@@ -133,12 +137,13 @@ File: `.github/workflows/android-release.yml`
 
 Triggers:
 
-- `push` to `main` when any of these paths change:
-  - `app/**`
-  - `core/**`
-  - `features/**`
-  - `shared/**`
-  - `android/**`
+- `push` to `main` when any path that can change the shipped binary changes:
+  - JS bundle source — `app/**`, `core/**`, `features/**`, `shared/**`
+  - native — `android/**` (the watch companion is iOS-only, so `targets/**` and `watch-ios/**` are deliberately absent)
+  - compiled-in data and assets — `catalogue/**`, `assets/**`, `tokens/**`
+  - build inputs — `app.json`, `app.config.ts`, `package.json`, `yarn.lock`, `babel.config.js`, `metro.config.js`, `patches/**`, `fastlane/**`
+  - this workflow itself — `.github/workflows/android-release.yml`
+- …but **not** `!**/*.test.ts`, `!**/*.test.tsx`, `!**/*.stories.tsx` — see the iOS section above for the rationale.
 - `workflow_dispatch` for manual runs on any branch
 
 What it runs:
@@ -157,7 +162,11 @@ File: `.github/workflows/beta-releases.yml`
 
 Triggers:
 
-- `push` tags matching `v*.*.*-rc.*`
+- a **published GitHub Release** whose tag contains `-rc.` — the intended trigger, see [Why releases are published, not just tagged](#why-releases-are-published-not-just-tagged)
+- `push` tags matching `v*.*.*-rc.*` — kept as a fallback so a bare `git push --tags` is not a silent no-op
+- `workflow_dispatch` with a required `tag` input, for a manual re-run
+
+Because `on.release` cannot filter by tag pattern, the RC selection lives in a job-level `if:`. A published release whose tag is not an RC therefore produces a run whose jobs are all `skipped` — that is expected, not a failure. A `concurrency` group keyed on the tag name collapses the release and tag-push events into a single run, so one tag never produces two uploads.
 
 Jobs:
 
@@ -175,8 +184,11 @@ File: `.github/workflows/store-upload.yml`
 
 Triggers:
 
-- `push` tags matching `v*.*.*`
-- excludes pre-release tags via `!v*.*.*-*`
+- a **published GitHub Release** that is _not_ flagged as a pre-release and whose tag is a bare `vX.Y.Z` — the intended trigger
+- `push` tags matching `v*.*.*`, excluding pre-release tags via `!v*.*.*-*` — kept as a fallback
+- `workflow_dispatch` with a required `tag` input, for a manual re-run
+
+Both conditions — the `prerelease` flag **and** the tag shape — are checked in the job-level `if:`, so a release mis-flagged in the GitHub UI cannot reach production.
 
 Jobs:
 
@@ -219,18 +231,27 @@ Android lanes summary:
 
 ## Release Runbooks
 
+### Why releases are published, not just tagged
+
+**Do not cut a release with a bare `git tag && git push --tags`.** It silently does nothing most of the time.
+
+After nearly every merge, [`mark-story-done.yml`](../.github/workflows/mark-story-done.yml) pushes `chore(sprint): mark story done after merge [skip ci]` straight to `main`, so `main`'s tip usually carries a skip marker. GitHub honours `[skip ci]` (and `[ci skip]`, `[no ci]`, `[skip actions]`, `[actions skip]`, and the `skip-checks: true` trailer) for the `push` and `pull_request` events, and it evaluates them against the **commit the pushed ref points at** — including a pushed tag. Tag that tip, push the tag, and no workflow run is created at all: no red X, no notification, just silence.
+
+Publishing a GitHub Release avoids this entirely, because the `release` event is not a `push` event and cannot be skipped. That is why both release workflows trigger on `release: [published]`, and why the runbooks below use `gh release create`.
+
+The `push: tags` triggers are still in place as a fallback, so an out-of-habit tag push is not a silent no-op when the tip happens to be clean. If you ever _do_ end up with a tag that fired nothing, you have two ways out: publish a release for the existing tag (`gh release create <tag> --verify-tag …`), or run the workflow manually from the Actions tab and pass the tag as the `tag` input.
+
 ### Ship to TestFlight
 
 1. Confirm `main` is green with passing CI.
 2. Decide the release version.
-3. Create an RC tag:
+3. Create and publish the RC as a **pre-release**:
 
 ```bash
-git tag v1.0.0-rc.1
-git push --tags
+gh release create v1.0.0-rc.1 --prerelease --generate-notes --target main
 ```
 
-4. Monitor `.github/workflows/beta-releases.yml` in GitHub Actions.
+4. Monitor `.github/workflows/beta-releases.yml` in GitHub Actions. `Store Upload (Final Release)` will also appear with all jobs `skipped` — that is the pre-release guard working, not a failure.
 5. Verify the iOS build appears in App Store Connect → TestFlight.
 6. Verify the Android build appears in the Play Console alpha (testing) track.
 7. Distribute to testers.
@@ -238,14 +259,13 @@ git push --tags
 ### Release to Production
 
 1. Validate the RC/TestFlight build.
-2. Create a final release tag:
+2. Create and publish the final release (**no** `--prerelease`, and a bare `vX.Y.Z` tag — the workflow checks both):
 
 ```bash
-git tag v1.0.0
-git push --tags
+gh release create v1.0.0 --generate-notes --target main
 ```
 
-3. Monitor `.github/workflows/store-upload.yml` in GitHub Actions.
+3. Monitor `.github/workflows/store-upload.yml` in GitHub Actions. `Beta Releases (RC)` will appear with all jobs `skipped`.
 4. After upload completes, submit the build for App Store / Play Store review.
 
 ### Manual / AdHoc Build

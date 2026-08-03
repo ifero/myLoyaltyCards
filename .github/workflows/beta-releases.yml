@@ -1,9 +1,32 @@
 name: Beta Releases (RC)
 
 on:
+  # A published release is the reliable trigger. GitHub honours `[skip ci]` and
+  # friends ONLY for the push and pull_request events, and mark-story-done.yml
+  # lands `chore(sprint): mark story done after merge [skip ci]` on main after
+  # most merges — so tagging that tip and pushing the tag creates no run at all.
+  # Publishing the release cannot be skipped, whatever the tagged commit says.
+  release:
+    types: [published]
+  # Kept so a habitual `git push --tags` is never a silent no-op. When both
+  # events fire for one tag the concurrency group below collapses them to one run.
   push:
     tags:
       - 'v*.*.*-rc.*' # RC tags for beta builds
+  # Manual re-run, e.g. after a flaky upload. Not skippable either.
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'RC tag to build (e.g. v1.0.0-rc.18)'
+        required: true
+
+# github.ref_name is the bare tag name for BOTH the release and the tag-push
+# event, so a tag that fires both collapses to a single run. The loser is
+# cancelled seconds after queuing — during runner setup, ~20 minutes before any
+# upload — so no partial build ever reaches TestFlight or Play.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref_name }}
+  cancel-in-progress: true
 
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: 'true'
@@ -12,6 +35,10 @@ jobs:
   ios-testflight-beta:
     name: Build iOS TestFlight (RC)
     runs-on: macos-latest
+    # `on.release` cannot filter by tag pattern, so the RC selection that used to
+    # live entirely in `on.push.tags` is enforced here for release events. Push
+    # runs are already scoped by the tag pattern; dispatch is deliberate.
+    if: github.event_name != 'release' || contains(github.event.release.tag_name, '-rc.')
     env:
       MATCH_PASSWORD: ${{ secrets.MATCH_PASSWORD }}
       MATCH_GIT_BASIC_AUTHORIZATION: ${{ secrets.MATCH_GIT_BASIC_AUTHORIZATION }}
@@ -32,6 +59,11 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          # release → refs/tags/<tag> (GITHUB_SHA is already the tagged commit);
+          # push → the tag; workflow_dispatch → the tag typed by the operator.
+          # `github.event.inputs` is null for the first two, so `||` falls through.
+          ref: ${{ github.event.inputs.tag || github.ref }}
       - name: Select Xcode (latest stable for iOS 26 SDK)
         uses: maxim-lobanov/setup-xcode@v1
         with:
@@ -81,6 +113,8 @@ jobs:
   android-beta:
     name: Build Android Alpha (RC)
     runs-on: ubuntu-latest
+    # See ios-testflight-beta above for why this guard exists.
+    if: github.event_name != 'release' || contains(github.event.release.tag_name, '-rc.')
     env:
       ANDROID_PACKAGE_NAME: ${{ secrets.ANDROID_PACKAGE_NAME }}
       PLAY_STORE_API_KEY: ${{ secrets.PLAY_STORE_API_KEY }}
@@ -100,6 +134,9 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          # See ios-testflight-beta above.
+          ref: ${{ github.event.inputs.tag || github.ref }}
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:

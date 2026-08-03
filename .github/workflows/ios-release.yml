@@ -1,17 +1,48 @@
 # iOS AdHoc Build
-# Triggers on main branch push (if app/core/features/shared/ios change)
-# Also available as manual workflow_dispatch on any branch
+# Triggers on main branch push when something that can change the shipped binary
+# changes — see the annotated path list below.
+# Also available as manual workflow_dispatch on any branch.
 name: iOS AdHoc Build
 
 on:
   push:
     branches: [main]
     paths:
+      # Source that reaches the JS bundle.
       - 'app/**'
       - 'core/**'
       - 'features/**'
       - 'shared/**'
+      # Native projects, plus the watch companion embedded in the iOS binary.
       - 'ios/**'
+      - 'targets/**'
+      - 'watch-ios/**'
+      # Data and assets compiled into the binary. catalogue/italy.json is read by
+      # watch-ios/Scripts/generate-catalogue.swift during this very build, so a
+      # brand added to the catalogue alone still changes what ships.
+      - 'catalogue/**'
+      - 'assets/**'
+      - 'tokens/**'
+      # Build inputs: Expo config (incl. the app version), dependencies, the
+      # native patches this workflow verifies below, and the Fastlane lanes.
+      - 'app.json'
+      - 'app.config.ts'
+      - 'package.json'
+      - 'yarn.lock'
+      - 'babel.config.js'
+      - 'metro.config.js'
+      - 'patches/**'
+      - 'fastlane/**'
+      # So a change to this pipeline is exercised on merge (as watchos-tests.yml does).
+      - '.github/workflows/ios-release.yml'
+      # …but never for files that cannot reach the binary: tests are co-located
+      # beside their subject and stories are Storybook-only (Chromatic covers
+      # those, and there is no web target). Order is load-bearing — a negative
+      # pattern after a positive match excludes that path, while a commit that
+      # ALSO touches real source still matches and still builds.
+      - '!**/*.test.ts'
+      - '!**/*.test.tsx'
+      - '!**/*.stories.tsx'
   workflow_dispatch:
 
 env:
