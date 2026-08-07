@@ -241,13 +241,14 @@ myLoyaltyCards/
 │       ├── ComplicationProvider.swift
 │       ├── WatchCardEntity.swift  # SwiftData model
 │       └── Assets.xcassets/       # Watch app icon, AccentColor
-├── watch-android/          # Phase 2: Native Wear OS (Kotlin/Compose) — future
+├── watch-android/          # Native Wear OS (Kotlin/Compose) — STANDALONE Gradle project
 │   ├── README.md           # ⚠️ Documents this is native Kotlin, not RN
-│   ├── scripts/
-│   │   └── generate-catalogue.kts
-│   └── app/src/main/
-│       └── generated/      # .gitignore'd - created at build time
-│           └── Brands.kt   # Generated from /catalogue/italy.json
+│   └── app/src/main/kotlin/com/iferoporefi/myloyaltycards/wear/
+│       └── Generated/
+│           └── Brands.kt   # Generated from /catalogue/italy.json — COMMITTED,
+│                           # drift-gated by `yarn wear:catalogue:check`. The generator
+│                           # is scripts/generate-wear-catalogue.mjs (Node, not a .kts),
+│                           # and Gradle never runs it. See Story 10.2.
 ├── app.json                # Expo config with @bacons/apple-targets plugin
 └── .env.example            # Template for local development
 ```

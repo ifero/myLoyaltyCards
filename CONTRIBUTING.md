@@ -260,8 +260,9 @@ Quality is enforced at three levels. **All must pass — bypassing them is forbi
 | ----------------------- | ----------------------------------- | ------------------------------------------------------------------------------------ |
 | **pre-commit**          | `git commit`                        | `lint-staged` → ESLint `--fix` + Prettier on staged files                            |
 | **pre-push**            | `git push`                          | Typecheck, lint, format, drift checks, full test suite                               |
-| **CI — quality**        | every PR & push to `main`           | Everything `pre-push` runs, plus `check:no-tests-folders`, with coverage             |
+| **CI — quality**        | every PR & push to `main`           | Everything `pre-push` runs, plus the repo-layout checks, with coverage               |
 | **CI — watchOS**        | PR/push touching watch or iOS paths | Watch contract tests, `Brands.swift` catalogue sync, watch-target build              |
+| **CI — Wear OS**        | PR/push touching `watch-android/**` | `./gradlew assembleDebug` for the standalone Wear OS project                         |
 | **CI — PR conventions** | every PR                            | Conventional-Commit title, branch naming, and spec-first story link (see note below) |
 
 ### Exactly what runs, in order
@@ -273,11 +274,12 @@ The pre-push hook and the quality-gates workflow run the **same set of checks in
 1. `yarn typecheck`
 2. `yarn tokens:check`
 3. `yarn splash:check`
-4. `yarn lint`
-5. `yarn check:native-patches`
-6. `yarn check:native-strings`
-7. `yarn format:check`
-8. `yarn test`
+4. `yarn wear:catalogue:check`
+5. `yarn lint`
+6. `yarn check:native-patches`
+7. `yarn check:native-strings`
+8. `yarn format:check`
+9. `yarn test`
 
 **CI — quality** ([`ci-quality-gates.yml`](.github/workflows/ci-quality-gates.yml)):
 
@@ -288,10 +290,14 @@ The pre-push hook and the quality-gates workflow run the **same set of checks in
 5. `yarn typecheck`
 6. `yarn tokens:check`
 7. `yarn splash:check`
-8. `yarn check:no-tests-folders`
-9. `yarn test:coverage`
+8. `yarn wear:catalogue:check`
+9. `yarn check:no-tests-folders`
+10. `yarn check:story-catalogue-sync`
+11. `yarn test:coverage`
 
 **CI — watchOS** ([`watchos-tests.yml`](.github/workflows/watchos-tests.yml)) is a **separate, path-filtered workflow** — it runs only when `targets/watch/**`, `watch-ios/**`, `ios/**`, `app.json`, `fastlane/Fastfile`, or the workflow itself changes, so most PRs never trigger it. It runs the watch catalogue Jest tests, then `expo prebuild`, regenerates `Brands.swift`, verifies it with `yarn check:catalogue-generated`, and builds the watch target via `yarn watch:build:ci`. Locally, `yarn test:all` covers the watch tests.
+
+**CI — Wear OS** ([`wear-os-build.yml`](.github/workflows/wear-os-build.yml)) is likewise path-filtered, to `watch-android/**` — it compiles the standalone Gradle project with `./gradlew assembleDebug` and runs no tests. Note that the Wear brand-catalogue drift check is **not** here: `yarn wear:catalogue:check` runs in the always-on quality-gates job above, because a PR editing only `catalogue/italy.json` would never trigger a `watch-android/**`-filtered job. Locally, `cd watch-android && ./gradlew assembleDebug`.
 
 The **PR conventions** check ([`pr-conventions.yml`](.github/workflows/pr-conventions.yml)) fails the PR if the title isn't a Conventional Commit, the branch doesn't use an allowed prefix, or a **code change** references no story. `docs:`/`chore:` titles and catalogue- or `design`-labelled PRs are exempt from the story requirement (the `design` label covers token/visual polish — see [Design / UI Changes](#design--ui-changes)).
 
@@ -365,13 +371,18 @@ Expanding the brand catalogue is the easiest and most-welcomed way to contribute
 
 1. The catalogue source of truth lives in [`catalogue/`](catalogue/) (e.g. `catalogue/italy.json`).
 2. Add or correct a brand entry, matching the existing JSON shape and the schema in `catalogue/types.ts`. Keep all fields present.
-3. **Regenerate the watch catalogue** so the watch app stays in sync:
+3. **Regenerate the watchOS catalogue** so the Apple Watch app stays in sync (needs macOS + Xcode):
    ```bash
    yarn watch:catalogue:generate
    ```
    This also regenerates the watch complication's brand-logo catalog (`targets/watch-widget/Generated/BrandLogoCatalog.generated.swift`) from the bundled logo assets. CI runs `yarn check:catalogue-generated` to ensure the generated watch sources match the source — commit the regenerated output.
-4. Run `yarn lint && yarn test` (catalogue files have tests, e.g. `catalogue/italy.test.ts`).
-5. Open a PR titled `feat(catalogue): add <brand> to <country>`. Catalogue-only PRs are lighter-weight and usually don't need a full story, but please reference an issue if one exists.
+4. **Regenerate the Wear OS catalogue** too — it is a separate generated file for a separate app, and forgetting it is the easiest mistake to make here:
+   ```bash
+   yarn wear:catalogue:generate
+   ```
+   This rewrites `watch-android/app/src/main/kotlin/com/iferoporefi/myloyaltycards/wear/Generated/Brands.kt`, which is committed on purpose. Pure Node, so it runs anywhere — unlike step 3. `yarn wear:catalogue:check` gates it in pre-push **and** CI; commit the regenerated output.
+5. Run `yarn lint && yarn test` (catalogue files have tests, e.g. `catalogue/italy.test.ts`).
+6. Open a PR titled `feat(catalogue): add <brand> to <country>`. Catalogue-only PRs are lighter-weight and usually don't need a full story, but please reference an issue if one exists.
 
 ---
 

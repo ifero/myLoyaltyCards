@@ -97,6 +97,17 @@ jobs:
       - name: Check the splash icon is in sync with its source artwork
         run: yarn splash:check
 
+      # Regenerates the Wear OS brand catalogue from catalogue/italy.json and fails if the
+      # committed Brands.kt differs. It lives HERE rather than in wear-os-build.yml
+      # deliberately: that job is path-filtered to `watch-android/**`, so a PR that edits
+      # only the catalogue would never trigger it and the drift would land unnoticed —
+      # which is the exact failure this gate exists to prevent. This job runs on every PR.
+      #
+      # The watchOS twin (`check:catalogue-generated`) cannot be here because it needs
+      # `xcrun swift`; it runs in watchos-tests.yml on macOS. This one is pure Node.
+      - name: Check the Wear OS brand catalogue is in sync with the catalogue source
+        run: yarn wear:catalogue:check
+
       - name: Check tests are co-located (no __tests__ folders)
         run: yarn check:no-tests-folders
 

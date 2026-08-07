@@ -10,6 +10,11 @@ yarn tokens:check || exit 1
 echo "Checking the splash icon is in sync with the app icon..."
 yarn splash:check || exit 1
 
+# Pure Node, unlike the watchOS equivalent (`check:catalogue-generated` needs `xcrun swift`),
+# so it runs on any machine and belongs here rather than only in CI.
+echo "Checking the Wear OS brand catalogue is in sync..."
+yarn wear:catalogue:check || exit 1
+
 echo "Running lint..."
 yarn lint || exit 1
 
