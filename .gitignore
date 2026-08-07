@@ -92,6 +92,15 @@ watch-android/local.properties
 watch-android/**/*.apk
 watch-android/**/*.aab
 
+# Wear OS generated brand catalogue (watch-android — the generated Brands.kt is tracked).
+# Same ignore-the-directory / un-ignore-the-file shape as targets/watch/Generated above,
+# and for the same reason: a gitignored artifact cannot be drift-checked, so a stale
+# catalogue would ship in silence. `yarn wear:catalogue:check` gates it in pre-push and CI.
+# The one thing the directory rule quietly covers is the generator's
+# .catalogue-inputs.sha256 sidecar — machine state for the incremental skip, not an artifact.
+watch-android/app/src/main/kotlin/com/iferoporefi/myloyaltycards/wear/Generated/*
+!watch-android/app/src/main/kotlin/com/iferoporefi/myloyaltycards/wear/Generated/Brands.kt
+
 # Fastlane
 bundler/
 fastlane/.env.default

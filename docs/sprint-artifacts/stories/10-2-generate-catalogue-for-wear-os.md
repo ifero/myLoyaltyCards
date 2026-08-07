@@ -4,7 +4,7 @@ baseline_commit: 7837f359540c72c30edcf392e1a897fa99ab9752
 
 # Story 10.2: Generate the catalogue for Wear OS [Enabling]
 
-Status: ready-for-dev
+Status: review
 
 Epic: 10 — Wear OS App
 
@@ -174,36 +174,36 @@ generator and its artifact are untouched.
 
 ## Tasks / Subtasks
 
-- [ ] **Task 1 — Write the generator (AC: 1, 2, 3)**
-  - [ ] `scripts/generate-wear-catalogue.mjs`, modelled on `scripts/build-tokens.mjs` for CLI/`--check`
+- [x] **Task 1 — Write the generator (AC: 1, 2, 3)**
+  - [x] `scripts/generate-wear-catalogue.mjs`, modelled on `scripts/build-tokens.mjs` for CLI/`--check`
         shape and on `watch-ios/Scripts/generate-catalogue.swift` for emission logic.
-  - [ ] Port the literal-escaping helpers to Kotlin equivalents. Kotlin string literals differ from
+  - [x] Port the literal-escaping helpers to Kotlin equivalents. Kotlin string literals differ from
         Swift: `$` is a template character and **must** be escaped in addition to `\` and `"`. The
         catalogue has no `$` today, but a future brand name or alias could — handle it now.
-  - [ ] Read `version` from the catalogue and expose it; a version-less generated catalogue makes 10-6's
+  - [x] Read `version` from the catalogue and expose it; a version-less generated catalogue makes 10-6's
         sync debugging harder.
-  - [ ] Emit a repo-relative `Source:` header comment (port `repoRelativePath`).
+  - [x] Emit a repo-relative `Source:` header comment (port `repoRelativePath`).
 
-- [ ] **Task 2 — Determinism + incremental skip (AC: 1, 7)**
-  - [ ] Sort brands by `id` before emitting. Never rely on JSON key order.
-  - [ ] SHA-256 the inputs (catalogue JSON **and** the generator itself) into a sidecar hash file;
+- [x] **Task 2 — Determinism + incremental skip (AC: 1, 7)**
+  - [x] Sort brands by `id` before emitting. Never rely on JSON key order.
+  - [x] SHA-256 the inputs (catalogue JSON **and** the generator itself) into a sidecar hash file;
         short-circuit when unchanged. Gitignore the sidecar — it is machine state, not an artifact.
 
-- [ ] **Task 3 — `--check` mode and gates (AC: 5, 6)**
-  - [ ] Implement `--check` so it never writes over the tracked artifact.
-  - [ ] Add the `yarn` scripts to `package.json`, named to match the sibling gates.
-  - [ ] Add to `.husky/pre-push` next to `tokens:check` / `splash:check`.
-  - [ ] Add to the PR quality-gate workflow. If `check:catalogue-generated` already has a job, extend
+- [x] **Task 3 — `--check` mode and gates (AC: 5, 6)**
+  - [x] Implement `--check` so it never writes over the tracked artifact.
+  - [x] Add the `yarn` scripts to `package.json`, named to match the sibling gates.
+  - [x] Add to `.husky/pre-push` next to `tokens:check` / `splash:check`.
+  - [x] Add to the PR quality-gate workflow. If `check:catalogue-generated` already has a job, extend
         that job rather than adding a new one.
 
-- [ ] **Task 4 — Commit the artifact correctly (AC: 4, 8)**
-  - [ ] Generate `Brands.kt`, commit it, add the `.gitignore` ignore-dir + un-ignore-file pair.
-  - [ ] `./gradlew assembleDebug` from `watch-android/` to prove it compiles with no codegen step.
+- [x] **Task 4 — Commit the artifact correctly (AC: 4, 8)**
+  - [x] Generate `Brands.kt`, commit it, add the `.gitignore` ignore-dir + un-ignore-file pair.
+  - [x] `./gradlew assembleDebug` from `watch-android/` to prove it compiles with no codegen step.
 
-- [ ] **Task 5 — Tests and docs (AC: 9, 10, 11)**
-  - [ ] Write the AC9 tests.
-  - [ ] Update `watch-android/README.md` and the add-a-brand documentation.
-  - [ ] Run the full gate suite (JS gates in any installed checkout; native builds from the main
+- [x] **Task 5 — Tests and docs (AC: 9, 10, 11)**
+  - [x] Write the AC9 tests.
+  - [x] Update `watch-android/README.md` and the add-a-brand documentation.
+  - [x] Run the full gate suite (JS gates in any installed checkout; native builds from the main
         checkout).
 
 ## Dev Notes
@@ -326,10 +326,250 @@ undocumented step in a manual checklist will be missed.
 
 ### Agent Model Used
 
-_To be filled by the dev agent._
+claude-opus-5 (implementation), claude-sonnet-4-5 (code review + QA review subagents)
 
 ### Debug Log References
 
+**Kotlin escape set verified against the real compiler, not just the docs.** The `$` and `\uXXXX`
+branches of the escaper are unreachable from the real catalogue, so nothing in the shipped build would
+ever compile them. A throwaway `EscapeProbeTemp.kt` was generated from a fixture containing `\`, `"`,
+`$`, `${…}`, `\n\t\r\b`, a form feed, `U+0000`, `U+001F`, `U+007F` and `U+009F`, compiled with
+`./gradlew compileDebugKotlin` (Kotlin 2.4.10 / AGP 9.3.1) — **BUILD SUCCESSFUL** — then deleted. The
+escape list itself was taken from kotlinlang's Characters reference via Context7, which confirms exactly
+`\t \b \n \r \' \" \\ \$` plus `\uXXXX` and **no `\f`**.
+
+**APK contents checked.** `unzip -l app-debug.apk` confirms the `.catalogue-inputs.sha256` sidecar does
+not ship: it sits in a Kotlin _source_ directory, which is not packaged. `./gradlew lintDebug` also
+passes, so the `Generated/` directory + lowercase package causes no Android-lint complaint.
+
+**Gate runs (all from the main checkout):** `yarn lint` (0 errors; 3 pre-existing
+`react-hooks/exhaustive-deps` warnings in `app/_layout.tsx`, `CreateAccountScreen.tsx`,
+`BarcodeScanner.tsx` — untouched by this story), `yarn typecheck`, `yarn format:check`, `yarn test`
+(**173 suites / 2087 tests**, up one suite), `yarn tokens:check`, `yarn splash:check`,
+`yarn wear:catalogue:check`, `yarn check:no-tests-folders`, `yarn check:story-catalogue-sync`,
+`yarn check:native-patches`, `yarn check:native-strings`, `yarn check:catalogue-generated`,
+`yarn watch:build` (**BUILD SUCCEEDED**), `./gradlew assembleDebug` + `lintDebug`.
+
 ### Completion Notes List
 
+**All 11 ACs satisfied.** Three decisions went beyond the literal AC text; each is called out below
+because a reviewer should agree with them explicitly rather than discover them.
+
+1. **The catalogue holds 57 brands, not 56.** The story says 56; `catalogue/italy.json` is now at
+   version `2026-08-02` with 57. Nothing hardcodes a count — the generator emits whatever it reads and
+   the tests assert against `catalogue.brands.length`, so the next brand needs no test edit.
+
+2. **`defaultFormat` is emitted, though AC2 lists only `id`/`name`/`aliases`/`logo`/`color`+`version`.**
+   `catalogue/types.ts` has a sixth, optional field (`defaultFormat`: 10 of 57 brands carry `EAN13` or
+   `QR`). AC3 is the stricter constraint — "No field is dropped" and "one with a null-ish optional must
+   round-trip correctly" — and `defaultFormat` is the _only_ optional field in the catalogue, so it is
+   what AC3's optional case can refer to. Dropping it would also make Story 10-4 (barcode rendering)
+   change the generator. It stays a `String?` rather than becoming an enum because AC3 forbids
+   re-typing a field.
+
+3. **Kotlin naming follows kotlinlang's conventions over `Brands.swift`'s spelling.** The generated
+   accessors are `WearBrands.ALL` / `WearBrands.VERSION`, not `all` / `version`: the official rule is
+   that `const val` and object `val`s holding deeply immutable data use SCREAMING*SNAKE_CASE. Field
+   \_names* and semantics still mirror the catalogue exactly, which is what AC3 constrains.
+
+**One improvement over the Swift generator it ports from.** The incremental-skip decision includes the
+_output_ file's digest, not just the inputs'. The Swift version hashes inputs alone, which deadlocks a
+hand-edited artifact: inputs still match, so `generate` skips and leaves the edit, while `--check` keeps
+failing and telling you to run `generate`. Including the output digest makes a hand edit simply get
+overwritten — which is what the story's own anti-pattern table ("Hand-edit `Brands.kt` → fix the
+generator; the drift gate will catch you anyway") assumes happens. `watch-ios/Scripts/generate-catalogue.swift`
+still has the latent version of this; not fixed here, per the story's do-not-touch list. **Flagged as a
+follow-up.**
+
+**Input validation added, following repo precedent.** The generator refuses an unknown catalogue field
+rather than silently dropping it, and refuses duplicate brand ids (which would make the sort order — and
+therefore the drift check — depend on how the JSON happened to be written). Both sibling generators
+guard their inputs the same way (`assertWellFormed` in `build-tokens.mjs`, `assertSvgMatches` in
+`build-splash-icon.mjs`); a generator that quietly ignores new input is how a field ends up present on
+the phone and missing on the watch.
+
+**Tests decode rather than substring-match.** `generate-wear-catalogue.test.ts` implements a Kotlin
+string _unescaper_, independent of the generator's escaper, which buys two things: a full field-by-field
+round-trip of all 57 brands against `catalogue/italy.json`, and a hard failure if the generator ever
+emits an escape Kotlin does not define. 41 tests; `scripts/` is outside `collectCoverageFrom`, so they
+move no coverage number by design. One of them runs `--check` against the **tracked** artifact, making
+`yarn test` a third drift gate alongside pre-push and CI.
+
+**Where the CI gate lives, and why not in the Wear job.** `yarn wear:catalogue:check` is in
+`ci-quality-gates.yml`, not `wear-os-build.yml`. The Wear job is path-filtered to `watch-android/**`, so
+a PR editing only `catalogue/italy.json` would never trigger it — the exact case the gate exists to
+catch. A regenerated `Brands.kt` does trigger the Wear job, so the compile is covered too.
+
+**AC4, AC6 and AC8 now have automated guards, which they did not at first.** The QA review's most
+useful observation was that three ACs were _true_ but _unguarded_ — properties of files outside the
+generator that nothing would notice regressing: a `.gitignore` edit that re-ignores `Brands.kt`, a
+`pre-push` rewrite that drops the check, a Gradle codegen task creeping back in. Given AC6's own framing
+("a generator without a gate is a suggestion"), leaving the gate itself ungated was the wrong place to
+stop. A `gate wiring` describe block now asserts each of them, plus AC3's parity against
+`Brands.swift`'s field list specifically — the two generators are independent, so nothing else would
+catch a field added on one side only. The equivalent gap for `tokens:check` / `splash:check` is
+pre-existing and repo-wide; **flagged as a follow-up**, not widened into this story.
+
+**`defaultFormat` is validated against a derived enum, not a transcribed one.** QA noted the generator
+would accept any string. It now checks against `barcodeFormatSchema`, **parsed out of
+`core/schemas/card.ts`** rather than copied into the generator — the same choice
+`build-splash-icon.mjs` makes for its SVG geometry, and for the same reason: a hand-maintained parallel
+list goes stale silently, and here staleness would mean rejecting a format the phone app had legally
+added. It fails loudly if that schema is ever refactored beyond regex reach, because skipping the
+validation quietly would be worse than not having it.
+
+**The generated KDoc's format list is derived too — and that changed the hashing decision.** QA's
+sharpest catch: the first version derived only the _validation_ and left the KDoc's
+"`CODE128`, `EAN13`, … or `UPCA`" a hand-typed literal, recreating in the documentation the exact
+staleness the derivation existed to prevent. It is now interpolated from the same parsed list.
+
+That has a consequence I got wrong the first time and am recording rather than quietly correcting:
+having argued that `core/schemas/card.ts` should stay **out** of the input hash because it "constrains
+what input is accepted, never what is emitted", deriving the KDoc makes it emitted — so the formats are
+a real input and are hashed now.
+
+**And a second correction, which QA had to make for me.** It is the KDoc interpolation _alone_ that
+makes a schema change detectable: `--check` calls `runCheck(source)` and returns before any hash or
+sidecar code runs, so the hash has nothing to do with it. What the hash inclusion actually buys is that
+`yarn wear:catalogue:generate` no longer no-ops through its "inputs unchanged" fast path after a schema
+change that does affect output. Two fixes, two different jobs — worth stating precisely, because
+someone debugging this later would otherwise go hunting in the hash logic for behaviour that lives
+entirely in `renderKotlin`.
+
+The formats enter the hash as the extracted, **sorted** values rather than as `card.ts`'s bytes.
+Sorting decouples the two modules — a phone-side contributor alphabetising the enum should not be told
+to regenerate a Wear OS file — and hashing the values rather than the file means an unrelated edit to
+`card.ts` (it also holds the card schemas, and is edited often) no longer invalidates the fast path.
+
+**Two docs were already wrong and are fixed as part of this mechanism** (both describe the thing this
+story builds, so leaving them stale would invite a future story to re-litigate the decision):
+
+- `docs/architecture.md` still described `watch-android/scripts/generate-catalogue.kts` writing into a
+  gitignored `generated/` folder "at build time" — the design this story supersedes, on all three
+  counts.
+- `CONTRIBUTING.md`'s "Exactly what runs, in order" list — which the doc itself says must be updated
+  when a check is added — was **already missing `check:story-catalogue-sync`** (added in PR #200). Both
+  it and `wear:catalogue:check` are now listed, and the Wear OS CI workflow got the table row it never
+  had.
+
+`watch-android/README.md`'s 10-1 statements were reconciled rather than appended to: "No unit tests run
+— there are none … Stories 10-2 onward should add them" is now precise about _Kotlin_ unit tests still
+being absent (10-2's logic lives in a Node generator tested by Jest), and the Scope table's 10-2 row is
+struck through.
+
+**Out of scope — flagged, not fixed:**
+
+- **`docs/epics.md` Story 10.2 still documents the superseded design** (gitignored artifact, Gradle
+  codegen, `.kts`). Deliberately not edited: `docs/sprint-artifacts/README.md` records that `epics.md` is
+  regenerated from the tracker, and `check:story-catalogue-sync` gates its heading structure. The
+  contradiction is documented in this story, in the generator's header and in the Wear README.
+- **`watch-ios/Scripts/generate-catalogue.swift` has the hand-edit deadlock** described above.
+- **Epic 10 has no Wear OS complication story**, though the Epic 5 generic-complication follow-up was
+  parked into this epic — and a complication is the only surface that would need real brand artwork plus
+  the per-logo luminance analysis. Worth a story number, @ifero. (Carried forward from the story's own
+  Out-of-scope #2.)
+- **No Kotlin unit tests and no Android lint in CI** for `watch-android/` — pre-existing 10-1 gaps,
+  recorded in that README's Known gaps.
+- **`tokens:check` and `splash:check` have no wiring guard**, the gap this story closed for its own gate.
+  Repo-wide pattern; deliberately not widened into this story.
+- **No `.gitattributes` pins line endings.** The generator only ever writes `\n`, so CRLF cannot enter
+  through it, but a contributor with `core.autocrlf=true` on Windows could in principle check out a CRLF
+  copy and see the drift check fail. Pre-existing and shared identically by all three sibling generated
+  artifacts (tokens, splash, `Brands.swift`), so it is a repo-level decision, not this story's.
+
+### Review Record
+
+**Code review (Sonnet, fresh context): APPROVED, zero comments** — after one round. Its two NITs were
+both fixed rather than accepted: an unpaired-UTF-16-surrogate guard (a lone surrogate would otherwise
+have become U+FFFD — a corrupted brand name that still compiles _and_ still passes the drift check), and
+a parser fixture with parentheses and commas inside string literals. The reviewer then independently
+mutation-tested that second one, confirming a string-state-blind splitter yields 7 arguments where the
+real one yields 6, so the test genuinely discriminates.
+
+**QA review round 1 (Sonnet, fresh context): CONCERNS → all 8 findings resolved.** One MAJOR: the test
+counts in this record and in `sprint-status.yaml` said 24/2070 when the truth was 26/2072 — I had
+written them before adding the two code-review fixes and never revisited. The remaining seven were the
+AC4/AC6/AC8 guard gaps, the AC3 Swift-parity cross-check, the `defaultFormat` enum, a generic
+`SyntaxError` on malformed JSON, and three untested validation branches.
+
+**QA review round 2: CONCERNS → all 6 findings resolved.** It mutation-tested all five new wiring tests
+and confirmed none is tautological, then found six refinements:
+
+- The AC8 codegen regex banned `Exec` wholesale, so a legitimate future
+  `tasks.register<Exec>("gitHash") { commandLine("git", "rev-parse", "HEAD") }` would have failed a test
+  named "catalogue" with no explanation. Narrowed to the two signals AC8 actually names — a reference to
+  the generator/artifact, or a Node invocation — each with a message saying which it is. Re-verified:
+  the `git rev-parse` case now passes, real codegen still fails.
+- The KDoc-derivation gap and its hashing consequence, above.
+- The format-doc test was one-directional (it caught a format missing from the doc, not a removed format
+  whose stale mention lingered). Now asserts set-equality.
+- The AC6 assertions were string-exact. The pre-push one is now whitespace-tolerant, and the
+  `continue-on-error` check isolates the workflow step by YAML indentation rather than a 200-character
+  window that an unrelated comment could push it out of.
+- `readBarcodeFormats`'s own "fail loudly" promise was untested and its path unoverridable. Added
+  `WEAR_BARCODE_SCHEMA_PATH` (matching the other two overrides) and two tests: the parse-failure branch,
+  and that widening the schema is real drift.
+- A deliberately obfuscated Gradle invocation still evades a text guard. Accepted and now stated in the
+  code as a design boundary — it exists to catch an accidental regression, not sabotage.
+
+Test count went 24 → 26 → 36 → 38 → **41**; suite total 2070 → **2087**. The counts were updated last in each
+round, after nothing else was changing, which is the process fix for the round-1 MAJOR.
+
+**QA review round 3: CONCERNS → all 5 findings resolved.** Zero blocker/major/minor; five NITs, three
+of them direct side effects of the round-2 fixes:
+
+- Narrowing the AC8 regex reopened a gap: `tasks.register<Exec>("regenerateCatalogue") { /* TODO */ }`
+  — named for the job but not yet wired to a command — matched neither surviving signal. Added a third
+  keyed on the task **name**, so an unrelated `Exec` still passes.
+- The attribution correction above (KDoc interpolation, not the hash, is what makes `--check` catch it).
+- Hashing all of `card.ts` meant any unrelated edit to it forced a redundant byte-identical rewrite.
+  Now hashes the extracted values.
+- Reordering the enum was drift, because the KDoc's word order changed. The formats are sorted now, so
+  a phone-side restyle costs `watch-android/` nothing.
+- A single-value enum would have rendered a dangling "— or `X`". Handled, and tested.
+
+**QA review round 4: CONCERNS → both findings resolved.** One MINOR, one cosmetic:
+
+- The round-3 name-keyed AC8 signal matched the noun alone, so it flagged
+  `tasks.register<Copy>("copyBrandsAssets")` and `tasks.register("validateBrandsData")`. Those are not
+  contrived: "brands" is this app's own domain vocabulary, and an asset-bundling task is close to the
+  complication work Out-of-scope #2 already anticipates. Now requires a generation **verb** beside the
+  noun (`regen`/`sync`/`generat`), which keeps both intended catches and clears both false positives.
+  Six fixture cases are asserted in the test itself, both directions, so the pattern cannot drift back
+  toward either uselessness or nuisance. Accepted limit, stated in the code: a codegen task named with
+  a verb outside that list slips past _this_ signal — but a finished one still has to invoke the
+  generator, which trips one of the other two.
+- The generated KDoc lists formats alphabetically while `core/schemas/card.ts` keeps its declaration
+  order, so the two read differently side by side. Left as is: sorting is what decouples the modules
+  (round-3 finding 4), and the cost is cosmetic.
+
+**QA review round 5: PASS, zero findings.** The narrowed pattern was re-verified against all eight
+cases in a fresh process rather than read off the test file. Both review loops are closed: code review
+APPROVED with zero comments, QA PASS with zero findings.
+
+QA could not reproduce `./gradlew assembleDebug` (no Android SDK in its sandbox) or `yarn watch:build`.
+Both were run from the main checkout for this record: `assembleDebug` and `lintDebug` **BUILD
+SUCCESSFUL**, `yarn watch:build` **BUILD SUCCEEDED**, `check:catalogue-generated` up to date.
+
 ### File List
+
+| File                                                                                        | Change                                                  |
+| ------------------------------------------------------------------------------------------- | ------------------------------------------------------- |
+| `scripts/generate-wear-catalogue.mjs`                                                       | **NEW** — the generator                                 |
+| `scripts/generate-wear-catalogue.test.ts`                                                   | **NEW** — 41 co-located tests (AC9)                     |
+| `watch-android/app/src/main/kotlin/com/iferoporefi/myloyaltycards/wear/Generated/Brands.kt` | **NEW, COMMITTED** — generated artifact                 |
+| `.gitignore`                                                                                | UPDATE — ignore dir, un-ignore `Brands.kt`              |
+| `package.json`                                                                              | UPDATE — `wear:catalogue:generate`/`:check`             |
+| `.husky/pre-push`                                                                           | UPDATE — added the drift check                          |
+| `.github/workflows/ci-quality-gates.yml`                                                    | UPDATE — enforce the drift check                        |
+| `watch-android/README.md`                                                                   | UPDATE — § Brand catalogue (AC10) + 10-1 reconciliation |
+| `CONTRIBUTING.md`                                                                           | UPDATE — add-a-brand step 4, quality-gate lists         |
+| `docs/architecture.md`                                                                      | UPDATE — corrected the superseded Wear codegen tree     |
+| `docs/sprint-artifacts/stories/10-2-generate-catalogue-for-wear-os.md`                      | UPDATE — this record                                    |
+| `docs/sprint-artifacts/sprint-status.yaml`                                                  | UPDATE — status → review                                |
+
+## Change Log
+
+| Date       | Change                                                                                                                                                                                      |
+| ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 2026-08-03 | Implemented Story 10.2: Node generator for the Wear OS Kotlin brand catalogue, committed artifact, `--check` drift gate in pre-push + CI, incremental skip, 41 tests, docs. All 11 ACs met. |
