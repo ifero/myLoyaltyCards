@@ -5,6 +5,10 @@
 
   Title format:  <type>(<scope>): <summary> (Story X.Y)
   Example:       feat(watch): render barcode complication (Story 5.9)
+
+  No CI-skip marker anywhere in the title or body — a squash merge copies both into
+  main's commit message, where GitHub honours one and skips the quality gates. To
+  write about a marker, hyphenate it (skip-ci) or split it: `[skip` `ci]`.
 -->
 
 ## Summary

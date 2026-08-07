@@ -3,6 +3,8 @@ name: PR conventions
 # Fails the PR if it doesn't follow the machine-checkable rules in CONTRIBUTING.md:
 # Conventional Commit title, branch naming, and a spec-first story reference for
 # code changes (docs:/chore: titles, catalogue PRs, and design-labelled PRs are exempt).
+# It also rejects a CI-skip marker in the title or body — a squash merge copies both
+# into the commit message on main, where GitHub would honour it and skip the gates.
 
 on:
   pull_request:
