@@ -1,73 +1,84 @@
 package com.iferoporefi.myloyaltycards.wear.presentation
 
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.navigation.NavType
+import androidx.navigation.navArgument
 import androidx.wear.compose.material3.AppScaffold
-import androidx.wear.compose.material3.MaterialTheme
-import androidx.wear.compose.material3.ScreenScaffold
-import androidx.wear.compose.material3.Text
-import androidx.wear.compose.ui.tooling.preview.WearPreviewDevices
-import com.iferoporefi.myloyaltycards.wear.R
+import androidx.wear.compose.navigation.SwipeDismissableNavHost
+import androidx.wear.compose.navigation.composable
+import androidx.wear.compose.navigation.rememberSwipeDismissableNavController
+import com.iferoporefi.myloyaltycards.wear.data.CardRepository
+import com.iferoporefi.myloyaltycards.wear.prefs.SortPreferenceRepository
+import com.iferoporefi.myloyaltycards.wear.presentation.theme.MyLoyaltyCardsWearTheme
+import com.iferoporefi.myloyaltycards.wear.sort.WatchSortMode
+import kotlinx.coroutines.launch
+
+private const val ROUTE_CARDS = "cards"
+private const val ROUTE_SORT = "sort"
+private const val ROUTE_BARCODE = "barcode"
+private const val ARG_CARD_ID = "cardId"
 
 /**
- * Root composable of the Wear OS companion app.
+ * Root of the Wear OS app. [AppScaffold] owns the time text across destinations; the
+ * [SwipeDismissableNavHost] gives each screen the swipe-to-dismiss back gesture Wear users expect.
  *
- * [AppScaffold] and [ScreenScaffold] are the Wear Material 3 containers that own
- * the time text and (later) the scroll indicator. They are set up now so that
- * Story 10-3 can drop a real list into [ScreenScaffold] without restructuring:
- * a Wear screen is frequently round, and these scaffolds are what keep content
- * clear of the bezel.
+ * State is hoisted here and read from the repositories: the cards ([CardRepository], read-only) and
+ * the watch-local sort mode ([SortPreferenceRepository]). Three destinations: the list, the
+ * full-screen sort picker, and the inert barcode seam Story 10-4 fills (AC11).
  *
- * The default [MaterialTheme] is used on purpose — the app's own colour scheme
- * belongs with the card UI in Story 10-3, not with the scaffold.
+ * @param onImportSampleCards DEBUG-only seeder passed through to the empty state; `null` in release.
  */
 @Composable
-fun WearApp() {
-    MaterialTheme {
+fun WearApp(
+    cardRepository: CardRepository,
+    sortPreferenceRepository: SortPreferenceRepository,
+    onImportSampleCards: (() -> Unit)? = null,
+) {
+    MyLoyaltyCardsWearTheme {
+        val navController = rememberSwipeDismissableNavController()
+        val scope = rememberCoroutineScope()
+        val cards by cardRepository.cards.collectAsState()
+        val sortMode by sortPreferenceRepository.sortMode.collectAsState(initial = WatchSortMode.DEFAULT)
+
         AppScaffold {
-            ScreenScaffold { contentPadding ->
-                PlaceholderScreen(modifier = Modifier.padding(contentPadding))
+            SwipeDismissableNavHost(
+                navController = navController,
+                startDestination = ROUTE_CARDS,
+            ) {
+                composable(ROUTE_CARDS) {
+                    CardListScreen(
+                        cards = cards,
+                        sortMode = sortMode,
+                        onCardClick = { cardId -> navController.navigate("$ROUTE_BARCODE/$cardId") },
+                        onOpenSort = { navController.navigate(ROUTE_SORT) },
+                        onImportSampleCards = onImportSampleCards,
+                    )
+                }
+                composable(ROUTE_SORT) {
+                    SortPickerScreen(
+                        selected = sortMode,
+                        onModeSelected = { mode ->
+                            // Persist watch-locally (never transmitted to the phone — AC6), then pop
+                            // once the write is applied so the list is already re-ordered on return.
+                            scope.launch {
+                                sortPreferenceRepository.setSortMode(mode)
+                                navController.popBackStack()
+                            }
+                        },
+                    )
+                }
+                composable(
+                    route = "$ROUTE_BARCODE/{$ARG_CARD_ID}",
+                    arguments = listOf(navArgument(ARG_CARD_ID) { type = NavType.StringType }),
+                ) { backStackEntry ->
+                    val cardId = backStackEntry.arguments?.getString(ARG_CARD_ID)
+                    val cardName = cards.firstOrNull { it.id == cardId }?.name
+                    BarcodePlaceholderScreen(cardName = cardName)
+                }
             }
         }
     }
-}
-
-/**
- * Temporary landing screen: the app name and an empty-state line.
- *
- * Story 10-3 replaces this with the card list (with the Epic 9 favourite
- * indicator and persisted sort). Deliberately builds no card UI, no storage and
- * no sync — those belong to 10-3, 10-5 and 10-6 respectively.
- */
-@Composable
-fun PlaceholderScreen(modifier: Modifier = Modifier) {
-    Column(
-        modifier = modifier.fillMaxSize(),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center,
-    ) {
-        Text(
-            text = stringResource(R.string.app_name),
-            textAlign = TextAlign.Center,
-            style = MaterialTheme.typography.titleMedium,
-        )
-        Text(
-            text = stringResource(R.string.placeholder_no_cards),
-            textAlign = TextAlign.Center,
-            style = MaterialTheme.typography.bodySmall,
-        )
-    }
-}
-
-@WearPreviewDevices
-@Composable
-private fun WearAppPreview() {
-    WearApp()
 }

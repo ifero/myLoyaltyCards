@@ -2,11 +2,33 @@
 <!--
   Default (English) strings for the Wear OS companion app.
 
-  Localisation is deliberately not set up here: Story 10-3 brings the first real
-  user-facing copy, and it should decide how the watch shares (or does not share)
-  the phone app's i18n catalogue.
+  Story 10-3 brings the first real user-facing copy. Wear localisation is its own Android string
+  resources (en here, it in values-it/) rather than sharing the phone's i18next catalogue — the two
+  apps share no build. Add every string to BOTH locales at once: Android has no missing-translation
+  gate, so an absent `it` value would fall back to English silently (AC12).
+
+  Copy mirrors targets/watch/{en,it}.lproj, with one deliberate change: the empty state says
+  "phone", not watchOS's "iPhone".
 -->
 <resources>
-    <string name="app_name">myLoyaltyCards</string>
-    <string name="placeholder_no_cards">No cards yet</string>
+    <!-- Brand name: locale-invariant, so it is deliberately not translated in values-it/. -->
+    <string name="app_name" translatable="false">myLoyaltyCards</string>
+
+    <!-- Card list -->
+    <string name="cards_title">Cards</string>
+    <string name="cards_empty_title">No cards yet</string>
+    <string name="cards_empty_subtitle">Add cards on your phone — they sync here automatically.</string>
+    <string name="cards_empty_content_description">No cards yet. Add cards on your phone, they sync here automatically.</string>
+    <string name="card_row_content_description">Card, %1$s</string>
+    <string name="card_row_favorite_content_description">Favourite card, %1$s</string>
+
+    <!-- Sort -->
+    <string name="sort_title">Sort</string>
+    <string name="sort_button_content_description">Sort cards. Current order: %1$s</string>
+    <string name="sort_frequent">Frequently used</string>
+    <string name="sort_recent">Recently added</string>
+    <string name="sort_az">A-Z</string>
+
+    <!-- DEBUG-only; never shown in release builds -->
+    <string name="debug_import_sample_cards">Import sample cards</string>
 </resources>

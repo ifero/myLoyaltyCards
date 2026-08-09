@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Italian strings for the Wear OS companion app (Italian is the primary audience).
+
+  Uses proper accents (e.g. "Più usate"), matching the phone's i18n (shared/i18n/locales/it.ts) —
+  not watchOS's deliberately accent-free .strings. "telefono", not "iPhone". app_name is not
+  translated; it inherits the default.
+-->
+<resources>
+    <!-- Card list -->
+    <string name="cards_title">Carte</string>
+    <string name="cards_empty_title">Nessuna carta</string>
+    <string name="cards_empty_subtitle">Aggiungi carte sul tuo telefono: si sincronizzano qui automaticamente.</string>
+    <string name="cards_empty_content_description">Nessuna carta. Aggiungi carte sul tuo telefono, si sincronizzano qui automaticamente.</string>
+    <string name="card_row_content_description">Carta, %1$s</string>
+    <string name="card_row_favorite_content_description">Carta preferita, %1$s</string>
+
+    <!-- Sort -->
+    <string name="sort_title">Ordina</string>
+    <string name="sort_button_content_description">Ordina le carte. Ordine attuale: %1$s</string>
+    <string name="sort_frequent">Più usate</string>
+    <string name="sort_recent">Aggiunte di recente</string>
+    <string name="sort_az">A-Z</string>
+
+    <!-- DEBUG-only; never shown in release builds -->
+    <string name="debug_import_sample_cards">Importa carte di esempio</string>
+</resources>

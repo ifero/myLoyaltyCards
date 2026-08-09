@@ -19,6 +19,14 @@ androidxComposeBom = "2026.06.01"
 # compose-foundation, compose-material3 and compose-ui-tooling ship together.
 androidxWearCompose = "1.6.2"
 playServicesWearable = "20.0.1"
+# Jetpack DataStore (Preferences) backs the watch-local sort preference (Story
+# 10.3, Open Decision 3). 1.2.1 is the current stable release.
+androidxDatastore = "1.2.1"
+# Unit-test stack. kotlinxCoroutines MUST match the coroutines-core the app resolves
+# (DataStore + Wear compose pull 1.9.0) so kotlinx-coroutines-test's runTest agrees
+# with the runtime — check `./gradlew :app:dependencies` when bumping DataStore.
+junit4 = "4.13.2"
+kotlinxCoroutines = "1.9.0"
 
 [libraries]
 androidx-activity-compose = { module = "androidx.activity:activity-compose", version.ref = "androidxActivity" }
@@ -29,7 +37,18 @@ androidx-compose-ui-tooling = { module = "androidx.compose.ui:ui-tooling" }
 wear-compose-ui-tooling = { module = "androidx.wear.compose:compose-ui-tooling", version.ref = "androidxWearCompose" }
 wear-compose-foundation = { module = "androidx.wear.compose:compose-foundation", version.ref = "androidxWearCompose" }
 wear-compose-material3 = { module = "androidx.wear.compose:compose-material3", version.ref = "androidxWearCompose" }
+# Wear navigation: SwipeDismissableNavHost (list <-> sort picker, and the inert
+# barcode seam that Story 10-4 fills). Ships in lockstep with the other
+# androidx.wear.compose artifacts, so it shares `androidxWearCompose`.
+wear-compose-navigation = { module = "androidx.wear.compose:compose-navigation", version.ref = "androidxWearCompose" }
 play-services-wearable = { module = "com.google.android.gms:play-services-wearable", version.ref = "playServicesWearable" }
+# DataStore (Preferences) — async-safe watch-local key/value store for the sort mode.
+androidx-datastore-preferences = { module = "androidx.datastore:datastore-preferences", version.ref = "androidxDatastore" }
+# JVM-only core of DataStore Preferences: lets the sort-pref round-trip test build
+# a temp-file-backed store in a plain unit test (no Android Context needed).
+androidx-datastore-preferences-core = { module = "androidx.datastore:datastore-preferences-core", version.ref = "androidxDatastore" }
+junit = { module = "junit:junit", version.ref = "junit4" }
+kotlinx-coroutines-test = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-test", version.ref = "kotlinxCoroutines" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

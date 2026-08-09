@@ -137,6 +137,17 @@ android {
 
     buildFeatures {
         compose = true
+        // Generates BuildConfig.DEBUG, the compile-time flag that gates the sample-card
+        // seeder so R8 strips it from the release APK (the Kotlin equivalent of `#if DEBUG`).
+        buildConfig = true
+    }
+
+    testOptions {
+        unitTests {
+            // DataStore's read/write flows assert they are off the main thread; the default
+            // returns 0 for unmocked android.* calls, which is enough for these pure-logic tests.
+            isReturnDefaultValues = true
+        }
     }
 }
 
@@ -152,14 +163,27 @@ dependencies {
     // so the Wear foundation sits alongside the general Compose artifacts.
     implementation(libs.wear.compose.material3)
     implementation(libs.wear.compose.foundation)
+    // Wear navigation (SwipeDismissableNavHost): the card list, the sort picker,
+    // and the inert row-tap barcode seam (Story 10-4 fills the barcode screen).
+    implementation(libs.wear.compose.navigation)
+
+    // Watch-local sort preference (Story 10.3). DataStore, not SharedPreferences:
+    // async-safe and the current AndroidX recommendation.
+    implementation(libs.androidx.datastore.preferences)
 
     // Wearable Data Layer. Declared here but UNUSED in this story so that
     // Story 10-6 (phone <-> watch sync, CARD_USED usage events) can wire sync up
     // without editing build files. Do not add sync logic before 10-6.
     implementation(libs.play.services.wearable)
 
-    // Wear-specific @Preview annotations, used by the placeholder screen.
+    // Wear-specific @Preview annotations, used by the card list previews.
     implementation(libs.wear.compose.ui.tooling)
     // The preview renderer itself is debug-only and never ships in the APK.
     debugImplementation(libs.androidx.compose.ui.tooling)
+
+    // Unit tests (JVM, no device): sort comparators, colour maths, the read-only invariant,
+    // and the sort-preference round-trip through a temp-file-backed DataStore.
+    testImplementation(libs.junit)
+    testImplementation(libs.kotlinx.coroutines.test)
+    testImplementation(libs.androidx.datastore.preferences.core)
 }
