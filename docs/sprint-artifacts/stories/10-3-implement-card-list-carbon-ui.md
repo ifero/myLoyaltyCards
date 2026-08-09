@@ -4,7 +4,7 @@ baseline_commit: 7837f359540c72c30edcf392e1a897fa99ab9752
 
 # Story 10.3: Implement the Wear OS card list (Carbon UI)
 
-Status: ready-for-dev
+Status: review
 
 Epic: 10 — Wear OS App
 
@@ -203,46 +203,46 @@ and the Kotlin unit tests pass in `watch-android/`.
 
 ## Tasks / Subtasks
 
-- [ ] **Task 1 — Card model + read seam (AC: 1, 13)**
-  - [ ] A Kotlin model mirroring `WatchCard`'s decoded shape: `id`, `name`, `brandId`, `colorHex`,
+- [x] **Task 1 — Card model + read seam (AC: 1, 13)**
+  - [x] A Kotlin model mirroring `WatchCard`'s decoded shape: `id`, `name`, `brandId`, `colorHex`,
         `barcodeValue`, `barcodeFormat`, `usageCount`, `lastUsedAt`, `createdAt`, `isFavorite`.
         `isFavorite` **defaults to false**; `lastUsedAt` and `brandId` are nullable.
-  - [ ] **Dates as strings**, per `docs/project-context.md`'s watch rule — parse only for display or
+  - [x] **Dates as strings**, per `docs/project-context.md`'s watch rule — parse only for display or
         comparison. Do not introduce `Instant`-typed fields that 10-5/10-6 must undo.
-  - [ ] Define the read-only repository interface 10-5 will implement. Debug-only seeding, gated to the
+  - [x] Define the read-only repository interface 10-5 will implement. Debug-only seeding, gated to the
         empty state.
 
-- [ ] **Task 2 — Row and list UI (AC: 1, 2, 3, 9, 10)**
-  - [ ] Port `WatchCardRowLayoutMetrics.compact` into a single Kotlin metrics holder — one source of
+- [x] **Task 2 — Row and list UI (AC: 1, 2, 3, 9, 10)**
+  - [x] Port `WatchCardRowLayoutMetrics.compact` into a single Kotlin metrics holder — one source of
         truth, as on watchOS, so the numbers are testable and not scattered through composables.
-  - [ ] Row: accent bar, initials avatar with luminance-driven text colour, name, favourite badge.
-  - [ ] Port the initials and contrast helpers from `ColorHelpers.swift` / `CardListView.swift:277`.
+  - [x] Row: accent bar, initials avatar with luminance-driven text colour, name, favourite badge.
+  - [x] Port the initials and contrast helpers from `ColorHelpers.swift` / `CardListView.swift:277`.
         Mirror the phone's `shared/theme/luminance.ts` thresholds; do not invent a new cutoff.
-  - [ ] Empty state per AC10.
+  - [x] Empty state per AC10.
 
-- [ ] **Task 3 — Round-screen correctness (AC: 8)**
-  - [ ] Use the Wear Compose scaling list container, **not** `LazyColumn`. Confirm the current class name
+- [x] **Task 3 — Round-screen correctness (AC: 8)**
+  - [x] Use the Wear Compose scaling list container, **not** `LazyColumn`. Confirm the current class name
         against the installed BOM.
-  - [ ] Shape-aware padding so first/last rows are never clipped on a round device.
-  - [ ] Rotary/bezel scrolling wired and verified.
+  - [x] Shape-aware padding so first/last rows are never clipped on a round device.
+  - [x] Rotary/bezel scrolling wired and verified.
 
-- [ ] **Task 4 — Sort (AC: 4, 5, 6, 7)**
-  - [ ] A sort-mode enum with a stable persisted raw value and a deterministic display order.
-  - [ ] Comparators per the table. **Read Story 9-5's notes on the `frequent` mixed-`null` tier and the
+- [x] **Task 4 — Sort (AC: 4, 5, 6, 7)**
+  - [x] A sort-mode enum with a stable persisted raw value and a deterministic display order.
+  - [x] Comparators per the table. **Read Story 9-5's notes on the `frequent` mixed-`null` tier and the
         diacritic fix before writing them** — both were review findings, not first drafts.
-  - [ ] Locale-aware `Collator` for A-Z; verify empirically that the chosen strength ignores accents for
+  - [x] Locale-aware `Collator` for A-Z; verify empirically that the chosen strength ignores accents for
         `it`, with an accented fixture.
-  - [ ] Persist watch-locally, default A-Z. Never transmit.
-  - [ ] Picker affordance. Story 9-5 left the exact affordance to UX ("sheet vs inline list vs Digital
+  - [x] Persist watch-locally, default A-Z. Never transmit.
+  - [x] Picker affordance. Story 9-5 left the exact affordance to UX ("sheet vs inline list vs Digital
         Crown"); watchOS shipped a toolbar button plus a `.sheet`. Open Decision 4.
 
-- [ ] **Task 5 — Localisation (AC: 12)**
-  - [ ] `en` + `it` string resources for every user-facing string, added together.
+- [x] **Task 5 — Localisation (AC: 12)**
+  - [x] `en` + `it` string resources for every user-facing string, added together.
 
-- [ ] **Task 6 — Tests, verification, docs (AC: 13, 14, 15)**
-  - [ ] The AC14 unit tests plus the AC13 read-only guard.
-  - [ ] Run on a round and a square emulator; record both.
-  - [ ] Update `watch-android/README.md`: sort semantics, the A-Z default and why it differs from the
+- [x] **Task 6 — Tests, verification, docs (AC: 13, 14, 15)**
+  - [x] The AC14 unit tests plus the AC13 read-only guard.
+  - [x] Run on a round and a square emulator; record both.
+  - [x] Update `watch-android/README.md`: sort semantics, the A-Z default and why it differs from the
         phone, and the 48 dp deviation.
 
 ## Dev Notes
@@ -355,21 +355,73 @@ align; no new palette is required. Card colours come from the catalogue, not the
 
 ### Agent Model Used
 
-_To be filled by the dev agent._
+Opus 4.8 (`claude-opus-4-8`) — BMad dev-story workflow.
 
 ### Debug Log References
 
+- `watch-android/` Gradle (SDK API 30/36, JDK 17): `./gradlew lintDebug testDebugUnitTest assembleDebug` → **BUILD SUCCESSFUL**, **35/35** unit tests pass. Lint clean apart from two pre-existing, intentional warnings (`MonochromeLauncherIcon`; "a newer Gradle is available").
+- Phone gates from the worktree: `yarn format:check`, `yarn tokens:check`, `yarn wear:catalogue:check`, `yarn check:catalogue-generated`, `yarn lint`, `yarn typecheck`, `yarn splash:check`, and the full `yarn test` (Jest) — all pass. Only `yarn watch:build` was not run here: it needs the gitignored `ios/` (absent in a worktree), and `targets/watch` is untouched so it is unaffected — enforced at pre-push and in CI.
+- Wear Compose **1.6.2** APIs verified against the resolved AARs before use (`TransformingLazyColumn`/`rememberTransformingLazyColumnState`, `ScreenScaffold(scrollState = …)`, `SurfaceTransformation`/`rememberTransformationSpec`, `Card`/`RadioButton(transformation = …)`, `SwipeDismissableNavHost`).
+
 ### Completion Notes List
+
+- **List + row** mirror `targets/watch/CardListView.swift` on the Carbon (OLED-black) surface: accent bar, initials avatar with contrast-correct text, name (truncates, never wraps), favourite star. Metrics ported from `WatchCardRowLayoutMetrics.compact` into one `CardRowMetrics`, with the mandated change — **48 dp** tap target, not 44 (AC9).
+- **Round-screen (AC8):** `TransformingLazyColumn` (never `LazyColumn`) + `ScreenScaffold(scrollState = …)` give shape-aware content padding, the scroll indicator, rotary scrolling, and the scale/fade morph (`SurfaceTransformation`).
+- **Sort mirrors `useCardSort.ts` exactly** (`CardSorter`): favourites pinned in `frequent` & `az`, **not** `recent` (confirmed by @ifero — 10-3 AC4's "every mode" wording deferred to the canonical source it says to mirror); the `frequent` mixed-`null` `lastUsedAt` tier and diacritic-insensitive A-Z (`Collator` PRIMARY) are the Story 9-5 review fixes, ported not re-derived. Dates are parsed to `Instant` only for comparison.
+- **Sort preference** persisted watch-locally via DataStore (Preferences), default **A-Z**, key `watch.sortMode`, **never transmitted** to the phone — UI state, not card data (AC6; ADR-2026-06-09-001).
+- **Catalogue vs custom colour (confirmed by @ifero):** a catalogue card's avatar uses the **brand** colour from `Brands.kt`; a custom card uses the user's `colorHex`; missing/unparseable → neutral grey (AC1/AC2, Open Decision 6).
+- **Read seam:** `CardRepository` is read-only (Story 10-5 implements Room); this story ships an in-memory impl + a **DEBUG-only, empty-state-gated** sample seeder (R8-stripped from release).
+- **Localisation:** `en` + `it` resources added together; empty state says "phone" not "iPhone"; Italian uses proper accents, matching the phone's i18n.
+- **Picker (Open Decision 4):** a full-screen `RadioButton` list reached from a list-header control, via `SwipeDismissableNavHost`; the row tap is an inert seam Story 10-4 fills (AC11).
+- **Reviews:** Sonnet code review — **approved, zero comments** after fixing 5 round-1 findings (a `frequent` equal-`lastUsedAt` tie-break parity bug, missing `@WearPreviewDevices` previews, sort-write/pop sequencing, an untested initials-id fallback, and this Dev Agent Record). QA acceptance review — **all 15 ACs PASS**; its 5 completeness/doc findings addressed (a both-never-used `frequent` tier test, a model-defaults test, running the full `yarn test`, and tightening the rotary-verification record). Note: AC4's "every sort mode" and AC14's "favourites-first in each" wording is textually stale versus the ratified favourites-**not**-in-`recent` behaviour — left for the story author to amend, as dev-story may not edit acceptance criteria.
 
 ### Device / Emulator Verification (AC8)
 
-| Shape       | Device / emulator | API | Theme | Result |
-| ----------- | ----------------- | --- | ----- | ------ |
-| Round       |                   |     |       |        |
-| Square/rect |                   |     |       |        |
+| Shape       | Device / emulator                      | API | Theme         | Result                                                                                                                                                                                                                                         |
+| ----------- | -------------------------------------- | --- | ------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Round       | Wear OS Small Round (384×384) emulator | 30  | Dark (Carbon) | **PASS** — no row clipped top/bottom; content inset from the bezel; **touch-scroll verified** (a swipe revealed the off-screen third card); sort picker reachable; brand-colour avatars, contrast-correct initials + favourite star all render |
+| Square/rect | Wear OS Square (360×360) emulator      | 30  | Dark (Carbon) | **PASS** — no clipping/overflow; touch-scroll works; long names truncate with an ellipsis per AC1                                                                                                                                              |
+
+Both shapes are additionally covered by `@WearPreviewDevices` previews (`CardListPreviews.kt`) for a fast, emulator-free round-vs-square check.
+
+**Rotary/bezel scrolling** is provided by `TransformingLazyColumn`'s built-in `RotaryScrollableBehavior`, wired through the shared `ScreenScaffold` scroll state (the framework default; verified at the API level, and touch-scroll over the same scroll state is confirmed above). It was **not** separately injected on the headless emulator — the emulator console exposes only `rotate` (orientation), not rotary-encoder events — so confirm the physical bezel/crown on-device or via the emulator's interactive rotary dial.
 
 ### Do the Kotlin tests run in CI? (AC14)
 
-_State yes/no explicitly and how._
+**Yes.** `.github/workflows/wear-os-build.yml` runs `./gradlew testDebugUnitTest assembleDebug` (Ubuntu, JDK 17, no device), path-filtered to `watch-android/**`. This is unlike the watchOS precedent, where Swift XCTests do **not** run in CI (only a TS source-contract test does). The 35 unit tests — sort comparators, colour/initials/contrast maths, the AC2 avatar rules, the model's backward-compatible defaults, the AC13 read-only-reload guard, and the DataStore preference round-trip — run on every PR touching the module.
 
 ### File List
+
+**New — `watch-android/app/src/main/kotlin/com/iferoporefi/myloyaltycards/wear/`**
+
+- `data/WearCard.kt`, `data/CardRepository.kt`, `data/DebugSampleCards.kt`
+- `sort/WatchSortMode.kt`, `sort/CardSorter.kt`
+- `prefs/SortPreferenceRepository.kt`
+- `presentation/theme/CarbonTheme.kt`
+- `presentation/CardVisuals.kt`, `presentation/CardPresentation.kt`, `presentation/CardRowMetrics.kt`, `presentation/CardRow.kt`, `presentation/SortLabels.kt`
+- `presentation/CardListScreen.kt`, `presentation/SortPickerScreen.kt`, `presentation/BarcodePlaceholderScreen.kt`, `presentation/CardListPreviews.kt`
+
+**New — resources & tests**
+
+- `watch-android/app/src/main/res/values-it/strings.xml`
+- `watch-android/app/src/main/res/drawable/{ic_star_filled,ic_sort,ic_cards_empty}.xml`
+- `watch-android/app/src/test/kotlin/.../sort/{CardSorterTest,WatchSortModeTest}.kt`
+- `watch-android/app/src/test/kotlin/.../presentation/{CardVisualsTest,CardPresentationTest}.kt`
+- `watch-android/app/src/test/kotlin/.../data/{CardRepositoryTest,WearCardTest}.kt`
+- `watch-android/app/src/test/kotlin/.../prefs/SortPreferenceRepositoryTest.kt`
+
+**Modified**
+
+- `watch-android/app/src/main/kotlin/.../MainActivity.kt` (wires repositories + DEBUG seeder)
+- `watch-android/app/src/main/kotlin/.../presentation/WearApp.kt` (nav host + hoisted state)
+- `watch-android/app/src/main/res/values/strings.xml`
+- `watch-android/app/build.gradle.kts`, `watch-android/gradle/libs.versions.toml`
+- `watch-android/README.md`
+- `.github/workflows/wear-os-build.yml`
+- `docs/sprint-artifacts/sprint-status.yaml`, `docs/sprint-artifacts/stories/10-3-implement-card-list-carbon-ui.md`
+
+## Change Log
+
+| Date       | Version | Description                                                                          | Author             |
+| ---------- | ------- | ------------------------------------------------------------------------------------ | ------------------ |
+| 2026-08-09 | 0.1     | Implemented the Wear OS card list, favourite indicator and selectable persisted sort | Amelia (dev-story) |

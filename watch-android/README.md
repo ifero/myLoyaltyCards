@@ -123,10 +123,13 @@ watch-android/
     └── src/main/
         ├── AndroidManifest.xml
         ├── kotlin/com/iferoporefi/myloyaltycards/wear/
-        │   ├── MainActivity.kt
+        │   ├── MainActivity.kt           ← thin host; wires the repositories
         │   ├── Generated/Brands.kt       ← GENERATED, committed; see § Brand catalogue
-        │   └── presentation/WearApp.kt   ← placeholder screen; Story 10-3 replaces it
-        └── res/
+        │   ├── data/                     ← WearCard model, read-only CardRepository seam, DEBUG samples
+        │   ├── sort/                     ← WatchSortMode + CardSorter (comparators mirror the phone)
+        │   ├── prefs/                    ← DataStore-backed watch-local sort preference
+        │   └── presentation/             ← Carbon theme, card list, row, sort picker, nav host
+        └── res/                          ← strings (values/ + values-it/), sort/star/empty vector icons
 ```
 
 `namespace` is `com.iferoporefi.myloyaltycards.wear` (the code/R-class package) while `applicationId`
@@ -188,6 +191,61 @@ would never trigger it — precisely the case the gate exists for.
   The directory ignore rule covers it; do not commit it.
 - **No brand artwork is involved.** The card list draws initials on a brand-coloured circle, so `name`
   and `color` are all Story 10-3 needs. `logo` is generated for field parity and has no consumer yet.
+
+## Card list and sort (Story 10.3)
+
+The list mirrors watchOS's `CardListView.swift` on the Carbon (OLED-black) surface: each row is a
+colour accent bar, an initials avatar in the brand/card colour with contrast-correct text, the card
+name, and a favourite star. There is **no brand artwork** — initials on a coloured circle is the
+shipped design, not an omission.
+
+**Row metrics are ported, with one change.** `CardRowMetrics` is the single source of truth, ported
+from watchOS `WatchCardRowLayoutMetrics.compact` (Story 5-10's density tuning). The one deliberate
+change: the tap target is **48 dp**, the Android/Wear Material minimum, not watchOS's 44 dp (Apple's
+guidance). Recorded here because it is a deviation from the mirror.
+
+**Round-screen correctness** comes from `TransformingLazyColumn` — the Wear scaling list container,
+never a plain `LazyColumn` — wired to `ScreenScaffold` by a shared scroll state. The scaffold supplies
+shape-aware content padding (so the first and last rows are never clipped on a round device), the
+scroll indicator, and rotary/bezel scrolling; none of it is hand-computed. Rows scale and fade toward
+the bezel via a `SurfaceTransformation`.
+
+**Sort — three modes, mirroring the phone's `useCardSort.ts` exactly** (`CardSorter`):
+
+| Mode            | Ordering                                                | Favourites pinned? |
+| --------------- | ------------------------------------------------------- | ------------------ |
+| Frequently used | usageCount desc → lastUsedAt desc → createdAt desc      | yes                |
+| Recently added  | createdAt desc                                          | **no**             |
+| A-Z             | name, locale-aware, case- **and** diacritic-insensitive | yes                |
+
+Two things worth stating because they surprise:
+
+- **The default is A-Z, not the phone's `frequent`.** A deliberate watch decision (2026-06-09):
+  alphabetical is the most predictable order for finding a card at a counter on a glance-and-go
+  surface. The preference is **watch-local** — Jetpack DataStore (Preferences), key `watch.sortMode`,
+  chosen over `SharedPreferences` as the async-safe current recommendation — and is **never
+  transmitted to the phone**. It is UI state, not card data, so it does not breach the read-only rule
+  (ADR-2026-06-09-001).
+- **Favourites are NOT pinned in "Recently added."** That mode is purely chronological, matching
+  `useCardSort.ts`, watchOS, and story 9-5's reviewed spec. (10-3's AC4 says "every mode"; the
+  canonical behaviour was confirmed to win.)
+
+**A-Z is accent-insensitive**, via a `java.text.Collator` at `PRIMARY` strength — `Èsselunga`,
+`esselunga` and `Esselunga` order together (matters for the Italian-first audience; a `lowercase()`
+compare would not). This mirrors the phone's `localeCompare(…, { sensitivity: 'base' })`. Dates are
+compared by parsing the ISO-8601 strings to `Instant`, never by widening the model to date types.
+
+**Catalogue vs custom colour.** A catalogue card's avatar uses the **brand's** colour from
+`Brands.kt` (recognisable on the wrist — watchOS could not, its brand record had no colour); a custom
+card uses the user's picked colour. Missing/unparseable colours fall back to a neutral grey.
+
+**The read seam.** `CardRepository` is a read-only interface; Story 10-5 implements it against Room.
+This story ships an in-memory implementation and a **DEBUG-only, empty-state-gated** sample-card
+seeder (R8 strips it from release). No persistence layer is built here — Story 5-9's lesson.
+
+**Localisation.** All user-facing strings are Android resources in `res/values/` (en) and
+`res/values-it/` (it), added together — Android has no missing-translation gate, so a missing `it`
+value would fall back to English silently. The empty state says "phone", not watchOS's "iPhone".
 
 ## The three non-negotiable platform constraints
 
@@ -270,7 +328,8 @@ Recorded rather than pinned by prose — bump deliberately in
 | Android Gradle Plugin | 9.3.1                                                                                               |
 | Kotlin                | 2.4.10 (drives AGP's built-in Kotlin **and** Compose)                                               |
 | Compose BOM           | 2026.06.01                                                                                          |
-| Compose for Wear OS   | 1.6.2 (`compose-material3`, `compose-foundation`)                                                   |
+| Compose for Wear OS   | 1.6.2 (`compose-material3`, `compose-foundation`, `compose-navigation`)                             |
+| Jetpack DataStore     | 1.2.1 (`datastore-preferences`) — watch-local sort preference                                       |
 | `compileSdk`          | 36                                                                                                  |
 | `minSdk`              | 30 — Wear OS 3 floor and Play's Wear quality requirement                                            |
 | `targetSdk`           | 35 — Play's 2026 rule is API 36, but Wear OS and Android Automotive are explicitly carved out at 35 |
@@ -287,21 +346,25 @@ Two toolchain facts that are easy to get wrong:
 ## CI
 
 [`.github/workflows/wear-os-build.yml`](../.github/workflows/wear-os-build.yml) runs
-`./gradlew assembleDebug`, path-filtered to `watch-android/**` so it stays off the phone app's critical
-path — the same shape as `chromatic.yml`'s filtering and `watchos-tests.yml`'s scoping.
+`./gradlew testDebugUnitTest assembleDebug`, path-filtered to `watch-android/**` so it stays off the
+phone app's critical path — the same shape as `chromatic.yml`'s filtering and `watchos-tests.yml`'s
+scoping.
 
 **Be precise about what that does and does not prove**, because an absent job is easily mistaken for
 coverage:
 
 - ✅ **Compiles.** The module cannot rot silently; a broken build fails the PR that broke it.
-- ❌ **No Kotlin unit tests run** — there are none in this module, and there is still no test dependency
-  in `app/build.gradle.kts`. Story 10-2 added logic but put it in a Node generator, so its tests
-  (`scripts/generate-wear-catalogue.test.ts`) run in the main Jest suite, not here. The first Kotlin
-  code worth unit-testing arrives with Story 10-3.
-- ❌ **No lint in CI.** `./gradlew lintDebug` passes locally and is worth wiring up once the module has
-  real code; it is not a gate today.
-- ❌ **No instrumented or on-device test.** The APK's install-and-launch was verified by hand on a Wear
-  OS 3 (API 30) emulator, not by CI.
+- ✅ **Kotlin unit tests run — genuinely, in CI.** Story 10-3 added the first ones (`app/src/test/…`):
+  the sort comparators, the colour/initials/contrast maths, the AC2 avatar rules, the read-only
+  invariant (card data does not survive a reload), and the sort-preference round-trip through a
+  temp-file DataStore. Unlike watchOS — whose Swift XCTests do **not** run in CI, only a TS
+  source-contract test does — these are real JVM tests on the Ubuntu runner (no emulator), so this is
+  the answer to Story 10-3 AC14: **yes, they run in CI.**
+- ❌ **No lint in CI.** `./gradlew lintDebug` passes locally and is worth wiring up as a gate later; it
+  is not one today.
+- ❌ **No instrumented or on-device test.** Install-and-launch and the round/square layout check (AC8)
+  are done by hand on Wear OS emulators, not by CI. With effectively no Android telemetry, that manual
+  two-shape check is the only real gate against a round-screen layout defect.
 
 `ci-quality-gates.yml` is untouched and does **not** compile Kotlin as a side effect: `yarn lint` is
 `eslint . --ext .ts,.tsx`, and `jest.config.js` matches only `**/*.test.[jt]s?(x)` — `.kt` files are
@@ -333,15 +396,16 @@ Flagged rather than silently carried:
 ## Scope
 
 Story 10.1 delivered the module, the build and a placeholder screen; Story 10.2 added the generated
-brand catalogue. Everything below is still someone else's.
+brand catalogue; Story 10.3 added the card list, favourite indicator and persisted sort. Everything
+below is still someone else's.
 
-| Owned by | Work                                                                                                        |
-| -------- | ----------------------------------------------------------------------------------------------------------- |
-| ~~10-2~~ | ~~Brand catalogue generation~~ — done, see [§ Brand catalogue](#brand-catalogue)                            |
-| **10-3** | Card list UI, favourite indicator, persisted sort (Epic 9 parity)                                           |
-| **10-4** | Barcode rendering                                                                                           |
-| **10-5** | Room storage — owns the schema, hence **no Room dependency here**                                           |
-| **10-6** | Data Layer sync and `CARD_USED` — the **only** consumer of the declared `play-services-wearable` dependency |
+| Owned by | Work                                                                                                                    |
+| -------- | ----------------------------------------------------------------------------------------------------------------------- |
+| ~~10-2~~ | ~~Brand catalogue generation~~ — done, see [§ Brand catalogue](#brand-catalogue)                                        |
+| ~~10-3~~ | ~~Card list UI, favourite indicator, persisted sort~~ — done, see [§ Card list and sort](#card-list-and-sort-story-103) |
+| **10-4** | Barcode rendering                                                                                                       |
+| **10-5** | Room storage — owns the schema, hence **no Room dependency here**                                                       |
+| **10-6** | Data Layer sync and `CARD_USED` — the **only** consumer of the declared `play-services-wearable` dependency             |
 
 The Play Services Wearable dependency is declared but **unused**, purely so 10-6 can wire sync without
 editing build files. Do not add sync logic before then.

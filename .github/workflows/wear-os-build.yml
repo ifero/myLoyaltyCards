@@ -8,10 +8,11 @@ name: CI — Wear OS build
 # `eslint . --ext .ts,.tsx` and jest matches only `**/*.test.[jt]s?(x)`, so `.kt`
 # is invisible to both.
 #
-# What this proves, precisely: the module COMPILES. It runs no unit tests (there
-# are none yet — 10.1 is a scaffold), no lint, and nothing on a device. The
-# install-and-launch check was done by hand on a Wear OS 3 / API 30 emulator.
-# See watch-android/README.md § CI before assuming this job covers more.
+# What this proves, precisely: the module COMPILES and its JVM unit tests pass
+# (Story 10.3 added the first ones — sort comparators, colour maths, the read-only
+# invariant and the sort-preference round-trip). It runs no lint and nothing on a
+# device; the install-and-launch and round/square layout checks are done by hand on
+# Wear OS emulators. See watch-android/README.md § CI before assuming more.
 #
 # The reason it exists at all: the phone app's Android surface already has
 # effectively no telemetry, and an uncompiled module rots silently. If Gradle
@@ -80,6 +81,6 @@ jobs:
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v6
 
-      - name: Build Wear OS debug APK
+      - name: Run unit tests and build Wear OS debug APK
         working-directory: watch-android
-        run: ./gradlew assembleDebug --no-daemon
+        run: ./gradlew testDebugUnitTest assembleDebug --no-daemon
