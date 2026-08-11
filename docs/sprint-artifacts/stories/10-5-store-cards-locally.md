@@ -4,7 +4,7 @@ baseline_commit: 7837f359540c72c30edcf392e1a897fa99ab9752
 
 # Story 10.5: Store cards locally on Wear OS (Room)
 
-Status: ready-for-dev
+Status: review
 
 Epic: 10 — Wear OS App
 
@@ -166,31 +166,31 @@ and the Kotlin tests pass in `watch-android/`.
 
 ## Tasks / Subtasks
 
-- [ ] **Task 1 — Entity and DAO (AC: 5, 6, 7, 8, 11)**
-  - [ ] Room `@Entity` with `id` as `@PrimaryKey`, all AC7 fields, `String` dates, nullable raw-payload
+- [x] **Task 1 — Entity and DAO (AC: 5, 6, 7, 8, 11)**
+  - [x] Room `@Entity` with `id` as `@PrimaryKey`, all AC7 fields, `String` dates, nullable raw-payload
         column.
-  - [ ] DAO: observe-all as a `Flow`, get-by-id, upsert (single and list), delete-all, count.
-  - [ ] A single explicit wire→entity mapper. Keep the DTO's wire names (`barcodeValue`, `colorHex`).
+  - [x] DAO: observe-all as a `Flow`, get-by-id, upsert (single and list), delete-all, count.
+  - [x] A single explicit wire→entity mapper. Keep the DTO's wire names (`barcodeValue`, `colorHex`).
 
-- [ ] **Task 2 — Database and migrations (AC: 3, 4)**
-  - [ ] `@Database(version = 1)`. Export the schema so future migrations can be generated and diffed.
-  - [ ] Document the migration policy in `watch-android/README.md`. Ensure
+- [x] **Task 2 — Database and migrations (AC: 3, 4)**
+  - [x] `@Database(version = 1)`. Export the schema so future migrations can be generated and diffed.
+  - [x] Document the migration policy in `watch-android/README.md`. Ensure
         `fallbackToDestructiveMigration` cannot reach a release build.
-  - [ ] Write the AC4 migration test now — a v1→v2 migration test written against a throwaway v2 proves
+  - [x] Write the AC4 migration test now — a v1→v2 migration test written against a throwaway v2 proves
         the harness works before it is needed under pressure.
 
-- [ ] **Task 3 — Repository (AC: 9, 10)**
-  - [ ] Implement 10-3's read interface over the DAO. Expose a write surface **only** for 10-6's
+- [x] **Task 3 — Repository (AC: 9, 10)**
+  - [x] Implement 10-3's read interface over the DAO. Expose a write surface **only** for 10-6's
         snapshot application — internal to the data layer, not reachable from UI code.
-  - [ ] No public content-mutation API. Add the AC9 test.
+  - [x] No public content-mutation API. Add the AC9 test.
 
-- [ ] **Task 4 — Seeding (AC: 12)**
-  - [ ] Move 10-3's debug seed onto Room, debug-only and empty-state-gated.
+- [x] **Task 4 — Seeding (AC: 12)**
+  - [x] Move 10-3's debug seed onto Room, debug-only and empty-state-gated.
 
-- [ ] **Task 5 — Tests, docs, verification (AC: 13, 14)**
-  - [ ] AC13 tests with an in-memory database.
-  - [ ] README: schema, migration policy, the single-surface rule and why (link 5-9).
-  - [ ] Verify AC2 on a real watch or emulator with Bluetooth disabled — not just a unit test.
+- [x] **Task 5 — Tests, docs, verification (AC: 13, 14)**
+  - [x] AC13 tests with an in-memory database.
+  - [x] README: schema, migration policy, the single-surface rule and why (link 5-9).
+  - [x] Verify AC2 on a real watch or emulator with Bluetooth disabled — not just a unit test.
 
 ## Dev Notes
 
@@ -262,6 +262,13 @@ the **wire payload** in `core/watch-connectivity.ts` and the six barcode-format 
    that is a cross-platform product decision.
 5. **The watchOS `updatedAt` gap.** Worth a small phone-side story to either send `updatedAt` or drop the
    field from the watchOS entity — **raise with @ifero**, do not fix here.
+6. **End-to-end migration-registration test.** `CardMigrationTest` proves a migration's SQL preserves
+   data (AC4) by driving `Migration.migrate()` directly, and `CardDaoTest.cardsSurviveAStoreReopen`
+   exercises Room's real open path through `Room.databaseBuilder`. Testing Room's v1→v2 **version
+   dispatch** (that a migration is correctly registered in `ALL_MIGRATIONS` and picked up by the
+   builder) requires a real v2 schema, which does not exist yet. Deferred to the first real migration,
+   which supplies that v2 — at which point add a `MigrationTestHelper` end-to-end test (already noted in
+   `CardMigrationTest`'s KDoc).
 
 ## Open Decisions — binding defaults, implement as written
 
@@ -303,22 +310,114 @@ the **wire payload** in `core/watch-connectivity.ts` and the six barcode-format 
 
 ### Agent Model Used
 
-_To be filled by the dev agent._
+claude-opus-4-8 (implementation); claude-sonnet code-review subagent (adversarial review loop).
 
 ### Room Version Used
 
+`androidx.room` **2.8.4** (runtime + KSP compiler + Gradle schema-export plugin), KSP **2.3.11**,
+`org.robolectric:robolectric` **4.16.1** (test only). Deliberately the mature `androidx.room` 2.8.x
+line, **not** the weeks-old `androidx.room3` 3.0.x major, for a data-loss-critical layer — 2.8.x
+already carries every API used here (the `SQLiteDriver` API, the `schemaDirectory` Gradle plugin, the
+driver-based `MigrationTestHelper`; all landed in 2.7.0). Versions verified against Google's Maven
+`<release>` at implementation time.
+
 ### Debug Log References
+
+- Build-wiring spike (`assembleDebug`) confirmed AGP 9 built-in Kotlin + KSP 2.3.11 + Room 2.8.4
+  compile and export the schema; config cache stored.
+- Test-strategy spikes established, empirically, that (a) the context-less KMP `inMemoryDatabaseBuilder`
+  does not resolve for an Android app module (compile error → Room's Android builder needs a Context →
+  Robolectric), and (b) `androidx.sqlite:sqlite-bundled` cannot load native SQLite on the host JVM in
+  an Android module (`UnsatisfiedLinkError`) → the migration test uses `AndroidSQLiteDriver` under
+  Robolectric instead.
 
 ### Completion Notes List
 
+- **One storage surface, Room only** (5-9's lesson): no `SharedPreferences`/JSON/in-memory card cache;
+  the in-memory `InMemoryCardRepository` placeholder from 10-3 was removed.
+- **Dates as ISO-8601 UTC millisecond strings** (`TEXT` columns), not date types — protects 10-6's
+  `"<cardId>:<usedAt>"` dedup key (ADR-2026-06-09-001); a round-trip test proves ms precision (AC6).
+- **`id` primary key + `@Upsert`** → idempotent (AC5). **Reactive** via a Room `Flow` mapped to a
+  `StateFlow` (AC11). **Field parity** with the wire payload mapped in one explicit place
+  (`CardMappers.kt`), with 9-4's `isFavorite=false` / `usageCount=0` defaults and nullable
+  `brandId`/`lastUsedAt` (AC7). **`rawPayload`** kept as TEXT for forward-compat (AC8); stripping
+  `barcodeImageBase64` is 10-6's job (it owns the transport).
+- **Read-only invariant is structural** (AC9): the UI sees only `CardRepository` (read-only interface);
+  writers live on the concrete `RoomCardRepository`. Guarded by a reflection test that fails if any
+  mutator is ever added to the interface (the hardened 9-5 form, not the vacuous value-copy form).
+- **Schema `version = 1`, exported + committed**; `fallbackToDestructiveMigration(dropAllTables = true)`
+  is `BuildConfig.DEBUG`-gated so it cannot reach release (AC3/AC4). Verified at the bytecode level:
+  the DEBUG seeder (`DebugSampleCards`) is in R8's removed-code list — 0 references in the release dex,
+  present in debug (AC12).
+- **Seeding** moved onto Room, debug-only, and empty-state-gated **atomically** via
+  `seedIfEmpty` (`withTransaction`), so it can never clobber cards 10-6 syncs in concurrently.
+- **Process-lifetime DI** (`WearGraph`): the repository/scope are process singletons, so the card
+  `StateFlow` survives Activity recreation instead of leaking a scope + flashing an empty list.
+
 ### Offline Verification (AC2)
 
-| Device / emulator | Bluetooth state | Result |
-| ----------------- | --------------- | ------ |
-|                   | disabled        |        |
+No code path in this story performs I/O beyond the local Room database — there is no network or
+Bluetooth/Data-Layer code here (that is 10-6). The list and every barcode are served entirely from
+Room, so they work with the phone unreachable. Evidenced by the persistence-across-reopen test
+(`CardDaoTest.cardsSurviveAStoreReopen`) and demonstrated on an emulator with no paired phone:
+
+| Device / emulator                     | Radio state                            | Result                                                                                                                                                                                                                                       |
+| ------------------------------------- | -------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Wear OS emulator, round 384² (API 30) | **airplane mode ON**, BT off, no phone | PASS. Debug-seeded into Room while offline → list rendered; **force-stop + relaunch (still offline) → cards persisted** (AC1); opening a card **rendered its EAN-13 barcode locally** (AC2). No network/BT path exists in this story's code. |
 
 ### Do the Kotlin/Room tests run in CI? (AC13)
 
-_State yes/no explicitly and how._
+**Yes.** `.github/workflows/wear-os-build.yml` runs `./gradlew testDebugUnitTest assembleDebug`, and
+the Room tests are ordinary `testDebugUnitTest` tests. The DAO tests, the migration test, and the
+read-only structural test run under **Robolectric** — a JVM Android runtime, no emulator — on the
+Ubuntu runner; the mapper tests are pure JVM. The first CI run downloads Robolectric's `android-all`
+runtime (well within the job's 20m headroom). This is unlike watchOS, whose Swift XCTests do not run
+in CI.
 
 ### File List
+
+**Added (production):**
+
+- `watch-android/app/src/main/kotlin/com/iferoporefi/myloyaltycards/wear/WearGraph.kt`
+- `watch-android/app/src/main/kotlin/com/iferoporefi/myloyaltycards/wear/data/CardEntity.kt`
+- `watch-android/app/src/main/kotlin/com/iferoporefi/myloyaltycards/wear/data/CardDao.kt`
+- `watch-android/app/src/main/kotlin/com/iferoporefi/myloyaltycards/wear/data/WatchCardPayload.kt`
+- `watch-android/app/src/main/kotlin/com/iferoporefi/myloyaltycards/wear/data/CardMappers.kt`
+- `watch-android/app/src/main/kotlin/com/iferoporefi/myloyaltycards/wear/data/WearDatabase.kt`
+- `watch-android/app/src/main/kotlin/com/iferoporefi/myloyaltycards/wear/data/RoomCardRepository.kt`
+
+**Added (tests + resources):**
+
+- `watch-android/app/src/test/kotlin/com/iferoporefi/myloyaltycards/wear/data/CardDaoTest.kt`
+- `watch-android/app/src/test/kotlin/com/iferoporefi/myloyaltycards/wear/data/CardMappersTest.kt`
+- `watch-android/app/src/test/kotlin/com/iferoporefi/myloyaltycards/wear/data/CardMigrationTest.kt`
+- `watch-android/app/src/test/kotlin/com/iferoporefi/myloyaltycards/wear/data/RoomCardRepositoryTest.kt`
+- `watch-android/app/src/test/kotlin/com/iferoporefi/myloyaltycards/wear/data/CardRepositoryReadOnlyTest.kt`
+- `watch-android/app/src/test/kotlin/com/iferoporefi/myloyaltycards/wear/WearGraphTest.kt`
+- `watch-android/app/src/test/resources/robolectric.properties`
+
+**Added (generated, committed):**
+
+- `watch-android/app/schemas/com.iferoporefi.myloyaltycards.wear.data.WearDatabase/1.json`
+
+**Modified:**
+
+- `watch-android/app/src/main/kotlin/com/iferoporefi/myloyaltycards/wear/MainActivity.kt`
+- `watch-android/app/src/main/kotlin/com/iferoporefi/myloyaltycards/wear/data/CardRepository.kt` (removed `InMemoryCardRepository`)
+- `watch-android/build.gradle.kts`
+- `watch-android/app/build.gradle.kts`
+- `watch-android/gradle/libs.versions.toml`
+- `watch-android/README.md`
+- `.prettierignore`
+- `docs/sprint-artifacts/stories/10-5-store-cards-locally.md` (this story: task checkboxes, Dev Agent Record, Change Log)
+
+**Deleted:**
+
+- `watch-android/app/src/test/kotlin/com/iferoporefi/myloyaltycards/wear/data/CardRepositoryTest.kt` (old in-memory test; replaced by the Room tests)
+
+## Change Log
+
+| Date       | Change                                                                                                                                                                                                                                                                                                                                                      |
+| ---------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 2026-08-11 | Implemented Room-backed local card storage: entity/DAO/database/migration policy, mappers, wire DTO, `RoomCardRepository` (read-only seam + internal write surface), atomic debug seeding, schema export, Robolectric + JVM tests, README.                                                                                                                  |
+| 2026-08-11 | Addressed code-review findings: process-lifetime DI (`WearGraph`) to fix a per-recreation scope leak; replaced the vacuous read-only test with a structural reflection guard; made debug seeding atomic (`seedIfEmpty`); dropped a redundant `@ColumnInfo`; filled the Dev Agent Record; tracked the end-to-end migration-registration test as a follow-up. |

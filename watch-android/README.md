@@ -120,12 +120,13 @@ watch-android/
     ├── build.gradle.kts
     ├── lint.xml
     ├── proguard-rules.pro
+    ├── schemas/                      ← EXPORTED Room schema JSON, committed (Story 10.5); diffed per version
     └── src/main/
         ├── AndroidManifest.xml
         ├── kotlin/com/iferoporefi/myloyaltycards/wear/
         │   ├── MainActivity.kt           ← thin host; wires the repositories
         │   ├── Generated/Brands.kt       ← GENERATED, committed; see § Brand catalogue
-        │   ├── data/                     ← WearCard model, read-only CardRepository seam, DEBUG samples
+        │   ├── data/                     ← Room store (CardEntity/CardDao/WearDatabase), read-only CardRepository seam, mappers, DEBUG samples
         │   ├── sort/                     ← WatchSortMode + CardSorter (comparators mirror the phone)
         │   ├── prefs/                    ← DataStore-backed watch-local sort preference
         │   └── presentation/             ← Carbon theme, card list, row, sort picker, nav host
@@ -239,9 +240,10 @@ compared by parsing the ISO-8601 strings to `Instant`, never by widening the mod
 `Brands.kt` (recognisable on the wrist — watchOS could not, its brand record had no colour); a custom
 card uses the user's picked colour. Missing/unparseable colours fall back to a neutral grey.
 
-**The read seam.** `CardRepository` is a read-only interface; Story 10-5 implements it against Room.
-This story ships an in-memory implementation and a **DEBUG-only, empty-state-gated** sample-card
-seeder (R8 strips it from release). No persistence layer is built here — Story 5-9's lesson.
+**The read seam.** `CardRepository` is a read-only interface. Story 10-3 shipped an in-memory
+implementation; **Story 10-5 replaced it with a Room-backed one** — see
+[Local storage](#local-storage-story-105). The DEBUG-only, empty-state-gated seeder now writes into
+Room.
 
 **Localisation.** All user-facing strings are Android resources in `res/values/` (en) and
 `res/values-it/` (it), added together — Android has no missing-translation gate, so a missing `it`
@@ -295,6 +297,78 @@ this matters for the invalid-value error path under full-mode R8.
 **Usage-event seam.** Opening a barcode calls a no-op `CardUsageRecorder` at the barcode-appearing
 point (mirroring watchOS), with a millisecond-precision open time. Story 10-6 swaps in the real Data
 Layer `CARD_USED` emission from `MainActivity`; no transport is implemented here.
+
+## Local storage (Story 10.5)
+
+Cards are persisted on the watch in **Room**, so the list and every barcode work with the phone out
+of range, out of battery, or in another room. It is the on-device replica the phone re-sends on the
+next sync; nothing here is authored on the watch.
+
+**One storage surface. Room only.** There is no `SharedPreferences`/JSON/in-memory card cache
+alongside it. watchOS originally shipped **two** surfaces (a `UserDefaults` `watch.cards` key _and_
+SwiftData, plus a migration fallback and a `UITEST_CARDS` env shim) and
+[Story 5-9](../docs/sprint-artifacts/stories/5-9-remove-userdefaults-fallback.md) existed solely to
+delete them "before public release" so tests use a single data surface. Wear OS starts clean and
+stays clean. The one legitimate neighbour is the DataStore **sort preference** — UI state, not card
+data (Story 9-5's rationale), so it is not a second card surface.
+
+**Schema — one table, `cards`.** Columns mirror watchOS's `WatchCardEntity` and the phone's
+`WatchCardPayload` wire contract (`core/watch-connectivity.ts`). The exported schema lives in
+[`app/schemas/`](app/schemas) and is **committed** (`exportSchema = true` + the Room Gradle plugin's
+`schemaDirectory`), so the next schema change can be diffed against it and the migration test can
+validate a real migration. Two deliberate divergences from the watchOS mirror:
+
+- **Dates are `String`, not a date/instant type.** This is the documented project rule
+  (`docs/project-context.md`: "store dates as strings, parse only for display"), which the watchOS
+  entity does not follow. It is load-bearing: Story 10-6's usage-event dedup key is
+  `"<cardId>:<usedAt>"` at millisecond precision (ADR-2026-06-09-001), and round-tripping through a
+  date type is exactly how milliseconds are silently dropped. ISO-8601 UTC strings also sort
+  chronologically with no parsing.
+- **`rawPayload` is TEXT, not a `Data?`/BLOB.** The payload is JSON to begin with, so storing the
+  original text preserves unknown fields from a newer phone build (forward compatibility) losslessly
+  and inspectably, with no `TypeConverter`. `barcodeImageBase64` is **never** persisted — 10-4
+  renders barcodes locally, so the pre-rendered image is dead weight and the largest field by far
+  (Story 10-6 strips it before handing over the raw text). Column names stay camelCase (Room's
+  default), mirroring the Swift `@Model`; this is a platform-native store, **not** the phone's shared
+  `snake_case` SQLite schema, which is never shared with the watch.
+
+**Migration policy — real migrations, no destructive fallback in release.** The database is
+`version = 1`. Every schema change bumps `WearDatabase.VERSION` and appends a `Migration` to
+`WearDatabase.ALL_MIGRATIONS`; regenerate the committed schema at the same time.
+`fallbackToDestructiveMigration` is enabled **only** in debug, build-type-scoped via the compile-time
+`BuildConfig.DEBUG`, so it cannot reach a release build — silently dropping a user's cards on an
+unhandled version change is exactly the "data survives an app update" failure. `CardMigrationTest`
+proves the migration harness works (a throwaway v1→v2 migration preserves data) **before** a real
+migration is needed under release pressure.
+
+**Read-only for card data, structurally.** The UI is handed Story 10-3's `CardRepository`
+interface, which exposes only a read-only `StateFlow<List<WearCard>>` — it has no mutators, so "the
+watch cannot edit card data" (ADR-2026-06-09-001) is a compile-time fact, not a convention. The
+write surface (`upsertAll`/`deleteAll`) lives on the concrete `RoomCardRepository`, off the
+interface; the only callers are Story 10-6's snapshot apply and the DEBUG seeder.
+
+**Deletion semantics are Story 10-6's call.** This story provides `deleteAll` and `upsert`
+primitives only. Whether a phone snapshot _replaces_ or _merges_ — and therefore how a card deleted
+on the phone disappears from the watch — is left to 10-6, because
+[Story 16-11](../docs/sprint-artifacts/stories/16-11-fix-card-deletion-cloud-resurrection.md) shipped
+a deletion-blind merge on the phone that resurrected deleted cards. That boundary stays explicit.
+
+**Reactive.** The list observes a Room `Flow` (mapped to a `StateFlow` in the repository), so Story
+10-6's writes appear without a manual refresh — no polling.
+
+**Debug seeding writes into Room**, debug-only and empty-state-gated: the seed button only appears in
+the empty state, and the handler re-checks `isEmpty()` before writing so it can never overwrite real
+synced cards. `BuildConfig.DEBUG` gates it, so R8 strips both the seeder and `DebugSampleCards` from
+the release APK (verified: 0 references in the release dex, present in debug).
+
+**Testing (answering "do the Kotlin/Room tests run in CI?" — yes).** Room's DAO tests and the
+migration test run under **Robolectric** — an Android runtime on the JVM — because Room's Android
+database builder needs a `Context` (the context-less KMP builder is not available to an app module).
+Robolectric runs as ordinary `testDebugUnitTest`, so `wear-os-build.yml` executes them in CI with **no
+emulator**, exactly like the ZXing and DataStore tests. The mapper tests are pure JVM (no Robolectric).
+Tests use an **in-memory** database (mirroring Story 5-9's approach); the persistence-across-reopen
+and read-only-across-reload tests use a file-backed one, since an in-memory store cannot demonstrate
+persistence. First CI run downloads Robolectric's `android-all` runtime.
 
 ## The three non-negotiable platform constraints
 
@@ -362,8 +436,8 @@ build system, and coupling them would drag the Wear APK back into the "regenerat
   (ADR-2026-06-09-001, [`docs/adr-2026-06-09-watch-usage-events.md`](../docs/adr-2026-06-09-watch-usage-events.md)).
   Do not add a second write path.
 - **Dates are strings.** Per `docs/project-context.md`'s Watch App Rules, store dates as strings and
-  parse only for display; the phone sends ISO-8601 UTC with milliseconds. No `Date`-typed placeholder
-  model exists here for 10-5 to undo.
+  parse only for display; the phone sends ISO-8601 UTC with milliseconds, and Story 10-5's Room store
+  persists them as `String` columns accordingly (see [Local storage](#local-storage-story-105)).
 
 ## Toolchain
 
@@ -379,6 +453,9 @@ Recorded rather than pinned by prose — bump deliberately in
 | Compose BOM           | 2026.06.01                                                                                          |
 | Compose for Wear OS   | 1.6.2 (`compose-material3`, `compose-foundation`, `compose-navigation`)                             |
 | Jetpack DataStore     | 1.2.1 (`datastore-preferences`) — watch-local sort preference                                       |
+| Room                  | 2.8.4 (`room-runtime` + `room-compiler`) — on-device card store (Story 10.5)                        |
+| KSP                   | 2.3.11 (`com.google.devtools.ksp`) — runs Room's processor; independently versioned, Kotlin 2.2+    |
+| Robolectric           | 4.16.1 (test only) — JVM Android runtime for the Room tests                                         |
 | `compileSdk`          | 36                                                                                                  |
 | `minSdk`              | 30 — Wear OS 3 floor and Play's Wear quality requirement                                            |
 | `targetSdk`           | 35 — Play's 2026 rule is API 36, but Wear OS and Android Automotive are explicitly carved out at 35 |
@@ -409,6 +486,12 @@ coverage:
   temp-file DataStore. Unlike watchOS — whose Swift XCTests do **not** run in CI, only a TS
   source-contract test does — these are real JVM tests on the Ubuntu runner (no emulator), so this is
   the answer to Story 10-3 AC14: **yes, they run in CI.**
+- ✅ **Story 10.5's Room tests run in CI too (AC13).** The DAO tests (persistence across reopen,
+  idempotent upsert, millisecond date round-trip, absent-field defaults, nullability, reactive
+  emission), the read-only-across-reload test, and the migration test run under **Robolectric** — a
+  JVM Android runtime — as ordinary `testDebugUnitTest`, so they run on the Ubuntu runner with **no
+  emulator**. The mapper tests are pure JVM. The first CI run downloads Robolectric's `android-all`
+  runtime (well within the job's 20m headroom).
 - ❌ **No lint in CI.** `./gradlew lintDebug` passes locally and is worth wiring up as a gate later; it
   is not one today.
 - ❌ **No instrumented or on-device test.** Install-and-launch and the round/square layout check (AC8)
@@ -446,14 +529,14 @@ Flagged rather than silently carried:
 
 Story 10.1 delivered the module, the build and a placeholder screen; Story 10.2 added the generated
 brand catalogue; Story 10.3 added the card list, favourite indicator and persisted sort; Story 10.4
-added barcode rendering. Everything below is still someone else's.
+added barcode rendering; Story 10.5 added the Room store. Everything below is still someone else's.
 
 | Owned by | Work                                                                                                                    |
 | -------- | ----------------------------------------------------------------------------------------------------------------------- |
 | ~~10-2~~ | ~~Brand catalogue generation~~ — done, see [§ Brand catalogue](#brand-catalogue)                                        |
 | ~~10-3~~ | ~~Card list UI, favourite indicator, persisted sort~~ — done, see [§ Card list and sort](#card-list-and-sort-story-103) |
 | ~~10-4~~ | ~~Barcode rendering~~ — done, see [§ Barcode](#barcode-story-104)                                                       |
-| **10-5** | Room storage — owns the schema, hence **no Room dependency here**                                                       |
+| ~~10-5~~ | ~~Room storage~~ — done, see [§ Local storage](#local-storage-story-105)                                                |
 | **10-6** | Data Layer sync and `CARD_USED` — the **only** consumer of the declared `play-services-wearable` dependency             |
 
 The Play Services Wearable dependency is declared but **unused**, purely so 10-6 can wire sync without

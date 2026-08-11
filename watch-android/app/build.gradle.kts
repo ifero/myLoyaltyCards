@@ -10,6 +10,12 @@ plugins {
     // plugin. AGP 9's built-in Kotlin support covers plain Kotlin compilation,
     // but NOT the Compose compiler, so this is still required.
     alias(libs.plugins.compose.compiler)
+    // KSP runs Room's annotation processor (Story 10.5). It coexists with AGP 9's
+    // built-in Kotlin — built-in Kotlin only requires KGP >= 2.2.10 and does not
+    // replace KSP — so it is applied here the normal way.
+    alias(libs.plugins.ksp)
+    // Room's schema-export plugin (configured in the `room { }` block below).
+    alias(libs.plugins.room)
 }
 
 /**
@@ -145,10 +151,27 @@ android {
     testOptions {
         unitTests {
             // DataStore's read/write flows assert they are off the main thread; the default
-            // returns 0 for unmocked android.* calls, which is enough for these pure-logic tests.
+            // returns 0 for unmocked android.* calls, which is enough for those pure-logic tests.
             isReturnDefaultValues = true
+            // Robolectric needs the merged manifest and resources on the unit-test classpath to
+            // stand up an Android runtime for the Room DAO tests.
+            isIncludeAndroidResources = true
         }
     }
+}
+
+/**
+ * Room schema export (Story 10.5, AC4). `exportSchema = true` on `@Database` writes the schema
+ * as JSON here so future migrations can be generated and diffed; the v1 file is committed. The
+ * directory is a tracked task output — a `.json` per database version — so a schema change that
+ * forgets its migration is caught in review, not in the field.
+ *
+ * Using the Room Gradle plugin (not a raw `room.schemaLocation` KSP arg) on purpose: it registers
+ * the export as a proper Gradle task output, which is what keeps it correct under the build cache
+ * and configuration cache (both enabled in gradle.properties).
+ */
+room {
+    schemaDirectory("$projectDir/schemas")
 }
 
 dependencies {
@@ -181,6 +204,12 @@ dependencies {
     // on the JVM (below) without an emulator.
     implementation(libs.zxing.core)
 
+    // Room — the on-device card store (Story 10.5). This module OWNS the schema; nothing
+    // Room-related lived here before. `room-runtime` is the library; `room-compiler` is the
+    // KSP processor that generates the DAO/database implementations at compile time.
+    implementation(libs.androidx.room.runtime)
+    ksp(libs.androidx.room.compiler)
+
     // Wear-specific @Preview annotations, used by the card list previews.
     implementation(libs.wear.compose.ui.tooling)
     // The preview renderer itself is debug-only and never ships in the APK.
@@ -191,4 +220,11 @@ dependencies {
     testImplementation(libs.junit)
     testImplementation(libs.kotlinx.coroutines.test)
     testImplementation(libs.androidx.datastore.preferences.core)
+    // Room's DAO tests and the migration test both need an Android runtime — Room's Android
+    // database builder needs a Context (the context-less KMP builder is not available to an app
+    // module), and the migration test drives Room's default AndroidSQLiteDriver, whose SQLite is
+    // an android.* type. Robolectric supplies both on the JVM, so `./gradlew testDebugUnitTest`
+    // runs them in CI with no emulator (Story 10.5, AC13). AndroidSQLiteDriver itself comes
+    // transitively from room-runtime, so no extra androidx.sqlite dependency is needed.
+    testImplementation(libs.robolectric)
 }
