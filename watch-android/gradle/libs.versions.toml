@@ -32,6 +32,28 @@ kotlinxCoroutines = "1.9.0"
 # 3.5.4 is the current stable release (verified against Maven Central at implementation time —
 # do not copy a version from prose; re-resolve `<release>` when bumping).
 zxingCore = "3.5.4"
+# Room: the on-device card store (Story 10.5). 2.8.4 is the current stable release of the
+# `androidx.room` line (verified against Google's Maven `<release>` at implementation time).
+# Deliberately NOT the newer `androidx.room3` 3.0.x major: this is a data-loss-critical layer
+# (a bad migration silently wipes a user's cards — AC3), and 2.8.x is the battle-tested line
+# that already carries every API this story needs (the SQLiteDriver API, the schema-export
+# Gradle plugin and the driver-based MigrationTestHelper all landed in 2.7.0). Re-resolve
+# `<release>` before bumping. The Room runtime, the KSP compiler and the Gradle plugin below
+# MUST share this single version.
+room = "2.8.4"
+# KSP runs Room's annotation processor. Since 2.3.0 KSP is versioned INDEPENDENTLY of Kotlin
+# (KSP2, on the K2 compiler) and supports Kotlin 2.2+, so 2.3.11 pairs with this project's
+# Kotlin 2.4.10 — the version string no longer mirrors the Kotlin version the way the old
+# `<kotlin>-<ksp>` scheme did. AGP 9's built-in Kotlin coexists with the standard
+# `com.google.devtools.ksp` plugin (built-in Kotlin only requires KGP >= 2.2.10).
+ksp = "2.3.11"
+# Robolectric provides an Android runtime (Context + a real SQLite) on the JVM, so the Room DAO
+# tests run as plain `testDebugUnitTest` in CI with no emulator. It is required because Room's
+# Android database builder needs a Context — the context-less KMP builder is not available to an
+# Android app module (verified: it fails to resolve). 4.16.1 is the current stable release and
+# supports API 36 (this module's compileSdk); the tests pin API 35 (targetSdk) via
+# `src/test/resources/robolectric.properties`. First CI run downloads the android-all runtime.
+robolectric = "4.16.1"
 
 [libraries]
 androidx-activity-compose = { module = "androidx.activity:activity-compose", version.ref = "androidxActivity" }
@@ -57,7 +79,20 @@ kotlinx-coroutines-test = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-t
 # Barcode generation (Story 10.4). `core` is the pure-JVM module — deliberately NOT `zxing-android-embedded`
 # or the `android` module, which add camera/scanning we do not need and an Android dependency we do not want.
 zxing-core = { module = "com.google.zxing:core", version.ref = "zxingCore" }
+# Room persistence (Story 10.5). `room-runtime` is the on-device library; `room-compiler` is the
+# KSP annotation processor (wired via `ksp(...)`, not `implementation(...)`). Both share `room`.
+androidx-room-runtime = { module = "androidx.room:room-runtime", version.ref = "room" }
+androidx-room-compiler = { module = "androidx.room:room-compiler", version.ref = "room" }
+# Robolectric — JVM Android runtime for the Room DAO and migration tests (see `robolectric` above).
+robolectric = { module = "org.robolectric:robolectric", version.ref = "robolectric" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
 compose-compiler = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
+# KSP — runs Room's annotation processor (Story 10.5). Shares `ksp`.
+ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
+# Room Gradle plugin — the recommended way to export the schema (`room { schemaDirectory(...) }`):
+# it wires the exported JSON as a proper task output so it survives the build cache and the
+# configuration cache (both ON in gradle.properties), which a raw `room.schemaLocation` KSP arg
+# does not. Shares the single `room` version with the runtime and compiler.
+room = { id = "androidx.room", version.ref = "room" }
