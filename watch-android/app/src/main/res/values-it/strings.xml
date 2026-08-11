@@ -22,6 +22,15 @@
     <string name="sort_recent">Aggiunte di recente</string>
     <string name="sort_az">A-Z</string>
 
+    <!-- Barcode screen (Story 10.4). Due stati di errore DISTINTI: formato non supportato → riaggiungi
+         la carta; valore non valido → il codice memorizzato è sbagliato. Mai una schermata vuota (AC2). -->
+    <string name="barcode_untitled_card">Carta</string>
+    <string name="barcode_content_description">Codice a barre per %1$s</string>
+    <string name="barcode_error_unsupported_title">Codice non supportato</string>
+    <string name="barcode_error_unsupported_message">Il tipo di codice di questa carta non può essere mostrato sull\'orologio. Aggiungi di nuovo la carta dal tuo telefono.</string>
+    <string name="barcode_error_invalid_title">Codice non valido</string>
+    <string name="barcode_error_invalid_message">Il codice di questa carta non può essere mostrato. Controlla la carta sul tuo telefono.</string>
+
     <!-- DEBUG-only; never shown in release builds -->
     <string name="debug_import_sample_cards">Importa carte di esempio</string>
 </resources>
