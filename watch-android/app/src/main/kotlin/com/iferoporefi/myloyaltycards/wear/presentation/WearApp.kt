@@ -3,17 +3,23 @@ package com.iferoporefi.myloyaltycards.wear.presentation
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.lifecycle.Lifecycle
+import androidx.navigation.NavController
 import androidx.navigation.NavType
 import androidx.navigation.navArgument
 import androidx.wear.compose.material3.AppScaffold
 import androidx.wear.compose.navigation.SwipeDismissableNavHost
 import androidx.wear.compose.navigation.composable
 import androidx.wear.compose.navigation.rememberSwipeDismissableNavController
+import com.iferoporefi.myloyaltycards.wear.barcode.WearBarcodeGenerator
 import com.iferoporefi.myloyaltycards.wear.data.CardRepository
 import com.iferoporefi.myloyaltycards.wear.prefs.SortPreferenceRepository
 import com.iferoporefi.myloyaltycards.wear.presentation.theme.MyLoyaltyCardsWearTheme
 import com.iferoporefi.myloyaltycards.wear.sort.WatchSortMode
+import com.iferoporefi.myloyaltycards.wear.usage.CardUsageRecorder
+import com.iferoporefi.myloyaltycards.wear.usage.NoOpCardUsageRecorder
 import kotlinx.coroutines.launch
 
 private const val ROUTE_CARDS = "cards"
@@ -27,14 +33,17 @@ private const val ARG_CARD_ID = "cardId"
  *
  * State is hoisted here and read from the repositories: the cards ([CardRepository], read-only) and
  * the watch-local sort mode ([SortPreferenceRepository]). Three destinations: the list, the
- * full-screen sort picker, and the inert barcode seam Story 10-4 fills (AC11).
+ * full-screen sort picker, and the full-screen barcode (Story 10-4).
  *
+ * @param usageRecorder the AC8 seam invoked when a barcode opens; defaults to the no-op recorder.
+ *   Story 10-6 swaps in a Data Layer-backed implementation from `MainActivity` — no change here.
  * @param onImportSampleCards DEBUG-only seeder passed through to the empty state; `null` in release.
  */
 @Composable
 fun WearApp(
     cardRepository: CardRepository,
     sortPreferenceRepository: SortPreferenceRepository,
+    usageRecorder: CardUsageRecorder = NoOpCardUsageRecorder,
     onImportSampleCards: (() -> Unit)? = null,
 ) {
     MyLoyaltyCardsWearTheme {
@@ -42,6 +51,8 @@ fun WearApp(
         val scope = rememberCoroutineScope()
         val cards by cardRepository.cards.collectAsState()
         val sortMode by sortPreferenceRepository.sortMode.collectAsState(initial = WatchSortMode.DEFAULT)
+        // One generator for the app's lifetime so its barcode cache survives open→close→re-open (AC10).
+        val barcodeGenerator = remember { WearBarcodeGenerator() }
 
         AppScaffold {
             SwipeDismissableNavHost(
@@ -52,8 +63,8 @@ fun WearApp(
                     CardListScreen(
                         cards = cards,
                         sortMode = sortMode,
-                        onCardClick = { cardId -> navController.navigate("$ROUTE_BARCODE/$cardId") },
-                        onOpenSort = { navController.navigate(ROUTE_SORT) },
+                        onCardClick = { cardId -> navController.navigateOnce("$ROUTE_BARCODE/$cardId") },
+                        onOpenSort = { navController.navigateOnce(ROUTE_SORT) },
                         onImportSampleCards = onImportSampleCards,
                     )
                 }
@@ -75,10 +86,28 @@ fun WearApp(
                     arguments = listOf(navArgument(ARG_CARD_ID) { type = NavType.StringType }),
                 ) { backStackEntry ->
                     val cardId = backStackEntry.arguments?.getString(ARG_CARD_ID)
-                    val cardName = cards.firstOrNull { it.id == cardId }?.name
-                    BarcodePlaceholderScreen(cardName = cardName)
+                    val card = cards.firstOrNull { it.id == cardId }
+                    BarcodeScreen(
+                        card = card,
+                        barcodeGenerator = barcodeGenerator,
+                        usageRecorder = usageRecorder,
+                        onDismiss = { navController.popBackStack() },
+                    )
                 }
             }
         }
+    }
+}
+
+/**
+ * Navigates to [route] only from a fully-resumed destination. Guards against a double-tap pushing the
+ * same screen twice: the second tap fires before the first navigation completes, when the source is
+ * no longer `RESUMED`. Without it, a double-tap on a card would open the barcode twice — a duplicate
+ * confirm haptic and a duplicate `CARD_USED` usage event (AC8), which once Story 10-6 wires the real
+ * transport would double-count a single open toward 10-3's "frequently used" sort.
+ */
+private fun NavController.navigateOnce(route: String) {
+    if (currentBackStackEntry?.lifecycle?.currentState?.isAtLeast(Lifecycle.State.RESUMED) == true) {
+        navigate(route)
     }
 }

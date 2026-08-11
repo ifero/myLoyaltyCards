@@ -176,6 +176,11 @@ dependencies {
     // without editing build files. Do not add sync logic before 10-6.
     implementation(libs.play.services.wearable)
 
+    // Barcode generation (Story 10.4): the pure-JVM ZXing core covers all six card
+    // formats. No Android dependency, so the encode/layout/cache logic is unit-tested
+    // on the JVM (below) without an emulator.
+    implementation(libs.zxing.core)
+
     // Wear-specific @Preview annotations, used by the card list previews.
     implementation(libs.wear.compose.ui.tooling)
     // The preview renderer itself is debug-only and never ships in the APK.
