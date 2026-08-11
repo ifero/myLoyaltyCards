@@ -247,6 +247,55 @@ seeder (R8 strips it from release). No persistence layer is built here — Story
 `res/values-it/` (it), added together — Android has no missing-translation gate, so a missing `it`
 value would fall back to English silently. The empty state says "phone", not watchOS's "iPhone".
 
+## Barcode (Story 10.4)
+
+Tapping a card opens a full-screen barcode on a **white** surface (a hardware-scanner requirement,
+not a theme choice): card name as title-level context, the symbol, and the value beneath it.
+
+**ZXing, not a port of the encoders.** Barcodes are generated with `com.google.zxing:core` (the
+pure-JVM module), **not** by porting watchOS's hand-rolled EAN-13/Code128 encoders — those exist only
+because watchOS ships no barcode library. Being pure JVM, the encode/layout/cache logic is unit-tested
+without an emulator (`app/src/test/…/barcode/`).
+
+**Wear OS renders all six formats; watchOS renders three.** The card schema defines
+`CODE128, EAN13, EAN8, QR, CODE39, UPCA`. watchOS's `BarcodeGenerator.swift` returns `nil` for EAN8,
+CODE39 and UPCA, so a card in one of those shows **nothing** on Apple Watch today; ZXing covers all
+six here at no extra cost, so Wear deliberately exceeds watchOS parity. This asymmetry is intentional
+and documented — the watchOS gap is a real, unstoried defect flagged for @ifero, not something to
+"fix" by hobbling Wear.
+
+**Layout is ported, with two Wear adaptations** (`BarcodeLayoutMetrics`, the single testable source of
+truth). The watchOS QR-vs-linear branch, the `112` QR floor and the linear `0.52`-of-height / 88–110
+clamp are reproduced. Added for Wear: (1) on a **round** screen the symbol + title + value box is
+inscribed in the circle (`boxW² + boxH² ≤ D²`) so no corner or end clips — no-clip always wins over the
+floor; (2) a reserved **title header**, because Wear has no nav-bar title slot for a full-screen surface
+like watchOS does. `widthFillRatio` makes Story 5-10's "≥ 80 % of the container" measurable.
+
+**Scanner reliability.** The screen is held awake and at **maximum brightness** while a barcode is
+shown and both are restored on exit (a lifecycle-scoped `DisposableEffect`) — parity with the phone's
+`useBrightness`, which watchOS lacks. The `TimeText` clock is hidden on this screen
+(`ScreenScaffold(timeText = {})`) so it never overlaps the barcode or the title. Rendering is off the
+main thread (`Dispatchers.Default`) and the `BitMatrix` is cached per (value, format, size), so
+re-opening a card never re-encodes.
+
+**Errors, never blanks.** An unknown/unsupported format and an invalid value (e.g. a bad EAN-13 check
+digit) each render a **distinct, localised** error state naming the problem — the two have different
+remedies (re-add the card vs the stored barcode is wrong).
+
+**Dismissal.** Tap anywhere returns to the list (single-shot latch); swipe-to-dismiss (the
+`SwipeDismissableNavHost` back gesture) also returns. Rotary dismiss (Open Decision 3's ideal) was
+**not** shipped — it cannot be injected on a headless emulator, so it is unverifiable in CI, and Open
+Decision 3 blesses "tap-only plus the system back gesture" as acceptable. A follow-up for on-wrist
+verification.
+
+**Release builds keep ZXing explicitly.** `proguard-rules.pro` keeps the ZXing writer path, because
+`core` ships no consumer rules and CI only builds the debug variant — see the comment there for why
+this matters for the invalid-value error path under full-mode R8.
+
+**Usage-event seam.** Opening a barcode calls a no-op `CardUsageRecorder` at the barcode-appearing
+point (mirroring watchOS), with a millisecond-precision open time. Story 10-6 swaps in the real Data
+Layer `CARD_USED` emission from `MainActivity`; no transport is implemented here.
+
 ## The three non-negotiable platform constraints
 
 These are platform requirements, not preferences. Getting any of them wrong breaks Play association or
@@ -396,14 +445,14 @@ Flagged rather than silently carried:
 ## Scope
 
 Story 10.1 delivered the module, the build and a placeholder screen; Story 10.2 added the generated
-brand catalogue; Story 10.3 added the card list, favourite indicator and persisted sort. Everything
-below is still someone else's.
+brand catalogue; Story 10.3 added the card list, favourite indicator and persisted sort; Story 10.4
+added barcode rendering. Everything below is still someone else's.
 
 | Owned by | Work                                                                                                                    |
 | -------- | ----------------------------------------------------------------------------------------------------------------------- |
 | ~~10-2~~ | ~~Brand catalogue generation~~ — done, see [§ Brand catalogue](#brand-catalogue)                                        |
 | ~~10-3~~ | ~~Card list UI, favourite indicator, persisted sort~~ — done, see [§ Card list and sort](#card-list-and-sort-story-103) |
-| **10-4** | Barcode rendering                                                                                                       |
+| ~~10-4~~ | ~~Barcode rendering~~ — done, see [§ Barcode](#barcode-story-104)                                                       |
 | **10-5** | Room storage — owns the schema, hence **no Room dependency here**                                                       |
 | **10-6** | Data Layer sync and `CARD_USED` — the **only** consumer of the declared `play-services-wearable` dependency             |
 
