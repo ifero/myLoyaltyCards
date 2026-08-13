@@ -198,7 +198,13 @@ async function buildWatchQRCodeBase64(card: LoyaltyCard): Promise<string | null>
   }
 }
 
-type WatchTransportValue =
+/**
+ * A value the wearable transport can carry. Exported so the Android Data Layer path
+ * (`core/wear-connectivity.ts`) reuses this module's sanitiser rather than growing a second
+ * one — Story 5-6a exists because unsanitised values were handed to `WCSession`, and the Data
+ * Layer has the same class of constraint with different specifics.
+ */
+export type WatchTransportValue =
   | string
   | number
   | boolean
@@ -214,7 +220,11 @@ let latestSourceCards: LoyaltyCard[] | null = null;
 let diagnosticsRegistered = false;
 const diagnosticsUnsubscribers: Unsubscribe[] = [];
 
-function utf8ByteLength(value: string): number {
+/**
+ * UTF-8 byte length of `value`. Exported so both transports measure their payload budget the
+ * same way — the fallback branch matters on runtimes without `TextEncoder`.
+ */
+export function utf8ByteLength(value: string): number {
   if (typeof TextEncoder !== 'undefined') {
     return new TextEncoder().encode(value).length;
   }
@@ -226,7 +236,15 @@ function snapshotEnvelopeSize(payload: WatchCardPayload[]): number {
   return utf8ByteLength(JSON.stringify({ type: 'cards', payload }));
 }
 
-function toBaseWatchCardPayload(card: LoyaltyCard): WatchCardPayload {
+/**
+ * The card payload without `barcodeImageBase64`.
+ *
+ * Exported for the Android Data Layer path, which sends exactly this and never adds the image:
+ * Wear OS renders all six barcode formats locally with ZXing (Story 10-4), so the phone-rendered
+ * QR is the largest field in the payload and buys nothing there (AC13). The iOS path keeps
+ * layering the image on top via `buildSnapshotWithOptionalQRImages` — watchOS still needs it.
+ */
+export function toBaseWatchCardPayload(card: LoyaltyCard): WatchCardPayload {
   return {
     id: card.id,
     name: card.name,
@@ -372,7 +390,15 @@ function sanitizeWatchTransportValue(value: unknown): WatchTransportValue | unde
   return undefined;
 }
 
-function sanitizeWatchTransportObject(
+/**
+ * Drop every value the wearable transport cannot represent — `null`, `undefined`, non-finite
+ * numbers and anything that is not a string/boolean/number/Date/array/plain object — recursively.
+ *
+ * Exported so the Android Data Layer path reuses this exact function (AC12). Story 5-6a is the
+ * precedent: a parallel implementation is how the two transports drift apart, and the failure is
+ * silent on both.
+ */
+export function sanitizeWatchTransportObject(
   value: Record<string, unknown>
 ): Record<string, WatchTransportValue> {
   const sanitized = sanitizeWatchTransportValue(value);

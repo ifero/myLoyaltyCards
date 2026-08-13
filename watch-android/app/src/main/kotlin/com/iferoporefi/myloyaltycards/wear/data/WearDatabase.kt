@@ -5,7 +5,11 @@ import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
 import androidx.room.migration.Migration
+import androidx.sqlite.SQLiteConnection
+import androidx.sqlite.execSQL
 import com.iferoporefi.myloyaltycards.wear.BuildConfig
+import com.iferoporefi.myloyaltycards.wear.usage.UsageEventEntity
+import com.iferoporefi.myloyaltycards.wear.usage.UsageOutboxDao
 
 /**
  * The Wear OS card database (Story 10.5) — Room, and the **only** storage surface on the watch.
@@ -24,23 +28,51 @@ import com.iferoporefi.myloyaltycards.wear.BuildConfig
  * constant, so the branch is absent from the release APK entirely — purely so schema churn during
  * development does not force a manual uninstall.
  */
-@Database(entities = [CardEntity::class], version = WearDatabase.VERSION, exportSchema = true)
+@Database(
+    entities = [CardEntity::class, UsageEventEntity::class],
+    version = WearDatabase.VERSION,
+    exportSchema = true,
+)
 abstract class WearDatabase : RoomDatabase() {
     abstract fun cardDao(): CardDao
 
+    /** The `CARD_USED` outbox (Story 10-6). Outbound, watch-local work — never card data. */
+    abstract fun usageOutboxDao(): UsageOutboxDao
+
     companion object {
         /** Current schema version. Bump on every schema change and add the matching migration. */
-        const val VERSION = 1
+        const val VERSION = 2
 
         private const val DB_NAME = "cards.db"
 
         /**
-         * The ordered migration path. Empty at v1 — there is nothing before it to migrate from.
-         * Each version bump appends its `MIGRATION_(n-1)_n` here; `CardMigrationTest` proves the
-         * harness works so that the first real migration is a fill-in-the-blank, not a first
-         * attempt under release pressure.
+         * v1 → v2: adds the `usage_outbox` table (Story 10-6).
+         *
+         * Additive only — it does not touch `cards`, so a user upgrading keeps every synced card
+         * (AC3 of Story 10-5). The DDL must match what Room generates for [UsageEventEntity]
+         * byte for byte, or Room's post-migration schema validation fails at runtime; the
+         * authority is `app/schemas/…/2.json`, and `CardMigrationTest` runs the real migration
+         * against the exported v1 schema so a mismatch fails in CI rather than on a wrist.
          */
-        val ALL_MIGRATIONS: Array<Migration> = emptyArray()
+        val MIGRATION_1_2 = object : Migration(1, 2) {
+            override fun migrate(connection: SQLiteConnection) {
+                connection.execSQL(
+                    "CREATE TABLE IF NOT EXISTS `usage_outbox` (" +
+                        "`eventId` TEXT NOT NULL, " +
+                        "`cardId` TEXT NOT NULL, " +
+                        "`usedAt` TEXT NOT NULL, " +
+                        "`enqueuedAt` TEXT NOT NULL, " +
+                        "PRIMARY KEY(`eventId`))",
+                )
+            }
+        }
+
+        /**
+         * The ordered migration path. Each version bump appends its `MIGRATION_(n-1)_n` here;
+         * `CardMigrationTest` proves the harness works so that a migration is a fill-in-the-blank
+         * rather than a first attempt under release pressure.
+         */
+        val ALL_MIGRATIONS: Array<Migration> = arrayOf(MIGRATION_1_2)
 
         @Volatile
         private var instance: WearDatabase? = null

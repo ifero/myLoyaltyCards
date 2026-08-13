@@ -6,7 +6,6 @@ import androidx.activity.compose.setContent
 import com.iferoporefi.myloyaltycards.wear.prefs.DataStoreSortPreferenceRepository
 import com.iferoporefi.myloyaltycards.wear.prefs.sortPreferencesDataStore
 import com.iferoporefi.myloyaltycards.wear.presentation.WearApp
-import com.iferoporefi.myloyaltycards.wear.usage.NoOpCardUsageRecorder
 
 /**
  * Sole entry point of the Wear OS companion app — a thin `setContent` host that wires the
@@ -39,9 +38,13 @@ class MainActivity : ComponentActivity() {
                 null
             }
 
-        // Usage-event seam (AC8 of Story 10-4). No-op until Story 10-6 supplies a Wearable Data
-        // Layer-backed recorder here — the only line that needs to change to wire CARD_USED.
-        val usageRecorder = NoOpCardUsageRecorder
+        // Usage-event seam (AC8 of Story 10-4), now backed by Story 10-6's durable outbox: a card
+        // open is persisted first and delivered whenever the phone is next reachable.
+        val usageRecorder = WearGraph.cardUsageRecorder(applicationContext)
+
+        // Phone -> watch sync (Story 10-6). Idempotent and process-scoped, so the repeated calls
+        // an Activity recreation produces cost nothing.
+        WearGraph.startSync(applicationContext)
 
         setContent {
             WearApp(

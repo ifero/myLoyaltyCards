@@ -278,6 +278,10 @@ export default [
       'android/**',
       'ios/**',
       'watch-android/**',
+      // Local Expo modules are tracked source and their `.ts` IS linted, but their Android
+      // `build/` holds generated Gradle output (e.g. a test report's `report.js` that references
+      // `window`) — the analogue of ignoring `android/**` and `watch-android/**/build`.
+      'modules/*/android/build/**',
       'plugins/withMlkitAppleSiliconSimulator.js',
       '*.config.js',
       'targets/**/expo-target.config.js',

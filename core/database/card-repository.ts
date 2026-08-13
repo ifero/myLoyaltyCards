@@ -9,13 +9,21 @@
 import { SQLiteDatabase } from 'expo-sqlite';
 
 import { LoyaltyCard, BarcodeFormat, CardColor } from '../schemas';
-import { pushCardsToWatch, type WatchUsageEvent } from '../watch-connectivity';
+import { type WatchUsageEvent } from '../watch-connectivity';
+import { pushCardsToWearable } from '../wearable-sync';
 import { getDatabase } from './database';
 
-async function pushSnapshotToWatch(db: SQLiteDatabase): Promise<void> {
+/**
+ * Push the current card list to whichever wearable this platform pairs with.
+ *
+ * Goes through the `wearable-sync` seam rather than calling `pushCardsToWatch` directly (Story
+ * 10-6, AC2): the repository has no business knowing that an Apple Watch is reached over
+ * WCSession and a Wear OS watch over the Data Layer.
+ */
+async function pushSnapshotToWearable(db: SQLiteDatabase): Promise<void> {
   try {
     const cards = await getAllCards(db);
-    await pushCardsToWatch(cards);
+    await pushCardsToWearable(cards);
   } catch {
     // best-effort — never fail a DB write because the watch couldn't be reached
   }
@@ -107,7 +115,7 @@ export async function insertCard(
       ]
     );
   });
-  await pushSnapshotToWatch(db);
+  await pushSnapshotToWearable(db);
 }
 
 /**
@@ -145,7 +153,7 @@ export async function updateCard(
       ]
     );
   });
-  await pushSnapshotToWatch(db);
+  await pushSnapshotToWearable(db);
 }
 
 /**
@@ -156,7 +164,7 @@ export async function deleteCard(id: string, db: SQLiteDatabase = getDatabase())
   await db.withTransactionAsync(async () => {
     await db.runAsync('DELETE FROM loyalty_cards WHERE id = ?', [id]);
   });
-  await pushSnapshotToWatch(db);
+  await pushSnapshotToWearable(db);
 }
 
 /**
@@ -188,7 +196,7 @@ export async function upsertCard(
       ]
     );
   });
-  await pushSnapshotToWatch(db);
+  await pushSnapshotToWearable(db);
 }
 
 /**
@@ -200,7 +208,7 @@ export async function deleteAllCards(db: SQLiteDatabase = getDatabase()): Promis
   await db.withTransactionAsync(async () => {
     await db.runAsync('DELETE FROM loyalty_cards');
   });
-  await pushSnapshotToWatch(db);
+  await pushSnapshotToWearable(db);
 }
 
 /**
@@ -238,7 +246,7 @@ export async function batchUpsertCards(
       );
     }
   });
-  await pushSnapshotToWatch(db);
+  await pushSnapshotToWearable(db);
 }
 
 /**
@@ -262,7 +270,7 @@ export async function incrementUsageCount(
       WHERE id = ?`,
     [now, now, id]
   );
-  await pushSnapshotToWatch(db);
+  await pushSnapshotToWearable(db);
 }
 
 /**
@@ -287,7 +295,7 @@ export async function toggleFavorite(
       WHERE id = ?`,
     [now, id]
   );
-  await pushSnapshotToWatch(db);
+  await pushSnapshotToWearable(db);
 }
 
 /**
@@ -358,7 +366,7 @@ export async function applyWatchUsageEvents(
   });
 
   if (appliedCount > 0) {
-    await pushSnapshotToWatch(db);
+    await pushSnapshotToWearable(db);
   }
   return appliedCount;
 }

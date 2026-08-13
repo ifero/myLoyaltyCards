@@ -1,0 +1,53 @@
+// Local Expo module: the phone-side Wearable Data Layer transport (Story 10-6, AC1).
+//
+// It lives in `modules/` — NOT in `android/` — on purpose. `android/` is gitignored
+// (.gitignore:56) and regenerated wholesale by `expo prebuild`, so anything written there is
+// lost on the next prebuild (Story 16.7's lesson). A local Expo module is tracked source,
+// is autolinked (expo-modules-autolinking defaults `nativeModulesDir` to `./modules`), and
+// contributes its own AndroidManifest entries through the manifest merger — which is how the
+// WearableListenerService below reaches the generated app manifest without editing it.
+plugins {
+  id 'com.android.library'
+  id 'expo-module-gradle-plugin'
+}
+
+group = 'expo.modules.weardatalayer'
+version = '1.0.0'
+
+android {
+  namespace "expo.modules.weardatalayer"
+  defaultConfig {
+    versionCode 1
+    versionName "1.0.0"
+  }
+  lintOptions {
+    abortOnError false
+  }
+  testOptions {
+    unitTests {
+      // Robolectric needs the merged manifest + resources on the unit-test classpath to stand up
+      // an Android runtime for the WearDataLayerInbox tests (real SharedPreferences + real
+      // org.json — the android.jar stubs throw otherwise).
+      includeAndroidResources = true
+    }
+  }
+}
+
+dependencies {
+  // Wearable Data Layer (DataClient / MessageClient / NodeClient). 20.0.1 is the current
+  // release on Google's Maven (verified against maven-metadata.xml at implementation time)
+  // and matches the version the Wear OS APK resolves in
+  // `watch-android/gradle/libs.versions.toml` — the two sides of one transport should not
+  // drift across a major.
+  implementation "com.google.android.gms:play-services-wearable:20.0.1"
+
+  // Unit tests for WearDataLayerInbox (Story 10-6). The inbox is the phone-side durability
+  // component — a SharedPreferences-backed read/modify/write with a FIFO trim and corrupt-store
+  // recovery — so it earns real tests, like its watch-side analogue UsageOutbox. Robolectric
+  // supplies a JVM Android runtime (Context + real SharedPreferences + real org.json), the same
+  // versions watch-android pins. See ../../README notes on CI in the story's Dev Agent Record:
+  // these run via `./gradlew :wear-data-layer:testDebugUnitTest` from the prebuild-generated
+  // `android/`.
+  testImplementation "junit:junit:4.13.2"
+  testImplementation "org.robolectric:robolectric:4.16.1"
+}

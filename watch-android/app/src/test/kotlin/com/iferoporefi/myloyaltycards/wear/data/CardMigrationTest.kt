@@ -14,37 +14,25 @@ import org.robolectric.RobolectricTestRunner
 import org.robolectric.RuntimeEnvironment
 
 /**
- * Proves the migration harness works **before** a real migration is needed (Story 10.5, AC4).
+ * Proves a schema upgrade preserves the user's cards (Story 10.5, AC3/AC4).
  *
- * Story 10-5 ships schema `version = 1` only, so there is no real migration yet. This test writes a
- * throwaway v1→v2 migration, applies it to a hand-built v1 database, and asserts the existing row
- * survives — exactly the guarantee AC3 needs ("data survives an app update"). When a real v2 lands,
- * this is the template: bump [WearDatabase.VERSION], add the real `MIGRATION_1_2` to
- * [WearDatabase.ALL_MIGRATIONS], regenerate the exported schema, and adapt this test.
+ * Story 10.5 shipped this as a *template* against a throwaway migration, because v1 was the only
+ * schema that existed. Story 10-6 supplies the first real one — v1 → v2 adds the `usage_outbox`
+ * table — so the test now drives [WearDatabase.MIGRATION_1_2] itself. That matters more than the
+ * template did: the DDL in a `Migration` is hand-written and must match what Room generates for
+ * the entity byte for byte, or Room's post-migration validation fails at runtime, on a user's
+ * wrist, after the upgrade has already been installed.
  *
  * It runs under Robolectric (the same JVM, no-emulator runtime as the DAO tests) and drives a real
  * `SQLiteConnection` via [AndroidSQLiteDriver] — Room's default Android driver, backed here by
  * Robolectric's SQLite. This is deliberately lighter than Room's `MigrationTestHelper`, which is
  * instrumentation-oriented and reads the exported schema from packaged assets; the direct
- * `migrate()` call proves the same data-preservation contract without that wiring. Once a real
- * migration and a committed per-version schema exist, `MigrationTestHelper` becomes worthwhile for
- * validating the post-migration schema against the exported JSON.
+ * `migrate()` call proves the same data-preservation contract without that wiring.
  */
 @RunWith(RobolectricTestRunner::class)
 class CardMigrationTest {
     private val context = RuntimeEnvironment.getApplication()
     private val driver = AndroidSQLiteDriver()
-
-    /**
-     * Demonstrative next migration: add a nullable column. A real migration replaces this body; the
-     * mechanism under test — register a [Migration], it runs, data is preserved — is identical.
-     */
-    private val migration1to2 =
-        object : Migration(1, 2) {
-            override fun migrate(connection: SQLiteConnection) {
-                connection.execSQL("ALTER TABLE `cards` ADD COLUMN `note` TEXT")
-            }
-        }
 
     private fun dbPath(): String =
         context.getDatabasePath(DB_NAME).also { it.parentFile?.mkdirs() }.path
@@ -59,6 +47,10 @@ class CardMigrationTest {
         context.deleteDatabase(DB_NAME)
     }
 
+    /**
+     * The v1 → v2 upgrade path a user actually takes: they have cards, they install the build
+     * that adds the outbox, and their cards must still be there.
+     */
     @Test
     fun migrationPreservesExistingRows() {
         val path = dbPath()
@@ -76,22 +68,65 @@ class CardMigrationTest {
             connection.execSQL("PRAGMA user_version = 1")
         }
 
-        // 2) Apply the migration through a fresh connection (the driver-based migrate path).
+        // 2) Apply the REAL migration through a fresh connection (the driver-based migrate path).
         driver.open(path).use { connection ->
-            migration1to2.migrate(connection)
+            WearDatabase.MIGRATION_1_2.migrate(connection)
             connection.execSQL("PRAGMA user_version = 2")
         }
 
-        // 3) The pre-existing row is intact — including millisecond timestamps (AC6) — and the new
-        //    v2 column exists, defaulting to NULL.
+        // 3) The pre-existing card is intact, milliseconds included (AC6) — the migration is
+        //    additive and must not have touched `cards` at all.
         driver.open(path).use { connection ->
-            connection.prepare("SELECT name, usageCount, lastUsedAt, note FROM `cards` WHERE id = 'a'").use { stmt ->
+            connection.prepare("SELECT name, usageCount, lastUsedAt FROM `cards` WHERE id = 'a'").use { stmt ->
                 assertTrue("row preserved across migration", stmt.step())
                 assertEquals("Esselunga", stmt.getText(0))
                 assertEquals(12L, stmt.getLong(1))
                 assertEquals("2026-08-01T09:00:00.123Z", stmt.getText(2))
-                assertTrue("new v2 column present and null", stmt.isNull(3))
             }
+        }
+
+        // 4) The new outbox table exists and is usable.
+        driver.open(path).use { connection ->
+            connection.execSQL(
+                "INSERT INTO `usage_outbox` (eventId, cardId, usedAt, enqueuedAt) " +
+                    "VALUES ('a:2026-08-12T10:00:00.123Z','a','2026-08-12T10:00:00.123Z','2026-08-12T10:00:01.000Z')",
+            )
+            connection.prepare("SELECT COUNT(*) FROM `usage_outbox`").use { stmt ->
+                assertTrue(stmt.step())
+                assertEquals(1L, stmt.getLong(0))
+            }
+        }
+    }
+
+    /**
+     * The migration's hand-written DDL must equal what Room generates for `UsageEventEntity`, or
+     * Room's post-migration schema validation throws at runtime on an upgraded install.
+     *
+     * Comparing against the committed exported schema is what makes this checkable in CI: Room
+     * writes `app/schemas/<db>/2.json` on every build, and `${'$'}{TABLE_NAME}` is the placeholder it
+     * uses for the table name there.
+     */
+    @Test
+    fun migrationDdlMatchesTheExportedSchema() {
+        val path = dbPath()
+
+        driver.open(path).use { connection ->
+            WearDatabase.MIGRATION_1_2.migrate(connection)
+        }
+
+        driver.open(path).use { connection ->
+            connection
+                .prepare("SELECT sql FROM sqlite_master WHERE type='table' AND name='usage_outbox'")
+                .use { stmt ->
+                    assertTrue("usage_outbox created", stmt.step())
+                    val actual = stmt.getText(0)
+                    assertEquals(
+                        EXPORTED_V2_CREATE_USAGE_OUTBOX.replace("\${TABLE_NAME}", "usage_outbox")
+                            .removePrefix("CREATE TABLE IF NOT EXISTS ")
+                            .let { "CREATE TABLE $it" },
+                        actual,
+                    )
+                }
         }
     }
 
@@ -105,5 +140,11 @@ class CardMigrationTest {
                 "`color` TEXT NOT NULL, `isFavorite` INTEGER NOT NULL, `lastUsedAt` TEXT, " +
                 "`usageCount` INTEGER NOT NULL, `createdAt` TEXT NOT NULL, `updatedAt` TEXT, " +
                 "`rawPayload` TEXT, PRIMARY KEY(`id`))"
+
+        /** `createSql` for `usage_outbox`, copied verbatim from the exported schema `2.json`. */
+        const val EXPORTED_V2_CREATE_USAGE_OUTBOX =
+            "CREATE TABLE IF NOT EXISTS `\${TABLE_NAME}` (`eventId` TEXT NOT NULL, " +
+                "`cardId` TEXT NOT NULL, `usedAt` TEXT NOT NULL, `enqueuedAt` TEXT NOT NULL, " +
+                "PRIMARY KEY(`eventId`))"
     }
 }
