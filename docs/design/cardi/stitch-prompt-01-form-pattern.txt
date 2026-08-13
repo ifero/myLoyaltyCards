@@ -1,0 +1,24 @@
+Design ONE mobile screen at 393x852, light mode: the "Add Card — details" form for Cardì. This screen is the app's form pattern; seven other screens will be derived from it, so the field rhythm matters more than any flourish.
+
+There is NO bottom tab bar and NO floating action button on this screen. Do not draw either. Do not add an illustration.
+
+HEADER
+A back chevron on the left, the title "Add Card" centred, nothing on the right. Flat — no shadow, no coloured bar.
+
+BODY — single column, 20px side margins, 8px-grid vertical rhythm, plenty of air between fields.
+
+1. Field "Store Name". A small bold label sitting ABOVE the input (never a floating label). Text input below it, 12px radius, 1px hairline outline, 48px min height, placeholder "Enter store name".
+
+2. Field "Card Number". Same label-above treatment. Text input with placeholder "Enter barcode number", and a separate small square outline button pinned inline at its right end containing a camera icon — a 48x48 touch target for scanning instead of typing.
+
+3. A read-only row labelled "Barcode Format" showing the value "EAN-13 — auto-detected" in a muted style. This is information, not a control: it must not look tappable, no chevron, no border.
+
+4. Section "Card Colour". A small bold label, then a horizontal row of five circular swatches, each a 48px touch target, in exactly these colours: #E42424, #0C3C84, #0C84CC, #0C843C, #FCCC0C. The third one is selected and shows a selection ring plus a small check. These five are the fallback colour for a card that has no brand logo.
+
+5. A row reading "Add to favourites" on the left with a switch on the right, separated from the fields above by a hairline rule.
+
+FOOTER
+A full-width primary button labelled "Save card": ink #181824 fill, white text, 52px tall, 12px radius. It sits in the page flow above the safe area with a 20px margin — it does not float and it is not a FAB.
+
+TONE
+This screen carries no brand colour at all, so it must stay quiet: cream #F0F0E8 ground, white input surfaces, ink #181824 text, hairline outlines, flat — no shadows, no gradients. The signature yellow #FCCC0C appears nowhere here except as one of the five colour swatches. Headline in Space Grotesk, everything else Inter.

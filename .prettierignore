@@ -44,3 +44,10 @@ watch-android/app/schemas/
 # no upside. Sibling CSS is NOT ignored -- prettier's CSS output is safe.
 docs/*.html
 supabase/templates/*.html
+
+# Design-exploration artifacts kept as authored records, not as maintained source.
+# palette-bench.html is a single self-contained comparison board emitted by a Claude
+# Artifact: ~45k of inlined CSS and SVG specimens whose exact bytes are the record of
+# what the room actually judged. Reformatting it would churn the whole file and prove
+# nothing, and nothing builds from it — same generated-artifact case as the docs/ HTML.
+docs/design/cardi/*.html

@@ -1,0 +1,1038 @@
+<title>Cardì — Five Palette Directions</title>
+
+<style>
+  :root {
+    --bench: #f5f4f2;
+    --plate: #ffffff;
+    --ink: #1a1a1c;
+    --muted: #6e6e73;
+    --faint: #96959a;
+    --line: #dcdbd7;
+    --line-soft: #eceae6;
+
+    --serif: ui-serif, Georgia, "Iowan Old Style", "Times New Roman", serif;
+    --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    --mono: ui-monospace, "SF Mono", SFMono-Regular, Menlo, Consolas, monospace;
+
+    --wrap: 1180px;
+    --r: 10px;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bench: #131315;
+      --plate: #1c1c1f;
+      --ink: #ecebe8;
+      --muted: #9c9ba0;
+      --faint: #76757a;
+      --line: #33333a;
+      --line-soft: #26262b;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bench: #131315;
+    --plate: #1c1c1f;
+    --ink: #ecebe8;
+    --muted: #9c9ba0;
+    --faint: #76757a;
+    --line: #33333a;
+    --line-soft: #26262b;
+  }
+  :root[data-theme="light"] {
+    --bench: #f5f4f2;
+    --plate: #ffffff;
+    --ink: #1a1a1c;
+    --muted: #6e6e73;
+    --faint: #96959a;
+    --line: #dcdbd7;
+    --line-soft: #eceae6;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: var(--bench);
+    color: var(--ink);
+    font-family: var(--sans);
+    font-size: 16px;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .wrap {
+    max-width: var(--wrap);
+    margin: 0 auto;
+    padding: 0 28px;
+  }
+
+  /* ---------- masthead ---------- */
+
+  header.masthead {
+    padding: 72px 0 40px;
+    border-bottom: 1px solid var(--line);
+  }
+  .eyebrow {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--faint);
+    margin: 0 0 20px;
+  }
+  h1 {
+    font-family: var(--serif);
+    font-weight: 500;
+    font-size: clamp(32px, 5vw, 52px);
+    line-height: 1.1;
+    letter-spacing: -0.015em;
+    margin: 0 0 20px;
+    text-wrap: balance;
+    max-width: 18ch;
+  }
+  .standfirst {
+    font-size: 18px;
+    line-height: 1.65;
+    color: var(--muted);
+    max-width: 62ch;
+    margin: 0;
+  }
+  .standfirst strong { color: var(--ink); font-weight: 600; }
+
+  /* ---------- constants strip ---------- */
+
+  .constants {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 28px 44px;
+    align-items: flex-start;
+    padding: 32px 0 40px;
+    border-bottom: 1px solid var(--line);
+  }
+  .constants h2 {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--faint);
+    font-weight: 500;
+    margin: 0;
+    flex: 0 0 100%;
+  }
+  .chipset { display: flex; flex-wrap: wrap; gap: 10px; }
+  .chip {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    font-family: var(--mono);
+    font-size: 11.5px;
+    color: var(--muted);
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    padding: 5px 12px 5px 6px;
+    background: var(--plate);
+  }
+  .chip i {
+    width: 15px; height: 15px;
+    border-radius: 999px;
+    display: block;
+    box-shadow: inset 0 0 0 1px rgba(128,128,128,0.25);
+  }
+  .constants p {
+    margin: 0;
+    max-width: 46ch;
+    font-size: 14.5px;
+    color: var(--muted);
+    line-height: 1.6;
+  }
+
+  /* ---------- jump nav ---------- */
+
+  nav.jump {
+    position: sticky;
+    top: 0;
+    z-index: 20;
+    background: color-mix(in srgb, var(--bench) 92%, transparent);
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid var(--line);
+    margin-bottom: 8px;
+  }
+  nav.jump ul {
+    list-style: none;
+    margin: 0 auto;
+    padding: 11px 28px;
+    max-width: var(--wrap);
+    display: flex;
+    gap: 6px;
+    overflow-x: auto;
+  }
+  nav.jump a {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    white-space: nowrap;
+    text-decoration: none;
+    color: var(--muted);
+    font-size: 13px;
+    padding: 5px 11px;
+    border-radius: 999px;
+    border: 1px solid transparent;
+    transition: color .15s, border-color .15s;
+  }
+  nav.jump a:hover, nav.jump a:focus-visible {
+    color: var(--ink);
+    border-color: var(--line);
+  }
+  nav.jump a b {
+    font-family: var(--mono);
+    font-weight: 500;
+    font-size: 11px;
+    color: var(--faint);
+  }
+  nav.jump a i {
+    width: 9px; height: 9px; border-radius: 999px; display: block;
+    box-shadow: inset 0 0 0 1px rgba(128,128,128,0.3);
+  }
+
+  /* ---------- specimen plate ---------- */
+
+  .plate {
+    padding: 64px 0;
+    border-bottom: 1px solid var(--line);
+  }
+  .plate:last-of-type { border-bottom: none; }
+
+  .plate-head {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 24px 56px;
+    align-items: start;
+    margin-bottom: 36px;
+  }
+  .plate-id {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.14em;
+    color: var(--faint);
+    margin: 0 0 10px;
+  }
+  .plate h2 {
+    font-family: var(--serif);
+    font-weight: 500;
+    font-size: clamp(26px, 3.4vw, 36px);
+    line-height: 1.12;
+    letter-spacing: -0.015em;
+    margin: 0 0 12px;
+  }
+  .thesis {
+    font-family: var(--serif);
+    font-size: 19px;
+    font-style: italic;
+    line-height: 1.5;
+    color: var(--muted);
+    margin: 0;
+    max-width: 34ch;
+  }
+  .mechanism {
+    font-size: 15px;
+    line-height: 1.7;
+    color: var(--muted);
+    margin: 0 0 18px;
+  }
+  .mechanism strong { color: var(--ink); font-weight: 600; }
+  .risk {
+    font-size: 14.5px;
+    line-height: 1.65;
+    color: var(--muted);
+    margin: 0;
+    padding-left: 15px;
+    border-left: 2px solid var(--line);
+  }
+  .risk b {
+    color: var(--ink);
+    font-weight: 600;
+    font-family: var(--mono);
+    font-size: 10.5px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    display: block;
+    margin-bottom: 3px;
+  }
+
+  /* ---------- phone rack ---------- */
+
+  .rack {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 34px 30px;
+    align-items: flex-start;
+    padding: 34px 30px;
+    background: var(--plate);
+    border: 1px solid var(--line);
+    border-radius: var(--r);
+    overflow-x: auto;
+  }
+  .frame { flex: 0 0 auto; }
+  .frame > figcaption {
+    font-family: var(--mono);
+    font-size: 10.5px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--faint);
+    margin-top: 12px;
+    text-align: center;
+  }
+
+  /* the phone itself — colours come from per-plate custom props */
+  .phone {
+    width: 216px;
+    height: 468px;
+    border-radius: 26px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    font-family: var(--sans);
+    box-shadow: 0 0 0 1px rgba(128,128,128,0.28);
+    background: var(--g);
+    color: var(--t);
+  }
+
+  .status {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 9px 15px 3px;
+    font-size: 9.5px;
+    font-weight: 600;
+    opacity: 0.75;
+    font-variant-numeric: tabular-nums;
+  }
+  .status span:last-child { letter-spacing: 0.08em; }
+
+  .topbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 14px 12px;
+    background: var(--hdr, transparent);
+    color: var(--hdrt, var(--t));
+  }
+  .topbar .icn {
+    width: 26px; height: 26px;
+    display: grid; place-items: center;
+    font-size: 16px; line-height: 1;
+    opacity: 0.9;
+  }
+  .wordmark {
+    font-size: 19px;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+  }
+  .wordmark em {
+    font-style: normal;
+    position: relative;
+    color: inherit;
+  }
+  /* the ì accent — the beam dot */
+  .wordmark em::after {
+    content: "";
+    position: absolute;
+    left: 50%;
+    top: -6px;
+    width: 8px;
+    height: 3px;
+    border-radius: 2px;
+    background: var(--sig);
+    transform: translateX(-50%) rotate(-20deg);
+  }
+
+  .list {
+    flex: 1;
+    overflow: hidden;
+    padding: 6px 12px 12px;
+    display: flex;
+    flex-direction: column;
+    gap: var(--rowgap, 7px);
+  }
+
+  .row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 9px 11px;
+    border-radius: 12px;
+    background: var(--rowbg);
+    color: var(--rowt, var(--t));
+    box-shadow: inset 0 0 0 1px var(--rowline, transparent);
+    border-left: var(--rowedge, 0) solid var(--acc);
+  }
+  .tile {
+    width: 30px; height: 30px;
+    flex: 0 0 30px;
+    border-radius: 999px;
+    background: var(--acc);
+    color: var(--acct, #fff);
+    display: grid;
+    place-items: center;
+    font-size: 10.5px;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+  }
+  .name { flex: 1; font-size: 13px; font-weight: 600; letter-spacing: -0.01em; }
+  .star { font-size: 11px; opacity: 0.85; color: var(--sig); }
+  .chev { font-size: 13px; opacity: 0.4; }
+
+  /* barcode frame */
+  .barcode-screen {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 14px;
+    padding: 20px 18px;
+  }
+  .bc-store { font-size: 15px; font-weight: 700; letter-spacing: -0.01em; }
+  .bc-card {
+    width: 100%;
+    background: #ffffff;
+    border-radius: 12px;
+    padding: 18px 14px 14px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    position: relative;
+    overflow: hidden;
+  }
+  .bars {
+    width: 100%;
+    height: 84px;
+    background:
+      repeating-linear-gradient(90deg,
+        #000 0 2px, transparent 2px 5px,
+        #000 5px 8px, transparent 8px 10px,
+        #000 10px 11px, transparent 11px 15px,
+        #000 15px 19px, transparent 19px 21px,
+        #000 21px 22px, transparent 22px 26px);
+  }
+  .bc-num {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    color: #181824;
+    font-variant-numeric: tabular-nums;
+  }
+  .bc-hint { font-size: 10.5px; opacity: 0.55; }
+  .btn {
+    width: 100%;
+    text-align: center;
+    padding: 11px;
+    border-radius: 12px;
+    font-size: 12.5px;
+    font-weight: 600;
+    background: var(--act);
+    color: var(--actt);
+  }
+
+  /* ---------- palette readout ---------- */
+
+  .readout {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 22px;
+  }
+  .sw {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    border: 1px solid var(--line);
+    border-radius: 7px;
+    padding: 5px 10px 5px 5px;
+    background: var(--plate);
+  }
+  .sw i {
+    width: 22px; height: 22px; border-radius: 5px; display: block;
+    box-shadow: inset 0 0 0 1px rgba(128,128,128,0.25);
+  }
+  .sw div { display: flex; flex-direction: column; line-height: 1.3; }
+  .sw b { font-size: 11px; font-weight: 600; }
+  .sw code { font-family: var(--mono); font-size: 10px; color: var(--faint); }
+
+  /* ---------- verdict ---------- */
+
+  .verdict {
+    margin-top: 26px;
+    padding: 18px 22px;
+    background: var(--plate);
+    border: 1px solid var(--line);
+    border-radius: var(--r);
+    display: flex;
+    gap: 14px;
+    align-items: flex-start;
+  }
+  .verdict .who {
+    font-size: 22px;
+    line-height: 1.1;
+    flex: 0 0 auto;
+  }
+  .verdict p { margin: 0; font-size: 15px; line-height: 1.6; }
+  .verdict p b { font-weight: 600; }
+  .verdict p span { color: var(--muted); }
+
+  /* ---------- closing ---------- */
+
+  footer.close {
+    padding: 64px 0 96px;
+  }
+  footer.close h2 {
+    font-family: var(--serif);
+    font-weight: 500;
+    font-size: 30px;
+    letter-spacing: -0.015em;
+    margin: 0 0 18px;
+  }
+  footer.close p { max-width: 64ch; color: var(--muted); margin: 0 0 14px; }
+  footer.close ol { max-width: 64ch; color: var(--muted); padding-left: 22px; margin: 0 0 14px; }
+  footer.close li { margin-bottom: 7px; }
+  footer.close strong { color: var(--ink); font-weight: 600; }
+  .note {
+    margin-top: 34px;
+    padding-top: 20px;
+    border-top: 1px solid var(--line);
+    font-size: 13.5px;
+    color: var(--faint);
+    max-width: 70ch;
+    line-height: 1.65;
+  }
+
+  a { color: inherit; }
+  a:focus-visible, [tabindex]:focus-visible {
+    outline: 2px solid currentColor;
+    outline-offset: 3px;
+    border-radius: 4px;
+  }
+
+  @media (max-width: 860px) {
+    .plate-head { grid-template-columns: 1fr; gap: 20px; }
+    .rack { padding: 22px 18px; gap: 26px 20px; }
+    .wrap { padding: 0 20px; }
+    nav.jump ul { padding: 10px 20px; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    * { animation: none !important; transition: none !important; }
+  }
+</style>
+
+<nav class="jump">
+  <ul>
+    <li><a href="#s01"><i style="background:#f0f0e8"></i><b>01</b> Ink &amp; Beam</a></li>
+    <li><a href="#s02"><i style="background:#fccc0c"></i><b>02</b> Beam Forward</a></li>
+    <li><a href="#s03"><i style="background:#e42424"></i><b>03</b> Five Bars Alive</a></li>
+    <li><a href="#s04"><i style="background:#dfe7f4"></i><b>04</b> Gelato</a></li>
+    <li><a href="#s05"><i style="background:#0c0c10"></i><b>05</b> Night Market</a></li>
+  </ul>
+</nav>
+
+<div class="wrap">
+
+  <header class="masthead">
+    <p class="eyebrow">Cardì · palette bench · 11 August 2026</p>
+    <h1>Five directions. The same five colours.</h1>
+    <p class="standfirst">
+      Nothing below invents a new hue. Every specimen uses the identical palette pulled from the
+      Cardì logo bars. What changes between them is <strong>where colour is allowed to live</strong> —
+      as a single accent, as a whole surface, as the card itself, as a wash, or as an edge glowing
+      in the dark. That is the real decision, and it is the one that determines whether the app
+      reads as playful or as chaotic.
+    </p>
+    <p class="standfirst" style="margin-top:20px">
+      <strong>The barcode carries no beam.</strong> The beam belongs to the scanner at the till —
+      it is the shop's, not ours. Drawing our own across a scan target would be decoration
+      impersonating function, and it would cost contrast on the one screen that cannot afford any.
+      The ì keeps the beam as a promise; the barcode screen keeps it by getting out of the way.
+      What is left to judge on those frames is <strong>the surround</strong>, which turns out to
+      separate these five more sharply than the wallet does.
+    </p>
+  </header>
+
+  <section class="constants">
+    <h2>Fixed across all five</h2>
+    <div class="chipset">
+      <span class="chip"><i style="background:#fccc0c"></i>beam #FCCC0C</span>
+      <span class="chip"><i style="background:#181824"></i>ink #181824</span>
+      <span class="chip"><i style="background:#f0f0e8"></i>cream #F0F0E8</span>
+      <span class="chip"><i style="background:#e42424"></i>#E42424</span>
+      <span class="chip"><i style="background:#0c3c84"></i>#0C3C84</span>
+      <span class="chip"><i style="background:#0c84cc"></i>#0C84CC</span>
+      <span class="chip"><i style="background:#0c843c"></i>#0C843C</span>
+    </div>
+    <p>
+      Coral is absent from every direction — it belongs to Monzo, and it was the terracotta
+      wearing a different name badge. Warmth is supplied by cream, not by a borrowed accent.
+    </p>
+  </section>
+
+
+  <!-- ═══════════ 01 ═══════════ -->
+  <section class="plate" id="s01">
+    <div class="plate-head">
+      <div>
+        <p class="plate-id">SPECIMEN 01 · COLOUR AS ACCENT</p>
+        <h2>Ink &amp; Beam</h2>
+        <p class="thesis">Good stationery. The beam is the only ornament, and it is spent twice.</p>
+      </div>
+      <div>
+        <p class="mechanism">
+          Cream ground, white cards, <strong>ink actions</strong>. The five hues appear only as
+          virtual-logo tiles. Yellow is reserved for the ì, focus rings, and the scan beam — then
+          takes over as the action colour in the dark, which is the one moment of theatre.
+        </p>
+        <p class="risk"><b>What it risks</b>
+          Sober to the point of severe. All the playfulness rests on a 3-pixel dot, and if that dot
+          isn't animated in the real build, there is no play at all.</p>
+      </div>
+    </div>
+
+    <div class="rack">
+      <figure class="frame" style="margin:0">
+        <div class="phone" style="--g:#f0f0e8;--t:#181824;--sig:#fccc0c;--rowbg:#ffffff;--rowline:#d6d6cb;--act:#181824;--actt:#ffffff">
+          <div class="status"><span>9:41</span><span>▮▮▮</span></div>
+          <div class="topbar"><span class="icn">＋</span><span class="wordmark">Card<em>ì</em></span><span class="icn">⚙</span></div>
+          <div class="list">
+            <div class="row" style="--acc:#e42424"><span class="tile">ES</span><span class="name">Esselunga</span><span class="star">★</span><span class="chev">›</span></div>
+            <div class="row" style="--acc:#0c3c84"><span class="tile">CO</span><span class="name">Coop</span><span class="star">★</span><span class="chev">›</span></div>
+            <div class="row" style="--acc:#0c84cc"><span class="tile">DE</span><span class="name">Decathlon</span><span class="chev">›</span></div>
+            <div class="row" style="--acc:#0c843c"><span class="tile">CN</span><span class="name">Conad</span><span class="chev">›</span></div>
+            <div class="row" style="--acc:#fccc0c;--acct:#181824"><span class="tile">IK</span><span class="name">IKEA Family</span><span class="chev">›</span></div>
+            <div class="row" style="--acc:#0c3c84"><span class="tile">FA</span><span class="name">Farmacia Rossi</span><span class="chev">›</span></div>
+          </div>
+        </div>
+        <figcaption>Light</figcaption>
+      </figure>
+
+      <figure class="frame" style="margin:0">
+        <div class="phone" style="--g:#000000;--t:#f0f0e8;--sig:#fccc0c;--rowbg:#181824;--rowline:#3a3a48;--act:#fccc0c;--actt:#181824">
+          <div class="status"><span>9:41</span><span>▮▮▮</span></div>
+          <div class="topbar"><span class="icn">＋</span><span class="wordmark">Card<em>ì</em></span><span class="icn">⚙</span></div>
+          <div class="list">
+            <div class="row" style="--acc:#e42424"><span class="tile">ES</span><span class="name">Esselunga</span><span class="star">★</span><span class="chev">›</span></div>
+            <div class="row" style="--acc:#0c3c84"><span class="tile">CO</span><span class="name">Coop</span><span class="star">★</span><span class="chev">›</span></div>
+            <div class="row" style="--acc:#0c84cc"><span class="tile">DE</span><span class="name">Decathlon</span><span class="chev">›</span></div>
+            <div class="row" style="--acc:#0c843c"><span class="tile">CN</span><span class="name">Conad</span><span class="chev">›</span></div>
+            <div class="row" style="--acc:#fccc0c;--acct:#181824"><span class="tile">IK</span><span class="name">IKEA Family</span><span class="chev">›</span></div>
+          </div>
+          <div style="padding:0 12px 14px"><div class="btn">Add a card</div></div>
+        </div>
+        <figcaption>Dark — actions turn beam</figcaption>
+      </figure>
+
+      <figure class="frame" style="margin:0">
+        <div class="phone" style="--g:#000000;--t:#f0f0e8;--sig:#fccc0c;--act:#fccc0c;--actt:#181824">
+          <div class="status"><span>9:41</span><span>▮▮▮</span></div>
+          <div class="barcode-screen">
+            <span class="bc-store">Esselunga</span>
+            <div class="bc-card">
+              <div class="bars"></div>
+              <span class="bc-num">2 8814 47301 9</span>
+            </div>
+            <span class="bc-hint">Brightness at maximum</span>
+          </div>
+        </div>
+        <figcaption>Barcode</figcaption>
+      </figure>
+    </div>
+
+    <div class="readout">
+      <span class="sw"><i style="background:#f0f0e8"></i><div><b>Ground</b><code>#F0F0E8</code></div></span>
+      <span class="sw"><i style="background:#ffffff"></i><div><b>Card</b><code>#FFFFFF</code></div></span>
+      <span class="sw"><i style="background:#181824"></i><div><b>Action (light)</b><code>#181824</code></div></span>
+      <span class="sw"><i style="background:#fccc0c"></i><div><b>Action (dark)</b><code>#FCCC0C</code></div></span>
+    </div>
+
+    <div class="verdict">
+      <span class="who">🎨</span>
+      <p><b>Sally</b> — <span>“Eight rows readable in one glance, and nothing on screen lies about
+      what's tappable. This is the one that survives a supermarket queue. It is also, yes, a bit
+      of a librarian.”</span></p>
+    </div>
+  </section>
+
+
+  <!-- ═══════════ 02 ═══════════ -->
+  <section class="plate" id="s02">
+    <div class="plate-head">
+      <div>
+        <p class="plate-id">SPECIMEN 02 · COLOUR AS SURFACE</p>
+        <h2>Beam Forward</h2>
+        <p class="thesis">The app is yellow the way a taxi is yellow. You spot it across a room.</p>
+      </div>
+      <div>
+        <p class="mechanism">
+          Yellow stops being an accent and becomes <strong>architecture</strong> — a full beam-coloured
+          header block with ink text sitting on it. Cards stay white on cream below. Ownable
+          instantly; nobody confuses this with another wallet app.
+        </p>
+        <p class="risk"><b>What it risks</b>
+          Hazard tape. Yellow at surface scale reads “caution” before it reads “brand”, and once
+          yellow is everywhere the beam stops being special. It also loses the barcode screen:
+          a saturated surround at full brightness is glare beside the scan target.</p>
+      </div>
+    </div>
+
+    <div class="rack">
+      <figure class="frame" style="margin:0">
+        <div class="phone" style="--g:#f0f0e8;--t:#181824;--sig:#181824;--hdr:#fccc0c;--hdrt:#181824;--rowbg:#ffffff;--rowline:#d6d6cb;--act:#181824;--actt:#ffffff">
+          <div class="status" style="background:#fccc0c;color:#181824"><span>9:41</span><span>▮▮▮</span></div>
+          <div class="topbar" style="padding-bottom:20px"><span class="icn">＋</span><span class="wordmark">Card<em>ì</em></span><span class="icn">⚙</span></div>
+          <div class="list" style="margin-top:-10px">
+            <div class="row" style="--acc:#e42424"><span class="tile">ES</span><span class="name">Esselunga</span><span class="star" style="color:#fccc0c">★</span><span class="chev">›</span></div>
+            <div class="row" style="--acc:#0c3c84"><span class="tile">CO</span><span class="name">Coop</span><span class="star" style="color:#fccc0c">★</span><span class="chev">›</span></div>
+            <div class="row" style="--acc:#0c84cc"><span class="tile">DE</span><span class="name">Decathlon</span><span class="chev">›</span></div>
+            <div class="row" style="--acc:#0c843c"><span class="tile">CN</span><span class="name">Conad</span><span class="chev">›</span></div>
+            <div class="row" style="--acc:#fccc0c;--acct:#181824"><span class="tile">IK</span><span class="name">IKEA Family</span><span class="chev">›</span></div>
+            <div class="row" style="--acc:#0c3c84"><span class="tile">FA</span><span class="name">Farmacia Rossi</span><span class="chev">›</span></div>
+          </div>
+        </div>
+        <figcaption>Light</figcaption>
+      </figure>
+
+      <figure class="frame" style="margin:0">
+        <div class="phone" style="--g:#000000;--t:#f0f0e8;--sig:#181824;--hdr:#fccc0c;--hdrt:#181824;--rowbg:#181824;--rowline:#3a3a48;--act:#fccc0c;--actt:#181824">
+          <div class="status" style="background:#fccc0c;color:#181824"><span>9:41</span><span>▮▮▮</span></div>
+          <div class="topbar" style="padding-bottom:20px"><span class="icn">＋</span><span class="wordmark">Card<em>ì</em></span><span class="icn">⚙</span></div>
+          <div class="list" style="margin-top:-10px">
+            <div class="row" style="--acc:#e42424"><span class="tile">ES</span><span class="name">Esselunga</span><span class="star" style="color:#fccc0c">★</span><span class="chev">›</span></div>
+            <div class="row" style="--acc:#0c3c84"><span class="tile">CO</span><span class="name">Coop</span><span class="star" style="color:#fccc0c">★</span><span class="chev">›</span></div>
+            <div class="row" style="--acc:#0c84cc"><span class="tile">DE</span><span class="name">Decathlon</span><span class="chev">›</span></div>
+            <div class="row" style="--acc:#0c843c"><span class="tile">CN</span><span class="name">Conad</span><span class="chev">›</span></div>
+          </div>
+          <div style="padding:0 12px 14px"><div class="btn">Add a card</div></div>
+        </div>
+        <figcaption>Dark</figcaption>
+      </figure>
+
+      <figure class="frame" style="margin:0">
+        <div class="phone" style="--g:#fccc0c;--t:#181824;--sig:#e42424;--act:#181824;--actt:#ffffff">
+          <div class="status"><span>9:41</span><span>▮▮▮</span></div>
+          <div class="barcode-screen">
+            <span class="bc-store">Esselunga</span>
+            <div class="bc-card">
+              <div class="bars"></div>
+              <span class="bc-num">2 8814 47301 9</span>
+            </div>
+            <span class="bc-hint">Brightness at maximum</span>
+          </div>
+        </div>
+        <figcaption>Barcode — saturated surround, at full brightness</figcaption>
+      </figure>
+    </div>
+
+    <div class="readout">
+      <span class="sw"><i style="background:#fccc0c"></i><div><b>Header surface</b><code>#FCCC0C</code></div></span>
+      <span class="sw"><i style="background:#f0f0e8"></i><div><b>Ground</b><code>#F0F0E8</code></div></span>
+      <span class="sw"><i style="background:#ffffff"></i><div><b>Card</b><code>#FFFFFF</code></div></span>
+      <span class="sw"><i style="background:#181824"></i><div><b>Action</b><code>#181824</code></div></span>
+    </div>
+
+    <div class="verdict">
+      <span class="who">🎬</span>
+      <p><b>Caravaggio</b> — <span>“Third frame. A saturated yellow field at maximum brightness,
+      wrapped around the one white rectangle a cashier is trying to read. That is glare standing
+      next to the target. And a signature used at surface scale is no longer a signature — it is
+      wallpaper you have to keep paying for.”</span></p>
+    </div>
+  </section>
+
+
+  <!-- ═══════════ 03 ═══════════ -->
+  <section class="plate" id="s03">
+    <div class="plate-head">
+      <div>
+        <p class="plate-id">SPECIMEN 03 · COLOUR AS THE CARD</p>
+        <h2>Five Bars Alive</h2>
+        <p class="thesis">The logo, scrolling. Every card is one of the bars, and the wallet is the mark itself.</p>
+      </div>
+      <div>
+        <p class="mechanism">
+          The five hues come off the bench and become <strong>the card surfaces</strong>. Chrome stays
+          ink on cream; the list is the colour. Conceptually the tightest idea here — brand and
+          content become literally the same object.
+        </p>
+        <p class="risk"><b>What it risks</b>
+          This is the chaos you named. Real brand logos will sit on these fills and fight them,
+          the yellow card needs ink text while the others need white, and with fourteen cards the
+          palette repeats and stops meaning anything. Its barcode screen inherits the card's hue
+          for the surround, which is the worst of the five for the scan.</p>
+      </div>
+    </div>
+
+    <div class="rack">
+      <figure class="frame" style="margin:0">
+        <div class="phone" style="--g:#f0f0e8;--t:#181824;--sig:#fccc0c;--act:#181824;--actt:#ffffff;--rowgap:8px">
+          <div class="status"><span>9:41</span><span>▮▮▮</span></div>
+          <div class="topbar"><span class="icn">＋</span><span class="wordmark">Card<em>ì</em></span><span class="icn">⚙</span></div>
+          <div class="list">
+            <div class="row" style="--rowbg:#e42424;--rowt:#fff;--acc:rgba(255,255,255,.22)"><span class="tile">ES</span><span class="name">Esselunga</span><span class="star" style="color:#fff">★</span><span class="chev">›</span></div>
+            <div class="row" style="--rowbg:#0c3c84;--rowt:#fff;--acc:rgba(255,255,255,.22)"><span class="tile">CO</span><span class="name">Coop</span><span class="star" style="color:#fff">★</span><span class="chev">›</span></div>
+            <div class="row" style="--rowbg:#0c84cc;--rowt:#fff;--acc:rgba(255,255,255,.22)"><span class="tile">DE</span><span class="name">Decathlon</span><span class="chev">›</span></div>
+            <div class="row" style="--rowbg:#0c843c;--rowt:#fff;--acc:rgba(255,255,255,.22)"><span class="tile">CN</span><span class="name">Conad</span><span class="chev">›</span></div>
+            <div class="row" style="--rowbg:#fccc0c;--rowt:#181824;--acc:rgba(24,24,36,.16);--acct:#181824"><span class="tile">IK</span><span class="name">IKEA Family</span><span class="chev">›</span></div>
+            <div class="row" style="--rowbg:#e42424;--rowt:#fff;--acc:rgba(255,255,255,.22)"><span class="tile">FA</span><span class="name">Farmacia Rossi</span><span class="chev">›</span></div>
+          </div>
+        </div>
+        <figcaption>Light — note the repeat at row 6</figcaption>
+      </figure>
+
+      <figure class="frame" style="margin:0">
+        <div class="phone" style="--g:#000000;--t:#f0f0e8;--sig:#fccc0c;--act:#fccc0c;--actt:#181824;--rowgap:8px">
+          <div class="status"><span>9:41</span><span>▮▮▮</span></div>
+          <div class="topbar"><span class="icn">＋</span><span class="wordmark">Card<em>ì</em></span><span class="icn">⚙</span></div>
+          <div class="list">
+            <div class="row" style="--rowbg:#c41c1c;--rowt:#fff;--acc:rgba(255,255,255,.2)"><span class="tile">ES</span><span class="name">Esselunga</span><span class="star" style="color:#fff">★</span><span class="chev">›</span></div>
+            <div class="row" style="--rowbg:#0a3170;--rowt:#fff;--acc:rgba(255,255,255,.2)"><span class="tile">CO</span><span class="name">Coop</span><span class="star" style="color:#fff">★</span><span class="chev">›</span></div>
+            <div class="row" style="--rowbg:#0a6ea8;--rowt:#fff;--acc:rgba(255,255,255,.2)"><span class="tile">DE</span><span class="name">Decathlon</span><span class="chev">›</span></div>
+            <div class="row" style="--rowbg:#0a6e32;--rowt:#fff;--acc:rgba(255,255,255,.2)"><span class="tile">CN</span><span class="name">Conad</span><span class="chev">›</span></div>
+            <div class="row" style="--rowbg:#d4ab0a;--rowt:#181824;--acc:rgba(24,24,36,.16);--acct:#181824"><span class="tile">IK</span><span class="name">IKEA Family</span><span class="chev">›</span></div>
+          </div>
+          <div style="padding:0 12px 14px"><div class="btn">Add a card</div></div>
+        </div>
+        <figcaption>Dark — fills must deepen or they glare</figcaption>
+      </figure>
+
+      <figure class="frame" style="margin:0">
+        <div class="phone" style="--g:#e42424;--t:#ffffff;--sig:#fccc0c;--act:#181824;--actt:#ffffff">
+          <div class="status"><span>9:41</span><span>▮▮▮</span></div>
+          <div class="barcode-screen">
+            <span class="bc-store">Esselunga</span>
+            <div class="bc-card">
+              <div class="bars"></div>
+              <span class="bc-num">2 8814 47301 9</span>
+            </div>
+            <span class="bc-hint">Brightness at maximum</span>
+          </div>
+        </div>
+        <figcaption>Barcode — surround inherits the card's hue</figcaption>
+      </figure>
+    </div>
+
+    <div class="readout">
+      <span class="sw"><i style="background:#e42424"></i><div><b>Card 1</b><code>#E42424</code></div></span>
+      <span class="sw"><i style="background:#0c3c84"></i><div><b>Card 2</b><code>#0C3C84</code></div></span>
+      <span class="sw"><i style="background:#0c84cc"></i><div><b>Card 3</b><code>#0C84CC</code></div></span>
+      <span class="sw"><i style="background:#0c843c"></i><div><b>Card 4</b><code>#0C843C</code></div></span>
+      <span class="sw"><i style="background:#fccc0c"></i><div><b>Card 5</b><code>#FCCC0C</code></div></span>
+    </div>
+
+    <div class="verdict">
+      <span class="who">🧠</span>
+      <p><b>Carson</b> — <span>“THIS one. Look at it! It's a bag of sweets. And yes it breaks at
+      fourteen cards — so let the user pick the colour and it stops being a repeat and starts
+      being <em>theirs</em>. That's not chaos, that's ownership.”</span></p>
+    </div>
+  </section>
+
+
+  <!-- ═══════════ 04 ═══════════ -->
+  <section class="plate" id="s04">
+    <div class="plate-head">
+      <div>
+        <p class="plate-id">SPECIMEN 04 · COLOUR AS WASH</p>
+        <h2>Gelato</h2>
+        <p class="thesis">Colour you can read straight through. Playful in the surface, calm in the text.</p>
+      </div>
+      <div>
+        <p class="mechanism">
+          The same five hues, but the card takes a <strong>10% wash</strong> of its accent while the
+          tile stays fully saturated. Text stays ink on every row, so contrast never moves and the
+          list never shouts. Colour becomes a wayfinding cue rather than a costume.
+        </p>
+        <p class="risk"><b>What it risks</b>
+          Washes drift toward nursery pastel, and at 10% the blue and the azure are nearly the same
+          card — the cue you added may not survive a glance in a dim shop.</p>
+      </div>
+    </div>
+
+    <div class="rack">
+      <figure class="frame" style="margin:0">
+        <div class="phone" style="--g:#f0f0e8;--t:#181824;--sig:#fccc0c;--act:#181824;--actt:#ffffff;--rowgap:8px">
+          <div class="status"><span>9:41</span><span>▮▮▮</span></div>
+          <div class="topbar"><span class="icn">＋</span><span class="wordmark">Card<em>ì</em></span><span class="icn">⚙</span></div>
+          <div class="list">
+            <div class="row" style="--rowbg:#fbe3e3;--acc:#e42424;--rowline:#f3cccc"><span class="tile">ES</span><span class="name">Esselunga</span><span class="star">★</span><span class="chev">›</span></div>
+            <div class="row" style="--rowbg:#dfe7f4;--acc:#0c3c84;--rowline:#c9d6ec"><span class="tile">CO</span><span class="name">Coop</span><span class="star">★</span><span class="chev">›</span></div>
+            <div class="row" style="--rowbg:#dcedf9;--acc:#0c84cc;--rowline:#c3e0f3"><span class="tile">DE</span><span class="name">Decathlon</span><span class="chev">›</span></div>
+            <div class="row" style="--rowbg:#dceee3;--acc:#0c843c;--rowline:#c3e2cf"><span class="tile">CN</span><span class="name">Conad</span><span class="chev">›</span></div>
+            <div class="row" style="--rowbg:#fdf2ce;--acc:#fccc0c;--acct:#181824;--rowline:#f6e4a8"><span class="tile">IK</span><span class="name">IKEA Family</span><span class="chev">›</span></div>
+            <div class="row" style="--rowbg:#dfe7f4;--acc:#0c3c84;--rowline:#c9d6ec"><span class="tile">FA</span><span class="name">Farmacia Rossi</span><span class="chev">›</span></div>
+          </div>
+        </div>
+        <figcaption>Light</figcaption>
+      </figure>
+
+      <figure class="frame" style="margin:0">
+        <div class="phone" style="--g:#000000;--t:#f0f0e8;--sig:#fccc0c;--act:#fccc0c;--actt:#181824;--rowgap:8px">
+          <div class="status"><span>9:41</span><span>▮▮▮</span></div>
+          <div class="topbar"><span class="icn">＋</span><span class="wordmark">Card<em>ì</em></span><span class="icn">⚙</span></div>
+          <div class="list">
+            <div class="row" style="--rowbg:#2a1618;--acc:#e42424;--rowline:#4a2226"><span class="tile">ES</span><span class="name">Esselunga</span><span class="star">★</span><span class="chev">›</span></div>
+            <div class="row" style="--rowbg:#131b2c;--acc:#0c3c84;--rowline:#22304c"><span class="tile">CO</span><span class="name">Coop</span><span class="star">★</span><span class="chev">›</span></div>
+            <div class="row" style="--rowbg:#10202b;--acc:#0c84cc;--rowline:#1d3a4b"><span class="tile">DE</span><span class="name">Decathlon</span><span class="chev">›</span></div>
+            <div class="row" style="--rowbg:#12241a;--acc:#0c843c;--rowline:#1e3f2c"><span class="tile">CN</span><span class="name">Conad</span><span class="chev">›</span></div>
+            <div class="row" style="--rowbg:#2a2410;--acc:#fccc0c;--acct:#181824;--rowline:#4a4120"><span class="tile">IK</span><span class="name">IKEA Family</span><span class="chev">›</span></div>
+          </div>
+          <div style="padding:0 12px 14px"><div class="btn">Add a card</div></div>
+        </div>
+        <figcaption>Dark — washes become deep tints</figcaption>
+      </figure>
+
+      <figure class="frame" style="margin:0">
+        <div class="phone" style="--g:#fbe3e3;--t:#181824;--sig:#fccc0c;--act:#181824;--actt:#ffffff">
+          <div class="status"><span>9:41</span><span>▮▮▮</span></div>
+          <div class="barcode-screen">
+            <span class="bc-store">Esselunga</span>
+            <div class="bc-card">
+              <div class="bars"></div>
+              <span class="bc-num">2 8814 47301 9</span>
+            </div>
+            <span class="bc-hint">Brightness at maximum</span>
+          </div>
+        </div>
+        <figcaption>Barcode — card's wash carries through</figcaption>
+      </figure>
+    </div>
+
+    <div class="readout">
+      <span class="sw"><i style="background:#fbe3e3"></i><div><b>Wash red</b><code>#FBE3E3</code></div></span>
+      <span class="sw"><i style="background:#dfe7f4"></i><div><b>Wash blue</b><code>#DFE7F4</code></div></span>
+      <span class="sw"><i style="background:#dcedf9"></i><div><b>Wash azure</b><code>#DCEDF9</code></div></span>
+      <span class="sw"><i style="background:#dceee3"></i><div><b>Wash green</b><code>#DCEEE3</code></div></span>
+      <span class="sw"><i style="background:#fdf2ce"></i><div><b>Wash yellow</b><code>#FDF2CE</code></div></span>
+    </div>
+
+    <div class="verdict">
+      <span class="who">🎨</span>
+      <p><b>Maya</b> — <span>“She has fourteen cards and she finds Esselunga because it's the pink
+      one, not because she read the word. That's the only version here where the colour is doing a
+      job for <em>her</em> instead of for us.”</span></p>
+    </div>
+  </section>
+
+
+  <!-- ═══════════ 05 ═══════════ -->
+  <section class="plate" id="s05">
+    <div class="plate-head">
+      <div>
+        <p class="plate-id">SPECIMEN 05 · COLOUR AS EDGE</p>
+        <h2>Night Market</h2>
+        <p class="thesis">Built for the checkout at nine in the evening. Dark is the front door, not the alternative.</p>
+      </div>
+      <div>
+        <p class="mechanism">
+          Black ground, ink cards, and each card carries a <strong>3px accent edge</strong> that
+          glows against it. Beam yellow drives every action. Light mode still exists and is
+          properly designed — it simply is not the face the product leads with.
+        </p>
+        <p class="risk"><b>What it risks</b>
+          This is a product decision disguised as a palette. Ship it and the light theme becomes
+          the neglected one — the exact failure the last design system had, just pointing the
+          other way.</p>
+      </div>
+    </div>
+
+    <div class="rack">
+      <figure class="frame" style="margin:0">
+        <div class="phone" style="--g:#000000;--t:#f0f0e8;--sig:#fccc0c;--rowbg:#181824;--rowline:#2c2c38;--rowedge:3px;--act:#fccc0c;--actt:#181824;--rowgap:8px">
+          <div class="status"><span>9:41</span><span>▮▮▮</span></div>
+          <div class="topbar"><span class="icn">＋</span><span class="wordmark">Card<em>ì</em></span><span class="icn">⚙</span></div>
+          <div class="list">
+            <div class="row" style="--acc:#e42424"><span class="tile">ES</span><span class="name">Esselunga</span><span class="star">★</span><span class="chev">›</span></div>
+            <div class="row" style="--acc:#0c3c84"><span class="tile">CO</span><span class="name">Coop</span><span class="star">★</span><span class="chev">›</span></div>
+            <div class="row" style="--acc:#0c84cc"><span class="tile">DE</span><span class="name">Decathlon</span><span class="chev">›</span></div>
+            <div class="row" style="--acc:#0c843c"><span class="tile">CN</span><span class="name">Conad</span><span class="chev">›</span></div>
+            <div class="row" style="--acc:#fccc0c;--acct:#181824"><span class="tile">IK</span><span class="name">IKEA Family</span><span class="chev">›</span></div>
+            <div class="row" style="--acc:#0c3c84"><span class="tile">FA</span><span class="name">Farmacia Rossi</span><span class="chev">›</span></div>
+          </div>
+        </div>
+        <figcaption>Dark — the default face</figcaption>
+      </figure>
+
+      <figure class="frame" style="margin:0">
+        <div class="phone" style="--g:#f0f0e8;--t:#181824;--sig:#fccc0c;--rowbg:#ffffff;--rowline:#d6d6cb;--rowedge:3px;--act:#181824;--actt:#ffffff;--rowgap:8px">
+          <div class="status"><span>9:41</span><span>▮▮▮</span></div>
+          <div class="topbar"><span class="icn">＋</span><span class="wordmark">Card<em>ì</em></span><span class="icn">⚙</span></div>
+          <div class="list">
+            <div class="row" style="--acc:#e42424"><span class="tile">ES</span><span class="name">Esselunga</span><span class="star">★</span><span class="chev">›</span></div>
+            <div class="row" style="--acc:#0c3c84"><span class="tile">CO</span><span class="name">Coop</span><span class="star">★</span><span class="chev">›</span></div>
+            <div class="row" style="--acc:#0c84cc"><span class="tile">DE</span><span class="name">Decathlon</span><span class="chev">›</span></div>
+            <div class="row" style="--acc:#0c843c"><span class="tile">CN</span><span class="name">Conad</span><span class="chev">›</span></div>
+          </div>
+          <div style="padding:0 12px 14px"><div class="btn">Add a card</div></div>
+        </div>
+        <figcaption>Light — the secondary face</figcaption>
+      </figure>
+
+      <figure class="frame" style="margin:0">
+        <div class="phone" style="--g:#000000;--t:#f0f0e8;--sig:#fccc0c;--act:#fccc0c;--actt:#181824">
+          <div class="status"><span>9:41</span><span>▮▮▮</span></div>
+          <div class="barcode-screen">
+            <span class="bc-store">Esselunga</span>
+            <div class="bc-card">
+              <div class="bars"></div>
+              <span class="bc-num">2 8814 47301 9</span>
+            </div>
+            <span class="bc-hint">Brightness at maximum</span>
+          </div>
+        </div>
+        <figcaption>Barcode — maximum drama</figcaption>
+      </figure>
+    </div>
+
+    <div class="readout">
+      <span class="sw"><i style="background:#000000"></i><div><b>Ground</b><code>#000000</code></div></span>
+      <span class="sw"><i style="background:#181824"></i><div><b>Card</b><code>#181824</code></div></span>
+      <span class="sw"><i style="background:#fccc0c"></i><div><b>Action</b><code>#FCCC0C</code></div></span>
+      <span class="sw"><i style="background:#e42424"></i><div><b>Edge</b><code>5 accents</code></div></span>
+    </div>
+
+    <div class="verdict">
+      <span class="who">📖</span>
+      <p><b>Sophia</b> — <span>“A black surround and a white card, and nothing between the laser
+      and the bars. It is the plainest frame on this page and it is also the best one, which ought
+      to tell us something. But a wallet that assumes night has decided something about its user
+      that it has no right to decide.”</span></p>
+    </div>
+  </section>
+
+
+  <footer class="close">
+    <h2>How to choose</h2>
+    <p>
+      Don't pick the one that looks best on this page — a comparison board flatters bold options.
+      Pick against the three questions that decide whether it survives contact with the product:
+    </p>
+    <ol>
+      <li><strong>Can you find one card among fourteen in a single glance?</strong> Scroll each
+        light frame and look only at row six, where the palette starts repeating.</li>
+      <li><strong>Does a real brand logo survive on that card surface?</strong> Every specimen here
+        shows initials tiles. Half your cards will carry actual logos with their own colours.</li>
+      <li><strong>Is the beam still special?</strong> If yellow appears more than twice per screen,
+        the signature has become decoration.</li>
+      <li><strong>Does the barcode surround stay out of the way?</strong> Nothing may overlay the
+        bars, and the field around them should be neutral — black, cream or white. 02 and 03 both
+        fail here, and it is the screen that matters most.</li>
+    </ol>
+    <p>
+      They are not mutually exclusive, either. <strong>04 Gelato with 01's chrome</strong> is a real
+      hybrid — washed cards, ink actions, beam held back for the scan. So is <strong>03 with a
+      user-chosen colour per card</strong>, which converts Carson's repeat problem into a feature.
+    </p>
+    <p class="note">
+      The specimens render in their own fixed colours regardless of your system theme — only the
+      board around them follows it. Type is the system sans rather than Space Grotesk and Inter,
+      since webfonts can't load here; judge colour and structure, not letterforms.
+    </p>
+  </footer>
+
+</div>
