@@ -4,7 +4,7 @@ baseline_commit: 7837f359540c72c30edcf392e1a897fa99ab9752
 
 # Story 10.6: Sync cards from the phone to Wear OS
 
-Status: review
+Status: done
 
 > ⚠️ **Two acceptance criteria remain open and neither can be closed by code review.** AC17
 > (physical two-device validation) and the hardware half of AC18 (Apple Watch re-check) need real
