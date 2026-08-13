@@ -6,6 +6,12 @@ import com.iferoporefi.myloyaltycards.wear.data.DebugSampleCards
 import com.iferoporefi.myloyaltycards.wear.data.RoomCardRepository
 import com.iferoporefi.myloyaltycards.wear.data.WearDatabase
 import com.iferoporefi.myloyaltycards.wear.data.toEntity
+import com.iferoporefi.myloyaltycards.wear.sync.DataLayerWearSyncTransport
+import com.iferoporefi.myloyaltycards.wear.sync.SnapshotApplier
+import com.iferoporefi.myloyaltycards.wear.sync.WearSyncCoordinator
+import com.iferoporefi.myloyaltycards.wear.usage.CardUsageRecorder
+import com.iferoporefi.myloyaltycards.wear.usage.OutboxCardUsageRecorder
+import com.iferoporefi.myloyaltycards.wear.usage.UsageOutbox
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -58,5 +64,66 @@ object WearGraph {
         applicationScope.launch {
             repository(context).seedIfEmpty(DebugSampleCards.CARDS.map { it.toEntity() })
         }
+    }
+
+    // --- Story 10-6: phone <-> watch sync -------------------------------------------------
+
+    @Volatile
+    private var usageOutboxInstance: UsageOutbox? = null
+
+    @Volatile
+    private var syncStarted = false
+
+    private fun usageOutbox(context: Context): UsageOutbox =
+        usageOutboxInstance ?: synchronized(this) {
+            usageOutboxInstance ?: UsageOutbox(
+                dao = WearDatabase.getInstance(context).usageOutboxDao(),
+                transport = DataLayerWearSyncTransport(context),
+            ).also { usageOutboxInstance = it }
+        }
+
+    /**
+     * The `CARD_USED` recorder handed to the barcode screen — the one-line swap Story 10-4's
+     * `NoOpCardUsageRecorder` was a placeholder for.
+     */
+    fun cardUsageRecorder(context: Context): CardUsageRecorder =
+        OutboxCardUsageRecorder(outbox = usageOutbox(context), scope = applicationScope)
+
+    /**
+     * Begin phone ↔ watch sync. Idempotent, and a **process singleton** for the same reason the
+     * repository is: `MainActivity` is recreated on every configuration change, and re-running
+     * the start-up read plus re-registering the two Data Layer listeners (`DataClient` for
+     * snapshots, `CapabilityClient` for reachability) each time would burn the radio for nothing.
+     *
+     * The [start] side effect is a parameter only so a test can substitute a counter for the real
+     * coordinator, which would otherwise reach live Play services. Production always uses the
+     * default; nothing else may pass this argument.
+     */
+    fun startSync(context: Context, start: (Context) -> Unit = ::startRealCoordinator) {
+        if (syncStarted) return
+        synchronized(this) {
+            if (syncStarted) return
+            syncStarted = true
+        }
+        start(context)
+    }
+
+    private fun startRealCoordinator(context: Context) {
+        WearSyncCoordinator(
+            transport = DataLayerWearSyncTransport(context),
+            applier = SnapshotApplier(WearDatabase.getInstance(context)),
+            outbox = usageOutbox(context),
+            scope = applicationScope,
+        ).start()
+    }
+
+    /**
+     * Test-only: clear the once-only [syncStarted] latch. Required because [WearGraph] is a
+     * process singleton whose state outlives an individual test, so a test asserting the latch
+     * must start from a known state regardless of what ran before it.
+     */
+    @androidx.annotation.VisibleForTesting
+    internal fun resetSyncStateForTests() {
+        synchronized(this) { syncStarted = false }
     }
 }

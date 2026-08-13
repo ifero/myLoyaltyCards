@@ -19,14 +19,12 @@ import { applyWatchUsageEvents, getAllCards } from '@/core/database/card-reposit
 import { initSentry } from '@/core/observability/sentry';
 import { logger } from '@/core/utils/logger';
 import { withTimeout } from '@/core/utils/with-timeout';
+import { parseWatchUsageEvent } from '@/core/watch-connectivity';
 import {
-  parseWatchUsageEvent,
-  pushCardsToWatch,
-  subscribeToWatchMessages,
-  subscribeToWatchUserInfo,
-  WatchMessage,
-  WatchUsageEvent
-} from '@/core/watch-connectivity';
+  createWearableInboundHandlers,
+  pushCardsToWearable,
+  subscribeToWearableInbound
+} from '@/core/wearable-sync';
 
 import { AppLaunchScreen } from '@/shared/components/launch/AppLaunchScreen';
 import { EXIT_FADE_MS, SPLASH_HIDE_FALLBACK_MS } from '@/shared/components/launch/constants';
@@ -476,56 +474,38 @@ const RootLayout = () => {
       }
     };
 
-    let unsubscribe: (() => void) | undefined;
-    let unsubscribeUserInfo: (() => void) | undefined;
+    let unsubscribeWearable: (() => void) | undefined;
 
     initializeApp().then(() => {
-      // Push an initial snapshot so the watch converges on launch, even if no
+      // Push an initial snapshot so the wearable converges on launch, even if no
       // mutation happens this session. CRUD paths in card-repository keep it
       // in sync afterwards.
       getAllCards()
-        .then((cards) => pushCardsToWatch(cards))
+        .then((cards) => pushCardsToWearable(cards))
         .catch(() => {});
 
       try {
-        unsubscribe = subscribeToWatchMessages(async (msg: WatchMessage) => {
-          try {
-            if (msg?.type === 'requestCards') {
-              const cards = await getAllCards();
-              await pushCardsToWatch(cards);
-            }
-          } catch (e) {
-            logger.warn('Watch message handler error:', e);
-          }
-        });
-      } catch {
-        // ignore if native module missing
-      }
-
-      try {
-        // Watch CARD_USED usage events (Story 9.6, ADR-2026-06-09-001).
-        // Subscribed after initializeApp so the DB is ready even for the
-        // batch of events the OS queued while the app wasn't running.
-        // applyWatchUsageEvents dedups and re-syncs the snapshot itself.
-        unsubscribeUserInfo = subscribeToWatchUserInfo(async (events) => {
-          try {
-            const usageEvents = events
-              .map(parseWatchUsageEvent)
-              .filter((event): event is WatchUsageEvent => event !== null);
-            if (usageEvents.length > 0) {
-              await applyWatchUsageEvents(usageEvents);
-            }
-          } catch (e) {
-            logger.warn('Watch usage event handler error:', e);
-          }
-        });
+        // One seam, both platforms (Story 10-6, AC2): WCSession on iOS, the
+        // Wearable Data Layer on Android. Subscribed after initializeApp so the
+        // DB is ready even for the batch of events that queued while the app
+        // wasn't running — the OS FIFO on iOS, the native durable inbox on
+        // Android. The handler bodies (AC5's requestCards republish, AC10's
+        // CARD_USED apply) live in `core/wearable-sync` so they are covered and
+        // unit-tested; this layer only injects the repository functions they
+        // need. Neither handler swallows its errors — see that module.
+        unsubscribeWearable = subscribeToWearableInbound(
+          createWearableInboundHandlers({
+            getAllCards,
+            parseWatchUsageEvent,
+            applyWatchUsageEvents
+          })
+        );
       } catch {
         // ignore if native module missing
       }
     });
     return () => {
-      if (typeof unsubscribe === 'function') unsubscribe();
-      if (typeof unsubscribeUserInfo === 'function') unsubscribeUserInfo();
+      if (typeof unsubscribeWearable === 'function') unsubscribeWearable();
     };
   }, []);
 

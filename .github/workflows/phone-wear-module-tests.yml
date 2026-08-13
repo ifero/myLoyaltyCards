@@ -1,0 +1,147 @@
+name: CI — Phone Wear module
+
+# Runs the JVM unit tests of the phone-side Wearable Data Layer module (Story 10-6):
+# `modules/wear-data-layer`, whose `WearDataLayerInbox` is the durable inbox that keeps
+# watch → phone `CARD_USED` events from being lost when the RN host is dead.
+#
+# WHY THIS IS A SEPARATE JOB FROM wear-os-build.yml.
+# `watch-android/` is a STANDALONE Gradle project (its own wrapper), so wear-os-build.yml
+# runs `./gradlew` in it directly. `wear-data-layer` is a LOCAL EXPO MODULE: it only becomes
+# a Gradle subproject once `expo prebuild` generates `android/settings.gradle` with the
+# autolinking includes. So its tests cannot run without a prebuild — which is exactly why they
+# were not gated before this job existed (documented in Story 10-6's AC16 disclosure), and why
+# closing that gap costs one Android prebuild.
+#
+# ci-quality-gates.yml never compiles Kotlin (`yarn lint` is `eslint --ext .ts,.tsx`; jest
+# matches only `*.test.[jt]s?(x)`), so without this job a PR that changed ONLY the module's
+# Kotlin would run no test of it at all. The TypeScript side (`core/wear-connectivity.ts`) is
+# already covered by `yarn test` in ci-quality-gates.yml; this closes the native side.
+
+on:
+  # Re-measure job duration on demand without pushing to a trigger path.
+  workflow_dispatch:
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+    paths:
+      - 'modules/**'
+      # The JS transport the module pairs with — a contract change here should re-run the
+      # native inbox contract too.
+      - 'core/wear-connectivity.ts'
+      - 'core/wearable-sync.ts'
+      - '.github/workflows/phone-wear-module-tests.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'modules/**'
+      - 'core/wear-connectivity.ts'
+      - 'core/wearable-sync.ts'
+      - '.github/workflows/phone-wear-module-tests.yml'
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: 'true'
+
+# Mirrors wear-os-build.yml: only PR runs cancel. On main every commit keeps its own result,
+# which is what tells you which merge broke the build.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  phone-wear-module-tests:
+    name: Phone Wear module (Gradle) tests
+    runs-on: ubuntu-latest
+    # Heavier than wear-os-build.yml (20m): this one runs a full Android prebuild and lets
+    # Gradle configure the whole Expo project graph before executing the single module test
+    # task, plus Robolectric's first-run android-all download. 30m is deliberate headroom for a
+    # cold CI cache; re-measure with workflow_dispatch before tightening it.
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: 'yarn'
+
+      - name: Install dependencies
+        # `yarn install` runs the `supabase` CLI postinstall, which downloads a binary from
+        # GitHub Releases and pipes it into gunzip without checking the HTTP status — a
+        # transient GitHub hiccup aborts the whole install with `Z_DATA_ERROR`. Retry to ride
+        # it out (same pattern as android-release.yml).
+        run: |
+          for attempt in 1 2 3; do
+            if yarn install --frozen-lockfile; then
+              echo "Dependencies installed (attempt $attempt)."
+              exit 0
+            fi
+            echo "::warning::yarn install failed (attempt $attempt/3); retrying in 15s…"
+            sleep 15
+          done
+          echo "::error::yarn install failed after 3 attempts."
+          exit 1
+
+      # AGP 9 requires JDK 17. Pin it rather than inheriting the runner image's default.
+      - name: Set up JDK 17
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      # setup-android exports ANDROID_SDK_ROOT, so Gradle finds the SDK with no
+      # local.properties. The two components the build needs are installed explicitly so a
+      # runner-image bump cannot silently break the job.
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v4
+        with:
+          packages: 'platforms;android-36 build-tools;36.0.0'
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v6
+
+      - name: Prebuild native Android project
+        # Generates `android/` with the autolinking includes that make `wear-data-layer` a
+        # Gradle subproject. No Supabase/Sentry secrets are needed: prebuild only generates the
+        # native project; the EXPO_PUBLIC_* values are inlined at bundle time, which this job
+        # never reaches.
+        run: npx expo prebuild --platform android
+
+      - name: Tune Gradle memory for CI
+        run: |
+          mkdir -p "$HOME/.gradle"
+          cat > "$HOME/.gradle/gradle.properties" <<'EOF'
+          org.gradle.jvmargs=-Xmx4096m -XX:MaxMetaspaceSize=1536m -Dfile.encoding=UTF-8
+          kotlin.daemon.jvmargs=-Xmx2048m -XX:MaxMetaspaceSize=768m
+          org.gradle.workers.max=2
+          org.gradle.daemon=false
+          EOF
+
+      - name: Harden Gradle distribution download
+        # `expo prebuild` writes gradle-wrapper.properties with the wrapper's default 10s
+        # networkTimeout; the gradle-*-bin.zip download from services.gradle.org intermittently
+        # exceeds that and aborts with `SocketTimeoutException`. Raise the timeout, then warm
+        # the download with retries (same pattern as android-release.yml).
+        run: |
+          props=android/gradle/wrapper/gradle-wrapper.properties
+          if grep -q '^networkTimeout=' "$props"; then
+            sed -i 's/^networkTimeout=.*/networkTimeout=120000/' "$props"
+          else
+            printf 'networkTimeout=120000\n' >> "$props"
+          fi
+          echo "Gradle wrapper config:"; cat "$props"
+          for attempt in 1 2 3; do
+            if (cd android && ./gradlew --version); then
+              echo "Gradle distribution provisioned (attempt $attempt)."
+              exit 0
+            fi
+            echo "::warning::Gradle provisioning failed (attempt $attempt/3); retrying in 20s…"
+            sleep 20
+          done
+          echo "::error::Gradle provisioning failed after 3 attempts."
+          exit 1
+
+      - name: Run wear-data-layer unit tests
+        working-directory: android
+        run: ./gradlew :wear-data-layer:testDebugUnitTest --no-daemon

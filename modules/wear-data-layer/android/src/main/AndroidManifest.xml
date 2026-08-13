@@ -1,0 +1,52 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <application>
+
+        <!--
+          Receives watch → phone Data Layer messages (Story 10-6).
+
+          This is the whole reason the transport is a local Expo module rather than a file in
+          `android/`: the manifest merger folds this <service> into the app manifest that
+          `expo prebuild` generates, so the declaration survives the clean prebuild that would
+          erase anything written into `android/` directly.
+
+          (Note for future editors: an XML comment may not contain a double hyphen, so flags like
+          the one on that prebuild command cannot be written out here. The manifest parses as XML
+          before the merger ever sees it, and the resulting failure names only the file.)
+
+          WHY A SERVICE AND NOT A LIVE `MessageClient.addListener`:
+          the watch flushes its CARD_USED outbox whenever it regains connectivity, which is
+          almost never a moment when the React Native app happens to be running. A live
+          listener only exists while JS is alive, so those events would be dropped — and the
+          watch has already deleted them from its outbox on a successful send. The service
+          starts the process, persists the message to `WearDataLayerInbox`, and JS drains it
+          whenever it next runs. Without this, AC9's "events are never lost" is false.
+
+          Correspondingly there is NO live listener anywhere in this module: the service is the
+          single inbound path, so an event cannot be delivered twice.
+
+          `android:exported="true"` is required — the system cannot bind the service otherwise
+          (Android's own Data Layer guide states this). `tools:ignore="ExportedService"`
+          silences the lint warning that the export is unguarded: the intent filter is
+          restricted to the `wear://` scheme, which only Google Play services can dispatch.
+
+          The `pathPrefix` restricts delivery to this app's own namespace, so an unrelated
+          Data Layer path on the same node never spins up our process.
+        -->
+        <service
+            android:name=".WearDataLayerListenerService"
+            android:exported="true"
+            tools:ignore="ExportedService">
+            <intent-filter>
+                <action android:name="com.google.android.gms.wearable.MESSAGE_RECEIVED" />
+                <data
+                    android:scheme="wear"
+                    android:host="*"
+                    android:pathPrefix="/myloyaltycards" />
+            </intent-filter>
+        </service>
+
+    </application>
+
+</manifest>

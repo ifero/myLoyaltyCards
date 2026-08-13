@@ -4,7 +4,13 @@ baseline_commit: 7837f359540c72c30edcf392e1a897fa99ab9752
 
 # Story 10.6: Sync cards from the phone to Wear OS
 
-Status: ready-for-dev
+Status: review
+
+> ⚠️ **Two acceptance criteria remain open and neither can be closed by code review.** AC17
+> (physical two-device validation) and the hardware half of AC18 (Apple Watch re-check) need real
+> devices the dev agent does not have. Every other AC is implemented and verified — see the gate
+> table in the Dev Agent Record. **Do not mark this done until @ifero has filled in the two
+> validation tables.**
 
 Epic: 10 — Wear OS App
 
@@ -220,41 +226,42 @@ Watch** — this story touches shared phone code and the Apple Watch is shipped,
 
 ## Tasks / Subtasks
 
-- [ ] **Task 1 — Phone-side Android module (AC: 1)**
-  - [ ] Local Expo module in a tracked directory (Kotlin), depending on Play Services Wearable. Confirm
+- [x] **Task 1 — Phone-side Android module (AC: 1)**
+  - [x] Local Expo module in a tracked directory (Kotlin), depending on Play Services Wearable. Confirm
         it is autolinked and survives `expo prebuild --clean`.
-  - [ ] API surface: publish snapshot, send message, subscribe to inbound messages, report connectivity.
+  - [x] API surface: publish snapshot, send message, subscribe to inbound messages, report connectivity.
         Keep it a **thin transport** — no business logic, no card knowledge.
 
-- [ ] **Task 2 — Dispatch seam (AC: 2, 13)**
-  - [ ] Introduce the platform seam and move existing call sites onto it. iOS behaviour unchanged.
-  - [ ] Build the Android payload from the same `toBaseWatchCardPayload` source, minus
+- [x] **Task 2 — Dispatch seam (AC: 2, 13)**
+  - [x] Introduce the platform seam and move existing call sites onto it. iOS behaviour unchanged.
+  - [x] Build the Android payload from the same `toBaseWatchCardPayload` source, minus
         `barcodeImageBase64`.
-  - [ ] Reuse the 5-6a sanitiser.
+  - [x] Reuse the 5-6a sanitiser.
 
-- [ ] **Task 3 — Watch-side receive (AC: 3, 4, 6, 7, 11, 12)**
-  - [ ] `DataClient` listener plus the **mandatory start-up read** (AC4).
-  - [ ] Decode into 10-5's entities via the explicit wire→entity mapper; preserve the raw payload
+- [x] **Task 3 — Watch-side receive (AC: 3, 4, 6, 7, 11, 12)**
+  - [x] `DataClient` listener plus the **mandatory start-up read** (AC4).
+  - [x] Decode into 10-5's entities via the explicit wire→entity mapper; preserve the raw payload
         (10-5 AC8) minus the stripped image field.
-  - [ ] Apply as a **full replace inside one transaction** so deletions propagate (AC7).
-  - [ ] Reject malformed/unknown payloads without partial application.
+  - [x] Apply as a **full replace inside one transaction** so deletions propagate (AC7).
+  - [x] Reject malformed/unknown payloads without partial application.
 
-- [ ] **Task 4 — `requestCards` (AC: 5)**
-  - [ ] Watch sends on connect; phone republishes on receipt.
+- [x] **Task 4 — `requestCards` (AC: 5)**
+  - [x] Watch sends on connect; phone republishes on receipt.
 
-- [ ] **Task 5 — `CARD_USED` outbox (AC: 8, 9, 10, 15)**
-  - [ ] Implement 10-4's AC8 seam: capture `usedAt` at **millisecond** precision, UTC.
-  - [ ] Durable outbox surviving restart; flush on connectivity; delete only after confirmed send.
-  - [ ] Route into the phone's **existing** commutative handler. Extract, never clone.
-  - [ ] Test that no card content can leave the watch.
+- [x] **Task 5 — `CARD_USED` outbox (AC: 8, 9, 10, 15)**
+  - [x] Implement 10-4's AC8 seam: capture `usedAt` at **millisecond** precision, UTC.
+  - [x] Durable outbox surviving restart; flush on connectivity; delete only after confirmed send.
+  - [x] Route into the phone's **existing** commutative handler. Extract, never clone.
+  - [x] Test that no card content can leave the watch.
 
-- [ ] **Task 6 — Limits (AC: 14)**
-  - [ ] Measure a realistic and a large library. Define and test the over-limit path.
+- [x] **Task 6 — Limits (AC: 14)**
+  - [x] Measure a realistic and a large library. Define and test the over-limit path.
 
 - [ ] **Task 7 — Verification (AC: 16, 17, 18)**
-  - [ ] Full test suites both sides.
-  - [ ] **Two-device physical validation** per AC17 — coordinate with @ifero.
-  - [ ] **Re-verify the Apple Watch path on real hardware** (AC18).
+  - [x] Full test suites both sides.
+  - [ ] **Two-device physical validation** per AC17 — coordinate with @ifero. **BLOCKED:** no
+        physical phone/watch pair available to the dev agent. See Dev Agent Record.
+  - [ ] **Re-verify the Apple Watch path on real hardware** (AC18). **BLOCKED:** same reason.
 
 ## Dev Notes
 
@@ -377,30 +384,498 @@ the phone-side Android transport's failure paths. **Recommended**, and cheap.
 
 ### Agent Model Used
 
-_To be filled by the dev agent._
+Claude Opus 5 (`claude-opus-5`) — implementation. Code review and QA review by Claude Sonnet 5.
 
 ### Debug Log References
 
+Four issues were found by the gates rather than by reading, and each is worth recording because
+the failure mode was silent:
+
+1. **`.gitignore` would have dropped the entire Kotlin half of the phone module.** `.gitignore:56`
+   was `android/` — an **unanchored** pattern, so it matches a directory named `android` at any
+   depth, including `modules/wear-data-layer/android/`. `git status` showed only the three
+   TypeScript files. Left alone, the PR would have contained a module whose native side existed
+   solely on this machine: it builds for the author and for nobody else. Fixed with a negation
+   pair (`!modules/*/android/` plus a re-ignore of `build/`) rather than by anchoring the original
+   pattern, which would have un-ignored every nested native directory in the tree at once.
+2. **The module's `AndroidManifest.xml` failed to parse** because a comment contained
+   `prebuild --clean` — a double hyphen is illegal inside an XML comment. The manifest merger
+   reports only `Error parsing <file>`, with no line or reason. A note now sits in the file.
+3. **`WearSyncCoordinatorTest` hung under `runTest`.** `runTest` waits for every child job, and
+   the coordinator's three collectors never complete. `backgroundScope` fixed the hang but then
+   nothing ran deterministically: Room's suspend DAOs hop onto Room's own executor, which the
+   test scheduler does not control, so `advanceUntilIdle()` returned while writes were still in
+   flight. Rewritten on `runBlocking` + real dispatchers + `withTimeout`, matching the pattern
+   `CardDaoTest` already established for exactly this reason.
+4. **A size test measured the wrong bytes.** It rebuilt the envelope by hand and compared that
+   against the budget, but production measures and publishes the _sanitised_ envelope (nulls
+   dropped), which is smaller. The assertion now runs against the bytes actually handed to the
+   transport.
+
+One test-only correction: `core/wearable-sync.test.ts` initially typed its subscribe mocks by
+inference, which yields an empty argument tuple and made `mock.calls[0]![0]` a `noUncheckedIndexedAccess`
+error. `jest.fn<Return, [Args]>` declares the tuple without introducing unused parameters (ESLint
+has no `argsIgnorePattern` here).
+
+#### Code-review round (Sonnet, two passes to zero findings)
+
+The first pass returned seven findings, all legitimate. Two are worth recording because neither was
+visible from reading the code, and one of them was a genuine production bug:
+
+5. **Every Wearable API call on the watch had no timeout, and that could wedge the outbox
+   permanently.** The phone half of the transport bounded every Play services call at 10s, citing
+   Story 16-10 — and the watch half did not. `UsageOutbox.flush()` runs inside `Mutex.withLock`,
+   and a Kotlin mutex is released when the critical section _completes_: a coroutine that suspends
+   forever holds it forever. So one `sendMessage` that never settled would have deadlocked every
+   later card open and every later reconnection, on the singleton outbox, silently, on a platform
+   with no crash reporting. `runCatching` cannot catch a coroutine that never resumes.
+   `TaskAwaitTest` now reproduces exactly that scenario — a never-completing `Task` inside a
+   mutex — and proves the lock is reusable afterwards.
+6. **Writing the test for (5) surfaced a second, separate defect.**
+   `Task.addOnCompleteListener(listener)` — the no-executor overload — posts the callback to the
+   **main looper**. Three already-completed-task tests timed out at 10s, which is impossible unless
+   the callback never ran. In production that meant every Data Layer call on the watch was taking a
+   pointless hop onto the UI thread from a background coroutine, and it made the adapter untestable
+   without Robolectric. Fixed by passing a direct executor (`Executor(Runnable::run)`), verified
+   against the `play-services-tasks` AAR. A test asserts the resumption happens off the main
+   thread, so the regression cannot come back quietly.
+7. Two smaller findings restored behaviour this story had unintentionally changed: the pre-seam
+   `_layout.tsx` guarded its two WCSession subscriptions in **separate** try/catch blocks, so a
+   failure attaching one channel did not cost the other (collapsing them would have silently
+   disabled `CARD_USED` for a session and orphaned an unreleasable listener); and `onMessage`
+   swallowed its own errors, which on Android acknowledged — and therefore discarded — a
+   `requestCards` that had actually failed. Both now have tests.
+
+The second pass confirmed all seven fixed with no regressions and raised three nits (a new
+`import/order` warning, stale counts in this record, and an untested `acknowledge-error` branch),
+all of which are also fixed. Final verdict: **APPROVED, zero findings.**
+
+#### QA round (Sonnet test-architect lens, to zero findings)
+
+A separate QA pass reviewed the change against all 18 ACs with a coverage-and-test-quality lens
+(not code style). It found no shipped-code defects but ten test-integrity/coverage gaps, all now
+closed:
+
+- **A genuine test-integrity bug (the standout).** Two "never throws" tests in
+  `core/wear-connectivity.test.ts` silently exercised only their _first_ scenario. `getNativeModule`
+  requires `@/modules/wear-data-layer` **lazily**, so the require runs after `jest.isolateModules`
+  has exited and resolves in the parent registry; the first `loadModule` in a test caches the
+  module there, and a second `loadModule` in the _same_ test reuses that first mock. The reviewer
+  proved it with a standalone repro _and_ with Istanbul coverage — `isWearTransportSupported`'s
+  catch and `getConnectedWearNodeCount`'s early return showed zero hits despite tests that named
+  them. So those graceful-degradation branches (exactly the Story-16-10-class behaviour this path
+  exists to guarantee) were untested and would have stayed green through a regression. Fixed by
+  splitting each multi-scenario test into one `test()` per case, so `afterEach`'s `resetModules`
+  isolates them; coverage now hits both branches. I keep a load-bearing comment at the split so the
+  trap is not reintroduced.
+- **The phone's durable inbox had zero Kotlin tests** (finding 2, the other substantive one). Its
+  watch-side analogue had 14; this side — which the Completion Notes call load-bearing, and where
+  the code-review round had already found the blank-id bug — had none, and the module declared no
+  test dependencies at all. Added JUnit + Robolectric to the module and 12 `WearDataLayerInboxTest`
+  cases: append/read/acknowledge round-trip, oldest-first ordering, the 500-entry FIFO trim,
+  monotonic-id non-reuse, corrupt-store recovery, and two regression tests for the blank-id / non-
+  object rows the code-review fix addressed. Their CI status is disclosed honestly in the AC16
+  section (they run via `:wear-data-layer:testDebugUnitTest` from the prebuilt `android/` but are
+  not yet a PR gate; wiring one is a flagged follow-up).
+- **Coverage gaps closed with runnable tests:** the concurrent-flush guarantee the `flushLock`
+  exists for (a gated two-flush race in `UsageOutboxTest`); the exact snapshot byte-budget boundary
+  and the comparator's final `id` tiebreak (`core/wear-connectivity.test.ts`); the iOS
+  `onUsageEvents` rejection path, symmetric with its already-tested `onMessage` sibling
+  (`core/wearable-sync.test.ts`); the `Task.await` off-main-thread resumption (`TaskAwaitTest`); and
+  a dedicated `OutboxCardUsageRecorder` test proving the enqueue rides the application scope, not
+  the caller's — the guarantee that keeps a card open from being lost when the barcode screen's
+  effect is cancelled on wrist-down.
+- **Nits:** removed the genuinely-unused `__resetWearConnectivityForTests` export; added a
+  `modules/*/android/build/**` ESLint ignore (generated Gradle report JS was tripping `no-undef`
+  once the module's build output existed locally); and corrected the stale counts the reviewer
+  found in `sprint-status.yaml`.
+
+A **second QA pass** (fresh reviewer, same test-architect lens) then found three more coverage
+gaps, all now closed:
+
+- **AC5/AC10's actual glue was untested (MEDIUM).** The `onMessage` republish and `onUsageEvents`
+  apply lived inline in `app/_layout.tsx`, which the coverage gate excludes — so a broken
+  `'requestCards'` literal or a dropped `await` failed no test. Extracted them into
+  `createWearableInboundHandlers` in `core/wearable-sync.ts` (injected with the repository
+  functions, because a direct import would be a require cycle) and added 7 tests. This also does
+  what `project-context.md` advises — moves testable logic out of `app/` into a covered layer — so
+  `wearable-sync.ts` is now at 100 % coverage.
+- **`WearGraph.startSync`'s idempotency latch had no test (LOW-MED).** Without it, every Activity
+  recreation opens a second `WearSyncCoordinator` and doubles the Data Layer listener
+  registrations — invisible on a platform with no telemetry, surfacing only as battery drain. Made
+  the coordinator start injectable (default = real) plus a `@VisibleForTesting` latch reset, and
+  added a `WearGraphTest` case proving three `startSync` calls fire the side effect once.
+- **The inbox's `synchronized(lock)` claim was untested (LOW).** Its watch-side analogue's flush
+  race was covered; this side — a hand-rolled `SharedPreferences` read-modify-write with no
+  SQL-level atomicity — was not. Added a concurrent-append race (8 threads × 25 appends) asserting
+  no entry is clobbered or duplicated.
+
+The reviewer's one NIT (this PR won't trigger `watchos-tests.yml`, symmetric to the disclosed
+`wear-os-build.yml` path-filter gap) is out of scope — a pre-existing project-wide CI
+characteristic, not introduced here — and is left as disclosure only.
+
+Final QA verdict after both passes: all findings addressed, every suite green
+(2166 JS / 156 `watch-android` / 13 phone-module), coverage 93.83 % global with the AC-relevant
+`core/` modules at 97.81 % (`wear-connectivity.ts`) and 100 % (`wearable-sync.ts`).
+
+#### Findings from the code-review round
+
+The Sonnet review pass raised seven items; all were accepted and fixed, and one of them uncovered a
+second bug underneath it. Recorded here because two are the kind of defect that never shows up as a
+crash.
+
+1. **HIGH — every Play services call on the _watch_ had no timeout, and that could wedge the outbox
+   permanently.** The phone module bounds each call at 10s and cites Story 16-10 for why; the
+   watch-side `Task<T>.await()` did not. This mattered more than a slow call: `UsageOutbox.flush()`
+   runs inside `Mutex.withLock`, and a Kotlin mutex is released when the critical section
+   _completes_ — a coroutine suspended forever holds it forever. So one `sendMessage` that never
+   settled would deadlock every later card open and every later reconnection, for the life of the
+   process, with `runCatching` powerless because nothing is ever thrown. On a platform with no
+   crash reporting, usage sync would simply have stopped, silently. Fixed with `withTimeout`, and
+   `TaskAwaitTest` reproduces the mutex scenario end to end.
+2. **And writing that test exposed a second defect: `addOnCompleteListener(listener)` posts to the
+   MAIN LOOPER.** Every Data Layer call on the watch was hopping onto the UI thread purely to
+   resume a coroutine already running on a background dispatcher — and the resumption depended on
+   that looper pumping. Now uses the `addOnCompleteListener(Executor, listener)` overload with a
+   direct executor (verified present in `play-services-tasks-18.2.0.aar` via `javap`). A late
+   callback arriving after the timeout is a safe no-op on an already-completed
+   `CancellableContinuation`. As a bonus this made the adapter testable without Robolectric — a
+   plain JVM test has no main looper, which is exactly why the first version of the test failed.
+3. **MEDIUM — the seam had quietly reduced iOS fault isolation.** The pre-story `app/_layout.tsx`
+   wrapped its two `subscribeToWatch*` calls in **separate** try/catch blocks; routing both through
+   one seam call put them under a single guard, so a throw attaching the `message` listener would
+   have cost every `CARD_USED` event for the session _and_ orphaned an already-created listener.
+   Restored with a per-channel `subscribeSafely()`.
+4. **MEDIUM — `onMessage` swallowed its own errors, defeating the Android retry it was designed
+   for.** `onUsageEvents` deliberately let errors propagate so an unacknowledged message stays in
+   the native inbox and is retried; `requestCards` goes through the same inbox and deserved the
+   same treatment. Now neither handler swallows, and the iOS branch of the seam catches and logs
+   with the same messages the old code used.
+5. **LOW — a nudge arriving during a _failing_ read had its `drainAgain` flag discarded** by the
+   exception unwinding past the `while`. The read is now caught per iteration, and the deliberate
+   choice to defer rather than spin-retry is stated in the code instead of being an accident.
+6. **NIT** — the native module's TypeScript surface was re-declared by hand in
+   `core/wear-connectivity.ts`; now `Pick<WearDataLayerNativeModule, …>` from a type-only import, so
+   a signature change there is a compile error rather than a runtime surprise.
+7. **NIT** — a `WearGraph` comment overcounted the Data Layer listeners (three coroutines, but only
+   two register listeners); and `WearDataLayerInbox.acknowledge()` could not remove a
+   structurally-valid row with a blank id, which `read()` already skipped — leaving it unreachable
+   by both paths until the FIFO trim evicted it.
+
+A second review pass confirmed all seven resolved with no regressions, and raised three closing
+nits: a new `import/order` warning introduced by fix 6 (lint is back to the 3 pre-existing warnings),
+the stale counts in this record, and a missing test for the `acknowledge-error` branch (added, and it
+asserts the `outcome` tag rather than `expect.anything()` so the two failure branches stay
+distinguishable in Sentry).
+
 ### Completion Notes List
+
+**Shape of the change.** The story's scope finding was correct and load-bearing:
+`react-native-watch-connectivity` is iOS-only, so roughly half the work is a new phone-side
+Android native module. It landed as a local Expo module at `modules/wear-data-layer/`, autolinked
+(`expo-modules-autolinking` defaults `nativeModulesDir` to `./modules` — verified in the installed
+package, not assumed) and therefore outside the prebuild-generated `android/`.
+
+**AC1 was verified by doing it, not by reasoning about it.** `npx expo prebuild --platform android --clean`
+was run in this worktree, then `:app:processDebugMainManifest` and `:app:mergeDebugResources`. The
+generated app manifest contains
+`<service android:name="expo.modules.weardatalayer.WearDataLayerListenerService" android:exported="true">`
+with the `wear://*/myloyaltycards` intent filter, and the merged resources contain
+`<string-array name="android_wear_capabilities"><item>myloyaltycards_phone</item></string-array>`
+sourced from `:wear-data-layer`. The prebuild left **no** tracked-file drift.
+
+**Every Play services API was checked against the AAR**, not against prose:
+`javap` over `play-services-wearable-20.0.1.aar` confirmed `PutDataRequest.setUrgent()`,
+`DataClient.getDataItems()`, `CapabilityClient.addListener(listener, name)` /
+`getCapability(name, FILTER_REACHABLE)`, and that `DataBuffer` implements `Closeable` (so `use {}`
+is correct). 20.0.1 is also the current release on Google's Maven — the version already pinned in
+`libs.versions.toml` needed no bump.
+
+**Design decisions worth flagging to a reviewer:**
+
+- **A durable inbox on the phone, not just an outbox on the watch.** The watch deletes an event
+  once `sendMessage` succeeds. If the RN host is dead at that moment — the common case, since the
+  watch flushes on reconnection rather than when someone is holding their phone — the message
+  reaches a `WearableListenerService` with no JavaScript to hand it to. Without persistence there,
+  AC9's "events are never lost" is simply false. The inbox is **read-then-acknowledge**, never
+  drain-on-read, so a crash between the native read and the JS transaction re-delivers rather than
+  loses.
+- **A malformed card rejects the WHOLE snapshot.** Because the apply is a full replace (AC7),
+  "skip the card I could not parse" is identical to "delete that card from the watch". This is what
+  AC11's "without partial application" has to mean on a replace-based receiver, and it is tested
+  directly (`a snapshot containing one malformed card deletes nothing`).
+- **The phone allowlists inbound message types.** `WatchMessage` includes
+  `{ type: 'syncCard', payload: { id, cardData } }`, so without an allowlist a buggy or tampered
+  watch build could push card content into the phone through the same channel that carries
+  `CARD_USED`. AC8 is enforced on the watch (it emits nothing else) _and_ on the phone (it accepts
+  nothing else) — defence on both ends of one wire.
+- **`AC10` needed no extraction.** `applyWatchUsageEvents` in `core/database/card-repository.ts`
+  already takes `WatchUsageEvent[]` and is transport-agnostic; only the _subscription_ was
+  iOS-coupled. The seam routes Android inbound events into the same function. No second
+  reconciliation path was written — the 16-11 failure mode is avoided by there being nothing new.
+- **Over-budget snapshots degrade by priority, not by truncation.** `getAllCards()` returns
+  `ORDER BY name ASC`, so dropping the tail would permanently disenfranchise whoever shops at the
+  end of the alphabet. Cards are admitted favourites-first, then by usage, with `id` as the final
+  tiebreak so the selection is a total order and therefore stable between pushes — which matters
+  because the Data Layer is content-addressed and a flapping payload would wake the watch for
+  nothing. Truncation always goes through `logger.notify`.
+- **A retry was added to the outbox flush** after a test exposed the gap: "the phone is reachable"
+  and "a send will succeed" are different claims, and a reachability _transition_ was the only
+  other flush trigger. The schedule (1s, 2s) matches the project's documented watch-sync rule.
+- **Live listeners on the watch, a background service on the phone.** Asymmetric, deliberately.
+  The phone needs the service because the watch flushes when no JS is running; the watch does not,
+  because Android's own guidance prefers live listeners for interactive apps and AC4's mandatory
+  start-up read already covers everything that happened while the watch app was closed.
+
+**Two documentation defects found and fixed in passing:**
+
+- `test-fixtures/sync-message-v1.json` **did not exist**, despite being cited by this story's
+  References, `docs/project-context.md` and `docs/architecture.md`. Worse, its sibling
+  `test-fixtures/card-valid.json` has been in the tree since February and is read by **no test on
+  any platform** — the "cross-platform fixtures" mechanism was documentation only. The new fixture
+  is consumed for real by both `core/wear-sync-contract.test.ts` and Wear OS's
+  `SyncFixtureContractTest`.
+- Story 10-4's and 10-5's seam docs described `NoOpCardUsageRecorder` as "the default until 10.6";
+  updated to describe what it actually is now (the preview/UI-test default).
+
+**A new CI-enforced drift gate.** The wire contract exists in three artifacts with no build-time
+link between them — TypeScript, the phone's Kotlin module, the Wear APK — so a rename on one side
+would ship a build where the phone publishes to a path the watch never reads: no crash, no error,
+and on Android no telemetry either. `core/wear-sync-contract.test.ts` is a TypeScript test that
+reads the **Kotlin source** and the manifest, the same technique
+`targets/watch/__tests__/watch-layout-contract.test.ts` uses for Swift. It was mutation-checked:
+renaming `PHONE_CAPABILITY` in the Wear APK makes it fail, and reverting makes it pass.
 
 ### Physical Two-Device Validation (AC17)
 
-| Scenario                                | Phone (model / OS) | Watch (model / OS) | Result |
-| --------------------------------------- | ------------------ | ------------------ | ------ |
-| Initial sync                            |                    |                    |        |
-| Add card → appears                      |                    |                    |        |
-| Delete card → disappears                |                    |                    |        |
-| Open on watch → `usageCount` increments |                    |                    |        |
-| Offline opens → queued events flush     |                    |                    |        |
+**NOT PERFORMED — blocked.** The dev agent has no physical Android phone and no physical Wear OS
+watch. This is the one AC that cannot be satisfied from this environment, and the story is explicit
+that emulator evidence is not a substitute: Story 9-6 shipped with `transferUserInfo` flagged as
+needing exactly this, and the outbox here is the same class of code — the parts that only fail on
+real hardware are Bluetooth reconnection timing and process death under real memory pressure.
+
+@ifero: this table needs filling before merge. Everything else in the story is verified.
+
+| Scenario                                | Phone (model / OS) | Watch (model / OS) | Result     |
+| --------------------------------------- | ------------------ | ------------------ | ---------- |
+| Initial sync                            |                    |                    | ⬜ pending |
+| Add card → appears                      |                    |                    | ⬜ pending |
+| Delete card → disappears                |                    |                    | ⬜ pending |
+| Open on watch → `usageCount` increments |                    |                    | ⬜ pending |
+| Offline opens → queued events flush     |                    |                    | ⬜ pending |
 
 ### Apple Watch Regression Re-check (AC18)
 
-| Scenario | Watch model / OS | Result |
-| -------- | ---------------- | ------ |
-|          |                  |        |
+**Hardware check NOT PERFORMED — blocked** (no physical Apple Watch). What _was_ verified is
+stronger than it may look, because the iOS path was not modified behaviourally:
+
+- The only changes to `core/watch-connectivity.ts` are four added `export` keywords and their
+  doc comments. No statement, branch or value changed.
+- `core/watch-connectivity.test.ts` passes **untouched** — that is AC2's stated verification.
+- `core/wearable-sync.test.ts` asserts the iOS branch forwards its argument unmodified to
+  `pushCardsToWatch` and fans both WCSession channels into the same handlers.
+- **`yarn watch:build` passes** — `** BUILD SUCCEEDED **`, run in this worktree after
+  `npx expo prebuild --platform ios --clean`. The watchOS target, the watch widget and their asset
+  catalogues all compile against the changed phone code.
+
+So the residual risk is confined to runtime behaviour on a real Apple Watch, which no code in this
+change can reach: the Swift is untouched and the TypeScript it talks to is byte-identical in
+behaviour.
+
+| Scenario                              | Watch model / OS | Result              |
+| ------------------------------------- | ---------------- | ------------------- |
+| Cards sync from phone                 |                  | ⬜ pending hardware |
+| Open a card → `usageCount` increments |                  | ⬜ pending hardware |
+
+### Gate results (AC18)
+
+Run from this `.claude` worktree, which has its own `node_modules`. `expo prebuild` was run here
+for **both** platforms, so the native builds that normally need the main checkout were possible;
+neither prebuild produced any tracked-file drift.
+
+| Gate                              | Result                                                 |
+| --------------------------------- | ------------------------------------------------------ |
+| `yarn lint`                       | ✅ 0 errors (3 warnings, all pre-existing on `main`)   |
+| `yarn typecheck`                  | ✅                                                     |
+| `yarn test`                       | ✅ 176 suites, 2166 tests                              |
+| `yarn test:coverage`              | ✅ 93.83 % global, above the 80 % gate                 |
+| `yarn format:check`               | ✅                                                     |
+| `yarn tokens:check`               | ✅                                                     |
+| `yarn splash:check`               | ✅                                                     |
+| `yarn check:catalogue-generated`  | ✅                                                     |
+| `yarn wear:catalogue:check`       | ✅                                                     |
+| `yarn check:no-tests-folders`     | ✅                                                     |
+| `yarn check:native-patches`       | ✅                                                     |
+| `yarn check:native-strings`       | ✅                                                     |
+| `yarn check:story-catalogue-sync` | ✅                                                     |
+| `yarn watch:build`                | ✅ `** BUILD SUCCEEDED **`                             |
+| `./gradlew testDebugUnitTest`     | ✅ 156 tests, 0 failures                               |
+| `./gradlew assembleDebug`         | ✅                                                     |
+| `./gradlew lintDebug`             | ✅                                                     |
+| `expo prebuild` + manifest merge  | ✅ service and capability present in the generated app |
+
+New tests, final counts (the bold rows and the widened `wearable-sync`/`WearGraph`/inbox suites
+came out of the two review rounds):
+
+| Suite                                               |   Tests |
+| --------------------------------------------------- | ------: |
+| `core/wear-connectivity.test.ts`                    |      46 |
+| `core/wearable-sync.test.ts`                        |      21 |
+| `core/wear-sync-contract.test.ts` (drift gate)      |      12 |
+| Wear `SnapshotCodecTest`                            |      18 |
+| Wear `UsageOutboxTest`                              |      15 |
+| Wear `WearSyncCoordinatorTest`                      |      13 |
+| Wear `SnapshotApplierTest`                          |       9 |
+| Wear `TaskAwaitTest`                                |       7 |
+| Wear `SyncFixtureContractTest`                      |       5 |
+| Wear `OutboxCardUsageRecorderTest`                  |       2 |
+| Phone module `WearDataLayerInboxTest` (Robolectric) |      13 |
+| **Total new**                                       | **161** |
+
+Two pre-existing Wear suites also grew by one test each: `WearGraphTest` gained the
+`startSync`-idempotency guard (QA Finding B) and `CardMigrationTest` now drives the real
+`MIGRATION_1_2` instead of the throwaway one Story 10-5 left as a template. Suite totals after
+this story: **2166** JS tests (176 suites), **156** `watch-android` JVM tests, and **13**
+phone-module JVM tests.
 
 ### Do the Kotlin tests run in CI? (AC16)
 
-_State yes/no explicitly and how._
+**The `watch-android` tests: yes.** `.github/workflows/wear-os-build.yml:86` runs
+`./gradlew testDebugUnitTest assembleDebug --no-daemon` in `watch-android/`, so all 156 Wear OS
+JVM tests — including every one added here — execute on each qualifying PR and on `main`. They
+need no emulator: Room's DAO, migration, applier, coordinator and outbox tests all run under
+Robolectric.
+
+**One caveat on that job, stated plainly.** It is **path-filtered to `watch-android/**`**. A PR
+that changed only `modules/wear-data-layer/`or`core/wear-connectivity.ts`would not trigger it.
+This PR touches`watch-android/`, so it does. The gap is covered for the part that matters most —
+the cross-artifact wire contract — by `core/wear-sync-contract.test.ts`, which runs under
+`yarn test`in`ci-quality-gates.yml` and is **not** path-filtered. Widening the Wear job's trigger
+paths was deliberately left out of scope; it is a CI-policy change, and the drift gate closes the
+specific hazard.
+
+**The phone module's `WearDataLayerInboxTest`: yes — via a new job added in this story.** The
+review rounds added 13 Robolectric tests for `WearDataLayerInbox`, the phone-side durability
+component (a code-review pass found a real bug in it — `acknowledge` could not remove a blank-id
+row — and a QA pass added a concurrent-append race test). Gating them is not free, and the reason
+is structural: `watch-android/` is a **standalone** Gradle project with its own wrapper, so
+`wear-os-build.yml` can just run `./gradlew` in it. `wear-data-layer` is a **local Expo module** —
+it only becomes a Gradle subproject once `expo prebuild` generates `android/settings.gradle` with
+the autolinking includes, and `android/` is gitignored. So its tests genuinely cannot run without
+an Android prebuild.
+
+`.github/workflows/phone-wear-module-tests.yml` pays that cost deliberately and narrowly. It is
+path-filtered to `modules/**` plus the two JS files the module pairs with
+(`core/wear-connectivity.ts`, `core/wearable-sync.ts`), so the prebuild runs only on PRs that can
+actually break the module — not on every PR. It prebuilds Android and runs
+`:wear-data-layer:testDebugUnitTest`. Its 30-minute timeout is deliberate headroom over
+`wear-os-build.yml`'s 20: this job additionally configures the whole Expo project graph and pays
+Robolectric's first-run `android-all` download on a cold cache. `workflow_dispatch` is enabled so
+that duration can be re-measured and the limit tightened without pushing to a trigger path.
+
+**First real measurement (PR #209, cold cache): 6m45s**, against `wear-os-build.yml`'s 2m01s on
+the same PR. So the Android prebuild plus Expo project configuration costs roughly 4¾ minutes over
+the standalone Gradle project — the cost is real but modest, and the 30-minute limit is ~4.4×
+headroom. **Deliberately not tightened yet:** one cold-cache sample is a weak basis, and a limit
+set too close to the mean converts a slow runner into a red build. Re-measure with
+`workflow_dispatch` a few times before narrowing it.
+
+**Why a separate workflow rather than a step in `ci-quality-gates.yml`:** that workflow never
+compiles Kotlin (`yarn lint` is `eslint --ext .ts,.tsx`; jest matches only `*.test.[jt]s?(x)`),
+and it is not path-filtered — folding a 30-minute Android prebuild into it would tax every PR in
+the repo.
+
+**This closes the AC16 gap on the phone side.** All three Kotlin surfaces this story touches are
+now gated on PR: the 156 `watch-android` tests via `wear-os-build.yml`, the 13 phone-module tests
+via `phone-wear-module-tests.yml`, and the cross-artifact wire contract via
+`core/wear-sync-contract.test.ts` under `yarn test` — which remains the important one, because it
+is the only unpath-filtered gate of the three and a contract lives in three artifacts with no
+build-time link between them.
 
 ### File List
+
+**Phone — new local Expo module (`modules/wear-data-layer/`, tracked source, Android only)**
+
+- `modules/wear-data-layer/expo-module.config.json`
+- `modules/wear-data-layer/index.ts`
+- `modules/wear-data-layer/src/WearDataLayerModule.ts`
+- `modules/wear-data-layer/android/build.gradle`
+- `modules/wear-data-layer/android/src/main/AndroidManifest.xml`
+- `modules/wear-data-layer/android/src/main/res/values/wear.xml`
+- `modules/wear-data-layer/android/src/main/java/expo/modules/weardatalayer/WearDataLayerContract.kt`
+- `modules/wear-data-layer/android/src/main/java/expo/modules/weardatalayer/WearDataLayerInbox.kt`
+- `modules/wear-data-layer/android/src/main/java/expo/modules/weardatalayer/WearDataLayerListenerService.kt`
+- `modules/wear-data-layer/android/src/main/java/expo/modules/weardatalayer/WearDataLayerModule.kt`
+- `modules/wear-data-layer/android/src/test/java/expo/modules/weardatalayer/WearDataLayerInboxTest.kt`
+  (Robolectric; runs only from the prebuild-generated `android/` — see AC16 disclosure)
+- `modules/wear-data-layer/android/src/test/resources/robolectric.properties` (pins the test SDK)
+
+**Phone — new TypeScript**
+
+- `core/wear-connectivity.ts`
+- `core/wear-connectivity.test.ts`
+- `core/wearable-sync.ts`
+- `core/wearable-sync.test.ts`
+- `core/wear-sync-contract.test.ts`
+
+**Phone — modified**
+
+- `app/_layout.tsx` — one wearable seam replaces the two WCSession subscriptions
+- `core/database/card-repository.ts` — `pushSnapshotToWatch` → `pushSnapshotToWearable`, via the seam
+- `core/watch-connectivity.ts` — four helpers exported for reuse; **no behaviour change**
+- `.gitignore` — un-ignore local Expo modules' native directories (see Debug Log)
+- `eslint.config.mjs` — ignore `modules/*/android/build/**` (generated Gradle report JS tripped
+  `no-undef` once the module's local build output existed)
+
+**Wear OS — new**
+
+- `watch-android/app/src/main/kotlin/.../wear/sync/WearSyncContract.kt`
+- `watch-android/app/src/main/kotlin/.../wear/sync/SnapshotCodec.kt`
+- `watch-android/app/src/main/kotlin/.../wear/sync/SnapshotApplier.kt`
+- `watch-android/app/src/main/kotlin/.../wear/sync/WearSyncTransport.kt`
+- `watch-android/app/src/main/kotlin/.../wear/sync/DataLayerWearSyncTransport.kt`
+- `watch-android/app/src/main/kotlin/.../wear/sync/WearSyncCoordinator.kt`
+- `watch-android/app/src/main/kotlin/.../wear/usage/UsageEventEntity.kt`
+- `watch-android/app/src/main/kotlin/.../wear/usage/UsageOutboxDao.kt`
+- `watch-android/app/src/main/kotlin/.../wear/usage/UsageOutbox.kt`
+- `watch-android/app/src/main/kotlin/.../wear/usage/OutboxCardUsageRecorder.kt`
+- `watch-android/app/src/test/kotlin/.../wear/sync/SnapshotCodecTest.kt`
+- `watch-android/app/src/test/kotlin/.../wear/sync/SnapshotApplierTest.kt`
+- `watch-android/app/src/test/kotlin/.../wear/sync/WearSyncCoordinatorTest.kt`
+- `watch-android/app/src/test/kotlin/.../wear/sync/SyncFixtureContractTest.kt`
+- `watch-android/app/src/test/kotlin/.../wear/sync/TaskAwaitTest.kt`
+- `watch-android/app/src/test/kotlin/.../wear/usage/UsageOutboxTest.kt`
+- `watch-android/app/src/test/kotlin/.../wear/usage/OutboxCardUsageRecorderTest.kt`
+- `watch-android/app/schemas/com.iferoporefi.myloyaltycards.wear.data.WearDatabase/2.json` (generated
+  by Room, committed, already covered by `.prettierignore`)
+
+**Wear OS — modified**
+
+- `watch-android/app/src/main/kotlin/.../wear/data/WearDatabase.kt` — v2 + `MIGRATION_1_2`
+- `watch-android/app/src/main/kotlin/.../wear/WearGraph.kt` — sync + outbox singletons
+- `watch-android/app/src/main/kotlin/.../wear/MainActivity.kt` — wires the real recorder, starts sync
+- `watch-android/app/src/main/kotlin/.../wear/usage/CardUsageRecorder.kt` — doc-only
+- `watch-android/app/src/test/kotlin/.../wear/data/CardMigrationTest.kt` — drives the real migration
+
+**CI — new**
+
+- `.github/workflows/phone-wear-module-tests.yml` — prebuilds Android and runs
+  `:wear-data-layer:testDebugUnitTest`; path-filtered to `modules/**` plus the two JS files the
+  module pairs with. Closes the phone-side half of AC16 (see the AC16 section above).
+
+**Cross-platform**
+
+- `test-fixtures/sync-message-v1.json` — created; consumed by both platforms
+
+_No file in `targets/` (watchOS Swift) was touched._
+
+### Change Log
+
+| Date       | Change                                                                                                                                                                                                                                      |
+| ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 2026-08-12 | Implemented Story 10-6: phone-side Wearable Data Layer Expo module, platform dispatch seam, Wear OS snapshot receive with a mandatory start-up read, full-replace apply, `requestCards` ping, and a Room-backed durable `CARD_USED` outbox. |
+| 2026-08-12 | Fixed `.gitignore` swallowing local Expo modules' `android/` directories — the module's whole Kotlin half would otherwise not have been committed.                                                                                          |
+| 2026-08-12 | Created `test-fixtures/sync-message-v1.json` (cited by three docs but absent) and made it a real gate on both platforms.                                                                                                                    |
+| 2026-08-12 | Added `core/wear-sync-contract.test.ts`, a CI-enforced drift check across the three copies of the wire contract.                                                                                                                            |
+| 2026-08-12 | Room schema v1 → v2 (`usage_outbox`); `CardMigrationTest` now exercises the real migration instead of a throwaway one.                                                                                                                      |
+| 2026-08-13 | Added `.github/workflows/phone-wear-module-tests.yml`, closing the phone-side AC16 gap the Dev Agent Record had disclosed as an open follow-up: the module's 13 Robolectric tests are now a path-filtered PR gate rather than local-only.   |
