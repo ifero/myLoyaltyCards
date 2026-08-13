@@ -773,6 +773,13 @@ actually break the module — not on every PR. It prebuilds Android and runs
 Robolectric's first-run `android-all` download on a cold cache. `workflow_dispatch` is enabled so
 that duration can be re-measured and the limit tightened without pushing to a trigger path.
 
+**First real measurement (PR #209, cold cache): 6m45s**, against `wear-os-build.yml`'s 2m01s on
+the same PR. So the Android prebuild plus Expo project configuration costs roughly 4¾ minutes over
+the standalone Gradle project — the cost is real but modest, and the 30-minute limit is ~4.4×
+headroom. **Deliberately not tightened yet:** one cold-cache sample is a weak basis, and a limit
+set too close to the mean converts a slow runner into a red build. Re-measure with
+`workflow_dispatch` a few times before narrowing it.
+
 **Why a separate workflow rather than a step in `ci-quality-gates.yml`:** that workflow never
 compiles Kotlin (`yarn lint` is `eslint --ext .ts,.tsx`; jest matches only `*.test.[jt]s?(x)`),
 and it is not path-filtered — folding a 30-minute Android prebuild into it would tax every PR in
