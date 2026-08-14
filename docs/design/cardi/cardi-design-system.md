@@ -193,6 +193,15 @@ numbers, so digits align and don't jitter while someone reads them aloud.
 Thin weights are prohibited. Minimum body size is 15px. Headlines use tight tracking;
 small labels use slightly open tracking.
 
+**Form field labels are UPPERCASE** — `label-bold` (Inter 13px, weight 600, +0.02em
+tracking), ink, sitting above the field. This ratifies deliberately what the generator
+originally chose by accident, on two grounds: that positive tracking already in the token is
+an uppercase idiom, and casing the label differently from its value is what lets someone
+parse a form's structure at a glance — which is exactly how a read-only row is kept from
+reading as a control. Both locales' labels are short enough that the extra width costs
+nothing (`Store name` / `Nome negozio`, `Card number` / `Numero carta`), so this is a voice
+decision, not a constraint. Placeholders, values and error messages stay sentence case.
+
 ## Layout & Spacing
 
 - **Frame: 393 × 852 (iPhone-class portrait). Design nothing else.** No desktop, no
@@ -255,16 +264,25 @@ The space this leaves above the rule on a short form is **composition, not absen
 hairline is what makes it read that way. Do not close the gap by letting the button rise to
 meet the last field — that trades a predictable commit position for a per-screen one.
 
-Anchor it with `marginTop: 'auto'` inside a `flexGrow: 1` scroll container — **never
-`position: absolute`.** The button then owns the bottom edge whenever the form is short
-(which is every screen in this pattern) and scrolls naturally the moment content grows or
-the keyboard shrinks the viewport. An absolutely-positioned footer instead either hides
-beneath the keyboard or rides above it, stealing height from the field being typed into.
+**Never `position: absolute`.** Either make the footer a **flex sibling below the scroll
+area** inside the `KeyboardAvoidingView` (the reference implementation — see
+`CardSetupScreen`, where the footer sits outside the `ScrollView` and therefore never
+scrolls away), or, when the button must live inside scrollable content, anchor it with
+`marginTop: 'auto'` in a `flexGrow: 1` container. An absolutely-positioned footer instead
+either hides beneath the keyboard or rides above it, stealing height from the field being
+typed into.
 
 **The primary action is always enabled.** Pressing it on an incomplete form reveals the
 field errors; it never sits inert. A permanently visible disabled button is a permanent
 refusal that never says which field is wrong — and once the action is anchored, that refusal
-is in the eye line for the whole session.
+is in the eye line for the whole session. `CardSetupScreen` already works this way
+(`disabled={isLoading}` only, with validation raised on press); `CardForm` is the outlier
+and gates on `!isValid`.
+
+**Busy is not disabled.** While a submit is in flight the button is non-interactive to
+prevent a double submit, but it keeps its **ink fill** and swaps its label for a spinner.
+Greying it out re-introduces the refusal read this rule exists to remove — a busy control
+says "working", a grey one says "no".
 
 ### Barcode view (the hero moment)
 

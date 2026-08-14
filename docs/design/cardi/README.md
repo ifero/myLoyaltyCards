@@ -10,7 +10,8 @@ run started 2026-08-11) whose scratchpad lived in `/tmp` and whose API connectio
 | ----------------------------------- | --------------------------------------------------------------------------------------------------------------------------------- |
 | `cardi-design-system.md`            | **The canonical Cardì design system.** Stitch gets a disposable render of this — this repo copy is the source of truth.           |
 | `palette-bench.html`                | Five-direction palette comparison board (01 Ink & Beam … 05 Night Market). Superseded as a _layout_ study, still valid on chrome. |
-| `stitch-prompt-01-form-pattern.txt` | The Stitch prompt that produced the working form-pattern screen. Template for the remaining seven.                                |
+| `stitch-prompts-form-states.txt`    | **The four state frames** — default / error / filled / saving. Frame 1 is the exemplar the other seven screens derive from.       |
+| `stitch-prompt-01-form-pattern.txt` | Superseded. The prompt actually sent on 2026-08-11, kept as a record — it describes a screen that does not exist.                 |
 
 ## The thesis
 
@@ -76,8 +77,9 @@ button floating in cream with nothing marking it as a footer. Decided:
 
 - Anchored bottom footer, separated by a **1px hairline rule** — the gap above is
   composition, not absence.
-- Implemented with `marginTop: 'auto'` inside `flexGrow: 1`, **never `position: absolute`**,
-  so it never fights the keyboard.
+- **Never `position: absolute`** — a flex sibling below the scroll area, or an
+  auto-top-margin anchor inside it when the button must live in scrollable content, so it
+  never fights the keyboard. See below: `CardSetupScreen` already does exactly this.
 - **Always enabled**; pressing an incomplete form reveals the field errors.
 
 Both are now in `cardi-design-system.md` (§ _The primary-action footer_, plus two new
@@ -95,13 +97,49 @@ Two code findings that fed the decision, neither fixed here:
   `AuthScreenLayout` uses the `layout.screenHorizontalMargin` token, and the DS specifies
   20px. Worth a separate pass.
 
+### Resolved 2026-08-14 — the four state frames, and the label case
+
+`stitch-prompts-form-states.txt` holds four self-contained prompts (default / error /
+filled / saving), ready to generate in sequence. States are separate frames because baking
+an error into the canonical screen would make all seven derived screens inherit a permanent
+red field. Each prompt repeats the full chrome deliberately — Stitch has no memory between
+generations, so "same as before" gets a different screen.
+
+**Form field labels are UPPERCASE** (`label-bold`, Inter 13/600/+0.02em). Ratifying what the
+generator chose by accident: the tracking already in the token is an uppercase idiom, and
+casing the label differently from its value is what lets someone parse the form's structure
+at a glance. Checked first that it wasn't a constraint problem — labels are short in both
+locales (`Store name` / `Nome negozio`), so it cost nothing either way and came down to
+voice.
+
+Writing the prompts meant reading the real screen, which turned up three things:
+
+- **`CardSetupScreen` already implements both footer rules.** Its Done button sits outside
+  the `ScrollView` as a flex sibling — a genuinely pinned footer — and it is
+  `disabled={isLoading}` only, with validation raised on press (`setStoreNameError` inside
+  `handleDone`). So yesterday's decision ratifies shipped behaviour rather than inventing
+  it, and `CardForm` is the outlier that gates on `!isValid`. The design system now cites
+  it as the reference implementation.
+- **The superseded prompt described a screen that does not exist.** It blended fields from
+  `CardForm` and `CardSetupScreen`, invented an "Add to favourites" toggle that exists in
+  neither, got the labels wrong, and called the button "Save card" when it reads "Done".
+  The one generated screen was judged good against that prompt — worth knowing before
+  trusting it.
+- **The shipped card colours are not the Cardì five.** `CARD_COLORS` in
+  `shared/theme/tokens.generated.ts` is `blue #1A73E8`, `red #E2231A`, `green #16A34A`,
+  `orange #F59E0B`, `grey #64748B` — against the DS's `#E42424 / #0C3C84 / #0C84CC /
+#0C843C / #FCCC0C`. **One of the shipped five is orange, which this system bans
+  outright.** This is not a repaint: the `CardColor` union has members (`orange`, `grey`)
+  that Cardì has no equivalent for, and existing users have cards persisted against them.
+  The tokens PR (step 5) needs a data migration decision, not just new hexes.
+
 ### Still open
 
-1. Split the form exemplar into **separate state frames** (default / error / filled /
-   saving) rather than baking an error into the canonical screen. The always-enabled CTA
-   makes the error frame load-bearing rather than optional.
-2. Rule deliberately on the **uppercase tracked labels** Stitch chose on its own — it will
-   propagate to all eight form screens.
-3. Design the **wallet empty state** (zero cards, first launch). Distinct from the form's
+1. Generate the four state frames and judge them.
+2. Design the **wallet empty state** (zero cards, first launch). Distinct from the form's
    default state; repeatedly raised, never designed.
-4. Re-verify the Stitch design system hasn't been clobbered again since 2026-08-12.
+3. Re-verify the Stitch design system hasn't been clobbered again since 2026-08-12.
+4. Decide the `orange` / `grey` → Cardì card-colour migration before the tokens PR.
+5. Three answers to the screen margin (`CardForm` 32px hardcoded, `AuthScreenLayout` token,
+   DS 20px) and the busy-button divergence — the shared `Button` greys its fill when
+   `loading`, where the DS now says busy keeps the ink.

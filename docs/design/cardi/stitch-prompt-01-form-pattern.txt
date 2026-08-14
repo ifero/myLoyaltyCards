@@ -1,3 +1,16 @@
+SUPERSEDED — kept as the record of what was actually sent on 2026-08-11, not as a template.
+Use stitch-prompts-form-states.txt instead.
+
+It describes a screen that does not exist. Checked against the components on 2026-08-14:
+the fields below are a blend of two different components (CardForm and CardSetupScreen),
+"Add to favourites" was invented outright — there is no favourites control on either — the
+labels are wrong ("Store Name" is "Card Name" in CardForm and "Store name" in
+CardSetupScreen), there is no barcode-format row on the add-card screen, and the button
+reads "Done", not "Save card". The FOOTER block below has since been corrected in place for
+the anchored-footer rule; everything above it has not.
+
+---
+
 Design ONE mobile screen at 393x852, light mode: the "Add Card — details" form for Cardì. This screen is the app's form pattern; seven other screens will be derived from it, so the field rhythm matters more than any flourish.
 
 There is NO bottom tab bar and NO floating action button on this screen. Do not draw either. Do not add an illustration.
