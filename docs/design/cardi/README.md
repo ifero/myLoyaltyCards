@@ -158,6 +158,35 @@ later asset edits do not propagate.
 - The canvas holds a **780×1768** frame and a **390×852** one — neither is the mandated
   393×852.
 
+### 2026-08-14 — the push was attempted, and the DS compressed it
+
+Pushed the full repo designMd to the asset. Two new mechanics, both worse than the ones
+already recorded:
+
+- **`update_design_system` is asynchronous.** It returns
+  `projects/{id}/sessions/{session_id}` — a session, not the asset — and the asset is
+  unchanged when read back immediately. It settled about a minute later.
+- **The write triggers an agent regeneration that SUMMARISES your designMd.** The asset went
+  7 → 8 and what landed is a paraphrase, not the text sent. Casualties, in one round trip:
+  the entire **primary-action footer** section, the **uppercase label** rule, the thesis
+  sentence _"Playfulness in Cardì comes from big, uncropped, correctly-coloured brand
+  marks — a layout decision, never a palette one"_, and six Forbidden entries including both
+  new ones and _"replacing the home grid with a single-column list of rows"_. `ROUND_TWELVE`
+  was reverted to `ROUND_EIGHT` and the tonal palette is untouched.
+
+Net: **v8 holds fewer rules than v7 did.** The push cost more than it bought.
+
+The conclusion is structural rather than procedural: **the Stitch design system cannot hold
+this system.** It compresses on every write, and it drops the longest and most recently
+added prose first — which is always the rule you just fought for. Treat it as a lossy cache
+of the hard constraints, never the contract. Anything that must survive belongs in the
+prompt, spelled out, every time. That is now load-bearing rather than belt-and-braces: the
+four state prompts are self-sufficient by design and do not depend on the DS being right.
+
+If it is worth another attempt, send a deliberately **short** designMd — prohibitions only,
+no rationale — on the theory that compression is length-driven and a flat constraint list is
+the highest-signal shape a generator can be given anyway.
+
 Before generating, in order:
 
 1. Push the current repo designMd to the asset (`update_design_system`, **full payload** —
