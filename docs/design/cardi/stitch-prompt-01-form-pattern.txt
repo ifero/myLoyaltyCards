@@ -17,8 +17,12 @@ BODY — single column, 20px side margins, 8px-grid vertical rhythm, plenty of a
 
 5. A row reading "Add to favourites" on the left with a switch on the right, separated from the fields above by a hairline rule.
 
-FOOTER
-A full-width primary button labelled "Save card": ink #181824 fill, white text, 52px tall, 12px radius. It sits in the page flow above the safe area with a 20px margin — it does not float and it is not a FAB.
+FOOTER — anchored to the BOTTOM of the frame.
+A 1px hairline rule #D6D6CB spanning the full width, then below it a full-width primary button labelled "Save card": ink #181824 fill, white text, 52px tall, 12px radius, 20px side margins, sitting above the safe area.
+
+Leave the space between the "Add to favourites" row and that hairline EMPTY cream. That gap is deliberate — do not fill it, and do not move the button up to meet the last field.
+
+The button is in the page flow: it does not float, it is not a FAB, and it is not a shadowed or tinted bar. Draw it fully enabled at full ink #181824 — never greyed out or at reduced opacity.
 
 TONE
 This screen carries no brand colour at all, so it must stay quiet: cream #F0F0E8 ground, white input surfaces, ink #181824 text, hairline outlines, flat — no shadows, no gradients. The signature yellow #FCCC0C appears nowhere here except as one of the five colour swatches. Headline in Space Grotesk, everything else Inter.

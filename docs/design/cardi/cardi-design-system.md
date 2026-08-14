@@ -237,10 +237,34 @@ top-right, so it stays legible on any brand colour including yellow.
 
 ### Buttons
 
-- **Primary:** ink fill, white text, 12px radius, 52px tall, full width.
+- **Primary:** ink fill, white text, 12px radius, 52px tall, full width, anchored in the
+  footer (see below).
 - **Secondary:** transparent with a 1px ink outline.
 - **Destructive:** borderless, `#C41E1E` text, trailing icon.
 - **No FAB. Ever.**
+
+### The primary-action footer
+
+Every screen with a primary action **anchors it to the bottom of the frame**, separated from
+the content above by a **1px hairline rule** (`#D6D6CB` light, `#3A3A48` dark) spanning the
+full frame width. This is not a floating button and not a FAB — it is the last _region_ of
+the page, in flow. The bottom is where the thumb already is, and holding one position across
+all eight form-pattern screens is worth more than any single screen's composition.
+
+The space this leaves above the rule on a short form is **composition, not absence.** The
+hairline is what makes it read that way. Do not close the gap by letting the button rise to
+meet the last field — that trades a predictable commit position for a per-screen one.
+
+Anchor it with `marginTop: 'auto'` inside a `flexGrow: 1` scroll container — **never
+`position: absolute`.** The button then owns the bottom edge whenever the form is short
+(which is every screen in this pattern) and scrolls naturally the moment content grows or
+the keyboard shrinks the viewport. An absolutely-positioned footer instead either hides
+beneath the keyboard or rides above it, stealing height from the field being typed into.
+
+**The primary action is always enabled.** Pressing it on an incomplete form reveals the
+field errors; it never sits inert. A permanently visible disabled button is a permanent
+refusal that never says which field is wrong — and once the action is anchored, that refusal
+is in the eye line for the whole session.
 
 ### Barcode view (the hero moment)
 
@@ -301,4 +325,6 @@ as chrome · **anything overlaying a barcode, especially a drawn beam or scan-li
 **a saturated surround on the barcode screen** · **tinting, washing or recolouring a
 branded card tile** · **replacing the home grid with a single-column list of rows** ·
 **a large yellow chrome surface next to the card grid** · thin font weights · desktop or
-tablet frames · any frame that is not 393 × 852 · per-screen invented illustration styles.
+tablet frames · any frame that is not 393 × 852 · per-screen invented illustration styles ·
+**a primary action that floats over content or is positioned absolutely** · **a disabled
+button as a form's resting state**.

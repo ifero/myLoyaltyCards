@@ -64,14 +64,44 @@ Wave B is blocked until the illustration set exists.
 Stitch project `7004325876123157178` ("Cardì"), design system asset `484682383639656270`
 ("Cardì — Ink & Beam").
 
-Open, unanswered when the connection dropped:
+### Resolved 2026-08-14 — the primary-action footer
 
-1. **"Why shouldn't we stick the add button to the bottom? It's the most intuitive thing."**
-   — asked 2026-08-13, never answered.
-2. Split the form exemplar into **separate state frames** (default / error / filled /
-   saving) rather than baking an error into the canonical screen.
-3. Rule deliberately on the **uppercase tracked labels** Stitch chose on its own — it will
+> _"Why shouldn't we stick the add button to the bottom? It's the most intuitive thing."_
+> — asked 2026-08-13, answered after the carry-over.
+
+**Yes, anchor it.** The objection it was pushing back on ("a swimming pool of nothing… a
+button glued to the floor") made a real observation with the wrong cause attached: the gap
+and the anchoring are the _same thing_, and what made the gap read as unfinished was a lone
+button floating in cream with nothing marking it as a footer. Decided:
+
+- Anchored bottom footer, separated by a **1px hairline rule** — the gap above is
+  composition, not absence.
+- Implemented with `marginTop: 'auto'` inside `flexGrow: 1`, **never `position: absolute`**,
+  so it never fights the keyboard.
+- **Always enabled**; pressing an incomplete form reveals the field errors.
+
+Both are now in `cardi-design-system.md` (§ _The primary-action footer_, plus two new
+Forbidden entries) and in the prompt template's FOOTER block.
+
+Two code findings that fed the decision, neither fixed here:
+
+- The app has **two form treatments, not one**. `AuthScreenLayout` — the shared layout for
+  6 of the 8 pattern screens — centres its content vertically (`centerContent` defaults to
+  `true`), while `CardForm` is top-aligned with the button trailing the last field and
+  `paddingBottom: 100` after it. Neither is bottom-anchored, so the anchored footer isn't
+  fighting a shipped convention; it's filling a vacuum and unifying a fork. That unification
+  is the actual implementation story.
+- **Three answers to the screen margin:** `CardForm` hardcodes `paddingHorizontal: 32`,
+  `AuthScreenLayout` uses the `layout.screenHorizontalMargin` token, and the DS specifies
+  20px. Worth a separate pass.
+
+### Still open
+
+1. Split the form exemplar into **separate state frames** (default / error / filled /
+   saving) rather than baking an error into the canonical screen. The always-enabled CTA
+   makes the error frame load-bearing rather than optional.
+2. Rule deliberately on the **uppercase tracked labels** Stitch chose on its own — it will
    propagate to all eight form screens.
-4. Design the **wallet empty state** (zero cards, first launch). Distinct from the form's
+3. Design the **wallet empty state** (zero cards, first launch). Distinct from the form's
    default state; repeatedly raised, never designed.
-5. Re-verify the Stitch design system hasn't been clobbered again since 2026-08-12.
+4. Re-verify the Stitch design system hasn't been clobbered again since 2026-08-12.
