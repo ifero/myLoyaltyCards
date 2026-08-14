@@ -133,9 +133,49 @@ Writing the prompts meant reading the real screen, which turned up three things:
   that Cardì has no equivalent for, and existing users have cards persisted against them.
   The tokens PR (step 5) needs a data migration decision, not just new hexes.
 
+### Stitch state, verified 2026-08-14 — the frames are BLOCKED until this is fixed
+
+Read back over MCP. The asset and the project theme have diverged, which is the documented
+trap: activating a design system snapshots its designMd into `project.designTheme`, and
+later asset edits do not propagate.
+
+- **Asset `484682383639656270` (now version 7) — designMd is CORRECT.** It carries "The
+  content is the colour", Card **tile**, `CUSTOM CARDS ONLY`, the Esselunga collision and
+  the full Forbidden list. The 2026-08-12 corrections survived.
+- **`project.designTheme.designMd` is STALE — it is the pre-correction text.** It still
+  says _"The beam motif may animate once across the barcode on open"_ and _"Never a
+  two-column grid of cards on mobile"_, still calls the component a Card **row**, still
+  marks the accents `DATA ONLY`, and has no content-is-the-colour section at all. Its
+  Forbidden list bans two-column card grids. **This is what the generator reads.**
+- **The tonal palette is mangled in both**, unchanged since 2026-08-12: `primary #000000`,
+  `secondary #375ca6`, `tertiary #735c00` (brown) with `#cfa700` mustard, `surface #fafaf2`
+  instead of cream, `error #ba1a1a` instead of `#C41E1E`, `ROUND_EIGHT` instead of 12px.
+  The overrides are all set correctly and all ignored. This is why every prompt spells
+  literal hexes.
+- The asset also carries the competing **`styleGuidelines`** field. It currently paraphrases
+  the corrected designMd rather than contradicting it, but it drops the content-is-the-colour
+  thesis and the Esselunga collision.
+- The canvas holds a **780×1768** frame and a **390×852** one — neither is the mandated
+  393×852.
+
+Before generating, in order:
+
+1. Push the current repo designMd to the asset (`update_design_system`, **full payload** —
+   it replaces the whole object). It needs the two new sections that exist only in the repo:
+   the primary-action footer and the uppercase label rule.
+2. **Re-apply the design system in the Stitch UI** so `project.designTheme` picks up the
+   asset. This step is UI-only and cannot be done over MCP — and it is the step that has
+   been missed.
+3. Re-read `get_project` and confirm `designTheme.designMd` no longer contains "may animate
+   once across the barcode".
+
+The asset went from version 5 on 2026-08-12 to version 7, and the project's `updateTime` is
+today — so something is still editing it. The original desktop session was still running as
+PID 24364; quitting it removes one candidate.
+
 ### Still open
 
-1. Generate the four state frames and judge them.
+1. Generate the four state frames and judge them — blocked on the re-apply above.
 2. Design the **wallet empty state** (zero cards, first launch). Distinct from the form's
    default state; repeatedly raised, never designed.
 3. Re-verify the Stitch design system hasn't been clobbered again since 2026-08-12.
