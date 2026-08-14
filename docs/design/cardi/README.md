@@ -29,7 +29,7 @@ terracotta renamed — and it's Monzo's, on a card app).
 |     |                           |                                                         |
 | --- | ------------------------- | ------------------------------------------------------- |
 | ✅  | 0. Design system          | done — this folder                                      |
-| ✅  | 1. Form pattern exemplar  | generated, refined once                                 |
+| ✅  | 1. Form pattern exemplar  | all **four state frames** generated + judged 2026-08-14 |
 | →   | 2. Remaining screens      | 17 own-screens reduce to **4 patterns**                 |
 |     | 3. Icon set               | inventory falls out of 1–2                              |
 |     | 4. Illustrations          | commissioned as a set; onboarding + empty states only   |
@@ -58,7 +58,16 @@ Wave B is blocked until the illustration set exists.
   `SPACE_GROTESK`.
 - Theme-level `typography`/`spacing` maps are accepted then not persisted — keep them in
   the designMd frontmatter.
-- `generate_screen_from_text` over MCP times out; the web prompt box is the reliable path.
+- `generate_screen_from_text` over MCP times out **and never lands a screen** — verified
+  2026-08-14 with three attempts and 13 minutes of polling. Generation _from zero_ is what
+  fails.
+- **`generate_variants` is the working MCP route.** Seed it with an existing screen id and it
+  returns the finished screen synchronously in the tool result. Use
+  `creativeRange: REFINE` + `aspects: ["TEXT_CONTENT"]` + `variantCount: 1`, and describe
+  only the delta. See § _UNBLOCKED_ below.
+- **Both generate calls take `designSystem: "assets/<id>"` and `modelId: "GEMINI_3_1_PRO"`.**
+  Passing the asset id points at the live asset instead of the project's rotting snapshot, so
+  the UI "apply" step is not needed to generate correctly.
 
 ## Where it stopped
 
@@ -133,7 +142,13 @@ Writing the prompts meant reading the real screen, which turned up three things:
   that Cardì has no equivalent for, and existing users have cards persisted against them.
   The tokens PR (step 5) needs a data migration decision, not just new hexes.
 
-### Stitch state, verified 2026-08-14 — the frames are BLOCKED until this is fixed
+### Stitch state, verified 2026-08-14 — the divergence is real, but it does NOT block generating
+
+> **Superseded in part.** Everything below about the asset/theme divergence is still true and
+> re-verified today. The conclusion that it _blocks the frames_ was wrong: pass the asset id
+> as `designSystem` on the generate call and the stale project theme is bypassed entirely.
+> See "UNBLOCKED" below. The UI re-apply is still worth doing eventually so the Stitch canvas
+> and the repo agree, but nothing is waiting on it.
 
 Read back over MCP. The asset and the project theme have diverged, which is the documented
 trap: activating a design system snapshots its designMd into `project.designTheme`, and
@@ -187,26 +202,96 @@ If it is worth another attempt, send a deliberately **short** designMd — prohi
 no rationale — on the theory that compression is length-driven and a flat constraint list is
 the highest-signal shape a generator can be given anyway.
 
-Before generating, in order:
+~~Before generating, in order:~~ **This three-step ritual turned out to be unnecessary — see
+"UNBLOCKED" below. Kept as a record of the assumption.**
 
-1. Push the current repo designMd to the asset (`update_design_system`, **full payload** —
-   it replaces the whole object). It needs the two new sections that exist only in the repo:
-   the primary-action footer and the uppercase label rule.
-2. **Re-apply the design system in the Stitch UI** so `project.designTheme` picks up the
-   asset. This step is UI-only and cannot be done over MCP — and it is the step that has
-   been missed.
-3. Re-read `get_project` and confirm `designTheme.designMd` no longer contains "may animate
-   once across the barcode".
+1. ~~Push the current repo designMd to the asset~~ — actively harmful; the push compresses.
+2. ~~Re-apply the design system in the Stitch UI~~ — not required for generation; pass
+   `designSystem: "assets/484682383639656270"` on the call instead.
+3. ~~Re-read `get_project` and confirm~~ — `project.designTheme.designMd` is, as of
+   2026-08-14, **still stale** (still contains "may animate once across the barcode"). The
+   four frames were generated correctly anyway.
 
 The asset went from version 5 on 2026-08-12 to version 7, and the project's `updateTime` is
 today — so something is still editing it. The original desktop session was still running as
 PID 24364; quitting it removes one candidate.
 
+### 2026-08-14 — UNBLOCKED. All four state frames exist. The route is `generate_variants`.
+
+The re-apply above was never the only door, and the frames were never actually blocked.
+Two findings, in order of importance:
+
+**1. `generate_variants` works over MCP where `generate_screen_from_text` does not.**
+
+| tool                        | seed               | result over MCP                                                    |
+| --------------------------- | ------------------ | ------------------------------------------------------------------ |
+| `generate_screen_from_text` | nothing            | timed out ×3, and **no screen ever appeared** after 13 min polling |
+| `generate_variants`         | an existing screen | returned **synchronously and COMPLETE** ×3, under ~2 min each      |
+
+So the old note ("generate over MCP times out; the web prompt box is the reliable path") is
+correct but incomplete — it's _generation from zero_ that fails. Generation _from a seed_
+returns the finished screen, its id, and its screenshot url in the tool result itself. No
+polling, no browser, no login.
+
+`generate_variants` also takes `variantOptions.creativeRange: REFINE` ("subtle refinements,
+closely adhering to original") and an `aspects` allow-list — pass `["TEXT_CONTENT"]` and the
+tool is _structurally incapable_ of drifting the layout. The set-level bar ("all four frames
+identical except where intended") stops being something you inspect for afterwards and
+becomes something the call cannot violate. Use `variantCount: 1` — the count produces N
+variations of one prompt, not N different states.
+
+**2. Both generation tools take an explicit `designSystem` asset id and a `modelId`.**
+
+`designSystem: "assets/484682383639656270"` points the generator at the _asset_, so the stale
+`project.designTheme` snapshot never enters the picture and the UI re-apply is unnecessary
+for generation. `modelId: "GEMINI_3_1_PRO"` removes the "check the model selector" step.
+This is the snapshot-versus-reference distinction: the UI's _apply_ copies the designMd into
+the project and it rots; the API parameter _points_ at the live asset.
+
+(The asset is still v8, still the compressed one, and the tonal palette is still mangled.
+It did not matter — every rule that mattered was in the prompt. This is the compression
+finding holding up under test.)
+
+#### The four frames, and how they were seeded
+
+Seed chain — each hop asks for the smallest possible delta:
+`DEFAULT → ERROR`, and `DEFAULT → FILLED → SAVING`.
+
+| frame     | screen id                          | seeded from | local copy              |
+| --------- | ---------------------------------- | ----------- | ----------------------- |
+| 1 DEFAULT | `1bed6a8525e44b7fbad9cf85b467c92a` | —           | `frames/01-default.png` |
+| 2 ERROR   | `66fd99fdc0784a469a1d198a52339e20` | frame 1     | `frames/02-error.png`   |
+| 3 FILLED  | `a541546fbb6348c4aa7d35a46092fe5b` | frame 1     | `frames/03-filled.png`  |
+| 4 SAVING  | `cafd14e73078487ba0ef969d79204ec3` | **frame 3** | `frames/04-saving.png`  |
+
+The PNGs in `frames/` are 711 × 1600 renders committed to the repo because Stitch's
+screenshot URLs are ephemeral `googleusercontent` links that will rot. Fetch a fresh, larger
+render by appending `=s1600` (or `=s2048`) to a screenshot `downloadUrl`.
+
+Frame 4 is seeded from frame 3, not from frame 1 — it is "identical to filled except the
+button", so it should never see the empty form. That is why 3 and 4 are pixel-siblings.
+
+Frame 1 already existed and was already correct; it was generated in the web UI before the
+theme divergence was noticed, which is itself the proof that a self-sufficient prompt beats a
+correct design system.
+
+**All four judged and accepted.** Header, labels, field rhythm and the deliberate empty gap
+are identical across the set; the error frame's card number sits one line lower only because
+the error message occupies a line. Specifically verified: no summary banner or toast on the
+error frame, the `STORE NAME` label stays ink rather than turning red, the Done button is at
+full ink and enabled in all four, the saving button is a white spinner on full ink with no
+"Saving" text and no scrim, and the filled frame carries no success ticks or green outlines.
+
+**The transferable rule:** _generators hallucinate in proportion to how much you leave
+undecided._ Seed from a screen, allow-list the aspects, spell out the deltas, and forbid the
+specific embellishment you fear by name.
+
 ### Still open
 
-1. Generate the four state frames and judge them — blocked on the re-apply above.
+1. ~~Generate the four state frames and judge them~~ — **done 2026-08-14**, see above.
 2. Design the **wallet empty state** (zero cards, first launch). Distinct from the form's
-   default state; repeatedly raised, never designed.
+   default state; repeatedly raised, never designed. This is now the next thing to make,
+   and it needs a _new_ seed — no existing screen is close enough to vary from.
 3. Re-verify the Stitch design system hasn't been clobbered again since 2026-08-12.
 4. Decide the `orange` / `grey` → Cardì card-colour migration before the tokens PR.
 5. Three answers to the screen margin (`CardForm` 32px hardcoded, `AuthScreenLayout` token,

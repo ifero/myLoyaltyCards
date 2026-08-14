@@ -7,12 +7,26 @@ inherit a permanent red field.
 
 Frame 1 (DEFAULT) is THE exemplar. The other three are its siblings.
 
-Before generating:
-  - Confirm the model selector is on 3.1 Pro.
-  - Confirm the Cardì design system is ACTIVE as the project theme, not merely present as an
-    asset — applying it afterwards only re-skins colour, it does not re-architect layout.
+STATUS 2026-08-14: ALL FOUR FRAMES GENERATED AND ACCEPTED. See README.md § "UNBLOCKED" for
+the screen ids. These prompts are kept as the record of intent and as the source for
+regenerating any frame from scratch.
+
+How they were actually made — do this again rather than re-running the prompts verbatim:
+  - Frame 1 was generated from its full prompt (below). Frames 2-4 were made with
+    `generate_variants` SEEDED from an existing frame, with creativeRange REFINE and
+    aspects ["TEXT_CONTENT"], asking only for the delta. That route returns a completed
+    screen synchronously over MCP; `generate_screen_from_text` from zero does not return
+    at all.
+  - Seed chain: DEFAULT -> ERROR, and DEFAULT -> FILLED -> SAVING.
+  - Pass `designSystem: "assets/484682383639656270"` and `modelId: "GEMINI_3_1_PRO"` on the
+    call. This makes the two checks below obsolete:
+
+Before generating (OBSOLETE — kept for context):
+  - ~~Confirm the model selector is on 3.1 Pro.~~ pass modelId instead.
+  - ~~Confirm the Cardì design system is ACTIVE as the project theme.~~ pass the asset id as
+    designSystem instead; the stale project theme is then irrelevant.
   - Re-verify the asset hasn't been clobbered by Stitch's in-app agent since it was last
-    pushed.
+    pushed. (Still worth doing, but not load-bearing — the prompts carry every rule.)
 
 Every prompt below is deliberately self-contained and repeats the full chrome. Stitch has no
 memory between generations — it re-invents the form every time — so a prompt that says
