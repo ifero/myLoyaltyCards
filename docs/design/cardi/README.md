@@ -6,12 +6,14 @@ run started 2026-08-11) whose scratchpad lived in `/tmp` and whose API connectio
 
 ## Files
 
-| File                                | What it is                                                                                                                        |
-| ----------------------------------- | --------------------------------------------------------------------------------------------------------------------------------- |
-| `cardi-design-system.md`            | **The canonical Cardì design system.** Stitch gets a disposable render of this — this repo copy is the source of truth.           |
-| `palette-bench.html`                | Five-direction palette comparison board (01 Ink & Beam … 05 Night Market). Superseded as a _layout_ study, still valid on chrome. |
-| `stitch-prompts-form-states.txt`    | **The four state frames** — default / error / filled / saving. Frame 1 is the exemplar the other seven screens derive from.       |
-| `stitch-prompt-01-form-pattern.txt` | Superseded. The prompt actually sent on 2026-08-11, kept as a record — it describes a screen that does not exist.                 |
+| File                                | What it is                                                                                                                                                                             |
+| ----------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `cardi-design-system.md`            | **The canonical Cardì design system.** Stitch gets a disposable render of this — this repo copy is the source of truth.                                                                |
+| `palette-bench.html`                | Five-direction palette comparison board (01 Ink & Beam … 05 Night Market). Superseded as a _layout_ study, still valid on chrome.                                                      |
+| `stitch-prompts-form-states.txt`    | **The four state frames** — default / error / filled / saving. Frame 1 is the exemplar the other seven screens derive from.                                                            |
+| `stitch-prompt-01-form-pattern.txt` | Superseded. The prompt actually sent on 2026-08-11, kept as a record — it describes a screen that does not exist.                                                                      |
+| `frames/cardi-form-frames.html`     | **The reference implementation.** Hand-authored, exactly 393 × 852, all four states. This is what screens derive from — not the PNGs. Open with `?probe` for a measured geometry dump. |
+| `frames/0*.png`                     | Stitch's actual output, kept as evidence. Faithful to what the generator produced, including three defects it cannot avoid — see _The 2026-08-15 audit_.                               |
 
 ## The thesis
 
@@ -275,25 +277,93 @@ Frame 1 already existed and was already correct; it was generated in the web UI 
 theme divergence was noticed, which is itself the proof that a self-sufficient prompt beats a
 correct design system.
 
-**All four judged and accepted.** Header, labels, field rhythm and the deliberate empty gap
-are identical across the set; the error frame's card number sits one line lower only because
-the error message occupies a line. Specifically verified: no summary banner or toast on the
-error frame, the `STORE NAME` label stays ink rather than turning red, the Done button is at
-full ink and enabled in all four, the saving button is a white spinner on full ink with no
-"Saving" text and no scrim, and the filled frame carries no success ticks or green outlines.
+**All four judged and accepted, by eye.** Header, labels, field rhythm and the deliberate
+empty gap are identical across the set; the error frame's card number sits one line lower
+only because the error message occupies a line. Specifically verified: no summary banner or
+toast on the error frame, the `STORE NAME` label stays ink rather than turning red, the Done
+button is at full ink and enabled in all four, the saving button is a spinner on full ink
+with no "Saving" text and no scrim, and the filled frame carries no success ticks or green
+outlines.
+
+> **Corrected 2026-08-15.** This paragraph originally claimed the saving button was "a
+> **white** spinner". Measured, it is `#DDDDDF` — the other three frames render white text at
+> exactly `#FFFFFF`, so it is the one place white is not white. Every structural claim above
+> survived the audit; three colour/geometry claims did not. See below. The lesson is narrow
+> and worth keeping: _"judged and accepted" recorded an eyeball pass as though it were a
+> measurement._
 
 **The transferable rule:** _generators hallucinate in proportion to how much you leave
 undecided._ Seed from a screen, allow-list the aspects, spell out the deltas, and forbid the
 specific embellishment you fear by name.
 
+### The 2026-08-15 audit — the frames were measured, and the reference moved to HTML
+
+The four frames had been accepted by eye. Measuring them changed the conclusion. Method:
+sample the PNGs with Pillow and take the **modal** colour of a region rather than the most
+saturated pixel — antialiasing against cream blends toward the background, so a max-saturation
+sample overshoots and invents deviations that aren't there.
+
+| check                         | result                                                                                         |
+| ----------------------------- | ---------------------------------------------------------------------------------------------- |
+| cream, ink, all five swatches | **pixel-exact, `dmax=0`**, in all four frames                                                  |
+| frame geometry                | `711 × 1600` = **393 × 884** — `+32px` against the mandated 393 × 852, identically in all four |
+| error red (frame 2)           | **≈`#BF0000`** (89% of border pixels) against a specified `#C41E1E`                            |
+| saving spinner (frame 4)      | brightest pixel **`#DDDDDF`**; frames 1–3 reach `#FFFFFF`                                      |
+| footer hairline               | `#D3D3C8` vs `#D6D6CB` — within blend noise, fine                                              |
+
+**Stitch cannot draw this frame.** Not "did not" — cannot. It injects
+`body { min-height: max(884px, 100dvh) }` into every screen it generates, which is exactly
+the +32px measured above. The design system's own Forbidden list bans _"any frame that is not
+393 × 852"_, so the generator is structurally incapable of obeying the first rule in the
+document. Two further defects in the same output, neither fixable by prompting: a
+`position: fixed` footer (forbidden by § _The primary-action footer_) and a back chevron
+pulled outside the 20px margin with a negative margin.
+
+**So the reference moved.** `frames/cardi-form-frames.html` is hand-authored, exactly
+393 × 852, and is now what the remaining screens derive from. The PNGs stay as evidence of
+what Stitch produced. This does not retire Stitch — it stays the right tool for _exploring_ a
+screen that doesn't exist yet (the wallet empty state still needs a fresh seed). It is no
+longer the tool for _geometry and chrome_.
+
+**The literal-hex rule needs one caveat.** Six literal hexes came through byte-exact; the
+seventh did not. The difference is not literalness — it is whether the colour collides with a
+**semantic role the theme already owns.** `error` is a Material role (the theme holds
+`#ba1a1a`), and it is the one that drifted; the card accents, cream and ink own no role and
+passed through untouched. Amended rule: _spell literal hexes — and expect the ones that
+shadow a theme token to be overridden anyway._
+
+**The safe-area insets are now drawn.** They were reserved at the correct 59px / 34px but left
+blank, which made a correct measurement read as careless padding — and invited the actively
+wrong fix of shrinking it, which would push content under the live status bar at build time.
+The 59px stays; it now carries a clock and indicators, and the bottom inset carries the home
+indicator. Both are ink-only system chrome, never beam, and never controls.
+
+The geometry harness that used to live in a duplicate `_probe.html` is now a `?probe`-guarded
+block inside the reference file itself — two near-identical 575-line copies could only drift.
+Open `cardi-form-frames.html?probe`; expect `size=393x852`, `chevronL=20.0`, `labelL=20.0`,
+`inputL=20.0`, `btnL=20.0`, `btnH=52` on all four.
+
 ### Still open
 
-1. ~~Generate the four state frames and judge them~~ — **done 2026-08-14**, see above.
+1. ~~Generate the four state frames and judge them~~ — **done 2026-08-14**; measured and
+   corrected 2026-08-15, reference moved to HTML. Do **not** regenerate the PNGs to chase the
+   32px: Stitch injects the 884 floor, so a regenerated frame would come back with the same
+   defect. That door is closed, deliberately.
 2. Design the **wallet empty state** (zero cards, first launch). Distinct from the form's
    default state; repeatedly raised, never designed. This is now the next thing to make,
    and it needs a _new_ seed — no existing screen is close enough to vary from.
 3. Re-verify the Stitch design system hasn't been clobbered again since 2026-08-12.
-4. Decide the `orange` / `grey` → Cardì card-colour migration before the tokens PR.
-5. Three answers to the screen margin (`CardForm` 32px hardcoded, `AuthScreenLayout` token,
+4. **The Stitch canvas holds a decoy.** On 2026-08-15 `apply_design_system` was run against
+   both canvas screens — it succeeded, minting new screen ids and re-theming them through
+   `polish_edit_theme_agent`. But the Add Card screen on that canvas is the **superseded**
+   design (barcode-format row, "Save card", an invented favourites toggle, a baked-in red
+   error). It is now correctly themed and structurally wrong — freshly painted, and therefore
+   more likely to be trusted than it was before. The four good frames are not on that canvas.
+   Either clear it or label it before anyone re-derives from it.
+   Also confirmed the same day: `apply_design_system` is **per-screen only** — it does not
+   update `project.designTheme`, which remains stale. There is no MCP path to the project
+   default; that really is UI-only, and the canvas is currently inert to synthetic clicks.
+5. Decide the `orange` / `grey` → Cardì card-colour migration before the tokens PR.
+6. Three answers to the screen margin (`CardForm` 32px hardcoded, `AuthScreenLayout` token,
    DS 20px) and the busy-button divergence — the shared `Button` greys its fill when
    `loading`, where the DS now says busy keeps the ink.

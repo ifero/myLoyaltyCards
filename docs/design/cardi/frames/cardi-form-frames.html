@@ -1,0 +1,994 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Cardì — form pattern, four state frames</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Space+Grotesk:wght@700&family=JetBrains+Mono:wght@500&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      /* ------------------------------------------------------------------
+         Cardì — form pattern reference frames.
+
+         Hand-authored to the design system, NOT generated. Stitch injects
+         `body { min-height: max(884px, 100dvh) }` into every screen it makes,
+         so it can never emit the mandated 393 x 852 frame. It also produced a
+         `position: fixed` footer (explicitly forbidden) and pulled the back
+         chevron outside the 20px screen margin with a negative margin.
+
+         This file is the corrected geometry. Every number below is from
+         cardi-design-system.md.
+         ------------------------------------------------------------------ */
+
+      :root {
+        --ink: #181824;
+        --beam: #fccc0c;
+        --cream: #f0f0e8;
+        --white: #ffffff;
+        --hairline: #d6d6cb;
+        --placeholder: #55555f;
+        --error: #c41e1e;
+
+        --swatch-red: #e42424;
+        --swatch-blue: #0c3c84;
+        --swatch-azure: #0c84cc;
+        --swatch-green: #0c843c;
+        --swatch-yellow: #fccc0c;
+
+        --screen-margin: 20px;
+        --touch: 48px;
+        --radius-control: 12px;
+        --safe-top: 59px;
+        --safe-bottom: 34px;
+        --header-h: 56px;
+      }
+
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+
+      body {
+        background: #c9c9c2;
+        font-family: Inter, system-ui, sans-serif;
+        padding: 48px 32px;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 48px;
+        justify-content: center;
+        align-items: flex-start;
+      }
+
+      .plate {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        align-items: center;
+      }
+
+      .plate figcaption {
+        font:
+          600 12px/1.4 Inter,
+          sans-serif;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: #3d3d46;
+      }
+
+      /* ---- the frame: exactly 393 x 852, never anything else ---- */
+      .frame {
+        width: 393px;
+        height: 852px;
+        background: var(--cream);
+        color: var(--ink);
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+        position: relative;
+      }
+
+      /* Reserved system insets — 59px top / 34px bottom, the real values for a
+         393 x 852 Dynamic Island device.
+
+         These were originally left blank. That was a mistake of presentation,
+         not of measurement: on a real phone the top inset is OCCUPIED by the
+         clock and indicators, so drawing it empty makes a correct 59px read as
+         careless padding, and invites the exact wrong fix (shrink it — which
+         would push content under the live status bar at build time).
+
+         So the inset stays 59px and gets its real contents. The status bar is
+         SYSTEM chrome, not ours: ink only, no beam, and nothing here is a
+         control. Same for the home indicator below. */
+      .safe-top {
+        height: var(--safe-top);
+        flex: 0 0 auto;
+      }
+      .safe-bottom {
+        height: var(--safe-bottom);
+        flex: 0 0 auto;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .statusbar {
+        height: 100%;
+        padding: 14px var(--screen-margin) 0;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        color: var(--ink);
+      }
+
+      .statusbar .clock {
+        font-family: Inter, sans-serif;
+        font-size: 15px;
+        font-weight: 600;
+        letter-spacing: 0.01em;
+        font-variant-numeric: tabular-nums;
+      }
+
+      .statusbar .indicators {
+        display: flex;
+        align-items: center;
+        gap: 5px;
+      }
+
+      .statusbar svg {
+        display: block;
+        fill: currentColor;
+      }
+
+      /* The home indicator: ink at 85%, never full black, so it reads as
+         system furniture rather than content. */
+      .home-indicator {
+        width: 140px;
+        height: 5px;
+        border-radius: 999px;
+        background: var(--ink);
+        opacity: 0.85;
+      }
+
+      /* ---- header ----
+         Padding matches the body exactly.
+
+         The back chevron is optically aligned, not box-aligned. A chevron drawn
+         inside a square 24px icon box carries ~9px of empty left bearing, so
+         box-aligning it to the margin leaves the visible stroke sitting ~9px
+         inboard of the labels beneath — which is exactly what the generated
+         frames did, and what reads as "the header margins are off".
+
+         Fix: a tight viewBox so the glyph fills its own box, then bleed the 48px
+         touch target left to the frame edge while padding the content back to
+         the 20px margin. Ink lands on 20px; the target stays 48px and gains
+         edge reachability. */
+      .header {
+        height: var(--header-h);
+        flex: 0 0 auto;
+        padding: 0 var(--screen-margin);
+        display: grid;
+        grid-template-columns: var(--touch) 1fr var(--touch);
+        align-items: center;
+      }
+
+      .back {
+        width: var(--touch);
+        height: var(--touch);
+        margin-left: calc(-1 * var(--screen-margin));
+        padding-left: var(--screen-margin);
+        display: flex;
+        align-items: center;
+        justify-content: flex-start;
+        background: none;
+        border: 0;
+        cursor: pointer;
+        color: var(--ink);
+      }
+
+      .back svg {
+        width: 11px;
+        height: 20px;
+        display: block;
+      }
+
+      .title {
+        font-family: 'Space Grotesk', sans-serif;
+        font-weight: 700;
+        font-size: 24px;
+        line-height: 32px;
+        letter-spacing: -0.01em;
+        text-align: center;
+        color: var(--ink);
+      }
+
+      /* ---- body ---- */
+      .body {
+        flex: 1 1 auto;
+        min-height: 0;
+        padding: 24px var(--screen-margin) 0;
+        display: flex;
+        flex-direction: column;
+        gap: 32px;
+      }
+
+      .field {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+
+      .label {
+        font-family: Inter, sans-serif;
+        font-weight: 600;
+        font-size: 13px;
+        line-height: 18px;
+        letter-spacing: 0.02em;
+        text-transform: uppercase;
+        color: var(--ink);
+      }
+
+      .input {
+        min-height: var(--touch);
+        background: var(--white);
+        border: 1px solid var(--hairline);
+        border-radius: var(--radius-control);
+        padding: 0 16px;
+        display: flex;
+        align-items: center;
+        font-family: Inter, sans-serif;
+        font-size: 17px;
+        line-height: 24px;
+        color: var(--ink);
+      }
+
+      .input.is-placeholder {
+        color: var(--placeholder);
+      }
+      .input.is-error {
+        border-color: var(--error);
+      }
+      .input.mono {
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 16px;
+        font-weight: 500;
+      }
+
+      .error-text {
+        font-family: Inter, sans-serif;
+        font-size: 13px;
+        line-height: 18px;
+        color: var(--error);
+        margin-top: -4px;
+      }
+
+      .row {
+        display: flex;
+        gap: 8px;
+      }
+      .row .input {
+        flex: 1 1 auto;
+        min-width: 0;
+      }
+
+      .icon-btn {
+        width: var(--touch);
+        height: var(--touch);
+        flex: 0 0 auto;
+        background: var(--white);
+        border: 1px solid var(--hairline);
+        border-radius: var(--radius-control);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--ink);
+        cursor: pointer;
+      }
+      .icon-btn svg {
+        width: 24px;
+        height: 24px;
+        display: block;
+      }
+
+      /* ---- swatches: five 48px targets spread across the content width ---- */
+      .swatches {
+        display: flex;
+        justify-content: space-between;
+      }
+
+      .swatch {
+        width: var(--touch);
+        height: var(--touch);
+        border-radius: 999px;
+        border: 0;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      /* 2px ink ring held off the fill by a 2px cream gap. */
+      .swatch.is-selected {
+        box-shadow:
+          0 0 0 2px var(--cream),
+          0 0 0 4px var(--ink);
+      }
+
+      .swatch svg {
+        width: 20px;
+        height: 20px;
+        display: block;
+        color: var(--white);
+      }
+
+      /* ---- footer ----
+         A flex sibling AFTER the scroll area. Never fixed, never absolute —
+         so it cannot fight the keyboard. The gap above it is composition. */
+      .footer {
+        flex: 0 0 auto;
+      }
+
+      .hairline {
+        height: 1px;
+        background: var(--hairline);
+        width: 100%;
+      }
+
+      .footer-inner {
+        padding: var(--screen-margin);
+      }
+
+      .btn-primary {
+        width: 100%;
+        height: 52px;
+        background: var(--ink);
+        color: var(--white);
+        border: 0;
+        border-radius: var(--radius-control);
+        font-family: Inter, sans-serif;
+        font-weight: 600;
+        font-size: 17px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      /* Busy, not disabled: full ink retained, label swapped for a spinner. */
+      .spinner {
+        width: 22px;
+        height: 22px;
+        border-radius: 999px;
+        border: 2.5px solid rgba(255, 255, 255, 0.3);
+        border-top-color: var(--white);
+        animation: spin 0.8s linear infinite;
+      }
+
+      @keyframes spin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        .spinner {
+          animation: none;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <!-- ============================ FRAME 1 — DEFAULT ============================ -->
+    <figure class="plate">
+      <div class="frame">
+        <div class="safe-top">
+          <div class="statusbar" aria-hidden="true">
+            <span class="clock">9:41</span>
+            <span class="indicators">
+              <svg width="18" height="12" viewBox="0 0 18 12">
+                <rect x="0" y="8.5" width="3" height="3.5" rx="1" />
+                <rect x="5" y="6" width="3" height="6" rx="1" />
+                <rect x="10" y="3" width="3" height="9" rx="1" />
+                <rect x="15" y="0" width="3" height="12" rx="1" />
+              </svg>
+              <svg
+                width="16"
+                height="12"
+                viewBox="0 0 16 12"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.6"
+                stroke-linecap="round"
+              >
+                <path d="M1.2 4.4a10 10 0 0 1 13.6 0" />
+                <path d="M4 7.3a6 6 0 0 1 8 0" />
+                <circle cx="8" cy="10.4" r="1" fill="currentColor" stroke="none" />
+              </svg>
+              <svg width="25" height="12" viewBox="0 0 25 12">
+                <rect
+                  x="0.5"
+                  y="0.5"
+                  width="21"
+                  height="11"
+                  rx="3.2"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-opacity="0.4"
+                />
+                <rect x="2.2" y="2.2" width="14" height="7.6" rx="1.8" />
+                <rect x="22.6" y="4.2" width="1.9" height="3.6" rx="0.95" opacity="0.4" />
+              </svg>
+            </span>
+          </div>
+        </div>
+        <header class="header">
+          <button class="back" aria-label="Go back">
+            <svg
+              viewBox="0 0 11 20"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.75"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <path d="M9.5 1.5L1.5 10l8 8.5" />
+            </svg>
+          </button>
+          <h1 class="title">New Card</h1>
+          <span></span>
+        </header>
+
+        <main class="body">
+          <div class="field">
+            <span class="label">Store name</span>
+            <div class="input is-placeholder">Enter store name</div>
+          </div>
+
+          <div class="field">
+            <span class="label">Card number</span>
+            <div class="row">
+              <div class="input is-placeholder">Enter or scan card number</div>
+              <button class="icon-btn" aria-label="Scan card number">
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="1.5"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <path
+                    d="M3 8.5A1.5 1.5 0 014.5 7h2.2l1.1-1.9A1 1 0 019 4.6h6a1 1 0 01.9.5L17 7h2.5A1.5 1.5 0 0121 8.5v9A1.5 1.5 0 0119.5 19h-15A1.5 1.5 0 013 17.5v-9z"
+                  />
+                  <circle cx="12" cy="13" r="3.2" />
+                </svg>
+              </button>
+            </div>
+          </div>
+
+          <div class="field">
+            <span class="label">Card color</span>
+            <div class="swatches">
+              <button
+                class="swatch"
+                style="background: var(--swatch-red)"
+                aria-label="Red"
+              ></button>
+              <button
+                class="swatch is-selected"
+                style="background: var(--swatch-blue)"
+                aria-label="Deep blue, selected"
+              >
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="3"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <path d="M5 13l4 4L19 7" />
+                </svg>
+              </button>
+              <button
+                class="swatch"
+                style="background: var(--swatch-azure)"
+                aria-label="Azure"
+              ></button>
+              <button
+                class="swatch"
+                style="background: var(--swatch-green)"
+                aria-label="Green"
+              ></button>
+              <button
+                class="swatch"
+                style="background: var(--swatch-yellow)"
+                aria-label="Yellow"
+              ></button>
+            </div>
+          </div>
+        </main>
+
+        <footer class="footer">
+          <div class="hairline"></div>
+          <div class="footer-inner">
+            <button class="btn-primary">Done</button>
+          </div>
+        </footer>
+        <div class="safe-bottom"><span class="home-indicator"></span></div>
+      </div>
+      <figcaption>1 — Default</figcaption>
+    </figure>
+
+    <!-- ============================= FRAME 2 — ERROR ============================= -->
+    <figure class="plate">
+      <div class="frame">
+        <div class="safe-top">
+          <div class="statusbar" aria-hidden="true">
+            <span class="clock">9:41</span>
+            <span class="indicators">
+              <svg width="18" height="12" viewBox="0 0 18 12">
+                <rect x="0" y="8.5" width="3" height="3.5" rx="1" />
+                <rect x="5" y="6" width="3" height="6" rx="1" />
+                <rect x="10" y="3" width="3" height="9" rx="1" />
+                <rect x="15" y="0" width="3" height="12" rx="1" />
+              </svg>
+              <svg
+                width="16"
+                height="12"
+                viewBox="0 0 16 12"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.6"
+                stroke-linecap="round"
+              >
+                <path d="M1.2 4.4a10 10 0 0 1 13.6 0" />
+                <path d="M4 7.3a6 6 0 0 1 8 0" />
+                <circle cx="8" cy="10.4" r="1" fill="currentColor" stroke="none" />
+              </svg>
+              <svg width="25" height="12" viewBox="0 0 25 12">
+                <rect
+                  x="0.5"
+                  y="0.5"
+                  width="21"
+                  height="11"
+                  rx="3.2"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-opacity="0.4"
+                />
+                <rect x="2.2" y="2.2" width="14" height="7.6" rx="1.8" />
+                <rect x="22.6" y="4.2" width="1.9" height="3.6" rx="0.95" opacity="0.4" />
+              </svg>
+            </span>
+          </div>
+        </div>
+        <header class="header">
+          <button class="back" aria-label="Go back">
+            <svg
+              viewBox="0 0 11 20"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.75"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <path d="M9.5 1.5L1.5 10l8 8.5" />
+            </svg>
+          </button>
+          <h1 class="title">New Card</h1>
+          <span></span>
+        </header>
+
+        <main class="body">
+          <div class="field">
+            <span class="label">Store name</span>
+            <div class="input is-placeholder is-error">Enter store name</div>
+            <span class="error-text">Store name is required</span>
+          </div>
+
+          <div class="field">
+            <span class="label">Card number</span>
+            <div class="row">
+              <div class="input mono">2000012345678</div>
+              <button class="icon-btn" aria-label="Scan card number">
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="1.5"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <path
+                    d="M3 8.5A1.5 1.5 0 014.5 7h2.2l1.1-1.9A1 1 0 019 4.6h6a1 1 0 01.9.5L17 7h2.5A1.5 1.5 0 0121 8.5v9A1.5 1.5 0 0119.5 19h-15A1.5 1.5 0 013 17.5v-9z"
+                  />
+                  <circle cx="12" cy="13" r="3.2" />
+                </svg>
+              </button>
+            </div>
+          </div>
+
+          <div class="field">
+            <span class="label">Card color</span>
+            <div class="swatches">
+              <button
+                class="swatch"
+                style="background: var(--swatch-red)"
+                aria-label="Red"
+              ></button>
+              <button
+                class="swatch is-selected"
+                style="background: var(--swatch-blue)"
+                aria-label="Deep blue, selected"
+              >
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="3"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <path d="M5 13l4 4L19 7" />
+                </svg>
+              </button>
+              <button
+                class="swatch"
+                style="background: var(--swatch-azure)"
+                aria-label="Azure"
+              ></button>
+              <button
+                class="swatch"
+                style="background: var(--swatch-green)"
+                aria-label="Green"
+              ></button>
+              <button
+                class="swatch"
+                style="background: var(--swatch-yellow)"
+                aria-label="Yellow"
+              ></button>
+            </div>
+          </div>
+        </main>
+
+        <footer class="footer">
+          <div class="hairline"></div>
+          <div class="footer-inner">
+            <button class="btn-primary">Done</button>
+          </div>
+        </footer>
+        <div class="safe-bottom"><span class="home-indicator"></span></div>
+      </div>
+      <figcaption>2 — Error</figcaption>
+    </figure>
+
+    <!-- ============================ FRAME 3 — FILLED ============================= -->
+    <figure class="plate">
+      <div class="frame">
+        <div class="safe-top">
+          <div class="statusbar" aria-hidden="true">
+            <span class="clock">9:41</span>
+            <span class="indicators">
+              <svg width="18" height="12" viewBox="0 0 18 12">
+                <rect x="0" y="8.5" width="3" height="3.5" rx="1" />
+                <rect x="5" y="6" width="3" height="6" rx="1" />
+                <rect x="10" y="3" width="3" height="9" rx="1" />
+                <rect x="15" y="0" width="3" height="12" rx="1" />
+              </svg>
+              <svg
+                width="16"
+                height="12"
+                viewBox="0 0 16 12"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.6"
+                stroke-linecap="round"
+              >
+                <path d="M1.2 4.4a10 10 0 0 1 13.6 0" />
+                <path d="M4 7.3a6 6 0 0 1 8 0" />
+                <circle cx="8" cy="10.4" r="1" fill="currentColor" stroke="none" />
+              </svg>
+              <svg width="25" height="12" viewBox="0 0 25 12">
+                <rect
+                  x="0.5"
+                  y="0.5"
+                  width="21"
+                  height="11"
+                  rx="3.2"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-opacity="0.4"
+                />
+                <rect x="2.2" y="2.2" width="14" height="7.6" rx="1.8" />
+                <rect x="22.6" y="4.2" width="1.9" height="3.6" rx="0.95" opacity="0.4" />
+              </svg>
+            </span>
+          </div>
+        </div>
+        <header class="header">
+          <button class="back" aria-label="Go back">
+            <svg
+              viewBox="0 0 11 20"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.75"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <path d="M9.5 1.5L1.5 10l8 8.5" />
+            </svg>
+          </button>
+          <h1 class="title">New Card</h1>
+          <span></span>
+        </header>
+
+        <main class="body">
+          <div class="field">
+            <span class="label">Store name</span>
+            <div class="input">Farmacia Centrale</div>
+          </div>
+
+          <div class="field">
+            <span class="label">Card number</span>
+            <div class="row">
+              <div class="input mono">2000012345678</div>
+              <button class="icon-btn" aria-label="Scan card number">
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="1.5"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <path
+                    d="M3 8.5A1.5 1.5 0 014.5 7h2.2l1.1-1.9A1 1 0 019 4.6h6a1 1 0 01.9.5L17 7h2.5A1.5 1.5 0 0121 8.5v9A1.5 1.5 0 0119.5 19h-15A1.5 1.5 0 013 17.5v-9z"
+                  />
+                  <circle cx="12" cy="13" r="3.2" />
+                </svg>
+              </button>
+            </div>
+          </div>
+
+          <div class="field">
+            <span class="label">Card color</span>
+            <div class="swatches">
+              <button
+                class="swatch"
+                style="background: var(--swatch-red)"
+                aria-label="Red"
+              ></button>
+              <button
+                class="swatch"
+                style="background: var(--swatch-blue)"
+                aria-label="Deep blue"
+              ></button>
+              <button
+                class="swatch"
+                style="background: var(--swatch-azure)"
+                aria-label="Azure"
+              ></button>
+              <button
+                class="swatch is-selected"
+                style="background: var(--swatch-green)"
+                aria-label="Green, selected"
+              >
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="3"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <path d="M5 13l4 4L19 7" />
+                </svg>
+              </button>
+              <button
+                class="swatch"
+                style="background: var(--swatch-yellow)"
+                aria-label="Yellow"
+              ></button>
+            </div>
+          </div>
+        </main>
+
+        <footer class="footer">
+          <div class="hairline"></div>
+          <div class="footer-inner">
+            <button class="btn-primary">Done</button>
+          </div>
+        </footer>
+        <div class="safe-bottom"><span class="home-indicator"></span></div>
+      </div>
+      <figcaption>3 — Filled</figcaption>
+    </figure>
+
+    <!-- ============================ FRAME 4 — SAVING ============================= -->
+    <figure class="plate">
+      <div class="frame">
+        <div class="safe-top">
+          <div class="statusbar" aria-hidden="true">
+            <span class="clock">9:41</span>
+            <span class="indicators">
+              <svg width="18" height="12" viewBox="0 0 18 12">
+                <rect x="0" y="8.5" width="3" height="3.5" rx="1" />
+                <rect x="5" y="6" width="3" height="6" rx="1" />
+                <rect x="10" y="3" width="3" height="9" rx="1" />
+                <rect x="15" y="0" width="3" height="12" rx="1" />
+              </svg>
+              <svg
+                width="16"
+                height="12"
+                viewBox="0 0 16 12"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.6"
+                stroke-linecap="round"
+              >
+                <path d="M1.2 4.4a10 10 0 0 1 13.6 0" />
+                <path d="M4 7.3a6 6 0 0 1 8 0" />
+                <circle cx="8" cy="10.4" r="1" fill="currentColor" stroke="none" />
+              </svg>
+              <svg width="25" height="12" viewBox="0 0 25 12">
+                <rect
+                  x="0.5"
+                  y="0.5"
+                  width="21"
+                  height="11"
+                  rx="3.2"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-opacity="0.4"
+                />
+                <rect x="2.2" y="2.2" width="14" height="7.6" rx="1.8" />
+                <rect x="22.6" y="4.2" width="1.9" height="3.6" rx="0.95" opacity="0.4" />
+              </svg>
+            </span>
+          </div>
+        </div>
+        <header class="header">
+          <button class="back" aria-label="Go back">
+            <svg
+              viewBox="0 0 11 20"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.75"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <path d="M9.5 1.5L1.5 10l8 8.5" />
+            </svg>
+          </button>
+          <h1 class="title">New Card</h1>
+          <span></span>
+        </header>
+
+        <main class="body">
+          <div class="field">
+            <span class="label">Store name</span>
+            <div class="input">Farmacia Centrale</div>
+          </div>
+
+          <div class="field">
+            <span class="label">Card number</span>
+            <div class="row">
+              <div class="input mono">2000012345678</div>
+              <button class="icon-btn" aria-label="Scan card number">
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="1.5"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <path
+                    d="M3 8.5A1.5 1.5 0 014.5 7h2.2l1.1-1.9A1 1 0 019 4.6h6a1 1 0 01.9.5L17 7h2.5A1.5 1.5 0 0121 8.5v9A1.5 1.5 0 0119.5 19h-15A1.5 1.5 0 013 17.5v-9z"
+                  />
+                  <circle cx="12" cy="13" r="3.2" />
+                </svg>
+              </button>
+            </div>
+          </div>
+
+          <div class="field">
+            <span class="label">Card color</span>
+            <div class="swatches">
+              <button
+                class="swatch"
+                style="background: var(--swatch-red)"
+                aria-label="Red"
+              ></button>
+              <button
+                class="swatch"
+                style="background: var(--swatch-blue)"
+                aria-label="Deep blue"
+              ></button>
+              <button
+                class="swatch"
+                style="background: var(--swatch-azure)"
+                aria-label="Azure"
+              ></button>
+              <button
+                class="swatch is-selected"
+                style="background: var(--swatch-green)"
+                aria-label="Green, selected"
+              >
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="3"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <path d="M5 13l4 4L19 7" />
+                </svg>
+              </button>
+              <button
+                class="swatch"
+                style="background: var(--swatch-yellow)"
+                aria-label="Yellow"
+              ></button>
+            </div>
+          </div>
+        </main>
+
+        <footer class="footer">
+          <div class="hairline"></div>
+          <div class="footer-inner">
+            <button class="btn-primary" aria-busy="true" aria-label="Saving">
+              <span class="spinner"></span>
+            </button>
+          </div>
+        </footer>
+        <div class="safe-bottom"><span class="home-indicator"></span></div>
+      </div>
+      <figcaption>4 — Saving</figcaption>
+    </figure>
+    <!-- Geometry harness. Inert unless the page is opened with ?probe, so the
+         reference and its verifier are ONE file and cannot drift apart (they
+         previously lived as two near-identical 575-line copies).
+
+         Open  cardi-form-frames.html?probe  and a measured dump appends below
+         the frames. Expected, for all four: size=393x852, chevronL=20.0,
+         labelL=20.0, inputL=20.0, btnL=20.0, btnH=52. -->
+    <script>
+      if (location.search.includes('probe')) {
+        window.addEventListener('load', () => {
+          const out = [];
+          document.querySelectorAll('.frame').forEach((f, i) => {
+            const fr = f.getBoundingClientRect();
+            const svg = f.querySelector('.back svg').getBoundingClientRect();
+            const lab = f.querySelector('.label').getBoundingClientRect();
+            const inp = f.querySelector('.input').getBoundingClientRect();
+            const foot = f.querySelector('.footer').getBoundingClientRect();
+            const btn = f.querySelector('.btn-primary').getBoundingClientRect();
+            out.push(
+              `F${i + 1} size=${Math.round(fr.width)}x${Math.round(fr.height)}` +
+                ` chevronL=${(svg.left - fr.left).toFixed(1)}` +
+                ` labelL=${(lab.left - fr.left).toFixed(1)}` +
+                ` inputL=${(inp.left - fr.left).toFixed(1)}` +
+                ` btnL=${(btn.left - fr.left).toFixed(1)}` +
+                ` btnH=${Math.round(btn.height)}` +
+                ` footBottomGap=${(fr.bottom - foot.bottom).toFixed(1)}`
+            );
+          });
+          const pre = document.createElement('pre');
+          pre.id = 'probe';
+          pre.style.cssText =
+            'width:100%;font:12px/1.6 ui-monospace,monospace;background:#181824;' +
+            'color:#f0f0e8;padding:16px;border-radius:8px;white-space:pre-wrap';
+          pre.textContent = out.join('\n');
+          document.body.appendChild(pre);
+        });
+      }
+    </script>
+  </body>
+</html>
