@@ -315,9 +315,22 @@ sample overshoots and invents deviations that aren't there.
 `body { min-height: max(884px, 100dvh) }` into every screen it generates, which is exactly
 the +32px measured above. The design system's own Forbidden list bans _"any frame that is not
 393 × 852"_, so the generator is structurally incapable of obeying the first rule in the
-document. Two further defects in the same output, neither fixable by prompting: a
-`position: fixed` footer (forbidden by § _The primary-action footer_) and a back chevron
-pulled outside the 20px margin with a negative margin.
+document. Two further defects in the same output: a `position: fixed` footer (forbidden by
+§ _The primary-action footer_) and a back chevron pulled outside the 20px margin with a
+negative margin.
+
+**Which of the three are prompt-fixable — settled by experiment, same day.** A
+_"Fix ONLY the geometry"_ run was made against the form screen, producing
+`1c57d246642e49d596edfc95c8dbb96f`, titled "New Card Form (Fixed Geometry)". It reports
+having aligned the chevron to the 20px margin and converted the footer from `position: fixed`
+to a natural flex child — so **two of the three defects are ordinary CSS and do fix on
+request.** The result is `786 × 1768`, i.e. **393 × 884, unchanged.** A prompt whose entire
+and only instruction was to fix the geometry could not move the height.
+
+That is the cleanest available proof of the distinction, and it is worth more than the
+original claim it replaces: the chevron and the footer are _mistakes_, and mistakes can be
+corrected. The 884 floor is not a mistake — it is the platform, and no prompt reaches it.
+**All ten screens now in the project are `height: 1768`. There is no counter-example.**
 
 **So the reference moved.** `frames/cardi-form-frames.html` is hand-authored, exactly
 393 × 852, and is now what the remaining screens derive from. The PNGs stay as evidence of
@@ -353,16 +366,33 @@ Open `cardi-form-frames.html?probe`; expect `size=393x852`, `chevronL=20.0`, `la
    default state; repeatedly raised, never designed. This is now the next thing to make,
    and it needs a _new_ seed — no existing screen is close enough to vary from.
 3. Re-verify the Stitch design system hasn't been clobbered again since 2026-08-12.
-4. **The Stitch canvas holds a decoy.** On 2026-08-15 `apply_design_system` was run against
-   both canvas screens — it succeeded, minting new screen ids and re-theming them through
-   `polish_edit_theme_agent`. But the Add Card screen on that canvas is the **superseded**
-   design (barcode-format row, "Save card", an invented favourites toggle, a baked-in red
-   error). It is now correctly themed and structurally wrong — freshly painted, and therefore
-   more likely to be trusted than it was before. The four good frames are not on that canvas.
-   Either clear it or label it before anyone re-derives from it.
+4. **The Stitch canvas is now ten screens and needs a clear-out.** Inventory read over MCP
+   on 2026-08-15 — **every one of them is `height: 1768`:**
+
+   | screen id   | title                          | size       | what it is                          |
+   | ----------- | ------------------------------ | ---------- | ----------------------------------- |
+   | `1bed6a85…` | New Card Form                  | 786 × 1768 | frame 1 DEFAULT, accepted           |
+   | `66fd99fd…` | New Card Form (Error State)    | 786 × 1768 | frame 2 ERROR, accepted             |
+   | `a541546f…` | New Card Form (Filled)         | 786 × 1768 | frame 3 FILLED, accepted            |
+   | `cafd14e7…` | New Card Form (Saving State)   | 786 × 1768 | frame 4 SAVING, accepted            |
+   | `1c57d246…` | New Card Form (Fixed Geometry) | 786 × 1768 | the geometry experiment — see above |
+   | `affad33e…` | New Card Form (Error State)    | 786 × 1768 | **duplicate**                       |
+   | `c5beeb02…` | New Card Form (Filled)         | 786 × 1768 | **duplicate**                       |
+   | `fb508779…` | New Card Form (Saving State)   | 780 × 1768 | **duplicate**                       |
+   | `b1a1e6e6…` | Add Card Form                  | 780 × 1768 | **the decoy — see below**           |
+   | `70e27310…` | cardi-design-system.md         | 2560 ×2300 | the DS text render                  |
+
+   **The decoy is the dangerous one.** `b1a1e6e6…` is the **superseded** design — barcode
+   format row, "Save card", an invented favourites toggle, a baked-in red error. On
+   2026-08-15 `apply_design_system` was run across the canvas, so it is now _correctly
+   themed and structurally wrong_: freshly painted, and therefore more likely to be trusted
+   than before. Three unlabelled duplicates compound it. Stitch has **no delete-screen over
+   MCP**, so clearing this means the UI or a fresh project.
+
    Also confirmed the same day: `apply_design_system` is **per-screen only** — it does not
    update `project.designTheme`, which remains stale. There is no MCP path to the project
-   default; that really is UI-only, and the canvas is currently inert to synthetic clicks.
+   default; that really is UI-only, and the canvas is inert to synthetic clicks.
+
 5. Decide the `orange` / `grey` → Cardì card-colour migration before the tokens PR.
 6. Three answers to the screen margin (`CardForm` 32px hardcoded, `AuthScreenLayout` token,
    DS 20px) and the busy-button divergence — the shared `Button` greys its fill when
