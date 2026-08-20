@@ -12,6 +12,7 @@ run started 2026-08-11) whose scratchpad lived in `/tmp` and whose API connectio
 | `palette-bench.html`                | Five-direction palette comparison board (01 Ink & Beam … 05 Night Market). Superseded as a _layout_ study, still valid on chrome.                                                      |
 | `stitch-prompts-form-states.txt`    | **The four state frames** — default / error / filled / saving. Frame 1 is the exemplar the other seven screens derive from.                                                            |
 | `stitch-prompt-01-form-pattern.txt` | Superseded. The prompt actually sent on 2026-08-11, kept as a record — it describes a screen that does not exist.                                                                      |
+| `stitch-prompts-wallet.txt`         | **The wallet pattern** — populated / empty / single-card / no-results, specced against the real `CardList`. Carries eight findings from reading the code.                              |
 | `frames/cardi-form-frames.html`     | **The reference implementation.** Hand-authored, exactly 393 × 852, all four states. This is what screens derive from — not the PNGs. Open with `?probe` for a measured geometry dump. |
 | `frames/0*.png`                     | Stitch's actual output, kept as evidence. Faithful to what the generator produced, including three defects it cannot avoid — see _The 2026-08-15 audit_.                               |
 
@@ -405,17 +406,61 @@ whereas `frames/cardi-form-frames.html` now draws the status bar and home indica
 them. Every Stitch render from here will differ from the reference at the top and bottom of
 the frame. That is intended, and the reference is the one that is right.
 
+### 2026-08-15 — the wallet pattern, specced from the code
+
+`stitch-prompts-wallet.txt` holds four self-contained prompts: **populated / empty /
+single-card / no-results.** Written by reading `CardList.tsx`, `CardTile.tsx`,
+`EmptyState.tsx` and `gridLayout.ts` first — the discipline the superseded form prompt
+skipped, at the cost of a whole frame. Four things it turned up that change the system, not
+just the frames:
+
+- **The wallet has six states, not two.** `CardList` branches on loading, error,
+  single-card, grid, empty and no-results. The **single-card** state — an enlarged 220 × 180
+  centred tile with the tip _"Tap + to add more cards to your wallet"_ — has never been
+  designed by anyone. Search and sort only exist at `totalCount >= 2`, so drawing them on
+  the empty or single-card frame is wrong, not merely extra.
+- **The grid margin is 16pt and the design system's 20px cannot apply here.**
+  `TILE_WIDTH = 171` is `(390 − 2×16 − 16) / 2`, frozen in `gridLayout.ts` with a documented
+  derivation and tests; at 20px the tile stops being 171. **The system needs amending:**
+  20px is the single-column (form / settings / document) margin, the grid is 16. This is the
+  _fourth_ answer to the margin question in this repo.
+- **The shipped empty state violates the system four times** — a per-screen invented
+  illustration, accent dots in `#FFCC00` (Esselunga's exact yellow) and `#E2231A` (Coop's
+  exact red) used as decoration, a coloured **glow shadow** under the CTA, and a 240 × 50
+  centred button where the system says full-width 52px. The new frame is **typographic, with
+  no illustration at all** — Wave A is illustration-free, and inventing one here is the exact
+  failure the system's illustration rule exists to prevent.
+- **The card tile carries a drop shadow in light mode** (`shadowColor: '#000'`), against
+  _no drop shadows anywhere_. Removed in the spec; on this screen the brand colour is the
+  hierarchy.
+
+Two things came out **right** and are ratified rather than changed: the header is already
+`+` on the left and gear on the right, and the tile is already 171 × 140 at 16px radius with
+the name in `label-bold` below it. The one header change is the title, still
+`navigation.home: 'myLoyaltyCards'` — that string belongs to the rename.
+
+One new decision: **the favourite badge becomes an ink `#181824` plate carrying a beam
+`#FCCC0C` star.** Shipped is an amber star on a 95%-white plate, which is illegal in this
+system (amber is not in it) and invisible on light brands. Ink + beam is legal and survives
+all 57 brand colours, Esselunga's yellow included.
+
 ### Still open
 
 1. ~~Generate the four state frames and judge them~~ — **done 2026-08-14**; measured and
    corrected 2026-08-15, reference moved to HTML. Do **not** regenerate the PNGs to chase the
    32px: Stitch injects the 884 floor, so a regenerated frame would come back with the same
    defect. That door is closed, deliberately.
-2. Design the **wallet empty state** (zero cards, first launch). Distinct from the form's
-   default state; repeatedly raised, never designed. This is now the next thing to make,
-   and it needs a _new_ seed — no existing screen is close enough to vary from.
-3. Re-verify the Stitch design system hasn't been clobbered again since 2026-08-12.
-4. ~~The Stitch canvas is ten screens and needs a clear-out~~ — **done 2026-08-15.** The
+2. ~~Design the wallet empty state~~ — **specced 2026-08-15** in
+   `stitch-prompts-wallet.txt`, along with the three other wallet states. Not yet drawn:
+   the wallet needs a **new seed** and no existing screen is close enough to vary from, so
+   frame A has to come from the Stitch **web prompt box** (generation from zero still fails
+   over MCP) — or be authored straight into `frames/cardi-form-frames.html`, which is now
+   the reference anyway. Once frame A exists, B/C/D chain off it with `generate_variants`.
+3. **Amend the design system on the screen margin.** 20px is the single-column margin; the
+   grid is 16pt, and the 171px tile arithmetic depends on it. Right now the system states a
+   single figure that the wallet cannot honour.
+4. Re-verify the Stitch design system hasn't been clobbered again since 2026-08-12.
+5. ~~The Stitch canvas is ten screens and needs a clear-out~~ — **done 2026-08-15.** The
    superseded decoy (`b1a1e6e6…` "Add Card Form" — barcode format row, "Save card", an
    invented favourites toggle, a baked-in red error, and freshly repainted by
    `apply_design_system` so that it _looked_ trustworthy) was deleted along with three
@@ -427,7 +472,7 @@ the frame. That is intended, and the reference is the one that is right.
    not update `project.designTheme`, which remains stale. There is no MCP path to the project
    default; that really is UI-only, and the canvas is inert to synthetic clicks.
 
-5. Decide the `orange` / `grey` → Cardì card-colour migration before the tokens PR.
-6. Three answers to the screen margin (`CardForm` 32px hardcoded, `AuthScreenLayout` token,
+6. Decide the `orange` / `grey` → Cardì card-colour migration before the tokens PR.
+7. Three answers to the screen margin (`CardForm` 32px hardcoded, `AuthScreenLayout` token,
    DS 20px) and the busy-button divergence — the shared `Button` greys its fill when
    `loading`, where the DS now says busy keeps the ink.
