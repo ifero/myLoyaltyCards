@@ -481,6 +481,37 @@ ours — it found the wordmark point that four reviewers and a written thesis ha
 not worth trusting for anything the code already decides, because it drifts on exactly those
 details and it cannot hold the geometry. Explore there, author here.
 
+### 2026-08-15 — bringing the Stitch wallet screens back into compliance
+
+The four exploration screens were then corrected against the HTML so a future illustration
+pass starts from a sound screen rather than inheriting the defects. Compliant versions, all
+verified by pixel sampling: **empty `7c5de427…`**, **single-card `543cbab4…`**,
+**no-results `0dcda2f2…`** — cream `#F0F0E8` edge to edge, status bar and home indicator
+present, no header divider. The **populated** screen is the gap: its compliance pass timed
+out three times and never returned an id.
+
+Four MCP mechanics came out of it, all new:
+
+- **`list_screens` lags far behind generation, so it CANNOT tell you whether a timed-out call
+  landed.** Two screens whose calls returned complete data — ids and working screenshot URLs
+  — were still absent from the listing many minutes and several polls later. This corrects
+  the earlier note that said to poll it. **Fetch the screenshot URL from the tool result
+  instead; it works immediately while the listing is still blind.**
+- **Heavy screens time out, light ones don't.** The eight-tile grid failed every attempt;
+  the three sparse screens returned in one or two. Budget for the busiest screen needing the
+  web UI.
+- **`Request contains an invalid argument` is transient** on both `list_screens` and
+  `generate_variants`. It is rejected before any work happens, so an immediate identical
+  retry is safe and succeeds.
+- **A third instance of the theme token beating the literal.** Told _"cream `#F0F0E8` covers
+  the ENTIRE frame"_, the generator obeyed for the page and then painted the header
+  **`#FAFAF2`** — precisely the theme's mangled `surface`. Same shape as the error red. The
+  phrasing that actually fixes it is to **name the component and forbid the token's value by
+  hex**: _"the header has NO background of its own; do NOT use `#FAFAF2`."_ That worked in
+  one pass — exactly as naming `#DDDDDF` fixed the spinner. **Generalised rule: when a
+  literal loses, it is losing to a token with a claim on that component; say the component's
+  name and ban the value you keep getting.**
+
 ### Still open
 
 1. ~~Generate the four state frames and judge them~~ — **done 2026-08-14**; measured and
