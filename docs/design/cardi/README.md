@@ -14,6 +14,7 @@ run started 2026-08-11) whose scratchpad lived in `/tmp` and whose API connectio
 | `stitch-prompt-01-form-pattern.txt` | Superseded. The prompt actually sent on 2026-08-11, kept as a record — it describes a screen that does not exist.                                                                      |
 | `stitch-prompts-wallet.txt`         | **The wallet pattern** — populated / empty / single-card / no-results, specced against the real `CardList`. Carries eight findings from reading the code.                              |
 | `frames/cardi-form-frames.html`     | **The reference implementation.** Hand-authored, exactly 393 × 852, all four states. This is what screens derive from — not the PNGs. Open with `?probe` for a measured geometry dump. |
+| `frames/cardi-wallet-frames.html`   | **The wallet frames** — populated / empty / single-card / no-results, hand-authored at 393 × 852. Self-contained; shares its token block with the form file by copy, not by link.      |
 | `frames/0*.png`                     | Stitch's actual output, kept as evidence. Faithful to what the generator produced, including three defects it cannot avoid — see _The 2026-08-15 audit_.                               |
 
 ## The thesis
@@ -450,12 +451,20 @@ all 57 brand colours, Esselunga's yellow included.
    corrected 2026-08-15, reference moved to HTML. Do **not** regenerate the PNGs to chase the
    32px: Stitch injects the 884 floor, so a regenerated frame would come back with the same
    defect. That door is closed, deliberately.
-2. ~~Design the wallet empty state~~ — **specced 2026-08-15** in
-   `stitch-prompts-wallet.txt`, along with the three other wallet states. Not yet drawn:
-   the wallet needs a **new seed** and no existing screen is close enough to vary from, so
-   frame A has to come from the Stitch **web prompt box** (generation from zero still fails
-   over MCP) — or be authored straight into `frames/cardi-form-frames.html`, which is now
-   the reference anyway. Once frame A exists, B/C/D chain off it with `generate_variants`.
+2. ~~Design the wallet empty state~~ — **specced and drawn 2026-08-15.** All four wallet
+   states are hand-authored at 393 × 852 in `frames/cardi-wallet-frames.html`. Stitch was
+   not used: it cannot make this geometry, and the wallet needed a new seed it could not be
+   given (generation from zero still fails over MCP). A parallel Stitch run was made from
+   the web prompt box as an independent exploration — compare, don't merge blindly.
+
+   One authoring decision worth keeping: the frames are **self-contained, with the token
+   block duplicated** between the form and wallet files rather than linked from a shared
+   `.css`. A linked stylesheet was tried and reverted — any viewer that inlines the HTML
+   (preview panes, the Artifact CSP, pasting it anywhere) silently drops it and renders a
+   broken frame, which reads as _"the reference is wrong"_. Duplication is the cheaper
+   failure, and neither file was ever the source of truth for those values:
+   `cardi-design-system.md` is.
+
 3. **Amend the design system on the screen margin.** 20px is the single-column margin; the
    grid is 16pt, and the 171px tile arithmetic depends on it. Right now the system states a
    single figure that the wallet cannot honour.
