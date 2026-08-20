@@ -420,6 +420,49 @@
         color: var(--ink);
       }
 
+      /* Each mark is set in its OWN idiom — lowercase, heavy caps, light wide —
+         never one house style across all eight. Setting them uniformly is the
+         failure the system names outright: "do not unify the tiles, their
+         clashing is the content." These are still stand-ins for the real SVGs;
+         the point is that the stand-in must not flatten what production shows. */
+      .wordmark.wm-lower {
+        text-transform: lowercase;
+        letter-spacing: -0.02em;
+      }
+
+      .wordmark.wm-caps-heavy {
+        text-transform: uppercase;
+        font-size: 17px;
+        letter-spacing: 0.02em;
+      }
+
+      .wordmark.wm-caps-tight {
+        text-transform: uppercase;
+        font-size: 18px;
+        letter-spacing: -0.03em;
+      }
+
+      .wordmark.wm-caps-wide {
+        text-transform: uppercase;
+        font-family: Inter, sans-serif;
+        font-weight: 400;
+        font-size: 15px;
+        letter-spacing: 0.12em;
+      }
+
+      .wordmark.wm-caps-spaced {
+        text-transform: uppercase;
+        font-size: 15px;
+        letter-spacing: 0.06em;
+      }
+
+      .wordmark.wm-title {
+        font-family: Inter, sans-serif;
+        font-weight: 600;
+        font-size: 18px;
+        letter-spacing: -0.01em;
+      }
+
       .tile-name {
         font-family: Inter, sans-serif;
         font-weight: 600;
@@ -643,7 +686,7 @@
           <div class="grid">
             <div class="card">
               <div class="tile" style="background: #ffcc00">
-                <span class="wordmark on-light">Esselunga</span>
+                <span class="wordmark on-light wm-lower">Esselunga</span>
                 <span class="fav-badge" aria-label="Favourite">
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
                     <path
@@ -657,49 +700,49 @@
 
             <div class="card">
               <div class="tile" style="background: #da291c">
-                <span class="wordmark">Conad</span>
+                <span class="wordmark wm-caps-heavy">Conad</span>
               </div>
               <span class="tile-name">Conad</span>
             </div>
 
             <div class="card">
               <div class="tile" style="background: #e2231a">
-                <span class="wordmark">Coop</span>
+                <span class="wordmark wm-lower">Coop</span>
               </div>
               <span class="tile-name">Coop</span>
             </div>
 
             <div class="card">
               <div class="tile" style="background: #004e9f">
-                <span class="wordmark">Carrefour</span>
+                <span class="wordmark wm-title">Carrefour</span>
               </div>
               <span class="tile-name">Carrefour</span>
             </div>
 
             <div class="card">
               <div class="tile" style="background: #0050aa">
-                <span class="wordmark">Lidl</span>
+                <span class="wordmark wm-caps-tight">Lidl</span>
               </div>
               <span class="tile-name">Lidl</span>
             </div>
 
             <div class="card">
               <div class="tile" style="background: #0069b1">
-                <span class="wordmark">Eurospin</span>
+                <span class="wordmark wm-caps-spaced">Eurospin</span>
               </div>
               <span class="tile-name">Eurospin</span>
             </div>
 
             <div class="card">
               <div class="tile" style="background: #165226">
-                <span class="wordmark">Pam</span>
+                <span class="wordmark wm-title">Pam</span>
               </div>
               <span class="tile-name">Pam</span>
             </div>
 
             <div class="card">
               <div class="tile" style="background: #0082c3">
-                <span class="wordmark">Decathlon</span>
+                <span class="wordmark wm-caps-wide">Decathlon</span>
               </div>
               <span class="tile-name">Decathlon</span>
             </div>
@@ -891,7 +934,7 @@
         <main class="body grid-margin">
           <div class="single">
             <div class="tile" style="background: #ffcc00">
-              <span class="wordmark on-light">Esselunga</span>
+              <span class="wordmark on-light wm-lower">Esselunga</span>
             </div>
             <span class="tile-name">Esselunga</span>
             <p class="tip">Tap + to add more cards to your wallet</p>

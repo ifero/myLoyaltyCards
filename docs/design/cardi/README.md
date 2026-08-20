@@ -445,6 +445,42 @@ One new decision: **the favourite badge becomes an ink `#181824` plate carrying 
 system (amber is not in it) and invisible on light brands. Ink + beam is legal and survives
 all 57 brand colours, Esselunga's yellow included.
 
+### 2026-08-15 — the parallel Stitch run, and the one idea worth stealing
+
+The four wallet prompts were also sent through the Stitch **web prompt box** as an
+independent exploration, in parallel with the hand-authored frames: `6a2c2781…` (Populated),
+`2b0c1e6f…` (Empty), `a000f361…` (Single Card), `1d84102f…` (No Results). Kept on the canvas
+only — the PNGs in `frames/` remain the form set.
+
+**It got every colour right.** All eight catalogue hexes came back **pixel-exact** — Esselunga
+`#FFCC00`, Conad `#DA291C`, Coop `#E2231A`, Carrefour `#004E9F`, Lidl `#0050AA`, Eurospin
+`#0069B1`, Pam `#165226`, Decathlon `#0082C3` — plus cream exact and no shadow under any
+tile. Consistent with the literal-hex rule, and none of these shadow a semantic theme role.
+
+**One idea beat ours and has been adopted.** Stitch typeset each wordmark in its _own_
+idiom — lowercase `esselunga`, heavy caps `CONAD`, lowercase `coop`, tight `LIDL`, light and
+wide `DECATHLON`. The hand-authored frames had set all eight in one house style, which is
+exactly the failure the system names outright: _"do not unify the tiles — their clashing is
+the content."_ The HTML now carries per-brand treatments. They are still stand-ins for the
+real SVGs in `brandLogos.ts`; the point is that a stand-in must not flatten what production
+actually shows.
+
+**Six things it got wrong, every one of them pinned by the code:**
+
+| defect                                                        | why it is wrong                                                       |
+| ------------------------------------------------------------- | --------------------------------------------------------------------- |
+| No-results header has a **back chevron** and **no gear**      | The wallet is the root screen; `HeaderLeft` is unconditionally `+`    |
+| Frames are **711 and 706** wide within one set                | 393 × 884 vs 393 × 890 — the set is not even internally consistent    |
+| Empty frame has **dark bars** in the safe areas               | The ground is cream across the whole screen                           |
+| Empty subtitle **reflowed**                                   | The real string carries an explicit `\n` after "and"                  |
+| **Divider under the header** on two frames, not the other two | The system says no divider — and it contradicts itself across the set |
+| **No status bar, no home indicator** anywhere                 | The insets are real and occupied                                      |
+
+**The split this settles.** Stitch is worth running for a screen where its ideas might beat
+ours — it found the wordmark point that four reviewers and a written thesis had missed. It is
+not worth trusting for anything the code already decides, because it drifts on exactly those
+details and it cannot hold the geometry. Explore there, author here.
+
 ### Still open
 
 1. ~~Generate the four state frames and judge them~~ — **done 2026-08-14**; measured and
