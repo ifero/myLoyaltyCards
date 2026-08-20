@@ -266,6 +266,10 @@ Seed chain — each hop asks for the smallest possible delta:
 | 3 FILLED  | `a541546fbb6348c4aa7d35a46092fe5b` | frame 1     | `frames/03-filled.png`  |
 | 4 SAVING  | `cafd14e73078487ba0ef969d79204ec3` | **frame 3** | `frames/04-saving.png`  |
 
+> **Superseded 2026-08-15.** All four of the screens above were deleted, and the set was
+> regenerated from the corrected-geometry seed. See _The regenerated set_ at the end of this
+> document for the current ids — the PNGs in `frames/` are now the new renders.
+
 The PNGs in `frames/` are 711 × 1600 renders committed to the repo because Stitch's
 screenshot URLs are ephemeral `googleusercontent` links that will rot. Fetch a fresh, larger
 render by appending `=s1600` (or `=s2048`) to a screenshot `downloadUrl`.
@@ -356,6 +360,51 @@ block inside the reference file itself — two near-identical 575-line copies co
 Open `cardi-form-frames.html?probe`; expect `size=393x852`, `chevronL=20.0`, `labelL=20.0`,
 `inputL=20.0`, `btnL=20.0`, `btnH=52` on all four.
 
+### The regenerated set — 2026-08-15, from the corrected-geometry seed
+
+The canvas was cleared to a single screen, `1c57d246…` "New Card Form (Fixed Geometry)", and
+the three states were regenerated from it with `generate_variants` — `creativeRange: REFINE`,
+`aspects: ["TEXT_CONTENT"]`, `variantCount: 1`, `modelId: GEMINI_3_1_PRO`.
+
+| frame     | screen id                          | seeded from      | local copy              |
+| --------- | ---------------------------------- | ---------------- | ----------------------- |
+| 1 DEFAULT | `1c57d246642e49d596edfc95c8dbb96f` | the geometry fix | `frames/01-default.png` |
+| 2 ERROR   | `3805431b57c441e9a133df7572c9e99b` | frame 1          | `frames/02-error.png`   |
+| 3 FILLED  | `6d4cfe6e04794bf093c14dee6ed9e265` | frame 1          | `frames/03-filled.png`  |
+| 4 SAVING  | `d39488ce83bc40dfab0a2851e940abde` | **frame 3**      | `frames/04-saving.png`  |
+
+**The spinner is fixed. The geometry is not. The error red is not.** Measured on the new
+renders:
+
+| check                         | result                                                                  |
+| ----------------------------- | ----------------------------------------------------------------------- |
+| saving spinner                | **`#FFFFFF`, luma 255** — was `#DDDDDF`. Fixed.                         |
+| cream, ink, all five swatches | **pixel-exact in all four frames**                                      |
+| footer band                   | `y=1351..1442` **identical in all four** — the set is truly aligned     |
+| geometry                      | `711 × 1600` = **393 × 884**, all four. Third independent confirmation. |
+| error red                     | **still `#BF0000`** against `#C41E1E`                                   |
+
+The spinner fix is the transferable bit: it came right because the prompt **named the value
+it had drifted to and forbade it** ("pure white `#FFFFFF` — not grey, not `#DDDDDF`"). The
+error red did not come right, even though `#C41E1E` was spelled three times in the same
+prompt. That is the semantic-token caveat holding under a controlled retest: `error` is a
+role the theme owns, and owning the role beats spelling the hex.
+
+**Two MCP mechanics worth keeping.**
+
+- **`generate_variants` can time out at the MCP layer and still land the screen.** FILLED
+  returned `The operation timed out`, and the screen existed server-side moments later. Poll
+  `list_screens` — **do not retry**, or you will mint a duplicate. This is different from
+  `generate_screen_from_text`, which times out and lands nothing.
+- **`generate_variants` has no `designSystem` parameter**, contrary to the note further up
+  this document. The seed screen carries the system; there is nothing to pass.
+
+**One divergence to hold in view.** The Fixed Geometry seed reserves the 59px / 34px insets
+but leaves them **blank** — its own prompt says "keeping the canvas blank as requested" —
+whereas `frames/cardi-form-frames.html` now draws the status bar and home indicator into
+them. Every Stitch render from here will differ from the reference at the top and bottom of
+the frame. That is intended, and the reference is the one that is right.
+
 ### Still open
 
 1. ~~Generate the four state frames and judge them~~ — **done 2026-08-14**; measured and
@@ -366,31 +415,16 @@ Open `cardi-form-frames.html?probe`; expect `size=393x852`, `chevronL=20.0`, `la
    default state; repeatedly raised, never designed. This is now the next thing to make,
    and it needs a _new_ seed — no existing screen is close enough to vary from.
 3. Re-verify the Stitch design system hasn't been clobbered again since 2026-08-12.
-4. **The Stitch canvas is now ten screens and needs a clear-out.** Inventory read over MCP
-   on 2026-08-15 — **every one of them is `height: 1768`:**
+4. ~~The Stitch canvas is ten screens and needs a clear-out~~ — **done 2026-08-15.** The
+   superseded decoy (`b1a1e6e6…` "Add Card Form" — barcode format row, "Save card", an
+   invented favourites toggle, a baked-in red error, and freshly repainted by
+   `apply_design_system` so that it _looked_ trustworthy) was deleted along with three
+   unlabelled duplicates and the four original frames. Stitch has **no delete-screen over
+   MCP**, so this was done in the UI. The canvas is now the geometry seed, the three
+   regenerated states, and the DS text render.
 
-   | screen id   | title                          | size       | what it is                          |
-   | ----------- | ------------------------------ | ---------- | ----------------------------------- |
-   | `1bed6a85…` | New Card Form                  | 786 × 1768 | frame 1 DEFAULT, accepted           |
-   | `66fd99fd…` | New Card Form (Error State)    | 786 × 1768 | frame 2 ERROR, accepted             |
-   | `a541546f…` | New Card Form (Filled)         | 786 × 1768 | frame 3 FILLED, accepted            |
-   | `cafd14e7…` | New Card Form (Saving State)   | 786 × 1768 | frame 4 SAVING, accepted            |
-   | `1c57d246…` | New Card Form (Fixed Geometry) | 786 × 1768 | the geometry experiment — see above |
-   | `affad33e…` | New Card Form (Error State)    | 786 × 1768 | **duplicate**                       |
-   | `c5beeb02…` | New Card Form (Filled)         | 786 × 1768 | **duplicate**                       |
-   | `fb508779…` | New Card Form (Saving State)   | 780 × 1768 | **duplicate**                       |
-   | `b1a1e6e6…` | Add Card Form                  | 780 × 1768 | **the decoy — see below**           |
-   | `70e27310…` | cardi-design-system.md         | 2560 ×2300 | the DS text render                  |
-
-   **The decoy is the dangerous one.** `b1a1e6e6…` is the **superseded** design — barcode
-   format row, "Save card", an invented favourites toggle, a baked-in red error. On
-   2026-08-15 `apply_design_system` was run across the canvas, so it is now _correctly
-   themed and structurally wrong_: freshly painted, and therefore more likely to be trusted
-   than before. Three unlabelled duplicates compound it. Stitch has **no delete-screen over
-   MCP**, so clearing this means the UI or a fresh project.
-
-   Also confirmed the same day: `apply_design_system` is **per-screen only** — it does not
-   update `project.designTheme`, which remains stale. There is no MCP path to the project
+   Still true and still worth knowing: `apply_design_system` is **per-screen only** — it does
+   not update `project.designTheme`, which remains stale. There is no MCP path to the project
    default; that really is UI-only, and the canvas is inert to synthetic clicks.
 
 5. Decide the `orange` / `grey` → Cardì card-colour migration before the tokens PR.
