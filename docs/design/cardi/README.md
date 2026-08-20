@@ -16,6 +16,7 @@ run started 2026-08-11) whose scratchpad lived in `/tmp` and whose API connectio
 | `stitch-prompts-settings.txt`       | **The settings pattern** — screen (signed-in / guest) plus the four sheet SHAPES the eight sheets reduce to. Specced against the real `SettingsScreen`.                                |
 | `frames/cardi-form-frames.html`     | **The reference implementation.** Hand-authored, exactly 393 × 852, all four states. This is what screens derive from — not the PNGs. Open with `?probe` for a measured geometry dump. |
 | `frames/cardi-wallet-frames.html`   | **The wallet frames** — populated / empty / single-card / no-results, hand-authored at 393 × 852. Self-contained; shares its token block with the form file by copy, not by link.      |
+| `frames/cardi-settings-frames.html` | **The settings frames** — signed-in / guest plus one frame per sheet shape, hand-authored at 393 × 852. Frames C–F share one backdrop string, so it cannot drift.                      |
 | `frames/0*.png`                     | Stitch's actual output, kept as evidence. Faithful to what the generator produced, including three defects it cannot avoid — see _The 2026-08-15 audit_.                               |
 
 ## The thesis
@@ -548,6 +549,45 @@ sheet in the app is one of these four with different words.
   variant is an **unguarded fall-through** — `primary`/`secondary`/`tertiary` each get an `if`
   and everything else returns error-red — so any variant added to that union silently becomes
   destructive.
+
+### 2026-08-15 — the settings frames, and a prompt rule broken by its own author
+
+All six settings frames are hand-authored in `frames/cardi-settings-frames.html`. The Stitch
+run happened in parallel: `8d208789…` (Signed In), `4602b9d1…` (Guest), `734465a7…` (Theme),
+`7bc1305d…` (Sign Out), `9626cba4…` (Export Acknowledge), `6b336e24…` (Delete Step 2).
+
+**The sheets came out excellent and the backdrops came out fabricated.** All four sheet
+_contents_ matched the spec — including the hard one: sign-out drew a borderless `#C41E1E`
+"Sign Out" above an outlined "Cancel", and delete-step-2 drew the destructive button at
+reduced opacity with an empty field. That validates the four-shape reduction.
+
+But every screen _behind_ a sheet was invented, and each one differently:
+
+| frame       | invented backdrop                                          |
+| ----------- | ---------------------------------------------------------- |
+| Theme       | ACCOUNT / Profile / Security                               |
+| Sign out    | ACCOUNT / Profile Information / **Payment Methods**        |
+| Acknowledge | Account Details / Data & Privacy, drawn as a floating card |
+| Delete      | ACCOUNT / Profile Details / **DANGER ZONE**                |
+
+The guest frame drifted the same way, inventing Notifications, Clear Cache "12 MB" and a
+build number, and dropping the Create Account button entirely. "Payment Methods" in a
+loyalty-card app is the tell.
+
+**The cause was the prompt, and the rule it broke was already written down here.**
+`stitch-prompts-form-states.txt` says: _"Stitch has no memory between generations — so a
+prompt that says 'same as before' gets a different screen."_ The settings prompts then said
+_"identical to Frame A except the account block"_ and _"the Settings screen from Frame A
+behind a scrim"_, four times over. The generator was not drifting from a spec; it was filling
+a vacuum the prompt created by refusing to repeat one.
+
+**Rule, stated so it survives:** a prompt may never refer to another frame. Every frame
+repeats its own chrome in full, however tedious — the tedium IS the mechanism. When a frame
+is "screen X behind a sheet", the whole of X must be in that prompt.
+
+This failure mode does not exist in HTML, which is the quiet argument for authoring there:
+frames C–F share **one backdrop string reused four times**, so it is not merely consistent,
+it is incapable of differing.
 
 ### Still open
 

@@ -1,0 +1,1850 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Cardì — settings pattern, six frames</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Space+Grotesk:wght@700&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      /* ==================================================================
+         SHARED FRAME LAYER — the same tokens and frame primitives as
+         cardi-form-frames.html and cardi-wallet-frames.html. Keep the VALUES
+         in step; copied rather than linked, because any viewer that inlines
+         the HTML drops a linked stylesheet and renders a broken frame.
+         cardi-design-system.md is the source of truth for these values.
+         ================================================================== */
+
+      :root {
+        --ink: #181824;
+        --beam: #fccc0c;
+        --cream: #f0f0e8;
+        --white: #ffffff;
+        --hairline: #d6d6cb;
+        --placeholder: #55555f;
+        --error: #c41e1e;
+
+        --swatch-red: #e42424;
+        --swatch-blue: #0c3c84;
+        --swatch-azure: #0c84cc;
+        --swatch-green: #0c843c;
+        --swatch-yellow: #fccc0c;
+
+        /* TWO margins, deliberately. 20px is the SINGLE-COLUMN margin — forms,
+           settings, documents. The card grid uses 16px, and that is not a style
+           choice: TILE_WIDTH 171 in features/cards/utils/gridLayout.ts is
+           (390 − 2×16 − 16) / 2, frozen with tests. At 20px the tile stops being 171.
+           The design system currently states one figure and needs amending. */
+        --screen-margin: 20px;
+        --grid-margin: 16px;
+        --gutter: 16px;
+
+        --touch: 48px;
+        --radius-control: 12px;
+        --radius-tile: 16px;
+        --safe-top: 59px;
+        --safe-bottom: 34px;
+        --header-h: 56px;
+      }
+
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+
+      body {
+        background: #c9c9c2;
+        font-family: Inter, system-ui, sans-serif;
+        padding: 48px 32px;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 48px;
+        justify-content: center;
+        align-items: flex-start;
+      }
+
+      .plate {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        align-items: center;
+      }
+
+      .plate figcaption {
+        font:
+          600 12px/1.4 Inter,
+          sans-serif;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: #3d3d46;
+      }
+
+      /* ---- the frame: exactly 393 x 852, never anything else ---- */
+      .frame {
+        width: 393px;
+        height: 852px;
+        background: var(--cream);
+        color: var(--ink);
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+        position: relative;
+      }
+
+      /* Reserved system insets — 59px top / 34px bottom, the real values for a
+         393 x 852 Dynamic Island device.
+
+         These were originally left blank. That was a mistake of presentation, not of
+         measurement: on a real phone the top inset is OCCUPIED by the clock and
+         indicators, so drawing it empty makes a correct 59px read as careless
+         padding, and invites the exact wrong fix (shrink it — which would push
+         content under the live status bar at build time).
+
+         The status bar is SYSTEM chrome, not ours: ink only, no beam, and nothing
+         here is a control. Same for the home indicator. */
+      .safe-top {
+        height: var(--safe-top);
+        flex: 0 0 auto;
+      }
+
+      .safe-bottom {
+        height: var(--safe-bottom);
+        flex: 0 0 auto;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .statusbar {
+        height: 100%;
+        padding: 14px var(--screen-margin) 0;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        color: var(--ink);
+      }
+
+      .statusbar .clock {
+        font-family: Inter, sans-serif;
+        font-size: 15px;
+        font-weight: 600;
+        letter-spacing: 0.01em;
+        font-variant-numeric: tabular-nums;
+      }
+
+      .statusbar .indicators {
+        display: flex;
+        align-items: center;
+        gap: 5px;
+      }
+
+      .statusbar svg {
+        display: block;
+        fill: currentColor;
+      }
+
+      .home-indicator {
+        width: 140px;
+        height: 5px;
+        border-radius: 999px;
+        background: var(--ink);
+        opacity: 0.85;
+      }
+
+      /* ---- header ----
+         A three-column grid: a 48px touch target, the title, a 48px touch target.
+         Icons are optically aligned, not box-aligned — a glyph drawn inside a square
+         icon box carries empty side bearing, so box-aligning it to the margin leaves
+         the visible stroke sitting inboard of the content beneath. The fix is to
+         bleed the touch target to the frame edge and pad the content back to the
+         margin: ink lands on the margin, the target stays 48px. */
+      .header {
+        height: var(--header-h);
+        flex: 0 0 auto;
+        padding: 0 var(--screen-margin);
+        display: grid;
+        grid-template-columns: var(--touch) 1fr var(--touch);
+        align-items: center;
+      }
+
+      .header.grid-margin {
+        padding: 0 var(--grid-margin);
+      }
+
+      .icon-target {
+        width: var(--touch);
+        height: var(--touch);
+        display: flex;
+        align-items: center;
+        background: none;
+        border: 0;
+        cursor: pointer;
+        color: var(--ink);
+      }
+
+      .icon-target.at-start {
+        margin-left: calc(-1 * var(--screen-margin));
+        padding-left: var(--screen-margin);
+        justify-content: flex-start;
+      }
+
+      .icon-target.at-end {
+        margin-right: calc(-1 * var(--screen-margin));
+        padding-right: var(--screen-margin);
+        justify-content: flex-end;
+      }
+
+      .header.grid-margin .icon-target.at-start {
+        margin-left: calc(-1 * var(--grid-margin));
+        padding-left: var(--grid-margin);
+      }
+
+      .header.grid-margin .icon-target.at-end {
+        margin-right: calc(-1 * var(--grid-margin));
+        padding-right: var(--grid-margin);
+      }
+
+      .icon-target svg {
+        display: block;
+      }
+
+      .title {
+        font-family: 'Space Grotesk', sans-serif;
+        font-weight: 700;
+        font-size: 24px;
+        line-height: 32px;
+        letter-spacing: -0.01em;
+        text-align: center;
+        color: var(--ink);
+      }
+
+      /* ---- body ---- */
+      .body {
+        flex: 1 1 auto;
+        min-height: 0;
+        padding: 24px var(--screen-margin) 0;
+        display: flex;
+        flex-direction: column;
+        gap: 32px;
+      }
+
+      .body.grid-margin {
+        padding: 8px var(--grid-margin) 0;
+        gap: 16px;
+      }
+
+      /* ---- footer ----
+         A flex sibling AFTER the scroll area. Never fixed, never absolute — so it
+         cannot fight the keyboard. The gap above it is composition, not absence. */
+      .footer {
+        flex: 0 0 auto;
+      }
+
+      .hairline {
+        height: 1px;
+        background: var(--hairline);
+        width: 100%;
+      }
+
+      .footer-inner {
+        padding: var(--screen-margin);
+      }
+
+      .footer-inner.grid-margin {
+        padding: var(--grid-margin);
+      }
+
+      .btn-primary {
+        width: 100%;
+        height: 52px;
+        background: var(--ink);
+        color: var(--white);
+        border: 0;
+        border-radius: var(--radius-control);
+        font-family: Inter, sans-serif;
+        font-weight: 600;
+        font-size: 17px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      /* ------------------------------------------------------------------
+         Cardì — settings pattern reference frames.
+
+         Specced from features/settings/screens/SettingsScreen.tsx and the
+         eight *Sheet.tsx components — see stitch-prompts-settings.txt.
+
+         The eight sheets reduce to FOUR shapes: pick-one-from-a-list,
+         confirm, acknowledge, type-to-confirm. Frames C-F draw one each;
+         every other sheet in the app is one of them with different words.
+
+         Note the margin: 20px here, not the 24px the code currently uses.
+         The card grid uses 16 because 171 is derived from it and tested;
+         settings' 24 has no derivation behind it, so it follows the system.
+         ------------------------------------------------------------------ */
+
+      .settings-body {
+        padding: 16px var(--screen-margin) 0;
+        gap: 24px;
+        overflow: hidden;
+      }
+
+      /* ---- section ---- */
+      .sec {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        flex: 0 0 auto;
+      }
+
+      .sec-title {
+        font-family: Inter, sans-serif;
+        font-weight: 600;
+        font-size: 12px;
+        line-height: 16px;
+        letter-spacing: 0.05em;
+        text-transform: uppercase;
+        color: var(--placeholder);
+      }
+
+      /* ---- card: white on cream, hairline outline, rows divided by rules.
+         Flat — the outline is the hierarchy, never a shadow. ---- */
+      .card {
+        background: var(--white);
+        border: 1px solid var(--hairline);
+        border-radius: var(--radius-tile);
+        overflow: hidden;
+      }
+
+      .row {
+        min-height: var(--touch);
+        padding: 12px 16px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+
+      .row + .row,
+      .acct-head + .row {
+        border-top: 1px solid var(--hairline);
+      }
+
+      .row .label {
+        font-family: Inter, sans-serif;
+        font-size: 17px;
+        line-height: 24px;
+        color: var(--ink);
+        flex: 1 1 auto;
+      }
+
+      .row .value {
+        font-family: Inter, sans-serif;
+        font-size: 17px;
+        line-height: 24px;
+        color: var(--placeholder);
+        max-width: 46%;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .row .chev {
+        color: var(--placeholder);
+        display: flex;
+        flex: 0 0 auto;
+      }
+
+      .row .ico {
+        color: var(--ink);
+        display: flex;
+        flex: 0 0 auto;
+      }
+
+      /* Destructive rows are TEXT, never a red fill or a red border. The
+         system specifies borderless #C41E1E; Button.tsx currently renders a
+         filled error-red slab, which is the divergence these frames reject. */
+      .row.is-destructive .label {
+        color: var(--error);
+      }
+
+      /* A row that shows a value but does nothing must not look tappable:
+         no chevron. App version and catalogue are information. */
+
+      .acct-head {
+        padding: 12px 16px;
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+      }
+
+      .acct-head .cap {
+        font-family: Inter, sans-serif;
+        font-weight: 600;
+        font-size: 12px;
+        line-height: 16px;
+        letter-spacing: 0.05em;
+        text-transform: uppercase;
+        color: var(--placeholder);
+      }
+
+      .acct-head .email {
+        font-family: Inter, sans-serif;
+        font-size: 17px;
+        line-height: 24px;
+        color: var(--ink);
+      }
+
+      /* ---- guest block ---- */
+      .guest {
+        padding: 24px 20px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+        gap: 8px;
+      }
+
+      .guest h2 {
+        font-family: 'Space Grotesk', sans-serif;
+        font-weight: 700;
+        font-size: 20px;
+        line-height: 28px;
+        color: var(--ink);
+      }
+
+      .guest p {
+        font-family: Inter, sans-serif;
+        font-size: 15px;
+        line-height: 22px;
+        color: var(--placeholder);
+      }
+
+      .guest .actions {
+        width: 100%;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        margin-top: 16px;
+      }
+
+      /* ---- buttons ---- */
+      .btn-outline {
+        width: 100%;
+        height: 52px;
+        background: transparent;
+        color: var(--ink);
+        border: 1px solid var(--ink);
+        border-radius: var(--radius-control);
+        font-family: Inter, sans-serif;
+        font-weight: 600;
+        font-size: 17px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      /* Borderless, no fill, no outline. A destructive action should read as
+         a decision, not as a red slab competing with the safe option. */
+      .btn-destructive {
+        width: 100%;
+        height: 52px;
+        background: transparent;
+        color: var(--error);
+        border: 0;
+        font-family: Inter, sans-serif;
+        font-weight: 600;
+        font-size: 17px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      /* The ONE place this system draws a control disabled, because the gate
+         is the entire point of the screen. */
+      .btn-destructive.is-disabled {
+        opacity: 0.4;
+        cursor: default;
+      }
+
+      /* ---- sheet ---- */
+      .scrim {
+        position: absolute;
+        inset: 0;
+        background: rgba(24, 24, 36, 0.4);
+      }
+
+      /* The status bar is the SYSTEM layer and stays legible above the scrim.
+         iOS dims the app's content when a sheet opens; it does not dim the
+         clock. Scrimming it would be a rendering of the mock, not of the OS. */
+      .safe-top {
+        position: relative;
+        z-index: 2;
+      }
+
+      .sheet {
+        position: absolute;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: var(--white);
+        border-radius: var(--radius-tile) var(--radius-tile) 0 0;
+        display: flex;
+        flex-direction: column;
+      }
+
+      .grabber {
+        width: 36px;
+        height: 4px;
+        border-radius: 999px;
+        background: var(--hairline);
+        margin: 8px auto 0;
+        flex: 0 0 auto;
+      }
+
+      .sheet-inner {
+        padding: 16px var(--screen-margin) 0;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+
+      .sheet-title {
+        font-family: 'Space Grotesk', sans-serif;
+        font-weight: 700;
+        font-size: 20px;
+        line-height: 28px;
+        color: var(--ink);
+      }
+
+      .sheet-body {
+        font-family: Inter, sans-serif;
+        font-size: 15px;
+        line-height: 22px;
+        color: var(--placeholder);
+      }
+
+      .sheet-actions {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        margin-top: 16px;
+      }
+
+      /* Option list: choosing IS the action, so there are no buttons. */
+      .opts {
+        margin: 8px calc(-1 * var(--screen-margin)) 0;
+      }
+
+      .opt {
+        min-height: var(--touch);
+        padding: 12px var(--screen-margin);
+        display: flex;
+        align-items: center;
+        border-top: 1px solid var(--hairline);
+      }
+
+      .opt .label {
+        flex: 1 1 auto;
+        font-family: Inter, sans-serif;
+        font-size: 17px;
+        line-height: 24px;
+        color: var(--ink);
+      }
+
+      .opt .check {
+        color: var(--ink);
+        display: flex;
+      }
+
+      .helper {
+        font-family: Inter, sans-serif;
+        font-size: 13px;
+        line-height: 18px;
+        color: var(--placeholder);
+        padding-top: 12px;
+      }
+
+      .field-label {
+        font-family: Inter, sans-serif;
+        font-weight: 600;
+        font-size: 12px;
+        line-height: 16px;
+        letter-spacing: 0.05em;
+        text-transform: uppercase;
+        color: var(--ink);
+        margin-top: 16px;
+      }
+
+      .field {
+        min-height: var(--touch);
+        background: var(--white);
+        border: 1px solid var(--hairline);
+        border-radius: var(--radius-control);
+        margin-top: 8px;
+      }
+
+      .sheet-safe {
+        height: var(--safe-bottom);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-top: 8px;
+      }
+    </style>
+  </head>
+  <body>
+    <figure class="plate">
+      <div class="frame">
+        <div class="safe-top">
+          <div class="statusbar" aria-hidden="true">
+            <span class="clock">9:41</span>
+            <span class="indicators">
+              <svg width="18" height="12" viewBox="0 0 18 12">
+                <rect x="0" y="8.5" width="3" height="3.5" rx="1" />
+                <rect x="5" y="6" width="3" height="6" rx="1" />
+                <rect x="10" y="3" width="3" height="9" rx="1" />
+                <rect x="15" y="0" width="3" height="12" rx="1" />
+              </svg>
+              <svg
+                width="16"
+                height="12"
+                viewBox="0 0 16 12"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.6"
+                stroke-linecap="round"
+              >
+                <path d="M1.2 4.4a10 10 0 0 1 13.6 0" />
+                <path d="M4 7.3a6 6 0 0 1 8 0" />
+                <circle cx="8" cy="10.4" r="1" fill="currentColor" stroke="none" />
+              </svg>
+              <svg width="25" height="12" viewBox="0 0 25 12">
+                <rect
+                  x="0.5"
+                  y="0.5"
+                  width="21"
+                  height="11"
+                  rx="3.2"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-opacity="0.4"
+                />
+                <rect x="2.2" y="2.2" width="14" height="7.6" rx="1.8" />
+                <rect x="22.6" y="4.2" width="1.9" height="3.6" rx="0.95" opacity="0.4" />
+              </svg>
+            </span>
+          </div>
+        </div>
+        <header class="header">
+          <button class="icon-target at-start" aria-label="Go back">
+            <svg
+              viewBox="0 0 11 20"
+              width="11"
+              height="20"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.75"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <path d="M9.5 1.5L1.5 10l8 8.5" />
+            </svg>
+          </button>
+          <h1 class="title">Settings</h1>
+          <span></span>
+        </header>
+        <main class="body settings-body">
+          <div class="sec">
+            <div class="card">
+              <div class="acct-head">
+                <span class="cap">Signed in</span>
+                <span class="email">andrea@example.com</span>
+              </div>
+              <div class="row">
+                <span class="label">Change Password</span>
+                <span class="chev"
+                  ><svg
+                    width="18"
+                    height="18"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  >
+                    <path d="M9 6l6 6-6 6" /></svg
+                ></span>
+              </div>
+              <div class="row is-destructive">
+                <span class="label">Sign Out</span>
+              </div>
+              <div class="row is-destructive">
+                <span class="label">Delete Account</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="sec">
+            <span class="sec-title">Preferences</span>
+            <div class="card">
+              <div class="row">
+                <span class="ico"
+                  ><svg
+                    width="24"
+                    height="24"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="1.5"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  >
+                    <path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z" /></svg
+                ></span>
+                <span class="label">Theme</span>
+                <span class="value">System</span>
+                <span class="chev"
+                  ><svg
+                    width="18"
+                    height="18"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  >
+                    <path d="M9 6l6 6-6 6" /></svg
+                ></span>
+              </div>
+              <div class="row">
+                <span class="ico"
+                  ><svg
+                    width="24"
+                    height="24"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="1.5"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  >
+                    <circle cx="12" cy="12" r="9" />
+                    <path d="M3 12h18" />
+                    <path d="M12 3a14 14 0 0 1 0 18a14 14 0 0 1 0-18z" /></svg
+                ></span>
+                <span class="label">Language</span>
+                <span class="value">System (English)</span>
+                <span class="chev"
+                  ><svg
+                    width="18"
+                    height="18"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  >
+                    <path d="M9 6l6 6-6 6" /></svg
+                ></span>
+              </div>
+            </div>
+          </div>
+
+          <div class="sec">
+            <span class="sec-title">Data</span>
+            <div class="card">
+              <div class="row">
+                <span class="label">Export Data</span>
+                <span class="value">JSON</span>
+                <span class="chev"
+                  ><svg
+                    width="18"
+                    height="18"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  >
+                    <path d="M9 6l6 6-6 6" /></svg
+                ></span>
+              </div>
+              <div class="row">
+                <span class="label">Import Data</span>
+                <span class="chev"
+                  ><svg
+                    width="18"
+                    height="18"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  >
+                    <path d="M9 6l6 6-6 6" /></svg
+                ></span>
+              </div>
+              <div class="row">
+                <span class="label">Sync Now</span>
+                <span class="value">Synced</span>
+                <span class="chev"
+                  ><svg
+                    width="18"
+                    height="18"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  >
+                    <path d="M9 6l6 6-6 6" /></svg
+                ></span>
+              </div>
+            </div>
+          </div>
+
+          <div class="sec">
+            <span class="sec-title">About</span>
+            <div class="card">
+              <div class="row">
+                <span class="label">Help &amp; FAQ</span>
+                <span class="chev"
+                  ><svg
+                    width="18"
+                    height="18"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  >
+                    <path d="M9 6l6 6-6 6" /></svg
+                ></span>
+              </div>
+              <div class="row">
+                <span class="label">Privacy Policy</span>
+                <span class="chev"
+                  ><svg
+                    width="18"
+                    height="18"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  >
+                    <path d="M9 6l6 6-6 6" /></svg
+                ></span>
+              </div>
+              <div class="row">
+                <span class="label">App Version</span>
+                <span class="value">1.4.0</span>
+              </div>
+              <div class="row">
+                <span class="label">Catalogue</span>
+                <span class="value">2026.08</span>
+              </div>
+            </div>
+          </div>
+        </main>
+        <div class="safe-bottom"><span class="home-indicator"></span></div>
+      </div>
+      <figcaption>A — Signed in</figcaption>
+    </figure>
+
+    <figure class="plate">
+      <div class="frame">
+        <div class="safe-top">
+          <div class="statusbar" aria-hidden="true">
+            <span class="clock">9:41</span>
+            <span class="indicators">
+              <svg width="18" height="12" viewBox="0 0 18 12">
+                <rect x="0" y="8.5" width="3" height="3.5" rx="1" />
+                <rect x="5" y="6" width="3" height="6" rx="1" />
+                <rect x="10" y="3" width="3" height="9" rx="1" />
+                <rect x="15" y="0" width="3" height="12" rx="1" />
+              </svg>
+              <svg
+                width="16"
+                height="12"
+                viewBox="0 0 16 12"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.6"
+                stroke-linecap="round"
+              >
+                <path d="M1.2 4.4a10 10 0 0 1 13.6 0" />
+                <path d="M4 7.3a6 6 0 0 1 8 0" />
+                <circle cx="8" cy="10.4" r="1" fill="currentColor" stroke="none" />
+              </svg>
+              <svg width="25" height="12" viewBox="0 0 25 12">
+                <rect
+                  x="0.5"
+                  y="0.5"
+                  width="21"
+                  height="11"
+                  rx="3.2"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-opacity="0.4"
+                />
+                <rect x="2.2" y="2.2" width="14" height="7.6" rx="1.8" />
+                <rect x="22.6" y="4.2" width="1.9" height="3.6" rx="0.95" opacity="0.4" />
+              </svg>
+            </span>
+          </div>
+        </div>
+        <header class="header">
+          <button class="icon-target at-start" aria-label="Go back">
+            <svg
+              viewBox="0 0 11 20"
+              width="11"
+              height="20"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.75"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <path d="M9.5 1.5L1.5 10l8 8.5" />
+            </svg>
+          </button>
+          <h1 class="title">Settings</h1>
+          <span></span>
+        </header>
+        <main class="body settings-body">
+          <div class="sec">
+            <div class="card">
+              <div class="guest">
+                <h2>Not signed in yet</h2>
+                <p>Sign in or create an account to back up your cards and sync across devices.</p>
+                <div class="actions">
+                  <button class="btn-primary">Create Account</button>
+                  <button class="btn-outline">Sign In</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="sec">
+            <span class="sec-title">Preferences</span>
+            <div class="card">
+              <div class="row">
+                <span class="ico"
+                  ><svg
+                    width="24"
+                    height="24"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="1.5"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  >
+                    <path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z" /></svg
+                ></span>
+                <span class="label">Theme</span>
+                <span class="value">System</span>
+                <span class="chev"
+                  ><svg
+                    width="18"
+                    height="18"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  >
+                    <path d="M9 6l6 6-6 6" /></svg
+                ></span>
+              </div>
+              <div class="row">
+                <span class="ico"
+                  ><svg
+                    width="24"
+                    height="24"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="1.5"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  >
+                    <circle cx="12" cy="12" r="9" />
+                    <path d="M3 12h18" />
+                    <path d="M12 3a14 14 0 0 1 0 18a14 14 0 0 1 0-18z" /></svg
+                ></span>
+                <span class="label">Language</span>
+                <span class="value">System (English)</span>
+                <span class="chev"
+                  ><svg
+                    width="18"
+                    height="18"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  >
+                    <path d="M9 6l6 6-6 6" /></svg
+                ></span>
+              </div>
+            </div>
+          </div>
+
+          <div class="sec">
+            <span class="sec-title">Data</span>
+            <div class="card">
+              <div class="row">
+                <span class="label">Export Data</span>
+                <span class="value">JSON</span>
+                <span class="chev"
+                  ><svg
+                    width="18"
+                    height="18"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  >
+                    <path d="M9 6l6 6-6 6" /></svg
+                ></span>
+              </div>
+              <div class="row">
+                <span class="label">Import Data</span>
+                <span class="chev"
+                  ><svg
+                    width="18"
+                    height="18"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  >
+                    <path d="M9 6l6 6-6 6" /></svg
+                ></span>
+              </div>
+              <div class="row">
+                <span class="label">Sync Now</span>
+                <span class="value">Synced</span>
+                <span class="chev"
+                  ><svg
+                    width="18"
+                    height="18"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  >
+                    <path d="M9 6l6 6-6 6" /></svg
+                ></span>
+              </div>
+            </div>
+          </div>
+
+          <div class="sec">
+            <span class="sec-title">About</span>
+            <div class="card">
+              <div class="row">
+                <span class="label">Help &amp; FAQ</span>
+                <span class="chev"
+                  ><svg
+                    width="18"
+                    height="18"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  >
+                    <path d="M9 6l6 6-6 6" /></svg
+                ></span>
+              </div>
+              <div class="row">
+                <span class="label">Privacy Policy</span>
+                <span class="chev"
+                  ><svg
+                    width="18"
+                    height="18"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  >
+                    <path d="M9 6l6 6-6 6" /></svg
+                ></span>
+              </div>
+              <div class="row">
+                <span class="label">App Version</span>
+                <span class="value">1.4.0</span>
+              </div>
+              <div class="row">
+                <span class="label">Catalogue</span>
+                <span class="value">2026.08</span>
+              </div>
+            </div>
+          </div>
+        </main>
+        <div class="safe-bottom"><span class="home-indicator"></span></div>
+      </div>
+      <figcaption>B — Guest</figcaption>
+    </figure>
+
+    <figure class="plate">
+      <div class="frame">
+        <div class="safe-top">
+          <div class="statusbar" aria-hidden="true">
+            <span class="clock">9:41</span>
+            <span class="indicators">
+              <svg width="18" height="12" viewBox="0 0 18 12">
+                <rect x="0" y="8.5" width="3" height="3.5" rx="1" />
+                <rect x="5" y="6" width="3" height="6" rx="1" />
+                <rect x="10" y="3" width="3" height="9" rx="1" />
+                <rect x="15" y="0" width="3" height="12" rx="1" />
+              </svg>
+              <svg
+                width="16"
+                height="12"
+                viewBox="0 0 16 12"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.6"
+                stroke-linecap="round"
+              >
+                <path d="M1.2 4.4a10 10 0 0 1 13.6 0" />
+                <path d="M4 7.3a6 6 0 0 1 8 0" />
+                <circle cx="8" cy="10.4" r="1" fill="currentColor" stroke="none" />
+              </svg>
+              <svg width="25" height="12" viewBox="0 0 25 12">
+                <rect
+                  x="0.5"
+                  y="0.5"
+                  width="21"
+                  height="11"
+                  rx="3.2"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-opacity="0.4"
+                />
+                <rect x="2.2" y="2.2" width="14" height="7.6" rx="1.8" />
+                <rect x="22.6" y="4.2" width="1.9" height="3.6" rx="0.95" opacity="0.4" />
+              </svg>
+            </span>
+          </div>
+        </div>
+        <header class="header">
+          <button class="icon-target at-start" aria-label="Go back">
+            <svg
+              viewBox="0 0 11 20"
+              width="11"
+              height="20"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.75"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <path d="M9.5 1.5L1.5 10l8 8.5" />
+            </svg>
+          </button>
+          <h1 class="title">Settings</h1>
+          <span></span>
+        </header>
+        <main class="body settings-body">
+          <div class="sec">
+            <div class="card">
+              <div class="acct-head">
+                <span class="cap">Signed in</span>
+                <span class="email">andrea@example.com</span>
+              </div>
+              <div class="row">
+                <span class="label">Change Password</span>
+                <span class="chev"
+                  ><svg
+                    width="18"
+                    height="18"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  >
+                    <path d="M9 6l6 6-6 6" /></svg
+                ></span>
+              </div>
+              <div class="row is-destructive">
+                <span class="label">Sign Out</span>
+              </div>
+              <div class="row is-destructive">
+                <span class="label">Delete Account</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="sec">
+            <span class="sec-title">Preferences</span>
+            <div class="card">
+              <div class="row">
+                <span class="ico"
+                  ><svg
+                    width="24"
+                    height="24"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="1.5"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  >
+                    <path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z" /></svg
+                ></span>
+                <span class="label">Theme</span>
+                <span class="value">System</span>
+                <span class="chev"
+                  ><svg
+                    width="18"
+                    height="18"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  >
+                    <path d="M9 6l6 6-6 6" /></svg
+                ></span>
+              </div>
+              <div class="row">
+                <span class="ico"
+                  ><svg
+                    width="24"
+                    height="24"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="1.5"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  >
+                    <circle cx="12" cy="12" r="9" />
+                    <path d="M3 12h18" />
+                    <path d="M12 3a14 14 0 0 1 0 18a14 14 0 0 1 0-18z" /></svg
+                ></span>
+                <span class="label">Language</span>
+                <span class="value">System (English)</span>
+                <span class="chev"
+                  ><svg
+                    width="18"
+                    height="18"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  >
+                    <path d="M9 6l6 6-6 6" /></svg
+                ></span>
+              </div>
+            </div>
+          </div>
+        </main>
+        <div class="scrim"></div>
+        <div class="sheet">
+          <div class="grabber"></div>
+          <div class="sheet-inner">
+            <span class="sheet-title">Theme</span>
+            <div class="opts">
+              <div class="opt"><span class="label">Light</span></div>
+              <div class="opt"><span class="label">Dark</span></div>
+              <div class="opt">
+                <span class="label">System</span
+                ><span class="check"
+                  ><svg
+                    width="20"
+                    height="20"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  >
+                    <path d="M4 12.5l5 5L20 6.5" /></svg
+                ></span>
+              </div>
+            </div>
+            <span class="helper">System uses your device&rsquo;s appearance setting</span>
+          </div>
+          <div class="sheet-safe"><span class="home-indicator"></span></div>
+        </div>
+      </div>
+      <figcaption>C — Sheet: pick one</figcaption>
+    </figure>
+
+    <figure class="plate">
+      <div class="frame">
+        <div class="safe-top">
+          <div class="statusbar" aria-hidden="true">
+            <span class="clock">9:41</span>
+            <span class="indicators">
+              <svg width="18" height="12" viewBox="0 0 18 12">
+                <rect x="0" y="8.5" width="3" height="3.5" rx="1" />
+                <rect x="5" y="6" width="3" height="6" rx="1" />
+                <rect x="10" y="3" width="3" height="9" rx="1" />
+                <rect x="15" y="0" width="3" height="12" rx="1" />
+              </svg>
+              <svg
+                width="16"
+                height="12"
+                viewBox="0 0 16 12"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.6"
+                stroke-linecap="round"
+              >
+                <path d="M1.2 4.4a10 10 0 0 1 13.6 0" />
+                <path d="M4 7.3a6 6 0 0 1 8 0" />
+                <circle cx="8" cy="10.4" r="1" fill="currentColor" stroke="none" />
+              </svg>
+              <svg width="25" height="12" viewBox="0 0 25 12">
+                <rect
+                  x="0.5"
+                  y="0.5"
+                  width="21"
+                  height="11"
+                  rx="3.2"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-opacity="0.4"
+                />
+                <rect x="2.2" y="2.2" width="14" height="7.6" rx="1.8" />
+                <rect x="22.6" y="4.2" width="1.9" height="3.6" rx="0.95" opacity="0.4" />
+              </svg>
+            </span>
+          </div>
+        </div>
+        <header class="header">
+          <button class="icon-target at-start" aria-label="Go back">
+            <svg
+              viewBox="0 0 11 20"
+              width="11"
+              height="20"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.75"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <path d="M9.5 1.5L1.5 10l8 8.5" />
+            </svg>
+          </button>
+          <h1 class="title">Settings</h1>
+          <span></span>
+        </header>
+        <main class="body settings-body">
+          <div class="sec">
+            <div class="card">
+              <div class="acct-head">
+                <span class="cap">Signed in</span>
+                <span class="email">andrea@example.com</span>
+              </div>
+              <div class="row">
+                <span class="label">Change Password</span>
+                <span class="chev"
+                  ><svg
+                    width="18"
+                    height="18"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  >
+                    <path d="M9 6l6 6-6 6" /></svg
+                ></span>
+              </div>
+              <div class="row is-destructive">
+                <span class="label">Sign Out</span>
+              </div>
+              <div class="row is-destructive">
+                <span class="label">Delete Account</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="sec">
+            <span class="sec-title">Preferences</span>
+            <div class="card">
+              <div class="row">
+                <span class="ico"
+                  ><svg
+                    width="24"
+                    height="24"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="1.5"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  >
+                    <path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z" /></svg
+                ></span>
+                <span class="label">Theme</span>
+                <span class="value">System</span>
+                <span class="chev"
+                  ><svg
+                    width="18"
+                    height="18"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  >
+                    <path d="M9 6l6 6-6 6" /></svg
+                ></span>
+              </div>
+              <div class="row">
+                <span class="ico"
+                  ><svg
+                    width="24"
+                    height="24"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="1.5"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  >
+                    <circle cx="12" cy="12" r="9" />
+                    <path d="M3 12h18" />
+                    <path d="M12 3a14 14 0 0 1 0 18a14 14 0 0 1 0-18z" /></svg
+                ></span>
+                <span class="label">Language</span>
+                <span class="value">System (English)</span>
+                <span class="chev"
+                  ><svg
+                    width="18"
+                    height="18"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  >
+                    <path d="M9 6l6 6-6 6" /></svg
+                ></span>
+              </div>
+            </div>
+          </div>
+        </main>
+        <div class="scrim"></div>
+        <div class="sheet">
+          <div class="grabber"></div>
+          <div class="sheet-inner">
+            <span class="sheet-title">Sign Out?</span>
+            <span class="sheet-body"
+              >You will return to guest mode. Your cards will remain on this device.</span
+            >
+            <div class="sheet-actions">
+              <button class="btn-destructive">Sign Out</button>
+              <button class="btn-outline">Cancel</button>
+            </div>
+          </div>
+          <div class="sheet-safe"><span class="home-indicator"></span></div>
+        </div>
+      </div>
+      <figcaption>D — Sheet: confirm</figcaption>
+    </figure>
+
+    <figure class="plate">
+      <div class="frame">
+        <div class="safe-top">
+          <div class="statusbar" aria-hidden="true">
+            <span class="clock">9:41</span>
+            <span class="indicators">
+              <svg width="18" height="12" viewBox="0 0 18 12">
+                <rect x="0" y="8.5" width="3" height="3.5" rx="1" />
+                <rect x="5" y="6" width="3" height="6" rx="1" />
+                <rect x="10" y="3" width="3" height="9" rx="1" />
+                <rect x="15" y="0" width="3" height="12" rx="1" />
+              </svg>
+              <svg
+                width="16"
+                height="12"
+                viewBox="0 0 16 12"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.6"
+                stroke-linecap="round"
+              >
+                <path d="M1.2 4.4a10 10 0 0 1 13.6 0" />
+                <path d="M4 7.3a6 6 0 0 1 8 0" />
+                <circle cx="8" cy="10.4" r="1" fill="currentColor" stroke="none" />
+              </svg>
+              <svg width="25" height="12" viewBox="0 0 25 12">
+                <rect
+                  x="0.5"
+                  y="0.5"
+                  width="21"
+                  height="11"
+                  rx="3.2"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-opacity="0.4"
+                />
+                <rect x="2.2" y="2.2" width="14" height="7.6" rx="1.8" />
+                <rect x="22.6" y="4.2" width="1.9" height="3.6" rx="0.95" opacity="0.4" />
+              </svg>
+            </span>
+          </div>
+        </div>
+        <header class="header">
+          <button class="icon-target at-start" aria-label="Go back">
+            <svg
+              viewBox="0 0 11 20"
+              width="11"
+              height="20"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.75"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <path d="M9.5 1.5L1.5 10l8 8.5" />
+            </svg>
+          </button>
+          <h1 class="title">Settings</h1>
+          <span></span>
+        </header>
+        <main class="body settings-body">
+          <div class="sec">
+            <div class="card">
+              <div class="acct-head">
+                <span class="cap">Signed in</span>
+                <span class="email">andrea@example.com</span>
+              </div>
+              <div class="row">
+                <span class="label">Change Password</span>
+                <span class="chev"
+                  ><svg
+                    width="18"
+                    height="18"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  >
+                    <path d="M9 6l6 6-6 6" /></svg
+                ></span>
+              </div>
+              <div class="row is-destructive">
+                <span class="label">Sign Out</span>
+              </div>
+              <div class="row is-destructive">
+                <span class="label">Delete Account</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="sec">
+            <span class="sec-title">Preferences</span>
+            <div class="card">
+              <div class="row">
+                <span class="ico"
+                  ><svg
+                    width="24"
+                    height="24"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="1.5"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  >
+                    <path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z" /></svg
+                ></span>
+                <span class="label">Theme</span>
+                <span class="value">System</span>
+                <span class="chev"
+                  ><svg
+                    width="18"
+                    height="18"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  >
+                    <path d="M9 6l6 6-6 6" /></svg
+                ></span>
+              </div>
+              <div class="row">
+                <span class="ico"
+                  ><svg
+                    width="24"
+                    height="24"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="1.5"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  >
+                    <circle cx="12" cy="12" r="9" />
+                    <path d="M3 12h18" />
+                    <path d="M12 3a14 14 0 0 1 0 18a14 14 0 0 1 0-18z" /></svg
+                ></span>
+                <span class="label">Language</span>
+                <span class="value">System (English)</span>
+                <span class="chev"
+                  ><svg
+                    width="18"
+                    height="18"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  >
+                    <path d="M9 6l6 6-6 6" /></svg
+                ></span>
+              </div>
+            </div>
+          </div>
+        </main>
+        <div class="scrim"></div>
+        <div class="sheet">
+          <div class="grabber"></div>
+          <div class="sheet-inner">
+            <span class="sheet-title">Nothing to Export</span>
+            <span class="sheet-body"
+              >You don&rsquo;t have any cards yet. Add your first card to export your data.</span
+            >
+            <div class="sheet-actions">
+              <button class="btn-primary">OK</button>
+            </div>
+          </div>
+          <div class="sheet-safe"><span class="home-indicator"></span></div>
+        </div>
+      </div>
+      <figcaption>E — Sheet: acknowledge</figcaption>
+    </figure>
+
+    <figure class="plate">
+      <div class="frame">
+        <div class="safe-top">
+          <div class="statusbar" aria-hidden="true">
+            <span class="clock">9:41</span>
+            <span class="indicators">
+              <svg width="18" height="12" viewBox="0 0 18 12">
+                <rect x="0" y="8.5" width="3" height="3.5" rx="1" />
+                <rect x="5" y="6" width="3" height="6" rx="1" />
+                <rect x="10" y="3" width="3" height="9" rx="1" />
+                <rect x="15" y="0" width="3" height="12" rx="1" />
+              </svg>
+              <svg
+                width="16"
+                height="12"
+                viewBox="0 0 16 12"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.6"
+                stroke-linecap="round"
+              >
+                <path d="M1.2 4.4a10 10 0 0 1 13.6 0" />
+                <path d="M4 7.3a6 6 0 0 1 8 0" />
+                <circle cx="8" cy="10.4" r="1" fill="currentColor" stroke="none" />
+              </svg>
+              <svg width="25" height="12" viewBox="0 0 25 12">
+                <rect
+                  x="0.5"
+                  y="0.5"
+                  width="21"
+                  height="11"
+                  rx="3.2"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-opacity="0.4"
+                />
+                <rect x="2.2" y="2.2" width="14" height="7.6" rx="1.8" />
+                <rect x="22.6" y="4.2" width="1.9" height="3.6" rx="0.95" opacity="0.4" />
+              </svg>
+            </span>
+          </div>
+        </div>
+        <header class="header">
+          <button class="icon-target at-start" aria-label="Go back">
+            <svg
+              viewBox="0 0 11 20"
+              width="11"
+              height="20"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.75"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <path d="M9.5 1.5L1.5 10l8 8.5" />
+            </svg>
+          </button>
+          <h1 class="title">Settings</h1>
+          <span></span>
+        </header>
+        <main class="body settings-body">
+          <div class="sec">
+            <div class="card">
+              <div class="acct-head">
+                <span class="cap">Signed in</span>
+                <span class="email">andrea@example.com</span>
+              </div>
+              <div class="row">
+                <span class="label">Change Password</span>
+                <span class="chev"
+                  ><svg
+                    width="18"
+                    height="18"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  >
+                    <path d="M9 6l6 6-6 6" /></svg
+                ></span>
+              </div>
+              <div class="row is-destructive">
+                <span class="label">Sign Out</span>
+              </div>
+              <div class="row is-destructive">
+                <span class="label">Delete Account</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="sec">
+            <span class="sec-title">Preferences</span>
+            <div class="card">
+              <div class="row">
+                <span class="ico"
+                  ><svg
+                    width="24"
+                    height="24"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="1.5"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  >
+                    <path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z" /></svg
+                ></span>
+                <span class="label">Theme</span>
+                <span class="value">System</span>
+                <span class="chev"
+                  ><svg
+                    width="18"
+                    height="18"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  >
+                    <path d="M9 6l6 6-6 6" /></svg
+                ></span>
+              </div>
+              <div class="row">
+                <span class="ico"
+                  ><svg
+                    width="24"
+                    height="24"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="1.5"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  >
+                    <circle cx="12" cy="12" r="9" />
+                    <path d="M3 12h18" />
+                    <path d="M12 3a14 14 0 0 1 0 18a14 14 0 0 1 0-18z" /></svg
+                ></span>
+                <span class="label">Language</span>
+                <span class="value">System (English)</span>
+                <span class="chev"
+                  ><svg
+                    width="18"
+                    height="18"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  >
+                    <path d="M9 6l6 6-6 6" /></svg
+                ></span>
+              </div>
+            </div>
+          </div>
+        </main>
+        <div class="scrim"></div>
+        <div class="sheet">
+          <div class="grabber"></div>
+          <div class="sheet-inner">
+            <span class="sheet-title">Confirm Account Deletion</span>
+            <span class="sheet-body">Type DELETE to confirm permanent account deletion.</span>
+            <span class="field-label">Type DELETE to confirm</span>
+            <div class="field"></div>
+            <div class="sheet-actions">
+              <button class="btn-destructive is-disabled">Delete Account</button>
+              <button class="btn-outline">Cancel</button>
+            </div>
+          </div>
+          <div class="sheet-safe"><span class="home-indicator"></span></div>
+        </div>
+      </div>
+      <figcaption>F — Sheet: type to confirm</figcaption>
+    </figure>
+  </body>
+</html>
