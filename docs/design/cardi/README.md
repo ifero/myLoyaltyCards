@@ -18,6 +18,7 @@ run started 2026-08-11) whose scratchpad lived in `/tmp` and whose API connectio
 | `frames/cardi-form-frames.html`     | **The reference implementation.** Hand-authored, exactly 393 × 852, all four states. This is what screens derive from — not the PNGs. Open with `?probe` for a measured geometry dump. |
 | `frames/cardi-wallet-frames.html`   | **The wallet frames** — populated / empty / single-card / no-results, hand-authored at 393 × 852. Self-contained; shares its token block with the form file by copy, not by link.      |
 | `frames/cardi-settings-frames.html` | **The settings frames** — signed-in / guest plus one frame per sheet shape, hand-authored at 393 × 852. Frames C–F share one backdrop string, so it cannot drift.                      |
+| `frames/cardi-document-frames.html` | **The document frames** — prose / searchable FAQ / two-column table, hand-authored at 393 × 852 with the 48px reading margin.                                                          |
 | `frames/0*.png`                     | Stitch's actual output, kept as evidence. Faithful to what the generator produced, including three defects it cannot avoid — see _The 2026-08-15 audit_.                               |
 
 ## The thesis
@@ -630,6 +631,28 @@ Two more findings:
   and no colour on the "Not collected" values. They are not a warning and not a success.
 - One rebrand string hides here: `privacy.dataSummary.description` still reads "the data
   **myLoyaltyCards** collects".
+
+### 2026-08-15 — the document frames, and where a card belongs
+
+All three drawn in `frames/cardi-document-frames.html`. The Stitch run —
+`d22ecfc9…` (Prose), `32b5732b…` (FAQ), `a38494ef…` (Table) — was strong on two of three:
+the prose page and the table both came back essentially right, the table correctly showing
+"Not collected" in plain muted text with no colour. All three, however, omitted the status
+bar.
+
+**The FAQ disagreement was the useful one, and Stitch was half right.** The spec said the
+question rows should be bare hairline rules with "no card, no box". Stitch wrapped them in an
+outlined container with a **cream** fill — an outline enclosing nothing different, which is
+in neither the spec nor the system. But its instinct was better than the spec: those rows are
+**tappable**, and everywhere else in this app interactive rows sit on a **white card with a
+hairline outline**. So the frames adopt a rule rather than either version:
+
+> **A white card means interactive rows. Bare cream means prose.**
+> Help's accordion gets the card; the privacy policy does not.
+
+Two smaller things taken from the run: the table gets a **closing rule under the last row**,
+so it ends rather than trailing off, and bullets use a **hanging indent** so wrapped lines
+align under the text rather than under the bullet.
 
 ### Still open
 
