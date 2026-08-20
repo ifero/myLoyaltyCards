@@ -11,6 +11,16 @@ Status: done
 > devices the dev agent does not have. Every other AC is implemented and verified — see the gate
 > table in the Dev Agent Record. **Do not mark this done until @ifero has filled in the two
 > validation tables.**
+>
+> **RESOLVED 2026-08-20 — the tables were never filled, and the risk was accepted rather than
+> closed.** At the Epic 10 retrospective ifero decided to accept the residual risk and close the
+> epic instead of holding it as a gate (DEC-E10-RETRO-001,
+> [epic-10-retro-2026-08-20.md](../epic-10-retro-2026-08-20.md)). This note exists so the record is
+> honest: the story shipped as `done` on 2026-08-13 with AC17 and the hardware half of AC18
+> unperformed. The residual risk is Bluetooth reconnection timing and process death under real
+> memory pressure — the parts that only fail on real hardware — and `watch-android` has **no crash
+> reporting**, so a field failure produces no signal. Retro action item 1 (Wear OS field
+> observability) is the named mitigation.
 
 Epic: 10 — Wear OS App
 
@@ -648,7 +658,7 @@ renaming `PHONE_CAPABILITY` in the Wear APK makes it fail, and reverting makes i
 
 ### Physical Two-Device Validation (AC17)
 
-**NOT PERFORMED — blocked.** The dev agent has no physical Android phone and no physical Wear OS
+**NOT PERFORMED — RISK ACCEPTED 2026-08-20 (DEC-E10-RETRO-001), table left unfilled on purpose so the gap stays visible.** The dev agent has no physical Android phone and no physical Wear OS
 watch. This is the one AC that cannot be satisfied from this environment, and the story is explicit
 that emulator evidence is not a substitute: Story 9-6 shipped with `transferUserInfo` flagged as
 needing exactly this, and the outbox here is the same class of code — the parts that only fail on
@@ -666,7 +676,7 @@ real hardware are Bluetooth reconnection timing and process death under real mem
 
 ### Apple Watch Regression Re-check (AC18)
 
-**Hardware check NOT PERFORMED — blocked** (no physical Apple Watch). What _was_ verified is
+**Hardware check NOT PERFORMED — RISK ACCEPTED 2026-08-20 (DEC-E10-RETRO-001)** (no physical Apple Watch). What _was_ verified is
 stronger than it may look, because the iOS path was not modified behaviourally:
 
 - The only changes to `core/watch-connectivity.ts` are four added `export` keywords and their
