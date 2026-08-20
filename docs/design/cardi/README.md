@@ -18,7 +18,7 @@ run started 2026-08-11) whose scratchpad lived in `/tmp` and whose API connectio
 | `frames/cardi-form-frames.html`     | **The reference implementation.** Hand-authored, exactly 393 × 852, all four states. This is what screens derive from — not the PNGs. Open with `?probe` for a measured geometry dump. |
 | `frames/cardi-wallet-frames.html`   | **The wallet frames** — populated / empty / single-card / no-results, hand-authored at 393 × 852. Self-contained; shares its token block with the form file by copy, not by link.      |
 | `frames/cardi-settings-frames.html` | **The settings frames** — signed-in / guest plus one frame per sheet shape, hand-authored at 393 × 852. Frames C–F share one backdrop string, so it cannot drift.                      |
-| `frames/cardi-document-frames.html` | **The document frames** — prose / searchable FAQ / two-column table, hand-authored at 393 × 852 with the 48px reading margin.                                                          |
+| `frames/cardi-document-frames.html` | **The document frames** — prose / searchable FAQ / two-column table, hand-authored at 393 × 852. No repeated body title; 20px margins.                                                 |
 | `frames/0*.png`                     | Stitch's actual output, kept as evidence. Faithful to what the generator produced, including three defects it cannot avoid — see _The 2026-08-15 audit_.                               |
 
 ## The thesis
@@ -606,20 +606,27 @@ margin:
 Filing Help under "document" would have produced a wall of text and missed a live search
 field, an accordion and two buttons.
 
-**THE SCREEN MARGIN IS NOT ONE NUMBER — IT IS A FUNCTION OF CONTENT.** All three of these
-screens use `paddingHorizontal: 48`, and unlike the other outliers that is _defensible_: at a
-393 frame it leaves a 297px text column, which is a sane reading measure. So:
+**THE SCREEN MARGIN IS ONE NUMBER, WITH ONE DERIVED EXCEPTION.**
 
-| value    | where             | why                                                  |
-| -------- | ----------------- | ---------------------------------------------------- |
-| **16px** | card grid         | derived — `TILE_WIDTH` 171 depends on it, with tests |
-| **20px** | single-column UI  | forms, settings — the system default                 |
-| **48px** | long-form reading | prose, FAQ, table — a measure decision               |
+| value    | where           | why                                                  |
+| -------- | --------------- | ---------------------------------------------------- |
+| **16px** | card grid       | derived — `TILE_WIDTH` 171 depends on it, with tests |
+| **20px** | everything else | the system default                                   |
 
-`CardForm`'s 32 and `SettingsScreen`'s 24 are neither derived nor a measure: they are drift,
-and both should become 20. **This supersedes the earlier note in this document that said
-simply "20 single-column, 16 grid" — that was too simple, and it was written before the
-document screens were read.**
+`CardForm`'s 32, `SettingsScreen`'s 24 and these three screens' 48 are all drift, and all of
+them should become 20.
+
+> **Corrected 2026-08-15, after seeing it drawn.** This section first claimed the margin was
+> "a function of content" and defended the document screens' 48px as a _reading measure_.
+> That was wrong, and wrong in a way worth keeping: **the measure rule is desktop typography
+> imported to a phone.** It exists to bring a WIDE column down to 45–75 characters. A 393px
+> frame at 15px type is already near the bottom of that band; removing another 96px leaves a
+> 297px column — about **38 characters**, below the comfortable minimum. It does not read
+> better, it reads cramped, which is exactly how it looked once it was on screen.
+>
+> The tell I missed: I reached for a rule I already knew instead of measuring the result. The
+> earlier "20 single-column, 16 grid" note was right all along; it did not need the exception
+> I invented for it.
 
 Two more findings:
 

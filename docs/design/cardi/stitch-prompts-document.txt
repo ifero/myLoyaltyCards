@@ -30,20 +30,23 @@ docs/help.json; strings in shared/i18n/locales/en.ts.
 WHAT READING THE CODE TURNED UP
 -------------------------------------------------------------------------------
 
-1. THE SCREEN MARGIN QUESTION FINALLY RESOLVES. All three of these screens use
-   `paddingHorizontal: 48`, consistently. That is the SIXTH value in the codebase, but unlike
-   the others it is defensible: at a 393 frame, 48px margins leave a 297px text column, which
-   is a sane reading measure. Long-form prose wants a narrower column than UI does.
+1. THE SCREEN MARGIN IS 20px HERE — AND THE ARGUMENT FOR 48 WAS WRONG.
 
-   So the margin is not one number — it is a function of what the screen holds:
+   All three of these screens use `paddingHorizontal: 48`, and an earlier version of this
+   file defended that as a "reading measure": narrow the column, improve the read. **That is
+   a desktop rule and it inverts on a phone.** The measure guidance exists to bring a WIDE
+   column down to 45-75 characters. A 393px frame at 15px type is already near the bottom of
+   that range; taking another 96px out leaves a 297px column — about 38 characters, BELOW the
+   comfortable minimum. It does not read better, it reads cramped.
 
-       16px  card grid          — derived; TILE_WIDTH 171 depends on it, with tests
-       20px  single-column UI   — forms, settings; the system default
-       48px  long-form reading  — prose, FAQ, table; a measure decision
+   So there is no "long-form" margin. There are exactly two:
 
-   `CardForm`'s 32 and `SettingsScreen`'s 24 are neither derived nor a measure. They are
-   drift, and they should become 20. **This supersedes the earlier note that said simply
-   "20 single-column, 16 grid".**
+       16px  card grid  — derived; TILE_WIDTH 171 depends on it, with tests
+       20px  everything else — the system default
+
+   `CardForm`'s 32, `SettingsScreen`'s 24 and these screens' 48 are all drift, and all three
+   should become 20. **This supersedes the earlier claim in this file that the margin is "a
+   function of content" — it is one number with one derived exception.**
 
 2. ALL THREE SCREENS SET BODY TEXT AT 14px. The design system says the minimum body size is
    15px, and says it because these are the screens people actually read. This is a systematic
@@ -79,7 +82,7 @@ fully-rounded pill in ink #181824 at 85% opacity, centred.
 HEADER: 56px, flat, NO divider and no shadow beneath it. A back chevron on the left on a
 48 x 48 target, the title centred in Space Grotesk 24px bold ink #181824, nothing on the right.
 
-MARGINS: 48px left and right. This is wider than the rest of the app on purpose.
+MARGINS: 20px left and right — the system default. NOT 48: see finding 1.
 
 FORBIDDEN: bottom tab bars, floating action buttons, drop shadows, gradients, glassmorphism,
 illustrations, coral/salmon/terracotta/orange. Beam #FCCC0C appears NOWHERE in this pattern —
@@ -93,15 +96,16 @@ PROMPT A — PROSE DOCUMENT  (Privacy Policy)
 Design ONE mobile screen at 393x852, light mode: the Privacy Policy screen for Cardì. Apply
 the COMMON CHROME above. Header title: "Privacy Policy".
 
-BODY, 48px side margins, scrolling from the top:
+BODY, 20px side margins, scrolling from the top:
 
-1. The document title "Privacy Policy" in Space Grotesk 24px bold, ink #181824, left-aligned.
-   This repeats the header title deliberately — the header is navigation, this is the document.
+1. NO DOCUMENT TITLE IN THE BODY. The header already says "Privacy Policy"; repeating it as a
+   heading directly beneath itself is redundant and reads as an accident. The body opens with
+   the meta line.
 
-2. Directly beneath it, a meta line in Inter 12px, muted #55555F:
+2. A meta line in Inter 12px, muted #55555F:
    "Version 3 · Last updated: 12 August 2026"
 
-3. 48px of space, then the document body, left-aligned, ragged right:
+3. 32px of space, then the document body, left-aligned, ragged right:
    - a section header "What we collect" in Inter 16px bold ink #181824, with 32px above it
      and 8px below;
    - two paragraphs of body text in Inter 15px, line-height 22px, ink #181824, each followed
@@ -119,7 +123,7 @@ BODY, 48px side margins, scrolling from the top:
 Body text is 15px. It must not be smaller — this is a screen people read.
 
 TONE
-A legal document set like something worth reading: generous margins, a narrow measure, one
+A legal document set like something worth reading: the full column width, one
 type family for the body, no cards, no boxes, no panels, no icons, no accent colour anywhere.
 The page is cream and the words are ink. Nothing is highlighted, nothing is called out in a
 tinted box, and there is no "accept" button — this is a document, not a dialog.
@@ -132,12 +136,12 @@ PROMPT B — SEARCHABLE FAQ  (Help)
 Design ONE mobile screen at 393x852, light mode: the Help & FAQ screen for Cardì. Apply the
 COMMON CHROME above. Header title: "Help & FAQ".
 
-BODY, 48px side margins:
+BODY, 20px side margins:
 
-1. The title "Help & FAQ" in Space Grotesk 24px bold ink #181824, left-aligned.
+1. NO TITLE IN THE BODY — the header already says "Help & FAQ". The body opens with the
+   subtitle.
 
-2. Beneath it, the subtitle "Find quick answers and troubleshooting steps." in Inter 15px,
-   muted #55555F.
+2. The subtitle "Find quick answers and troubleshooting steps." in Inter 15px, muted #55555F.
 
 3. 24px below, a search field: white #FFFFFF fill, 1px #D6D6CB outline, 12px radius, 48px
    height, an outline magnifier icon in #55555F at its left, and the placeholder "Search
@@ -178,9 +182,10 @@ PROMPT C — TWO-COLUMN TABLE  (What We Collect)
 Design ONE mobile screen at 393x852, light mode: the "What We Collect" data-summary screen
 for Cardì. Apply the COMMON CHROME above. Header title: "What We Collect".
 
-BODY, 48px side margins:
+BODY, 20px side margins:
 
-1. The title "What We Collect" in Space Grotesk 24px bold ink #181824, left-aligned.
+1. NO TITLE IN THE BODY — the header already says "What We Collect". The body opens with the
+   description.
 
 2. Beneath it, the description in Inter 15px line-height 22px, muted #55555F:
    "This is a summary of the data Cardì collects when you have an account. Guest users have

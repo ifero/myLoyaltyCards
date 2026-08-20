@@ -282,43 +282,43 @@
          features/help/HelpScreen.tsx and features/privacy/DataSummaryScreen.tsx
          — see stitch-prompts-document.txt.
 
-         THE MARGIN HERE IS 48px, NOT 20. That is not drift: at a 393 frame it
-         leaves a 297px text column, which is a reading measure. The margin is a
-         function of content — 16 grid (derived), 20 single-column UI, 48
-         long-form reading.
+         THE MARGIN IS 20px, THE SYSTEM DEFAULT. An earlier version of this file
+         used 48px and defended it as a "reading measure". That was wrong, and
+         wrong in an instructive way: the measure rule comes from DESKTOP
+         typography, where you constrain a wide column down to 45-75 characters.
+         A 393px phone is already at the bottom of that range. Taking another
+         96px out left a 297px column — about 38 characters at 15px, BELOW the
+         comfortable minimum. The rule inverted when it crossed to mobile.
+
+         So there is no "long-form" margin. There are two: 16px for the card
+         grid, because TILE_WIDTH 171 is derived from it and tested, and 20px
+         for everything else. CardForm's 32, SettingsScreen's 24 and this file's
+         former 48 are all drift.
 
          BODY TEXT IS 15px. All three shipped screens set 14px, against a system
          minimum of 15px, on the screens people actually read.
+
+         NO REPEATED TITLE. The header carries the screen name; repeating it as
+         a body heading directly beneath itself is redundant, and it reads as an
+         accident rather than a decision.
          ------------------------------------------------------------------ */
 
-      :root {
-        --doc-margin: 48px;
-      }
-
       .doc-body {
-        padding: 8px var(--doc-margin) 0;
+        padding: 16px var(--screen-margin) 0;
         gap: 0;
         overflow: hidden;
         display: block;
       }
 
-      .doc-title {
-        font-family: 'Space Grotesk', sans-serif;
-        font-weight: 700;
-        font-size: 24px;
-        line-height: 32px;
-        letter-spacing: -0.01em;
-        color: var(--ink);
-      }
-
-      /* The header title is navigation; this one is the document. Repeating it
-         is deliberate. */
+      /* The header carries the screen name. There is no second copy of it in
+         the body — an earlier version had one and defended it as "the header is
+         navigation, this is the document", which is a distinction the eye does
+         not make when the two sit four pixels apart. */
       .doc-meta {
         font-family: Inter, sans-serif;
         font-size: 12px;
         line-height: 16px;
         color: var(--placeholder);
-        margin-top: 4px;
       }
 
       .doc-sub {
@@ -326,7 +326,6 @@
         font-size: 15px;
         line-height: 22px;
         color: var(--placeholder);
-        margin-top: 4px;
       }
 
       .doc-h2 {
@@ -582,7 +581,6 @@
           <span></span>
         </header>
         <main class="body doc-body">
-          <h2 class="doc-title">Privacy Policy</h2>
           <p class="doc-meta">Version 3 &middot; Last updated: 12 August 2026</p>
 
           <h3 class="doc-h2">What we collect</h3>
@@ -670,7 +668,6 @@
           <span></span>
         </header>
         <main class="body doc-body">
-          <h2 class="doc-title">Help &amp; FAQ</h2>
           <p class="doc-sub">Find quick answers and troubleshooting steps.</p>
 
           <div class="doc-search">
@@ -838,7 +835,6 @@
           <span></span>
         </header>
         <main class="body doc-body">
-          <h2 class="doc-title">What We Collect</h2>
           <p class="doc-sub">
             This is a summary of the data Cardì collects when you have an account. Guest users have
             no cloud data &mdash; everything stays on device.
