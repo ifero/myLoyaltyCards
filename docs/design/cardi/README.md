@@ -14,6 +14,7 @@ run started 2026-08-11) whose scratchpad lived in `/tmp` and whose API connectio
 | `stitch-prompt-01-form-pattern.txt` | Superseded. The prompt actually sent on 2026-08-11, kept as a record — it describes a screen that does not exist.                                                                      |
 | `stitch-prompts-wallet.txt`         | **The wallet pattern** — populated / empty / single-card / no-results, specced against the real `CardList`. Carries eight findings from reading the code.                              |
 | `stitch-prompts-settings.txt`       | **The settings pattern** — screen (signed-in / guest) plus the four sheet SHAPES the eight sheets reduce to. Specced against the real `SettingsScreen`.                                |
+| `stitch-prompts-document.txt`       | **The document pattern** — prose / searchable FAQ / two-column table. Three screens, three shapes, not the "document (2)" the plan assumed.                                            |
 | `frames/cardi-form-frames.html`     | **The reference implementation.** Hand-authored, exactly 393 × 852, all four states. This is what screens derive from — not the PNGs. Open with `?probe` for a measured geometry dump. |
 | `frames/cardi-wallet-frames.html`   | **The wallet frames** — populated / empty / single-card / no-results, hand-authored at 393 × 852. Self-contained; shares its token block with the form file by copy, not by link.      |
 | `frames/cardi-settings-frames.html` | **The settings frames** — signed-in / guest plus one frame per sheet shape, hand-authored at 393 × 852. Frames C–F share one backdrop string, so it cannot drift.                      |
@@ -588,6 +589,47 @@ is "screen X behind a sheet", the whole of X must be in that prompt.
 This failure mode does not exist in HTML, which is the quiet argument for authoring there:
 frames C–F share **one backdrop string reused four times**, so it is not merely consistent,
 it is incapable of differing.
+
+### 2026-08-15 — the document pattern, and the margin question finally resolves
+
+`stitch-prompts-document.txt` holds three prompts. The plan called this "document (2
+screens)". The code holds **three screens and three different shapes**, which only share a
+margin:
+
+| screen         | shape                                                                    |
+| -------------- | ------------------------------------------------------------------------ |
+| Privacy Policy | **prose document** — title, meta, section headers, bullets, body         |
+| Help           | **searchable FAQ** — search field, expand/collapse list, two end actions |
+| Data Summary   | **two-column table** — header row, ruled rows, download link, footnote   |
+
+Filing Help under "document" would have produced a wall of text and missed a live search
+field, an accordion and two buttons.
+
+**THE SCREEN MARGIN IS NOT ONE NUMBER — IT IS A FUNCTION OF CONTENT.** All three of these
+screens use `paddingHorizontal: 48`, and unlike the other outliers that is _defensible_: at a
+393 frame it leaves a 297px text column, which is a sane reading measure. So:
+
+| value    | where             | why                                                  |
+| -------- | ----------------- | ---------------------------------------------------- |
+| **16px** | card grid         | derived — `TILE_WIDTH` 171 depends on it, with tests |
+| **20px** | single-column UI  | forms, settings — the system default                 |
+| **48px** | long-form reading | prose, FAQ, table — a measure decision               |
+
+`CardForm`'s 32 and `SettingsScreen`'s 24 are neither derived nor a measure: they are drift,
+and both should become 20. **This supersedes the earlier note in this document that said
+simply "20 single-column, 16 grid" — that was too simple, and it was written before the
+document screens were read.**
+
+Two more findings:
+
+- **All three screens set body text at 14px**, against a system minimum of 15px — and these
+  are the screens people actually read. Systematic, not a one-off. The frames use 15px.
+- **The system has no table.** `DataSummaryScreen` renders a real one and nothing in
+  `cardi-design-system.md` describes it. Frame C defines it: **ruled, not boxed** — hairlines
+  between rows and under the header, no outer border, no card, no fills, no zebra striping,
+  and no colour on the "Not collected" values. They are not a warning and not a success.
+- One rebrand string hides here: `privacy.dataSummary.description` still reads "the data
+  **myLoyaltyCards** collects".
 
 ### Still open
 

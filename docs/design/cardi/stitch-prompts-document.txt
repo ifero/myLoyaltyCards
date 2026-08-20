@@ -1,0 +1,219 @@
+CARDÌ — THE DOCUMENT PATTERN, THREE FRAMES
+==========================================
+
+The plan called this "document (2 screens)". The code holds THREE screens, and they are not
+one pattern — they are three shapes that happen to share a margin:
+
+  A. PROSE DOCUMENT   — PrivacyPolicyScreen: title, meta, section headers, bullets, body
+  B. SEARCHABLE FAQ   — HelpScreen: title, subtitle, a search field, an expand/collapse list,
+                        two actions at the end
+  C. TWO-COLUMN TABLE — DataSummaryScreen: title, description, a header row, category/data
+                        rows, a download action, a footnote
+
+One frame each. Every prompt below is self-contained and repeats its own chrome in full —
+a prompt may NEVER refer to another frame, because the generator has no memory between
+generations and will invent whatever the prompt declines to state.
+
+Before generating:
+  - Model selector on 3.1 Pro.
+  - Stitch cannot emit 393 x 852; it injects `body { min-height: max(884px, 100dvh) }`.
+    Treat its output as the argument, author the final frame in HTML.
+  - Write every fix as a NUMBERED DEFECT. A requirement stated as an enumerated item lands;
+    the same requirement buried in descriptive prose gets skipped.
+
+Screen source of truth: features/privacy/PrivacyPolicyScreen.tsx,
+features/privacy/DataSummaryScreen.tsx, features/help/HelpScreen.tsx; FAQ content in
+docs/help.json; strings in shared/i18n/locales/en.ts.
+
+
+-------------------------------------------------------------------------------
+WHAT READING THE CODE TURNED UP
+-------------------------------------------------------------------------------
+
+1. THE SCREEN MARGIN QUESTION FINALLY RESOLVES. All three of these screens use
+   `paddingHorizontal: 48`, consistently. That is the SIXTH value in the codebase, but unlike
+   the others it is defensible: at a 393 frame, 48px margins leave a 297px text column, which
+   is a sane reading measure. Long-form prose wants a narrower column than UI does.
+
+   So the margin is not one number — it is a function of what the screen holds:
+
+       16px  card grid          — derived; TILE_WIDTH 171 depends on it, with tests
+       20px  single-column UI   — forms, settings; the system default
+       48px  long-form reading  — prose, FAQ, table; a measure decision
+
+   `CardForm`'s 32 and `SettingsScreen`'s 24 are neither derived nor a measure. They are
+   drift, and they should become 20. **This supersedes the earlier note that said simply
+   "20 single-column, 16 grid".**
+
+2. ALL THREE SCREENS SET BODY TEXT AT 14px. The design system says the minimum body size is
+   15px, and says it because these are the screens people actually read. This is a systematic
+   violation, not a one-off. **These frames use 15px** and the code should follow.
+
+3. THE DESIGN SYSTEM HAS NO TABLE. `DataSummaryScreen` renders a real two-column table —
+   header row, rows divided by hairlines, a category column and a data column — and nothing
+   in `cardi-design-system.md` describes one. Frame C specifies it: hairline rules only, no
+   fills, no zebra striping, no outer border. A table in this system is ruled, not boxed.
+
+4. HELP IS NOT A DOCUMENT. It has a live search field filtering nine FAQ entries, an
+   expand/collapse accordion (`expandedIds` state), links inside answers, and two actions at
+   the bottom — Contact Support and Submit Feedback. Filing it under "document" would have
+   produced a wall of text and missed the entire interaction.
+
+5. ONE REBRAND STRING LIVES HERE. `privacy.dataSummary.description` reads "This is a summary
+   of the data myLoyaltyCards collects…". Under the rename it says Cardì. That belongs to the
+   rename, not the redesign, but this is where it hides.
+
+
+-------------------------------------------------------------------------------
+COMMON CHROME — true of all three frames
+-------------------------------------------------------------------------------
+
+GROUND: cream #F0F0E8 across the WHOLE frame, both system insets included. Exactly one
+background colour. The header has NO background of its own — never #FAFAF2, never a
+near-white, never a tint.
+
+SYSTEM INSETS: 59px top carrying the iOS status bar in ink #181824 — "9:41" left in Inter
+15px semibold; signal, wifi and battery icons right. 34px bottom carrying a 140 x 5
+fully-rounded pill in ink #181824 at 85% opacity, centred.
+
+HEADER: 56px, flat, NO divider and no shadow beneath it. A back chevron on the left on a
+48 x 48 target, the title centred in Space Grotesk 24px bold ink #181824, nothing on the right.
+
+MARGINS: 48px left and right. This is wider than the rest of the app on purpose.
+
+FORBIDDEN: bottom tab bars, floating action buttons, drop shadows, gradients, glassmorphism,
+illustrations, coral/salmon/terracotta/orange. Beam #FCCC0C appears NOWHERE in this pattern —
+nothing here is a favourite or a selection, and yellow on a page of prose is noise.
+
+
+-------------------------------------------------------------------------------
+PROMPT A — PROSE DOCUMENT  (Privacy Policy)
+-------------------------------------------------------------------------------
+
+Design ONE mobile screen at 393x852, light mode: the Privacy Policy screen for Cardì. Apply
+the COMMON CHROME above. Header title: "Privacy Policy".
+
+BODY, 48px side margins, scrolling from the top:
+
+1. The document title "Privacy Policy" in Space Grotesk 24px bold, ink #181824, left-aligned.
+   This repeats the header title deliberately — the header is navigation, this is the document.
+
+2. Directly beneath it, a meta line in Inter 12px, muted #55555F:
+   "Version 3 · Last updated: 12 August 2026"
+
+3. 48px of space, then the document body, left-aligned, ragged right:
+   - a section header "What we collect" in Inter 16px bold ink #181824, with 32px above it
+     and 8px below;
+   - two paragraphs of body text in Inter 15px, line-height 22px, ink #181824, each followed
+     by 8px;
+   - three bullet lines, each indented 32px from the text column, Inter 15px ink #181824,
+     8px apart, reading:
+       "• Card names, barcodes and timestamps"
+       "• Your email address, if you create an account"
+       "• App version and locale, to fetch the right catalogue"
+   - a second section header "What we never collect" with the same treatment, followed by one
+     paragraph and two bullets:
+       "• Your location"
+       "• Your contacts"
+
+Body text is 15px. It must not be smaller — this is a screen people read.
+
+TONE
+A legal document set like something worth reading: generous margins, a narrow measure, one
+type family for the body, no cards, no boxes, no panels, no icons, no accent colour anywhere.
+The page is cream and the words are ink. Nothing is highlighted, nothing is called out in a
+tinted box, and there is no "accept" button — this is a document, not a dialog.
+
+
+-------------------------------------------------------------------------------
+PROMPT B — SEARCHABLE FAQ  (Help)
+-------------------------------------------------------------------------------
+
+Design ONE mobile screen at 393x852, light mode: the Help & FAQ screen for Cardì. Apply the
+COMMON CHROME above. Header title: "Help & FAQ".
+
+BODY, 48px side margins:
+
+1. The title "Help & FAQ" in Space Grotesk 24px bold ink #181824, left-aligned.
+
+2. Beneath it, the subtitle "Find quick answers and troubleshooting steps." in Inter 15px,
+   muted #55555F.
+
+3. 24px below, a search field: white #FFFFFF fill, 1px #D6D6CB outline, 12px radius, 48px
+   height, an outline magnifier icon in #55555F at its left, and the placeholder "Search
+   help" in #55555F.
+
+4. 24px below, a list of four questions. Each is a row at least 48px tall, holding the
+   question in Inter 16px semibold ink #181824 on the left and a small outline chevron on the
+   right. Rows are separated by a 1px #D6D6CB hairline rule that spans the text column. There
+   is NO card, NO box and NO fill behind these rows — the rules are the structure.
+
+   The four questions, in this order:
+     "How do I add my first card?"      — EXPANDED (see below)
+     "How do I scan a barcode?"         — collapsed, chevron pointing down
+     "Why is my camera not working?"    — collapsed, chevron pointing down
+     "Is my data private?"              — collapsed, chevron pointing down
+
+5. The FIRST question is EXPANDED: its chevron points UP, and beneath it, indented to the same
+   text column, its answer in Inter 15px line-height 22px, muted #55555F, reading:
+   "Tap Add Card on the main screen. If you have no cards yet, the First-Card Guidance overlay
+   appears on the home screen to walk you through it."
+   The expanded answer sits above the next hairline. Do not tint or fill the expanded row.
+
+6. At the very bottom of the content, 32px below the last row, two full-width buttons stacked
+   with 8px between them:
+     "Contact Support" — ink #181824 fill, white text, 52px tall, 12px radius;
+     "Submit Feedback" — transparent, 1px ink #181824 outline, ink text, 52px tall, 12px radius.
+
+TONE
+A reference someone reaches for when something has gone wrong, so it is calm and scannable:
+questions bold, answers quiet, one open at a time. No illustrations, no emoji, no coloured
+category chips, no "was this helpful?" widget.
+
+
+-------------------------------------------------------------------------------
+PROMPT C — TWO-COLUMN TABLE  (What We Collect)
+-------------------------------------------------------------------------------
+
+Design ONE mobile screen at 393x852, light mode: the "What We Collect" data-summary screen
+for Cardì. Apply the COMMON CHROME above. Header title: "What We Collect".
+
+BODY, 48px side margins:
+
+1. The title "What We Collect" in Space Grotesk 24px bold ink #181824, left-aligned.
+
+2. Beneath it, the description in Inter 15px line-height 22px, muted #55555F:
+   "This is a summary of the data Cardì collects when you have an account. Guest users have
+   no cloud data — everything stays on device."
+
+3. 32px below, a TWO-COLUMN TABLE. The design system has no table component, so this is the
+   definition of one:
+   - a header row: "Category" on the left and "Data Collected" on the right, both in Inter
+     12px semibold uppercase, letter-spacing 0.05em, ink #181824;
+   - beneath the header row, a 1px #D6D6CB hairline spanning the full text column;
+   - then five data rows, each at least 48px tall, with the category in Inter 15px semibold
+     ink #181824 in a left column about 40% of the width, and the detail in Inter 15px muted
+     #55555F filling the rest, wrapping to two lines where needed;
+   - each row separated from the next by a 1px #D6D6CB hairline.
+
+   The five rows, in this order:
+     "Account"   / "Email address"
+     "Cards"     / "Card names, barcodes, timestamps"
+     "App"       / "App version, locale (for catalogue)"
+     "Location"  / "Not collected"
+     "Contacts"  / "Not collected"
+
+   The table is RULED, NOT BOXED: hairline rules between rows and under the header only. No
+   outer border, no card, no rounded container, no fills, no zebra striping, no vertical rule
+   between the columns, and no colour on the "Not collected" values — they are not a warning
+   and not a success, they are simply the answer.
+
+4. 32px below the table, a single text action "Download my data" in Inter 15px semibold, ink
+   #181824, left-aligned, with a small outline download icon before it. Not a button — a link.
+
+5. Beneath it, a footnote in Inter 12px muted #55555F, wrapping to two lines.
+
+TONE
+This screen exists to be trusted, so it is plain to the point of austerity. A table earns
+trust by being legible and boring: no icons per row, no badges, no green ticks against "Not
+collected", no shaded header. The restraint is the argument.
