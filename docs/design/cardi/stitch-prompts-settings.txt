@@ -1,0 +1,258 @@
+CARDÌ — THE SETTINGS PATTERN, SIX FRAMES
+========================================
+
+Settings is the app's second-largest surface and the one nobody has counted. The plan called
+it "settings list (2 screens)". The code holds one screen with two account states, a separate
+language list, and EIGHT bottom sheets — which reduce to four shapes.
+
+Frame A (SETTINGS, SIGNED IN) is the exemplar. B is its account fork. C-F are the four sheet
+shapes, one frame each; every other sheet in the app is one of them with different words.
+
+Before generating:
+  - Model selector on 3.1 Pro.
+  - Stitch cannot emit 393 x 852 — it injects `body { min-height: max(884px, 100dvh) }`.
+    Explore there if its ideas are wanted; author the final frame in HTML.
+  - When a literal colour keeps losing to the theme, NAME THE COMPONENT and forbid the value
+    by hex ("the header has NO background of its own; do NOT use #FAFAF2"). That phrasing has
+    worked every time; repeating the literal alone has not.
+
+Screen source of truth: features/settings/screens/SettingsScreen.tsx, its four Section
+components, and the eight *Sheet.tsx components; primitives in shared/components/ui
+(BottomSheet, ActionRow, Button, TextField); strings in shared/i18n/locales/en.ts. Every
+label below is the real one.
+
+
+-------------------------------------------------------------------------------
+WHAT READING THE CODE TURNED UP
+-------------------------------------------------------------------------------
+
+1. EIGHT SHEETS, FOUR SHAPES. Fingerprinted by button count and whether they map a list:
+     - PICK ONE FROM A LIST (no buttons, renders a list): ThemePickerSheet, LanguagePickerSheet
+     - CONFIRM (two buttons): ExportConfirmationSheet, SignOutSheet, ImportPreviewSheet,
+       and DeleteAccountSheet step 1
+     - ACKNOWLEDGE (one button): ExportEmptyStateSheet, ImportErrorSheet
+     - TYPE-TO-CONFIRM (two buttons + a text input): DeleteAccountSheet step 2
+   `DeleteAccountSheet` is a TWO-STEP sheet — `useState<1 | 2>` — which is why it has four
+   buttons. Step 2 gates its destructive button on `confirmationText === 'DELETE'`. It is the
+   only sheet in the app with an input inside it, and the most destructive control we own.
+
+2. THE CHROME IS ALREADY A COMPONENT. Every sheet is built on `BottomSheet` from
+   shared/components/ui, which has its own stories and tests. Rows are `ActionRow`, also with
+   stories. So unlike the wallet, this pattern is constrained by an existing API — `prefix`
+   icon, `label`, `value`, `variant`, `onPress` — and the design must fit it rather than
+   invent a row.
+
+3. A FIFTH ANSWER TO THE SCREEN MARGIN. `SettingsScreen` uses `paddingHorizontal: 24`. The
+   running tally is `CardForm` 32 · `AuthScreenLayout` token · design system 20 · card grid
+   16 · settings 24. **These frames use 20**, and the code should move 24 -> 20. That is the
+   opposite call from the grid, for a stated reason: 16 is DERIVED (the 171px tile depends on
+   it, with tests), whereas 24 has no derivation behind it and no test pinning it.
+
+4. THE DESTRUCTIVE BUTTON DOES NOT MATCH THE SYSTEM. The system says destructive is
+   borderless, `#C41E1E` text, trailing icon. `Button.tsx` renders it as a FILLED
+   `theme.error` block with white text and a border. So sign-out and delete are solid red
+   slabs today. **These frames follow the system, not the code.** Worth knowing separately:
+   the variant is implemented as an unguarded fall-through — `primary`, `secondary` and
+   `tertiary` each get an `if`, and everything else returns error-red — so any variant added
+   to that union in future silently becomes destructive.
+
+5. THE ACCOUNT SECTION HAS NO SECTION TITLE. `settings.sections` holds exactly three strings —
+   Preferences, About, Data. The account block sits at the top with no uppercase header above
+   it, which is correct: it is identity, not a category.
+
+6. THE ACCOUNT SECTION FORKS ON AUTH STATE. `AccountSection` and `AccountSectionGuest` are
+   different components, not one component with a flag. Guest is a title plus body plus two
+   actions; signed-in is an email plus three actions including two destructive ones.
+
+
+-------------------------------------------------------------------------------
+COMMON CHROME — true of every frame below
+-------------------------------------------------------------------------------
+
+GROUND: cream #F0F0E8 across the WHOLE frame, including both system insets. There is exactly
+one background colour on the screen and it is #F0F0E8. The header has NO background of its
+own — no surface, no panel, no tint, no near-white, and specifically never #FAFAF2.
+
+SYSTEM INSETS: 59px top, 34px bottom, both on cream. The top inset carries the iOS status bar
+in ink #181824 — "9:41" left in Inter 15px semibold; signal, wifi and battery icons right.
+The bottom inset carries a 140 x 5 fully-rounded pill in ink #181824 at 85% opacity, centred.
+
+HEADER: 56px tall, flat, NO divider and no shadow beneath it. A back chevron on the left on a
+48 x 48 target, the title centred in Space Grotesk 24px bold ink #181824, nothing on the right.
+
+MARGINS: 20px. Section gap 24px. Row gap 8px.
+
+FORBIDDEN EVERYWHERE: bottom tab bars, floating action buttons, drop shadows, gradients,
+glassmorphism, illustrations, coral/salmon/terracotta/orange. Beam #FCCC0C appears nowhere in
+this pattern at all — settings has no favourite, no selection accent that earns it, and a
+yellow surface here would be the loudest thing in the app for no reason.
+
+
+-------------------------------------------------------------------------------
+PROMPT A — SETTINGS, SIGNED IN  (the exemplar)
+-------------------------------------------------------------------------------
+
+Design ONE mobile screen at 393x852, light mode: the Settings screen for Cardì, for a person
+who is signed in. Apply the COMMON CHROME above. Title: "Settings".
+
+Single column, 20px margins, sections separated by 24px.
+
+1. ACCOUNT BLOCK — first, and with NO uppercase section header above it.
+   A white #FFFFFF container, 16px radius, 1px #D6D6CB outline, holding:
+   - the person's email "andrea@example.com" in Inter 17px ink #181824, with a small
+     "Signed in" label above it in Inter 12px semibold uppercase, letter-spacing 0.05em,
+     muted #55555F;
+   - a hairline #D6D6CB rule, then a row "Change Password" in Inter 17px ink #181824 with a
+     small outline chevron-right at its right end;
+   - a hairline rule, then "Sign Out" in Inter 17px, #C41E1E, no chevron;
+   - a hairline rule, then "Delete Account" in Inter 17px, #C41E1E, no chevron.
+   Both destructive rows are TEXT ONLY — no red fill, no red border, no red background.
+
+2. SECTION "PREFERENCES" — the title in Inter 12px semibold, uppercase, letter-spacing
+   0.05em, muted #55555F, sitting 8px above its rows. Two rows, each 48px min height, in a
+   white #FFFFFF container with 16px radius and a 1px #D6D6CB outline, separated by a
+   hairline:
+   - a 24px outline brightness icon in ink, the label "Theme" in Inter 17px ink #181824,
+     and at the right end the current value "System" in Inter 17px muted #55555F followed by
+     a small outline chevron-right;
+   - a 24px outline language icon, the label "Language", value "System (English)", chevron.
+
+3. SECTION "DATA" — same treatment. Three rows:
+   - "Export Data", value "JSON", chevron;
+   - "Import Data", chevron, no value;
+   - "Sync Now", value "Synced", chevron.
+
+4. SECTION "ABOUT" — same treatment. Four rows:
+   - "Help & FAQ", chevron;
+   - "Privacy Policy", chevron;
+   - "App Version", value "1.4.0", NO chevron — it is information, not a control;
+   - "Catalogue", value "2026.08", NO chevron.
+
+Rows that show a value but do nothing must not look tappable: no chevron on them.
+
+TONE
+Quiet and dense. This is a utility screen: white cards on cream, ink type, hairline rules,
+flat throughout. The only colour on the whole screen is #C41E1E on the two destructive rows.
+
+
+-------------------------------------------------------------------------------
+PROMPT B — SETTINGS, GUEST  (the account fork)
+-------------------------------------------------------------------------------
+
+Identical to Frame A in every respect — the same COMMON CHROME, the same Preferences, Data
+and About sections with the same rows — EXCEPT the account block, which is replaced.
+
+The account block becomes a white #FFFFFF container, 16px radius, 1px #D6D6CB outline,
+containing, centred:
+- the title "Not signed in yet" in Space Grotesk 20px bold, ink #181824;
+- beneath it, the body "Sign in or create an account to back up your cards and sync across
+  devices." in Inter 15px, muted #55555F, wrapping to two or three lines;
+- beneath that, two full-width buttons stacked with 8px between them:
+    "Create Account" — ink #181824 fill, white text, 52px tall, 12px radius;
+    "Sign In" — transparent with a 1px ink #181824 outline, ink text, 52px tall, 12px radius.
+
+There is NO email, NO "Change Password", NO "Sign Out" and NO "Delete Account" on this frame —
+a guest has no account to act on. There is no red anywhere on this screen.
+
+
+-------------------------------------------------------------------------------
+PROMPT C — SHEET SHAPE 1: PICK ONE FROM A LIST
+-------------------------------------------------------------------------------
+
+Design ONE mobile screen at 393x852, light mode: the Settings screen from Frame A, dimmed
+behind a bottom sheet — the theme picker.
+
+BEHIND: Frame A exactly as specified, but covered by a scrim of ink #181824 at 40% opacity
+across the entire frame including both insets. The status bar glyphs stay visible above the
+scrim in ink; do not lighten or hide them.
+
+THE SHEET: anchored to the bottom edge, full width, white #FFFFFF, with a 16px radius on its
+TOP two corners only and square bottom corners. It sits above the 34px bottom inset, and the
+home indicator sits ON the sheet in ink #181824 at 85%.
+
+Inside the sheet, 20px margins:
+- a grabber at the very top, centred: 36 x 4, fully rounded, #D6D6CB, with 8px above it;
+- the title "Theme" in Space Grotesk 20px bold ink #181824, left-aligned;
+- three option rows, each 48px min height, separated by a hairline #D6D6CB rule:
+    "Light"   — no icon
+    "Dark"    — no icon
+    "System"  — SELECTED: the label in ink #181824 and a 20px outline check mark in ink
+                #181824 at the right end. Only the selected row has a check.
+- beneath the last row, a single line of helper text in Inter 13px muted #55555F:
+  "System uses your device's appearance setting".
+
+NO buttons on this sheet — no Cancel, no Done, no Apply. Choosing a row IS the action and
+dismisses the sheet; adding a button would invent a step the code does not have.
+
+
+-------------------------------------------------------------------------------
+PROMPT D — SHEET SHAPE 2: CONFIRM
+-------------------------------------------------------------------------------
+
+Design ONE mobile screen at 393x852, light mode: the Settings screen from Frame A behind a
+40%-ink scrim, with a bottom sheet asking the person to confirm signing out.
+
+Same sheet chrome as Frame C: bottom-anchored, full width, white #FFFFFF, 16px radius on the
+top corners only, grabber, 20px margins, home indicator on the sheet.
+
+Inside:
+- the title "Sign Out?" in Space Grotesk 20px bold, ink #181824;
+- the body "You will return to guest mode. Your cards will remain on this device." in Inter
+  15px, muted #55555F, wrapping to two lines;
+- 24px of space, then two full-width buttons stacked with 8px between them:
+    "Sign Out" — the destructive action. BORDERLESS, no fill, no outline, label in #C41E1E,
+                 Inter 17px semibold, 52px tall. It is a TEXT button, not a red slab.
+    "Cancel"   — transparent with a 1px ink #181824 outline, ink text, 52px tall, 12px radius.
+
+The destructive action sits ABOVE Cancel, and Cancel is the one with visible structure — the
+bordered control is the safe one. Do not give the destructive button a red fill, a red
+border, or a red background of any kind.
+
+
+-------------------------------------------------------------------------------
+PROMPT E — SHEET SHAPE 3: ACKNOWLEDGE
+-------------------------------------------------------------------------------
+
+Design ONE mobile screen at 393x852, light mode: the Settings screen from Frame A behind a
+40%-ink scrim, with a bottom sheet telling the person there is nothing to export.
+
+Same sheet chrome as Frame C.
+
+Inside:
+- the title "Nothing to Export" in Space Grotesk 20px bold, ink #181824;
+- the body "You don't have any cards yet. Add your first card to export your data." in Inter
+  15px, muted #55555F;
+- 24px of space, then ONE full-width button: "OK" — ink #181824 fill, white text, Inter 17px
+  semibold, 52px tall, 12px radius.
+
+Exactly one button. No Cancel — there is nothing to cancel. No illustration, no icon, no
+warning triangle, no sad face, and no red: an empty export is not an error.
+
+
+-------------------------------------------------------------------------------
+PROMPT F — SHEET SHAPE 4: TYPE-TO-CONFIRM
+-------------------------------------------------------------------------------
+
+Design ONE mobile screen at 393x852, light mode: the Settings screen from Frame A behind a
+40%-ink scrim, with the second step of the delete-account sheet. This is the most destructive
+control in the product and it should feel deliberate, not dramatic.
+
+Same sheet chrome as Frame C.
+
+Inside:
+- the title "Confirm Account Deletion" in Space Grotesk 20px bold, ink #181824;
+- the body "Type DELETE to confirm permanent account deletion." in Inter 15px, muted #55555F;
+- the label "TYPE DELETE TO CONFIRM" in Inter 12px semibold uppercase, letter-spacing 0.05em,
+  ink #181824, sitting ABOVE its input;
+- a text input: white #FFFFFF fill, 1px #D6D6CB outline, 12px radius, 48px minimum height,
+  EMPTY, with no placeholder text inside it;
+- 24px of space, then two full-width buttons stacked with 8px between them:
+    "Delete Account" — destructive and currently DISABLED because the field is empty:
+                       borderless, no fill, label in #C41E1E at 40% opacity, Inter 17px
+                       semibold, 52px tall. This is the ONE place in this system where a
+                       control is drawn disabled, because the gate is the whole point.
+    "Cancel"         — transparent with a 1px ink #181824 outline, ink text, 52px tall.
+
+The input is empty and the destructive button is therefore inert. Do not pre-fill the field,
+do not show a red outline on it, and do not add a warning banner, an alert icon or a red
+background to the sheet. The restraint is what makes the typed word mean something.

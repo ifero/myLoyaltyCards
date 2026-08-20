@@ -13,6 +13,7 @@ run started 2026-08-11) whose scratchpad lived in `/tmp` and whose API connectio
 | `stitch-prompts-form-states.txt`    | **The four state frames** — default / error / filled / saving. Frame 1 is the exemplar the other seven screens derive from.                                                            |
 | `stitch-prompt-01-form-pattern.txt` | Superseded. The prompt actually sent on 2026-08-11, kept as a record — it describes a screen that does not exist.                                                                      |
 | `stitch-prompts-wallet.txt`         | **The wallet pattern** — populated / empty / single-card / no-results, specced against the real `CardList`. Carries eight findings from reading the code.                              |
+| `stitch-prompts-settings.txt`       | **The settings pattern** — screen (signed-in / guest) plus the four sheet SHAPES the eight sheets reduce to. Specced against the real `SettingsScreen`.                                |
 | `frames/cardi-form-frames.html`     | **The reference implementation.** Hand-authored, exactly 393 × 852, all four states. This is what screens derive from — not the PNGs. Open with `?probe` for a measured geometry dump. |
 | `frames/cardi-wallet-frames.html`   | **The wallet frames** — populated / empty / single-card / no-results, hand-authored at 393 × 852. Self-contained; shares its token block with the form file by copy, not by link.      |
 | `frames/0*.png`                     | Stitch's actual output, kept as evidence. Faithful to what the generator produced, including three defects it cannot avoid — see _The 2026-08-15 audit_.                               |
@@ -511,6 +512,42 @@ Four MCP mechanics came out of it, all new:
   one pass — exactly as naming `#DDDDDF` fixed the spinner. **Generalised rule: when a
   literal loses, it is losing to a token with a claim on that component; say the component's
   name and ban the value you keep getting.**
+
+### 2026-08-15 — the settings pattern, and eight sheets reduced to four shapes
+
+`stitch-prompts-settings.txt` holds six prompts: the screen **signed-in** and **guest**, plus
+one frame for each sheet **shape**. The plan called this "settings list (2 screens)". The code
+holds one screen with two account forks, a separate `LanguageListScreen`, and **eight bottom
+sheets**.
+
+**The reduction.** Fingerprinting the sheets by button count and whether they map a list:
+
+| shape                | sheets                                                      |
+| -------------------- | ----------------------------------------------------------- |
+| Pick one from a list | Theme, Language — no buttons; choosing IS the action        |
+| Confirm              | Export confirm, Sign out, Import preview, **Delete step 1** |
+| Acknowledge          | Export empty, Import error — one button                     |
+| Type-to-confirm      | **Delete step 2** — the only sheet in the app with an input |
+
+`DeleteAccountSheet` is a **two-step** sheet (`useState<1 | 2>`), which is why it showed four
+buttons; step 2 gates its destructive button on `confirmationText === 'DELETE'`. Every other
+sheet in the app is one of these four with different words.
+
+**Three findings that outlive the frames:**
+
+- **The chrome is already a component.** All eight sheets are built on `BottomSheet` from
+  `shared/components/ui`, and rows are `ActionRow` — both with stories and tests. Unlike the
+  wallet, this pattern is constrained by an existing API and the design must fit it.
+- **A fifth answer to the screen margin.** Settings uses `paddingHorizontal: 24`. The tally is
+  now `CardForm` 32 · `AuthScreenLayout` token · system 20 · grid 16 · settings 24. The frames
+  use **20** and the code should move 24 → 20 — the opposite call from the grid, because 16 is
+  _derived_ (the 171px tile depends on it, with tests) and 24 is not.
+- **The destructive button contradicts the system.** The system says borderless, `#C41E1E`
+  text. `Button.tsx` renders a **filled** `theme.error` block with white text and a border, so
+  sign-out and delete are solid red slabs today. The frames follow the system. Separately: the
+  variant is an **unguarded fall-through** — `primary`/`secondary`/`tertiary` each get an `if`
+  and everything else returns error-red — so any variant added to that union silently becomes
+  destructive.
 
 ### Still open
 
