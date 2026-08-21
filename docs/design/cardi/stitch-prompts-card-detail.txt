@@ -1,0 +1,198 @@
+CARDÌ — THE CARD DETAIL SCREEN, THREE FRAMES
+============================================
+
+The screen you pass through to reach the barcode. It is the only scroll-linked screen in the
+app — the header condenses as the hero scrolls away — and the only one where a third-party
+brand colour occupies a third of the display.
+
+  A. HERO VISIBLE     — catalogue brand, at rest. The exemplar.
+  B. HEADER CONDENSED — scrolled past the hero
+  C. CUSTOM CARD      — no brand logo; the first-letter avatar path
+
+Every prompt is self-contained and repeats its own chrome in full. A prompt may NEVER refer to
+another frame. Write every correction as a NUMBERED DEFECT.
+
+Screen source of truth: features/cards/screens/CardDetailScreen.tsx and
+features/cards/components/CardDetails.tsx, BrandHero.tsx, DetailRow.tsx; strings in
+shared/i18n/locales/en.ts under `cards.details`.
+
+
+-------------------------------------------------------------------------------
+WHAT READING THE CODE TURNED UP
+-------------------------------------------------------------------------------
+
+1. THE BRAND COLOUR QUESTION SPLITS IN TWO, AND THE ANSWER DIFFERS EACH WAY.
+   `headerBg = brand ? brand.color : theme.primary` tints BOTH the navigation header and the
+   `BrandHero` band with the brand's own colour, with a contrast-aware foreground.
+
+   - **The hero band keeps it.** On a card's own detail screen the brand colour is CONTENT:
+     the hero is the wallet tile enlarged, and that is the thesis working exactly as intended.
+   - **The header gives it up.** The header is navigation — a back chevron and a favourite
+     toggle. Tinting it makes the app's own chrome wear a third-party brand's colour, which is
+     precisely what _"chrome is quiet so the brands can be loud"_ forbids. The header returns
+     to cream `#F0F0E8` with ink `#181824` controls, like every other screen in the system.
+
+   Same colour, two verdicts, decided by whether the surface is identifying the card or
+   navigating the app.
+
+2. THE CONDENSED HEADER USES A DROP SHADOW. `headerShadowVisible: isHeaderCondensed` turns on
+   a shadow once you scroll past the hero. The system forbids drop shadows anywhere; a **1px
+   `#D6D6CB` hairline** does the same job and is already the established pattern (the anchored
+   footer separates the same way).
+
+3. THE TITLE IS HIDDEN WITH `fontSize: 0`. At rest the header title is `''` at size 0; past
+   the hero it becomes the card name at 17. It works, but the frames specify the intent
+   rather than the trick: **no title at rest, card name once condensed.**
+
+4. THE FAVOURITE STAR IS `theme.warning` — amber. Same off-palette colour already replaced on
+   the wallet tile. It becomes **beam `#FCCC0C`** when favourited and ink outline when not.
+   This is one of the very few places beam legitimately appears: an active/selected state.
+
+5. THERE ARE TWO IMPLEMENTATIONS OF THE BARCODE SCREEN, AND THEY HAVE ALREADY DRIFTED.
+   `BarcodeFlash` serves the `barcode/[id]` route; `FullscreenBarcode` is opened from inside
+   `CardDetails` by tapping the barcode. Both maximise brightness — the critical behaviour is
+   intact in both — but the plate differs: `shadowOpacity` 0.05 vs **0.08**, radius 8 vs
+   **12**. Both use Tailwind `#1F2937`. **These should be one component.** Not a design task;
+   a note for the tokens/layout PR, and the reason `stitch-prompts-barcode.txt` alone does not
+   cover the hero moment.
+
+6. THE BARCODE HERE *DOES* GET A WHITE CARD — unlike the fullscreen view. On the fullscreen
+   barcode a white plate on a white field carries no information, so it goes. Here the page is
+   cream and the barcode is tappable, so the white card is doing two jobs: separating the code
+   from the ground, and marking it as interactive. That is the established rule — **white card
+   means interactive, bare ground means content.** No shadow either way.
+
+
+-------------------------------------------------------------------------------
+COMMON CHROME — true of all three frames
+-------------------------------------------------------------------------------
+
+GROUND: cream #F0F0E8 across the whole frame, both system insets included. The header has NO
+background of its own and is never tinted with a brand colour, never #FAFAF2.
+
+SYSTEM INSETS: 59px top carrying the iOS status bar in ink #181824 — "9:41" left in Inter 15px
+semibold; signal, wifi and battery icons right. 34px bottom carrying a 140 x 5 fully-rounded
+pill in ink #181824 at 85% opacity, centred.
+
+HEADER: 56px, flat. A back chevron on the left on a 48x48 target, ink #181824. A favourite
+star on the right on a 48x48 target. No shadow — a 1px #D6D6CB hairline appears beneath it
+only when the header is condensed.
+
+MARGINS: 20px, except the hero band which is full-bleed.
+
+FORBIDDEN: bottom tab bars, floating action buttons, drop shadows, gradients, glassmorphism,
+illustrations, coral/salmon/terracotta/orange. Beam #FCCC0C appears ONLY as the filled
+favourite star — nowhere else on these screens.
+
+
+-------------------------------------------------------------------------------
+PROMPT A — HERO VISIBLE  (the exemplar)
+-------------------------------------------------------------------------------
+
+Design ONE mobile screen at 393x852, light mode: the card detail screen for Cardì, at rest
+with the hero visible. Apply the COMMON CHROME above.
+
+HEADER: back chevron left in ink #181824, NO title text at all, and on the right a star
+outline icon in ink #181824 at 26px (this card is not a favourite). No hairline beneath it.
+
+BODY, no top gap — the hero meets the header:
+
+1. THE HERO: a full-bleed band, edge to edge, 200px tall, filled with Esselunga's own colour
+   #FFCC00. Centred inside it, the Esselunga wordmark at about 80px tall in ink #181824 — ink
+   and not white, because the fill is light. No gradient, no overlay, no shadow, no rounded
+   corners, no inset. The band runs to both frame edges.
+
+2. Below the hero, 20px margins from here down. The card name "Esselunga" in Space Grotesk
+   24px bold ink #181824, with 16px above and 16px below.
+
+3. THE BARCODE CARD: a white #FFFFFF container, 16px radius, 1px #D6D6CB outline, NO shadow,
+   full width, holding — centred, with 20px of padding — an EAN-13 barcode 280 wide x 100
+   tall in true black #000000 on white, and beneath it the hint "Tap to enlarge" in Inter 13px
+   muted #55555F. Nothing overlays the bars.
+
+4. 24px below, a white #FFFFFF card, 16px radius, 1px #D6D6CB outline, with three rows
+   divided by hairlines. Each row is at least 48px tall with the label on the left in Inter
+   15px muted #55555F and the value on the right in Inter 15px ink #181824:
+     "Number"  / "2000 0123 4567 8"
+     "Color"   / "Yellow"
+     "Added"   / "12 August 2026"
+
+5. The section title "MANAGE" in Inter 12px semibold uppercase, letter-spacing 0.05em, muted
+   #55555F, 24px above its card. Then a white #FFFFFF card, 16px radius, 1px #D6D6CB outline,
+   two rows divided by a hairline:
+     "Edit card"   — Inter 17px ink #181824, with a chevron-right
+     "Delete card" — Inter 17px #C41E1E, NO chevron. Text only: no red fill, no red border.
+
+TONE
+The brand owns the top of this screen and nothing else. Below the hero everything is cream,
+white cards and ink — the same furniture as settings. The one red is the delete row; the one
+yellow is Esselunga's own, and it stops at the bottom edge of the hero.
+
+
+-------------------------------------------------------------------------------
+PROMPT B — HEADER CONDENSED  (scrolled past the hero)
+-------------------------------------------------------------------------------
+
+Design ONE mobile screen at 393x852, light mode: the card detail screen for Cardì, scrolled so
+the hero has gone and the header has condensed. Apply the COMMON CHROME above.
+
+HEADER: back chevron left in ink #181824; the card name "Esselunga" centred in Inter 17px
+semibold ink #181824; a star outline icon right in ink #181824. Beneath the header, a 1px
+#D6D6CB hairline spanning the full frame width. The header background is cream #F0F0E8 — NOT
+Esselunga yellow, NOT tinted, NOT a near-white.
+
+There is NO drop shadow under this header. The hairline is what marks the boundary.
+
+BODY, 20px margins. The hero is scrolled away and not visible at all. The content begins
+directly beneath the hairline with 16px of space:
+
+1. THE BARCODE CARD: white #FFFFFF, 16px radius, 1px #D6D6CB outline, no shadow, full width,
+   holding a centred EAN-13 barcode 280 wide x 100 tall in true black #000000 on white with
+   20px padding, and the hint "Tap to enlarge" in Inter 13px muted #55555F beneath it.
+
+2. 24px below, a white card with three hairline-divided rows: "Number" / "2000 0123 4567 8",
+   "Color" / "Yellow", "Added" / "12 August 2026" — labels Inter 15px muted #55555F, values
+   Inter 15px ink #181824.
+
+3. "MANAGE" in Inter 12px semibold uppercase, letter-spacing 0.05em, muted #55555F, then a
+   white card with "Edit card" in ink with a chevron and "Delete card" in #C41E1E with no
+   chevron.
+
+No yellow anywhere on this frame. Once the hero is gone the brand is gone with it, and the
+screen is indistinguishable in furniture from settings.
+
+
+-------------------------------------------------------------------------------
+PROMPT C — CUSTOM CARD  (no brand logo)
+-------------------------------------------------------------------------------
+
+Design ONE mobile screen at 393x852, light mode: the card detail screen for Cardì for a card
+the person created themselves, which has no brand logo. Apply the COMMON CHROME above.
+
+HEADER: back chevron left in ink #181824, no title, and on the right a FILLED star in beam
+#FCCC0C at 26px — this card IS a favourite. This is one of the very few places beam appears in
+the app; it marks an active state and nothing else on the screen is yellow. No hairline.
+
+BODY:
+
+1. THE HERO: a full-bleed band, edge to edge, 200px tall, filled with the card accent
+   #0C843C green. Centred inside it, an 80px fully-round circle filled
+   rgba(255, 255, 255, 0.16) holding the single letter "F" in white, Space Grotesk 28px bold.
+   No logo — this card has none. No gradient, no shadow, no rounded band corners.
+
+2. Below the hero, 20px margins. The card name "Farmacia Centrale" in Space Grotesk 24px bold
+   ink #181824, 16px above and below.
+
+3. THE BARCODE CARD: white #FFFFFF, 16px radius, 1px #D6D6CB outline, no shadow, holding a
+   centred EAN-13 barcode 280 x 100 in true black on white with 20px padding, and "Tap to
+   enlarge" in Inter 13px muted #55555F beneath.
+
+4. A white card with three hairline-divided rows: "Number" / "2000 0123 4567 8", "Color" /
+   "Green", "Added" / "12 August 2026".
+
+5. "MANAGE", then a white card with "Edit card" in ink with a chevron and "Delete card" in
+   #C41E1E with no chevron.
+
+The five accent colours exist for exactly this case — a card with no brand of its own. Use
+#0C843C at that value; do not tint, darken or gradient it, and do not put a logo, icon or
+pattern in the band. A letter on a colour is the whole design.

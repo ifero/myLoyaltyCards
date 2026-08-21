@@ -6,22 +6,24 @@ run started 2026-08-11) whose scratchpad lived in `/tmp` and whose API connectio
 
 ## Files
 
-| File                                | What it is                                                                                                                                                                             |
-| ----------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `cardi-design-system.md`            | **The canonical Cardì design system.** Stitch gets a disposable render of this — this repo copy is the source of truth.                                                                |
-| `palette-bench.html`                | Five-direction palette comparison board (01 Ink & Beam … 05 Night Market). Superseded as a _layout_ study, still valid on chrome.                                                      |
-| `stitch-prompts-form-states.txt`    | **The four state frames** — default / error / filled / saving. Frame 1 is the exemplar the other seven screens derive from.                                                            |
-| `stitch-prompt-01-form-pattern.txt` | Superseded. The prompt actually sent on 2026-08-11, kept as a record — it describes a screen that does not exist.                                                                      |
-| `stitch-prompts-wallet.txt`         | **The wallet pattern** — populated / empty / single-card / no-results, specced against the real `CardList`. Carries eight findings from reading the code.                              |
-| `stitch-prompts-settings.txt`       | **The settings pattern** — screen (signed-in / guest) plus the four sheet SHAPES the eight sheets reduce to. Specced against the real `SettingsScreen`.                                |
-| `stitch-prompts-document.txt`       | **The document pattern** — prose / searchable FAQ / two-column table. Three screens, three shapes, not the "document (2)" the plan assumed.                                            |
-| `stitch-prompts-barcode.txt`        | **The barcode screen** — EAN-13 / QR / not-found. The hero moment, and the last screen to be specced.                                                                                  |
-| `frames/cardi-barcode-frames.html`  | **The barcode frames** — three, at 393 × 852. The only frames on **white**, not cream; the white field is the product feature.                                                         |
-| `frames/cardi-form-frames.html`     | **The reference implementation.** Hand-authored, exactly 393 × 852, all four states. This is what screens derive from — not the PNGs. Open with `?probe` for a measured geometry dump. |
-| `frames/cardi-wallet-frames.html`   | **The wallet frames** — populated / empty / single-card / no-results, hand-authored at 393 × 852. Self-contained; shares its token block with the form file by copy, not by link.      |
-| `frames/cardi-settings-frames.html` | **The settings frames** — signed-in / guest plus one frame per sheet shape, hand-authored at 393 × 852. Frames C–F share one backdrop string, so it cannot drift.                      |
-| `frames/cardi-document-frames.html` | **The document frames** — prose / searchable FAQ / two-column table, hand-authored at 393 × 852. No repeated body title; 20px margins.                                                 |
-| `frames/0*.png`                     | Stitch's actual output, kept as evidence. Faithful to what the generator produced, including three defects it cannot avoid — see _The 2026-08-15 audit_.                               |
+| File                                   | What it is                                                                                                                                                                             |
+| -------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `cardi-design-system.md`               | **The canonical Cardì design system.** Stitch gets a disposable render of this — this repo copy is the source of truth.                                                                |
+| `palette-bench.html`                   | Five-direction palette comparison board (01 Ink & Beam … 05 Night Market). Superseded as a _layout_ study, still valid on chrome.                                                      |
+| `stitch-prompts-form-states.txt`       | **The four state frames** — default / error / filled / saving. Frame 1 is the exemplar the other seven screens derive from.                                                            |
+| `stitch-prompt-01-form-pattern.txt`    | Superseded. The prompt actually sent on 2026-08-11, kept as a record — it describes a screen that does not exist.                                                                      |
+| `stitch-prompts-wallet.txt`            | **The wallet pattern** — populated / empty / single-card / no-results, specced against the real `CardList`. Carries eight findings from reading the code.                              |
+| `stitch-prompts-settings.txt`          | **The settings pattern** — screen (signed-in / guest) plus the four sheet SHAPES the eight sheets reduce to. Specced against the real `SettingsScreen`.                                |
+| `stitch-prompts-document.txt`          | **The document pattern** — prose / searchable FAQ / two-column table. Three screens, three shapes, not the "document (2)" the plan assumed.                                            |
+| `stitch-prompts-barcode.txt`           | **The barcode screen** — EAN-13 / QR / not-found. The hero moment, and the last screen to be specced.                                                                                  |
+| `stitch-prompts-card-detail.txt`       | **The card detail screen** — hero visible / header condensed / custom card. The barcode's parent, and the only scroll-linked screen in the app.                                        |
+| `frames/cardi-card-detail-frames.html` | **The card detail frames** — three, at 393 × 852. The hero keeps the brand colour; the header does not.                                                                                |
+| `frames/cardi-barcode-frames.html`     | **The barcode frames** — three, at 393 × 852. The only frames on **white**, not cream; the white field is the product feature.                                                         |
+| `frames/cardi-form-frames.html`        | **The reference implementation.** Hand-authored, exactly 393 × 852, all four states. This is what screens derive from — not the PNGs. Open with `?probe` for a measured geometry dump. |
+| `frames/cardi-wallet-frames.html`      | **The wallet frames** — populated / empty / single-card / no-results, hand-authored at 393 × 852. Self-contained; shares its token block with the form file by copy, not by link.      |
+| `frames/cardi-settings-frames.html`    | **The settings frames** — signed-in / guest plus one frame per sheet shape, hand-authored at 393 × 852. Frames C–F share one backdrop string, so it cannot drift.                      |
+| `frames/cardi-document-frames.html`    | **The document frames** — prose / searchable FAQ / two-column table, hand-authored at 393 × 852. No repeated body title; 20px margins.                                                 |
+| `frames/0*.png`                        | Stitch's actual output, kept as evidence. Faithful to what the generator produced, including three defects it cannot avoid — see _The 2026-08-15 audit_.                               |
 
 ## The thesis
 
@@ -711,6 +713,45 @@ The shipped code already had this right.
 And the hint line **stays**. "Nothing else on this screen" was written against nav, chrome and
 ads; "Tap anywhere to close" is the only affordance telling someone how to leave a modal with
 no visible dismiss control.
+
+### 2026-08-15 — card detail, and where a brand colour stops being content
+
+`stitch-prompts-card-detail.txt` and `frames/cardi-card-detail-frames.html` cover three
+frames: **hero visible**, **header condensed**, **custom card**.
+
+**The brand-colour question splits in two, and the answer differs each way.** The shipped code
+sets `headerBg = brand ? brand.color : theme.primary` and tints _both_ the navigation header
+and the `BrandHero` band with it.
+
+- **The hero keeps it.** On a card's own detail screen the brand colour is **content** — the
+  hero is the wallet tile enlarged, and that is the thesis working as intended.
+- **The header gives it up.** The header is navigation: a back chevron and a favourite toggle.
+  Tinting it makes the app's own chrome wear a third-party brand's colour, which is precisely
+  what _"chrome is quiet so the brands can be loud"_ forbids.
+
+Same colour, two verdicts, decided by whether the surface is identifying the card or
+navigating the app. The visible payoff is frame B: once the hero scrolls away there is **no
+yellow anywhere**, and the screen is indistinguishable in furniture from settings.
+
+Three more findings:
+
+- **The condensed header uses a drop shadow** (`headerShadowVisible`). Replaced with a 1px
+  `#D6D6CB` hairline — same job, and already the established pattern for the anchored footer.
+- **The favourite star is `theme.warning`** — amber, the same off-palette colour already
+  replaced on the wallet tile. It becomes **beam `#FCCC0C`** when filled. One of the very few
+  places beam legitimately appears: an active state.
+- **THERE ARE TWO IMPLEMENTATIONS OF THE BARCODE SCREEN, AND THEY HAVE ALREADY DRIFTED.**
+  `BarcodeFlash` serves the `barcode/[id]` route; `FullscreenBarcode` opens from inside
+  `CardDetails`. Both maximise brightness — the critical behaviour is intact in both — but the
+  plate differs: `shadowOpacity` 0.05 vs **0.08**, radius 8 vs **12**, and both use Tailwind
+  `#1F2937`. **These should be one component.** Not a design task; a note for the tokens and
+  layout PRs, and the reason `stitch-prompts-barcode.txt` alone does not cover the hero moment.
+
+One distinction worth keeping, because it looks like a contradiction: the barcode gets a
+**white card here** and **no plate at all** on the fullscreen view. On cream, and tappable, the
+card separates the code and marks it interactive. On a white field it would be defining a
+boundary that carries no information. Same element, opposite treatment — _white card means
+interactive, bare ground means content._
 
 ### Still open
 
