@@ -661,6 +661,14 @@ Two smaller things taken from the run: the table gets a **closing rule under the
 so it ends rather than trailing off, and bullets use a **hanging indent** so wrapped lines
 align under the text rather than under the bullet.
 
+**The Stitch screens were then brought into line with the corrected HTML** — prose
+`1cd3875b…`, FAQ `045dc4e9…`, table `ddcad879…`. Measured before and after: the left margin
+moved from **48px to 20–21px** on all three, and the status bar went from absent to present
+on all three. The duplicated body titles are gone, and the FAQ accordion now sits on a solid
+white fill instead of an outlined cream box. Each was a single prompt of three or four
+**numbered defects** — the phrasing that has landed every time, where the same requirement
+written into descriptive prose has not.
+
 ### Still open
 
 1. ~~Generate the four state frames and judge them~~ — **done 2026-08-14**; measured and
