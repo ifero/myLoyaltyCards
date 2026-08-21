@@ -80,6 +80,33 @@ Wave B is blocked until the illustration set exists.
 - **Both generate calls take `designSystem: "assets/<id>"` and `modelId: "GEMINI_3_1_PRO"`.**
   Passing the asset id points at the live asset instead of the project's rotting snapshot, so
   the UI "apply" step is not needed to generate correctly.
+- **`edit_screens` is the route for a corrective pass**, and it works: it returns a
+  `DomOperationEvent` listing every operation with the `verified_html_context` it matched
+  against, which is more auditable than a fresh generation. Numbered defects land; the same
+  fixes in prose do not.
+- **A prompt may not refer to ANYTHING outside itself** — not another frame, and not a shared
+  preamble in the same file. "Apply the COMMON CHROME above" does not survive a clipboard, and
+  the frame that happens to sit directly beneath the preamble is the only one that comes back
+  right. The tell is diagnostic: a shared missing spec produces N _different_ wrong answers,
+  not one shared wrong answer, so **frames diverging from each other in different directions
+  means a dangling reference, not a bad instruction.** Prompts now carry
+  `PASTE EVERYTHING BETWEEN…` / `END OF PROMPT x` delimiters so the rule is checkable by eye.
+- **Audit the DOM, never the screenshot.** The returned screenshot is 884px tall so it
+  **clips** the bottom of the stack, and it is wrapped in a rendered device bezel. Reading
+  defects off it produced three false positives out of seven on one pass — a circle that was
+  already there, a bezel that does not exist in the design, and a "missing" Edit/Delete card
+  that was merely below the fold. `curl` the `htmlCode.downloadUrl` and grep it. Use the
+  render to decide where to look, never as the finding.
+- **The written file and the screenshot both lag the edit.** Straight after `edit_screens`,
+  `get_screen` still returns the _previous_ file id and the _previous_ screenshot URL, so the
+  old content downloads and the edit looks like it silently failed. It has not — the
+  `DomOperationEvent` in the tool result is the receipt. Wait, re-list, and compare file ids.
+- **Gemini will not draw a real barcode.** Three passes produced three different fakes: a
+  `bg-black` box wrapping a white inner with seven `flex-1` bars, a ~40-bar approximation, and
+  a completely empty `bg-primary` rectangle. Nothing in a prompt fixes this, because the model
+  is drawing a picture of a barcode rather than encoding a number. The HTML frames compute a
+  real EAN-13 from the L/R code tables; treat the Stitch barcode as a placeholder and never as
+  a reference.
 
 ## Where it stopped
 
@@ -785,6 +812,74 @@ One distinction worth keeping, because it looks like a contradiction: the barcod
 card separates the code and marks it interactive. On a white field it would be defining a
 boundary that carries no information. Same element, opposite treatment — _white card means
 interactive, bare ground means content._
+
+### 2026-08-21 — bringing the Stitch card-detail screens back into compliance
+
+The four Stitch screens had drifted badly, and the shape of the drift turned out to be the
+diagnosis. Frame A was close. Frames B, C and D had each invented a **different** card detail
+screen: a Notes field and a `Code 128` row and an Edit/Share button pair; a `Remove Card`
+button with a red outline and a trash icon; a black `Show Barcode` pill, a copy icon and a
+green swatch dot. None of them drew the barcode at all — on the screen whose whole job is to
+show a barcode.
+
+**The cause was in this repo, not in Stitch.** `stitch-prompts-card-detail.txt` kept the chrome
+and the content stack in a shared `COMMON CHROME` preamble and had each prompt say "apply the
+COMMON CHROME above". "Above" does not survive a clipboard. Frame A came back right only
+because it sits directly beneath the preamble in the file, so copying it tends to take the
+preamble along; B, C and D travelled alone and Gemini filled the gap from its own priors about
+what a loyalty-card screen contains.
+
+The rule recorded on 2026-08-15 — _a prompt may never refer to another frame_ — was too narrow.
+**A prompt may not refer to anything outside itself at all.** Every prompt in that file now
+repeats the chrome and the stack in full and is fenced by `PASTE EVERYTHING BETWEEN…` /
+`END OF PROMPT x` delimiters, so the rule is checkable by eye instead of by discipline.
+
+And the divergence pattern is worth keeping as a diagnostic: **a shared missing spec does not
+produce a shared wrong answer, it produces N independent guesses.** Frames that are wrong in
+the same direction mean a bad instruction. Frames that are wrong in different directions mean
+a dangling reference.
+
+Three things learned about the tooling in the process, all recorded in § _Stitch mechanics_:
+
+- **`edit_screens` is a silent no-op**, and so is `generate_variants` when the delta is small.
+  Both return a confident narrative and a detailed `DomOperationEvent` listing operations with
+  the `verified_html_context` they matched — and write nothing. Five calls, byte-identical
+  files afterwards. **The discriminator is the response shape**: a `design.screens` block means
+  a real screen was written, a bare `DomOperationEvent` means nothing happened. The corollary
+  inverts the usual instinct — asking for _less_ makes a change _less_ likely to land, so a
+  one-line fix has to ride along inside a full regeneration.
+- **Audit the DOM, never the screenshot.** The returned render is 884px tall so it clips the
+  bottom of the stack, and it is wrapped in a device bezel. Reading defects off it produced
+  three false positives out of seven: a circle that was already there, a bezel that does not
+  exist in the design, and a "missing" Edit/Delete card that was merely below the fold.
+- **The semantic-token trap has a second form.** The card-name heading was marked up as
+  `font-headline-md`, which the design system defines as Space Grotesk 24/700 — and it rendered
+  small and grey, because the utility class does not exist in the generated stylesheet, so it
+  silently resolved to nothing. The fix is explicit inline values. This is the same failure as
+  a literal hex being overridden by a theme token, arriving from the opposite direction: there
+  the token won, here the token was never there.
+
+The compliant set, seeded from frame A and verified at DOM level with nothing missing and
+nothing invented:
+
+| frame         | screen id                          |
+| ------------- | ---------------------------------- |
+| A at rest     | `6d0e19c350fe4c0099fcc96a602f92fe` |
+| B blending    | `c617f0b38b724a9fb91ec3b5338538cc` |
+| C condensed   | `c0f8371dde504752bc2d776be528124a` |
+| D custom card | `96479924cff546be9760cad8fe85234b` |
+
+Four superseded screens should be deleted in the Stitch UI, since MCP cannot delete:
+`dc5ce30093d54901a07e4516e919798a`, `aa3f4175af4141bd98a15d4c9a89c4c8`,
+`20ea80642a2e4cea8a9a99e7032c090f`, and the intermediate `05e8ea43789240e4bb592782b61c7ac7`
+whose star came back as a white outline.
+
+Two things left deliberately unfixed, both cosmetically inert and both inherited from frame A:
+a `box-shadow: 0 0 0 1px rgba(0,0,0,0.05)` used as a border rather than a shadow — zero blur,
+so it reads as a hairline — and a dead `.esselunga-yellow` rule in frame C that is defined and
+never applied. And **Gemini will not draw a real barcode**: three passes produced three
+different fakes, including a completely empty rectangle. The HTML frames compute a real EAN-13;
+the Stitch barcode is a placeholder and never a reference.
 
 ### Still open
 
