@@ -1,5 +1,5 @@
-CARDÌ — THE PITCH PATTERN, FIVE FRAMES
-======================================
+CARDÌ — THE PITCH PATTERN, SIX FRAMES
+=====================================
 
 The first ninety seconds. Three screens before the person owns a single card, and the only flow
 in the app that contains no user content at all — which is exactly why it is the one place our
@@ -8,8 +8,9 @@ own voice has to carry the screen, and the one place it currently doesn't.
   A. WELCOME     — the mark, the promise, the way in. The exemplar.
   B. MODES       — on this device, or synced. The only real question we ask.
   C. DIFFERENCE  — the sheet behind "What's the difference?"
-  D. HIGHLIGHT   — the carousel, first slide.
-  E. HIGHLIGHT   — the carousel, last slide. The button changes and the dots move.
+  D. HIGHLIGHT 1 — all your cards in one place.
+  E. HIGHLIGHT 2 — scan or add manually. The beam motif, used literally.
+  F. HIGHLIGHT 3 — your data, your rules. The button changes and the dots move.
 
 Every prompt below is LITERALLY STANDALONE: it repeats the chrome and the content in full and
 refers to nothing outside its delimiters. Paste one whole block. Write every correction as a
@@ -115,24 +116,52 @@ So this is where the brand speaks in its own voice — and the design system alr
 exactly that, in a line nobody has applied: **"Illustrations: flat, two-tone (ink line-work on
 cream) with beam yellow as the single accent."**
 
-Applied concretely, one beam element per illustration and never two:
+  > **CORRECTED after drawing it.** The first version of this table replaced the four TINTED
+  > rectangles with four OUTLINED rectangles, and ifero was right to call the result terrible.
+  > Outlining a box is an improvement in colour discipline and nothing else — the placeholders
+  > were boxes and the replacements were also boxes. "Flat two-tone ink line-work" does not mean
+  > "rectangles with a 2px stroke"; line-work implies drawing.
+  >
+  > Worse, the welcome fan reproduced the exact defect finding 2 criticises in the shipped one:
+  > offsets with no rotation, which makes a staircase, not a fan.
 
-  the mark         the **ì** — a lowercase i in ink with the grave accent as a short beam-yellow
-                   stroke. Not a credit card, not a wallet, not a generic card glyph.
-  welcome band     three overlapping card outlines in 2px ink line-work, unfilled, the frontmost
-                   carrying a single beam bar where a barcode would sit.
-  highlight 1      four card outlines in ink line-work arranged two-by-two; exactly one is
-                   filled beam. "All your cards in one place" — the beam one is yours.
-  highlight 2      one card outline in ink with ink barcode bars inside it, and a single
-                   beam-yellow horizontal line crossing them: the scan beam, the brand's own
-                   motif, used literally. This is the same verdict as the scanner screen — when
-                   WE are the one reading the code, the beam is ours to draw.
-  highlight 3      two ink arrows, one leaving a card outline and one entering it, with a single
-                   beam accent on the outbound arrowhead. Export and import. NOT a shield —
-                   the copy promises portability, not security.
+Applied concretely — at most one beam element per drawing:
 
-That is five drawings, at two sizes, in one style, with one accent each. It is a morning's work,
-not a blocked epic.
+  the mark         the **ì** — an ink circle, a white stem, and the grave accent as a short
+                   beam-yellow STROKE, not a dot. At rest a dot, in motion a beam, so the accent
+                   is the beam. Not a credit card, not a wallet, not a generic card glyph.
+
+  welcome band     three card outlines in 2px ink line-work, ROTATED about a shared pivot below
+                   the group the way cards held in a hand are — about -17°, -1° and +15°. The
+                   frontmost carries a real barcode in ink and one short beam bar beneath it.
+                   Rotation is what makes it a fan; offsets alone make a staircase.
+
+  highlight 1      NOT line-work. A MINIATURE OF THE REAL WALLET: four rounded tiles in four
+                   true brand colours — Esselunga #FFCC00, Conad #E2231A, Coop #0C84CC, Lidl
+                   #0050AA — two by two, filled, no outlines and no beam.
+
+                   This is not an exception to "the content is the colour", it is a
+                   demonstration of it. The slide's promise literally is "your brands,
+                   together", and the product's whole visual identity is many clashing brand
+                   hues. A symbol for "many cards" would be weaker than a small true picture of
+                   the thing — and four outlined rectangles two-by-two reads as a keypad.
+
+  highlight 2      one card outline in ink holding a REAL EAN-13 — varied bar widths, because it
+                   encodes an actual number — and a single beam-yellow horizontal line sweeping
+                   across it, running past both edges of the card. The scan beam, the brand's
+                   own motif, used literally. Same verdict as the scanner screen: when WE are
+                   the one reading the code, the beam is ours to draw.
+
+  highlight 3      a DASHED ink boundary, and a card crossing out of it at a slight tilt,
+                   carrying a real barcode and one beam band. "No lock-in" has a shape: the
+                   boundary around your data is permeable and the card leaves freely.
+
+                   NOT a shield, a padlock or a tick — the copy promises portability, not
+                   security. And not a pair of arrows either: arrows read as a UML sketch rather
+                   than a drawing.
+
+That is five drawings, at two sizes, with at most one accent each. A morning's work, not a
+blocked epic.
 
 
 -------------------------------------------------------------------------------
@@ -170,12 +199,19 @@ MARGINS: 24px left and right.
 3. THE SUBTITLE "Your loyalty cards, always with you" centred 8px beneath the title, in Inter
    17px muted #55555F, on one line.
 
-4. THE ILLUSTRATION, centred 48px beneath the subtitle, occupying about 200 x 80: three
-   overlapping loyalty-card outlines drawn as 2px INK #181824 line-work on the cream — outlines
-   only, no fills, no gradients, no shadows, each about 80 x 50 with an 8px radius, fanned so
-   each sits slightly right of and below the one behind it. The frontmost card carries one
-   short horizontal BEAM #FCCC0C bar inside it where a barcode would sit. Flat, two-tone, and
-   the beam bar is the only yellow in the drawing.
+4. THE ILLUSTRATION, centred 48px beneath the subtitle, occupying about 230 x 110: three
+   loyalty-card outlines drawn as 2px INK #181824 line-work on the cream — outlines only, no
+   fills beyond the cream ground, no gradients, no shadows, each about 80 x 52 with a 7px
+   radius.
+
+   THEY MUST BE ROTATED, not merely offset: pivot all three about a shared point BELOW the
+   group, at roughly -17 degrees, -1 degree and +15 degrees, the way three cards held in one
+   hand splay apart. Offsetting them diagonally without rotation produces a staircase, not a
+   fan, and that is the single most common way this drawing goes wrong.
+
+   The frontmost card carries a real barcode in ink — vertical bars of VARYING widths, not
+   evenly spaced stripes — and one short horizontal BEAM #FCCC0C bar beneath the bars. That bar
+   is the only yellow in the drawing.
 
 5. THE PRIMARY BUTTON, full width between the margins, sitting 72px beneath the illustration:
    52px tall, filled ink #181824, 12px radius, with "Get Started" centred in Inter 17px semibold
@@ -343,10 +379,21 @@ MARGINS: 24px left and right.
    semibold ink #181824. Plain text — no fill, no outline, no underline.
 
 2. THE ILLUSTRATION, centred in the upper half of the remaining space: a 160px fully-round
-   circle filled cream #F0F0E8 with a 1px #D6D6CB outline, holding four loyalty-card outlines
-   drawn as 2px INK #181824 line-work, each about 40 x 28 with a 4px radius, arranged two by two
-   with 8px between them. Exactly ONE of the four — the top left — is FILLED beam #FCCC0C
-   instead of being an outline. Flat, two-tone, no gradients, no shadows.
+   circle filled cream #F0F0E8 with a 1px #D6D6CB outline, holding a MINIATURE OF THE REAL
+   WALLET — four rounded tiles about 51 x 43 with a 6px radius, arranged two by two with 8px
+   between them, each FILLED with a different real brand colour and carrying no outline, no
+   label and no icon:
+       top left      #FFCC00
+       top right     #E2231A
+       bottom left   #0C84CC
+       bottom right  #0050AA
+
+   These are filled tiles, NOT outlines: this slide promises "your brands, together", and the
+   product's entire visual identity is many clashing brand colours, so a small true picture of
+   the wallet beats a symbol for it. Four outlined rectangles two-by-two reads as a keypad.
+
+   NO beam #FCCC0C anywhere in this drawing — the brand colours are doing the work, and one of
+   them is already a yellow.
 
 3. THE TITLE "All your cards in one place" centred 40px beneath the circle, in Space Grotesk
    bold 24px ink #181824, on one or two lines.
@@ -366,19 +413,84 @@ MARGINS: 24px left and right.
 FORBIDDEN: bottom tab bars, floating action buttons, drop shadows, gradients, glassmorphism, a
 device bezel or phone frame around the screen, coral/salmon/terracotta/orange, a shield or
 padlock or tick-in-a-circle glyph, stock icons of credit cards or wallets, arrows at the left
-and right edges, a progress bar, and any second use of beam #FCCC0C beyond the one filled card
-in the illustration.
+and right edges, a progress bar, outlines on the four tiles, labels or logos on the tiles, and
+beam #FCCC0C anywhere.
 
 TONE
-One idea per slide, said once. The picture carries the promise and the beam card is the point:
-out of a wallet full of plastic, one of them is the one you need, and the app knows which.
+One idea per slide, said once. The picture is a small true picture of the product rather than a
+symbol for it — four brands, four colours, one place.
 
 =============================== END OF PROMPT D ===============================
 
 -------------------------------------------------------------------------------
-PROMPT E — HIGHLIGHT, LAST SLIDE
+PROMPT E — HIGHLIGHT, MIDDLE SLIDE  (the beam motif, used literally)
 -------------------------------------------------------------------------------
 =========== PASTE EVERYTHING BETWEEN THIS LINE AND "END OF PROMPT E" ===========
+
+Design ONE mobile screen at 393x852, light mode: the SECOND of three slides in a feature
+carousel in Cardì, a loyalty card wallet, shown at the end of first-run setup.
+
+GROUND: cream #F0F0E8 for the whole frame, both system insets included.
+
+SYSTEM INSETS: 59px top carrying the iOS status bar — "9:41" at the left in Inter 15px
+semibold, then signal, wifi and battery icons at the right, all in ink #181824. 34px bottom on
+cream carrying a 140 x 5 fully-rounded pill in ink #181824 at 85% opacity, centred.
+
+NO HEADER. There is no navigation bar, no title and no back control.
+
+MARGINS: 24px left and right.
+
+1. "Skip" at the TOP RIGHT, 8px below the status bar, on a 48px tall target, in Inter 15px
+   semibold ink #181824. Plain text — no fill, no outline, no underline.
+
+2. THE ILLUSTRATION, centred in the upper half of the remaining space: a 160px fully-round
+   circle filled cream #F0F0E8 with a 1px #D6D6CB outline, holding a card being scanned, drawn
+   as 2px INK #181824 line-work:
+   - a loyalty card about 108 x 62 with a 7px radius, filled cream #F0F0E8 with a 2px ink
+     outline, sitting square and centred;
+   - inside it, a REAL barcode in ink #181824: vertical bars of VARYING widths, as an actual
+     EAN-13 has — not evenly spaced stripes and not a row of identical lines. Beneath the bars,
+     one short muted ink rule standing in for the digits;
+   - across the whole thing, ONE horizontal BEAM #FCCC0C line about 3px tall, running the full
+     width of the circle and passing BEYOND both edges of the card, so it reads as a beam
+     sweeping over the card rather than a stripe printed on it.
+
+   That beam line is the only yellow in the drawing, and this is the one slide in the app where
+   it is unambiguously correct: the brand's whole ornament is a scan beam passing over a barcode,
+   and this slide is about scanning.
+
+3. THE TITLE "Scan or add manually" centred 40px beneath the circle, in Space Grotesk bold 24px
+   ink #181824.
+
+4. THE DESCRIPTION centred 8px beneath the title, in Inter 15px muted #55555F with 22px line
+   height, wrapping to two lines: "Point your camera at any barcode, or type the number in.
+   Either way, it takes seconds."
+
+5. THE PAGINATION DOTS, centred above the button block: THREE dots in a row with 8px between
+   them. The FIRST and THIRD are 8px across and filled #D6D6CB; the SECOND is 8px across and
+   filled ink #181824 — the middle slide is the active one. All three are perfect circles.
+
+6. THE BUTTON, full width between the margins, 24px below the dots and sitting directly above
+   the bottom inset: 52px tall, filled ink #181824, 12px radius, with "Next" centred in Inter
+   17px semibold white #FFFFFF.
+
+FORBIDDEN: bottom tab bars, floating action buttons, drop shadows, gradients, glassmorphism, a
+device bezel or phone frame around the screen, coral/salmon/terracotta/orange, a phone or camera
+device drawn around the card, viewfinder corner brackets, a keyboard glyph, a magnifying glass, a
+progress bar, evenly spaced barcode bars, and any second use of beam #FCCC0C beyond the one
+sweeping line.
+
+TONE
+The middle slide is the one that shows the product actually working, and it is the only place in
+the whole system where the brand's own motif can be drawn as itself. One card, one real code, one
+beam crossing it.
+
+=============================== END OF PROMPT E ===============================
+
+-------------------------------------------------------------------------------
+PROMPT F — HIGHLIGHT, LAST SLIDE
+-------------------------------------------------------------------------------
+=========== PASTE EVERYTHING BETWEEN THIS LINE AND "END OF PROMPT F" ===========
 
 Design ONE mobile screen at 393x852, light mode: the THIRD and final slide of a three-slide
 feature carousel in Cardì, a loyalty card wallet, shown at the end of first-run setup.
@@ -397,13 +509,22 @@ MARGINS: 24px left and right.
    semibold ink #181824. Plain text — no fill, no outline, no underline.
 
 2. THE ILLUSTRATION, centred in the upper half of the remaining space: a 160px fully-round
-   circle filled cream #F0F0E8 with a 1px #D6D6CB outline, holding a portability mark drawn as
-   2px INK #181824 line-work — one loyalty-card outline about 56 x 36 with a 4px radius, with an
-   arrow leaving it to the upper right and a second arrow entering it from the lower left. The
-   head of the OUTBOUND arrow is filled BEAM #FCCC0C; everything else in the drawing is ink.
-   This is export and import. Do NOT draw a shield, a padlock, a tick in a circle, a fingerprint
-   or any security symbol — the promise here is that the data is portable, not that it is
-   guarded.
+   circle filled cream #F0F0E8 with a 1px #D6D6CB outline, holding a PERMEABLE BOUNDARY drawn as
+   2px INK #181824 line-work:
+   - a rounded square about 64 x 66 with an 8px radius, drawn with a DASHED ink stroke — roughly
+     7px dash, 6px gap — occupying the left of the circle. This is where your data lives;
+   - a loyalty card about 74 x 46 with a 6px radius, filled cream #F0F0E8 with a 2px ink
+     outline, ROTATED about -13 degrees and positioned so it clearly CROSSES OUT of the dashed
+     square towards the upper right — overlapping it, half in and half out;
+   - inside that card, a real barcode in ink with vertical bars of VARYING widths, and one short
+     horizontal BEAM #FCCC0C band beneath them. That band is the only yellow in the drawing.
+
+   "No lock-in" has a shape, and this is it: the boundary is dashed because it is permeable, and
+   the card leaves through it freely.
+
+   Do NOT draw a shield, a padlock, a tick in a circle or a fingerprint — the promise here is
+   that the data is portable, not that it is guarded. And do NOT draw a pair of arrows in and
+   out of a box: arrows read as a UML diagram rather than a drawing.
 
 3. THE TITLE "Your data, your rules" centred 40px beneath the circle, in Space Grotesk bold 24px
    ink #181824.
@@ -423,12 +544,12 @@ MARGINS: 24px left and right.
 
 FORBIDDEN: bottom tab bars, floating action buttons, drop shadows, gradients, glassmorphism, a
 device bezel or phone frame around the screen, coral/salmon/terracotta/orange, a shield or
-padlock or tick-in-a-circle glyph, a cloud icon, a progress bar, and any second use of beam
-#FCCC0C beyond the outbound arrowhead in the illustration.
+padlock or tick-in-a-circle glyph, a cloud icon, a progress bar, arrows of any kind, and any
+second use of beam #FCCC0C beyond the one band on the card.
 
 TONE
 The last thing said before the wallet opens is the thing most apps do not say: you can leave, and
-take everything with you. The beam is on the arrow going OUT, which is the half of that promise
-nobody else makes.
+take everything with you. The card is drawn already halfway out, because that is the half of the
+promise nobody else makes.
 
-=============================== END OF PROMPT E ===============================
+=============================== END OF PROMPT F ===============================

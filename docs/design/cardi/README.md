@@ -21,7 +21,7 @@ run started 2026-08-11) whose scratchpad lived in `/tmp` and whose API connectio
 | `stitch-prompts-capture.txt`           | **The capture pattern** — how a card gets in: choose the brand, then point the camera. The only pattern that is a camera.                                                              |
 | `frames/cardi-capture-frames.html`     | **The capture frames** — five, at 393 × 852. Choose / aim / no camera / many codes / no code. The one screen where beam is mandatory.                                                  |
 | `stitch-prompts-onboarding.txt`        | **The pitch pattern** — the first ninety seconds. The only flow with no user content in it, and the one place the brand speaks in its own voice.                                       |
-| `frames/cardi-onboarding-frames.html`  | **The onboarding frames** — five, at 393 × 852. Welcome / modes / difference / first slide / last slide. Where Wave B stopped being blocked.                                           |
+| `frames/cardi-onboarding-frames.html`  | **The onboarding frames** — six, at 393 × 852. Welcome / modes / difference / and all three carousel slides. Where Wave B stopped being blocked.                                       |
 | `frames/cardi-barcode-frames.html`     | **The barcode frames** — three, at 393 × 852. The only frames on **white**, not cream; the white field is the product feature.                                                         |
 | `frames/cardi-form-frames.html`        | **The reference implementation.** Hand-authored, exactly 393 × 852, all four states. This is what screens derive from — not the PNGs. Open with `?probe` for a measured geometry dump. |
 | `frames/cardi-wallet-frames.html`      | **The wallet frames** — populated / empty / single-card / no-results, hand-authored at 393 × 852. Self-contained; shares its token block with the form file by copy, not by link.      |
@@ -995,8 +995,14 @@ any viewer that inlines the HTML — but the copy is now made by a script instea
 
 ### 2026-08-21 — the pitch pattern, and Wave B was never blocked
 
-`stitch-prompts-onboarding.txt` and `frames/cardi-onboarding-frames.html` cover five frames:
-**welcome**, **modes**, **difference**, and the **first** and **last** carousel slides.
+`stitch-prompts-onboarding.txt` and `frames/cardi-onboarding-frames.html` cover six frames:
+**welcome**, **modes**, **difference**, and **all three** carousel slides.
+
+> **Corrected after ifero looked at it.** The first pass drew only the first and last slides — to
+> pin the carousel's endpoints, the dots and the button label — and skipped the middle one. That
+> was the wrong one to skip: **"Scan or add manually" is the slide carrying the beam motif**, so
+> it holds the best drawing in the set. Pinning the endpoints was a reason to draw two frames,
+> never a reason to draw only two.
 
 **Wave B has been marked "blocked on illustrations" since 2026-08-14. It was blocked on a
 belief.** Four illustrations already exist in onboarding, all placeholders, all built the same
@@ -1021,17 +1027,36 @@ So this is where the brand speaks in its own voice, and the design system alread
 that in a line nobody had applied: _"Illustrations: flat, two-tone (ink line-work on cream) with
 beam yellow as the single accent."_ One beam element per drawing, never two:
 
-| slot        | drawing                                                                              |
-| ----------- | ------------------------------------------------------------------------------------ |
-| the mark    | the **ì** — an ink circle, a white stem, and the grave accent as a short beam stroke |
-| welcome     | three card outlines in 2px ink line-work, the frontmost carrying one beam bar        |
-| highlight 1 | four card outlines two-by-two; exactly one filled beam — that one is yours           |
-| highlight 2 | a card with ink barcode bars and a single beam line crossing them: the beam motif    |
-| highlight 3 | export/import arrows, beam on the **outbound** arrowhead. Not a shield               |
+> **And the first attempt at these was terrible, which is worth writing down rather than quietly
+> fixing.** It replaced four _tinted_ rectangles with four _outlined_ rectangles. That is an
+> improvement in colour discipline and nothing else: the placeholders were boxes and the
+> replacements were also boxes. _"Flat two-tone ink line-work"_ does not mean "rectangles with a
+> 2px stroke" — line-work implies drawing. The 2×2 grid read as a keypad; the export/import
+> arrows read as a UML sketch.
+>
+> Worse, the welcome fan **reproduced the exact defect this section criticises in the shipped
+> one**: diagonal offsets with no rotation, which makes a staircase, not a fan.
 
-Slide 3 mattered more than the rest: its shipped `verified-user` shield promises **security**
-while its own copy promises **portability** ("Export and import your cards anytime. No lock-in").
-The picture was making the weaker claim.
+| slot        | drawing                                                                                |
+| ----------- | -------------------------------------------------------------------------------------- |
+| the mark    | the **ì** — an ink circle, a white stem, the grave accent as a short beam **stroke**   |
+| welcome     | three card outlines **rotated** about a shared pivot (−17° / −1° / +15°), real barcode |
+| highlight 1 | **a miniature of the real wallet** — four tiles in four true brand colours. No beam    |
+| highlight 2 | a card holding a real EAN-13, one beam line sweeping past both its edges               |
+| highlight 3 | a **dashed** boundary and a card crossing out of it. Not a shield, and not arrows      |
+
+Two of those are worth the reasoning.
+
+**Highlight 1 stopped being line-work.** This slide promises "your brands, together", and the
+product's entire visual identity is many clashing brand hues — so a small **true picture** of the
+wallet beats a symbol for it. Four filled tiles at `#FFCC00` / `#E2231A` / `#0C84CC` / `#0050AA`,
+no outlines and no beam. That is not an exception to _"the content is the colour"_; it is the one
+place in onboarding that demonstrates it.
+
+**Highlight 3 needed a shape for "no lock-in".** Its shipped `verified-user` shield promises
+**security** while the copy promises **portability** — the picture was making the weaker claim.
+Arrows in and out of a box say the words without drawing anything. A **dashed** boundary with a
+card crossing freely out of it says the same thing as a picture: the perimeter is permeable.
 
 #### Two things drawing it settled that writing it could not
 
