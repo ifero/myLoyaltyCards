@@ -18,7 +18,7 @@
          `body { min-height: max(884px, 100dvh) }` into every screen it makes,
          so it can never emit the mandated 393 x 852 frame. It also produced a
          `position: fixed` footer (explicitly forbidden) and pulled the back
-         chevron outside the 20px screen margin with a negative margin.
+         chevron outside the 24px screen margin with a negative margin.
 
          This file is the corrected geometry. Every number below is from
          cardi-design-system.md.
@@ -39,7 +39,7 @@
         --swatch-green: #0c843c;
         --swatch-yellow: #fccc0c;
 
-        --screen-margin: 20px;
+        --screen-margin: 24px;
         --touch: 48px;
         --radius-control: 12px;
         --safe-top: 59px;
@@ -165,7 +165,7 @@
 
          Fix: a tight viewBox so the glyph fills its own box, then bleed the 48px
          touch target left to the frame edge while padding the content back to
-         the 20px margin. Ink lands on 20px; the target stays 48px and gains
+         the 24px margin. Ink lands on 24px; the target stays 48px and gains
          edge reachability. */
       .header {
         height: var(--header-h);

@@ -34,12 +34,12 @@
         --swatch-green: #0c843c;
         --swatch-yellow: #fccc0c;
 
-        /* TWO margins, deliberately. 20px is the SINGLE-COLUMN margin — forms,
+        /* TWO margins, deliberately. 24px is the SINGLE-COLUMN margin — forms,
            settings, documents. The card grid uses 16px, and that is not a style
            choice: TILE_WIDTH 171 in features/cards/utils/gridLayout.ts is
-           (390 − 2×16 − 16) / 2, frozen with tests. At 20px the tile stops being 171.
+           (390 − 2×16 − 16) / 2, frozen with tests. At 24px the tile stops being 171.
            The design system currently states one figure and needs amending. */
-        --screen-margin: 20px;
+        --screen-margin: 24px;
         --grid-margin: 16px;
         --gutter: 16px;
 
@@ -285,7 +285,10 @@
          confirm, acknowledge, type-to-confirm. Frames C-F draw one each;
          every other sheet in the app is one of them with different words.
 
-         Note the margin: 20px here, not the 24px the code currently uses.
+         Note the margin: 24px, which is what the code already uses. The design
+         system said 20px until 2026-08-21, when the 8px grid settled it against
+         itself: 20 is 2.5 x 8 and off-grid, 24 is 3 x 8. Settings was never
+         drifting — it was following the token, and the token was right.
          The card grid uses 16 because 171 is derived from it and tested;
          settings' 24 has no derivation behind it, so it follows the system.
          ------------------------------------------------------------------ */
@@ -403,7 +406,7 @@
 
       /* ---- guest block ---- */
       .guest {
-        padding: 24px 20px;
+        padding: 24px;
         display: flex;
         flex-direction: column;
         align-items: center;

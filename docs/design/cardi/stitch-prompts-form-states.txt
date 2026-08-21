@@ -55,7 +55,7 @@ HEADER
 A back chevron on the left, the title "New Card" centred, nothing on the right. Flat — no
 shadow, no coloured bar, no divider under it. Title in Space Grotesk 24px bold, ink #181824.
 
-BODY — single column, 20px side margins, 8px-grid vertical rhythm, generous air between
+BODY — single column, 24px side margins, 8px-grid vertical rhythm, generous air between
 fields.
 
 1. Label "STORE NAME" — uppercase, Inter 13px semibold, letter-spacing 0.02em, ink #181824,
@@ -76,7 +76,7 @@ fields.
 FOOTER — anchored to the BOTTOM of the frame.
 A 1px #D6D6CB hairline rule spanning the full frame width, and below it a full-width button
 labelled "Done": ink #181824 fill, white text in Inter 17px semibold, 52px tall, 12px
-radius, 20px side margins, sitting above the safe area.
+radius, 24px side margins, sitting above the safe area.
 
 Leave the space between the colour swatches and that hairline EMPTY cream #F0F0E8. That gap
 is deliberate — do not fill it, do not add a card preview or helper text, and do not move the
@@ -109,7 +109,7 @@ HEADER
 A back chevron on the left, the title "New Card" centred, nothing on the right. Flat — no
 shadow, no coloured bar, no divider. Title in Space Grotesk 24px bold, ink #181824.
 
-BODY — single column, 20px side margins, 8px-grid vertical rhythm.
+BODY — single column, 24px side margins, 8px-grid vertical rhythm.
 
 1. Label "STORE NAME" — uppercase, Inter 13px semibold, letter-spacing 0.02em, ink #181824,
    above the input. The input is EMPTY and in its error state: white #FFFFFF fill, 1px
@@ -135,7 +135,7 @@ BODY — single column, 20px side margins, 8px-grid vertical rhythm.
 FOOTER — anchored to the BOTTOM of the frame.
 A 1px #D6D6CB hairline rule spanning the full frame width, and below it a full-width button
 labelled "Done": ink #181824 fill, white text in Inter 17px semibold, 52px tall, 12px
-radius, 20px side margins, above the safe area.
+radius, 24px side margins, above the safe area.
 
 Leave the space between the colour swatches and the hairline EMPTY cream #F0F0E8.
 
@@ -168,7 +168,7 @@ HEADER
 A back chevron on the left, the title "New Card" centred, nothing on the right. Flat — no
 shadow, no coloured bar, no divider. Title in Space Grotesk 24px bold, ink #181824.
 
-BODY — single column, 20px side margins, 8px-grid vertical rhythm.
+BODY — single column, 24px side margins, 8px-grid vertical rhythm.
 
 1. Label "STORE NAME" — uppercase, Inter 13px semibold, letter-spacing 0.02em, ink #181824,
    above the input. The input holds the typed value "Farmacia Centrale" in ink #181824,
@@ -189,7 +189,7 @@ BODY — single column, 20px side margins, 8px-grid vertical rhythm.
 FOOTER — anchored to the BOTTOM of the frame.
 A 1px #D6D6CB hairline rule spanning the full frame width, and below it a full-width button
 labelled "Done": ink #181824 fill, white text in Inter 17px semibold, 52px tall, 12px
-radius, 20px side margins, above the safe area, fully enabled.
+radius, 24px side margins, above the safe area, fully enabled.
 
 Leave the space between the colour swatches and the hairline EMPTY cream #F0F0E8. A filled
 form does not earn the right to fill that gap.
@@ -221,7 +221,7 @@ HEADER
 A back chevron on the left, the title "New Card" centred, nothing on the right. Flat — no
 shadow, no coloured bar, no divider. Title in Space Grotesk 24px bold, ink #181824.
 
-BODY — single column, 20px side margins, 8px-grid vertical rhythm.
+BODY — single column, 24px side margins, 8px-grid vertical rhythm.
 
 1. Label "STORE NAME" — uppercase, Inter 13px semibold, letter-spacing 0.02em, ink #181824,
    above the input. The input holds "Farmacia Centrale" in ink #181824, Inter 17px. White
@@ -238,7 +238,7 @@ BODY — single column, 20px side margins, 8px-grid vertical rhythm.
 
 FOOTER — anchored to the BOTTOM of the frame.
 A 1px #D6D6CB hairline rule spanning the full frame width, and below it the full-width
-button, 52px tall, 12px radius, 20px side margins, above the safe area.
+button, 52px tall, 12px radius, 24px side margins, above the safe area.
 
 THE BUTTON IS BUSY, NOT DISABLED. It keeps its full ink #181824 fill. The word "Done" is
 replaced by a single small circular loading spinner in white, centred in the button. Do not

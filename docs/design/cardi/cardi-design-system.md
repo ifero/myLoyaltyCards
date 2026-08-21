@@ -207,8 +207,38 @@ decision, not a constraint. Placeholders, values and error messages stay sentenc
 - **Frame: 393 × 852 (iPhone-class portrait). Design nothing else.** No desktop, no
   tablet, no square canvases, no arbitrary heights.
 - Strict **8px grid**; 4px only for micro-adjustment.
-- Screen margin **20px**. Vertical gap between list rows **8px**.
+- Screen margin **24px**. Vertical gap between list rows **8px**.
 - Every interactive element is at least **48 × 48pt**.
+
+> **Both of those numbers were settled by the grid above, on 2026-08-21, and each artefact
+> lost one.** This document said margin 20 / target 48; the generated tokens said margin 24 /
+> target 44. Neither "the code is the truth" nor "the design system is the truth" gets both
+> right — each frame scores exactly half. The grid does better, and the grid is stated here, so
+> this document adjudicated against itself:
+>
+> | value                                | ×8   | verdict      |
+> | ------------------------------------ | ---- | ------------ |
+> | `TOUCH_TARGET.min` = 44              | 5.50 | **off grid** |
+> | touch target 48                      | 6.00 | on grid      |
+> | screen margin 20                     | 2.50 | **off grid** |
+> | `LAYOUT.screenHorizontalMargin` = 24 | 3.00 | on grid      |
+> | grid margin 16 (derived, tested)     | 2.00 | on grid      |
+>
+> **Margin is 24, not 20.** 20 is 2.5 × 8. The "4px for micro-adjustment" clause does not
+> rescue it: a screen margin is the most structural measurement on a page, and if _that_ is a
+> micro-adjustment the grid means nothing. This also retires the "margin drift" note kept
+> against settings and the scanner — both sit at 24 because they follow the token, and the token
+> was right. `CardForm` at 32 and the old document 48 were the only genuine one-offs.
+>
+> **Touch target is 48, not 44** — and here the token is the one that moves. Two independent
+> grounds. `app.json` declares **both** platforms, and a minimum binding on two platforms is the
+> **max** of their minimums: Apple HIG 44pt, Material 48dp, so 48. And 44 is off the grid, by
+> the same test and with the same non-defence available to it.
+>
+> **The two margins that remain are 24 and 16**, and 16 is not a style choice: `TILE_WIDTH` 171
+> in `features/cards/utils/gridLayout.ts` is `(390 − 2×16 − 16) / 2`, frozen with tests. Both
+> are on the grid.
+
 - The home screen is a **2-column grid of brand tiles** (see Card tile). This is the shipped
   layout and it is correct — do not replace it with a single-column list of rows.
 - Stack-pushed screens (detail, add, edit, settings) are single-column, content-first.

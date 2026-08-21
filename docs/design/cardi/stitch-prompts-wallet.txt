@@ -36,10 +36,10 @@ WHAT READING THE CODE TURNED UP  (decisions baked into the prompts)
    the single-card frame has no search bar, and the empty frame has no search bar. Drawing
    one is wrong, not merely extra.
 
-3. THE SCREEN MARGIN HERE IS 16pt, NOT THE DESIGN SYSTEM'S 20px — AND THE TILE MATH DEPENDS
+3. THE SCREEN MARGIN HERE IS 16pt, NOT THE DESIGN SYSTEM'S 24px — AND THE TILE MATH DEPENDS
    ON IT. `TILE_WIDTH = 171` is `(390 − 2 x 16 − 16) / 2`, frozen in gridLayout.ts with a
-   documented derivation and tests. At 20px margins the tile stops being 171. These prompts
-   use 16pt and the design system needs amending to say so: 20px is the SINGLE-COLUMN
+   documented derivation and tests. At 24px margins the tile stops being 171. These prompts
+   use 16pt and the design system needs amending to say so: 24px is the SINGLE-COLUMN
    (form / settings / document) margin; the grid is 16. This is now the FOURTH answer to the
    margin question in this codebase — see § Three answers to the screen margin.
 

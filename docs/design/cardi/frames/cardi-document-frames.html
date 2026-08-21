@@ -34,12 +34,12 @@
         --swatch-green: #0c843c;
         --swatch-yellow: #fccc0c;
 
-        /* TWO margins, deliberately. 20px is the SINGLE-COLUMN margin — forms,
+        /* TWO margins, deliberately. 24px is the SINGLE-COLUMN margin — forms,
            settings, documents. The card grid uses 16px, and that is not a style
            choice: TILE_WIDTH 171 in features/cards/utils/gridLayout.ts is
-           (390 − 2×16 − 16) / 2, frozen with tests. At 20px the tile stops being 171.
+           (390 − 2×16 − 16) / 2, frozen with tests. At 24px the tile stops being 171.
            The design system currently states one figure and needs amending. */
-        --screen-margin: 20px;
+        --screen-margin: 24px;
         --grid-margin: 16px;
         --gutter: 16px;
 
@@ -282,7 +282,7 @@
          features/help/HelpScreen.tsx and features/privacy/DataSummaryScreen.tsx
          — see stitch-prompts-document.txt.
 
-         THE MARGIN IS 20px, THE SYSTEM DEFAULT. An earlier version of this file
+         THE MARGIN IS 24px, THE SYSTEM DEFAULT. An earlier version of this file
          used 48px and defended it as a "reading measure". That was wrong, and
          wrong in an instructive way: the measure rule comes from DESKTOP
          typography, where you constrain a wide column down to 45-75 characters.
@@ -291,7 +291,7 @@
          comfortable minimum. The rule inverted when it crossed to mobile.
 
          So there is no "long-form" margin. There are two: 16px for the card
-         grid, because TILE_WIDTH 171 is derived from it and tested, and 20px
+         grid, because TILE_WIDTH 171 is derived from it and tested, and 24px
          for everything else. CardForm's 32, SettingsScreen's 24 and this file's
          former 48 are all drift.
 

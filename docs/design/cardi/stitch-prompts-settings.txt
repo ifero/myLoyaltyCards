@@ -80,7 +80,7 @@ The bottom inset carries a 140 x 5 fully-rounded pill in ink #181824 at 85% opac
 HEADER: 56px tall, flat, NO divider and no shadow beneath it. A back chevron on the left on a
 48 x 48 target, the title centred in Space Grotesk 24px bold ink #181824, nothing on the right.
 
-MARGINS: 20px. Section gap 24px. Row gap 8px.
+MARGINS: 24px. Section gap 24px. Row gap 8px.
 
 FORBIDDEN EVERYWHERE: bottom tab bars, floating action buttons, drop shadows, gradients,
 glassmorphism, illustrations, coral/salmon/terracotta/orange. Beam #FCCC0C appears nowhere in
@@ -95,7 +95,7 @@ PROMPT A — SETTINGS, SIGNED IN  (the exemplar)
 Design ONE mobile screen at 393x852, light mode: the Settings screen for Cardì, for a person
 who is signed in. Apply the COMMON CHROME above. Title: "Settings".
 
-Single column, 20px margins, sections separated by 24px.
+Single column, 24px margins, sections separated by 24px.
 
 1. ACCOUNT BLOCK — first, and with NO uppercase section header above it.
    A white #FFFFFF container, 16px radius, 1px #D6D6CB outline, holding:
@@ -170,7 +170,7 @@ THE SHEET: anchored to the bottom edge, full width, white #FFFFFF, with a 16px r
 TOP two corners only and square bottom corners. It sits above the 34px bottom inset, and the
 home indicator sits ON the sheet in ink #181824 at 85%.
 
-Inside the sheet, 20px margins:
+Inside the sheet, 24px margins:
 - a grabber at the very top, centred: 36 x 4, fully rounded, #D6D6CB, with 8px above it;
 - the title "Theme" in Space Grotesk 20px bold ink #181824, left-aligned;
 - three option rows, each 48px min height, separated by a hairline #D6D6CB rule:
@@ -193,7 +193,7 @@ Design ONE mobile screen at 393x852, light mode: the Settings screen from Frame 
 40%-ink scrim, with a bottom sheet asking the person to confirm signing out.
 
 Same sheet chrome as Frame C: bottom-anchored, full width, white #FFFFFF, 16px radius on the
-top corners only, grabber, 20px margins, home indicator on the sheet.
+top corners only, grabber, 24px margins, home indicator on the sheet.
 
 Inside:
 - the title "Sign Out?" in Space Grotesk 20px bold, ink #181824;

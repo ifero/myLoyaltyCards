@@ -162,7 +162,7 @@ Design ONE mobile screen at 393x852: the full-screen barcode modal for Cardì wh
 cannot be loaded. Apply the COMMON CHROME above — including the pure white #FFFFFF ground,
 because this screen is still the barcode modal.
 
-Centred vertically and horizontally, with 20px side margins:
+Centred vertically and horizontally, with 24px side margins:
 
 1. The message "Card not found" in Inter 17px semibold, #C41E1E, centred.
 

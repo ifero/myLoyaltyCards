@@ -133,10 +133,10 @@ bottom on cream carrying a 140 x 5 fully-rounded pill in ink #181824 at 85% opac
 HEADER: 56px tall, flat, and NEVER a drop shadow. A back chevron at the left on a 48x48 target,
 a favourite star at the right on a 48x48 target.
 
-MARGINS: 20px left and right for everything except the hero band, which is full-bleed to both
+MARGINS: 24px left and right for everything except the hero band, which is full-bleed to both
 frame edges.
 
-THE CONTENT STACK — at 20px margins, in this order, and it is EXACTLY these four things:
+THE CONTENT STACK — at 24px margins, in this order, and it is EXACTLY these four things:
 
   1. a white #FFFFFF card, 16px radius, 1px #D6D6CB outline, NO shadow, holding a centred
      EAN-13 barcode 280 wide x 100 tall in true black #000000 on white with 20px of padding,
@@ -210,10 +210,10 @@ bottom on cream carrying a 140 x 5 fully-rounded pill in ink #181824 at 85% opac
 HEADER: 56px tall, flat, and NEVER a drop shadow. A back chevron at the left on a 48x48 target,
 a favourite star at the right on a 48x48 target.
 
-MARGINS: 20px left and right for everything except the hero band, which is full-bleed to both
+MARGINS: 24px left and right for everything except the hero band, which is full-bleed to both
 frame edges.
 
-THE CONTENT STACK — at 20px margins, in this order, and it is EXACTLY these four things:
+THE CONTENT STACK — at 24px margins, in this order, and it is EXACTLY these four things:
 
   1. a white #FFFFFF card, 16px radius, 1px #D6D6CB outline, NO shadow, holding a centred
      EAN-13 barcode 280 wide x 100 tall in true black #000000 on white with 20px of padding,
@@ -285,10 +285,10 @@ bottom on cream carrying a 140 x 5 fully-rounded pill in ink #181824 at 85% opac
 HEADER: 56px tall, flat, and NEVER a drop shadow. A back chevron at the left on a 48x48 target,
 a favourite star at the right on a 48x48 target.
 
-MARGINS: 20px left and right for everything except the hero band, which is full-bleed to both
+MARGINS: 24px left and right for everything except the hero band, which is full-bleed to both
 frame edges.
 
-THE CONTENT STACK — at 20px margins, in this order, and it is EXACTLY these four things:
+THE CONTENT STACK — at 24px margins, in this order, and it is EXACTLY these four things:
 
   1. a white #FFFFFF card, 16px radius, 1px #D6D6CB outline, NO shadow, holding a centred
      EAN-13 barcode 280 wide x 100 tall in true black #000000 on white with 20px of padding,
@@ -360,10 +360,10 @@ bottom on cream carrying a 140 x 5 fully-rounded pill in ink #181824 at 85% opac
 HEADER: 56px tall, flat, and NEVER a drop shadow. A back chevron at the left on a 48x48 target,
 a favourite star at the right on a 48x48 target.
 
-MARGINS: 20px left and right for everything except the hero band, which is full-bleed to both
+MARGINS: 24px left and right for everything except the hero band, which is full-bleed to both
 frame edges.
 
-THE CONTENT STACK — at 20px margins, in this order, and it is EXACTLY these four things:
+THE CONTENT STACK — at 24px margins, in this order, and it is EXACTLY these four things:
 
   1. a white #FFFFFF card, 16px radius, 1px #D6D6CB outline, NO shadow, holding a centred
      EAN-13 barcode 280 wide x 100 tall in true black #000000 on white with 20px of padding,

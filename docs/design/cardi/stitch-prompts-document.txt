@@ -30,7 +30,7 @@ docs/help.json; strings in shared/i18n/locales/en.ts.
 WHAT READING THE CODE TURNED UP
 -------------------------------------------------------------------------------
 
-1. THE SCREEN MARGIN IS 20px HERE — AND THE ARGUMENT FOR 48 WAS WRONG.
+1. THE SCREEN MARGIN IS 24px HERE — AND THE ARGUMENT FOR 48 WAS WRONG.
 
    All three of these screens use `paddingHorizontal: 48`, and an earlier version of this
    file defended that as a "reading measure": narrow the column, improve the read. **That is
@@ -42,7 +42,7 @@ WHAT READING THE CODE TURNED UP
    So there is no "long-form" margin. There are exactly two:
 
        16px  card grid  — derived; TILE_WIDTH 171 depends on it, with tests
-       20px  everything else — the system default
+       24px  everything else — the system default
 
    `CardForm`'s 32, `SettingsScreen`'s 24 and these screens' 48 are all drift, and all three
    should become 20. **This supersedes the earlier claim in this file that the margin is "a
@@ -82,7 +82,7 @@ fully-rounded pill in ink #181824 at 85% opacity, centred.
 HEADER: 56px, flat, NO divider and no shadow beneath it. A back chevron on the left on a
 48 x 48 target, the title centred in Space Grotesk 24px bold ink #181824, nothing on the right.
 
-MARGINS: 20px left and right — the system default. NOT 48: see finding 1.
+MARGINS: 24px left and right — the system default. NOT 48: see finding 1.
 
 FORBIDDEN: bottom tab bars, floating action buttons, drop shadows, gradients, glassmorphism,
 illustrations, coral/salmon/terracotta/orange. Beam #FCCC0C appears NOWHERE in this pattern —
@@ -96,7 +96,7 @@ PROMPT A — PROSE DOCUMENT  (Privacy Policy)
 Design ONE mobile screen at 393x852, light mode: the Privacy Policy screen for Cardì. Apply
 the COMMON CHROME above. Header title: "Privacy Policy".
 
-BODY, 20px side margins, scrolling from the top:
+BODY, 24px side margins, scrolling from the top:
 
 1. NO DOCUMENT TITLE IN THE BODY. The header already says "Privacy Policy"; repeating it as a
    heading directly beneath itself is redundant and reads as an accident. The body opens with
@@ -136,7 +136,7 @@ PROMPT B — SEARCHABLE FAQ  (Help)
 Design ONE mobile screen at 393x852, light mode: the Help & FAQ screen for Cardì. Apply the
 COMMON CHROME above. Header title: "Help & FAQ".
 
-BODY, 20px side margins:
+BODY, 24px side margins:
 
 1. NO TITLE IN THE BODY — the header already says "Help & FAQ". The body opens with the
    subtitle.
@@ -182,7 +182,7 @@ PROMPT C — TWO-COLUMN TABLE  (What We Collect)
 Design ONE mobile screen at 393x852, light mode: the "What We Collect" data-summary screen
 for Cardì. Apply the COMMON CHROME above. Header title: "What We Collect".
 
-BODY, 20px side margins:
+BODY, 24px side margins:
 
 1. NO TITLE IN THE BODY — the header already says "What We Collect". The body opens with the
    description.

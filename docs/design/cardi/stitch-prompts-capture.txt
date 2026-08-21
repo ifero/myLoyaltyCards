@@ -143,7 +143,7 @@ HEADER: 48px tall, flat, no drop shadow and no hairline. A back chevron at the l
 target in ink #181824, the title "Add Card" centred in Inter 17px semibold ink #181824, and
 nothing at the right.
 
-MARGINS: 20px left and right for everything.
+MARGINS: 24px left and right for everything.
 
 1. THE SEARCH FIELD, directly under the header with 16px above it: full width between the
    margins, 48px tall, white #FFFFFF, 12px radius, a 1px #D6D6CB outline, holding a 20px
@@ -211,10 +211,10 @@ semibold, then signal, wifi and battery icons at the right, all in cream #F0F0E8
 ground is dark. 34px bottom carrying a 140 x 5 fully-rounded pill in cream #F0F0E8 at 85%
 opacity, centred.
 
-MARGINS: 20px left and right.
+MARGINS: 24px left and right.
 
 1. THE BACK CONTROL floats — there is no header bar, no title and no navigation chrome of any
-   kind. A single 40px fully-round button at the top left, 20px in from the edge and 8px below
+   kind. A single 40px fully-round button at the top left, 24px in from the edge and 8px below
    the status bar, filled rgba(0, 0, 0, 0.4), carrying a back chevron in cream #F0F0E8. No
    label.
 
@@ -240,7 +240,7 @@ MARGINS: 20px left and right.
    medium cream #F0F0E8, carrying a soft dark text shadow so it stays readable against whatever
    the camera happens to be pointing at.
 
-6. THE BOTTOM ACTIONS, sitting directly above the bottom inset, full width between the 20px
+6. THE BOTTOM ACTIONS, sitting directly above the bottom inset, full width between the 24px
    margins, as two rows each 48px tall separated by a 1px rgba(255,255,255,0.25) divider. Each
    row is: a 24px outline glyph at the left in cream #F0F0E8, the label in Inter 16px medium
    cream #F0F0E8, and a chevron-right at the far right in cream #F0F0E8.
@@ -279,10 +279,10 @@ SYSTEM INSETS: 59px top carrying the iOS status bar — "9:41" at the left in In
 semibold, then signal, wifi and battery icons at the right, all in ink #181824. 34px bottom on
 cream carrying a 140 x 5 fully-rounded pill in ink #181824 at 85% opacity, centred.
 
-MARGINS: 20px left and right.
+MARGINS: 24px left and right.
 
 1. THE BACK CONTROL floats — no header bar, no title, no navigation chrome. A single 40px
-   fully-round button at the top left, 20px in from the edge and 8px below the status bar,
+   fully-round button at the top left, 24px in from the edge and 8px below the status bar,
    filled white #FFFFFF with a 1px #D6D6CB outline, carrying a back chevron in ink #181824.
 
 2. Centred as a group on the vertical axis of the frame, and centred horizontally:
@@ -338,7 +338,7 @@ inset is covered by the sheet; the sheet itself carries the 140 x 5 fully-rounde
 
 THE SHEET, anchored to the bottom edge and about 460px tall: white #FFFFFF, with a 16px radius
 on its TOP two corners only and square bottom corners, no shadow and no outline. Inside it,
-with 20px left and right margins:
+with 24px left and right margins:
 
 1. A 36 x 4 fully-rounded grab handle in #D6D6CB, centred, 12px below the sheet's top edge.
 
@@ -393,10 +393,10 @@ SYSTEM INSETS: 59px top carrying the iOS status bar — "9:41" at the left in In
 semibold, then signal, wifi and battery icons at the right, all in cream #F0F0E8. 34px bottom
 carrying a 140 x 5 fully-rounded pill in cream #F0F0E8 at 85% opacity, centred.
 
-MARGINS: 20px left and right.
+MARGINS: 24px left and right.
 
 1. THE BACK CONTROL floats — no header bar, no title, no navigation chrome. A 40px fully-round
-   button at the top left, 20px in from the edge and 8px below the status bar, filled
+   button at the top left, 24px in from the edge and 8px below the status bar, filled
    rgba(0, 0, 0, 0.4), carrying a back chevron in cream #F0F0E8.
 
 2. THE BRAND PILL, centred horizontally 16px below the back button: a fully-round pill filled
@@ -412,7 +412,7 @@ MARGINS: 20px left and right.
 4. THE INSTRUCTION "Point camera at barcode" centred 16px below the viewfinder, in Inter 15px
    medium cream #F0F0E8 with a soft dark text shadow.
 
-5. THE BANNER, sitting 96px above the bottom edge of the frame, full width between the 20px
+5. THE BANNER, sitting 96px above the bottom edge of the frame, full width between the 24px
    margins: a plate filled rgba(0, 0, 0, 0.80) with a 12px radius, no outline and no shadow,
    padded 16px all round. Inside it:
        "We couldn't read a barcode in this image — try scanning the card itself" in Inter 15px
