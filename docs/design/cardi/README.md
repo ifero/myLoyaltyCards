@@ -15,6 +15,8 @@ run started 2026-08-11) whose scratchpad lived in `/tmp` and whose API connectio
 | `stitch-prompts-wallet.txt`         | **The wallet pattern** — populated / empty / single-card / no-results, specced against the real `CardList`. Carries eight findings from reading the code.                              |
 | `stitch-prompts-settings.txt`       | **The settings pattern** — screen (signed-in / guest) plus the four sheet SHAPES the eight sheets reduce to. Specced against the real `SettingsScreen`.                                |
 | `stitch-prompts-document.txt`       | **The document pattern** — prose / searchable FAQ / two-column table. Three screens, three shapes, not the "document (2)" the plan assumed.                                            |
+| `stitch-prompts-barcode.txt`        | **The barcode screen** — EAN-13 / QR / not-found. The hero moment, and the last screen to be specced.                                                                                  |
+| `frames/cardi-barcode-frames.html`  | **The barcode frames** — three, at 393 × 852. The only frames on **white**, not cream; the white field is the product feature.                                                         |
 | `frames/cardi-form-frames.html`     | **The reference implementation.** Hand-authored, exactly 393 × 852, all four states. This is what screens derive from — not the PNGs. Open with `?probe` for a measured geometry dump. |
 | `frames/cardi-wallet-frames.html`   | **The wallet frames** — populated / empty / single-card / no-results, hand-authored at 393 × 852. Self-contained; shares its token block with the form file by copy, not by link.      |
 | `frames/cardi-settings-frames.html` | **The settings frames** — signed-in / guest plus one frame per sheet shape, hand-authored at 393 × 852. Frames C–F share one backdrop string, so it cannot drift.                      |
@@ -668,6 +670,47 @@ on all three. The duplicated body titles are gone, and the FAQ accordion now sit
 white fill instead of an outlined cream box. Each was a single prompt of three or four
 **numbered defects** — the phrasing that has landed every time, where the same requirement
 written into descriptive prose has not.
+
+### 2026-08-15 — the barcode screen, and the flow nobody had noticed was missing
+
+An audit against the 21 real routes found that the "17 screens → 4 patterns" reduction, while
+sound, **did not cover everything.** Five routes belong to no pattern — and they are not a
+remainder, they are one flow: `add-card/index` → `scan` / `add-card/scan` → `card/[id]` →
+**`barcode/[id]`**. That is the loop the product exists to serve. The reduction was built from
+screens that share a shape, and each of these has a shape of its own, so they fell out of a
+taxonomy organised by similarity.
+
+The barcode screen was the sharpest omission: the most heavily specified screen in the system
+— an entire § _Barcode view (the hero moment)_ plus four Forbidden entries protecting it — and
+the only one never drawn. `stitch-prompts-barcode.txt` and `frames/cardi-barcode-frames.html`
+now cover EAN-13, QR and not-found.
+
+**What reading it turned up.** The hard part was already right: pure white `#FFFFFF`, true
+black bars, brightness maximised on mount and restored on unmount, the status bar forced
+dark-on-white, and nothing overlaying the code — `BarcodeFlash` is named for the use case
+(flash your card at the till), not a visual effect. **ifero confirmed it works at a real
+checkout**, which settled the one question the room could not answer from the code.
+
+Two corrections, and the reason matters:
+
+- **The barcode container's drop shadow and 8px radius are removed** —
+  `shadowOpacity: 0.05`, commented _"subtle shadow for definition"_. They were suspected of
+  costing scan contrast; the real-checkout test says otherwise, and the shadow renders outside
+  the white plate anyway. They go for two smaller, honest reasons: the system forbids shadows,
+  and **a white plate on a white field is defining a boundary that carries no information.**
+- **Every colour on the screen was off-palette** — card name and number `#1F2937`, hint
+  `#9CA3AF`, error `#EF4444`, dismiss `#4B5563`. A Tailwind grey ramp. None of it reads as
+  _wrong_ on a white field at full brightness, which is exactly why it survived every pass. It
+  is corrected because **this is the screen the system points at when it claims to be real.**
+
+One thing ratified rather than changed: the store name stays in **Inter, not Space Grotesk**.
+Space Grotesk carries our personality, and this text is a third-party brand's name — dressing
+someone else's brand in our display face contradicts the thesis that our chrome stays quiet.
+The shipped code already had this right.
+
+And the hint line **stays**. "Nothing else on this screen" was written against nav, chrome and
+ads; "Tap anywhere to close" is the only affordance telling someone how to leave a modal with
+no visible dismiss control.
 
 ### Still open
 
