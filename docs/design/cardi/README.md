@@ -102,7 +102,22 @@ Wave B is blocked until the illustration set exists.
 - **The written file and the screenshot both lag the edit.** Straight after `edit_screens`,
   `get_screen` still returns the _previous_ file id and the _previous_ screenshot URL, so the
   old content downloads and the edit looks like it silently failed. It has not — the
-  `DomOperationEvent` in the tool result is the receipt. Wait, re-list, and compare file ids.
+  `DomOperationEvent` in the tool result is the receipt.
+- **`list_screens` OMITS screens that exist — it is not merely stale.** Verified 2026-08-21:
+  three calls over several minutes each returned a differently-ordered 27 screens, and none
+  included `24ad8fff…`, which `get_screen` fetches happily and whose HTML was audited. So
+  exactly two confirmations are trustworthy: **the `design.screens` block** in the generate
+  response, and **`get_screen` with a known id**. A generation that **times out** gives neither —
+  no id comes back — so there is no way to check it over MCP at all, and the canvas is the only
+  authority. Do not retry a timed-out `generate_variants`; it often landed.
+- **Stitch ADDS reliably and MOVES unreliably.** In one three-part delta the new node — a banner
+  with an absolute offset — landed first time and exactly on the specified 171px, while
+  repositioning an existing caption out of a centred flex group failed for the third time across
+  two independent attempts. The instruction was wrong, not ignored: _"move it 16px below the
+  brackets"_ describes a **position**, when what needs saying is a **structure** — take the
+  caption out of the group that centres the brackets. Same class as the standalone-prompt rule:
+  when a generator fails the same way repeatedly, the prompt is describing the wrong _kind_ of
+  thing.
 - **Gemini will not draw a real barcode.** Three passes produced three different fakes: a
   `bg-black` box wrapping a white inner with seven `flex-1` bars, a ~40-bar approximation, and
   a completely empty `bg-primary` rectangle. Nothing in a prompt fixes this, because the model
