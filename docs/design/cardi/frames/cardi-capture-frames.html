@@ -1,0 +1,1872 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Cardì — capture, five frames</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@700&family=JetBrains+Mono:wght@500&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      /* ==================================================================
+         SHARED FRAME LAYER — extracted VERBATIM from
+         cardi-card-detail-frames.html by scratchpad/gen_capture.py, so the
+         token values cannot drift between the two files. Copied rather than
+         linked, because any viewer that inlines the HTML drops a linked
+         stylesheet and renders a broken frame.
+         cardi-design-system.md is the source of truth for these values.
+         ================================================================== */
+
+      :root {
+        --ink: #181824;
+        --beam: #fccc0c;
+        --cream: #f0f0e8;
+        --white: #ffffff;
+        --hairline: #d6d6cb;
+        --placeholder: #55555f;
+        --error: #c41e1e;
+
+        --swatch-red: #e42424;
+        --swatch-blue: #0c3c84;
+        --swatch-azure: #0c84cc;
+        --swatch-green: #0c843c;
+        --swatch-yellow: #fccc0c;
+
+        /* TWO margins, deliberately. 20px is the SINGLE-COLUMN margin — forms,
+           settings, documents. The card grid uses 16px, and that is not a style
+           choice: TILE_WIDTH 171 in features/cards/utils/gridLayout.ts is
+           (390 − 2×16 − 16) / 2, frozen with tests. At 20px the tile stops being 171.
+           The design system currently states one figure and needs amending. */
+        --screen-margin: 20px;
+        --grid-margin: 16px;
+        --gutter: 16px;
+
+        --touch: 48px;
+        --radius-control: 12px;
+        --radius-tile: 16px;
+        --safe-top: 59px;
+        --safe-bottom: 34px;
+        --header-h: 56px;
+      }
+
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+
+      body {
+        background: #c9c9c2;
+        font-family: Inter, system-ui, sans-serif;
+        padding: 48px 32px;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 48px;
+        justify-content: center;
+        align-items: flex-start;
+      }
+
+      .plate {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        align-items: center;
+      }
+
+      .plate figcaption {
+        font:
+          600 12px/1.4 Inter,
+          sans-serif;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: #3d3d46;
+      }
+
+      /* ---- the frame: exactly 393 x 852, never anything else ---- */
+      .frame {
+        width: 393px;
+        height: 852px;
+        background: var(--cream);
+        color: var(--ink);
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+        position: relative;
+      }
+
+      /* Reserved system insets — 59px top / 34px bottom, the real values for a
+         393 x 852 Dynamic Island device.
+
+         These were originally left blank. That was a mistake of presentation, not of
+         measurement: on a real phone the top inset is OCCUPIED by the clock and
+         indicators, so drawing it empty makes a correct 59px read as careless
+         padding, and invites the exact wrong fix (shrink it — which would push
+         content under the live status bar at build time).
+
+         The status bar is SYSTEM chrome, not ours: ink only, no beam, and nothing
+         here is a control. Same for the home indicator. */
+      .safe-top {
+        height: var(--safe-top);
+        flex: 0 0 auto;
+      }
+
+      .safe-bottom {
+        height: var(--safe-bottom);
+        flex: 0 0 auto;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .statusbar {
+        height: 100%;
+        padding: 14px var(--screen-margin) 0;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        color: var(--ink);
+      }
+
+      .statusbar .clock {
+        font-family: Inter, sans-serif;
+        font-size: 15px;
+        font-weight: 600;
+        letter-spacing: 0.01em;
+        font-variant-numeric: tabular-nums;
+      }
+
+      .statusbar .indicators {
+        display: flex;
+        align-items: center;
+        gap: 5px;
+      }
+
+      .statusbar svg {
+        display: block;
+        fill: currentColor;
+      }
+
+      .home-indicator {
+        width: 140px;
+        height: 5px;
+        border-radius: 999px;
+        background: var(--ink);
+        opacity: 0.85;
+      }
+
+      /* ---- header ----
+         A three-column grid: a 48px touch target, the title, a 48px touch target.
+         Icons are optically aligned, not box-aligned — a glyph drawn inside a square
+         icon box carries empty side bearing, so box-aligning it to the margin leaves
+         the visible stroke sitting inboard of the content beneath. The fix is to
+         bleed the touch target to the frame edge and pad the content back to the
+         margin: ink lands on the margin, the target stays 48px. */
+      .header {
+        height: var(--header-h);
+        flex: 0 0 auto;
+        padding: 0 var(--screen-margin);
+        display: grid;
+        grid-template-columns: var(--touch) 1fr var(--touch);
+        align-items: center;
+      }
+
+      .header.grid-margin {
+        padding: 0 var(--grid-margin);
+      }
+
+      .icon-target {
+        width: var(--touch);
+        height: var(--touch);
+        display: flex;
+        align-items: center;
+        background: none;
+        border: 0;
+        cursor: pointer;
+        color: var(--ink);
+      }
+
+      .icon-target.at-start {
+        margin-left: calc(-1 * var(--screen-margin));
+        padding-left: var(--screen-margin);
+        justify-content: flex-start;
+      }
+
+      .icon-target.at-end {
+        margin-right: calc(-1 * var(--screen-margin));
+        padding-right: var(--screen-margin);
+        justify-content: flex-end;
+      }
+
+      .header.grid-margin .icon-target.at-start {
+        margin-left: calc(-1 * var(--grid-margin));
+        padding-left: var(--grid-margin);
+      }
+
+      .header.grid-margin .icon-target.at-end {
+        margin-right: calc(-1 * var(--grid-margin));
+        padding-right: var(--grid-margin);
+      }
+
+      .icon-target svg {
+        display: block;
+      }
+
+      .title {
+        font-family: 'Space Grotesk', sans-serif;
+        font-weight: 700;
+        font-size: 24px;
+        line-height: 32px;
+        letter-spacing: -0.01em;
+        text-align: center;
+        color: var(--ink);
+      }
+
+      /* ---- body ---- */
+      .body {
+        flex: 1 1 auto;
+        min-height: 0;
+        padding: 24px var(--screen-margin) 0;
+        display: flex;
+        flex-direction: column;
+        gap: 32px;
+      }
+
+      .body.grid-margin {
+        padding: 8px var(--grid-margin) 0;
+        gap: 16px;
+      }
+
+      /* ---- footer ----
+         A flex sibling AFTER the scroll area. Never fixed, never absolute — so it
+         cannot fight the keyboard. The gap above it is composition, not absence. */
+      .footer {
+        flex: 0 0 auto;
+      }
+
+      .hairline {
+        height: 1px;
+        background: var(--hairline);
+        width: 100%;
+      }
+
+      .footer-inner {
+        padding: var(--screen-margin);
+      }
+
+      .footer-inner.grid-margin {
+        padding: var(--grid-margin);
+      }
+
+      .btn-primary {
+        width: 100%;
+        height: 52px;
+        background: var(--ink);
+        color: var(--white);
+        border: 0;
+        border-radius: var(--radius-control);
+        font-family: Inter, sans-serif;
+        font-weight: 600;
+        font-size: 17px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      /* ------------------------------------------------------------------
+         Cardì — the CAPTURE pattern: how a card gets into the wallet.
+
+         Specced from CardTypeSelectionScreen / BrandScannerScreen /
+         ScannerOverlay / NoCodeFoundBanner / MultiCodePickerSheet — see
+         stitch-prompts-capture.txt.
+
+         THIS IS THE ONLY PATTERN THAT IS A CAMERA, AND THE ONLY ONE WHERE THE
+         DESIGN SYSTEM CONTRADICTS ITSELF.
+
+         stitch-prompts-barcode.txt forbids, by name, "a frame, a corner marker,
+         a viewfinder bracket". This screen draws corner brackets AND a sweeping
+         line over a live camera. Both are correct, because that rule governs the
+         barcode you are DISPLAYING — your own card, held up to a scanner, where
+         anything on top of the bars costs you a read. This screen is the barcode
+         you are READING: someone else's code, through a lens, where the overlay
+         IS the affordance that says where to aim.
+
+         Same mark, opposite verdict, decided by which way the light travels.
+         The rule did not need weakening; it needed a direction.
+
+         AND THIS IS THE ONE SCREEN WHERE BEAM IS MANDATORY RATHER THAN BANNED.
+         The shipped scan line is theme.primary, which the design asset resolves
+         to #000000: a 2px near-black line, over a camera feed, under a 40% black
+         scrim. Invisible, and nobody would notice because the screen still works.
+         Meanwhile the brand's whole ornament is — the design system's own words —
+         "a scan beam passing over a barcode", and the barcode-display spec banned
+         beam there with "the real beam comes from the scanner at the till".
+         On THIS screen we ARE the scanner. The beam is ours, at #FCCC0C, here and
+         nowhere else.
+
+         THE VIEWFINDER IS WIDE, NOT SQUARE. The shipped one is screenWidth * 0.7
+         used as both width and height — a ~275px square around an EAN-13 that is
+         roughly 95:20. The screen already knows which to expect: expectedFormat
+         comes down from the catalogue. A square bracket around a linear code
+         teaches the wrong gesture — centre it in the box and you stand too far
+         back, which is the one failure a viewfinder exists to prevent.
+
+         THE FAILURE STATES LEAVE THE DARK, AND THAT IS RIGHT. Permission-denied
+         renders on cream while the live screen is black. Same logic as the
+         card-detail header: the dark ground exists to serve the camera. No
+         camera, no dark.
+         ------------------------------------------------------------------ */
+
+      /* The camera feed. A stand-in for a live preview: what the lens would
+         actually see, which is a loyalty card lying on a desk. Drawn rather than
+         abstracted, because the whole judgement on this screen is whether the
+         brackets frame the code well — and an abstract dark field cannot be
+         judged for that. */
+      .frame.is-camera {
+        background: #2a2a2e;
+      }
+
+      /* The camera frames layer their content absolutely, so the two insets are
+         the ONLY flex children. Without this the home indicator stacks directly
+         under the clock instead of sitting at the foot of the frame. */
+      .frame.is-camera .safe-bottom {
+        margin-top: auto;
+      }
+
+      .feed {
+        position: absolute;
+        inset: 0;
+        overflow: hidden;
+      }
+
+      /* Credit-card proportions (85.6 x 54mm = 1.586:1), centred on the viewfinder
+         so the brackets fall INSIDE the card and the fit between them and the code
+         is the thing this frame exists to let you judge. */
+      .desk-card {
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        width: 340px;
+        height: 214px;
+        margin: -107px 0 0 -170px;
+        background: var(--white);
+        border-radius: 10px;
+        transform: rotate(-2.4deg);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      /* A 40% flat scrim. Not a gradient and not a vignette: the controls need a
+         predictable floor, and a gradient would make legibility depend on where
+         the phone happens to be pointing. */
+      .scrim {
+        position: absolute;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.4);
+      }
+
+      .scrim.is-sheet-open {
+        background: rgba(0, 0, 0, 0.6);
+      }
+
+      .layer {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        flex-direction: column;
+      }
+
+      /* ---- floating controls: there is no header bar on a camera ---- */
+      .float-back {
+        position: absolute;
+        top: calc(var(--safe-top) + 8px);
+        left: var(--screen-margin);
+        width: 40px;
+        height: 40px;
+        border: 0;
+        border-radius: 999px;
+        background: rgba(0, 0, 0, 0.4);
+        color: var(--cream);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+      }
+
+      .float-back.on-cream {
+        background: var(--white);
+        border: 1px solid var(--hairline);
+        color: var(--ink);
+      }
+
+      /* Says WHICH card we are looking for. The brand was chosen on the previous
+         screen, so this is stated, never asked. */
+      .brand-pill {
+        position: absolute;
+        top: calc(var(--safe-top) + 8px + 40px + 16px);
+        left: 0;
+        right: 0;
+        display: flex;
+        justify-content: center;
+      }
+
+      .pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 6px 12px 6px 6px;
+        border-radius: 999px;
+        font-family: Inter, sans-serif;
+        font-weight: 600;
+        font-size: 15px;
+      }
+
+      .pill .dot {
+        width: 24px;
+        height: 24px;
+        border-radius: 999px;
+        background: var(--white);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 13px;
+        font-weight: 600;
+      }
+
+      /* ---- the viewfinder: CORNERS ONLY, and wide ---- */
+      .vf-wrap {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      /* Absolute, not a flex sibling of the brackets. The card is centred so the
+         brackets land inside it; centring brackets + caption as one column would
+         shift the brackets off the code by half the caption's height. */
+      .vf-caption {
+        position: absolute;
+        left: 0;
+        right: 0;
+        top: calc(50% + 124px);
+        text-align: center;
+      }
+
+      .vf {
+        position: relative;
+        width: 300px;
+        height: 120px;
+      }
+
+      .vf i {
+        position: absolute;
+        width: 32px;
+        height: 32px;
+        border-color: var(--white);
+        border-style: solid;
+        border-width: 0;
+      }
+
+      .vf i.tl {
+        top: 0;
+        left: 0;
+        border-top-width: 4px;
+        border-left-width: 4px;
+        border-top-left-radius: 12px;
+      }
+
+      .vf i.tr {
+        top: 0;
+        right: 0;
+        border-top-width: 4px;
+        border-right-width: 4px;
+        border-top-right-radius: 12px;
+      }
+
+      .vf i.bl {
+        bottom: 0;
+        left: 0;
+        border-bottom-width: 4px;
+        border-left-width: 4px;
+        border-bottom-left-radius: 12px;
+      }
+
+      .vf i.br {
+        bottom: 0;
+        right: 0;
+        border-bottom-width: 4px;
+        border-right-width: 4px;
+        border-bottom-right-radius: 12px;
+      }
+
+      /* The one legitimate beam in the app. */
+      .beam {
+        position: absolute;
+        left: 8px;
+        right: 8px;
+        top: 46px;
+        height: 2px;
+        border-radius: 999px;
+        background: var(--beam);
+      }
+
+      /* The one legitimate shadow. Legibility over a background nobody controls
+         is not decoration — the same class of exception as the barcode's quiet
+         zone, where the space is an input to the scanner rather than a margin.
+         It applies ONLY to type set directly on the camera feed. */
+      .on-feed {
+        font-family: Inter, sans-serif;
+        font-weight: 500;
+        font-size: 15px;
+        color: var(--cream);
+        text-shadow: 0 1px 3px rgba(0, 0, 0, 0.75);
+      }
+
+      /* ---- bottom actions: plain rows on the feed, never buttons ---- */
+      .feed-actions {
+        position: absolute;
+        left: 0;
+        right: 0;
+        bottom: var(--safe-bottom);
+        padding: 0 var(--screen-margin) 16px;
+      }
+
+      .feed-row {
+        height: var(--touch);
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        color: var(--cream);
+        cursor: pointer;
+      }
+
+      .feed-row .label {
+        flex: 1;
+        font-family: Inter, sans-serif;
+        font-weight: 500;
+        font-size: 16px;
+      }
+
+      .row-divider {
+        height: 1px;
+        background: rgba(255, 255, 255, 0.25);
+        margin: 4px 0;
+      }
+
+      /* ---- the no-code banner ----
+         No icon. The shipped one carries warning-amber at theme.warning — the
+         third sighting of the amber already replaced on the wallet tile and the
+         favourite star. The plate is already a dark surface carrying a sentence;
+         a 20px triangle on it is decoration doing no work. And the shipped action
+         links are theme.primary on rgba(0,0,0,.8) — near-black on near-black,
+         the same invisibility as the scan line, so they take the beam too. */
+      /* ABOVE the action rows, not on them.
+         The shipped banner is `bottom: 96` while `bottomActions` spans from 0 up
+         to insets.bottom (34) + SPACING.md (16) + two 48px rows + a divider ≈
+         155px — so on a real phone the banner COVERS "Scan from image", which is
+         one of the two ways out the banner itself is offering. 171px clears the
+         stack with a 16px gap. */
+      .banner {
+        position: absolute;
+        left: var(--screen-margin);
+        right: var(--screen-margin);
+        bottom: 171px;
+        background: rgba(0, 0, 0, 0.8);
+        border-radius: var(--radius-control);
+        padding: 16px;
+      }
+
+      .banner-msg {
+        display: flex;
+        gap: 12px;
+        align-items: flex-start;
+      }
+
+      .banner-msg p {
+        flex: 1;
+        font-family: Inter, sans-serif;
+        font-size: 15px;
+        line-height: 21px;
+        color: var(--cream);
+      }
+
+      .banner-close {
+        background: none;
+        border: 0;
+        padding: 0;
+        color: rgba(255, 255, 255, 0.6);
+        cursor: pointer;
+        flex: 0 0 auto;
+      }
+
+      .banner-links {
+        display: flex;
+        gap: 16px;
+        margin-top: 8px;
+      }
+
+      .banner-links span {
+        font-family: Inter, sans-serif;
+        font-size: 13px;
+        color: var(--beam);
+        cursor: pointer;
+        padding: 4px 0;
+      }
+
+      /* ---- the multi-code sheet ---- */
+      .sheet {
+        position: absolute;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        height: 460px;
+        background: var(--white);
+        border-radius: var(--radius-tile) var(--radius-tile) 0 0;
+        display: flex;
+        flex-direction: column;
+      }
+
+      .grab {
+        width: 36px;
+        height: 4px;
+        border-radius: 999px;
+        background: var(--hairline);
+        margin: 12px auto 0;
+      }
+
+      .sheet-title {
+        font-family: 'Space Grotesk', sans-serif;
+        font-weight: 700;
+        font-size: 20px;
+        line-height: 28px;
+        text-align: center;
+        margin-top: 20px;
+      }
+
+      .sheet-sub {
+        font-family: Inter, sans-serif;
+        font-size: 15px;
+        color: var(--placeholder);
+        text-align: center;
+        margin-top: 4px;
+      }
+
+      .code-list {
+        margin-top: 20px;
+        padding: 0 var(--screen-margin);
+      }
+
+      .code-row {
+        height: 64px;
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        border-bottom: 1px solid var(--hairline);
+      }
+
+      .code-row .mini {
+        width: 40px;
+        height: 24px;
+        background: var(--white);
+        flex: 0 0 auto;
+        display: block;
+      }
+
+      .code-row .stack {
+        display: flex;
+        flex-direction: column;
+      }
+
+      .code-row .digits {
+        font-family: 'JetBrains Mono', ui-monospace, monospace;
+        font-size: 15px;
+        color: var(--ink);
+      }
+
+      .code-row .fmt {
+        font-family: Inter, sans-serif;
+        font-size: 13px;
+        color: var(--placeholder);
+        margin-top: 2px;
+      }
+
+      .sheet-cancel {
+        height: var(--touch);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-family: Inter, sans-serif;
+        font-size: 17px;
+        color: var(--ink);
+        cursor: pointer;
+      }
+
+      .sheet-foot {
+        margin-top: auto;
+        height: var(--safe-bottom);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      /* ---- the brand list (frame A) ---- */
+      .list-header {
+        height: var(--touch);
+        flex: 0 0 auto;
+        padding: 0 var(--screen-margin);
+        display: grid;
+        grid-template-columns: var(--touch) 1fr var(--touch);
+        align-items: center;
+      }
+
+      .list-title {
+        font-family: Inter, sans-serif;
+        font-weight: 600;
+        font-size: 17px;
+        text-align: center;
+      }
+
+      .search {
+        margin: 16px var(--screen-margin) 0;
+        height: var(--touch);
+        background: var(--white);
+        border: 1px solid var(--hairline);
+        border-radius: var(--radius-control);
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 0 14px;
+        color: var(--placeholder);
+      }
+
+      .search span {
+        font-family: Inter, sans-serif;
+        font-size: 15px;
+      }
+
+      .section-label {
+        font-family: Inter, sans-serif;
+        font-weight: 600;
+        font-size: 12px;
+        letter-spacing: 0.05em;
+        text-transform: uppercase;
+        color: var(--placeholder);
+        margin: 24px var(--screen-margin) 8px;
+      }
+
+      .list-card {
+        margin: 0 var(--screen-margin);
+        background: var(--white);
+        border: 1px solid var(--hairline);
+        border-radius: var(--radius-tile);
+        overflow: hidden;
+      }
+
+      .brand-row {
+        height: 64px;
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        padding: 0 16px;
+        border-bottom: 1px solid var(--hairline);
+      }
+
+      .brand-row:last-child {
+        border-bottom: 0;
+      }
+
+      /* The 45 brand colours are the content of this app, and this is the screen
+         where the most of them are visible at once. The tile carries the brand's
+         own hex; the initial flips with luminance, same rule as the card-detail
+         controls. */
+      .brand-tile {
+        width: 40px;
+        height: 40px;
+        border-radius: 999px;
+        flex: 0 0 auto;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-family: Inter, sans-serif;
+        font-weight: 600;
+        font-size: 15px;
+      }
+
+      .brand-row .name {
+        flex: 1;
+        font-family: Inter, sans-serif;
+        font-size: 17px;
+        color: var(--ink);
+      }
+
+      .brand-row .name small {
+        display: block;
+        font-size: 13px;
+        color: var(--placeholder);
+        margin-top: 1px;
+      }
+
+      .brand-row .chev {
+        color: var(--placeholder);
+        flex: 0 0 auto;
+      }
+
+      .scroll-clip {
+        flex: 1 1 auto;
+        min-height: 0;
+        overflow: hidden;
+      }
+
+      /* ---- the cream failure state ---- */
+      .centred {
+        flex: 1 1 auto;
+        min-height: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 0 var(--screen-margin);
+        text-align: center;
+      }
+
+      .centred .glyph {
+        color: var(--placeholder);
+      }
+
+      .centred h2 {
+        font-family: Inter, sans-serif;
+        font-weight: 600;
+        font-size: 20px;
+        margin-top: 16px;
+      }
+
+      .centred p {
+        font-family: Inter, sans-serif;
+        font-size: 15px;
+        line-height: 22px;
+        color: var(--placeholder);
+        margin-top: 8px;
+      }
+
+      .centred .actions {
+        width: 100%;
+        margin-top: 24px;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+      }
+
+      .btn-secondary {
+        width: 100%;
+        height: 52px;
+        background: none;
+        color: var(--ink);
+        border: 1px solid var(--ink);
+        border-radius: var(--radius-control);
+        font-family: Inter, sans-serif;
+        font-weight: 600;
+        font-size: 17px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .bc {
+        display: block;
+        fill: #000000;
+      }
+    </style>
+  </head>
+  <body>
+    <figure class="plate">
+      <div class="frame">
+        <div class="safe-top" style="color: var(--ink)">
+          <div class="statusbar" aria-hidden="true" style="color: var(--ink)">
+            <span class="clock">9:41</span>
+            <span class="indicators">
+              <svg width="18" height="12" viewBox="0 0 18 12">
+                <rect x="0" y="8.5" width="3" height="3.5" rx="1" />
+                <rect x="5" y="6" width="3" height="6" rx="1" />
+                <rect x="10" y="3" width="3" height="9" rx="1" />
+                <rect x="15" y="0" width="3" height="12" rx="1" />
+              </svg>
+              <svg
+                width="16"
+                height="12"
+                viewBox="0 0 16 12"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.6"
+                stroke-linecap="round"
+              >
+                <path d="M1.2 4.4a10 10 0 0 1 13.6 0" />
+                <path d="M4 7.3a6 6 0 0 1 8 0" />
+                <circle cx="8" cy="10.4" r="1" fill="currentColor" stroke="none" />
+              </svg>
+              <svg width="25" height="12" viewBox="0 0 25 12">
+                <rect
+                  x="0.5"
+                  y="0.5"
+                  width="21"
+                  height="11"
+                  rx="3.2"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-opacity="0.4"
+                />
+                <rect x="2.2" y="2.2" width="14" height="7.6" rx="1.8" />
+                <rect x="22.6" y="4.2" width="1.9" height="3.6" rx="0.95" opacity="0.4" />
+              </svg>
+            </span>
+          </div>
+        </div>
+        <div class="list-header">
+          <button class="icon-target at-start" aria-label="Go back">
+            <svg
+              viewBox="0 0 11 20"
+              width="11"
+              height="20"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.75"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <path d="M9.5 1.5L1.5 10l8 8.5" />
+            </svg>
+          </button>
+          <h1 class="list-title">Add Card</h1>
+          <span></span>
+        </div>
+        <div class="search">
+          <svg
+            width="20"
+            height="20"
+            viewBox="0 0 20 20"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.6"
+            stroke-linecap="round"
+          >
+            <circle cx="8.5" cy="8.5" r="5.5" />
+            <path d="M12.8 12.8L17 17" /></svg
+          ><span>Search by name</span>
+        </div>
+        <div class="scroll-clip">
+          <p class="section-label">Popular cards</p>
+          <div class="list-card">
+            <div class="brand-row">
+              <span class="brand-tile" style="background: #ffcc00; color: var(--ink)">E</span
+              ><span class="name">Esselunga</span
+              ><span class="chev"
+                ><svg
+                  viewBox="0 0 11 20"
+                  width="9"
+                  height="16"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="1.75"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <path d="M1.5 1.5L9.5 10l-8 8.5" /></svg
+              ></span>
+            </div>
+            <div class="brand-row">
+              <span class="brand-tile" style="background: #e2231a; color: #ffffff">C</span
+              ><span class="name">Conad</span
+              ><span class="chev"
+                ><svg
+                  viewBox="0 0 11 20"
+                  width="9"
+                  height="16"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="1.75"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <path d="M1.5 1.5L9.5 10l-8 8.5" /></svg
+              ></span>
+            </div>
+            <div class="brand-row">
+              <span class="brand-tile" style="background: #0c84cc; color: #ffffff">C</span
+              ><span class="name">Coop</span
+              ><span class="chev"
+                ><svg
+                  viewBox="0 0 11 20"
+                  width="9"
+                  height="16"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="1.75"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <path d="M1.5 1.5L9.5 10l-8 8.5" /></svg
+              ></span>
+            </div>
+            <div class="brand-row">
+              <span class="brand-tile" style="background: #0050aa; color: #ffffff">L</span
+              ><span class="name">Lidl</span
+              ><span class="chev"
+                ><svg
+                  viewBox="0 0 11 20"
+                  width="9"
+                  height="16"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="1.75"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <path d="M1.5 1.5L9.5 10l-8 8.5" /></svg
+              ></span>
+            </div>
+          </div>
+          <p class="section-label">All cards</p>
+          <div class="list-card">
+            <div class="brand-row">
+              <span class="brand-tile" style="background: #004e9f; color: #ffffff">C</span
+              ><span class="name">Carrefour</span
+              ><span class="chev"
+                ><svg
+                  viewBox="0 0 11 20"
+                  width="9"
+                  height="16"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="1.75"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <path d="M1.5 1.5L9.5 10l-8 8.5" /></svg
+              ></span>
+            </div>
+            <div class="brand-row">
+              <span class="brand-tile" style="background: #0082c3; color: #ffffff">D</span
+              ><span class="name">Decathlon</span
+              ><span class="chev"
+                ><svg
+                  viewBox="0 0 11 20"
+                  width="9"
+                  height="16"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="1.75"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <path d="M1.5 1.5L9.5 10l-8 8.5" /></svg
+              ></span>
+            </div>
+            <div class="brand-row">
+              <span class="brand-tile" style="background: #0058a3; color: #ffffff">I</span
+              ><span class="name">IKEA</span
+              ><span class="chev"
+                ><svg
+                  viewBox="0 0 11 20"
+                  width="9"
+                  height="16"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="1.75"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <path d="M1.5 1.5L9.5 10l-8 8.5" /></svg
+              ></span>
+            </div>
+            <div class="brand-row">
+              <span
+                class="brand-tile"
+                style="
+                  background: var(--cream);
+                  border: 1px solid var(--hairline);
+                  color: var(--ink);
+                "
+                >+</span
+              ><span class="name">Other card<small>Add a custom loyalty card</small></span
+              ><span class="chev"
+                ><svg
+                  viewBox="0 0 11 20"
+                  width="9"
+                  height="16"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="1.75"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <path d="M1.5 1.5L9.5 10l-8 8.5" /></svg
+              ></span>
+            </div>
+          </div>
+        </div>
+        <div class="safe-bottom"><span class="home-indicator"></span></div>
+      </div>
+      <figcaption>A — Choose: the brand list</figcaption>
+    </figure>
+    <figure class="plate">
+      <div class="frame is-camera">
+        <div class="feed" aria-hidden="true">
+          <div class="desk-card">
+            <svg
+              class="bc"
+              width="262"
+              height="86"
+              viewBox="0 0 95 20"
+              preserveAspectRatio="none"
+              role="img"
+              aria-label="Barcode 2000012345678"
+            >
+              <rect x="0" y="0" width="1" height="20" />
+              <rect x="2" y="0" width="1" height="20" />
+              <rect x="6" y="0" width="2" height="20" />
+              <rect x="9" y="0" width="1" height="20" />
+              <rect x="13" y="0" width="2" height="20" />
+              <rect x="16" y="0" width="1" height="20" />
+              <rect x="20" y="0" width="2" height="20" />
+              <rect x="23" y="0" width="1" height="20" />
+              <rect x="27" y="0" width="2" height="20" />
+              <rect x="30" y="0" width="1" height="20" />
+              <rect x="33" y="0" width="2" height="20" />
+              <rect x="37" y="0" width="1" height="20" />
+              <rect x="40" y="0" width="1" height="20" />
+              <rect x="43" y="0" width="2" height="20" />
+              <rect x="46" y="0" width="1" height="20" />
+              <rect x="48" y="0" width="1" height="20" />
+              <rect x="50" y="0" width="1" height="20" />
+              <rect x="55" y="0" width="1" height="20" />
+              <rect x="57" y="0" width="1" height="20" />
+              <rect x="59" y="0" width="3" height="20" />
+              <rect x="64" y="0" width="1" height="20" />
+              <rect x="67" y="0" width="3" height="20" />
+              <rect x="71" y="0" width="1" height="20" />
+              <rect x="73" y="0" width="1" height="20" />
+              <rect x="78" y="0" width="1" height="20" />
+              <rect x="82" y="0" width="1" height="20" />
+              <rect x="85" y="0" width="1" height="20" />
+              <rect x="88" y="0" width="1" height="20" />
+              <rect x="92" y="0" width="1" height="20" />
+              <rect x="94" y="0" width="1" height="20" />
+            </svg>
+          </div>
+        </div>
+        <div class="scrim"></div>
+        <div class="safe-top" style="color: var(--cream)">
+          <div class="statusbar" aria-hidden="true" style="color: var(--cream)">
+            <span class="clock">9:41</span>
+            <span class="indicators">
+              <svg width="18" height="12" viewBox="0 0 18 12">
+                <rect x="0" y="8.5" width="3" height="3.5" rx="1" />
+                <rect x="5" y="6" width="3" height="6" rx="1" />
+                <rect x="10" y="3" width="3" height="9" rx="1" />
+                <rect x="15" y="0" width="3" height="12" rx="1" />
+              </svg>
+              <svg
+                width="16"
+                height="12"
+                viewBox="0 0 16 12"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.6"
+                stroke-linecap="round"
+              >
+                <path d="M1.2 4.4a10 10 0 0 1 13.6 0" />
+                <path d="M4 7.3a6 6 0 0 1 8 0" />
+                <circle cx="8" cy="10.4" r="1" fill="currentColor" stroke="none" />
+              </svg>
+              <svg width="25" height="12" viewBox="0 0 25 12">
+                <rect
+                  x="0.5"
+                  y="0.5"
+                  width="21"
+                  height="11"
+                  rx="3.2"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-opacity="0.4"
+                />
+                <rect x="2.2" y="2.2" width="14" height="7.6" rx="1.8" />
+                <rect x="22.6" y="4.2" width="1.9" height="3.6" rx="0.95" opacity="0.4" />
+              </svg>
+            </span>
+          </div>
+        </div>
+        <button class="float-back" aria-label="Go back">
+          <svg
+            viewBox="0 0 11 20"
+            width="11"
+            height="20"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.75"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <path d="M9.5 1.5L1.5 10l8 8.5" />
+          </svg>
+        </button>
+        <div class="brand-pill">
+          <span class="pill" style="background: #ffcc00; color: var(--ink)">
+            <span class="dot">E</span>Esselunga</span
+          >
+        </div>
+        <div class="vf-wrap">
+          <div class="vf">
+            <i class="tl"></i><i class="tr"></i><i class="bl"></i><i class="br"></i>
+            <div class="beam"></div>
+          </div>
+        </div>
+        <div class="vf-caption"><p class="on-feed">Point camera at barcode</p></div>
+        <div class="feed-actions">
+          <div class="feed-row">
+            <svg
+              width="24"
+              height="24"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.5"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <rect x="3" y="4.5" width="18" height="15" rx="2.5" />
+              <circle cx="8.5" cy="10" r="1.6" />
+              <path d="M3.5 17l5-4.5 3.5 3 3-2.5 5.5 4.5" /></svg
+            ><span class="label">Scan from image</span>
+            <svg
+              viewBox="0 0 11 20"
+              width="9"
+              height="16"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.75"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <path d="M1.5 1.5L9.5 10l-8 8.5" />
+            </svg>
+          </div>
+          <div class="row-divider"></div>
+          <div class="feed-row">
+            <svg
+              width="24"
+              height="24"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.5"
+              stroke-linecap="round"
+            >
+              <rect x="2" y="6" width="20" height="12" rx="2.5" />
+              <path
+                d="M6 10h.01M9.5 10h.01M13 10h.01M16.5 10h.01M6 13.5h.01M9.5 13.5h.01M13 13.5h.01M16.5 13.5h.01M8 16.5h8"
+              />
+            </svg>
+            <span class="label">Enter card number manually</span
+            ><svg
+              viewBox="0 0 11 20"
+              width="9"
+              height="16"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.75"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <path d="M1.5 1.5L9.5 10l-8 8.5" />
+            </svg>
+          </div>
+        </div>
+        <div class="safe-bottom">
+          <span class="home-indicator" style="background: var(--cream)"></span>
+        </div>
+      </div>
+      <figcaption>B — Aim: the viewfinder</figcaption>
+    </figure>
+    <figure class="plate">
+      <div class="frame">
+        <div class="safe-top" style="color: var(--ink)">
+          <div class="statusbar" aria-hidden="true" style="color: var(--ink)">
+            <span class="clock">9:41</span>
+            <span class="indicators">
+              <svg width="18" height="12" viewBox="0 0 18 12">
+                <rect x="0" y="8.5" width="3" height="3.5" rx="1" />
+                <rect x="5" y="6" width="3" height="6" rx="1" />
+                <rect x="10" y="3" width="3" height="9" rx="1" />
+                <rect x="15" y="0" width="3" height="12" rx="1" />
+              </svg>
+              <svg
+                width="16"
+                height="12"
+                viewBox="0 0 16 12"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.6"
+                stroke-linecap="round"
+              >
+                <path d="M1.2 4.4a10 10 0 0 1 13.6 0" />
+                <path d="M4 7.3a6 6 0 0 1 8 0" />
+                <circle cx="8" cy="10.4" r="1" fill="currentColor" stroke="none" />
+              </svg>
+              <svg width="25" height="12" viewBox="0 0 25 12">
+                <rect
+                  x="0.5"
+                  y="0.5"
+                  width="21"
+                  height="11"
+                  rx="3.2"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-opacity="0.4"
+                />
+                <rect x="2.2" y="2.2" width="14" height="7.6" rx="1.8" />
+                <rect x="22.6" y="4.2" width="1.9" height="3.6" rx="0.95" opacity="0.4" />
+              </svg>
+            </span>
+          </div>
+        </div>
+        <button class="float-back on-cream" aria-label="Go back">
+          <svg
+            viewBox="0 0 11 20"
+            width="11"
+            height="20"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.75"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <path d="M9.5 1.5L1.5 10l8 8.5" />
+          </svg>
+        </button>
+        <div class="centred">
+          <span class="glyph"
+            ><svg
+              width="48"
+              height="48"
+              viewBox="0 0 48 48"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <path
+                d="M40 34.5A2.5 2.5 0 0 1 37.5 37H10.5A2.5 2.5 0 0 1 8 34.5V17.5A2.5 2.5 0 0 1 10.5 15h4l2.5-4h14l1.6 2.6"
+              />
+              <path d="M40 30V17.5A2.5 2.5 0 0 0 37.5 15H30" />
+              <circle cx="24" cy="25" r="6.5" />
+              <path d="M7 7l34 34" /></svg
+          ></span>
+          <h2>Camera Access Needed</h2>
+          <p>
+            Camera access is needed to scan barcodes.<br />You can enable it in Settings, or enter
+            the barcode manually.
+          </p>
+          <div class="actions">
+            <button class="btn-primary">Open Settings</button>
+            <button class="btn-secondary">Enter card number manually</button>
+          </div>
+        </div>
+        <div class="safe-bottom"><span class="home-indicator"></span></div>
+      </div>
+      <figcaption>C — No camera: permission refused</figcaption>
+    </figure>
+    <figure class="plate">
+      <div class="frame is-camera">
+        <div class="feed" aria-hidden="true">
+          <div class="desk-card">
+            <svg
+              class="bc"
+              width="262"
+              height="86"
+              viewBox="0 0 95 20"
+              preserveAspectRatio="none"
+              role="img"
+              aria-label="Barcode 2000012345678"
+            >
+              <rect x="0" y="0" width="1" height="20" />
+              <rect x="2" y="0" width="1" height="20" />
+              <rect x="6" y="0" width="2" height="20" />
+              <rect x="9" y="0" width="1" height="20" />
+              <rect x="13" y="0" width="2" height="20" />
+              <rect x="16" y="0" width="1" height="20" />
+              <rect x="20" y="0" width="2" height="20" />
+              <rect x="23" y="0" width="1" height="20" />
+              <rect x="27" y="0" width="2" height="20" />
+              <rect x="30" y="0" width="1" height="20" />
+              <rect x="33" y="0" width="2" height="20" />
+              <rect x="37" y="0" width="1" height="20" />
+              <rect x="40" y="0" width="1" height="20" />
+              <rect x="43" y="0" width="2" height="20" />
+              <rect x="46" y="0" width="1" height="20" />
+              <rect x="48" y="0" width="1" height="20" />
+              <rect x="50" y="0" width="1" height="20" />
+              <rect x="55" y="0" width="1" height="20" />
+              <rect x="57" y="0" width="1" height="20" />
+              <rect x="59" y="0" width="3" height="20" />
+              <rect x="64" y="0" width="1" height="20" />
+              <rect x="67" y="0" width="3" height="20" />
+              <rect x="71" y="0" width="1" height="20" />
+              <rect x="73" y="0" width="1" height="20" />
+              <rect x="78" y="0" width="1" height="20" />
+              <rect x="82" y="0" width="1" height="20" />
+              <rect x="85" y="0" width="1" height="20" />
+              <rect x="88" y="0" width="1" height="20" />
+              <rect x="92" y="0" width="1" height="20" />
+              <rect x="94" y="0" width="1" height="20" />
+            </svg>
+          </div>
+        </div>
+        <div class="scrim is-sheet-open"></div>
+        <div class="safe-top" style="color: var(--cream)">
+          <div class="statusbar" aria-hidden="true" style="color: var(--cream)">
+            <span class="clock">9:41</span>
+            <span class="indicators">
+              <svg width="18" height="12" viewBox="0 0 18 12">
+                <rect x="0" y="8.5" width="3" height="3.5" rx="1" />
+                <rect x="5" y="6" width="3" height="6" rx="1" />
+                <rect x="10" y="3" width="3" height="9" rx="1" />
+                <rect x="15" y="0" width="3" height="12" rx="1" />
+              </svg>
+              <svg
+                width="16"
+                height="12"
+                viewBox="0 0 16 12"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.6"
+                stroke-linecap="round"
+              >
+                <path d="M1.2 4.4a10 10 0 0 1 13.6 0" />
+                <path d="M4 7.3a6 6 0 0 1 8 0" />
+                <circle cx="8" cy="10.4" r="1" fill="currentColor" stroke="none" />
+              </svg>
+              <svg width="25" height="12" viewBox="0 0 25 12">
+                <rect
+                  x="0.5"
+                  y="0.5"
+                  width="21"
+                  height="11"
+                  rx="3.2"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-opacity="0.4"
+                />
+                <rect x="2.2" y="2.2" width="14" height="7.6" rx="1.8" />
+                <rect x="22.6" y="4.2" width="1.9" height="3.6" rx="0.95" opacity="0.4" />
+              </svg>
+            </span>
+          </div>
+        </div>
+        <button class="float-back" aria-label="Go back">
+          <svg
+            viewBox="0 0 11 20"
+            width="11"
+            height="20"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.75"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <path d="M9.5 1.5L1.5 10l8 8.5" />
+          </svg>
+        </button>
+        <div class="brand-pill">
+          <span class="pill" style="background: #ffcc00; color: var(--ink)">
+            <span class="dot">E</span>Esselunga</span
+          >
+        </div>
+        <div class="sheet">
+          <div class="grab"></div>
+          <h2 class="sheet-title">Multiple barcodes found</h2>
+          <p class="sheet-sub">Tap the one that matches your loyalty card</p>
+          <div class="code-list">
+            <div class="code-row">
+              <svg
+                class="mini"
+                width="40"
+                height="24"
+                viewBox="0 0 95 20"
+                preserveAspectRatio="none"
+                role="img"
+                aria-label="Barcode 2000012345678"
+              >
+                <rect x="0" y="0" width="1" height="20" />
+                <rect x="2" y="0" width="1" height="20" />
+                <rect x="6" y="0" width="2" height="20" />
+                <rect x="9" y="0" width="1" height="20" />
+                <rect x="13" y="0" width="2" height="20" />
+                <rect x="16" y="0" width="1" height="20" />
+                <rect x="20" y="0" width="2" height="20" />
+                <rect x="23" y="0" width="1" height="20" />
+                <rect x="27" y="0" width="2" height="20" />
+                <rect x="30" y="0" width="1" height="20" />
+                <rect x="33" y="0" width="2" height="20" />
+                <rect x="37" y="0" width="1" height="20" />
+                <rect x="40" y="0" width="1" height="20" />
+                <rect x="43" y="0" width="2" height="20" />
+                <rect x="46" y="0" width="1" height="20" />
+                <rect x="48" y="0" width="1" height="20" />
+                <rect x="50" y="0" width="1" height="20" />
+                <rect x="55" y="0" width="1" height="20" />
+                <rect x="57" y="0" width="1" height="20" />
+                <rect x="59" y="0" width="3" height="20" />
+                <rect x="64" y="0" width="1" height="20" />
+                <rect x="67" y="0" width="3" height="20" />
+                <rect x="71" y="0" width="1" height="20" />
+                <rect x="73" y="0" width="1" height="20" />
+                <rect x="78" y="0" width="1" height="20" />
+                <rect x="82" y="0" width="1" height="20" />
+                <rect x="85" y="0" width="1" height="20" />
+                <rect x="88" y="0" width="1" height="20" />
+                <rect x="92" y="0" width="1" height="20" />
+                <rect x="94" y="0" width="1" height="20" /></svg
+              ><span class="stack"
+                ><span class="digits">2000 0123 4567 8</span><span class="fmt">EAN-13</span></span
+              >
+            </div>
+            <div class="code-row">
+              <svg
+                class="mini"
+                width="40"
+                height="24"
+                viewBox="0 0 95 20"
+                preserveAspectRatio="none"
+                role="img"
+                aria-label="Barcode 4006381333931"
+              >
+                <rect x="0" y="0" width="1" height="20" />
+                <rect x="2" y="0" width="1" height="20" />
+                <rect x="6" y="0" width="2" height="20" />
+                <rect x="9" y="0" width="1" height="20" />
+                <rect x="13" y="0" width="2" height="20" />
+                <rect x="16" y="0" width="1" height="20" />
+                <rect x="18" y="0" width="1" height="20" />
+                <rect x="20" y="0" width="4" height="20" />
+                <rect x="25" y="0" width="4" height="20" />
+                <rect x="30" y="0" width="1" height="20" />
+                <rect x="32" y="0" width="2" height="20" />
+                <rect x="35" y="0" width="3" height="20" />
+                <rect x="40" y="0" width="2" height="20" />
+                <rect x="44" y="0" width="1" height="20" />
+                <rect x="46" y="0" width="1" height="20" />
+                <rect x="48" y="0" width="1" height="20" />
+                <rect x="50" y="0" width="1" height="20" />
+                <rect x="55" y="0" width="1" height="20" />
+                <rect x="57" y="0" width="1" height="20" />
+                <rect x="62" y="0" width="1" height="20" />
+                <rect x="64" y="0" width="1" height="20" />
+                <rect x="69" y="0" width="1" height="20" />
+                <rect x="71" y="0" width="3" height="20" />
+                <rect x="75" y="0" width="1" height="20" />
+                <rect x="78" y="0" width="1" height="20" />
+                <rect x="83" y="0" width="1" height="20" />
+                <rect x="85" y="0" width="2" height="20" />
+                <rect x="89" y="0" width="2" height="20" />
+                <rect x="92" y="0" width="1" height="20" />
+                <rect x="94" y="0" width="1" height="20" /></svg
+              ><span class="stack"
+                ><span class="digits">4 006381 333931</span><span class="fmt">EAN-13</span></span
+              >
+            </div>
+            <div class="code-row">
+              <svg
+                class="mini"
+                width="40"
+                height="24"
+                viewBox="0 0 95 20"
+                preserveAspectRatio="none"
+                role="img"
+                aria-label="Barcode 9780201379624"
+              >
+                <rect x="0" y="0" width="1" height="20" />
+                <rect x="2" y="0" width="1" height="20" />
+                <rect x="4" y="0" width="3" height="20" />
+                <rect x="8" y="0" width="2" height="20" />
+                <rect x="11" y="0" width="2" height="20" />
+                <rect x="14" y="0" width="3" height="20" />
+                <rect x="20" y="0" width="2" height="20" />
+                <rect x="23" y="0" width="1" height="20" />
+                <rect x="26" y="0" width="1" height="20" />
+                <rect x="29" y="0" width="2" height="20" />
+                <rect x="34" y="0" width="2" height="20" />
+                <rect x="37" y="0" width="1" height="20" />
+                <rect x="40" y="0" width="2" height="20" />
+                <rect x="44" y="0" width="1" height="20" />
+                <rect x="46" y="0" width="1" height="20" />
+                <rect x="48" y="0" width="1" height="20" />
+                <rect x="50" y="0" width="1" height="20" />
+                <rect x="55" y="0" width="1" height="20" />
+                <rect x="57" y="0" width="1" height="20" />
+                <rect x="61" y="0" width="1" height="20" />
+                <rect x="64" y="0" width="3" height="20" />
+                <rect x="68" y="0" width="1" height="20" />
+                <rect x="71" y="0" width="1" height="20" />
+                <rect x="73" y="0" width="1" height="20" />
+                <rect x="78" y="0" width="2" height="20" />
+                <rect x="81" y="0" width="2" height="20" />
+                <rect x="85" y="0" width="1" height="20" />
+                <rect x="87" y="0" width="3" height="20" />
+                <rect x="92" y="0" width="1" height="20" />
+                <rect x="94" y="0" width="1" height="20" /></svg
+              ><span class="stack"
+                ><span class="digits">9 780201 379624</span><span class="fmt">EAN-13</span></span
+              >
+            </div>
+            <div class="code-row">
+              <svg
+                class="mini"
+                width="40"
+                height="24"
+                viewBox="0 0 24 24"
+                role="img"
+                aria-label="QR code"
+              >
+                <rect x="1" y="1" width="7" height="7" fill="none" stroke="#000" stroke-width="2" />
+                <rect
+                  x="16"
+                  y="1"
+                  width="7"
+                  height="7"
+                  fill="none"
+                  stroke="#000"
+                  stroke-width="2"
+                />
+                <rect
+                  x="1"
+                  y="16"
+                  width="7"
+                  height="7"
+                  fill="none"
+                  stroke="#000"
+                  stroke-width="2"
+                />
+                <rect x="11" y="11" width="2" height="2" />
+                <rect x="15" y="13" width="2" height="2" />
+                <rect x="19" y="17" width="2" height="2" />
+                <rect x="11" y="19" width="2" height="2" /></svg
+              ><span class="stack"
+                ><span class="digits">HTTPS://ESSELUNGA.IT</span
+                ><span class="fmt">QR Code</span></span
+              >
+            </div>
+          </div>
+          <div class="sheet-cancel">Cancel</div>
+          <div class="sheet-foot"><span class="home-indicator"></span></div>
+        </div>
+      </div>
+      <figcaption>D — Many codes: which one is yours</figcaption>
+    </figure>
+    <figure class="plate">
+      <div class="frame is-camera">
+        <div class="feed" aria-hidden="true">
+          <div class="desk-card">
+            <svg
+              class="bc"
+              width="262"
+              height="86"
+              viewBox="0 0 95 20"
+              preserveAspectRatio="none"
+              role="img"
+              aria-label="Barcode 2000012345678"
+            >
+              <rect x="0" y="0" width="1" height="20" />
+              <rect x="2" y="0" width="1" height="20" />
+              <rect x="6" y="0" width="2" height="20" />
+              <rect x="9" y="0" width="1" height="20" />
+              <rect x="13" y="0" width="2" height="20" />
+              <rect x="16" y="0" width="1" height="20" />
+              <rect x="20" y="0" width="2" height="20" />
+              <rect x="23" y="0" width="1" height="20" />
+              <rect x="27" y="0" width="2" height="20" />
+              <rect x="30" y="0" width="1" height="20" />
+              <rect x="33" y="0" width="2" height="20" />
+              <rect x="37" y="0" width="1" height="20" />
+              <rect x="40" y="0" width="1" height="20" />
+              <rect x="43" y="0" width="2" height="20" />
+              <rect x="46" y="0" width="1" height="20" />
+              <rect x="48" y="0" width="1" height="20" />
+              <rect x="50" y="0" width="1" height="20" />
+              <rect x="55" y="0" width="1" height="20" />
+              <rect x="57" y="0" width="1" height="20" />
+              <rect x="59" y="0" width="3" height="20" />
+              <rect x="64" y="0" width="1" height="20" />
+              <rect x="67" y="0" width="3" height="20" />
+              <rect x="71" y="0" width="1" height="20" />
+              <rect x="73" y="0" width="1" height="20" />
+              <rect x="78" y="0" width="1" height="20" />
+              <rect x="82" y="0" width="1" height="20" />
+              <rect x="85" y="0" width="1" height="20" />
+              <rect x="88" y="0" width="1" height="20" />
+              <rect x="92" y="0" width="1" height="20" />
+              <rect x="94" y="0" width="1" height="20" />
+            </svg>
+          </div>
+        </div>
+        <div class="scrim"></div>
+        <div class="safe-top" style="color: var(--cream)">
+          <div class="statusbar" aria-hidden="true" style="color: var(--cream)">
+            <span class="clock">9:41</span>
+            <span class="indicators">
+              <svg width="18" height="12" viewBox="0 0 18 12">
+                <rect x="0" y="8.5" width="3" height="3.5" rx="1" />
+                <rect x="5" y="6" width="3" height="6" rx="1" />
+                <rect x="10" y="3" width="3" height="9" rx="1" />
+                <rect x="15" y="0" width="3" height="12" rx="1" />
+              </svg>
+              <svg
+                width="16"
+                height="12"
+                viewBox="0 0 16 12"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.6"
+                stroke-linecap="round"
+              >
+                <path d="M1.2 4.4a10 10 0 0 1 13.6 0" />
+                <path d="M4 7.3a6 6 0 0 1 8 0" />
+                <circle cx="8" cy="10.4" r="1" fill="currentColor" stroke="none" />
+              </svg>
+              <svg width="25" height="12" viewBox="0 0 25 12">
+                <rect
+                  x="0.5"
+                  y="0.5"
+                  width="21"
+                  height="11"
+                  rx="3.2"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-opacity="0.4"
+                />
+                <rect x="2.2" y="2.2" width="14" height="7.6" rx="1.8" />
+                <rect x="22.6" y="4.2" width="1.9" height="3.6" rx="0.95" opacity="0.4" />
+              </svg>
+            </span>
+          </div>
+        </div>
+        <button class="float-back" aria-label="Go back">
+          <svg
+            viewBox="0 0 11 20"
+            width="11"
+            height="20"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.75"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <path d="M9.5 1.5L1.5 10l8 8.5" />
+          </svg>
+        </button>
+        <div class="brand-pill">
+          <span class="pill" style="background: #ffcc00; color: var(--ink)">
+            <span class="dot">E</span>Esselunga</span
+          >
+        </div>
+        <div class="vf-wrap">
+          <div class="vf">
+            <i class="tl"></i><i class="tr"></i><i class="bl"></i><i class="br"></i>
+            <div class="beam"></div>
+          </div>
+        </div>
+        <div class="vf-caption"><p class="on-feed">Point camera at barcode</p></div>
+        <div class="banner">
+          <div class="banner-msg">
+            <p>We couldn't read a barcode in this image — try scanning the card itself</p>
+            <button class="banner-close" aria-label="Dismiss">
+              <svg
+                width="18"
+                height="18"
+                viewBox="0 0 18 18"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.7"
+                stroke-linecap="round"
+              >
+                <path d="M4 4l10 10M14 4L4 14" />
+              </svg>
+            </button>
+          </div>
+          <div class="banner-links">
+            <span>Try another image</span> <span>Enter it manually</span>
+          </div>
+        </div>
+        <div class="feed-actions">
+          <div class="feed-row">
+            <svg
+              width="24"
+              height="24"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.5"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <rect x="3" y="4.5" width="18" height="15" rx="2.5" />
+              <circle cx="8.5" cy="10" r="1.6" />
+              <path d="M3.5 17l5-4.5 3.5 3 3-2.5 5.5 4.5" /></svg
+            ><span class="label">Scan from image</span>
+            <svg
+              viewBox="0 0 11 20"
+              width="9"
+              height="16"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.75"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <path d="M1.5 1.5L9.5 10l-8 8.5" />
+            </svg>
+          </div>
+          <div class="row-divider"></div>
+          <div class="feed-row">
+            <svg
+              width="24"
+              height="24"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.5"
+              stroke-linecap="round"
+            >
+              <rect x="2" y="6" width="20" height="12" rx="2.5" />
+              <path
+                d="M6 10h.01M9.5 10h.01M13 10h.01M16.5 10h.01M6 13.5h.01M9.5 13.5h.01M13 13.5h.01M16.5 13.5h.01M8 16.5h8"
+              />
+            </svg>
+            <span class="label">Enter card number manually</span
+            ><svg
+              viewBox="0 0 11 20"
+              width="9"
+              height="16"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.75"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <path d="M1.5 1.5L9.5 10l-8 8.5" />
+            </svg>
+          </div>
+        </div>
+        <div class="safe-bottom">
+          <span class="home-indicator" style="background: var(--cream)"></span>
+        </div>
+      </div>
+      <figcaption>E — No code: the camera never stopped</figcaption>
+    </figure>
+  </body>
+</html>

@@ -18,6 +18,8 @@ run started 2026-08-11) whose scratchpad lived in `/tmp` and whose API connectio
 | `stitch-prompts-barcode.txt`           | **The barcode screen** — EAN-13 / QR / not-found. The hero moment, and the last screen to be specced.                                                                                  |
 | `stitch-prompts-card-detail.txt`       | **The card detail screen** — at rest / blending / condensed / custom card. The barcode's parent, and the only scroll-linked screen in the app.                                         |
 | `frames/cardi-card-detail-frames.html` | **The card detail frames** — four, at 393 × 852. The header follows the brand as a scroll transition: brand → blend → cream.                                                           |
+| `stitch-prompts-capture.txt`           | **The capture pattern** — how a card gets in: choose the brand, then point the camera. The only pattern that is a camera.                                                              |
+| `frames/cardi-capture-frames.html`     | **The capture frames** — five, at 393 × 852. Choose / aim / no camera / many codes / no code. The one screen where beam is mandatory.                                                  |
 | `frames/cardi-barcode-frames.html`     | **The barcode frames** — three, at 393 × 852. The only frames on **white**, not cream; the white field is the product feature.                                                         |
 | `frames/cardi-form-frames.html`        | **The reference implementation.** Hand-authored, exactly 393 × 852, all four states. This is what screens derive from — not the PNGs. Open with `?probe` for a measured geometry dump. |
 | `frames/cardi-wallet-frames.html`      | **The wallet frames** — populated / empty / single-card / no-results, hand-authored at 393 × 852. Self-contained; shares its token block with the form file by copy, not by link.      |
@@ -880,6 +882,99 @@ so it reads as a hairline — and a dead `.esselunga-yellow` rule in frame C tha
 never applied. And **Gemini will not draw a real barcode**: three passes produced three
 different fakes, including a completely empty rectangle. The HTML frames compute a real EAN-13;
 the Stitch barcode is a placeholder and never a reference.
+
+### 2026-08-21 — the capture pattern, and the one screen that can falsify the system
+
+`stitch-prompts-capture.txt` and `frames/cardi-capture-frames.html` cover five frames:
+**choose**, **aim**, **no camera**, **many codes**, **no code**.
+
+Reading the code overturned the plan twice before a line was drawn.
+
+**There is one viewfinder, not two.** The plan carried `scan` and `add-card/scan` as "two
+viewfinders to unify". `app/scan.tsx` is a bare `<Redirect>` to `/add-card/scan` — a legacy
+bridge from the old entrypoint, still reached from `CatalogueGrid`. There was nothing to unify.
+
+**And the scan is brand-_first_, so there is no "brand not found".** This was expected to be the
+interesting fork: scan a code, look it up, design the moment it is not among the 45 catalogue
+brands. It cannot happen. You pick the brand from a searchable list and _then_ scan;
+`BrandScannerScreen` receives `brandId` and shows a `BrandPill`, and the catalogue is consulted
+before the camera opens, never after. The custom-card path is a **list row** — "Other card" —
+which routes into the very same scanner with `mode: 'custom'`. The door into a custom card was
+already built; it just was not where anyone looked for it.
+
+The real junction is **no code / one code / many codes, plus no camera**: five states, counting
+three distinct failure reasons in `NoCodeFoundBanner` (`notFound`, `scanFailed`, `pickerFailed`)
+and up to six rows in `MultiCodePickerSheet`.
+
+#### The design system contradicts itself here, and it resolves cleanly
+
+`stitch-prompts-barcode.txt` forbids, by name, "a frame, a corner marker, a viewfinder bracket".
+`ScannerOverlay` draws corner brackets **and** a sweeping line over a live camera. Both are
+correct.
+
+That rule governs the barcode you are **displaying** — your own card, held up to a scanner, where
+anything on top of the bars costs you a read. This screen is the barcode you are **reading** —
+someone else's code, through a lens, where the overlay _is_ the affordance that says where to
+aim. **Same mark, opposite verdict, decided by which way the light is travelling.** The rule did
+not need weakening; it needed a direction.
+
+#### And this is the one screen where beam is mandatory rather than banned
+
+The scan line is `theme.primary`, which the design asset resolves to `#000000` — a 2px near-black
+line, over a camera feed, under a 40% black scrim. Effectively invisible, and nobody would notice
+because the screen still works.
+
+Meanwhile the brand's entire ornament is, in the design system's own words, "a **scan beam**
+passing over a barcode", and the barcode-display spec banned beam from that screen with the line
+_"the real beam comes from the scanner at the till"_. **On this screen we are the scanner.** The
+beam is ours, at `#FCCC0C`, here and nowhere else. The identity's central metaphor has precisely
+one screen where it is literal, and this is it.
+
+#### The rest, in order of how much they matter
+
+- **The viewfinder is a square framing something that is not.** `screenWidth * 0.7` is used as
+  both width and height — a ~275px square around an EAN-13 that is roughly 95 : 20. And the
+  screen **already knows** which to expect: `expectedFormat` is threaded from the catalogue into
+  the overlay and on into the scanner hook. A square bracket around a linear code teaches the
+  wrong gesture — centre it in the box and you stand too far back, which is the one failure a
+  viewfinder exists to prevent. The frames use **300 × 120**.
+- **The banner covers one of its own escape routes.** `NoCodeFoundBanner` sits at `bottom: 96`
+  while `bottomActions` spans from 0 up to `insets.bottom + SPACING.md` + two 48px rows + a
+  divider ≈ **155px**. On a real phone the banner overlaps "Scan from image" — one of the two
+  ways out the banner is offering. The frames put it at 171px, clearing the stack with a 16px
+  gap. A real bug, not a style note.
+- **The failure states leave the dark, and that is right.** Permission-denied and camera-error
+  render on cream while the live screen is `#000000`. It looks like an inconsistency and is not:
+  same logic as the card-detail header — **the dark ground exists to serve the camera. No camera,
+  no dark.** Ratified, not changed.
+- **The text shadow stays.** `textShadowColor: 'rgba(0,0,0,0.75)'` on the instruction line. The
+  system forbids shadows everywhere; this one is legibility over a background nobody controls,
+  the same class of exception as the barcode's quiet zone, where the space is an input to the
+  scanner rather than a margin. Ratified explicitly so it stops reading as drift — and it applies
+  only to type set directly on the camera feed.
+- **Cream, not white, for text on the dark.** Every glyph over the camera is `#FFFFFF`; the
+  system's dark mode specifies body text as cream `#F0F0E8`. The corner brackets stay pure white
+  — they are a mark, not text.
+- **`theme.warning`, third sighting.** The banner puts `warning-amber` beside its message, the
+  same off-palette amber already replaced on the wallet tile and the favourite star. Here the
+  honest fix is to **delete the icon**: the plate already carries a sentence, and a 20px triangle
+  on it is decoration doing no work.
+- **The banner's action links are invisible for the same reason as the scan line** — both
+  `theme.primary` on `rgba(0,0,0,0.80)`, near-black on near-black. They take the beam too.
+- **48px MaterialIcons standing in for illustrations** on the two failure screens. The system has
+  no icon at that size (24px on a 48px target), so a 48px glyph is an illustration placeholder —
+  the same note the wallet `EmptyState` was pulled up for. Left as a plain icon; illustrations
+  are Wave B.
+- **Margins drift, third sighting.** `bottomActions` and `centeredContent` are both
+  `paddingHorizontal: 24`, joining `CardForm` 32 and settings 24.
+- **The brand pill is positioned off the back button, not the grid** —
+  `insets.top + SPACING.sm + TOUCH_TARGET.min + SPACING.md`, four values added at the call site.
+  It lands somewhere sane today and drifts the moment any one of them moves.
+
+One authoring note: this file's shared frame layer is **extracted verbatim from
+`cardi-card-detail-frames.html` by the generator**, rather than retyped, so the token values
+cannot drift between the two. Duplication by copy is still the rule — a linked stylesheet dies in
+any viewer that inlines the HTML — but the copy is now made by a script instead of by hand.
 
 ### Still open
 
