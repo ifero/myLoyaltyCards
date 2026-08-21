@@ -1,0 +1,1109 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Cardì — auth, six frames</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@700&family=JetBrains+Mono:wght@500&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      /* ==================================================================
+         SHARED FRAME LAYER — extracted VERBATIM from
+         cardi-card-detail-frames.html by scratchpad/gen_auth.py, so the token
+         values cannot drift. Copied rather than linked, because any viewer that
+         inlines the HTML drops a linked stylesheet.
+         ================================================================== */
+
+      :root {
+        --ink: #181824;
+        --beam: #fccc0c;
+        --cream: #f0f0e8;
+        --white: #ffffff;
+        --hairline: #d6d6cb;
+        --placeholder: #55555f;
+        --error: #c41e1e;
+
+        --swatch-red: #e42424;
+        --swatch-blue: #0c3c84;
+        --swatch-azure: #0c84cc;
+        --swatch-green: #0c843c;
+        --swatch-yellow: #fccc0c;
+
+        /* TWO margins, deliberately. 24px is the SINGLE-COLUMN margin — forms,
+           settings, documents. The card grid uses 16px, and that is not a style
+           choice: TILE_WIDTH 171 in features/cards/utils/gridLayout.ts is
+           (390 − 2×16 − 16) / 2, frozen with tests. At 24px the tile stops being 171.
+           The design system currently states one figure and needs amending. */
+        --screen-margin: 24px;
+        --grid-margin: 16px;
+        --gutter: 16px;
+
+        --touch: 48px;
+        --radius-control: 12px;
+        --radius-tile: 16px;
+        --safe-top: 59px;
+        --safe-bottom: 34px;
+        --header-h: 56px;
+      }
+
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+
+      body {
+        background: #c9c9c2;
+        font-family: Inter, system-ui, sans-serif;
+        padding: 48px 32px;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 48px;
+        justify-content: center;
+        align-items: flex-start;
+      }
+
+      .plate {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        align-items: center;
+      }
+
+      .plate figcaption {
+        font:
+          600 12px/1.4 Inter,
+          sans-serif;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: #3d3d46;
+      }
+
+      /* ---- the frame: exactly 393 x 852, never anything else ---- */
+      .frame {
+        width: 393px;
+        height: 852px;
+        background: var(--cream);
+        color: var(--ink);
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+        position: relative;
+      }
+
+      /* Reserved system insets — 59px top / 34px bottom, the real values for a
+         393 x 852 Dynamic Island device.
+
+         These were originally left blank. That was a mistake of presentation, not of
+         measurement: on a real phone the top inset is OCCUPIED by the clock and
+         indicators, so drawing it empty makes a correct 59px read as careless
+         padding, and invites the exact wrong fix (shrink it — which would push
+         content under the live status bar at build time).
+
+         The status bar is SYSTEM chrome, not ours: ink only, no beam, and nothing
+         here is a control. Same for the home indicator. */
+      .safe-top {
+        height: var(--safe-top);
+        flex: 0 0 auto;
+      }
+
+      .safe-bottom {
+        height: var(--safe-bottom);
+        flex: 0 0 auto;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .statusbar {
+        height: 100%;
+        padding: 14px var(--screen-margin) 0;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        color: var(--ink);
+      }
+
+      .statusbar .clock {
+        font-family: Inter, sans-serif;
+        font-size: 15px;
+        font-weight: 600;
+        letter-spacing: 0.01em;
+        font-variant-numeric: tabular-nums;
+      }
+
+      .statusbar .indicators {
+        display: flex;
+        align-items: center;
+        gap: 5px;
+      }
+
+      .statusbar svg {
+        display: block;
+        fill: currentColor;
+      }
+
+      .home-indicator {
+        width: 140px;
+        height: 5px;
+        border-radius: 999px;
+        background: var(--ink);
+        opacity: 0.85;
+      }
+
+      /* ---- header ----
+         A three-column grid: a 48px touch target, the title, a 48px touch target.
+         Icons are optically aligned, not box-aligned — a glyph drawn inside a square
+         icon box carries empty side bearing, so box-aligning it to the margin leaves
+         the visible stroke sitting inboard of the content beneath. The fix is to
+         bleed the touch target to the frame edge and pad the content back to the
+         margin: ink lands on the margin, the target stays 48px. */
+      .header {
+        height: var(--header-h);
+        flex: 0 0 auto;
+        padding: 0 var(--screen-margin);
+        display: grid;
+        grid-template-columns: var(--touch) 1fr var(--touch);
+        align-items: center;
+      }
+
+      .header.grid-margin {
+        padding: 0 var(--grid-margin);
+      }
+
+      .icon-target {
+        width: var(--touch);
+        height: var(--touch);
+        display: flex;
+        align-items: center;
+        background: none;
+        border: 0;
+        cursor: pointer;
+        color: var(--ink);
+      }
+
+      .icon-target.at-start {
+        margin-left: calc(-1 * var(--screen-margin));
+        padding-left: var(--screen-margin);
+        justify-content: flex-start;
+      }
+
+      .icon-target.at-end {
+        margin-right: calc(-1 * var(--screen-margin));
+        padding-right: var(--screen-margin);
+        justify-content: flex-end;
+      }
+
+      .header.grid-margin .icon-target.at-start {
+        margin-left: calc(-1 * var(--grid-margin));
+        padding-left: var(--grid-margin);
+      }
+
+      .header.grid-margin .icon-target.at-end {
+        margin-right: calc(-1 * var(--grid-margin));
+        padding-right: var(--grid-margin);
+      }
+
+      .icon-target svg {
+        display: block;
+      }
+
+      .title {
+        font-family: 'Space Grotesk', sans-serif;
+        font-weight: 700;
+        font-size: 24px;
+        line-height: 32px;
+        letter-spacing: -0.01em;
+        text-align: center;
+        color: var(--ink);
+      }
+
+      /* ---- body ---- */
+      .body {
+        flex: 1 1 auto;
+        min-height: 0;
+        padding: 24px var(--screen-margin) 0;
+        display: flex;
+        flex-direction: column;
+        gap: 32px;
+      }
+
+      .body.grid-margin {
+        padding: 8px var(--grid-margin) 0;
+        gap: 16px;
+      }
+
+      /* ---- footer ----
+         A flex sibling AFTER the scroll area. Never fixed, never absolute — so it
+         cannot fight the keyboard. The gap above it is composition, not absence. */
+      .footer {
+        flex: 0 0 auto;
+      }
+
+      .hairline {
+        height: 1px;
+        background: var(--hairline);
+        width: 100%;
+      }
+
+      .footer-inner {
+        padding: var(--screen-margin);
+      }
+
+      .footer-inner.grid-margin {
+        padding: var(--grid-margin);
+      }
+
+      .btn-primary {
+        width: 100%;
+        height: 52px;
+        background: var(--ink);
+        color: var(--white);
+        border: 0;
+        border-radius: var(--radius-control);
+        font-family: Inter, sans-serif;
+        font-weight: 600;
+        font-size: 17px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      /* ------------------------------------------------------------------
+         Cardì — the ACCOUNT pattern: everything to do with having an account.
+
+         Specced from features/auth — see stitch-prompts-auth.txt.
+
+         IT LOOKS LIKE SIX SCREENS AND IT IS ONE SHAPE WITH FIVE FILLINGS, and
+         the code got there first. AuthScreenLayout is a single keyboard-aware
+         shape; every screen is it plus a different children block. And
+         RecoveryOtpScreen is THIRTEEN LINES returning
+         <VerifyEmailScreen purpose="recovery" />, which is why that one file is
+         552 lines while nothing else in the folder passes 300.
+
+         Auth is also already on the ratified 24px margin, because it reads
+         layout.screenHorizontalMargin instead of a literal.
+
+         THE DECISION THIS PATTERN TURNS ON: the error idiom contradicted the
+         form pattern, and both sides were right.
+
+         stitch-prompts-form-states.txt says a field error is a 1px #C41E1E
+         outline plus 13px helper text, with "no error icon", "do not tint the
+         field's fill" and "do not add a summary banner at the top of the
+         screen". ErrorBanner is exactly that: a top banner, fill tinted
+         theme.error at 8%, with an error-outline icon.
+
+         The rule needed a DIRECTION, the same way the beam rule and the quiet
+         zone did:
+
+           a VALIDATION error belongs to a FIELD. The field is what is wrong,
+                              so the field carries it, and never more than one.
+           a REQUEST error    belongs to the SUBMISSION. There is no field to
+                              attach a dropped connection to.
+
+         So the banner stays and loses the tint and the icon: a white card with
+         a 1px #C41E1E outline. That honours "do not tint the fill" while
+         allowing the banner the form spec forbade, and keeps #C41E1E to two
+         uses — the outline and the sentence.
+
+         A REAL DEFECT FOUND HERE: SignInScreen passes hasError={hasFormError}
+         to BOTH fields, so "Unable to connect" reddens the email AND the
+         password though neither is invalid. Frame F is drawn to show the
+         opposite: the fields stay ordinary, because a server's refusal is not a
+         verdict on the typing.
+
+         AND A SECOND STOCK-ICON PLACEHOLDER, A DIFFERENT ONE: AppIconHeader
+         renders MaterialCommunityIcons 'card-account-details-outline' at 80px
+         while onboarding's BrandedIcon renders MaterialIcons 'credit-card' at
+         100px. Two generic glyphs standing in for one missing logo, in two
+         flows, at two sizes. Draw the ì once as a real asset.
+         ------------------------------------------------------------------ */
+
+      .auth {
+        flex: 1 1 auto;
+        min-height: 0;
+        padding: 0 var(--screen-margin);
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        overflow: hidden;
+      }
+
+      .auth.top {
+        justify-content: flex-start;
+        padding-top: 8px;
+      }
+
+      .auth-centre {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+      }
+
+      /* The mark, constructed rather than typeset: no font lets you paint half a
+         glyph, and the accent has to carry its own colour. At rest a dot, in
+         motion a beam — so the accent is a STROKE. */
+      .mark {
+        width: 80px;
+        height: 80px;
+        border-radius: 999px;
+        background: var(--ink);
+        position: relative;
+        display: flex;
+        align-items: flex-end;
+        justify-content: center;
+        flex: 0 0 auto;
+      }
+
+      .mark-stem {
+        width: 8px;
+        height: 28px;
+        border-radius: 2px;
+        background: var(--white);
+        margin-bottom: 22px;
+      }
+
+      .mark-accent {
+        position: absolute;
+        width: 14px;
+        height: 5px;
+        border-radius: 2px;
+        background: var(--beam);
+        transform: rotate(-22deg);
+        left: 50%;
+        margin-left: -10px;
+        top: 22px;
+      }
+
+      .auth-h1 {
+        font-family: 'Space Grotesk', sans-serif;
+        font-weight: 700;
+        font-size: 24px;
+        line-height: 32px;
+        letter-spacing: -0.01em;
+        color: var(--ink);
+      }
+
+      .auth-sub {
+        font-family: Inter, sans-serif;
+        font-size: 15px;
+        line-height: 22px;
+        color: var(--placeholder);
+      }
+
+      .auth-sub strong {
+        font-weight: 600;
+        color: var(--ink);
+      }
+
+      /* ---- fields ----
+         Label ALWAYS above and always visible: never floating, never a
+         placeholder doing double duty as a label. 13/600/0.02em is label-bold,
+         the smallest legitimate size in this system — and it is a LABEL. */
+      .field-label {
+        font-family: Inter, sans-serif;
+        font-weight: 600;
+        font-size: 13px;
+        line-height: 18px;
+        letter-spacing: 0.02em;
+        color: var(--ink);
+        display: block;
+        margin-bottom: 8px;
+      }
+
+      .field {
+        height: 52px;
+        background: var(--white);
+        border: 1px solid var(--hairline);
+        border-radius: var(--radius-control);
+        display: flex;
+        align-items: center;
+        padding: 0 16px;
+        gap: 8px;
+      }
+
+      .field .val {
+        flex: 1;
+        font-family: Inter, sans-serif;
+        font-size: 15px;
+        color: var(--ink);
+        min-width: 0;
+      }
+
+      .field .val.placeholder {
+        color: var(--placeholder);
+      }
+
+      .field .eye {
+        color: var(--placeholder);
+        flex: 0 0 auto;
+        display: flex;
+        align-items: center;
+      }
+
+      /* One field, not eight boxes. This code is pasted from an email as often
+         as it is typed, and eight cells fight the paste. */
+      .field.code {
+        height: 56px;
+        justify-content: center;
+      }
+
+      .field.code .val {
+        flex: 0 0 auto;
+        font-family: 'JetBrains Mono', ui-monospace, monospace;
+        font-size: 22px;
+        letter-spacing: 8px;
+        text-align: center;
+      }
+
+      /* ---- the request-error banner ----
+         White, not pink. The form pattern forbids tinting a field's fill and
+         the same restraint applies here; the outline and the sentence are the
+         whole message, which keeps #C41E1E to two uses. No icon. */
+      .err-banner {
+        background: var(--white);
+        border: 1px solid var(--error);
+        border-radius: var(--radius-control);
+        padding: 16px;
+      }
+
+      .err-banner p {
+        font-family: Inter, sans-serif;
+        font-size: 15px;
+        line-height: 22px;
+        color: var(--error);
+      }
+
+      /* ---- the strength meter ----
+         The one place a third colour would be unavoidable, so it COUNTS rather
+         than judges: one, two or three ink segments. No red/amber/green ramp —
+         which also means it still works for a colour-blind reader, and a
+         traffic light does not. */
+      .meter {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .meter .bars {
+        flex: 1;
+        display: flex;
+        gap: 4px;
+      }
+
+      .meter .bars i {
+        flex: 1;
+        height: 4px;
+        border-radius: 999px;
+        background: var(--hairline);
+      }
+
+      .meter .bars i.on {
+        background: var(--ink);
+      }
+
+      .meter .word {
+        font-family: Inter, sans-serif;
+        font-weight: 600;
+        font-size: 13px;
+        line-height: 18px;
+        letter-spacing: 0.02em;
+        color: var(--ink);
+        flex: 0 0 auto;
+      }
+
+      /* ---- consent ---- */
+      .consent {
+        display: flex;
+        gap: 12px;
+        align-items: flex-start;
+      }
+
+      .consent .box {
+        width: 24px;
+        height: 24px;
+        border: 1px solid var(--hairline);
+        border-radius: 4px;
+        background: var(--white);
+        flex: 0 0 auto;
+        margin-top: 1px;
+      }
+
+      .consent p {
+        flex: 1;
+        font-family: Inter, sans-serif;
+        font-size: 15px;
+        line-height: 22px;
+        color: var(--placeholder);
+      }
+
+      .consent p a {
+        color: var(--ink);
+        font-weight: 600;
+        text-decoration: underline;
+      }
+
+      /* ---- links ----
+         theme.link is used in three flows and is not in the palette. On cream a
+         link is ink, underlined only when it sits inside a sentence. */
+      .link-row {
+        height: var(--touch);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-family: Inter, sans-serif;
+        font-size: 15px;
+        color: var(--placeholder);
+        gap: 5px;
+      }
+
+      .link-row b {
+        font-weight: 600;
+        color: var(--ink);
+      }
+
+      .link-row.at-end {
+        justify-content: flex-end;
+      }
+
+      .link-row.solo {
+        color: var(--ink);
+        font-weight: 600;
+      }
+    </style>
+  </head>
+  <body>
+    <figure class="plate">
+      <div class="frame">
+        <div class="safe-top">
+          <div class="statusbar" aria-hidden="true">
+            <span class="clock">9:41</span>
+            <span class="indicators">
+              <svg width="18" height="12" viewBox="0 0 18 12">
+                <rect x="0" y="8.5" width="3" height="3.5" rx="1" />
+                <rect x="5" y="6" width="3" height="6" rx="1" />
+                <rect x="10" y="3" width="3" height="9" rx="1" />
+                <rect x="15" y="0" width="3" height="12" rx="1" />
+              </svg>
+              <svg
+                width="16"
+                height="12"
+                viewBox="0 0 16 12"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.6"
+                stroke-linecap="round"
+              >
+                <path d="M1.2 4.4a10 10 0 0 1 13.6 0" />
+                <path d="M4 7.3a6 6 0 0 1 8 0" />
+                <circle cx="8" cy="10.4" r="1" fill="currentColor" stroke="none" />
+              </svg>
+              <svg width="25" height="12" viewBox="0 0 25 12">
+                <rect
+                  x="0.5"
+                  y="0.5"
+                  width="21"
+                  height="11"
+                  rx="3.2"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-opacity="0.4"
+                />
+                <rect x="2.2" y="2.2" width="14" height="7.6" rx="1.8" />
+                <rect x="22.6" y="4.2" width="1.9" height="3.6" rx="0.95" opacity="0.4" />
+              </svg>
+            </span>
+          </div>
+        </div>
+        <div class="auth">
+          <div class="auth-centre">
+            <span class="mark"
+              ><span class="mark-accent"></span><span class="mark-stem"></span
+            ></span>
+            <h1 class="auth-h1" style="margin-top: 32px">Welcome Back</h1>
+            <p class="auth-sub" style="margin-top: 8px">
+              Sign in to sync your loyalty cards across devices
+            </p>
+          </div>
+          <div style="margin-top: 32px; display: flex; flex-direction: column; gap: 16px">
+            <div>
+              <span class="field-label">Email</span>
+              <div class="field"><span class="val placeholder">you@example.com</span></div>
+            </div>
+            <div>
+              <span class="field-label">Password</span>
+              <div class="field">
+                <span class="val placeholder">Your password</span
+                ><span class="eye"
+                  ><svg
+                    width="24"
+                    height="24"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="1.5"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  >
+                    <path d="M2 12s3.6-6.5 10-6.5S22 12 22 12s-3.6 6.5-10 6.5S2 12 2 12z" />
+                    <circle cx="12" cy="12" r="3" /></svg
+                ></span>
+              </div>
+            </div>
+          </div>
+          <div class="link-row at-end solo" style="margin-top: 8px">Forgot password?</div>
+          <button class="btn-primary" style="margin-top: 24px">Sign In</button>
+          <div class="link-row" style="margin-top: 16px">
+            Don't have an account? <b>Create one</b>
+          </div>
+        </div>
+        <div class="safe-bottom"><span class="home-indicator"></span></div>
+      </div>
+      <figcaption>A — Sign in: the exemplar</figcaption>
+    </figure>
+    <figure class="plate">
+      <div class="frame">
+        <div class="safe-top">
+          <div class="statusbar" aria-hidden="true">
+            <span class="clock">9:41</span>
+            <span class="indicators">
+              <svg width="18" height="12" viewBox="0 0 18 12">
+                <rect x="0" y="8.5" width="3" height="3.5" rx="1" />
+                <rect x="5" y="6" width="3" height="6" rx="1" />
+                <rect x="10" y="3" width="3" height="9" rx="1" />
+                <rect x="15" y="0" width="3" height="12" rx="1" />
+              </svg>
+              <svg
+                width="16"
+                height="12"
+                viewBox="0 0 16 12"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.6"
+                stroke-linecap="round"
+              >
+                <path d="M1.2 4.4a10 10 0 0 1 13.6 0" />
+                <path d="M4 7.3a6 6 0 0 1 8 0" />
+                <circle cx="8" cy="10.4" r="1" fill="currentColor" stroke="none" />
+              </svg>
+              <svg width="25" height="12" viewBox="0 0 25 12">
+                <rect
+                  x="0.5"
+                  y="0.5"
+                  width="21"
+                  height="11"
+                  rx="3.2"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-opacity="0.4"
+                />
+                <rect x="2.2" y="2.2" width="14" height="7.6" rx="1.8" />
+                <rect x="22.6" y="4.2" width="1.9" height="3.6" rx="0.95" opacity="0.4" />
+              </svg>
+            </span>
+          </div>
+        </div>
+        <div class="auth top">
+          <div class="auth-centre">
+            <span class="mark"
+              ><span class="mark-accent"></span><span class="mark-stem"></span
+            ></span>
+            <h1 class="auth-h1" style="margin-top: 24px">Create Account</h1>
+            <p class="auth-sub" style="margin-top: 8px">Join My Loyalty Cards</p>
+          </div>
+          <div style="margin-top: 24px; display: flex; flex-direction: column; gap: 16px">
+            <div>
+              <span class="field-label">Email</span>
+              <div class="field"><span class="val placeholder">you@example.com</span></div>
+            </div>
+            <div>
+              <span class="field-label">Password</span>
+              <div class="field">
+                <span class="val">••••••••••</span
+                ><span class="eye"
+                  ><svg
+                    width="24"
+                    height="24"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="1.5"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  >
+                    <path d="M2 12s3.6-6.5 10-6.5S22 12 22 12s-3.6 6.5-10 6.5S2 12 2 12z" />
+                    <circle cx="12" cy="12" r="3" /></svg
+                ></span>
+              </div>
+              <div class="meter">
+                <span class="bars"><i class="on"></i><i class="on"></i><i class=""></i></span
+                ><span class="word">Fair</span>
+              </div>
+            </div>
+            <div>
+              <span class="field-label">Confirm Password</span>
+              <div class="field">
+                <span class="val placeholder">Re-enter your password</span
+                ><span class="eye"
+                  ><svg
+                    width="24"
+                    height="24"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="1.5"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  >
+                    <path d="M2 12s3.6-6.5 10-6.5S22 12 22 12s-3.6 6.5-10 6.5S2 12 2 12z" />
+                    <circle cx="12" cy="12" r="3" /></svg
+                ></span>
+              </div>
+            </div>
+          </div>
+          <div class="consent" style="margin-top: 16px">
+            <span class="box"></span>
+            <p>I agree to the <a>Privacy Policy</a></p>
+          </div>
+          <button class="btn-primary" style="margin-top: 24px">Create Account</button>
+          <div class="link-row" style="margin-top: 16px">
+            Already have an account? <b>Sign in</b>
+          </div>
+        </div>
+        <div class="safe-bottom"><span class="home-indicator"></span></div>
+      </div>
+      <figcaption>B — Create account: the longest form</figcaption>
+    </figure>
+    <figure class="plate">
+      <div class="frame">
+        <div class="safe-top">
+          <div class="statusbar" aria-hidden="true">
+            <span class="clock">9:41</span>
+            <span class="indicators">
+              <svg width="18" height="12" viewBox="0 0 18 12">
+                <rect x="0" y="8.5" width="3" height="3.5" rx="1" />
+                <rect x="5" y="6" width="3" height="6" rx="1" />
+                <rect x="10" y="3" width="3" height="9" rx="1" />
+                <rect x="15" y="0" width="3" height="12" rx="1" />
+              </svg>
+              <svg
+                width="16"
+                height="12"
+                viewBox="0 0 16 12"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.6"
+                stroke-linecap="round"
+              >
+                <path d="M1.2 4.4a10 10 0 0 1 13.6 0" />
+                <path d="M4 7.3a6 6 0 0 1 8 0" />
+                <circle cx="8" cy="10.4" r="1" fill="currentColor" stroke="none" />
+              </svg>
+              <svg width="25" height="12" viewBox="0 0 25 12">
+                <rect
+                  x="0.5"
+                  y="0.5"
+                  width="21"
+                  height="11"
+                  rx="3.2"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-opacity="0.4"
+                />
+                <rect x="2.2" y="2.2" width="14" height="7.6" rx="1.8" />
+                <rect x="22.6" y="4.2" width="1.9" height="3.6" rx="0.95" opacity="0.4" />
+              </svg>
+            </span>
+          </div>
+        </div>
+        <div class="auth">
+          <div class="auth-centre">
+            <span class="mark"
+              ><span class="mark-accent"></span><span class="mark-stem"></span
+            ></span>
+            <h1 class="auth-h1" style="margin-top: 32px">Forgot Password?</h1>
+            <p class="auth-sub" style="margin-top: 8px">
+              No worries. Enter your email and we'll send you a reset code.
+            </p>
+          </div>
+          <div style="margin-top: 32px">
+            <div>
+              <span class="field-label">Email</span>
+              <div class="field"><span class="val placeholder">you@example.com</span></div>
+            </div>
+          </div>
+          <button class="btn-primary" style="margin-top: 24px">Send Reset Code</button>
+          <div class="link-row solo" style="margin-top: 16px">Back to Sign In</div>
+        </div>
+        <div class="safe-bottom"><span class="home-indicator"></span></div>
+      </div>
+      <figcaption>C — Forgot password: one field</figcaption>
+    </figure>
+    <figure class="plate">
+      <div class="frame">
+        <div class="safe-top">
+          <div class="statusbar" aria-hidden="true">
+            <span class="clock">9:41</span>
+            <span class="indicators">
+              <svg width="18" height="12" viewBox="0 0 18 12">
+                <rect x="0" y="8.5" width="3" height="3.5" rx="1" />
+                <rect x="5" y="6" width="3" height="6" rx="1" />
+                <rect x="10" y="3" width="3" height="9" rx="1" />
+                <rect x="15" y="0" width="3" height="12" rx="1" />
+              </svg>
+              <svg
+                width="16"
+                height="12"
+                viewBox="0 0 16 12"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.6"
+                stroke-linecap="round"
+              >
+                <path d="M1.2 4.4a10 10 0 0 1 13.6 0" />
+                <path d="M4 7.3a6 6 0 0 1 8 0" />
+                <circle cx="8" cy="10.4" r="1" fill="currentColor" stroke="none" />
+              </svg>
+              <svg width="25" height="12" viewBox="0 0 25 12">
+                <rect
+                  x="0.5"
+                  y="0.5"
+                  width="21"
+                  height="11"
+                  rx="3.2"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-opacity="0.4"
+                />
+                <rect x="2.2" y="2.2" width="14" height="7.6" rx="1.8" />
+                <rect x="22.6" y="4.2" width="1.9" height="3.6" rx="0.95" opacity="0.4" />
+              </svg>
+            </span>
+          </div>
+        </div>
+        <div class="auth">
+          <div class="auth-centre">
+            <span class="mark"
+              ><span class="mark-accent"></span><span class="mark-stem"></span
+            ></span>
+            <h1 class="auth-h1" style="margin-top: 32px">Verify your email</h1>
+            <p class="auth-sub" style="margin-top: 8px">
+              We sent an 8-digit code to <strong>you@example.com</strong>
+            </p>
+          </div>
+          <div style="margin-top: 32px">
+            <div>
+              <div class="field code"><span class="val">20461532</span></div>
+            </div>
+          </div>
+          <p class="auth-sub" style="margin-top: 16px; text-align: center">Resend in 0:42</p>
+          <button class="btn-primary" style="margin-top: 24px">Confirm</button>
+          <div class="link-row" style="margin-top: 16px">Wrong email? <b>Go back</b></div>
+        </div>
+        <div class="safe-bottom"><span class="home-indicator"></span></div>
+      </div>
+      <figcaption>D — Code: eight digits, one field</figcaption>
+    </figure>
+    <figure class="plate">
+      <div class="frame">
+        <div class="safe-top">
+          <div class="statusbar" aria-hidden="true">
+            <span class="clock">9:41</span>
+            <span class="indicators">
+              <svg width="18" height="12" viewBox="0 0 18 12">
+                <rect x="0" y="8.5" width="3" height="3.5" rx="1" />
+                <rect x="5" y="6" width="3" height="6" rx="1" />
+                <rect x="10" y="3" width="3" height="9" rx="1" />
+                <rect x="15" y="0" width="3" height="12" rx="1" />
+              </svg>
+              <svg
+                width="16"
+                height="12"
+                viewBox="0 0 16 12"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.6"
+                stroke-linecap="round"
+              >
+                <path d="M1.2 4.4a10 10 0 0 1 13.6 0" />
+                <path d="M4 7.3a6 6 0 0 1 8 0" />
+                <circle cx="8" cy="10.4" r="1" fill="currentColor" stroke="none" />
+              </svg>
+              <svg width="25" height="12" viewBox="0 0 25 12">
+                <rect
+                  x="0.5"
+                  y="0.5"
+                  width="21"
+                  height="11"
+                  rx="3.2"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-opacity="0.4"
+                />
+                <rect x="2.2" y="2.2" width="14" height="7.6" rx="1.8" />
+                <rect x="22.6" y="4.2" width="1.9" height="3.6" rx="0.95" opacity="0.4" />
+              </svg>
+            </span>
+          </div>
+        </div>
+        <div class="auth">
+          <div class="auth-centre">
+            <span class="mark"
+              ><span class="mark-accent"></span><span class="mark-stem"></span
+            ></span>
+            <h1 class="auth-h1" style="margin-top: 32px">Set New Password</h1>
+            <p class="auth-sub" style="margin-top: 8px">
+              Choose a strong new password for your account.
+            </p>
+          </div>
+          <div style="margin-top: 32px; display: flex; flex-direction: column; gap: 16px">
+            <div>
+              <span class="field-label">New Password</span>
+              <div class="field">
+                <span class="val">••••••••••••••</span
+                ><span class="eye"
+                  ><svg
+                    width="24"
+                    height="24"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="1.5"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  >
+                    <path d="M2 12s3.6-6.5 10-6.5S22 12 22 12s-3.6 6.5-10 6.5S2 12 2 12z" />
+                    <circle cx="12" cy="12" r="3" /></svg
+                ></span>
+              </div>
+              <div class="meter">
+                <span class="bars"><i class="on"></i><i class="on"></i><i class="on"></i></span
+                ><span class="word">Strong</span>
+              </div>
+            </div>
+            <div>
+              <span class="field-label">Confirm Password</span>
+              <div class="field">
+                <span class="val placeholder">Re-enter your new password</span
+                ><span class="eye"
+                  ><svg
+                    width="24"
+                    height="24"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="1.5"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  >
+                    <path d="M2 12s3.6-6.5 10-6.5S22 12 22 12s-3.6 6.5-10 6.5S2 12 2 12z" />
+                    <circle cx="12" cy="12" r="3" /></svg
+                ></span>
+              </div>
+            </div>
+          </div>
+          <button class="btn-primary" style="margin-top: 24px">Update Password</button>
+        </div>
+        <div class="safe-bottom"><span class="home-indicator"></span></div>
+      </div>
+      <figcaption>E — New password: the meter, full</figcaption>
+    </figure>
+    <figure class="plate">
+      <div class="frame">
+        <div class="safe-top">
+          <div class="statusbar" aria-hidden="true">
+            <span class="clock">9:41</span>
+            <span class="indicators">
+              <svg width="18" height="12" viewBox="0 0 18 12">
+                <rect x="0" y="8.5" width="3" height="3.5" rx="1" />
+                <rect x="5" y="6" width="3" height="6" rx="1" />
+                <rect x="10" y="3" width="3" height="9" rx="1" />
+                <rect x="15" y="0" width="3" height="12" rx="1" />
+              </svg>
+              <svg
+                width="16"
+                height="12"
+                viewBox="0 0 16 12"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.6"
+                stroke-linecap="round"
+              >
+                <path d="M1.2 4.4a10 10 0 0 1 13.6 0" />
+                <path d="M4 7.3a6 6 0 0 1 8 0" />
+                <circle cx="8" cy="10.4" r="1" fill="currentColor" stroke="none" />
+              </svg>
+              <svg width="25" height="12" viewBox="0 0 25 12">
+                <rect
+                  x="0.5"
+                  y="0.5"
+                  width="21"
+                  height="11"
+                  rx="3.2"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-opacity="0.4"
+                />
+                <rect x="2.2" y="2.2" width="14" height="7.6" rx="1.8" />
+                <rect x="22.6" y="4.2" width="1.9" height="3.6" rx="0.95" opacity="0.4" />
+              </svg>
+            </span>
+          </div>
+        </div>
+        <div class="auth">
+          <div class="auth-centre">
+            <span class="mark"
+              ><span class="mark-accent"></span><span class="mark-stem"></span
+            ></span>
+            <h1 class="auth-h1" style="margin-top: 32px">Welcome Back</h1>
+            <p class="auth-sub" style="margin-top: 8px">
+              Sign in to sync your loyalty cards across devices
+            </p>
+          </div>
+          <div class="err-banner" style="margin-top: 32px">
+            <p>Incorrect email or password. Please try again.</p>
+          </div>
+          <div style="margin-top: 16px; display: flex; flex-direction: column; gap: 16px">
+            <div>
+              <span class="field-label">Email</span>
+              <div class="field"><span class="val">you@example.com</span></div>
+            </div>
+            <div>
+              <span class="field-label">Password</span>
+              <div class="field">
+                <span class="val">••••••••</span
+                ><span class="eye"
+                  ><svg
+                    width="24"
+                    height="24"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="1.5"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  >
+                    <path d="M2 12s3.6-6.5 10-6.5S22 12 22 12s-3.6 6.5-10 6.5S2 12 2 12z" />
+                    <circle cx="12" cy="12" r="3" /></svg
+                ></span>
+              </div>
+            </div>
+          </div>
+          <div class="link-row at-end solo" style="margin-top: 8px">Forgot password?</div>
+          <button class="btn-primary" style="margin-top: 24px">Sign In</button>
+          <div class="link-row" style="margin-top: 16px">
+            Don't have an account? <b>Create one</b>
+          </div>
+        </div>
+        <div class="safe-bottom"><span class="home-indicator"></span></div>
+      </div>
+      <figcaption>F — Request failed: the error idiom</figcaption>
+    </figure>
+  </body>
+</html>

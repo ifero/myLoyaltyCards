@@ -22,6 +22,8 @@ run started 2026-08-11) whose scratchpad lived in `/tmp` and whose API connectio
 | `frames/cardi-capture-frames.html`     | **The capture frames** — five, at 393 × 852. Choose / aim / no camera / many codes / no code. The one screen where beam is mandatory.                                                  |
 | `stitch-prompts-onboarding.txt`        | **The pitch pattern** — the first ninety seconds. The only flow with no user content in it, and the one place the brand speaks in its own voice.                                       |
 | `frames/cardi-onboarding-frames.html`  | **The onboarding frames** — six, at 393 × 852. Welcome / modes / difference / and all three carousel slides. Where Wave B stopped being blocked.                                       |
+| `stitch-prompts-auth.txt`              | **The account pattern** — six frames. One shape with five fillings; the code got there first.                                                                                          |
+| `frames/cardi-auth-frames.html`        | **The auth frames** — six, at 393 × 852. Sign in / create / forgot / code / new password / request failed.                                                                             |
 | `frames/cardi-barcode-frames.html`     | **The barcode frames** — three, at 393 × 852. The only frames on **white**, not cream; the white field is the product feature.                                                         |
 | `frames/cardi-form-frames.html`        | **The reference implementation.** Hand-authored, exactly 393 × 852, all four states. This is what screens derive from — not the PNGs. Open with `?probe` for a measured geometry dump. |
 | `frames/cardi-wallet-frames.html`      | **The wallet frames** — populated / empty / single-card / no-results, hand-authored at 393 × 852. Self-contained; shares its token block with the form file by copy, not by link.      |
@@ -1090,6 +1092,73 @@ card crossing freely out of it says the same thing as a picture: the perimeter i
 - **The recommended card carried a 2px border _and_ a 5% ink wash.** The wash goes: every card in
   this app is white on cream, and a border weight plus one beam pill carries a recommendation
   without making the other option look broken.
+
+### 2026-08-21 — the account pattern, and the error rule gets a direction
+
+`stitch-prompts-auth.txt` and `frames/cardi-auth-frames.html` cover six frames: **sign in**,
+**create account**, **forgot password**, **code**, **new password**, **request failed**.
+
+**It looks like six screens and it is one shape with five fillings — and the code got there
+first.** `AuthScreenLayout` is a single keyboard-aware shape and every screen is it plus a
+different `children` block. `RecoveryOtpScreen` is **thirteen lines** returning
+`<VerifyEmailScreen purpose="recovery" />`, which is why that one file runs to 552 lines while
+nothing else in the folder passes 300. Auth is also **already on the ratified 24px margin**,
+because it reads `layout.screenHorizontalMargin` instead of a literal.
+
+#### The decision this pattern turns on
+
+The error idiom contradicted the form pattern, and **both sides were right**.
+`stitch-prompts-form-states.txt` says a field error is a 1px `#C41E1E` outline plus 13px helper
+text, with _"no error icon"_, _"do not tint the field's fill"_ and _"do not add a summary banner
+at the top of the screen"_. `ErrorBanner` is exactly that: a top banner, fill tinted
+`theme.error` at 8%, with an `error-outline` icon.
+
+The rule needed a **direction** — the third time in this system that a conflict resolved that way
+rather than by picking a winner:
+
+| the error is…                                | where it belongs                                                               |
+| -------------------------------------------- | ------------------------------------------------------------------------------ |
+| **validation** — "Email is required."        | the **field**. It is what is wrong, so it carries it — and never more than one |
+| **a request failure** — "Unable to connect." | the **submission**. There is no field to attach a dropped connection to        |
+
+So the banner stays and loses the tint and the icon: **a white card with a 1px `#C41E1E`
+outline**. That honours "do not tint the fill" while permitting the banner the form spec forbade,
+and keeps `#C41E1E` to two uses — the outline and the sentence. Measured on frame F: banner fill
+`#FFFFFF`, border `#C41E1E`, no icon, both field borders at the ordinary `#D6D6CB`, and exactly
+**two** uses of the error colour in the frame.
+
+#### Two findings worth acting on
+
+- **A network failure currently reddens both fields.** `SignInScreen` computes
+  `hasFormError = Boolean(error)` and passes `hasError={hasFormError}` to the email field _and_
+  the password field, so "Unable to connect. Check your internet and try again." marks both as
+  invalid though neither is. It contradicts the form spec's "exactly one field is in error", and
+  it is wrong on its own terms: a dropped connection is not a claim about your typing. Frame F is
+  drawn to show the opposite.
+- **A second stock-icon placeholder, and it is a different one.** `AppIconHeader` renders
+  `MaterialCommunityIcons 'card-account-details-outline'` at 80px; onboarding's `BrandedIcon`
+  renders `MaterialIcons 'credit-card'` at 100px. Two generic glyphs standing in for one missing
+  logo, in two flows, at two sizes — which is the argument for **drawing the ì once as a real
+  asset** rather than patching each site.
+
+#### The rest
+
+- **The strength meter is the one place a third colour would be unavoidable**, so it **counts
+  instead of judging**: one, two or three ink segments against `#D6D6CB`, never a red/amber/green
+  ramp. That keeps the palette honest and it also survives colour-blindness, which a traffic
+  light does not.
+- **The code field is one field, not eight boxes.** An 8-digit code is pasted from an email as
+  often as it is typed, and eight cells fight the paste. One 56px field, JetBrains Mono 22px,
+  letter-spaced 8px so the digits stay countable.
+- **`AuthLink` and `ErrorBanner` both set body copy at `footnote`** — below the 15px minimum, on
+  the copy people read most carefully in the app.
+- **`theme.link` — third flow, still not in the palette.** The frames use ink, underlined only
+  inside prose.
+- **`auth.verifyEmail` and `auth.recoveryOtp` duplicate twelve byte-identical strings.** One
+  shared component reading from two copied sets, with no test that they agree.
+- **The password rule is stated three times in three wordings** — the placeholder, the validation
+  message and `createAccount.passwordRequirements`. The frames use the first two and drop the
+  third.
 
 ### Still open
 
