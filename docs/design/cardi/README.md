@@ -20,6 +20,8 @@ run started 2026-08-11) whose scratchpad lived in `/tmp` and whose API connectio
 | `frames/cardi-card-detail-frames.html` | **The card detail frames** — four, at 393 × 852. The header follows the brand as a scroll transition: brand → blend → cream.                                                           |
 | `stitch-prompts-capture.txt`           | **The capture pattern** — how a card gets in: choose the brand, then point the camera. The only pattern that is a camera.                                                              |
 | `frames/cardi-capture-frames.html`     | **The capture frames** — five, at 393 × 852. Choose / aim / no camera / many codes / no code. The one screen where beam is mandatory.                                                  |
+| `stitch-prompts-onboarding.txt`        | **The pitch pattern** — the first ninety seconds. The only flow with no user content in it, and the one place the brand speaks in its own voice.                                       |
+| `frames/cardi-onboarding-frames.html`  | **The onboarding frames** — five, at 393 × 852. Welcome / modes / difference / first slide / last slide. Where Wave B stopped being blocked.                                           |
 | `frames/cardi-barcode-frames.html`     | **The barcode frames** — three, at 393 × 852. The only frames on **white**, not cream; the white field is the product feature.                                                         |
 | `frames/cardi-form-frames.html`        | **The reference implementation.** Hand-authored, exactly 393 × 852, all four states. This is what screens derive from — not the PNGs. Open with `?probe` for a measured geometry dump. |
 | `frames/cardi-wallet-frames.html`      | **The wallet frames** — populated / empty / single-card / no-results, hand-authored at 393 × 852. Self-contained; shares its token block with the form file by copy, not by link.      |
@@ -990,6 +992,79 @@ One authoring note: this file's shared frame layer is **extracted verbatim from
 `cardi-card-detail-frames.html` by the generator**, rather than retyped, so the token values
 cannot drift between the two. Duplication by copy is still the rule — a linked stylesheet dies in
 any viewer that inlines the HTML — but the copy is now made by a script instead of by hand.
+
+### 2026-08-21 — the pitch pattern, and Wave B was never blocked
+
+`stitch-prompts-onboarding.txt` and `frames/cardi-onboarding-frames.html` cover five frames:
+**welcome**, **modes**, **difference**, and the **first** and **last** carousel slides.
+
+**Wave B has been marked "blocked on illustrations" since 2026-08-14. It was blocked on a
+belief.** Four illustrations already exist in onboarding, all placeholders, all built the same
+way — monochrome alpha-tints of `theme.primary` assembled out of plain `View`s: three offset rects
+on welcome (no rotation, so not a fan at all — a staircase), a 160px circle holding four rects, a
+circle holding a rect and seven bars, and one that is just `MaterialIcons verified-user` at 60px.
+**The slots already existed at known sizes** — one 200 × 80 band and three 160px circles. The job
+was never "design an illustration system"; it was "draw four things into four holes".
+
+And the highest-leverage fix in the flow is not a design question at all: **`BrandedIcon` defaults
+to `MaterialIcons name="credit-card"`**, so the screen introducing a brand whose entire ornament
+is the ì shows stock clip art. That is a missing asset.
+
+#### The decision this pattern turns on
+
+Onboarding is **the only flow with no user content in it**, and that changes what the palette is
+for. Everywhere else "the content is the colour" — forty-five brand colours are the content, so
+our chrome stays quiet and beam is rationed to almost nothing. On these three screens there are no
+cards yet. Nothing is competing. The quiet was protecting something that is not there.
+
+So this is where the brand speaks in its own voice, and the design system already licensed exactly
+that in a line nobody had applied: _"Illustrations: flat, two-tone (ink line-work on cream) with
+beam yellow as the single accent."_ One beam element per drawing, never two:
+
+| slot        | drawing                                                                              |
+| ----------- | ------------------------------------------------------------------------------------ |
+| the mark    | the **ì** — an ink circle, a white stem, and the grave accent as a short beam stroke |
+| welcome     | three card outlines in 2px ink line-work, the frontmost carrying one beam bar        |
+| highlight 1 | four card outlines two-by-two; exactly one filled beam — that one is yours           |
+| highlight 2 | a card with ink barcode bars and a single beam line crossing them: the beam motif    |
+| highlight 3 | export/import arrows, beam on the **outbound** arrowhead. Not a shield               |
+
+Slide 3 mattered more than the rest: its shipped `verified-user` shield promises **security**
+while its own copy promises **portability** ("Export and import your cards anytime. No lock-in").
+The picture was making the weaker claim.
+
+#### Two things drawing it settled that writing it could not
+
+- **The mark has to be constructed, not typeset.** No font lets you paint half a glyph, so "ì" as
+  a character cannot carry an ink stem and a beam accent. It is a logotype; building it from a
+  stem and a stroke is the honest approach — and it makes the identity literal: _at rest a dot, in
+  motion a beam_, so the accent is a **stroke**, not a dot.
+- **The spec asked for beam on the wordmark's accent, and that was wrong.** Beam on cream fails
+  contrast, which is precisely why the system pairs beam with ink and never with cream. The prompt
+  is corrected: the wordmark is entirely ink and the beam lives on the mark, where it sits on an
+  ink circle. Drawing a thing is still the only way to find this class of error.
+
+#### The rest, found by reading
+
+- **`fontSize: 42 - 16`**, left in `ModeSelectionScreen` as arithmetic. It evaluates to 26px,
+  which is not on the type scale (34 / 24 / 20 / 17 / 15 / 13). It renders fine, which is why it
+  survived.
+- **Body text below the 15px minimum in seven places**: the mode subtitle at `footnote`, its
+  footer at 13, "What's the difference?" at 14, the option-card subtitle at 14, its eyebrow at 12,
+  the "Recommended" badge at 12, and "Skip" at 14. The smallest legitimate size here is
+  `label-bold` 13/600/0.02em — and that is a **label**, not body copy.
+- **Four of fourteen vertical gaps land on the 8px grid.** Welcome 64/38/6/44/74/18, modes
+  30/8/28/34/4, highlights 8/4/20/10. This is the flow that sets the first impression of how
+  carefully the app is built.
+- **Three consecutive screens, three different top treatments.** Welcome: no header,
+  `insets.top + 64`. Modes: a 56px header **with** a 1px bottom border and 12px horizontal
+  padding. Highlights: no header but a right-aligned "Skip" at `insets.top + 8`. The frames unify
+  on a flat 56px header with no border, and no header at all where there is nothing to go back to.
+- **`theme.link` is not in the palette.** All three screens use it. The frames use **ink
+  #181824**, underlined only where the link sits inside prose.
+- **The recommended card carried a 2px border _and_ a 5% ink wash.** The wash goes: every card in
+  this app is white on cream, and a border weight plus one beam pill carries a recommendation
+  without making the other option look broken.
 
 ### Still open
 

@@ -159,8 +159,13 @@ MARGINS: 24px left and right.
    is the only yellow on this screen. This is the brand's logo: do NOT draw a credit card, a
    wallet, a card stack, a barcode, a shopping bag or any generic icon in this circle.
 
-2. THE TITLE "Cardì" centred 32px beneath the circle, in Space Grotesk bold 34px, ink #181824.
-   The grave accent on the final ì is beam #FCCC0C; every other letter is ink.
+2. THE TITLE "Cardì" centred 32px beneath the circle, in Space Grotesk bold 34px, ink #181824 —
+   ALL of it, the grave accent on the final ì included.
+
+   (An earlier draft asked for that accent in beam. Drawing it disproved the idea: beam on cream
+   fails contrast, which is exactly why the design system pairs beam with ink and never with
+   cream. The beam accent lives on the mark in point 1, where it sits on an ink circle and has
+   the contrast to carry it. One accent, on the surface that can hold it.)
 
 3. THE SUBTITLE "Your loyalty cards, always with you" centred 8px beneath the title, in Inter
    17px muted #55555F, on one line.
@@ -184,8 +189,8 @@ photograph, no decorative pattern.
 
 FORBIDDEN: bottom tab bars, floating action buttons, drop shadows, gradients, glassmorphism, a
 device bezel or phone frame around the screen, coral/salmon/terracotta/orange, stock icons of
-credit cards or wallets, and any second use of beam #FCCC0C beyond the accent on the ì, the
-accent in the title and the one bar in the illustration.
+credit cards or wallets, and any second use of beam #FCCC0C beyond the accent on the ì inside
+the circle and the one bar in the illustration.
 
 TONE
 There are no cards on this screen and nothing competing for attention, which is exactly why it
