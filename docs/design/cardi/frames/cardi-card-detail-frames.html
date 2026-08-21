@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Cardì — card detail, three frames</title>
+    <title>Cardì — card detail, four frames</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
@@ -283,23 +283,44 @@
          CardDetails / BrandHero / DetailRow — see
          stitch-prompts-card-detail.txt.
 
-         THE BRAND COLOUR QUESTION SPLITS IN TWO. The shipped code tints BOTH
-         the navigation header and the hero band with brand.color. Here:
+         THE HEADER FOLLOWS THE BRAND — AS A TRANSITION, NOT A TINT.
 
-           the HERO KEEPS it   — on a card's own screen the brand colour is
-                                 CONTENT; the hero is the wallet tile enlarged
-           the HEADER GIVES IT UP — the header is navigation (back, favourite),
-                                 and tinting it makes our chrome wear a
-                                 third-party brand's colour, which is what
-                                 "chrome is quiet so the brands can be loud"
-                                 forbids
+         An earlier version of this file made the header cream at every scroll
+         position, arguing that the header is navigation and navigation should
+         not wear a third-party brand's colour. That cut a horizontal cream band
+         straight across the top of the hero, so the brand block read as
+         interrupted rather than as one field. ifero rejected it, correctly.
 
-         Same colour, two verdicts, decided by whether the surface identifies
-         the card or navigates the app.
+         What that argument was actually protecting against is narrower than the
+         rule it produced: brand-coloured chrome with NOTHING BENEATH IT to
+         identify. That only happens once the hero has scrolled away. So:
+
+           at rest     the header IS the brand colour, seamless with the hero.
+                       The field runs from the status bar down, with no seam.
+           blending    once the hero has gone, the brand fades out over cream
+                       and the title fades in.
+           condensed   cream plus a hairline. There is nothing left for the
+                       colour to identify.
+
+         THE ORDER MATTERS. The header stays matched to the hero for as long as
+         ANY hero is visible — they are one field, and a header a shade paler
+         than the band beneath it reads as a rendering mistake, not a
+         transition. The blend belongs to the tail of the scroll, after the
+         band is gone. An earlier draft blended them in parallel and looked
+         broken.
+
+         The endpoints are clean — full brand, or full cream — so this never
+         becomes forty-five permanent pastel tints. The mid-state is one frame
+         of a transition, not a resting style.
+
+         The status bar and the header controls flip with the background's
+         luminance: ink on Esselunga's yellow, white on the green accent.
+         shared/theme/luminance.ts already does this, though it returns
+         #1F1F24 rather than ink #181824 — a near-palette value worth fixing.
 
          NO HEADER SHADOW. The shipped screen sets headerShadowVisible once
          condensed. A 1px hairline does the same job and is already the
-         established pattern.
+         established pattern for the anchored footer.
          ------------------------------------------------------------------ */
 
       .cd-body {
@@ -310,13 +331,24 @@
         padding: 0;
       }
 
-      /* Full-bleed: the brand runs to both frame edges and stops dead at the
-         bottom of the band. No gradient, no overlay, no rounded corners. */
+      /* Full-bleed: the brand runs to both frame edges and, at rest, straight
+         up into the header and status bar with no seam. */
       .hero {
         height: 200px;
         display: flex;
         align-items: center;
         justify-content: center;
+      }
+
+      /* Mid-scroll: the band is being consumed from the top. */
+      .hero.is-scrolled {
+        height: 80px;
+        align-items: flex-start;
+        overflow: hidden;
+      }
+
+      .hero.is-scrolled .hero-mark {
+        margin-top: -18px;
       }
 
       /* Stand-in for the real brand SVG from brandLogos.ts, set in the brand's
@@ -361,6 +393,16 @@
         letter-spacing: -0.01em;
         color: var(--ink);
         margin: 16px 0;
+      }
+
+      /* The condensed title: Inter, not Space Grotesk. It is a third-party
+         brand's name doing navigation duty, and our display face is ours. */
+      .cd-title {
+        font-family: Inter, sans-serif;
+        font-weight: 600;
+        font-size: 17px;
+        line-height: 24px;
+        letter-spacing: 0;
       }
 
       /* A hairline, never a shadow. */
@@ -465,8 +507,8 @@
   <body>
     <figure class="plate">
       <div class="frame">
-        <div class="safe-top">
-          <div class="statusbar" aria-hidden="true">
+        <div class="safe-top" style="background: #ffcc00; color: var(--ink)">
+          <div class="statusbar" aria-hidden="true" style="color: var(--ink)">
             <span class="clock">9:41</span>
             <span class="indicators">
               <svg width="18" height="12" viewBox="0 0 18 12">
@@ -505,8 +547,8 @@
             </span>
           </div>
         </div>
-        <header class="header">
-          <button class="icon-target at-start" aria-label="Go back">
+        <header class="header" style="background: #ffcc00">
+          <button class="icon-target at-start" aria-label="Go back" style="color: var(--ink)">
             <svg
               viewBox="0 0 11 20"
               width="11"
@@ -521,7 +563,7 @@
             </svg>
           </button>
           <span></span>
-          <button class="icon-target at-end" aria-label="Favourite">
+          <button class="icon-target at-end" aria-label="Favourite" style="color: var(--ink)">
             <svg
               width="24"
               height="24"
@@ -621,12 +663,170 @@
         </main>
         <div class="safe-bottom"><span class="home-indicator"></span></div>
       </div>
-      <figcaption>A — Hero visible</figcaption>
+      <figcaption>A — At rest: header is the brand</figcaption>
     </figure>
+
     <figure class="plate">
       <div class="frame">
-        <div class="safe-top">
-          <div class="statusbar" aria-hidden="true">
+        <div class="safe-top" style="background: #f8de74; color: var(--ink)">
+          <div class="statusbar" aria-hidden="true" style="color: var(--ink)">
+            <span class="clock">9:41</span>
+            <span class="indicators">
+              <svg width="18" height="12" viewBox="0 0 18 12">
+                <rect x="0" y="8.5" width="3" height="3.5" rx="1" />
+                <rect x="5" y="6" width="3" height="6" rx="1" />
+                <rect x="10" y="3" width="3" height="9" rx="1" />
+                <rect x="15" y="0" width="3" height="12" rx="1" />
+              </svg>
+              <svg
+                width="16"
+                height="12"
+                viewBox="0 0 16 12"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.6"
+                stroke-linecap="round"
+              >
+                <path d="M1.2 4.4a10 10 0 0 1 13.6 0" />
+                <path d="M4 7.3a6 6 0 0 1 8 0" />
+                <circle cx="8" cy="10.4" r="1" fill="currentColor" stroke="none" />
+              </svg>
+              <svg width="25" height="12" viewBox="0 0 25 12">
+                <rect
+                  x="0.5"
+                  y="0.5"
+                  width="21"
+                  height="11"
+                  rx="3.2"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-opacity="0.4"
+                />
+                <rect x="2.2" y="2.2" width="14" height="7.6" rx="1.8" />
+                <rect x="22.6" y="4.2" width="1.9" height="3.6" rx="0.95" opacity="0.4" />
+              </svg>
+            </span>
+          </div>
+        </div>
+        <header class="header" style="background: #f8de74">
+          <button class="icon-target at-start" aria-label="Go back" style="color: var(--ink)">
+            <svg
+              viewBox="0 0 11 20"
+              width="11"
+              height="20"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.75"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <path d="M9.5 1.5L1.5 10l8 8.5" />
+            </svg>
+          </button>
+          <h1 class="title cd-title" style="color: var(--ink); opacity: 0.5">Esselunga</h1>
+          <button class="icon-target at-end" aria-label="Favourite" style="color: var(--ink)">
+            <svg
+              width="24"
+              height="24"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.5"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <path d="M12 3.2l2.7 5.5 6 .9-4.3 4.2 1 6-5.4-2.8-5.4 2.8 1-6L3.3 9.6l6-.9z" />
+            </svg>
+          </button>
+        </header>
+        <main class="cd-body">
+          <div class="cd-inner" style="padding-top: 16px">
+            <div class="card bc-card">
+              <svg
+                class="bc"
+                width="280"
+                height="100"
+                viewBox="0 0 95 20"
+                preserveAspectRatio="none"
+                role="img"
+                aria-label="Barcode 2000012345678"
+              >
+                <rect x="0" y="0" width="1" height="20" />
+                <rect x="2" y="0" width="1" height="20" />
+                <rect x="6" y="0" width="2" height="20" />
+                <rect x="9" y="0" width="1" height="20" />
+                <rect x="13" y="0" width="2" height="20" />
+                <rect x="16" y="0" width="1" height="20" />
+                <rect x="20" y="0" width="2" height="20" />
+                <rect x="23" y="0" width="1" height="20" />
+                <rect x="27" y="0" width="2" height="20" />
+                <rect x="30" y="0" width="1" height="20" />
+                <rect x="33" y="0" width="2" height="20" />
+                <rect x="37" y="0" width="1" height="20" />
+                <rect x="40" y="0" width="1" height="20" />
+                <rect x="43" y="0" width="2" height="20" />
+                <rect x="46" y="0" width="1" height="20" />
+                <rect x="48" y="0" width="1" height="20" />
+                <rect x="50" y="0" width="1" height="20" />
+                <rect x="55" y="0" width="1" height="20" />
+                <rect x="57" y="0" width="1" height="20" />
+                <rect x="59" y="0" width="3" height="20" />
+                <rect x="64" y="0" width="1" height="20" />
+                <rect x="67" y="0" width="3" height="20" />
+                <rect x="71" y="0" width="1" height="20" />
+                <rect x="73" y="0" width="1" height="20" />
+                <rect x="78" y="0" width="1" height="20" />
+                <rect x="82" y="0" width="1" height="20" />
+                <rect x="85" y="0" width="1" height="20" />
+                <rect x="88" y="0" width="1" height="20" />
+                <rect x="92" y="0" width="1" height="20" />
+                <rect x="94" y="0" width="1" height="20" />
+              </svg>
+              <span class="bc-hint">Tap to enlarge</span>
+            </div>
+            <div class="stack-gap"></div>
+            <div class="card">
+              <div class="row">
+                <span class="label">Number</span><span class="value">2000 0123 4567 8</span>
+              </div>
+              <div class="row">
+                <span class="label">Color</span><span class="value">Yellow</span>
+              </div>
+              <div class="row">
+                <span class="label">Added</span><span class="value">12 August 2026</span>
+              </div>
+            </div>
+            <span class="sec-title">Manage</span>
+            <div class="card">
+              <div class="row">
+                <span class="action">Edit card</span
+                ><span class="chev"
+                  ><svg
+                    width="18"
+                    height="18"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  >
+                    <path d="M9 6l6 6-6 6" /></svg
+                ></span>
+              </div>
+              <div class="row is-destructive"><span class="action">Delete card</span></div>
+            </div>
+          </div>
+        </main>
+        <div class="safe-bottom"><span class="home-indicator"></span></div>
+      </div>
+      <figcaption>B — Blending: hero gone, header fading</figcaption>
+    </figure>
+
+    <figure class="plate">
+      <div class="frame">
+        <div class="safe-top" style="color: var(--ink)">
+          <div class="statusbar" aria-hidden="true" style="color: var(--ink)">
             <span class="clock">9:41</span>
             <span class="indicators">
               <svg width="18" height="12" viewBox="0 0 18 12">
@@ -666,7 +866,7 @@
           </div>
         </div>
         <header class="header">
-          <button class="icon-target at-start" aria-label="Go back">
+          <button class="icon-target at-start" aria-label="Go back" style="color: var(--ink)">
             <svg
               viewBox="0 0 11 20"
               width="11"
@@ -680,13 +880,8 @@
               <path d="M9.5 1.5L1.5 10l8 8.5" />
             </svg>
           </button>
-          <h1
-            class="title"
-            style="font-size: 17px; font-family: Inter, sans-serif; font-weight: 600"
-          >
-            Esselunga
-          </h1>
-          <button class="icon-target at-end" aria-label="Favourite">
+          <h1 class="title cd-title" style="color: var(--ink); opacity: 1">Esselunga</h1>
+          <button class="icon-target at-end" aria-label="Favourite" style="color: var(--ink)">
             <svg
               width="24"
               height="24"
@@ -783,12 +978,13 @@
         </main>
         <div class="safe-bottom"><span class="home-indicator"></span></div>
       </div>
-      <figcaption>B — Header condensed</figcaption>
+      <figcaption>C — Condensed: cream + hairline</figcaption>
     </figure>
+
     <figure class="plate">
       <div class="frame">
-        <div class="safe-top">
-          <div class="statusbar" aria-hidden="true">
+        <div class="safe-top" style="background: #0c843c; color: var(--white)">
+          <div class="statusbar" aria-hidden="true" style="color: var(--white)">
             <span class="clock">9:41</span>
             <span class="indicators">
               <svg width="18" height="12" viewBox="0 0 18 12">
@@ -827,8 +1023,8 @@
             </span>
           </div>
         </div>
-        <header class="header">
-          <button class="icon-target at-start" aria-label="Go back">
+        <header class="header" style="background: #0c843c">
+          <button class="icon-target at-start" aria-label="Go back" style="color: var(--white)">
             <svg
               viewBox="0 0 11 20"
               width="11"
@@ -934,7 +1130,7 @@
         </main>
         <div class="safe-bottom"><span class="home-indicator"></span></div>
       </div>
-      <figcaption>C — Custom card</figcaption>
+      <figcaption>D — Custom card, dark accent</figcaption>
     </figure>
   </body>
 </html>

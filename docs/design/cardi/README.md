@@ -16,8 +16,8 @@ run started 2026-08-11) whose scratchpad lived in `/tmp` and whose API connectio
 | `stitch-prompts-settings.txt`          | **The settings pattern** — screen (signed-in / guest) plus the four sheet SHAPES the eight sheets reduce to. Specced against the real `SettingsScreen`.                                |
 | `stitch-prompts-document.txt`          | **The document pattern** — prose / searchable FAQ / two-column table. Three screens, three shapes, not the "document (2)" the plan assumed.                                            |
 | `stitch-prompts-barcode.txt`           | **The barcode screen** — EAN-13 / QR / not-found. The hero moment, and the last screen to be specced.                                                                                  |
-| `stitch-prompts-card-detail.txt`       | **The card detail screen** — hero visible / header condensed / custom card. The barcode's parent, and the only scroll-linked screen in the app.                                        |
-| `frames/cardi-card-detail-frames.html` | **The card detail frames** — three, at 393 × 852. The hero keeps the brand colour; the header does not.                                                                                |
+| `stitch-prompts-card-detail.txt`       | **The card detail screen** — at rest / blending / condensed / custom card. The barcode's parent, and the only scroll-linked screen in the app.                                         |
+| `frames/cardi-card-detail-frames.html` | **The card detail frames** — four, at 393 × 852. The header follows the brand as a scroll transition: brand → blend → cream.                                                           |
 | `frames/cardi-barcode-frames.html`     | **The barcode frames** — three, at 393 × 852. The only frames on **white**, not cream; the white field is the product feature.                                                         |
 | `frames/cardi-form-frames.html`        | **The reference implementation.** Hand-authored, exactly 393 × 852, all four states. This is what screens derive from — not the PNGs. Open with `?probe` for a measured geometry dump. |
 | `frames/cardi-wallet-frames.html`      | **The wallet frames** — populated / empty / single-card / no-results, hand-authored at 393 × 852. Self-contained; shares its token block with the form file by copy, not by link.      |
@@ -719,19 +719,33 @@ no visible dismiss control.
 `stitch-prompts-card-detail.txt` and `frames/cardi-card-detail-frames.html` cover three
 frames: **hero visible**, **header condensed**, **custom card**.
 
-**The brand-colour question splits in two, and the answer differs each way.** The shipped code
-sets `headerBg = brand ? brand.color : theme.primary` and tints _both_ the navigation header
-and the `BrandHero` band with it.
+**The header follows the brand — as a transition, not a tint.** Four frames: **at rest**,
+**blending**, **condensed**, **custom card**.
 
-- **The hero keeps it.** On a card's own detail screen the brand colour is **content** — the
-  hero is the wallet tile enlarged, and that is the thesis working as intended.
-- **The header gives it up.** The header is navigation: a back chevron and a favourite toggle.
-  Tinting it makes the app's own chrome wear a third-party brand's colour, which is precisely
-  what _"chrome is quiet so the brands can be loud"_ forbids.
+> **Corrected 2026-08-15, after seeing it drawn.** This section first argued the header should
+> be cream at every scroll position, because navigation should not wear a third-party brand's
+> colour. ifero rejected it, correctly: a cream header cuts a horizontal band straight across
+> the top of the hero, so the brand block reads as _interrupted_ rather than as one field.
+>
+> The argument was protecting something real but stated it too broadly. What is actually
+> objectionable is **brand-coloured chrome with nothing beneath it to identify** — and that
+> only happens once the hero has scrolled away. So the colour became a transition:
 
-Same colour, two verdicts, decided by whether the surface is identifying the card or
-navigating the app. The visible payoff is frame B: once the hero scrolls away there is **no
-yellow anywhere**, and the screen is indistinguishable in furniture from settings.
+| state     | header + top inset                                                                                      |
+| --------- | ------------------------------------------------------------------------------------------------------- |
+| at rest   | **the brand colour** — one unbroken field from the top of the screen to the bottom of the hero, no seam |
+| blending  | the brand at half strength over cream, title fading in                                                  |
+| condensed | **cream + a 1px hairline** — nothing left for the colour to identify                                    |
+
+The endpoints stay clean — full brand or full cream — so this never becomes forty-five
+permanent pastel tints. And **the order matters**: the header stays matched to the hero for as
+long as any of the band is visible, because they are one field and a header a shade paler than
+the band beneath it reads as a rendering fault. Drafted the other way round it looked broken,
+which is why frame B shows no hero at all.
+
+The controls flip with luminance — ink on Esselunga's yellow, white on the green accent.
+`shared/theme/luminance.ts` already does this, though it returns **`#1F1F24` rather than ink
+`#181824`**: another near-palette value worth fixing.
 
 Three more findings:
 
