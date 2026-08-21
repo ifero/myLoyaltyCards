@@ -54,7 +54,25 @@ WHAT READING THE CODE TURNED UP
    content is the colour and our chrome stays quiet. Inter is the correct choice, and the
    shipped code already does this — it is ratified, not changed.
 
-6. THE HINT LINE STAYS. "Nothing else on this screen" was written against nav, chrome and
+6. WIDTH IS CONSTRAINED, HEIGHT IS FREE — DO NOT SHRINK THE SIDE SPACE. The white space
+   either side of the bars is not a margin. It is the QUIET ZONE and it is part of the code:
+   EAN-13 needs roughly 10 blank modules on each side for a scanner to find where the code
+   begins and ends. At 314px across 95 modules the module is 3.31px and the surround is
+   39.5px — about 12 modules, over the minimum with margin to spare. The shipped
+   `Math.min(SCREEN_WIDTH * 0.8, 320)` therefore is not arbitrary; it lands almost exactly on
+   "as wide as possible while staying safe". The theoretical maximum at a 393 frame is ~325px,
+   an 11px gain bought by cutting the margin to exactly 10 modules. Not worth it.
+
+   **This is the opposite verdict from the 48px document margin, and the difference is why.**
+   There, the space was decoration and constrained a text column for no reason. Here the space
+   is an input to the scanner. Same measurement, opposite call, decided by whether anything
+   depends on it.
+
+   Height, by contrast, costs nothing and buys the thing that actually goes wrong: a tilted
+   phone. Taller bars let the beam cross at a steeper angle and still read a complete slice.
+   **The frames use 200px, up from the shipped 120px**, spending vertical space that was empty.
+
+7. THE HINT LINE STAYS. "Nothing else on this screen" was written against nav, chrome and
    ads. "Tap anywhere to close" is the only affordance telling someone how to leave a modal
    with no visible dismiss control; removing it would be obedience to the letter of the rule
    at the cost of the person holding the phone.
@@ -93,10 +111,10 @@ Everything is centred on the vertical axis of the frame and centred as a group v
 
 1. The store name "Esselunga" in Inter 20px bold, ink #181824, centred, with 24px beneath it.
 
-2. The barcode: an EAN-13 code, 314 wide x 120 tall, drawn as true black #000000 vertical
+2. The barcode: an EAN-13 code, 314 wide x 200 tall, drawn as true black #000000 vertical
    bars of varying widths directly on the white field. No container, no plate, no padding
-   box, no border, no radius, no shadow. The bars run to the full 120px height. Nothing
-   crosses them.
+   box, no border, no radius, no shadow. The bars run to the full 200px height. Nothing
+   crosses them. Leave the white space either side of the bars alone — see finding 6.
 
 3. 16px beneath the barcode, the number "2000012345678" in JetBrains Mono 16px, ink #181824,
    letter-spacing 1px, centred.

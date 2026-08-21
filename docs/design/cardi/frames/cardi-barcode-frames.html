@@ -294,6 +294,20 @@
          badly — ifero confirmed the screen works at a real checkout — but
          because a white plate on a white field is defining a boundary that
          carries no information, and the system forbids shadows anyway.
+
+         WIDTH IS CONSTRAINED, HEIGHT IS FREE. The white space either side of
+         the bars is not a margin — it is the QUIET ZONE, and it is part of the
+         code. EAN-13 needs roughly 10 blank modules each side for a scanner to
+         find where the code begins and ends. At 314px across 95 modules the
+         module is 3.31px and the surround is 39.5px, about 12 modules: over the
+         minimum with margin to spare. The theoretical maximum here is ~325px,
+         an 11px gain bought by cutting the safety margin to exactly 10. Not
+         worth it, so the width stays.
+
+         Height costs nothing and buys the thing that actually goes wrong: a
+         tilted phone. Taller bars let the scanner's beam cross at a steeper
+         angle and still read a complete slice. The bars are 200px tall here,
+         up from the shipped 120px, using vertical space that was empty.
          ------------------------------------------------------------------ */
 
       .frame.is-white {
@@ -416,7 +430,7 @@
           <svg
             class="bc"
             width="314"
-            height="120"
+            height="200"
             viewBox="0 0 95 20"
             preserveAspectRatio="none"
             role="img"
