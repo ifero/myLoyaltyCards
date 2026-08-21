@@ -1,0 +1,429 @@
+CARDÌ — THE PITCH PATTERN, FIVE FRAMES
+======================================
+
+The first ninety seconds. Three screens before the person owns a single card, and the only flow
+in the app that contains no user content at all — which is exactly why it is the one place our
+own voice has to carry the screen, and the one place it currently doesn't.
+
+  A. WELCOME     — the mark, the promise, the way in. The exemplar.
+  B. MODES       — on this device, or synced. The only real question we ask.
+  C. DIFFERENCE  — the sheet behind "What's the difference?"
+  D. HIGHLIGHT   — the carousel, first slide.
+  E. HIGHLIGHT   — the carousel, last slide. The button changes and the dots move.
+
+Every prompt below is LITERALLY STANDALONE: it repeats the chrome and the content in full and
+refers to nothing outside its delimiters. Paste one whole block. Write every correction as a
+NUMBERED DEFECT.
+
+  > The rule the hard way: a prompt may not refer to another frame OR to a shared preamble.
+  > "Apply the COMMON CHROME above" does not survive a clipboard — it cost three card-detail
+  > frames, which each invented a different screen.
+
+Screen source of truth: app/welcome.tsx → features/onboarding/screens/WelcomeScreen.tsx;
+app/onboarding/mode-selection.tsx → ModeSelectionScreen.tsx (with ModeOptionCard,
+InfoTooltipModal, useModeSelection); app/onboarding/highlights.tsx →
+FeatureHighlightsScreen.tsx (with HighlightSlide, PaginationDots, useHighlightPagination);
+shared components BrandedIcon and FannedCardIllustration. Strings in
+shared/i18n/locales/en.ts under `onboarding`.
+
+
+-------------------------------------------------------------------------------
+WHAT READING THE CODE TURNED UP
+-------------------------------------------------------------------------------
+
+1. THE FIRST THING ANYONE SEES IS CLIP ART. `BrandedIcon` defaults to
+   `MaterialIcons name="credit-card"`, tinted `theme.primary`, inside a 100px circle filled
+   `theme.primary` at 10% alpha. The welcome screen renders it at 100px with a 34px glyph.
+
+   The brand's entire ornament is the **ì** — *"at rest it is a dot, in motion it is a scan beam
+   passing over a barcode"* — and the screen that introduces the brand shows a stock credit-card
+   icon instead. This is the single highest-leverage fix in the flow and it is not a design
+   question; it is a missing asset.
+
+2. WAVE B WAS NEVER BLOCKED ON INVENTING ILLUSTRATIONS. It was blocked on a belief. There are
+   **four** illustrations already in onboarding, all placeholders, all built the same way — as
+   monochrome alpha-tints of `theme.primary` assembled out of plain `View`s:
+
+     welcome        `FannedCardIllustration` — three 80x50 rounded rects at 15% / 45% / 75%
+                    alpha, offset 30px and 8px. No rotation, so it is not a fan; it is a
+                    staircase, and the component name overstates it.
+     highlight 1    a 160px circle at 10% alpha holding four 40x34 rects at 50% and 65%.
+     highlight 2    a 160px circle holding a 72x50 rect and seven bars of alternating 3px / 2px
+                    width — a barcode diagram, and the closest of the four to being right.
+     highlight 3    a 160px circle holding `MaterialIcons name="verified-user"` at 60px.
+
+   **The slots already exist at known sizes** — one 200 x 80 band and three 160px circles. The
+   job was never "design an illustration system", it was "draw four things into four holes".
+
+3. AND SLIDE 3'S ILLUSTRATION CONTRADICTS ITS OWN COPY. A `verified-user` shield promises
+   **security**. The text under it reads "Export and import your cards anytime. No lock-in, no
+   hidden fees. Your cards belong to you." — which promises **portability**. Those are different
+   claims, and the picture is making the weaker one.
+
+4. `fontSize: 42 - 16`. Left in the source of `ModeSelectionScreen` as arithmetic. It evaluates
+   to 26px, which is not a size on the type scale at all (the scale runs 34 / 24 / 20 / 17 / 15 /
+   13). It renders fine, which is why it survived.
+
+5. BODY TEXT BELOW THE SYSTEM MINIMUM, IN SEVEN PLACES. The design system says "minimum body size
+   is 15px". Onboarding ships: the mode-selection subtitle at `typography.footnote`, its footer at
+   13, "What's the difference?" at 14, the `ModeOptionCard` subtitle at 14, its eyebrow at 12, the
+   "Recommended" badge at 12, and the highlights "Skip" at 14. The smallest legitimate size in
+   this system is `label-bold` 13/600/0.02em, and it is a LABEL, not body copy.
+
+6. THE GRID IS IGNORED ALMOST COMPLETELY. Against "strict 8px grid; 4px only for
+   micro-adjustment", the vertical rhythm reads: welcome 64 / 38 / 6 / 44 / 74 / 18; mode
+   selection 30 / 8 / 28 / 34 / 4; highlights 8 / 4 / 20 / 10. Of those fourteen values, four are
+   multiples of eight. This is the flow that sets a first impression of how carefully the app is
+   built.
+
+7. THREE CONSECUTIVE SCREENS, THREE DIFFERENT TOP TREATMENTS. Welcome has no header and
+   `paddingTop: insets.top + 64`. Mode selection has a 56px header WITH a 1px bottom border and
+   `paddingHorizontal: 12`. Highlights has no header but a right-aligned "Skip" at
+   `insets.top + 8`. Nothing in the flow agrees with anything else about where the top of a
+   screen is.
+
+8. `theme.link` IS NOT IN THE DESIGN SYSTEM. All three screens use it for text links. The palette
+   defines ink, beam, cream and deep blue, and deep blue is reserved for "secondary structure
+   only… never the primary action colour". A link needs a defined value; these frames use **ink
+   #181824**, underlined only where the link sits inside prose.
+
+9. `theme.primary` IS CARRYING NINE JOBS. The back chevron, the mode-card icon, that icon's
+   circle tint, the eyebrow text, the "Recommended" badge fill, the recommended card's border and
+   background wash, the active pagination dot, and all four illustrations. In this system
+   `primary` is ink, so most of those become grey washes of ink — which is nearly right, and it
+   means the illustrations currently have no accent at all.
+
+10. THE RECOMMENDED CARD USES A 2px BORDER AND A 5% WASH. `borderWidth: recommended ? 2 : 1` plus
+    `backgroundColor` at `theme.primary` 5%. The system says hairline outlines at 1px and cards
+    are white on cream. A selected state does need to be visible, so these frames keep a
+    distinction but express it as **ink 1px hairline vs ink 2px hairline plus a beam eyebrow** —
+    no background wash, so the card stays white like every other card in the app.
+
+
+-------------------------------------------------------------------------------
+THE DECISION THIS PATTERN TURNS ON
+-------------------------------------------------------------------------------
+
+ONBOARDING IS THE ONLY FLOW WITH NO USER CONTENT IN IT, AND THAT CHANGES WHAT THE PALETTE IS FOR.
+
+Everywhere else in this app the rule is "the content is the colour": forty-five brand colours are
+the content, so our chrome stays quiet and beam is rationed to almost nothing. On these three
+screens there are no cards yet. Nothing is competing. The quiet exists to protect something that
+is not there.
+
+So this is where the brand speaks in its own voice — and the design system already licenses
+exactly that, in a line nobody has applied: **"Illustrations: flat, two-tone (ink line-work on
+cream) with beam yellow as the single accent."**
+
+Applied concretely, one beam element per illustration and never two:
+
+  the mark         the **ì** — a lowercase i in ink with the grave accent as a short beam-yellow
+                   stroke. Not a credit card, not a wallet, not a generic card glyph.
+  welcome band     three overlapping card outlines in 2px ink line-work, unfilled, the frontmost
+                   carrying a single beam bar where a barcode would sit.
+  highlight 1      four card outlines in ink line-work arranged two-by-two; exactly one is
+                   filled beam. "All your cards in one place" — the beam one is yours.
+  highlight 2      one card outline in ink with ink barcode bars inside it, and a single
+                   beam-yellow horizontal line crossing them: the scan beam, the brand's own
+                   motif, used literally. This is the same verdict as the scanner screen — when
+                   WE are the one reading the code, the beam is ours to draw.
+  highlight 3      two ink arrows, one leaving a card outline and one entering it, with a single
+                   beam accent on the outbound arrowhead. Export and import. NOT a shield —
+                   the copy promises portability, not security.
+
+That is five drawings, at two sizes, in one style, with one accent each. It is a morning's work,
+not a blocked epic.
+
+
+-------------------------------------------------------------------------------
+PROMPT A — WELCOME  (the exemplar)
+-------------------------------------------------------------------------------
+=========== PASTE EVERYTHING BETWEEN THIS LINE AND "END OF PROMPT A" ===========
+
+Design ONE mobile screen at 393x852, light mode: the welcome screen of Cardì, a loyalty card
+wallet. It is the very first screen a new person sees, before they own any cards.
+
+GROUND: cream #F0F0E8 for the whole frame, both system insets included.
+
+SYSTEM INSETS: 59px top carrying the iOS status bar — "9:41" at the left in Inter 15px
+semibold, then signal, wifi and battery icons at the right, all in ink #181824. 34px bottom on
+cream carrying a 140 x 5 fully-rounded pill in ink #181824 at 85% opacity, centred.
+
+NO HEADER. There is no navigation bar, no title bar, no back control and nothing to go back to.
+
+MARGINS: 24px left and right.
+
+1. THE MARK, centred, 64px below the status bar: a 96px fully-round circle filled ink #181824,
+   holding the letter "ì" in white #FFFFFF, Space Grotesk bold at about 44px — a lowercase i
+   with a grave accent. The accent stroke above the i is BEAM #FCCC0C rather than white, and it
+   is the only yellow on this screen. This is the brand's logo: do NOT draw a credit card, a
+   wallet, a card stack, a barcode, a shopping bag or any generic icon in this circle.
+
+2. THE TITLE "Cardì" centred 32px beneath the circle, in Space Grotesk bold 34px, ink #181824.
+   The grave accent on the final ì is beam #FCCC0C; every other letter is ink.
+
+3. THE SUBTITLE "Your loyalty cards, always with you" centred 8px beneath the title, in Inter
+   17px muted #55555F, on one line.
+
+4. THE ILLUSTRATION, centred 48px beneath the subtitle, occupying about 200 x 80: three
+   overlapping loyalty-card outlines drawn as 2px INK #181824 line-work on the cream — outlines
+   only, no fills, no gradients, no shadows, each about 80 x 50 with an 8px radius, fanned so
+   each sits slightly right of and below the one behind it. The frontmost card carries one
+   short horizontal BEAM #FCCC0C bar inside it where a barcode would sit. Flat, two-tone, and
+   the beam bar is the only yellow in the drawing.
+
+5. THE PRIMARY BUTTON, full width between the margins, sitting 72px beneath the illustration:
+   52px tall, filled ink #181824, 12px radius, with "Get Started" centred in Inter 17px semibold
+   white #FFFFFF.
+
+6. BENEATH IT, 16px lower, "I already have an account" centred on a 48px tall target in Inter
+   15px semibold ink #181824. Plain text — no fill, no outline, no underline, no chevron.
+
+Nothing else on the screen. No pagination dots, no skip link, no progress bar, no card grid, no
+photograph, no decorative pattern.
+
+FORBIDDEN: bottom tab bars, floating action buttons, drop shadows, gradients, glassmorphism, a
+device bezel or phone frame around the screen, coral/salmon/terracotta/orange, stock icons of
+credit cards or wallets, and any second use of beam #FCCC0C beyond the accent on the ì, the
+accent in the title and the one bar in the illustration.
+
+TONE
+There are no cards on this screen and nothing competing for attention, which is exactly why it
+is the one place the brand may speak in its own voice. Everything is centred, generously spaced
+and calm. The ì is the whole identity: a dot at rest, a scan beam in motion.
+
+=============================== END OF PROMPT A ===============================
+
+-------------------------------------------------------------------------------
+PROMPT B — MODES  (the only real question we ask)
+-------------------------------------------------------------------------------
+=========== PASTE EVERYTHING BETWEEN THIS LINE AND "END OF PROMPT B" ===========
+
+Design ONE mobile screen at 393x852, light mode: the storage-mode choice in Cardì, a loyalty
+card wallet, shown once during first-run setup.
+
+GROUND: cream #F0F0E8 for the whole frame, both system insets included.
+
+SYSTEM INSETS: 59px top carrying the iOS status bar — "9:41" at the left in Inter 15px
+semibold, then signal, wifi and battery icons at the right, all in ink #181824. 34px bottom on
+cream carrying a 140 x 5 fully-rounded pill in ink #181824 at 85% opacity, centred.
+
+HEADER: 56px tall, flat, on cream, with NO bottom border and NO drop shadow. A back chevron at
+the left on a 48x48 target in ink #181824, the title "Get Started" centred in Inter 17px
+semibold ink #181824, and nothing at the right.
+
+MARGINS: 24px left and right.
+
+1. THE HEADING, centred, 24px below the header, in Space Grotesk bold 24px ink #181824, on two
+   lines broken exactly here:
+       "How would you like"
+       "to use the app?"
+
+2. THE SUBTITLE "You can always change this later in Settings." centred 8px beneath the heading,
+   in Inter 15px muted #55555F.
+
+3. THE FIRST OPTION CARD, 24px below the subtitle, full width between the margins: white
+   #FFFFFF, 16px radius, and a 2px INK #181824 outline — thicker than an ordinary card because
+   this is the recommended choice. NO background tint or wash: the card stays white. Padded 20px
+   all round. Inside it, a row:
+   - at the left, a 48px fully-round tile filled cream #F0F0E8 with a 1px #D6D6CB outline,
+     holding a 24px outline smartphone glyph in ink #181824;
+   - 16px to its right, a column: "Keep cards on this device" in Inter 17px semibold ink
+     #181824; then 4px lower "Fast and private. Your cards stay right here." in Inter 15px muted
+     #55555F; then 8px lower "You can create an account later" in Inter 13px semibold ink
+     #181824 with letter-spacing 0.02em.
+   At the TOP RIGHT corner of this card, a fully-round pill filled BEAM #FCCC0C with
+   "Recommended" in Inter 13px semibold ink #181824, padded 4px top and bottom and 12px left and
+   right. That pill is the only yellow on the screen.
+
+4. THE SECOND OPTION CARD, 16px below the first, full width: white #FFFFFF, 16px radius, a 1px
+   #D6D6CB outline — an ordinary hairline, because this is not the recommended choice. Padded
+   20px all round. Inside it, the same row shape:
+   - a 48px fully-round tile filled cream #F0F0E8 with a 1px #D6D6CB outline, holding a 24px
+     outline cloud-upload glyph in ink #181824;
+   - then "Sync across all devices" in Inter 17px semibold ink #181824; 4px lower "Create a free
+     account to back up and access your cards everywhere." in Inter 15px muted #55555F wrapping
+     to two lines; 8px lower "Free forever" in Inter 13px semibold muted #55555F with
+     letter-spacing 0.02em.
+   NO pill on this card.
+
+5. THE FOOTER, centred 32px below the second card, in Inter 15px muted #55555F, wrapping to two
+   lines: "Your data is always yours. Export or import your cards anytime from Settings."
+
+6. BENEATH IT, 8px lower, "What's the difference?" centred on a 48px tall target in Inter 15px
+   semibold ink #181824 WITH an underline — it sits in prose, so it is marked as a link.
+
+FORBIDDEN: bottom tab bars, floating action buttons, drop shadows, gradients, glassmorphism, a
+device bezel or phone frame around the screen, coral/salmon/terracotta/orange, radio buttons or
+checkboxes on the cards, a background tint or wash on either card, a progress bar, pagination
+dots, and any second use of beam #FCCC0C beyond the "Recommended" pill.
+
+TONE
+This is the only genuine question the app ever asks, and both answers are honest ones — so the
+recommendation is carried by a border weight and one small yellow pill, not by making the other
+option look broken. The two cards are the same shape and the same white.
+
+=============================== END OF PROMPT B ===============================
+
+-------------------------------------------------------------------------------
+PROMPT C — DIFFERENCE  (the sheet behind the link)
+-------------------------------------------------------------------------------
+=========== PASTE EVERYTHING BETWEEN THIS LINE AND "END OF PROMPT C" ===========
+
+Design ONE mobile screen at 393x852, light mode: an explanatory bottom sheet in Cardì, a loyalty
+card wallet, opened by tapping "What's the difference?" on the storage-mode screen.
+
+BEHIND THE SHEET: the storage-mode screen, dimmed. Show a cream #F0F0E8 page carrying, faintly
+visible through the dimming, a 56px header with a back chevron and the centred title "Get
+Started", a two-line centred heading, and the top edge of a white card. Over all of it lay a
+flat black scrim at 40% opacity. Dimmed, NOT blurred — no defocus, no frosted glass, no
+gradient.
+
+SYSTEM INSETS: 59px top carrying the iOS status bar in cream #F0F0E8 because it sits over the
+scrim — "9:41" at the left in Inter 15px semibold, then signal, wifi and battery icons at the
+right. The bottom inset is covered by the sheet; the sheet carries a 140 x 5 fully-rounded pill
+in ink #181824 at 85% opacity, centred in a 34px band at its foot.
+
+THE SHEET, anchored to the bottom edge and about 400px tall: white #FFFFFF, with a 16px radius
+on its TOP two corners only and square bottom corners, no shadow and no outline. Inside it, with
+24px left and right margins:
+
+1. A 36 x 4 fully-rounded grab handle in #D6D6CB, centred, 12px below the sheet's top edge.
+
+2. "What's the difference?" in Space Grotesk bold 24px ink #181824, LEFT-aligned, 24px below the
+   handle.
+
+3. 16px lower, the body in Inter 15px ink #181824 with 22px line height, left-aligned, as three
+   paragraphs separated by 16px:
+   - "Keep cards on this device stores your loyalty cards only on this phone. It's fast,
+     private, and works offline."
+   - "Sync across all devices creates a free account so your cards are backed up and available
+     on any device you sign in to."
+   - "You can switch anytime from Settings."
+
+4. THE BUTTON, full width between the margins, 24px below the last paragraph: 52px tall, filled
+   ink #181824, 12px radius, with "Got it" centred in Inter 17px semibold white #FFFFFF.
+
+FORBIDDEN: bottom tab bars, floating action buttons, drop shadows, gradients, glassmorphism, a
+device bezel or phone frame around the screen, coral/salmon/terracotta/orange, illustrations,
+icons of any kind inside the sheet, a comparison table, a two-column layout, tick marks, and
+beam #FCCC0C anywhere on this frame.
+
+TONE
+Somebody tapped a link because they were unsure, so this sheet answers in plain sentences and
+stops. It is prose, not a feature matrix — a comparison table here would turn a small doubt into
+a decision they feel unqualified to make.
+
+=============================== END OF PROMPT C ===============================
+
+-------------------------------------------------------------------------------
+PROMPT D — HIGHLIGHT, FIRST SLIDE
+-------------------------------------------------------------------------------
+=========== PASTE EVERYTHING BETWEEN THIS LINE AND "END OF PROMPT D" ===========
+
+Design ONE mobile screen at 393x852, light mode: the first slide of a three-slide feature
+carousel in Cardì, a loyalty card wallet, shown at the end of first-run setup.
+
+GROUND: cream #F0F0E8 for the whole frame, both system insets included.
+
+SYSTEM INSETS: 59px top carrying the iOS status bar — "9:41" at the left in Inter 15px
+semibold, then signal, wifi and battery icons at the right, all in ink #181824. 34px bottom on
+cream carrying a 140 x 5 fully-rounded pill in ink #181824 at 85% opacity, centred.
+
+NO HEADER. There is no navigation bar, no title and no back control.
+
+MARGINS: 24px left and right.
+
+1. "Skip" at the TOP RIGHT, 8px below the status bar, on a 48px tall target, in Inter 15px
+   semibold ink #181824. Plain text — no fill, no outline, no underline.
+
+2. THE ILLUSTRATION, centred in the upper half of the remaining space: a 160px fully-round
+   circle filled cream #F0F0E8 with a 1px #D6D6CB outline, holding four loyalty-card outlines
+   drawn as 2px INK #181824 line-work, each about 40 x 28 with a 4px radius, arranged two by two
+   with 8px between them. Exactly ONE of the four — the top left — is FILLED beam #FCCC0C
+   instead of being an outline. Flat, two-tone, no gradients, no shadows.
+
+3. THE TITLE "All your cards in one place" centred 40px beneath the circle, in Space Grotesk
+   bold 24px ink #181824, on one or two lines.
+
+4. THE DESCRIPTION centred 8px beneath the title, in Inter 15px muted #55555F with 22px line
+   height, wrapping to two or three lines: "Store every loyalty card digitally. No more digging
+   through your wallet at the checkout."
+
+5. THE PAGINATION DOTS, centred above the button block: THREE dots in a row with 8px between
+   them. The FIRST is 8px across and filled ink #181824; the second and third are 8px across and
+   filled #D6D6CB. All three are perfect circles.
+
+6. THE BUTTON, full width between the margins, 24px below the dots and sitting directly above
+   the bottom inset: 52px tall, filled ink #181824, 12px radius, with "Next" centred in Inter
+   17px semibold white #FFFFFF.
+
+FORBIDDEN: bottom tab bars, floating action buttons, drop shadows, gradients, glassmorphism, a
+device bezel or phone frame around the screen, coral/salmon/terracotta/orange, a shield or
+padlock or tick-in-a-circle glyph, stock icons of credit cards or wallets, arrows at the left
+and right edges, a progress bar, and any second use of beam #FCCC0C beyond the one filled card
+in the illustration.
+
+TONE
+One idea per slide, said once. The picture carries the promise and the beam card is the point:
+out of a wallet full of plastic, one of them is the one you need, and the app knows which.
+
+=============================== END OF PROMPT D ===============================
+
+-------------------------------------------------------------------------------
+PROMPT E — HIGHLIGHT, LAST SLIDE
+-------------------------------------------------------------------------------
+=========== PASTE EVERYTHING BETWEEN THIS LINE AND "END OF PROMPT E" ===========
+
+Design ONE mobile screen at 393x852, light mode: the THIRD and final slide of a three-slide
+feature carousel in Cardì, a loyalty card wallet, shown at the end of first-run setup.
+
+GROUND: cream #F0F0E8 for the whole frame, both system insets included.
+
+SYSTEM INSETS: 59px top carrying the iOS status bar — "9:41" at the left in Inter 15px
+semibold, then signal, wifi and battery icons at the right, all in ink #181824. 34px bottom on
+cream carrying a 140 x 5 fully-rounded pill in ink #181824 at 85% opacity, centred.
+
+NO HEADER. There is no navigation bar, no title and no back control.
+
+MARGINS: 24px left and right.
+
+1. "Skip" at the TOP RIGHT, 8px below the status bar, on a 48px tall target, in Inter 15px
+   semibold ink #181824. Plain text — no fill, no outline, no underline.
+
+2. THE ILLUSTRATION, centred in the upper half of the remaining space: a 160px fully-round
+   circle filled cream #F0F0E8 with a 1px #D6D6CB outline, holding a portability mark drawn as
+   2px INK #181824 line-work — one loyalty-card outline about 56 x 36 with a 4px radius, with an
+   arrow leaving it to the upper right and a second arrow entering it from the lower left. The
+   head of the OUTBOUND arrow is filled BEAM #FCCC0C; everything else in the drawing is ink.
+   This is export and import. Do NOT draw a shield, a padlock, a tick in a circle, a fingerprint
+   or any security symbol — the promise here is that the data is portable, not that it is
+   guarded.
+
+3. THE TITLE "Your data, your rules" centred 40px beneath the circle, in Space Grotesk bold 24px
+   ink #181824.
+
+4. THE DESCRIPTION centred 8px beneath the title, in Inter 15px muted #55555F with 22px line
+   height, wrapping to two or three lines: "Export and import your cards anytime. No lock-in, no
+   hidden fees. Your cards belong to you."
+
+5. THE PAGINATION DOTS, centred above the button block: THREE dots in a row with 8px between
+   them. The FIRST and SECOND are 8px across and filled #D6D6CB; the THIRD is 8px across and
+   filled ink #181824 — the last slide is the active one. All three are perfect circles.
+
+6. THE BUTTON, full width between the margins, 24px below the dots and sitting directly above
+   the bottom inset: 52px tall, filled ink #181824, 12px radius, with "Let's go!" centred in
+   Inter 17px semibold white #FFFFFF. The label is "Let's go!" on this slide, never "Next" —
+   there is nothing after it.
+
+FORBIDDEN: bottom tab bars, floating action buttons, drop shadows, gradients, glassmorphism, a
+device bezel or phone frame around the screen, coral/salmon/terracotta/orange, a shield or
+padlock or tick-in-a-circle glyph, a cloud icon, a progress bar, and any second use of beam
+#FCCC0C beyond the outbound arrowhead in the illustration.
+
+TONE
+The last thing said before the wallet opens is the thing most apps do not say: you can leave, and
+take everything with you. The beam is on the arrow going OUT, which is the half of that promise
+nobody else makes.
+
+=============================== END OF PROMPT E ===============================
