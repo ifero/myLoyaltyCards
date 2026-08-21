@@ -303,6 +303,26 @@ real beam comes from the scanner at the till. On this screen the app's job is to
 perfect white field and get out of the way. The beam motif belongs to the logo, the splash,
 focus rings and loading states — never to the barcode.
 
+### The beam rule, both halves
+
+The prohibition above is only half a rule, and half a rule invites the wrong reading — that
+because the brand's ornament _is_ a scan beam, a beam at the till would be on-brand. It would
+not. The rule turns on **which way the light is travelling**:
+
+| the barcode is…                                    | the beam                                                                         |
+| -------------------------------------------------- | -------------------------------------------------------------------------------- |
+| **displayed** — your card held up at the checkout  | **NEVER.** Nothing overlays the code, and the real beam comes from their scanner |
+| **read** — someone else's code, through our camera | **REQUIRED.** We are the scanner, so the beam is ours to draw                    |
+
+So the same 2px `#FCCC0C` line is forbidden on `barcode/[id]` and mandatory on
+`add-card/scan`. Same mark, opposite verdict, and the deciding question is never "is this
+on-brand?" but "who is doing the scanning?"
+
+Across the whole system beam is drawn in exactly three places, and a fourth is a bug:
+the scan line and the banner links on our own viewfinder, and a filled favourite star. It
+appears nowhere on the flash-at-checkout screen — not as a line, not as a tint, not on the
+insets, not on the dismiss hint.
+
 ### Input fields
 
 1px outline, 12px radius, label **always visible above** the field (never floating), 48px
