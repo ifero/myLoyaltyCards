@@ -1,0 +1,514 @@
+CARDÌ — THE ACCOUNT PATTERN, SIX FRAMES
+=======================================
+
+Everything to do with having an account. It looks like six screens and it is ONE SHAPE with five
+fillings — the code already made that reduction, and nobody had noticed.
+
+  A. SIGN IN         — the exemplar. Two fields, one link, one button, one way out.
+  B. CREATE ACCOUNT  — the longest form: strength meter and a consent checkbox.
+  C. FORGOT PASSWORD — the shortest. One field.
+  D. CODE            — the 8-digit code, with a resend cooldown. Serves TWO routes.
+  E. NEW PASSWORD    — two fields and the strength meter.
+  F. REQUEST FAILED  — the error idiom, which is the decision this pattern turns on.
+
+Every prompt below is LITERALLY STANDALONE: it repeats the chrome and the content in full and
+refers to nothing outside its delimiters. Paste one whole block. Write every correction as a
+NUMBERED DEFECT.
+
+Screen source of truth: features/auth/SignInScreen.tsx, CreateAccountScreen.tsx,
+ForgotPasswordScreen.tsx, VerifyEmailScreen.tsx, NewPasswordScreen.tsx and the 13-line
+RecoveryOtpScreen.tsx; shared components in features/auth/components/ — AuthScreenLayout,
+AppIconHeader, AuthLink, ErrorBanner, PasswordInput, PasswordStrengthIndicator. Strings in
+shared/i18n/locales/en.ts under `auth`.
+
+
+-------------------------------------------------------------------------------
+WHAT READING THE CODE TURNED UP
+-------------------------------------------------------------------------------
+
+1. AUTH IS ALREADY ONE PATTERN, AND THE CODE GOT THERE FIRST.
+   `AuthScreenLayout` is a single shape: a keyboard-aware scroll view,
+   `paddingHorizontal: layout.screenHorizontalMargin`, an optional app-icon circle, an optional
+   centred `title1` heading, an optional `subheadline` subtitle, then `children` — vertically
+   centred by default. All five screens are that layout plus a different `children` block,
+   sharing `AuthLink`, `ErrorBanner`, `PasswordInput` and `PasswordStrengthIndicator`.
+
+   It is also **already on the correct 24px margin**, because it reads the token rather than a
+   literal. Nothing in this pattern needs the margin fix that the rest of the app needs.
+
+2. AND IT IS FIVE SCREENS, NOT SIX. `RecoveryOtpScreen.tsx` is thirteen lines:
+   `const RecoveryOtpScreen = () => <VerifyEmailScreen purpose="recovery" />`. The verify-email
+   and password-recovery screens are one component with a prop — which is why
+   `VerifyEmailScreen` is 552 lines while nothing else in the folder passes 300.
+
+3. THERE IS A SECOND STOCK-ICON PLACEHOLDER, AND IT IS A DIFFERENT ONE.
+   `AppIconHeader` renders `MaterialCommunityIcons name="card-account-details-outline"` at 36px
+   inside an 80px circle filled `theme.primary` at 10%. Onboarding's `BrandedIcon` renders
+   `MaterialIcons name="credit-card"` at 34px inside a 100px circle.
+
+   So the app carries **two different generic glyphs standing in for a logo it does not have**,
+   in two different flows, at two different sizes. The onboarding spec called its version the
+   highest-leverage fix in that flow; this is the same fix, and finding the second one is the
+   argument for drawing the ì once as a real asset rather than patching each site.
+
+4. THE ERROR IDIOM CONTRADICTS THE FORM PATTERN, AND BOTH SIDES ARE RIGHT.
+   `stitch-prompts-form-states.txt` is explicit, and it was accepted: a field error is a 1px
+   `#C41E1E` outline plus 13px helper text below, and — quoting it — "do not add an error icon
+   inside the field, and do not tint the field's fill", "do not add a summary banner at the top
+   of the screen".
+
+   `ErrorBanner` is exactly what that forbids: a summary banner at the top of the form, with a
+   fill tinted `theme.error` at 8% and an `error-outline` icon.
+
+   The rule needed a direction, the same way the beam rule and the quiet zone did:
+
+     a VALIDATION error   belongs to a FIELD. "Email is required." The field is what is wrong,
+                          so the field carries it — 1px #C41E1E outline, 13px helper beneath,
+                          no icon, no fill tint, and never more than one field at a time.
+     a REQUEST error      belongs to the SUBMISSION. "Unable to connect." "Incorrect email or
+                          password." There is no field to attach a dropped connection to, so
+                          it needs one banner above the form. The form spec's prohibition was
+                          written about validation and was never tested against a server reply.
+
+   **The banner stays, and it loses the tint and the icon.** On cream, the system's plate is a
+   white card with a hairline — so the request-error banner is a white #FFFFFF card with a 1px
+   `#C41E1E` outline and the message in `#C41E1E`. That honours "do not tint the fill" while
+   allowing the banner the form spec forbade, and it keeps `#C41E1E` to two uses: the outline
+   and the sentence.
+
+5. A NETWORK FAILURE CURRENTLY REDDENS BOTH FIELDS. `SignInScreen` computes
+   `hasFormError = Boolean(error)` and passes `hasError={hasFormError}` to **both** the email
+   field and the password field. So "Unable to connect. Check your internet and try again."
+   marks your email address and your password as invalid, though neither is.
+
+   That contradicts the form spec's "exactly one field is in error", and it is wrong on its own
+   terms: a dropped connection is not a claim about your typing. In these frames a request error
+   colours the banner and nothing else.
+
+6. BODY COPY BELOW THE MINIMUM, AGAIN, IN THE TWO MOST-READ COMPONENTS. `AuthLink` sets the
+   whole line — "Don't have an account? Create one" — at `typography.footnote`, and `ErrorBanner`
+   sets its message at `typography.footnote`. The system's minimum body size is 15px and its
+   smallest legitimate size is `label-bold` 13px, which is a LABEL. An error message is the copy
+   a person reads most carefully in the whole app, and it is set smaller than everything else.
+
+7. `theme.link` — THIRD FLOW, STILL NOT IN THE PALETTE. Onboarding uses it, auth uses it for
+   "Forgot password?", for the action half of every `AuthLink`, and for the recovery links. The
+   palette defines ink, beam, cream and deep blue; deep blue is "secondary structure only… never
+   the primary action colour". These frames use **ink #181824** for links, underlined only inside
+   prose.
+
+8. THE TWO CODE SCREENS DUPLICATE TWELVE STRINGS. `auth.verifyEmail` and `auth.recoveryOtp` are
+   byte-identical apart from `heading` and `subtitle` — confirm, resendCode, resendIn,
+   wrongEmail, goBack, incorrectCode, expiredCode, verifyUnavailable, resendFailure,
+   resendSuccess. One shared component reads from two copied string sets, so every copy fix has
+   to be made twice and there is no test that they agree.
+
+9. THE PASSWORD RULE IS STATED THREE TIMES, IN THREE WORDINGS.
+   `placeholders.newPassword` = "Min 8 chars, 1 letter, 1 number";
+   `validation.passwordRule` = "Min 8 characters, at least one letter and one number.";
+   `createAccount.passwordRequirements` = "Password must be at least 8 characters with at least
+   one letter and one number." Same rule, three registers. The frames use the placeholder for
+   the field and the validation string for the error, and drop the third.
+
+10. THE STRENGTH METER IS THE ONE PLACE A THIRD COLOUR IS UNAVOIDABLE.
+    `getPasswordStrength` returns weak / fair / strong, and a meter needs three distinguishable
+    states. The palette has no "good" colour: beam is the signature and `#C41E1E` is failure.
+    These frames use **ink at three weights of a bar** — one, two or three filled segments in
+    ink #181824 against #D6D6CB — so strength is carried by COUNT rather than by hue. That keeps
+    the system honest and it also survives colour-blindness, which a red/amber/green meter does
+    not.
+
+
+-------------------------------------------------------------------------------
+COMMON SHAPE — for humans reading this file, not for pasting
+-------------------------------------------------------------------------------
+
+Every frame: cream #F0F0E8 ground, 59px status bar in ink, 34px home indicator, 24px margins, no
+header bar and no title bar — the app icon and the heading do that job. Content is centred
+vertically. The stack is always: icon, heading, subtitle, [banner], fields, [link], button,
+footer link. A 52px ink button with white 17px semibold type. Fields are 48px minimum, white,
+12px radius, 1px #D6D6CB outline, label always visible above.
+
+
+-------------------------------------------------------------------------------
+PROMPT A — SIGN IN  (the exemplar)
+-------------------------------------------------------------------------------
+=========== PASTE EVERYTHING BETWEEN THIS LINE AND "END OF PROMPT A" ===========
+
+Design ONE mobile screen at 393x852, light mode: the sign-in screen of Cardì, a loyalty card
+wallet.
+
+GROUND: cream #F0F0E8 for the whole frame, both system insets included.
+
+SYSTEM INSETS: 59px top carrying the iOS status bar — "9:41" at the left in Inter 15px
+semibold, then signal, wifi and battery icons at the right, all in ink #181824. 34px bottom on
+cream carrying a 140 x 5 fully-rounded pill in ink #181824 at 85% opacity, centred.
+
+NO HEADER. There is no navigation bar, no title bar and no back chevron. The mark and the
+heading do that job.
+
+MARGINS: 24px left and right. The whole content block is centred vertically in the frame.
+
+1. THE MARK, centred: an 80px fully-round circle filled ink #181824, holding the letter "ì" in
+   white #FFFFFF, Space Grotesk bold at about 36px — a lowercase i whose grave accent above it
+   is a short stroke in BEAM #FCCC0C. That accent is the only yellow on this screen. Do NOT draw
+   a credit card, an ID card, a wallet, a padlock, a person or any generic icon in this circle.
+
+2. THE HEADING "Welcome Back" centred 32px beneath the circle, in Space Grotesk bold 24px ink
+   #181824.
+
+3. THE SUBTITLE "Sign in to sync your loyalty cards across devices" centred 8px beneath the
+   heading, in Inter 15px muted #55555F, wrapping to two lines.
+
+4. THE EMAIL FIELD, 32px below the subtitle, full width between the margins:
+   - the label "Email" ABOVE the field in Inter 13px semibold ink #181824, letter-spacing
+     0.02em, 8px above it. The label is always visible; it never floats into the field;
+   - the field itself 52px tall, white #FFFFFF, 12px radius, a 1px #D6D6CB outline, with the
+     placeholder "you@example.com" in Inter 15px muted #55555F, padded 16px left and right.
+
+5. THE PASSWORD FIELD, 16px below, the same shape: label "Password", placeholder "Your
+   password", and at the RIGHT INSIDE EDGE of the field a 24px outline eye glyph in muted
+   #55555F on a 48x48 target — the show/hide toggle. No other adornment.
+
+6. "Forgot password?" 8px below the password field, RIGHT-ALIGNED, on a 48px tall target, in
+   Inter 15px semibold ink #181824. Plain text: no fill, no outline, no underline.
+
+7. THE PRIMARY BUTTON, full width, 24px below that: 52px tall, filled ink #181824, 12px radius,
+   with "Sign In" centred in Inter 17px semibold white #FFFFFF.
+
+8. THE FOOTER, centred 16px below the button, on a 48px tall target: "Don't have an account?" in
+   Inter 15px muted #55555F followed by "Create one" in Inter 15px semibold ink #181824 on the
+   same line. Only the second half is the link, and it carries no underline.
+
+Nothing else. No social sign-in buttons, no "or continue with" divider, no remember-me
+checkbox, no biometric prompt, no error banner, no pagination, no illustration.
+
+FORBIDDEN: bottom tab bars, floating action buttons, drop shadows, gradients, glassmorphism, a
+device bezel or phone frame around the screen, coral/salmon/terracotta/orange, tinted field
+fills, floating or animated labels, a divider line between fields, and any second use of beam
+#FCCC0C beyond the accent on the ì.
+
+TONE
+Signing in is a chore standing between someone and their cards, so the screen is two fields and
+a button and nothing else. The only ornament is the accent on the ì.
+
+=============================== END OF PROMPT A ===============================
+
+-------------------------------------------------------------------------------
+PROMPT B — CREATE ACCOUNT  (the longest form)
+-------------------------------------------------------------------------------
+=========== PASTE EVERYTHING BETWEEN THIS LINE AND "END OF PROMPT B" ===========
+
+Design ONE mobile screen at 393x852, light mode: the create-account screen of Cardì, a loyalty
+card wallet. A password has been typed, so the strength meter is showing.
+
+GROUND: cream #F0F0E8 for the whole frame, both system insets included.
+
+SYSTEM INSETS: 59px top carrying the iOS status bar — "9:41" at the left in Inter 15px
+semibold, then signal, wifi and battery icons at the right, all in ink #181824. 34px bottom on
+cream carrying a 140 x 5 fully-rounded pill in ink #181824 at 85% opacity, centred.
+
+NO HEADER. There is no navigation bar, no title bar and no back chevron.
+
+MARGINS: 24px left and right. The content starts near the top rather than centred, because this
+form is tall.
+
+1. THE MARK, centred 8px below the status bar: an 80px fully-round circle filled ink #181824
+   holding the letter "ì" in white #FFFFFF, Space Grotesk bold about 36px, its grave accent a
+   short stroke in BEAM #FCCC0C.
+
+2. THE HEADING "Create Account" centred 24px beneath the circle, in Space Grotesk bold 24px ink
+   #181824. Then the subtitle "Join My Loyalty Cards" centred 8px lower, in Inter 15px muted
+   #55555F.
+
+3. THREE FIELDS, the first 24px below the subtitle and 16px between each, all full width, each
+   with its label ABOVE in Inter 13px semibold ink #181824 letter-spacing 0.02em, and each 52px
+   tall, white #FFFFFF, 12px radius, 1px #D6D6CB outline, placeholder in Inter 15px muted
+   #55555F:
+       "Email"            / "you@example.com"
+       "Password"         / "Min 8 chars, 1 letter, 1 number"   — with a 24px outline eye glyph
+                            in muted #55555F at the right inside edge on a 48x48 target
+       "Confirm Password" / "Re-enter your password"             — same eye glyph
+
+4. THE STRENGTH METER, 8px below the password field and above the confirm field: three equal
+   segment bars in a row, each about 1/3 of the field width minus gaps, 4px tall, fully rounded,
+   with 4px between them. TWO segments are filled ink #181824 and the third is #D6D6CB. To
+   their right, the word "Fair" in Inter 13px semibold ink #181824.
+
+   STRENGTH IS SHOWN BY THE NUMBER OF FILLED SEGMENTS, NOT BY COLOUR. Do NOT make the bars red,
+   amber, orange or green, and do not use a colour ramp — one filled segment is weak, two is
+   fair, three is strong, and all filled segments are ink.
+
+5. THE CONSENT ROW, 16px below the confirm field: a 24px square checkbox with a 1px #D6D6CB
+   outline, 4px radius, UNCHECKED and unfilled, at the left; then 12px to its right, on one or
+   two lines, "I agree to the " in Inter 15px muted #55555F followed by "Privacy Policy" in
+   Inter 15px semibold ink #181824 WITH an underline, since it sits inside a sentence.
+
+6. THE PRIMARY BUTTON, full width, 24px below the consent row: 52px tall, filled ink #181824,
+   12px radius, with "Create Account" centred in Inter 17px semibold white #FFFFFF.
+
+7. THE FOOTER, centred 16px below the button on a 48px tall target: "Already have an account?"
+   in Inter 15px muted #55555F followed by "Sign in" in Inter 15px semibold ink #181824.
+
+Nothing else. No social sign-up buttons, no "or" divider, no captcha, no name field, no
+marketing-consent checkbox, no password-rules checklist with tick marks.
+
+FORBIDDEN: bottom tab bars, floating action buttons, drop shadows, gradients, glassmorphism, a
+device bezel or phone frame around the screen, coral/salmon/terracotta/orange, tinted field
+fills, a red/amber/green strength meter, a percentage or score next to the meter, and any second
+use of beam #FCCC0C beyond the accent on the ì.
+
+TONE
+This is the longest form in the app and the only one that asks for consent, so it stays plain and
+finishes quickly. The strength meter counts rather than judges: no traffic lights.
+
+=============================== END OF PROMPT B ===============================
+
+-------------------------------------------------------------------------------
+PROMPT C — FORGOT PASSWORD  (one field)
+-------------------------------------------------------------------------------
+=========== PASTE EVERYTHING BETWEEN THIS LINE AND "END OF PROMPT C" ===========
+
+Design ONE mobile screen at 393x852, light mode: the forgot-password screen of Cardì, a loyalty
+card wallet.
+
+GROUND: cream #F0F0E8 for the whole frame, both system insets included.
+
+SYSTEM INSETS: 59px top carrying the iOS status bar — "9:41" at the left in Inter 15px
+semibold, then signal, wifi and battery icons at the right, all in ink #181824. 34px bottom on
+cream carrying a 140 x 5 fully-rounded pill in ink #181824 at 85% opacity, centred.
+
+NO HEADER. There is no navigation bar and no title bar. The way back is the link at the foot.
+
+MARGINS: 24px left and right. The whole content block is centred vertically in the frame.
+
+1. THE MARK, centred: an 80px fully-round circle filled ink #181824 holding the letter "ì" in
+   white #FFFFFF, Space Grotesk bold about 36px, its grave accent a short stroke in BEAM
+   #FCCC0C. That accent is the only yellow on this screen.
+
+2. THE HEADING "Forgot Password?" centred 32px beneath the circle, in Space Grotesk bold 24px
+   ink #181824.
+
+3. THE SUBTITLE "No worries. Enter your email and we'll send you a reset code." centred 8px
+   beneath the heading, in Inter 15px muted #55555F, wrapping to two lines.
+
+4. THE EMAIL FIELD, 32px below the subtitle, full width: the label "Email" above it in Inter
+   13px semibold ink #181824 letter-spacing 0.02em, then the field 52px tall, white #FFFFFF,
+   12px radius, 1px #D6D6CB outline, placeholder "you@example.com" in Inter 15px muted #55555F.
+
+5. THE PRIMARY BUTTON, full width, 24px below the field: 52px tall, filled ink #181824, 12px
+   radius, with "Send Reset Code" centred in Inter 17px semibold white #FFFFFF.
+
+6. "Back to Sign In" centred 16px below the button, on a 48px tall target, in Inter 15px
+   semibold ink #181824. Plain text: no fill, no outline, no underline, no chevron.
+
+Nothing else. No progress indicator, no step counter, no illustration, no help text about spam
+folders, no alternative recovery method.
+
+FORBIDDEN: bottom tab bars, floating action buttons, drop shadows, gradients, glassmorphism, a
+device bezel or phone frame around the screen, coral/salmon/terracotta/orange, tinted field
+fills, and any second use of beam #FCCC0C beyond the accent on the ì.
+
+TONE
+One field and one button. "No worries" is the only reassurance offered and it is enough — a
+screen that apologises at length makes a forgotten password feel like a problem.
+
+=============================== END OF PROMPT C ===============================
+
+-------------------------------------------------------------------------------
+PROMPT D — CODE  (8 digits, with the resend cooldown)
+-------------------------------------------------------------------------------
+=========== PASTE EVERYTHING BETWEEN THIS LINE AND "END OF PROMPT D" ===========
+
+Design ONE mobile screen at 393x852, light mode: the email-verification screen of Cardì, a
+loyalty card wallet, where an 8-digit code is entered. A code has just been sent, so the resend
+control is counting down.
+
+GROUND: cream #F0F0E8 for the whole frame, both system insets included.
+
+SYSTEM INSETS: 59px top carrying the iOS status bar — "9:41" at the left in Inter 15px
+semibold, then signal, wifi and battery icons at the right, all in ink #181824. 34px bottom on
+cream carrying a 140 x 5 fully-rounded pill in ink #181824 at 85% opacity, centred.
+
+NO HEADER. There is no navigation bar and no title bar. The way back is the link at the foot.
+
+MARGINS: 24px left and right. The whole content block is centred vertically in the frame.
+
+1. THE MARK, centred: an 80px fully-round circle filled ink #181824 holding the letter "ì" in
+   white #FFFFFF, Space Grotesk bold about 36px, its grave accent a short stroke in BEAM
+   #FCCC0C. That accent is the only yellow on this screen.
+
+2. THE HEADING "Verify your email" centred 32px beneath the circle, in Space Grotesk bold 24px
+   ink #181824.
+
+3. THE SUBTITLE centred 8px beneath it, in Inter 15px muted #55555F, on one or two lines: "We
+   sent an 8-digit code to " followed by "you@example.com" in Inter 15px semibold ink #181824 —
+   the address is emphasised because it is the thing worth checking.
+
+4. THE CODE FIELD, 32px below the subtitle, full width between the margins: ONE field, 56px
+   tall, white #FFFFFF, 12px radius, a 1px #D6D6CB outline, holding "20461532" in JetBrains
+   Mono 22px ink #181824, CENTRED, with letter-spacing about 8px so the digits are countable at
+   a glance. No label above it.
+
+   ONE FIELD, NOT EIGHT BOXES. Do not draw eight separate digit cells, an underline per digit, a
+   dashed group or a split 4+4 layout: this is a code pasted from an email as often as it is
+   typed, and eight boxes fight the paste.
+
+5. THE RESEND ROW, centred 16px below the field, in Inter 15px muted #55555F: "Resend in 0:42".
+   It is TEXT, not a button — it is counting down and cannot be pressed yet. No spinner, no
+   progress ring, no circular timer.
+
+6. THE PRIMARY BUTTON, full width, 24px below that: 52px tall, filled ink #181824, 12px radius,
+   with "Confirm" centred in Inter 17px semibold white #FFFFFF.
+
+7. THE FOOTER, centred 16px below the button on a 48px tall target: "Wrong email?" in Inter 15px
+   muted #55555F followed by "Go back" in Inter 15px semibold ink #181824.
+
+Nothing else. No email-app deep link, no "check your spam folder" note, no illustration, no step
+counter, no keyboard drawn on the screen.
+
+FORBIDDEN: bottom tab bars, floating action buttons, drop shadows, gradients, glassmorphism, a
+device bezel or phone frame around the screen, coral/salmon/terracotta/orange, eight separate
+digit boxes, a per-digit underline, tinted field fills, a countdown ring, and any second use of
+beam #FCCC0C beyond the accent on the ì.
+
+TONE
+The person is switching between this screen and their email, so everything here is about getting
+eight digits in and out of the way. The address is the only emphasised thing, because "did it go
+to the right place?" is the one question this screen has to answer.
+
+=============================== END OF PROMPT D ===============================
+
+-------------------------------------------------------------------------------
+PROMPT E — NEW PASSWORD  (two fields and the meter)
+-------------------------------------------------------------------------------
+=========== PASTE EVERYTHING BETWEEN THIS LINE AND "END OF PROMPT E" ===========
+
+Design ONE mobile screen at 393x852, light mode: the set-new-password screen of Cardì, a loyalty
+card wallet, reached after a recovery code was accepted. A strong password has been typed, so the
+meter is full.
+
+GROUND: cream #F0F0E8 for the whole frame, both system insets included.
+
+SYSTEM INSETS: 59px top carrying the iOS status bar — "9:41" at the left in Inter 15px
+semibold, then signal, wifi and battery icons at the right, all in ink #181824. 34px bottom on
+cream carrying a 140 x 5 fully-rounded pill in ink #181824 at 85% opacity, centred.
+
+NO HEADER. There is no navigation bar, no title bar and no back chevron — there is nothing
+useful to go back to at this point in the flow.
+
+MARGINS: 24px left and right. The whole content block is centred vertically in the frame.
+
+1. THE MARK, centred: an 80px fully-round circle filled ink #181824 holding the letter "ì" in
+   white #FFFFFF, Space Grotesk bold about 36px, its grave accent a short stroke in BEAM
+   #FCCC0C. That accent is the only yellow on this screen.
+
+2. THE HEADING "Set New Password" centred 32px beneath the circle, in Space Grotesk bold 24px
+   ink #181824. Then the subtitle "Choose a strong new password for your account." centred 8px
+   lower, in Inter 15px muted #55555F.
+
+3. TWO FIELDS, the first 32px below the subtitle and 16px between them, full width, each with
+   its label ABOVE in Inter 13px semibold ink #181824 letter-spacing 0.02em, each 52px tall,
+   white #FFFFFF, 12px radius, 1px #D6D6CB outline, placeholder in Inter 15px muted #55555F,
+   and each with a 24px outline eye glyph in muted #55555F at the right inside edge on a 48x48
+   target:
+       "New Password"     / "Min 8 chars, 1 letter, 1 number"
+       "Confirm Password" / "Re-enter your new password"
+
+4. THE STRENGTH METER, 8px below the first field and above the confirm field: three equal
+   segment bars in a row, each about 1/3 of the field width minus gaps, 4px tall, fully rounded,
+   4px between them. ALL THREE are filled ink #181824. To their right, the word "Strong" in
+   Inter 13px semibold ink #181824.
+
+   STRENGTH IS SHOWN BY THE NUMBER OF FILLED SEGMENTS, NOT BY COLOUR. Do NOT make the bars red,
+   amber, orange or green, and do not use a colour ramp — all filled segments are ink, and three
+   of three means strong.
+
+5. THE PRIMARY BUTTON, full width, 24px below the confirm field: 52px tall, filled ink #181824,
+   12px radius, with "Update Password" centred in Inter 17px semibold white #FFFFFF.
+
+Nothing else. No footer link, no "back to sign in", no password-rules checklist with tick marks,
+no illustration, no step counter.
+
+FORBIDDEN: bottom tab bars, floating action buttons, drop shadows, gradients, glassmorphism, a
+device bezel or phone frame around the screen, coral/salmon/terracotta/orange, tinted field
+fills, a red/amber/green strength meter, a percentage or score, tick marks beside password
+rules, and any second use of beam #FCCC0C beyond the accent on the ì.
+
+TONE
+The last screen in the recovery flow, and the only one with no way out but forward. Two fields,
+a meter that counts rather than judges, and one button.
+
+=============================== END OF PROMPT E ===============================
+
+-------------------------------------------------------------------------------
+PROMPT F — REQUEST FAILED  (the error idiom)
+-------------------------------------------------------------------------------
+=========== PASTE EVERYTHING BETWEEN THIS LINE AND "END OF PROMPT F" ===========
+
+Design ONE mobile screen at 393x852, light mode: the sign-in screen of Cardì, a loyalty card
+wallet, immediately after the server rejected the attempt.
+
+GROUND: cream #F0F0E8 for the whole frame, both system insets included.
+
+SYSTEM INSETS: 59px top carrying the iOS status bar — "9:41" at the left in Inter 15px
+semibold, then signal, wifi and battery icons at the right, all in ink #181824. 34px bottom on
+cream carrying a 140 x 5 fully-rounded pill in ink #181824 at 85% opacity, centred.
+
+NO HEADER. There is no navigation bar, no title bar and no back chevron.
+
+MARGINS: 24px left and right. The whole content block is centred vertically in the frame.
+
+1. THE MARK, centred: an 80px fully-round circle filled ink #181824 holding the letter "ì" in
+   white #FFFFFF, Space Grotesk bold about 36px, its grave accent a short stroke in BEAM
+   #FCCC0C. That accent is the only yellow on this screen.
+
+2. THE HEADING "Welcome Back" centred 32px beneath the circle, in Space Grotesk bold 24px ink
+   #181824, then the subtitle "Sign in to sync your loyalty cards across devices" centred 8px
+   lower in Inter 15px muted #55555F.
+
+3. THE ERROR BANNER, 32px below the subtitle and ABOVE the fields, full width between the
+   margins: a white #FFFFFF card, 12px radius, with a 1px #C41E1E outline and NO fill tint —
+   the card stays white, not pink and not red-washed. Padded 16px. Inside it, on one or two
+   lines and nothing else, the message "Incorrect email or password. Please try again." in Inter
+   15px #C41E1E.
+
+   NO ICON in this banner: no warning triangle, no circle-with-an-exclamation-mark, no cross.
+   The outline and the sentence are the whole message.
+
+4. THE EMAIL FIELD, 16px below the banner, full width: label "Email" above it in Inter 13px
+   semibold ink #181824 letter-spacing 0.02em, then the field 52px tall, white #FFFFFF, 12px
+   radius, a 1px #D6D6CB OUTLINE — an ordinary hairline, NOT red — holding the typed value
+   "you@example.com" in Inter 15px ink #181824.
+
+5. THE PASSWORD FIELD, 16px below, the same shape and also with an ordinary 1px #D6D6CB
+   outline, holding eight dots as a masked value in ink #181824, and a 24px outline eye glyph in
+   muted #55555F at the right inside edge on a 48x48 target.
+
+   NEITHER FIELD IS IN AN ERROR STATE. This is the point of the frame: the server refused the
+   submission, which says nothing about whether either field was typed correctly, so no red
+   outline, no red label and no red helper text appears on either one. A rejected request
+   belongs to the form, not to a field.
+
+6. "Forgot password?" 8px below the password field, right-aligned, on a 48px tall target, in
+   Inter 15px semibold ink #181824. Plain text.
+
+7. THE PRIMARY BUTTON, full width, 24px below that: 52px tall, filled ink #181824, 12px radius,
+   with "Sign In" centred in Inter 17px semibold white #FFFFFF. Fully enabled — the person can
+   try again immediately.
+
+8. THE FOOTER, centred 16px below the button on a 48px tall target: "Don't have an account?" in
+   Inter 15px muted #55555F followed by "Create one" in Inter 15px semibold ink #181824.
+
+FORBIDDEN: bottom tab bars, floating action buttons, drop shadows, gradients, glassmorphism, a
+device bezel or phone frame around the screen, coral/salmon/terracotta/orange, a pink or red
+tinted banner fill, an icon inside the banner, red outlines on the fields, a toast at the top of
+the screen, a modal dialog, a disabled button, and any use of beam #FCCC0C beyond the accent on
+the ì.
+
+TONE
+`#C41E1E` appears exactly twice — the banner outline and the sentence inside it — and nowhere
+else. The fields are untouched because the server's refusal is not a verdict on the typing, and
+the button is still live because the only useful thing to do is try again.
+
+=============================== END OF PROMPT F ===============================
