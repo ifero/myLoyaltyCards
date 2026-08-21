@@ -323,6 +323,20 @@
          established pattern for the anchored footer.
          ------------------------------------------------------------------ */
 
+      /* ONE ELEMENT PAINTS THE FIELD. The status bar, the header and the hero
+         sit on it transparently.
+
+         An earlier version gave each of the three its own background set to
+         the same value. That leaves faint horizontal seams: adjacent flex
+         items do not land on whole device pixels at fractional ratios, so a
+         hairline of the PARENT's cream leaks through between them. The seam
+         appears precisely because neighbours agree on a colour their parent
+         does not — which is what "three things that match" gets you instead of
+         "three things on one field". */
+      .brand-field {
+        flex: 0 0 auto;
+      }
+
       .cd-body {
         flex: 1 1 auto;
         min-height: 0;
@@ -338,17 +352,6 @@
         display: flex;
         align-items: center;
         justify-content: center;
-      }
-
-      /* Mid-scroll: the band is being consumed from the top. */
-      .hero.is-scrolled {
-        height: 80px;
-        align-items: flex-start;
-        overflow: hidden;
-      }
-
-      .hero.is-scrolled .hero-mark {
-        margin-top: -18px;
       }
 
       /* Stand-in for the real brand SVG from brandLogos.ts, set in the brand's
@@ -507,81 +510,83 @@
   <body>
     <figure class="plate">
       <div class="frame">
-        <div class="safe-top" style="background: #ffcc00; color: var(--ink)">
-          <div class="statusbar" aria-hidden="true" style="color: var(--ink)">
-            <span class="clock">9:41</span>
-            <span class="indicators">
-              <svg width="18" height="12" viewBox="0 0 18 12">
-                <rect x="0" y="8.5" width="3" height="3.5" rx="1" />
-                <rect x="5" y="6" width="3" height="6" rx="1" />
-                <rect x="10" y="3" width="3" height="9" rx="1" />
-                <rect x="15" y="0" width="3" height="12" rx="1" />
-              </svg>
-              <svg
-                width="16"
-                height="12"
-                viewBox="0 0 16 12"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="1.6"
-                stroke-linecap="round"
-              >
-                <path d="M1.2 4.4a10 10 0 0 1 13.6 0" />
-                <path d="M4 7.3a6 6 0 0 1 8 0" />
-                <circle cx="8" cy="10.4" r="1" fill="currentColor" stroke="none" />
-              </svg>
-              <svg width="25" height="12" viewBox="0 0 25 12">
-                <rect
-                  x="0.5"
-                  y="0.5"
-                  width="21"
-                  height="11"
-                  rx="3.2"
+        <div class="brand-field" style="background: #ffcc00">
+          <div class="safe-top" style="color: var(--ink)">
+            <div class="statusbar" aria-hidden="true" style="color: var(--ink)">
+              <span class="clock">9:41</span>
+              <span class="indicators">
+                <svg width="18" height="12" viewBox="0 0 18 12">
+                  <rect x="0" y="8.5" width="3" height="3.5" rx="1" />
+                  <rect x="5" y="6" width="3" height="6" rx="1" />
+                  <rect x="10" y="3" width="3" height="9" rx="1" />
+                  <rect x="15" y="0" width="3" height="12" rx="1" />
+                </svg>
+                <svg
+                  width="16"
+                  height="12"
+                  viewBox="0 0 16 12"
                   fill="none"
                   stroke="currentColor"
-                  stroke-opacity="0.4"
-                />
-                <rect x="2.2" y="2.2" width="14" height="7.6" rx="1.8" />
-                <rect x="22.6" y="4.2" width="1.9" height="3.6" rx="0.95" opacity="0.4" />
-              </svg>
-            </span>
+                  stroke-width="1.6"
+                  stroke-linecap="round"
+                >
+                  <path d="M1.2 4.4a10 10 0 0 1 13.6 0" />
+                  <path d="M4 7.3a6 6 0 0 1 8 0" />
+                  <circle cx="8" cy="10.4" r="1" fill="currentColor" stroke="none" />
+                </svg>
+                <svg width="25" height="12" viewBox="0 0 25 12">
+                  <rect
+                    x="0.5"
+                    y="0.5"
+                    width="21"
+                    height="11"
+                    rx="3.2"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-opacity="0.4"
+                  />
+                  <rect x="2.2" y="2.2" width="14" height="7.6" rx="1.8" />
+                  <rect x="22.6" y="4.2" width="1.9" height="3.6" rx="0.95" opacity="0.4" />
+                </svg>
+              </span>
+            </div>
           </div>
-        </div>
-        <header class="header" style="background: #ffcc00">
-          <button class="icon-target at-start" aria-label="Go back" style="color: var(--ink)">
-            <svg
-              viewBox="0 0 11 20"
-              width="11"
-              height="20"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="1.75"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-            >
-              <path d="M9.5 1.5L1.5 10l8 8.5" />
-            </svg>
-          </button>
-          <span></span>
-          <button class="icon-target at-end" aria-label="Favourite" style="color: var(--ink)">
-            <svg
-              width="24"
-              height="24"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="1.5"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-            >
-              <path d="M12 3.2l2.7 5.5 6 .9-4.3 4.2 1 6-5.4-2.8-5.4 2.8 1-6L3.3 9.6l6-.9z" />
-            </svg>
-          </button>
-        </header>
-        <main class="cd-body">
-          <div class="hero" style="background: #ffcc00">
+          <header class="header">
+            <button class="icon-target at-start" aria-label="Go back" style="color: var(--ink)">
+              <svg
+                viewBox="0 0 11 20"
+                width="11"
+                height="20"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.75"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <path d="M9.5 1.5L1.5 10l8 8.5" />
+              </svg>
+            </button>
+            <span></span>
+            <button class="icon-target at-end" aria-label="Favourite" style="color: var(--ink)">
+              <svg
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.5"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <path d="M12 3.2l2.7 5.5 6 .9-4.3 4.2 1 6-5.4-2.8-5.4 2.8 1-6L3.3 9.6l6-.9z" />
+              </svg>
+            </button>
+          </header>
+          <div class="hero">
             <span class="hero-mark on-light">Esselunga</span>
           </div>
+        </div>
+        <main class="cd-body">
           <div class="cd-inner">
             <h2 class="cd-name">Esselunga</h2>
             <div class="card bc-card">
@@ -668,77 +673,79 @@
 
     <figure class="plate">
       <div class="frame">
-        <div class="safe-top" style="background: #f8de74; color: var(--ink)">
-          <div class="statusbar" aria-hidden="true" style="color: var(--ink)">
-            <span class="clock">9:41</span>
-            <span class="indicators">
-              <svg width="18" height="12" viewBox="0 0 18 12">
-                <rect x="0" y="8.5" width="3" height="3.5" rx="1" />
-                <rect x="5" y="6" width="3" height="6" rx="1" />
-                <rect x="10" y="3" width="3" height="9" rx="1" />
-                <rect x="15" y="0" width="3" height="12" rx="1" />
-              </svg>
-              <svg
-                width="16"
-                height="12"
-                viewBox="0 0 16 12"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="1.6"
-                stroke-linecap="round"
-              >
-                <path d="M1.2 4.4a10 10 0 0 1 13.6 0" />
-                <path d="M4 7.3a6 6 0 0 1 8 0" />
-                <circle cx="8" cy="10.4" r="1" fill="currentColor" stroke="none" />
-              </svg>
-              <svg width="25" height="12" viewBox="0 0 25 12">
-                <rect
-                  x="0.5"
-                  y="0.5"
-                  width="21"
-                  height="11"
-                  rx="3.2"
+        <div class="brand-field" style="background: #f8de74">
+          <div class="safe-top" style="color: var(--ink)">
+            <div class="statusbar" aria-hidden="true" style="color: var(--ink)">
+              <span class="clock">9:41</span>
+              <span class="indicators">
+                <svg width="18" height="12" viewBox="0 0 18 12">
+                  <rect x="0" y="8.5" width="3" height="3.5" rx="1" />
+                  <rect x="5" y="6" width="3" height="6" rx="1" />
+                  <rect x="10" y="3" width="3" height="9" rx="1" />
+                  <rect x="15" y="0" width="3" height="12" rx="1" />
+                </svg>
+                <svg
+                  width="16"
+                  height="12"
+                  viewBox="0 0 16 12"
                   fill="none"
                   stroke="currentColor"
-                  stroke-opacity="0.4"
-                />
-                <rect x="2.2" y="2.2" width="14" height="7.6" rx="1.8" />
-                <rect x="22.6" y="4.2" width="1.9" height="3.6" rx="0.95" opacity="0.4" />
-              </svg>
-            </span>
+                  stroke-width="1.6"
+                  stroke-linecap="round"
+                >
+                  <path d="M1.2 4.4a10 10 0 0 1 13.6 0" />
+                  <path d="M4 7.3a6 6 0 0 1 8 0" />
+                  <circle cx="8" cy="10.4" r="1" fill="currentColor" stroke="none" />
+                </svg>
+                <svg width="25" height="12" viewBox="0 0 25 12">
+                  <rect
+                    x="0.5"
+                    y="0.5"
+                    width="21"
+                    height="11"
+                    rx="3.2"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-opacity="0.4"
+                  />
+                  <rect x="2.2" y="2.2" width="14" height="7.6" rx="1.8" />
+                  <rect x="22.6" y="4.2" width="1.9" height="3.6" rx="0.95" opacity="0.4" />
+                </svg>
+              </span>
+            </div>
           </div>
+          <header class="header">
+            <button class="icon-target at-start" aria-label="Go back" style="color: var(--ink)">
+              <svg
+                viewBox="0 0 11 20"
+                width="11"
+                height="20"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.75"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <path d="M9.5 1.5L1.5 10l8 8.5" />
+              </svg>
+            </button>
+            <h1 class="title cd-title" style="color: var(--ink); opacity: 0.5">Esselunga</h1>
+            <button class="icon-target at-end" aria-label="Favourite" style="color: var(--ink)">
+              <svg
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.5"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <path d="M12 3.2l2.7 5.5 6 .9-4.3 4.2 1 6-5.4-2.8-5.4 2.8 1-6L3.3 9.6l6-.9z" />
+              </svg>
+            </button>
+          </header>
         </div>
-        <header class="header" style="background: #f8de74">
-          <button class="icon-target at-start" aria-label="Go back" style="color: var(--ink)">
-            <svg
-              viewBox="0 0 11 20"
-              width="11"
-              height="20"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="1.75"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-            >
-              <path d="M9.5 1.5L1.5 10l8 8.5" />
-            </svg>
-          </button>
-          <h1 class="title cd-title" style="color: var(--ink); opacity: 0.5">Esselunga</h1>
-          <button class="icon-target at-end" aria-label="Favourite" style="color: var(--ink)">
-            <svg
-              width="24"
-              height="24"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="1.5"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-            >
-              <path d="M12 3.2l2.7 5.5 6 .9-4.3 4.2 1 6-5.4-2.8-5.4 2.8 1-6L3.3 9.6l6-.9z" />
-            </svg>
-          </button>
-        </header>
         <main class="cd-body">
           <div class="cd-inner" style="padding-top: 16px">
             <div class="card bc-card">
@@ -983,72 +990,76 @@
 
     <figure class="plate">
       <div class="frame">
-        <div class="safe-top" style="background: #0c843c; color: var(--white)">
-          <div class="statusbar" aria-hidden="true" style="color: var(--white)">
-            <span class="clock">9:41</span>
-            <span class="indicators">
-              <svg width="18" height="12" viewBox="0 0 18 12">
-                <rect x="0" y="8.5" width="3" height="3.5" rx="1" />
-                <rect x="5" y="6" width="3" height="6" rx="1" />
-                <rect x="10" y="3" width="3" height="9" rx="1" />
-                <rect x="15" y="0" width="3" height="12" rx="1" />
-              </svg>
-              <svg
-                width="16"
-                height="12"
-                viewBox="0 0 16 12"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="1.6"
-                stroke-linecap="round"
-              >
-                <path d="M1.2 4.4a10 10 0 0 1 13.6 0" />
-                <path d="M4 7.3a6 6 0 0 1 8 0" />
-                <circle cx="8" cy="10.4" r="1" fill="currentColor" stroke="none" />
-              </svg>
-              <svg width="25" height="12" viewBox="0 0 25 12">
-                <rect
-                  x="0.5"
-                  y="0.5"
-                  width="21"
-                  height="11"
-                  rx="3.2"
+        <div class="brand-field" style="background: #0c843c">
+          <div class="safe-top" style="color: var(--white)">
+            <div class="statusbar" aria-hidden="true" style="color: var(--white)">
+              <span class="clock">9:41</span>
+              <span class="indicators">
+                <svg width="18" height="12" viewBox="0 0 18 12">
+                  <rect x="0" y="8.5" width="3" height="3.5" rx="1" />
+                  <rect x="5" y="6" width="3" height="6" rx="1" />
+                  <rect x="10" y="3" width="3" height="9" rx="1" />
+                  <rect x="15" y="0" width="3" height="12" rx="1" />
+                </svg>
+                <svg
+                  width="16"
+                  height="12"
+                  viewBox="0 0 16 12"
                   fill="none"
                   stroke="currentColor"
-                  stroke-opacity="0.4"
-                />
-                <rect x="2.2" y="2.2" width="14" height="7.6" rx="1.8" />
-                <rect x="22.6" y="4.2" width="1.9" height="3.6" rx="0.95" opacity="0.4" />
-              </svg>
-            </span>
+                  stroke-width="1.6"
+                  stroke-linecap="round"
+                >
+                  <path d="M1.2 4.4a10 10 0 0 1 13.6 0" />
+                  <path d="M4 7.3a6 6 0 0 1 8 0" />
+                  <circle cx="8" cy="10.4" r="1" fill="currentColor" stroke="none" />
+                </svg>
+                <svg width="25" height="12" viewBox="0 0 25 12">
+                  <rect
+                    x="0.5"
+                    y="0.5"
+                    width="21"
+                    height="11"
+                    rx="3.2"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-opacity="0.4"
+                  />
+                  <rect x="2.2" y="2.2" width="14" height="7.6" rx="1.8" />
+                  <rect x="22.6" y="4.2" width="1.9" height="3.6" rx="0.95" opacity="0.4" />
+                </svg>
+              </span>
+            </div>
           </div>
-        </div>
-        <header class="header" style="background: #0c843c">
-          <button class="icon-target at-start" aria-label="Go back" style="color: var(--white)">
-            <svg
-              viewBox="0 0 11 20"
-              width="11"
-              height="20"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="1.75"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-            >
-              <path d="M9.5 1.5L1.5 10l8 8.5" />
-            </svg>
-          </button>
-          <span></span>
-          <button class="icon-target at-end" aria-label="Favourite" style="color: var(--beam)">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M12 2.6l2.9 5.9 6.5.9-4.7 4.6 1.1 6.4-5.8-3-5.8 3 1.1-6.4-4.7-4.6 6.5-.9z" />
-            </svg>
-          </button>
-        </header>
-        <main class="cd-body">
-          <div class="hero" style="background: #0c843c">
+          <header class="header">
+            <button class="icon-target at-start" aria-label="Go back" style="color: var(--white)">
+              <svg
+                viewBox="0 0 11 20"
+                width="11"
+                height="20"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.75"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <path d="M9.5 1.5L1.5 10l8 8.5" />
+              </svg>
+            </button>
+            <span></span>
+            <button class="icon-target at-end" aria-label="Favourite" style="color: var(--beam)">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                <path
+                  d="M12 2.6l2.9 5.9 6.5.9-4.7 4.6 1.1 6.4-5.8-3-5.8 3 1.1-6.4-4.7-4.6 6.5-.9z"
+                />
+              </svg>
+            </button>
+          </header>
+          <div class="hero">
             <span class="avatar">F</span>
           </div>
+        </div>
+        <main class="cd-body">
           <div class="cd-inner">
             <h2 class="cd-name">Farmacia Centrale</h2>
             <div class="card bc-card">

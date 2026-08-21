@@ -716,11 +716,10 @@ no visible dismiss control.
 
 ### 2026-08-15 — card detail, and where a brand colour stops being content
 
-`stitch-prompts-card-detail.txt` and `frames/cardi-card-detail-frames.html` cover three
-frames: **hero visible**, **header condensed**, **custom card**.
+`stitch-prompts-card-detail.txt` and `frames/cardi-card-detail-frames.html` cover four
+frames: **at rest**, **blending**, **condensed**, **custom card**.
 
-**The header follows the brand — as a transition, not a tint.** Four frames: **at rest**,
-**blending**, **condensed**, **custom card**.
+**The header follows the brand — as a transition, not a tint.**
 
 > **Corrected 2026-08-15, after seeing it drawn.** This section first argued the header should
 > be cream at every scroll position, because navigation should not wear a third-party brand's
@@ -742,6 +741,26 @@ permanent pastel tints. And **the order matters**: the header stays matched to t
 long as any of the band is visible, because they are one field and a header a shade paler than
 the band beneath it reads as a rendering fault. Drafted the other way round it looked broken,
 which is why frame B shows no hero at all.
+
+> **"One unbroken field" turned out to be a fact about the markup, not about the colour
+> values.** The first draft of the HTML gave the status-bar inset, the header and the hero each
+> their own background, every one set to the same brand colour — and it rendered with faint
+> horizontal lines at both boundaries. ifero read them as navigation-bar borders, which is
+> exactly what they looked like.
+>
+> Nothing drew a border. The element edges land on **fractional device pixels** — measured at
+> `.391` on a 2x display — so a hairline of the _parent's_ cream leaked between siblings that
+> agreed with each other but not with what sat behind them. (A computed `outline: 1.5px` on
+> every element was checked and cleared: `outline-style: none`, so it never paints.)
+>
+> The fix is structural rather than a nudge: **one element paints the field and the three sit
+> on it transparently**, so there is no second colour left in that region to leak. The seam was
+> possible only because _"three things that match"_ is a different object from _"three things
+> on one field"_, and the markup was saying the first.
+>
+> **This is a live hazard in the shipped app, not only in the frames.** `headerBg` tints the
+> navigation header and `BrandHero` as two separately-filled views; any layout PR that keeps
+> them separate inherits the same seam. The band wants one filled parent.
 
 The controls flip with luminance — ink on Esselunga's yellow, white on the green accent.
 `shared/theme/luminance.ts` already does this, though it returns **`#1F1F24` rather than ink

@@ -46,33 +46,51 @@ WHAT READING THE CODE TURNED UP
    directly beneath it reads as a rendering fault, not a transition. The blend belongs to the
    tail of the scroll, after the band has gone. Drafted the other way round it looked broken.
 
-3. THE CONTROLS FLIP WITH LUMINANCE, AND THE HELPER IS ALMOST RIGHT.
+3. "ONE UNBROKEN FIELD" IS A FACT ABOUT THE MARKUP, NOT ABOUT THE COLOUR VALUES.
+   The first HTML draft gave the status-bar inset, the header and the hero each their own
+   background, every one set to the same brand colour. It rendered with faint horizontal lines
+   at both boundaries — visible enough that ifero read them as navigation-bar borders. Nothing
+   drew a border. The element edges land on fractional device pixels (measured at .391 on a 2x
+   display), so a hairline of the PARENT's cream leaked between siblings that agreed with each
+   other but not with what was behind them. A computed `outline: 1.5px` on every element was
+   checked and cleared — `outline-style: none`, so it never paints.
+
+   The fix is structural rather than a tweak: ONE element paints the field and the three sit on
+   it transparently. Then there is no second colour in that region left to leak. The seam was
+   possible only because "three things that match" is not the same object as "three things on
+   one field", and the markup was saying the first.
+
+   **This is a live hazard in the shipped app, not only in the frames.** `headerBg` tints the
+   navigation header and `BrandHero` as two separately-filled views; any layout PR that keeps
+   them separate inherits the same seam. The band wants one filled parent.
+
+4. THE CONTROLS FLIP WITH LUMINANCE, AND THE HELPER IS ALMOST RIGHT.
    `shared/theme/luminance.ts` returns `#FFFFFF` below 0.5 luminance and `#1F1F24` above — so
    ink on Esselunga's `#FFCC00` (luminance ≈ 0.79) and white on the `#0C843C` accent
    (≈ 0.40). Correct behaviour, but `#1F1F24` is **not** ink `#181824`. Another near-palette
    value; it should be ink.
 
-4. THE CONDENSED HEADER USES A DROP SHADOW. `headerShadowVisible: isHeaderCondensed`. The
+5. THE CONDENSED HEADER USES A DROP SHADOW. `headerShadowVisible: isHeaderCondensed`. The
    system forbids drop shadows anywhere; a **1px `#D6D6CB` hairline** does the same job and is
    already the established pattern for the anchored footer.
 
-5. THE TITLE IS HIDDEN WITH `fontSize: 0`. At rest the title is `''` at size 0; past the hero
+6. THE TITLE IS HIDDEN WITH `fontSize: 0`. At rest the title is `''` at size 0; past the hero
    it becomes the card name at 17. These frames specify the intent instead: **no title at
    rest, card name once condensed** — and in Inter, not Space Grotesk, because it is a
    third-party brand's name doing navigation duty and the display face is ours.
 
-6. THE FAVOURITE STAR IS `theme.warning` — amber. The same off-palette colour already replaced
+7. THE FAVOURITE STAR IS `theme.warning` — amber. The same off-palette colour already replaced
    on the wallet tile. It becomes **beam `#FCCC0C`** when filled, outline in the foreground
    colour when not. One of the very few places beam legitimately appears: an active state.
 
-7. THERE ARE TWO IMPLEMENTATIONS OF THE BARCODE SCREEN, AND THEY HAVE ALREADY DRIFTED.
+8. THERE ARE TWO IMPLEMENTATIONS OF THE BARCODE SCREEN, AND THEY HAVE ALREADY DRIFTED.
    `BarcodeFlash` serves the `barcode/[id]` route; `FullscreenBarcode` opens from inside
    `CardDetails` by tapping the barcode. Both maximise brightness — the critical behaviour is
    intact in both — but `shadowOpacity` is 0.05 vs **0.08** and radius 8 vs **12**, and both
    use Tailwind `#1F2937`. **These should be one component.** Not a design task; a note for the
    tokens and layout PRs.
 
-8. THE BARCODE GETS A WHITE CARD HERE, AND NO PLATE AT ALL ON THE FULLSCREEN VIEW. It looks
+9. THE BARCODE GETS A WHITE CARD HERE, AND NO PLATE AT ALL ON THE FULLSCREEN VIEW. It looks
    like a contradiction and is not. On cream, and tappable, the card separates the code and
    marks it interactive. On a white field a white plate defines a boundary carrying no
    information. **White card means interactive; bare ground means content.**
@@ -124,16 +142,18 @@ FOREGROUND COLOUR for this frame: ink #181824 — Esselunga's yellow is light.
 1. THE TOP INSET AND THE HEADER ARE BOTH FILLED #FFCC00, Esselunga's own colour, and so is the
    hero beneath them. There must be NO seam, NO divider and NO change of tone between the
    status bar, the header and the hero: one unbroken field of #FFCC00 from the very top of the
-   screen down to the bottom of the hero band. The status-bar glyphs and both header icons sit
-   on it in ink #181824.
+   screen down to the bottom of the hero band. Paint it as ONE filled region
+   containing all three, not three regions that happen to share a value: three separately
+   filled boxes leave visible hairlines where they meet. The status-bar glyphs and
+   both header icons sit on it in ink #181824.
 
 2. NO TITLE in the header at rest. Back chevron left, star OUTLINE right, nothing between them.
 
-3. THE HERO: full-bleed, edge to edge, 200px tall, #FFCC00, with the Esselunga wordmark
+4. THE HERO: full-bleed, edge to edge, 200px tall, #FFCC00, with the Esselunga wordmark
    centred at about 32px in ink #181824 — ink, not white, because the fill is light. No
    gradient, no overlay, no shadow, no rounded corners, no inset.
 
-4. Below the hero the page is cream #F0F0E8. The card name "Esselunga" in Space Grotesk 24px
+5. Below the hero the page is cream #F0F0E8. The card name "Esselunga" in Space Grotesk 24px
    bold ink #181824, 16px above and below. Then THE CONTENT STACK, with "Color" reading
    "Yellow".
 
@@ -154,15 +174,17 @@ FOREGROUND COLOUR for this frame: ink #181824.
 
 1. THE TOP INSET AND THE HEADER ARE BOTH FILLED #F8DE74 — Esselunga's #FFCC00 at half
    strength over cream #F0F0E8. This is a transient blend, halfway through a fade, not a
-   resting colour. Both surfaces carry exactly the same value; there is no seam between them.
+   resting colour. Paint it as ONE filled region
+   containing both, not three regions that happen to share a value: three separately
+   filled boxes leave visible hairlines where they meet.
 
 2. THE TITLE "Esselunga" is centred in the header in Inter 17px semibold ink #181824, at HALF
    opacity — it is fading in.
 
-3. Back chevron left, star OUTLINE right, both ink #181824. NO hairline beneath the header yet
+4. Back chevron left, star OUTLINE right, both ink #181824. NO hairline beneath the header yet
    — the rule belongs to the condensed state.
 
-4. NO HERO. It has scrolled away entirely; there is no band, no sliver and no yellow anywhere
+5. NO HERO. It has scrolled away entirely; there is no band, no sliver and no yellow anywhere
    below the header. The page beneath is cream #F0F0E8 and THE CONTENT STACK begins 16px under
    the header, with "Color" reading "Yellow".
 
@@ -184,11 +206,11 @@ FOREGROUND COLOUR for this frame: ink #181824.
 
 2. THE TITLE "Esselunga" centred in Inter 17px semibold ink #181824, at FULL opacity.
 
-3. Back chevron left, star OUTLINE right, both ink #181824. Beneath the header, a 1px #D6D6CB
+4. Back chevron left, star OUTLINE right, both ink #181824. Beneath the header, a 1px #D6D6CB
    HAIRLINE spanning the full frame width. There is NO drop shadow under this header; the
    hairline is what marks the boundary.
 
-4. No hero. THE CONTENT STACK begins 16px below the hairline, with "Color" reading "Yellow".
+5. No hero. THE CONTENT STACK begins 16px below the hairline, with "Color" reading "Yellow".
 
 Once the hero is gone the brand is gone with it, and the screen is indistinguishable in
 furniture from settings. That is the intended end state.
@@ -206,16 +228,19 @@ and glyph on it flips.
 
 1. THE TOP INSET AND THE HEADER ARE BOTH FILLED #0C843C, the green card accent, and so is the
    hero beneath them: one unbroken field from the top of the screen to the bottom of the band,
-   with no seam. The status-bar glyphs and the back chevron sit on it in WHITE #FFFFFF.
+   with no seam. Paint it as ONE filled region
+   containing all three, not three regions that happen to share a value: three separately
+   filled boxes leave visible hairlines where they meet. The status-bar glyphs and the back
+   chevron sit on it in WHITE #FFFFFF.
 
 2. NO TITLE at rest. Back chevron left in white. On the right, a FILLED star in beam #FCCC0C —
    this card IS a favourite. That star is the only yellow on the screen.
 
-3. THE HERO: full-bleed, 200px tall, #0C843C, holding a centred 80px fully-round circle filled
+4. THE HERO: full-bleed, 200px tall, #0C843C, holding a centred 80px fully-round circle filled
    rgba(255, 255, 255, 0.16) with the single letter "F" in white, Space Grotesk 28px bold. No
    logo — this card has none. No gradient, no shadow, no rounded band corners.
 
-4. Below the hero the page is cream #F0F0E8. The card name "Farmacia Centrale" in Space Grotesk
+5. Below the hero the page is cream #F0F0E8. The card name "Farmacia Centrale" in Space Grotesk
    24px bold ink #181824, 16px above and below. Then THE CONTENT STACK, with "Color" reading
    "Green".
 
