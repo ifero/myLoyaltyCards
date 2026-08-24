@@ -122,6 +122,19 @@ Wave B is blocked until the illustration set exists.
   caption out of the group that centres the brackets. Same class as the standalone-prompt rule:
   when a generator fails the same way repeatedly, the prompt is describing the wrong _kind_ of
   thing.
+- **`colors.primary` CANNOT BE FIXED IN THE ASSET, because it is derived.** Verified against the
+  `update_design_system` schema 2026-08-24: the settable colour fields are `customColor`,
+  `overridePrimaryColor`, `overrideNeutralColor`, `overrideSecondaryColor` and
+  `overrideTertiaryColor` — there is **no `colors.primary`**. That value is computed by
+  Material's tonal engine from `customColor` under `colorVariant`, and `customColor` and
+  `overridePrimaryColor` are **both already `#181824`**. A tonal engine handed a near-black seed
+  floors `primary` to `#000000`; that is the same mechanism already recorded here as "turns beam
+  into brown `#735c00` and ink into pure black", just applied to a field nobody had checked.
+
+  **So there is nothing to repair.** The fix is not an asset edit, it is the prompt rule:
+  **name the hex AND forbid the token**, which is now inside all 31 prompt blocks. Do not spend
+  another session trying to make `primary` come back as `#181824` — it cannot, by construction.
+
 - **Gemini will not draw a real barcode.** Three passes produced three different fakes: a
   `bg-black` box wrapping a white inner with seven `flex-1` bars, a ~40-bar approximation, and
   a completely empty `bg-primary` rectangle. Nothing in a prompt fixes this, because the model
