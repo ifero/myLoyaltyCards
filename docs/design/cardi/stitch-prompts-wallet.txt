@@ -171,6 +171,15 @@ and NO coloured glow of any kind. Draw it fully enabled at full ink #181824.
 
 Leave the space between the subtitle and the hairline EMPTY cream #F0F0E8.
 
+COLOURS ARE LITERAL HEXES, NEVER TOKENS. Write #181824, #FCCC0C, #F0F0E8, #FFFFFF,
+#D6D6CB, #55555F and #C41E1E exactly as written. Do NOT reach for a semantic colour name
+instead — not `primary`, not `on-surface`, not `on-background`, not `surface`, not `outline`,
+not `outline-variant`, and not a Tailwind utility built on one such as text-primary,
+bg-primary, border-primary or border-outline-variant. In this project's theme `primary`
+resolves to #000000 and `on-surface` to #1a1c18, so a screen assembled out of tokens comes
+out in two wrong near-blacks that look almost right and are not. A literal hex survives; a
+token does not.
+
 TONE
 Quiet and unembarrassed. An empty wallet is a beginning, not an error — nothing here is
 apologetic, nothing is grey-on-grey, and nothing is decorated to compensate for the
@@ -210,6 +219,15 @@ reading exactly: "Tap + to add more cards to your wallet"
 Everything below that line is EMPTY cream #F0F0E8, all the way down. There is no footer
 button on this screen, no hairline rule, and no second placeholder tile. The `+` in the
 header is the only way to add a card, and the tip already points at it.
+
+COLOURS ARE LITERAL HEXES, NEVER TOKENS. Write #181824, #FCCC0C, #F0F0E8, #FFFFFF,
+#D6D6CB, #55555F and #C41E1E exactly as written. Do NOT reach for a semantic colour name
+instead — not `primary`, not `on-surface`, not `on-background`, not `surface`, not `outline`,
+not `outline-variant`, and not a Tailwind utility built on one such as text-primary,
+bg-primary, border-primary or border-outline-variant. In this project's theme `primary`
+resolves to #000000 and `on-surface` to #1a1c18, so a screen assembled out of tokens comes
+out in two wrong near-blacks that look almost right and are not. A literal hex survives; a
+token does not.
 
 TONE
 One card should feel like a deliberate beginning, not a half-filled grid. The tile is bigger
@@ -253,6 +271,15 @@ below the controls, in Inter 15px, #55555F, reading exactly:
 Nothing else. No illustration, no icon, no "try again" button, no suggestions list, no
 "clear search" button — the x in the field already does that. Everything below that line is
 EMPTY cream #F0F0E8.
+
+COLOURS ARE LITERAL HEXES, NEVER TOKENS. Write #181824, #FCCC0C, #F0F0E8, #FFFFFF,
+#D6D6CB, #55555F and #C41E1E exactly as written. Do NOT reach for a semantic colour name
+instead — not `primary`, not `on-surface`, not `on-background`, not `surface`, not `outline`,
+not `outline-variant`, and not a Tailwind utility built on one such as text-primary,
+bg-primary, border-primary or border-outline-variant. In this project's theme `primary`
+resolves to #000000 and `on-surface` to #1a1c18, so a screen assembled out of tokens comes
+out in two wrong near-blacks that look almost right and are not. A literal hex survives; a
+token does not.
 
 TONE
 A search miss is not an error and must not be dressed as one. No red, no warning colour, no

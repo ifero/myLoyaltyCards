@@ -84,6 +84,15 @@ HEADER: 56px, flat, NO divider and no shadow beneath it. A back chevron on the l
 
 MARGINS: 24px left and right — the system default. NOT 48: see finding 1.
 
+COLOURS ARE LITERAL HEXES, NEVER TOKENS. Write #181824, #FCCC0C, #F0F0E8, #FFFFFF,
+#D6D6CB, #55555F and #C41E1E exactly as written. Do NOT reach for a semantic colour name
+instead — not `primary`, not `on-surface`, not `on-background`, not `surface`, not `outline`,
+not `outline-variant`, and not a Tailwind utility built on one such as text-primary,
+bg-primary, border-primary or border-outline-variant. In this project's theme `primary`
+resolves to #000000 and `on-surface` to #1a1c18, so a screen assembled out of tokens comes
+out in two wrong near-blacks that look almost right and are not. A literal hex survives; a
+token does not.
+
 FORBIDDEN: bottom tab bars, floating action buttons, drop shadows, gradients, glassmorphism,
 illustrations, coral/salmon/terracotta/orange. Beam #FCCC0C appears NOWHERE in this pattern —
 nothing here is a favourite or a selection, and yellow on a page of prose is noise.

@@ -180,6 +180,15 @@ MARGINS: 24px left and right for everything.
    does not fit above the fold, leave it off the frame entirely rather than compressing the
    list.
 
+COLOURS ARE LITERAL HEXES, NEVER TOKENS. Write #181824, #FCCC0C, #F0F0E8, #FFFFFF,
+#D6D6CB, #55555F and #C41E1E exactly as written. Do NOT reach for a semantic colour name
+instead — not `primary`, not `on-surface`, not `on-background`, not `surface`, not `outline`,
+not `outline-variant`, and not a Tailwind utility built on one such as text-primary,
+bg-primary, border-primary or border-outline-variant. In this project's theme `primary`
+resolves to #000000 and `on-surface` to #1a1c18, so a screen assembled out of tokens comes
+out in two wrong near-blacks that look almost right and are not. A literal hex survives; a
+token does not.
+
 FORBIDDEN: bottom tab bars, floating action buttons, drop shadows, gradients, glassmorphism,
 illustrations, a device bezel or phone frame around the screen, and
 coral/salmon/terracotta/orange. Beam #FCCC0C appears NOWHERE on this screen.
@@ -249,6 +258,15 @@ MARGINS: 24px left and right.
    These are plain rows on the camera feed. No filled buttons, no pills, no card, no panel and
    no plate behind them.
 
+COLOURS ARE LITERAL HEXES, NEVER TOKENS. Write #181824, #FCCC0C, #F0F0E8, #FFFFFF,
+#D6D6CB, #55555F and #C41E1E exactly as written. Do NOT reach for a semantic colour name
+instead — not `primary`, not `on-surface`, not `on-background`, not `surface`, not `outline`,
+not `outline-variant`, and not a Tailwind utility built on one such as text-primary,
+bg-primary, border-primary or border-outline-variant. In this project's theme `primary`
+resolves to #000000 and `on-surface` to #1a1c18, so a screen assembled out of tokens comes
+out in two wrong near-blacks that look almost right and are not. A literal hex survives; a
+token does not.
+
 FORBIDDEN: bottom tab bars, floating action buttons, gradients, glassmorphism, illustrations, a
 device bezel or phone frame around the screen, coral/salmon/terracotta/orange, a torch or flash
 button, a gallery thumbnail, a zoom control, a format selector, a camera-flip button, a
@@ -303,6 +321,15 @@ MARGINS: 24px left and right.
 
 Nothing else on the screen. No viewfinder, no brackets, no beam, no brand pill, no barcode, no
 bottom rows, no illustration and no yellow anywhere.
+
+COLOURS ARE LITERAL HEXES, NEVER TOKENS. Write #181824, #FCCC0C, #F0F0E8, #FFFFFF,
+#D6D6CB, #55555F and #C41E1E exactly as written. Do NOT reach for a semantic colour name
+instead — not `primary`, not `on-surface`, not `on-background`, not `surface`, not `outline`,
+not `outline-variant`, and not a Tailwind utility built on one such as text-primary,
+bg-primary, border-primary or border-outline-variant. In this project's theme `primary`
+resolves to #000000 and `on-surface` to #1a1c18, so a screen assembled out of tokens comes
+out in two wrong near-blacks that look almost right and are not. A literal hex survives; a
+token does not.
 
 FORBIDDEN: bottom tab bars, floating action buttons, drop shadows, gradients, glassmorphism,
 illustrations, a device bezel or phone frame around the screen, and
@@ -361,6 +388,15 @@ with 24px left and right margins:
 
 5. Beneath the last row, "Cancel" centred in Inter 17px ink #181824 on a 48px tall row. Plain
    text: no fill, no outline, no icon.
+
+COLOURS ARE LITERAL HEXES, NEVER TOKENS. Write #181824, #FCCC0C, #F0F0E8, #FFFFFF,
+#D6D6CB, #55555F and #C41E1E exactly as written. Do NOT reach for a semantic colour name
+instead — not `primary`, not `on-surface`, not `on-background`, not `surface`, not `outline`,
+not `outline-variant`, and not a Tailwind utility built on one such as text-primary,
+bg-primary, border-primary or border-outline-variant. In this project's theme `primary`
+resolves to #000000 and `on-surface` to #1a1c18, so a screen assembled out of tokens comes
+out in two wrong near-blacks that look almost right and are not. A literal hex survives; a
+token does not.
 
 FORBIDDEN: bottom tab bars, floating action buttons, drop shadows, gradients, glassmorphism,
 illustrations, a device bezel or phone frame around the screen,
@@ -429,6 +465,15 @@ MARGINS: 24px left and right.
    cream #F0F0E8, and a chevron-right at the far right:
        an image glyph  — "Scan from image"
        a keyboard glyph — "Enter card number manually"
+
+COLOURS ARE LITERAL HEXES, NEVER TOKENS. Write #181824, #FCCC0C, #F0F0E8, #FFFFFF,
+#D6D6CB, #55555F and #C41E1E exactly as written. Do NOT reach for a semantic colour name
+instead — not `primary`, not `on-surface`, not `on-background`, not `surface`, not `outline`,
+not `outline-variant`, and not a Tailwind utility built on one such as text-primary,
+bg-primary, border-primary or border-outline-variant. In this project's theme `primary`
+resolves to #000000 and `on-surface` to #1a1c18, so a screen assembled out of tokens comes
+out in two wrong near-blacks that look almost right and are not. A literal hex survives; a
+token does not.
 
 FORBIDDEN: bottom tab bars, floating action buttons, gradients, glassmorphism, illustrations, a
 device bezel or phone frame around the screen, coral/salmon/terracotta/orange, a red or amber

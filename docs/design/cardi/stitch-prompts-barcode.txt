@@ -92,6 +92,15 @@ fully-rounded pill in ink #181824 at 85% opacity, centred. Both sit on white.
 NO HEADER. There is no navigation bar, no back chevron, no title and no close button. The
 whole screen is the dismiss target.
 
+COLOURS ARE LITERAL HEXES, NEVER TOKENS. Write #181824, #FCCC0C, #F0F0E8, #FFFFFF,
+#D6D6CB, #55555F and #C41E1E exactly as written. Do NOT reach for a semantic colour name
+instead — not `primary`, not `on-surface`, not `on-background`, not `surface`, not `outline`,
+not `outline-variant`, and not a Tailwind utility built on one such as text-primary,
+bg-primary, border-primary or border-outline-variant. In this project's theme `primary`
+resolves to #000000 and `on-surface` to #1a1c18, so a screen assembled out of tokens comes
+out in two wrong near-blacks that look almost right and are not. A literal hex survives; a
+token does not.
+
 FORBIDDEN, and this screen is where it matters most: nothing may overlay the bars — no beam,
 no scan-line, no shimmer, no watermark, no logo, no gradient, no rounded mask cropping the
 code. No drop shadow anywhere, including under the barcode. No card, plate, panel, border or

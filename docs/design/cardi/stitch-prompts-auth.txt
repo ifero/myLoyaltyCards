@@ -114,9 +114,14 @@ WHAT READING THE CODE TURNED UP
     `getPasswordStrength` returns weak / fair / strong, and a meter needs three distinguishable
     states. The palette has no "good" colour: beam is the signature and `#C41E1E` is failure.
     These frames use **ink at three weights of a bar** — one, two or three filled segments in
-    ink #181824 against #D6D6CB — so strength is carried by COUNT rather than by hue. That keeps
-    the system honest and it also survives colour-blindness, which a red/amber/green meter does
-    not.
+    ink #181824 against #D6D6CB — so strength is carried by COUNT rather than by hue.
+
+    > **The accessibility half of this argument was overstated and is withdrawn.** The shipped
+    > meter is a single bar whose WIDTH goes 33% / 66% / 100% as well as changing hue, so it
+    > already carries a non-colour channel and a colour-blind reader is not stuck. The real
+    > objection is narrower and holds on its own: the shipped meter reaches for
+    > `theme.error` / `theme.warning` / `theme.success`, and **`success` is a green that does not
+    > exist in the Cardì palette at all.** Counting in ink needs no new colour.
 
 
 -------------------------------------------------------------------------------
@@ -182,6 +187,15 @@ MARGINS: 24px left and right. The whole content block is centred vertically in t
 
 Nothing else. No social sign-in buttons, no "or continue with" divider, no remember-me
 checkbox, no biometric prompt, no error banner, no pagination, no illustration.
+
+COLOURS ARE LITERAL HEXES, NEVER TOKENS. Write #181824, #FCCC0C, #F0F0E8, #FFFFFF,
+#D6D6CB, #55555F and #C41E1E exactly as written. Do NOT reach for a semantic colour name
+instead — not `primary`, not `on-surface`, not `on-background`, not `surface`, not `outline`,
+not `outline-variant`, and not a Tailwind utility built on one such as text-primary,
+bg-primary, border-primary or border-outline-variant. In this project's theme `primary`
+resolves to #000000 and `on-surface` to #1a1c18, so a screen assembled out of tokens comes
+out in two wrong near-blacks that look almost right and are not. A literal hex survives; a
+token does not.
 
 FORBIDDEN: bottom tab bars, floating action buttons, drop shadows, gradients, glassmorphism, a
 device bezel or phone frame around the screen, coral/salmon/terracotta/orange, tinted field
@@ -253,6 +267,15 @@ form is tall.
 Nothing else. No social sign-up buttons, no "or" divider, no captcha, no name field, no
 marketing-consent checkbox, no password-rules checklist with tick marks.
 
+COLOURS ARE LITERAL HEXES, NEVER TOKENS. Write #181824, #FCCC0C, #F0F0E8, #FFFFFF,
+#D6D6CB, #55555F and #C41E1E exactly as written. Do NOT reach for a semantic colour name
+instead — not `primary`, not `on-surface`, not `on-background`, not `surface`, not `outline`,
+not `outline-variant`, and not a Tailwind utility built on one such as text-primary,
+bg-primary, border-primary or border-outline-variant. In this project's theme `primary`
+resolves to #000000 and `on-surface` to #1a1c18, so a screen assembled out of tokens comes
+out in two wrong near-blacks that look almost right and are not. A literal hex survives; a
+token does not.
+
 FORBIDDEN: bottom tab bars, floating action buttons, drop shadows, gradients, glassmorphism, a
 device bezel or phone frame around the screen, coral/salmon/terracotta/orange, tinted field
 fills, a red/amber/green strength meter, a percentage or score next to the meter, and any second
@@ -304,6 +327,15 @@ MARGINS: 24px left and right. The whole content block is centred vertically in t
 
 Nothing else. No progress indicator, no step counter, no illustration, no help text about spam
 folders, no alternative recovery method.
+
+COLOURS ARE LITERAL HEXES, NEVER TOKENS. Write #181824, #FCCC0C, #F0F0E8, #FFFFFF,
+#D6D6CB, #55555F and #C41E1E exactly as written. Do NOT reach for a semantic colour name
+instead — not `primary`, not `on-surface`, not `on-background`, not `surface`, not `outline`,
+not `outline-variant`, and not a Tailwind utility built on one such as text-primary,
+bg-primary, border-primary or border-outline-variant. In this project's theme `primary`
+resolves to #000000 and `on-surface` to #1a1c18, so a screen assembled out of tokens comes
+out in two wrong near-blacks that look almost right and are not. A literal hex survives; a
+token does not.
 
 FORBIDDEN: bottom tab bars, floating action buttons, drop shadows, gradients, glassmorphism, a
 device bezel or phone frame around the screen, coral/salmon/terracotta/orange, tinted field
@@ -367,6 +399,15 @@ MARGINS: 24px left and right. The whole content block is centred vertically in t
 Nothing else. No email-app deep link, no "check your spam folder" note, no illustration, no step
 counter, no keyboard drawn on the screen.
 
+COLOURS ARE LITERAL HEXES, NEVER TOKENS. Write #181824, #FCCC0C, #F0F0E8, #FFFFFF,
+#D6D6CB, #55555F and #C41E1E exactly as written. Do NOT reach for a semantic colour name
+instead — not `primary`, not `on-surface`, not `on-background`, not `surface`, not `outline`,
+not `outline-variant`, and not a Tailwind utility built on one such as text-primary,
+bg-primary, border-primary or border-outline-variant. In this project's theme `primary`
+resolves to #000000 and `on-surface` to #1a1c18, so a screen assembled out of tokens comes
+out in two wrong near-blacks that look almost right and are not. A literal hex survives; a
+token does not.
+
 FORBIDDEN: bottom tab bars, floating action buttons, drop shadows, gradients, glassmorphism, a
 device bezel or phone frame around the screen, coral/salmon/terracotta/orange, eight separate
 digit boxes, a per-digit underline, tinted field fills, a countdown ring, and any second use of
@@ -429,6 +470,15 @@ MARGINS: 24px left and right. The whole content block is centred vertically in t
 
 Nothing else. No footer link, no "back to sign in", no password-rules checklist with tick marks,
 no illustration, no step counter.
+
+COLOURS ARE LITERAL HEXES, NEVER TOKENS. Write #181824, #FCCC0C, #F0F0E8, #FFFFFF,
+#D6D6CB, #55555F and #C41E1E exactly as written. Do NOT reach for a semantic colour name
+instead — not `primary`, not `on-surface`, not `on-background`, not `surface`, not `outline`,
+not `outline-variant`, and not a Tailwind utility built on one such as text-primary,
+bg-primary, border-primary or border-outline-variant. In this project's theme `primary`
+resolves to #000000 and `on-surface` to #1a1c18, so a screen assembled out of tokens comes
+out in two wrong near-blacks that look almost right and are not. A literal hex survives; a
+token does not.
 
 FORBIDDEN: bottom tab bars, floating action buttons, drop shadows, gradients, glassmorphism, a
 device bezel or phone frame around the screen, coral/salmon/terracotta/orange, tinted field
@@ -499,6 +549,15 @@ MARGINS: 24px left and right. The whole content block is centred vertically in t
 
 8. THE FOOTER, centred 16px below the button on a 48px tall target: "Don't have an account?" in
    Inter 15px muted #55555F followed by "Create one" in Inter 15px semibold ink #181824.
+
+COLOURS ARE LITERAL HEXES, NEVER TOKENS. Write #181824, #FCCC0C, #F0F0E8, #FFFFFF,
+#D6D6CB, #55555F and #C41E1E exactly as written. Do NOT reach for a semantic colour name
+instead — not `primary`, not `on-surface`, not `on-background`, not `surface`, not `outline`,
+not `outline-variant`, and not a Tailwind utility built on one such as text-primary,
+bg-primary, border-primary or border-outline-variant. In this project's theme `primary`
+resolves to #000000 and `on-surface` to #1a1c18, so a screen assembled out of tokens comes
+out in two wrong near-blacks that look almost right and are not. A literal hex survives; a
+token does not.
 
 FORBIDDEN: bottom tab bars, floating action buttons, drop shadows, gradients, glassmorphism, a
 device bezel or phone frame around the screen, coral/salmon/terracotta/orange, a pink or red

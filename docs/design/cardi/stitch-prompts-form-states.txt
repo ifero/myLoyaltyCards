@@ -85,6 +85,15 @@ button up to meet the last field.
 The button is in the page flow: it does not float, it is not a FAB, and it casts no shadow.
 Draw it fully enabled at full ink #181824 — never greyed out, never at reduced opacity.
 
+COLOURS ARE LITERAL HEXES, NEVER TOKENS. Write #181824, #FCCC0C, #F0F0E8, #FFFFFF,
+#D6D6CB, #55555F and #C41E1E exactly as written. Do NOT reach for a semantic colour name
+instead — not `primary`, not `on-surface`, not `on-background`, not `surface`, not `outline`,
+not `outline-variant`, and not a Tailwind utility built on one such as text-primary,
+bg-primary, border-primary or border-outline-variant. In this project's theme `primary`
+resolves to #000000 and `on-surface` to #1a1c18, so a screen assembled out of tokens comes
+out in two wrong near-blacks that look almost right and are not. A literal hex survives; a
+token does not.
+
 TONE
 This screen carries no brand colour at all, so it stays quiet: cream ground, white input
 surfaces, ink text, hairline outlines, flat throughout. The signature yellow #FCCC0C appears
@@ -145,6 +154,15 @@ it is what surfaced this error. Never grey it out and never reduce its opacity.
 Exactly one field is in error. Do not put the card number or the colour row into an error
 state, and do not add a summary banner at the top of the screen.
 
+COLOURS ARE LITERAL HEXES, NEVER TOKENS. Write #181824, #FCCC0C, #F0F0E8, #FFFFFF,
+#D6D6CB, #55555F and #C41E1E exactly as written. Do NOT reach for a semantic colour name
+instead — not `primary`, not `on-surface`, not `on-background`, not `surface`, not `outline`,
+not `outline-variant`, and not a Tailwind utility built on one such as text-primary,
+bg-primary, border-primary or border-outline-variant. In this project's theme `primary`
+resolves to #000000 and `on-surface` to #1a1c18, so a screen assembled out of tokens comes
+out in two wrong near-blacks that look almost right and are not. A literal hex survives; a
+token does not.
+
 TONE
 Quiet and corrective, not alarming. #C41E1E appears in exactly two places on this screen —
 the store name outline and its message — and nowhere else. Everything else is identical to
@@ -198,6 +216,15 @@ No success ticks, no green outlines, no "looks good" affirmations on the filled 
 valid field looks exactly like an empty one except that it holds text — validity is the
 absence of an error, not a decoration.
 
+COLOURS ARE LITERAL HEXES, NEVER TOKENS. Write #181824, #FCCC0C, #F0F0E8, #FFFFFF,
+#D6D6CB, #55555F and #C41E1E exactly as written. Do NOT reach for a semantic colour name
+instead — not `primary`, not `on-surface`, not `on-background`, not `surface`, not `outline`,
+not `outline-variant`, and not a Tailwind utility built on one such as text-primary,
+bg-primary, border-primary or border-outline-variant. In this project's theme `primary`
+resolves to #000000 and `on-surface` to #1a1c18, so a screen assembled out of tokens comes
+out in two wrong near-blacks that look almost right and are not. A literal hex survives; a
+token does not.
+
 TONE
 Identical to the default frame in every respect except the content. Cream ground, white
 inputs, ink text, hairline outlines, flat. The signature yellow #FCCC0C appears nowhere
@@ -250,6 +277,15 @@ Leave the space between the colour swatches and the hairline EMPTY cream #F0F0E8
 
 The rest of the screen is unchanged and undimmed — no overlay, no scrim, no modal, no
 blurring of the fields behind. Saving a card takes a moment, not a takeover.
+
+COLOURS ARE LITERAL HEXES, NEVER TOKENS. Write #181824, #FCCC0C, #F0F0E8, #FFFFFF,
+#D6D6CB, #55555F and #C41E1E exactly as written. Do NOT reach for a semantic colour name
+instead — not `primary`, not `on-surface`, not `on-background`, not `surface`, not `outline`,
+not `outline-variant`, and not a Tailwind utility built on one such as text-primary,
+bg-primary, border-primary or border-outline-variant. In this project's theme `primary`
+resolves to #000000 and `on-surface` to #1a1c18, so a screen assembled out of tokens comes
+out in two wrong near-blacks that look almost right and are not. A literal hex survives; a
+token does not.
 
 TONE
 Identical to the filled frame except the button. Cream ground, white inputs, ink text,

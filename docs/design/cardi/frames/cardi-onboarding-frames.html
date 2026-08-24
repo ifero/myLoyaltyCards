@@ -413,6 +413,29 @@
         flex: 0 0 auto;
       }
 
+      /* THE BEAM MOVES — see the same note in cardi-capture-frames.html. Taken
+         from the Stitch render, timed from the shipped ScanLine component (2s,
+         ease-in-out, alternating) rather than Stitch's 2.5s linear. Slide 2 is
+         the one slide about scanning, so its beam is the one that should sweep. */
+      @keyframes beam-sweep {
+        from {
+          transform: translateY(-13px);
+        }
+        to {
+          transform: translateY(13px);
+        }
+      }
+
+      .illo-disc .beam-line {
+        animation: beam-sweep 2s ease-in-out infinite alternate;
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        .illo-disc .beam-line {
+          animation: none;
+        }
+      }
+
       .link-plain {
         font-family: Inter, sans-serif;
         font-weight: 600;
@@ -1217,7 +1240,15 @@
                 <rect x="98.28" y="32" width="0.91" height="28" fill="#181824" />
                 <rect x="100.09" y="32" width="0.91" height="28" fill="#181824" />
                 <rect x="15" y="65" width="36" height="4" rx="2" fill="#181824" opacity="0.3" />
-                <rect x="0" y="47" width="116" height="3" rx="1.5" fill="var(--beam)" />
+                <rect
+                  class="beam-line"
+                  x="0"
+                  y="47"
+                  width="116"
+                  height="3"
+                  rx="1.5"
+                  fill="var(--beam)"
+                />
               </svg>
             </div>
             <h2 class="pitch-h2" style="margin-top: 40px">Scan or add manually</h2>

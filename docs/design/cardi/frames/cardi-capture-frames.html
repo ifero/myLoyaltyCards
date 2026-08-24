@@ -515,6 +515,38 @@
         background: var(--beam);
       }
 
+      /* THE BEAM MOVES. Taken from the Stitch render, which animated its scan
+         line while these frames drew it static — a good idea, since the brand's
+         whole ornament is "at rest a dot, IN MOTION a scan beam".
+
+         The timing is the shipped component's, not Stitch's. ScanLine in
+         features/add-card/components/ScannerOverlay.tsx runs
+         withRepeat(withTiming(..., 2000, Easing.inOut(Easing.ease)), -1, true):
+         2s, ease-in-out, ALTERNATING. Stitch used 2.5s linear. Ease-in-out
+         dwells at the ends the way a real scanner sweep does; linear does not.
+
+         0% and 100% are the documented resting position, so a screenshot taken
+         at either end still measures the spec. And it stops entirely for anyone
+         who has asked for less motion. */
+      @keyframes beam-sweep {
+        from {
+          transform: translateY(-46px);
+        }
+        to {
+          transform: translateY(46px);
+        }
+      }
+
+      .beam {
+        animation: beam-sweep 2s ease-in-out infinite alternate;
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        .beam {
+          animation: none;
+        }
+      }
+
       /* The one legitimate shadow. Legibility over a background nobody controls
          is not decoration — the same class of exception as the barcode's quiet
          zone, where the space is an input to the scanner rather than a margin.
