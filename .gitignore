@@ -145,3 +145,8 @@ _bmad/config.user.toml
 # keepsakes, brainstorming scratch). Every artifact that IS a project record is pinned to docs/ via
 # _bmad/custom/config.toml, so nothing durable should ever land here.
 _bmad-output/
+
+# Playwright MCP server scratch output — console/network captures written into the
+# working directory while the server drives a browser. Per-session tool noise, never
+# a project record, and it lands in whichever directory the session happens to run in.
+.playwright-mcp/
