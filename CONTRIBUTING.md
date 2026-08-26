@@ -256,14 +256,14 @@ feat(watch): render barcode complication on the watch face (Story 5.9)
 
 Quality is enforced at three levels. **All must pass — bypassing them is forbidden.**
 
-| Gate                    | When                                | What runs                                                                            |
-| ----------------------- | ----------------------------------- | ------------------------------------------------------------------------------------ |
-| **pre-commit**          | `git commit`                        | `lint-staged` → ESLint `--fix` + Prettier on staged files                            |
-| **pre-push**            | `git push`                          | Typecheck, lint, format, drift checks, full test suite                               |
-| **CI — quality**        | every PR & push to `main`           | Everything `pre-push` runs, plus the repo-layout checks, with coverage               |
-| **CI — watchOS**        | PR/push touching watch or iOS paths | Watch contract tests, `Brands.swift` catalogue sync, watch-target build              |
-| **CI — Wear OS**        | PR/push touching `watch-android/**` | `./gradlew assembleDebug` for the standalone Wear OS project                         |
-| **CI — PR conventions** | every PR                            | Conventional-Commit title, branch naming, and spec-first story link (see note below) |
+| Gate                    | When                                | What runs                                                                                        |
+| ----------------------- | ----------------------------------- | ------------------------------------------------------------------------------------------------ |
+| **pre-commit**          | `git commit`                        | `lint-staged` → ESLint `--fix` + Prettier on staged files                                        |
+| **pre-push**            | `git push`                          | Typecheck, lint, format, drift checks, full test suite                                           |
+| **CI — quality**        | every PR & push to `main`           | Everything `pre-push` runs, plus the repo-layout checks, with coverage                           |
+| **CI — watchOS**        | PR/push touching watch or iOS paths | Watch contract tests, `Brands.swift` catalogue sync, watch-target build                          |
+| **CI — Wear OS**        | PR/push touching `watch-android/**` | JVM unit tests plus `assembleDebug` **and** `assembleRelease` for the standalone Wear OS project |
+| **CI — PR conventions** | every PR                            | Conventional-Commit title, branch naming, and spec-first story link (see note below)             |
 
 ### Exactly what runs, in order
 

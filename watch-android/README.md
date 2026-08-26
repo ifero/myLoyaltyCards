@@ -389,32 +389,72 @@ the Wearable Data Layer.
 
 ## Signing, Play and Asset Links
 
-**Documented here, not configured here.** The release keystore, the Play Console setup and the Asset
-Links publication are **@ifero's**, and no keystore, signing secret or `local.properties` is committed
-to this repo. `assembleRelease` therefore produces an unsigned APK; that is expected.
+**Wired in CI since Story 16.35; still unsigned locally.** No keystore, signing secret or
+`local.properties` is committed to this repo, so a local `assembleRelease` produces
+`app-release-unsigned.apk` — that is expected and unchanged. The release pipelines inject @ifero's
+upload keystore via the `android.injected.signing.*` Gradle properties (the same mechanism the phone
+lane uses), which is what turns that artifact into a signed `app-release.apk`.
+
+> ⚠️ This section used to say _"Documented here, not configured here."_ It was accurate, and the Wear
+> OS app was consequently **never delivered to any Play track** through the whole of Epic 10 — the
+> defect Story 16.35 fixes. A gap recorded only in prose has no CI status check and is
+> indistinguishable, at release time, from a gap nobody noticed.
+
+### How a release actually ships
+
+Both Android release pipelines build and upload the phone AAB and this Wear APK **in one job, in one
+Play release**, because the shared `applicationId` means Play sees a single app whose track release
+must list **both** version codes:
+
+| Pipeline            | Track        | Lane                              |
+| ------------------- | ------------ | --------------------------------- |
+| `beta-releases.yml` | `alpha`      | `fastlane android beta`           |
+| `store-upload.yml`  | `production` | `fastlane android upload_release` |
+
+The mechanics live in the Fastfile's `ship_wear_apk!` private lane, with the rationale inline. Three
+things there are load-bearing and must not be "tidied":
+
+1. **The Wear upload runs second, and passes `version_codes_to_retain`** with the phone's
+   `versionCode`. `upload_to_play_store` creates a _new_ track release on every call, so without it
+   the second call would publish a release containing only the Wear APK — un-delivering the phone,
+   with the Play Console looking healthy either way.
+2. **Two calls, not one.** `supply` cannot carry an AAB and an APK in a single invocation (hence
+   `skip_upload_apk` / `skip_upload_aab`), and multiple AABs are unsupported. The phone ships an AAB
+   and this app ships an APK, so two sequential calls is the only shape that exists.
+3. **One job, never two.** Parallel jobs race the same Play track edit and one silently loses. That
+   is why the release job carries both the Node/Expo toolchain and JDK 17 + Android SDK 36.
+
+Before uploading, `scripts/check-android-signing-parity.mjs` asserts the Wear APK and the phone AAB
+carry the **same** signing certificate and fails the job if not — see constraint 2 above; that failure
+is otherwise completely silent. It prints the certificate SHA-256, which is also the value the Digital
+Asset Links entry needs.
+
+**Still @ifero's, still not in this repo:** the release keystore itself, the Play Console setup, the
+Wear OS store-listing assets, and the Digital Asset Links publication.
 
 ### versionCode bands
 
 Play allocates `versionCode` **per application ID**, and this Wear APK shares
-`com.iferoporefi.myloyaltycards` with the phone app. It is therefore a **third consumer of one shared
-counter space**. Story 16.7 exists because two counters already collided there.
+`com.iferoporefi.myloyaltycards` with the phone app. It is therefore a **third and fourth consumer of
+one shared counter space**. Story 16.7 exists because two counters already collided there.
 
-| Band        | Consumer          | Set by                                                                                       |
-| ----------- | ----------------- | -------------------------------------------------------------------------------------------- |
-| `0`         | phone, alpha/beta | `beta-releases.yml` — bare `GITHUB_RUN_NUMBER`                                               |
-| `1_000_000` | phone, production | `store-upload.yml` — `PRODUCTION_VERSION_CODE_OFFSET` in [`app.config.ts`](../app.config.ts) |
-| `2_000_000` | **Wear OS APK**   | [`app/build.gradle.kts`](app/build.gradle.kts) in this project                               |
+| Band        | Consumer                    | Set by                                                                                       |
+| ----------- | --------------------------- | -------------------------------------------------------------------------------------------- |
+| `0`         | phone, alpha/beta           | `beta-releases.yml` — bare `GITHUB_RUN_NUMBER`                                               |
+| `1_000_000` | phone, production           | `store-upload.yml` — `PRODUCTION_VERSION_CODE_OFFSET` in [`app.config.ts`](../app.config.ts) |
+| `2_000_000` | **Wear OS APK, alpha/beta** | [`app/build.gradle.kts`](app/build.gradle.kts) in this project                               |
+| `3_000_000` | **Wear OS APK, production** | the same file — band + `wearProductionVersionCodeOffset`                                     |
 
 The Wear counter comes from the `WEAR_VERSION_CODE` environment variable — a **distinct name** from the
 phone's `ANDROID_VERSION_CODE`, so a Wear build can never silently inherit the phone's counter.
 
 Its contract is deliberately asymmetric, and the asymmetry is the point:
 
-| `WEAR_VERSION_CODE`                  | Result                                                           |
-| ------------------------------------ | ---------------------------------------------------------------- |
-| unset                                | `versionCode` = `2000000` (the bare band) — the local-build case |
-| a positive integer                   | `versionCode` = `2000000 + n`                                    |
-| empty / `0` / negative / non-numeric | **the build fails**                                              |
+| `WEAR_VERSION_CODE`                  | Result                                               |
+| ------------------------------------ | ---------------------------------------------------- |
+| unset                                | `versionCode` = the bare band — the local-build case |
+| a positive integer                   | `versionCode` = band + n                             |
+| empty / `0` / negative / non-numeric | **the build fails**                                  |
 
 Falling back on a _present but unusable_ value would emit a plausible-looking `versionCode`
 indistinguishable from a legitimate first upload — the exact failure Story 16.7 documents. An unset
@@ -422,8 +462,23 @@ GitHub Actions variable interpolates to the empty string, so that case is a hard
 is computed in `Long` and checked against Play's maximum (`2_100_000_000`) before narrowing, so a
 large counter cannot overflow into a negative `versionCode`.
 
-This is set in **this project's own Gradle build, not in `app.config.ts`**: the two projects share no
+**Why there are two Wear bands (Story 16.35).** `GITHUB_RUN_NUMBER` is scoped **per workflow file**, so
+`beta-releases.yml` run 40 and `store-upload.yml` run 40 are unrelated releases. Feeding both into one
+band would have them both compute `2000040` — the two-counters-one-band collision Story 16.7 documents.
+`WEAR_RELEASE_TRACK=production` selects the `3_000_000` band; anything else (including unset) stays on
+`2_000_000`. Only the exact literal `production` opts in, so a typo lands on the beta band, where a
+collision is a hard Play rejection rather than a plausible-looking success.
+
+The variable is set by the Fastfile's `ship_wear_apk!` **from the upload track**, not by the workflow,
+so the band and the destination track cannot disagree.
+
+Both are set in **this project's own Gradle build, not in `app.config.ts`**: the two projects share no
 build system, and coupling them would drag the Wear APK back into the "regenerated by prebuild" trap.
+This deliberately diverges from the phone, whose production offset is _declared_ in `app.config.ts` but
+_applied_ as `$((GITHUB_RUN_NUMBER + 1000000))` in `store-upload.yml`, kept honest only by a "must stay
+in sync" comment. The phone has to do that because `app.config.ts` runs at prebuild and reads a single
+env var; Gradle has no such constraint. **Do not "restore consistency" by moving the arithmetic into
+YAML.**
 
 ## Behaviour constraints inherited by Stories 10-2 … 10-6
 
@@ -472,14 +527,19 @@ Two toolchain facts that are easy to get wrong:
 ## CI
 
 [`.github/workflows/wear-os-build.yml`](../.github/workflows/wear-os-build.yml) runs
-`./gradlew testDebugUnitTest assembleDebug`, path-filtered to `watch-android/**` so it stays off the
-phone app's critical path — the same shape as `chromatic.yml`'s filtering and `watchos-tests.yml`'s
+`./gradlew testDebugUnitTest assembleDebug assembleRelease`, path-filtered to `watch-android/**` so it
+stays off the phone app's critical path — the same shape as `chromatic.yml`'s filtering and `watchos-tests.yml`'s
 scoping.
 
 **Be precise about what that does and does not prove**, because an absent job is easily mistaken for
 coverage:
 
-- ✅ **Compiles.** The module cannot rot silently; a broken build fails the PR that broke it.
+- ✅ **Compiles — both variants.** The module cannot rot silently; a broken build fails the PR that
+  broke it. **`assembleRelease` was added by Story 16.35**, which made the release variant the one
+  users actually receive. Until then R8 full mode had never run against this app at all, and
+  [`app/proguard-rules.pro`](app/proguard-rules.pro) says so in its own header — its ZXing keep rules
+  were written blind against a variant CI did not build. The APK the job produces is unsigned (no
+  `signingConfig` by design), so this proves the variant compiles and survives R8, nothing more.
 - ✅ **Kotlin unit tests run — genuinely, in CI.** Story 10-3 added the first ones (`app/src/test/…`):
   the sort comparators, the colour/initials/contrast maths, the AC2 avatar rules, the read-only
   invariant (card data does not survive a reload), and the sort-preference round-trip through a
@@ -492,8 +552,13 @@ coverage:
   JVM Android runtime — as ordinary `testDebugUnitTest`, so they run on the Ubuntu runner with **no
   emulator**. The mapper tests are pure JVM. The first CI run downloads Robolectric's `android-all`
   runtime (well within the job's 20m headroom).
+- ✅ **Release signing is checked at release time, not here.** `scripts/check-android-signing-parity.mjs`
+  asserts the Wear APK and the phone AAB share one signing certificate before either reaches Play
+  (Story 16.35). It cannot run in this job — there is no keystore in the repo — but its _parsing_ is
+  unit-tested in `scripts/lib/signing-fingerprints.test.js`, which does run in `ci-quality-gates.yml`.
 - ❌ **No lint in CI.** `./gradlew lintDebug` passes locally and is worth wiring up as a gate later; it
-  is not one today.
+  is not one today. (`lintVitalRelease` now runs as part of `assembleRelease`, which is a narrower
+  check — fatal-severity issues only.)
 - ❌ **No instrumented or on-device test.** Install-and-launch and the round/square layout check (AC8)
   are done by hand on Wear OS emulators, not by CI. With effectively no Android telemetry, that manual
   two-shape check is the only real gate against a round-screen layout defect.

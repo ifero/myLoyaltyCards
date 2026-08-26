@@ -207,4 +207,69 @@ Markdown has no CI status check and is indistinguishable, at release time, from 
 
 ## Dev Agent Record
 
-_(to be completed during implementation)_
+Implemented 2026-08-26 in the same pass that drafted the story (party mode: Amelia + Winston).
+
+### Files changed
+
+| File                                                         | Why                                                                                    |
+| ------------------------------------------------------------ | -------------------------------------------------------------------------------------- |
+| `watch-android/app/build.gradle.kts`                         | AC4 — `wearProductionVersionCodeOffset` + `WEAR_RELEASE_TRACK` band selector           |
+| `fastlane/Fastfile`                                          | AC1/AC2/AC3/AC5/AC6 — `ship_wear_apk!`, `wear_release_apk!`, `phone_version_code!`     |
+| `scripts/lib/signing-fingerprints.mjs`                       | AC5 — pure fingerprint parsing/normalisation/comparison                                |
+| `scripts/check-android-signing-parity.mjs`                   | AC5 — the gate itself (resolves `apksigner`, runs `keytool`, compares, prints SHA-256) |
+| `scripts/lib/signing-fingerprints.test.js`                   | AC5 — 12 unit tests over the parsing, incl. the public-key-digest trap                 |
+| `.github/workflows/beta-releases.yml`                        | AC1 — JDK 17 + Android SDK 36 in `android-beta`, `WEAR_VERSION_CODE`                   |
+| `.github/workflows/store-upload.yml`                         | AC2 — the same for `upload-android-release`                                            |
+| `.github/workflows/wear-os-build.yml`                        | AC7 — `assembleRelease` added                                                          |
+| `watch-android/README.md`, `docs/cicd.md`, `CONTRIBUTING.md` | AC8                                                                                    |
+
+### Design decision reversed mid-implementation (AC4)
+
+The story as drafted proposed applying the production offset as workflow arithmetic, mirroring the
+phone's `$((GITHUB_RUN_NUMBER + 1000000))`. **That was reversed.** The phone does it that way only
+because `app.config.ts` runs at prebuild and reads a single env var, and it pays for it with a "must
+stay in sync" comment — the exact fragility this story is about. Gradle has no such constraint, so the
+band, the offset and the validation now all live in `build.gradle.kts`, and `WEAR_RELEASE_TRACK` is set
+by `ship_wear_apk!` **from the upload track**, so the band cannot disagree with the destination.
+`store-upload.yml` therefore passes the **bare** run number to `WEAR_VERSION_CODE` while passing an
+offset one to `ANDROID_VERSION_CODE`; the asymmetry is commented at both sites.
+
+### Verified locally
+
+`watch-android` Gradle, real builds, `aapt2 dump badging` on the produced APK:
+
+| Input                                                | versionCode | Result                   |
+| ---------------------------------------------------- | ----------- | ------------------------ |
+| `WEAR_VERSION_CODE=42`                               | `2000042`   | ✅ beta band             |
+| `WEAR_VERSION_CODE=42 WEAR_RELEASE_TRACK=production` | `3000042`   | ✅ production band       |
+| unset (local build)                                  | `2000000`   | ✅ bare band             |
+| `""` / `0` / `-3` / `abc`                            | —           | ✅ build fails, all four |
+
+`./gradlew :app:assembleRelease` succeeds cold in **~1m31s** with R8 (`minifyReleaseWithR8`) and
+`lintVitalRelease` both running — the first time either has ever run on this app. `testDebugUnitTest`
+passes. Repo gates: `typecheck`, `lint` (3 pre-existing warnings owned by 16-24), `format:check`,
+`tokens:check`, `splash:check`, `wear:catalogue:check`, `check:native-patches`, `check:native-strings`
+all green; `yarn test` = **177 suites / 2178 tests passed**, including the 12 new ones.
+
+### Found while implementing — the hardcoded APK path was wrong
+
+`assembleRelease` with no signing config emits **`app-release-unsigned.apk`**, not `app-release.apk`;
+AGP names the artifact from whether signing applied. The first draft of the Fastfile hardcoded the
+signed name, which would have failed the release with a confusing "file not found". Replaced with
+`wear_release_apk!`, which globs the output directory, refuses to guess when there is not exactly one
+APK, and **fails with a named error if the one it finds is the `-unsigned` variant** — i.e. if the
+injected-signing properties did not take effect. Verified against the real build output.
+
+### Not verifiable from this repository — AC9 is still open
+
+No local run can exercise the Play Console, so two things remain unproven and gate the story:
+
+1. **That `version_codes_to_retain` composes with the existing _draft_ release** the phone upload
+   creates on the alpha track. This is Play behaviour, not fastlane behaviour. The documented fallback
+   is in the story's Notes.
+2. **That the injected keystore produces a signed `app-release.apk`** rather than the unsigned name.
+   The signing material is not in this repo. Both `wear_release_apk!` and the parity check fail loudly
+   if it does not, so the failure mode is a red job — not a bad upload.
+
+**Next step for @ifero:** cut an RC and confirm the alpha release lists two version codes (phone `N`,
+Wear `2000000 + N`), then record them and the certificate fingerprint here.

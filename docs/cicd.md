@@ -171,12 +171,13 @@ Because `on.release` cannot filter by tag pattern, the RC selection lives in a j
 Jobs:
 
 - `ios-testflight-beta` builds and uploads the iOS app to TestFlight using `bundle exec fastlane ios beta`
-- `android-beta` builds and uploads the Android AAB to the Play Console alpha track using `bundle exec fastlane android beta`.
+- `android-beta` builds and uploads **both** the phone AAB and the Wear OS companion APK to the Play Console alpha track using `bundle exec fastlane android beta`.
 
 Notes:
 
 - The iOS job runs `npx expo prebuild --platform ios` and generates the watchOS catalogue before Fastlane.
 - There is no separate `watch_beta` lane; the watch companion is included in the iOS `beta` lane.
+- **Neither is there a separate Wear OS job, and that is deliberate (Story 16.35).** The Wear APK shares `applicationId` with the phone app, so Play sees one app whose track release must list **both** version codes. `upload_to_play_store` creates a new track release on every call, so a parallel Wear job would race the same Play edit and one artifact would silently vanish from the release. The Android job therefore carries both toolchains — Node/Expo for the phone, JDK 17 + Android SDK 36 for `watch-android` — and the Fastfile's `ship_wear_apk!` uploads the APK second with `version_codes_to_retain`. Before uploading, `scripts/check-android-signing-parity.mjs` fails the job unless the Wear APK and the phone AAB carry the same signing certificate.
 
 ### Store Upload (Final Release)
 
@@ -225,9 +226,10 @@ iOS lanes summary:
 
 Android lanes summary:
 
-- `android adhoc` — Release APK build
-- `android beta` — Builds an AAB and uploads it to the Play Console alpha (testing) track
-- `android upload_release` — Play Store production upload
+- `android adhoc` — Release APK build (phone only; no Wear artifact, nothing is uploaded)
+- `android beta` — Builds the phone AAB and the Wear OS APK, and uploads both into one Play Console alpha (testing) release
+- `android upload_release` — the same pair, uploaded into one Play Store production release
+- `ship_wear_apk!` (private) — the Wear half of both lanes above; builds, signing-parity-checks and uploads the Wear APK into the release the phone AAB just created
 
 ## Release Runbooks
 
@@ -253,7 +255,7 @@ gh release create v1.0.0-rc.1 --prerelease --generate-notes --target main
 
 4. Monitor `.github/workflows/beta-releases.yml` in GitHub Actions. `Store Upload (Final Release)` will also appear with all jobs `skipped` — that is the pre-release guard working, not a failure.
 5. Verify the iOS build appears in App Store Connect → TestFlight.
-6. Verify the Android build appears in the Play Console alpha (testing) track.
+6. Verify the Android build appears in the Play Console alpha (testing) track, and that the release lists **two** version codes — the phone (`<run>`) and the Wear OS APK (`2000000 + <run>`). One version code means the watch app did not ship; see Story 16.35.
 7. Distribute to testers.
 
 ### Release to Production
@@ -266,7 +268,8 @@ gh release create v1.0.0 --generate-notes --target main
 ```
 
 3. Monitor `.github/workflows/store-upload.yml` in GitHub Actions. `Beta Releases (RC)` will appear with all jobs `skipped`.
-4. After upload completes, submit the build for App Store / Play Store review.
+4. Verify the Play Console production release lists **two** version codes — the phone (`<run> + 1000000`) and the Wear OS APK (`3000000 + <run>`). Shipping a production release with only the phone code would silently downgrade every tester who already has the watch app.
+5. After upload completes, submit the build for App Store / Play Store review.
 
 ### Manual / AdHoc Build
 

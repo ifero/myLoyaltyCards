@@ -110,8 +110,15 @@ jobs:
       - name: Build iOS TestFlight (RC)
         run: bundle exec fastlane ios beta
 
+  # Builds and uploads BOTH Android artifacts of one release: the phone AAB and the
+  # Wear OS companion APK. They are deliberately one job, not two (Story 16.35).
+  # The Wear APK shares `applicationId` with the phone app, so Play sees a single app
+  # whose track release must list BOTH version codes — two jobs would race the same
+  # Play track edit and the loser's artifact would silently vanish from the release.
+  # The ordering and the `version_codes_to_retain` mechanics live in the Fastfile's
+  # `ship_wear_apk!`; read that before splitting this job for speed.
   android-beta:
-    name: Build Android Alpha (RC)
+    name: Build Android Alpha + Wear OS (RC)
     runs-on: ubuntu-latest
     # See ios-testflight-beta above for why this guard exists.
     if: github.event_name != 'release' || contains(github.event.release.tag_name, '-rc.')
@@ -142,6 +149,21 @@ jobs:
         with:
           node-version: '24'
           cache: 'yarn'
+      # Pinned rather than inherited from the runner image, which drifts. AGP 9.3
+      # requires JDK 17 as a minimum for the Wear OS project this job now also
+      # builds, and wear-os-build.yml already pins the same version — keep them equal.
+      - name: Set up JDK 17
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '17'
+      # `watch-android` compiles against API 36, and `apksigner` (used by the
+      # signing-parity check below) ships in build-tools, which is not otherwise on
+      # PATH. Both are no-ops when the runner image already provides them.
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v4
+        with:
+          packages: 'platforms;android-36 build-tools;36.0.0'
       - name: Install dependencies
         run: yarn install --frozen-lockfile
       - name: Create .env file
@@ -158,10 +180,21 @@ jobs:
             echo "::warning::SENTRY_AUTH_TOKEN not set — skipping Sentry symbol upload (crashes won't be symbolicated). Add the SENTRY_AUTH_TOKEN repo secret to enable."
             echo "SENTRY_DISABLE_AUTO_UPLOAD=true" >> "$GITHUB_ENV"
           fi
-      - name: Compute Android versionCode
+      - name: Compute Android versionCodes (phone + Wear)
         # Authoritative versionCode baked into the AAB manifest by app.config.ts
         # during prebuild. Alpha/beta band = the workflow run number.
-        run: echo "ANDROID_VERSION_CODE=$GITHUB_RUN_NUMBER" >> "$GITHUB_ENV"
+        #
+        # WEAR_VERSION_CODE is the SAME counter, deliberately: the Wear build adds its
+        # own band (2,000,000 for beta) in watch-android/app/build.gradle.kts, so this
+        # workflow carries no band arithmetic to keep in sync — unlike the phone's
+        # production offset. The band is selected from the upload track by the
+        # Fastfile's ship_wear_apk!, so it cannot disagree with the destination.
+        #
+        # The phone code is also what version_codes_to_retain must carry so the Wear
+        # upload does not drop the phone from the Play release (Story 16.35, AC3).
+        run: |
+          echo "ANDROID_VERSION_CODE=$GITHUB_RUN_NUMBER" >> "$GITHUB_ENV"
+          echo "WEAR_VERSION_CODE=$GITHUB_RUN_NUMBER" >> "$GITHUB_ENV"
       - name: Prebuild native projects
         run: npx expo prebuild --platform android
       - name: Decode Android release keystore
@@ -182,5 +215,7 @@ jobs:
           org.gradle.workers.max=2
           org.gradle.daemon=false
           EOF
-      - name: Build Android Alpha (RC)
+      # One lane, two artifacts: the phone AAB is built and uploaded, then the Wear
+      # OS APK is built, signing-parity-checked and added to the SAME Play release.
+      - name: Build and upload Android Alpha + Wear OS (RC)
         run: bundle exec fastlane android beta
