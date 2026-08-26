@@ -17,7 +17,16 @@
  *      "SHA-256" line happens to work today and would break silently if the order
  *      ever changed; matching the wrong one compares a real value that is simply
  *      not the identity Play uses.
- *   3. **Different formats.** `apksigner` prints bare lowercase hex; `keytool`
+ *   3. **`apksigner`'s own line prefix is not stable across build-tools.** Measured
+ *      against one identical, validly-signed APK:
+ *        build-tools 35.0.0 / 36.0.0 / 36.1.0 -> `Signer #1 certificate SHA-256 digest: ...`
+ *        build-tools 37.0.0                   -> `V3.0 Signer: certificate SHA-256 digest: ...`
+ *      A regex anchored on `Signer #N` therefore reports a perfectly signed APK as
+ *      unsigned the moment a runner image ships build-tools 37. The prefix is matched
+ *      loosely and the anchor is the word `certificate` instead. A multi-scheme APK can
+ *      also print the SAME certificate under both a `V2 Signer:` and a `V3.0 Signer:`
+ *      label, so identical repeats are normal and only DISTINCT values are an error.
+ *   4. **Different formats.** `apksigner` prints bare lowercase hex; `keytool`
  *      prints uppercase hex in colon-separated byte pairs.
  *
  * A signing check that compares the wrong digest is worse than no check: it turns an
@@ -62,25 +71,33 @@ export function normalizeFingerprint(raw) {
  * @throws {Error} when no certificate digest is present, or more than one signer is.
  */
 export function parseApksignerCertificateFingerprint(stdout) {
+  // The prefix before `certificate` is deliberately loose (`Signer #1 `, `V3.0 Signer: `,
+  // whatever a future build-tools invents); the anchor that carries the meaning is the literal
+  // word `certificate` immediately before `SHA-256 digest`, which is exactly what keeps the
+  // sibling `... public key SHA-256 digest:` line from ever matching.
   const matches = [
-    ...String(stdout).matchAll(/^Signer\s+#\d+\s+certificate\s+SHA-?256\s+digest:\s*(\S+)$/gim)
+    ...String(stdout).matchAll(/^.*?\bcertificate\s+SHA-?256\s+digest:\s*([0-9A-Fa-f]+)\s*$/gim)
   ].map((m) => m[1]);
 
   if (matches.length === 0) {
     throw new Error(
-      'apksigner printed no "Signer #N certificate SHA-256 digest" line. The APK is ' +
-        'probably unsigned, or apksigner failed — check the command output above.'
+      'apksigner printed no "certificate SHA-256 digest" line. The APK is probably ' +
+        'unsigned, or apksigner failed — check the command output above.'
     );
   }
-  // Multiple signers would make "the" fingerprint ambiguous, and this project signs
-  // with exactly one upload key. Fail rather than pick one.
-  if (matches.length > 1) {
+
+  // One APK signed under several signature schemes prints the same certificate once per
+  // scheme, so repeats are expected. Genuinely different certificates are not: this project
+  // signs with exactly one upload key, and picking one of two would defeat the whole check.
+  const distinct = [...new Set(matches.map(normalizeFingerprint))];
+  if (distinct.length > 1) {
     throw new Error(
-      `apksigner reported ${matches.length} signers; expected exactly 1. ` +
-        'A multi-signer APK cannot be compared against a single upload key.'
+      `apksigner reported ${distinct.length} distinct signing certificates ` +
+        `(${distinct.join(', ')}); expected exactly 1. A multi-signer APK cannot be ` +
+        'compared against a single upload key.'
     );
   }
-  return normalizeFingerprint(matches[0]);
+  return distinct[0];
 }
 
 /**

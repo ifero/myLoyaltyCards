@@ -23,6 +23,21 @@ const { pathToFileURL } = require('node:url');
 
 const MODULE_URL = pathToFileURL(require.resolve('./signing-fingerprints.mjs')).href;
 
+// CAPTURED FROM A REAL apksigner RUN, not hand-written. One identical, validly-signed APK
+// verified with build-tools 36.0.0 and 37.0.0 — the prefix differs, the fingerprint does not.
+// A regex anchored on `Signer #N` reports the 37.0.0 case as unsigned; that is the bug these
+// two fixtures exist to prevent from coming back.
+const APKSIGNER_37 = `V3.0 Signer: certificate DN: CN=fmt-test
+V3.0 Signer: certificate SHA-256 digest: 8c1e5b0a4f37d2916ba0c4e57d38f9a1b2c3d4e5f60718293a4b5c6d7e8f9012
+V3.0 Signer: certificate SHA-1 digest: 0d726e956cd6c83a27deda4e8a1b198de05b4d73
+V3.0 Signer: certificate MD5 digest: f98e93870f6f77e9214f13aca793021e`;
+
+// One APK signed under two schemes prints the same certificate twice, under two labels.
+const APKSIGNER_MULTI_SCHEME = `V2 Signer: certificate DN: CN=fmt-test
+V2 Signer: certificate SHA-256 digest: 8c1e5b0a4f37d2916ba0c4e57d38f9a1b2c3d4e5f60718293a4b5c6d7e8f9012
+V3.0 Signer: certificate DN: CN=fmt-test
+V3.0 Signer: certificate SHA-256 digest: 8c1e5b0a4f37d2916ba0c4e57d38f9a1b2c3d4e5f60718293a4b5c6d7e8f9012`;
+
 // Real shapes, trimmed. Note the ORDER: certificate digest, then public key digest.
 const APKSIGNER_OK = `Verifies
 Verified using v1 scheme (JAR signing): false
@@ -71,6 +86,12 @@ const CASES = [
     [
       'Signer #1 public key SHA-256 digest: ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff'
     ]
+  ],
+  ['apksigner: build-tools 37 format', 'parseApksignerCertificateFingerprint', [APKSIGNER_37]],
+  [
+    'apksigner: same cert under two schemes',
+    'parseApksignerCertificateFingerprint',
+    [APKSIGNER_MULTI_SCHEME]
   ],
   ['keytool: sha256 line', 'parseKeytoolCertificateFingerprint', [KEYTOOL_OK]],
   [
@@ -177,7 +198,17 @@ describe('signing-fingerprints', () => {
     it('never mistakes the public key digest for the certificate digest', () => {
       const result = r['apksigner: only a public key digest'];
       expect(result.ok).toBe(false);
-      expect(result.error).toMatch(/no "Signer #N certificate SHA-256 digest" line/);
+      expect(result.error).toMatch(/no "certificate SHA-256 digest" line/);
+    });
+
+    // build-tools 37.0.0 renamed the line prefix from `Signer #1 ` to `V3.0 Signer: `.
+    // Verified against real binaries: 35.0.0/36.0.0/36.1.0 use the old shape, 37.0.0 the new.
+    it('reads the build-tools 37 `V3.0 Signer:` format', () => {
+      expect(r['apksigner: build-tools 37 format']).toEqual({ ok: true, value: EXPECTED });
+    });
+
+    it('accepts one certificate reported under several signature schemes', () => {
+      expect(r['apksigner: same cert under two schemes']).toEqual({ ok: true, value: EXPECTED });
     });
 
     it('fails on an unsigned APK rather than returning nothing', () => {
@@ -187,7 +218,7 @@ describe('signing-fingerprints', () => {
     it('refuses to pick a fingerprint when the APK has multiple signers', () => {
       const result = r['apksigner: two signers'];
       expect(result.ok).toBe(false);
-      expect(result.error).toMatch(/2 signers/);
+      expect(result.error).toMatch(/2 distinct signing certificates/);
     });
   });
 
