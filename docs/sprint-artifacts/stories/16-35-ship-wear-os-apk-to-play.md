@@ -276,3 +276,34 @@ No local run can exercise the Play Console, so two things remain unproven and ga
 
 **Next step for @ifero:** cut an RC and confirm the alpha release lists two version codes (phone `N`,
 Wear `2000000 + N`), then record them and the certificate fingerprint here.
+
+### Code review — 4 findings, all fixed
+
+Reviewed at `high` effort against the full branch diff. All four were confirmed against fastlane's own
+source or a real artifact, not argued from reading.
+
+1. **🔴 Release-breaking: `Dir.glob` in a lane body resolves against `fastlane/`, not the project root.**
+   fastlane wraps the whole lane in `Dir.chdir(FastlaneCore::FastlaneFolder.path)` (`runner.rb`) and
+   chdirs out to the root only _inside_ an action (`execute_action`'s `custom_dir` defaults to `".."`).
+   So action parameters (`gradle(project_dir:)`, `aab:`) resolve against the root, while raw Ruby and
+   `sh` — `FastFile#sh` calls `Actions.sh_no_action` with no chdir — resolve against `fastlane/`. The
+   first draft's glob therefore returned `[]` **with the APK on disk**, aborting the lane _after_ the
+   phone AAB had been uploaded: the phone-only release this story exists to prevent, on every release.
+   Proven both ways against the real repo — old expression `[]`, fixed expression finds the artifact.
+   Fixed by routing every path through a new `project_path` helper (absolute paths are correct under
+   both working directories), with the rule written into the file as a warning banner.
+2. **The `ANDROID_VERSION_CODE` guard ran too late.** `phone_version_code!` was evaluated as an
+   argument to `ship_wear_apk!`, i.e. after the phone upload — so a missing value produced the
+   phone-only release its own error message warns about. Moved to a preflight beside
+   `ensure_android_signing_env!` in both lanes.
+3. **`Integer(raw, exception: false)` honours radix prefixes.** `042` parsed as octal `34` while
+   `app.config.ts`'s `Number('042')` — the value actually baked into the AAB — is `42`;
+   `version_codes_to_retain: [34]` would have retained a nonexistent code and dropped the phone. Base
+   10 is now pinned. Verified across `42 / 042 / 0x1f / "" / 0 / -3 / abc / unset`.
+4. **build-tools versions were sorted lexicographically**, so `'9.0.0'` outranked `'36.0.0'` and an
+   ancient `apksigner` could be resolved, failing a correctly signed APK on a parse error. Replaced
+   with a numeric comparator, moved into the tested lib and covered by four more cases (16 total).
+
+The review's own lesson is worth keeping: **findings 1 and 2 both produce the exact defect the story
+was written to fix.** A change that hardens a release path is itself a release path, and deserves the
+same suspicion.

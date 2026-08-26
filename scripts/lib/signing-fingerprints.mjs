@@ -1,5 +1,7 @@
 /**
- * Parse and compare Android signing-certificate SHA-256 fingerprints (Story 16.35).
+ * Pure helpers behind `scripts/check-android-signing-parity.mjs` (Story 16.35):
+ * parsing and comparing Android signing-certificate SHA-256 fingerprints, plus
+ * ordering SDK build-tools versions.
  *
  * The Wear OS APK and the phone AAB must be signed with the SAME key: the Wearable
  * Data Layer refuses to connect two artifacts signed differently, and Play rejects
@@ -146,4 +148,30 @@ export function compareSigningFingerprints(a, b) {
       `  ${a.label}: ${left}\n` +
       `  ${b.label}: ${right}`
   };
+}
+
+/**
+ * Compare two Android SDK `build-tools` directory names newest-first, by numeric
+ * version components.
+ *
+ * A plain lexicographic sort is wrong here and not academically so: `'36.0.0'`
+ * sorts BELOW `'9.0.0'` as a string, so an SDK carrying both would hand back
+ * build-tools 9's `apksigner` — old enough that its `--print-certs` output no
+ * longer matches {@link parseApksignerCertificateFingerprint}, failing a release
+ * on a perfectly well-signed APK.
+ *
+ * @param {string} a
+ * @param {string} b
+ * @returns {number} negative when `a` is newer (sorts first)
+ */
+export function compareBuildToolsVersionsDesc(a, b) {
+  const parse = (name) => name.split('.').map((part) => Number.parseInt(part, 10) || 0);
+  const [left, right] = [parse(a), parse(b)];
+  for (let i = 0; i < Math.max(left.length, right.length); i += 1) {
+    const diff = (right[i] ?? 0) - (left[i] ?? 0);
+    if (diff !== 0) return diff;
+  }
+  // Numerically equal (e.g. a `-rc` suffix parsed to the same numbers): fall back
+  // to a stable, deterministic string order so the resolver never flip-flops.
+  return a < b ? 1 : a > b ? -1 : 0;
 }

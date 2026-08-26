@@ -101,6 +101,16 @@ const CASES = [
       }
     ]
   ],
+  // Lexicographic sort puts '9.0.0' above '36.0.0'; numeric sort must not.
+  [
+    'buildtools: two-digit beats single-digit',
+    'compareBuildToolsVersionsDesc',
+    ['36.0.0', '9.0.0']
+  ],
+  ['buildtools: patch ordering', 'compareBuildToolsVersionsDesc', ['35.0.1', '35.0.10']],
+  ['buildtools: equal', 'compareBuildToolsVersionsDesc', ['36.0.0', '36.0.0']],
+  ['buildtools: short vs long', 'compareBuildToolsVersionsDesc', ['36.0', '36.0.0']],
+  ['buildtools: short vs long reversed', 'compareBuildToolsVersionsDesc', ['36.0.0', '36.0']],
   [
     'compare: mismatch',
     'compareSigningFingerprints',
@@ -211,6 +221,38 @@ describe('signing-fingerprints', () => {
 
     it('rejects non-hex input', () => {
       expect(r['normalize: non-hex'].ok).toBe(false);
+    });
+  });
+
+  describe('compareBuildToolsVersionsDesc', () => {
+    // The whole point: `['36.0.0','9.0.0'].sort()` yields '9.0.0' first as strings,
+    // which would resolve an ancient apksigner whose --print-certs output the parser
+    // above no longer recognises — a red release on a correctly signed APK.
+    it('orders 36.0.0 above 9.0.0 (a lexicographic sort does not)', () => {
+      expect(r['buildtools: two-digit beats single-digit'].value).toBeLessThan(0);
+      expect(['36.0.0', '9.0.0'].sort()[0]).toBe('36.0.0'); // lexicographic ascending
+      expect(['36.0.0', '9.0.0'].sort().reverse()[0]).toBe('9.0.0'); // the old bug
+    });
+
+    it('compares patch components numerically, not as strings', () => {
+      // '35.0.10' is newer than '35.0.1' despite sorting earlier as a string.
+      expect(r['buildtools: patch ordering'].value).toBeGreaterThan(0);
+    });
+
+    it('returns 0 for identical versions', () => {
+      expect(r['buildtools: equal'].value).toBe(0);
+    });
+
+    // A missing component counts as 0, so '36.0' and '36.0.0' tie numerically and
+    // fall to the documented string tiebreak. What matters is that the tiebreak is
+    // deterministic and antisymmetric — Array#sort with an inconsistent comparator
+    // is free to produce a different winner per engine, which would make which
+    // apksigner gets picked unpredictable.
+    it('breaks a numeric tie deterministically and antisymmetrically', () => {
+      const forward = r['buildtools: short vs long'].value;
+      const reverse = r['buildtools: short vs long reversed'].value;
+      expect(forward).not.toBe(0);
+      expect(Math.sign(forward)).toBe(-Math.sign(reverse));
     });
   });
 

@@ -205,8 +205,34 @@ end
 # Artifact paths shared by the phone and Wear halves of an Android release
 # (Story 16.35). Named here rather than inlined so the upload, the signing-parity
 # check and the "did it actually build" guard can never drift apart.
+#
+# Kept project-root-relative for readability, and ALWAYS passed through
+# `project_path` before use — see the warning on that method. Do not hand a bare
+# constant to `Dir.glob`, `File.exist?` or `sh`.
 PHONE_RELEASE_AAB = "android/app/build/outputs/bundle/release/app-release.aab".freeze
 WEAR_RELEASE_APK_DIR = "watch-android/app/build/outputs/apk/release".freeze
+
+# ⚠️ A LANE BODY'S WORKING DIRECTORY IS `fastlane/`, NOT THE PROJECT ROOT.
+#
+# fastlane wraps the entire lane in `Dir.chdir(FastlaneCore::FastlaneFolder.path)`
+# (`runner.rb`) and chdirs out to the project root only *inside* an action
+# (`execute_action`'s `custom_dir` defaults to `".."`). So within one lane there are
+# two different working directories:
+#
+#   * action PARAMETERS (`gradle(project_dir:)`, `upload_to_play_store(aab:)`) are
+#     resolved by the action, i.e. against the PROJECT ROOT — which is why the
+#     relative paths elsewhere in this file work;
+#   * raw Ruby in the lane body (`Dir.glob`, `File.exist?`) and `sh` both run
+#     against `fastlane/`, because `FastFile#sh` calls `Actions.sh_no_action`
+#     directly and never chdirs.
+#
+# That split silently broke the first draft of `wear_release_apk!`: its glob found
+# nothing even with the APK on disk, aborting the lane AFTER the phone AAB had been
+# uploaded — the phone-only release this whole story exists to prevent. Absolute
+# paths are correct under both directories, so everything goes through here.
+def project_path(relative)
+  File.expand_path(relative, File.expand_path("..", FastlaneCore::FastlaneFolder.path || Dir.pwd))
+end
 
 # Resolve the Wear OS release APK by globbing rather than by name, and refuse the
 # unsigned one.
@@ -223,7 +249,8 @@ WEAR_RELEASE_APK_DIR = "watch-android/app/build/outputs/apk/release".freeze
 # prints no certificate digest for one), but failing here says WHY in one line
 # instead of making someone read apksigner output.
 def wear_release_apk!
-  candidates = Dir.glob(File.join(WEAR_RELEASE_APK_DIR, "*.apk")).sort
+  # Absolute — a lane body's cwd is `fastlane/`. See `project_path`.
+  candidates = Dir.glob(File.join(project_path(WEAR_RELEASE_APK_DIR), "*.apk")).sort
 
   if candidates.empty?
     UI.user_error!(
@@ -259,7 +286,11 @@ end
 # from the Play release rather than fail.
 def phone_version_code!
   raw = ENV['ANDROID_VERSION_CODE'].to_s.strip
-  parsed = Integer(raw, exception: false)
+  # Base 10 is PINNED. Bare `Integer()` honours radix prefixes, so "042" would parse
+  # as octal 34 while `app.config.ts`'s `Number("042")` — the value actually baked
+  # into the AAB — is 42. `version_codes_to_retain: [34]` would then retain a
+  # versionCode that does not exist and drop the phone from the release.
+  parsed = Integer(raw, 10, exception: false)
   unless parsed&.positive?
     UI.user_error!(
       "ANDROID_VERSION_CODE is #{raw.empty? ? 'unset' : "\"#{raw}\""} but must be a positive " \
@@ -328,8 +359,13 @@ platform :android do
     # An unsigned APK fails loudly at Play, but a wrong-key APK uploads cleanly and
     # then breaks the Wearable Data Layer with no crash and no telemetry. The check
     # also prints the fingerprint the Digital Asset Links entry needs.
-    # `sh` runs from `fastlane/`, hence the `../` prefixes.
-    sh("node", "../scripts/check-android-signing-parity.mjs", "../#{PHONE_RELEASE_AAB}", "../#{wear_apk}")
+    # All paths absolute: `sh` runs from `fastlane/`. See `project_path`.
+    sh(
+      "node",
+      project_path("scripts/check-android-signing-parity.mjs"),
+      project_path(PHONE_RELEASE_AAB),
+      wear_apk
+    )
 
     upload_to_play_store(
       package_name: package_name,
@@ -371,6 +407,11 @@ platform :android do
     UI.user_error!("Missing PLAY_STORE_API_KEY") unless json_key_data
 
     ensure_android_signing_env!
+    # PREFLIGHT, deliberately before the phone upload: the Wear half needs this
+    # value for `version_codes_to_retain`, and discovering it is missing AFTER the
+    # AAB is on the track would leave exactly the phone-only release this story
+    # exists to prevent. Nothing here depends on the build, so it costs nothing.
+    phone_version_code = phone_version_code!
 
     # versionCode is set authoritatively by app.config.ts at `expo prebuild`
     # time (from ANDROID_VERSION_CODE) and baked into the generated build.gradle
@@ -390,7 +431,7 @@ platform :android do
       json_key_data: json_key_data,
       track: "alpha",
       release_status: "draft",
-      aab: PHONE_RELEASE_AAB,
+      aab: project_path(PHONE_RELEASE_AAB),
       skip_upload_metadata: true,
       skip_upload_changelogs: true,
       skip_upload_images: true,
@@ -403,7 +444,7 @@ platform :android do
     ship_wear_apk!(
       track: "alpha",
       release_status: "draft",
-      phone_version_code: phone_version_code!
+      phone_version_code: phone_version_code
     )
   end
 
@@ -413,6 +454,9 @@ platform :android do
     UI.user_error!("Missing PLAY_STORE_API_KEY") unless json_key_data
 
     ensure_android_signing_env!
+    # PREFLIGHT — see the `beta` lane above for why this must not wait until after
+    # the phone upload.
+    phone_version_code = phone_version_code!
 
     # versionCode is set authoritatively by app.config.ts at `expo prebuild`
     # time (from ANDROID_VERSION_CODE, production offset band) and baked into the
@@ -431,7 +475,7 @@ platform :android do
       package_name: package_name,
       json_key_data: json_key_data,
       track: "production",
-      aab: PHONE_RELEASE_AAB,
+      aab: project_path(PHONE_RELEASE_AAB),
       skip_upload_metadata: true,
       skip_upload_changelogs: true,
       skip_upload_images: true,
@@ -448,7 +492,7 @@ platform :android do
     ship_wear_apk!(
       track: "production",
       release_status: "completed",
-      phone_version_code: phone_version_code!
+      phone_version_code: phone_version_code
     )
   end
 end

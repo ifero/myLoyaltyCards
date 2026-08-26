@@ -22,6 +22,7 @@ import { appendFileSync, existsSync, readdirSync } from 'node:fs';
 import path from 'node:path';
 
 import {
+  compareBuildToolsVersionsDesc,
   compareSigningFingerprints,
   parseApksignerCertificateFingerprint,
   parseKeytoolCertificateFingerprint
@@ -58,8 +59,7 @@ const resolveApksigner = () => {
     const buildTools = path.join(sdkRoot, 'build-tools');
     if (existsSync(buildTools)) {
       const candidates = readdirSync(buildTools)
-        .sort()
-        .reverse()
+        .sort(compareBuildToolsVersionsDesc)
         .map((version) => path.join(buildTools, version, 'apksigner'))
         .filter((candidate) => existsSync(candidate));
       if (candidates.length > 0) return candidates[0];
