@@ -9,6 +9,8 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
+import kotlinx.coroutines.cancelAndJoin
+import kotlinx.coroutines.job
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emptyFlow
@@ -83,7 +85,12 @@ class OutboxCardUsageRecorderTest {
             awaitUntil("queue drained after flush") { out.pendingCount() == 0 }
             assertEquals(1, transport.sent.size)
         } finally {
-            scope.cancel()
+            // AWAIT, do not just cancel. `cancel()` returns immediately, so a recorder coroutine
+            // still inside a Room call would meet `database.close()` in @After — throwing inside a
+            // SupervisorJob with no CoroutineExceptionHandler, which surfaces as
+            // `UncaughtExceptionsBeforeTest` in an unrelated later test. See the note on
+            // WearSyncCoordinatorTest.tearDown.
+            scope.coroutineContext.job.cancelAndJoin()
         }
     }
 
@@ -113,8 +120,11 @@ class OutboxCardUsageRecorderTest {
             // The work runs on appScope regardless, so the event still reaches the transport.
             awaitUntil("event survives caller-scope cancellation") { transport.sent.size == 1 }
         } finally {
-            appScope.cancel()
-            callerScope.cancel()
+            // The widest window in this suite: `awaitUntil` returns as soon as the TRANSPORT has
+            // the event, but the outbox deletes the delivered row from Room *after* that. Await
+            // both scopes so the database outlives that delete.
+            appScope.coroutineContext.job.cancelAndJoin()
+            callerScope.coroutineContext.job.cancelAndJoin()
         }
     }
 }
