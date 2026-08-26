@@ -333,7 +333,11 @@
     position: relative;
     color: inherit;
   }
-  /* the ì accent — the beam dot */
+  /* The ì accent — the beam dot. GRAVE: it descends left to right, so the
+     rotation is POSITIVE (both CSS and SVG put the y-axis pointing down). A
+     negative angle draws an acute and spells Cardí, a different word. This one
+     centres with translateX(-50%) rather than a hand-set margin, so it turns
+     about its own centre and the sign flip alone is a true mirror. */
   .wordmark em::after {
     content: "";
     position: absolute;
@@ -343,7 +347,7 @@
     height: 3px;
     border-radius: 2px;
     background: var(--sig);
-    transform: translateX(-50%) rotate(-20deg);
+    transform: translateX(-50%) rotate(35deg);
   }
 
   .list {

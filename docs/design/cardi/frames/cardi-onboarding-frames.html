@@ -344,16 +344,20 @@
         margin-bottom: 26px;
       }
 
-      /* At rest a dot, in motion a beam — so the accent is a stroke, not a dot. */
+      /* At rest a dot, in motion a beam — so the accent is a stroke, not a dot.
+         GRAVE: it descends left to right. Cardì, not Cardí. A positive CSS
+         rotation drops the right-hand end; a negative one would draw an acute
+         and spell a different word. `margin-left` mirrors with the sign because
+         the bar is placed by its left edge but turns about its centre. */
       .mark-accent {
         position: absolute;
         width: 17px;
         height: 6px;
         border-radius: 2px;
         background: var(--beam);
-        transform: rotate(-22deg);
+        transform: rotate(35deg);
         left: 50%;
-        margin-left: -12px;
+        margin-left: -5px;
         top: 26px;
       }
 

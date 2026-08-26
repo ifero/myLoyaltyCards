@@ -115,6 +115,36 @@ The name is _card_ + the Italian **ì**. The grave accent on that ì is the bran
 ornament: at rest it is a dot, in motion it is a **scan beam** passing over a barcode.
 That single idea — _you hold it up, and it is seen_ — is the whole identity.
 
+**The accent descends.** A grave falls left to right: its high end is on the **left**, like
+a backslash. An acute rises, and `Cardí` is a different word — so this is spelling, not
+styling, and there is no variant where it leans the other way. The mechanical form of the
+rule matters more than the typographic one, because the trap is a sign convention: in both
+SVG and CSS the y-axis points **down**, so a _positive_ rotation is the correct one.
+
+    rotate(35)     ✓  grave — descends to the right.  Cardì
+    rotate(-35)    ✗  acute — rises to the right.     Cardí
+
+Every exploration sheet in `frames/` was drawn with the negative angle until 2026-08-25,
+while this document said "grave" throughout. Prose naming the accent did not prevent it;
+only the sign does. If the shape is sheared rather than round-capped, flipping the sign is
+also not sufficient on its own — mirror the outline, or the beam silently changes length
+(at 24 × 9 units and 35°, a naive negation grows it to 30.3 and breaks containment).
+
+**The ì sits on the baseline, and the anchoring ships with the glyph.** When the mark
+replaces the letter inside live type, it is an inline SVG in a box exactly `1em` tall whose
+own baseline is drawn at `y = 70` of a 100-unit viewBox. Left alone, an inline SVG aligns
+its **box bottom** to the text baseline, which floats the glyph by the remaining
+`(100 − 70) / 100 = 0.30em` — 15.6px at 52px, and unmistakable. The correction is therefore
+not a tuned nudge but a derived one:
+
+    vertical-align: -0.30em      /* = (100 − BASELINE) / 100 */
+
+Carry it as an **inline `style` on the `<svg>`**, never as a stylesheet rule. This has been
+wrong twice: first as a guessed `translateY(size * 0.28)`, then because a new sheet reused
+the glyph markup without copying the `.wglyph` CSS. An `<svg>` missing its `vertical-align`
+does not look broken in review — it looks like an `<svg>` — so the only reliable fix is to
+make the anchoring inseparable from the markup it corrects.
+
 The visual language is **warm, flat and structural**. Paper, not glass. No gradients, no
 drop shadows, no glassmorphism, no neon. Depth comes from tonal layers and hairline
 outlines. The app should feel like good stationery: calm, tactile, obviously useful.
@@ -387,7 +417,7 @@ dark screen is produced.
 
 ## Forbidden
 
-Bottom tab bars · floating action buttons · coral, salmon, terracotta or orange · drop
+**An accent that rises to the right (`Cardí`)** · Bottom tab bars · floating action buttons · coral, salmon, terracotta or orange · drop
 shadows · gradients · glassmorphism · darkened or muddied yellow · card accent colours used
 as chrome · **anything overlaying a barcode, especially a drawn beam or scan-line** ·
 **a saturated surround on the barcode screen** · **tinting, washing or recolouring a

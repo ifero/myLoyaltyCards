@@ -156,7 +156,7 @@ MARGINS: 24px left and right. The whole content block is centred vertically in t
 
 1. THE MARK, centred: an 80px fully-round circle filled ink #181824, holding the letter "ì" in
    white #FFFFFF, Space Grotesk bold at about 36px — a lowercase i whose grave accent above it
-   is a short stroke in BEAM #FCCC0C. That accent is the only yellow on this screen. Do NOT draw
+   is a short stroke in BEAM #FCCC0C. The accent DESCENDS from upper-left to lower-right, like a backslash — its high end is on the LEFT. It must NOT rise to the right; that is an acute and spells Cardi with the wrong accent, a different word. That accent is the only yellow on this screen. Do NOT draw
    a credit card, an ID card, a wallet, a padlock, a person or any generic icon in this circle.
 
 2. THE HEADING "Welcome Back" centred 32px beneath the circle, in Space Grotesk bold 24px ink
@@ -229,7 +229,7 @@ form is tall.
 
 1. THE MARK, centred 8px below the status bar: an 80px fully-round circle filled ink #181824
    holding the letter "ì" in white #FFFFFF, Space Grotesk bold about 36px, its grave accent a
-   short stroke in BEAM #FCCC0C.
+   short stroke in BEAM #FCCC0C. The accent DESCENDS from upper-left to lower-right, like a backslash — its high end is on the LEFT. It must NOT rise to the right; that is an acute and spells Cardi with the wrong accent, a different word.
 
 2. THE HEADING "Create Account" centred 24px beneath the circle, in Space Grotesk bold 24px ink
    #181824. Then the subtitle "Join My Loyalty Cards" centred 8px lower, in Inter 15px muted
@@ -307,7 +307,7 @@ MARGINS: 24px left and right. The whole content block is centred vertically in t
 
 1. THE MARK, centred: an 80px fully-round circle filled ink #181824 holding the letter "ì" in
    white #FFFFFF, Space Grotesk bold about 36px, its grave accent a short stroke in BEAM
-   #FCCC0C. That accent is the only yellow on this screen.
+   #FCCC0C. The accent DESCENDS from upper-left to lower-right, like a backslash — its high end is on the LEFT. It must NOT rise to the right; that is an acute and spells Cardi with the wrong accent, a different word. That accent is the only yellow on this screen.
 
 2. THE HEADING "Forgot Password?" centred 32px beneath the circle, in Space Grotesk bold 24px
    ink #181824.
@@ -368,7 +368,7 @@ MARGINS: 24px left and right. The whole content block is centred vertically in t
 
 1. THE MARK, centred: an 80px fully-round circle filled ink #181824 holding the letter "ì" in
    white #FFFFFF, Space Grotesk bold about 36px, its grave accent a short stroke in BEAM
-   #FCCC0C. That accent is the only yellow on this screen.
+   #FCCC0C. The accent DESCENDS from upper-left to lower-right, like a backslash — its high end is on the LEFT. It must NOT rise to the right; that is an acute and spells Cardi with the wrong accent, a different word. That accent is the only yellow on this screen.
 
 2. THE HEADING "Verify your email" centred 32px beneath the circle, in Space Grotesk bold 24px
    ink #181824.
@@ -442,7 +442,7 @@ MARGINS: 24px left and right. The whole content block is centred vertically in t
 
 1. THE MARK, centred: an 80px fully-round circle filled ink #181824 holding the letter "ì" in
    white #FFFFFF, Space Grotesk bold about 36px, its grave accent a short stroke in BEAM
-   #FCCC0C. That accent is the only yellow on this screen.
+   #FCCC0C. The accent DESCENDS from upper-left to lower-right, like a backslash — its high end is on the LEFT. It must NOT rise to the right; that is an acute and spells Cardi with the wrong accent, a different word. That accent is the only yellow on this screen.
 
 2. THE HEADING "Set New Password" centred 32px beneath the circle, in Space Grotesk bold 24px
    ink #181824. Then the subtitle "Choose a strong new password for your account." centred 8px
@@ -511,7 +511,7 @@ MARGINS: 24px left and right. The whole content block is centred vertically in t
 
 1. THE MARK, centred: an 80px fully-round circle filled ink #181824 holding the letter "ì" in
    white #FFFFFF, Space Grotesk bold about 36px, its grave accent a short stroke in BEAM
-   #FCCC0C. That accent is the only yellow on this screen.
+   #FCCC0C. The accent DESCENDS from upper-left to lower-right, like a backslash — its high end is on the LEFT. It must NOT rise to the right; that is an acute and spells Cardi with the wrong accent, a different word. That accent is the only yellow on this screen.
 
 2. THE HEADING "Welcome Back" centred 32px beneath the circle, in Space Grotesk bold 24px ink
    #181824, then the subtitle "Sign in to sync your loyalty cards across devices" centred 8px

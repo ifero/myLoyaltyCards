@@ -32,21 +32,12 @@
          ================================================================== */
 
       :root {
-        --ink: #181824;
-        --beam: #fccc0c;
-        --cream: #f0f0e8;
-        --white: #ffffff;
-        --hairline: #d6d6cb;
-        --muted: #55555f;
-        --fg: var(--ink);
-        --ac: var(--beam);
+        --ink: #181824; --beam: #fccc0c; --cream: #f0f0e8; --white: #ffffff;
+        --hairline: #d6d6cb; --muted: #55555f;
+        --fg: var(--ink); --ac: var(--beam);
       }
 
-      * {
-        box-sizing: border-box;
-        margin: 0;
-        padding: 0;
-      }
+      * { box-sizing: border-box; margin: 0; padding: 0; }
 
       body {
         background: var(--cream);
@@ -57,850 +48,231 @@
 
       h1 {
         font-family: 'Space Grotesk', sans-serif;
-        font-weight: 700;
-        font-size: 26px;
-        letter-spacing: -0.02em;
+        font-weight: 700; font-size: 26px; letter-spacing: -0.02em;
       }
 
       header p {
-        font-size: 15px;
-        line-height: 22px;
-        color: var(--muted);
-        max-width: 68ch;
-        margin-top: 8px;
+        font-size: 15px; line-height: 22px; color: var(--muted);
+        max-width: 68ch; margin-top: 8px;
       }
 
       .row {
-        display: flex;
-        gap: 36px;
-        align-items: center;
-        padding: 22px 0;
-        border-bottom: 1px solid var(--hairline);
+        display: flex; gap: 36px; align-items: center;
+        padding: 22px 0; border-bottom: 1px solid var(--hairline);
       }
 
-      .meta {
-        flex: 0 0 230px;
-      }
+      .meta { flex: 0 0 230px; }
       .meta h2 {
-        font-family: 'Space Grotesk', sans-serif;
-        font-weight: 700;
-        font-size: 18px;
+        font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 18px;
       }
-      .meta p {
-        font-size: 14px;
-        line-height: 20px;
-        color: var(--muted);
-        margin-top: 4px;
-      }
+      .meta p { font-size: 14px; line-height: 20px; color: var(--muted); margin-top: 4px; }
 
-      .specimens {
-        display: flex;
-        gap: 30px;
-        align-items: flex-end;
-        flex-wrap: wrap;
-      }
-      .stack {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        gap: 6px;
-      }
+      .specimens { display: flex; gap: 30px; align-items: flex-end; flex-wrap: wrap; }
+      .stack { display: flex; flex-direction: column; align-items: center; gap: 6px; }
       .cap {
-        font-size: 10px;
-        font-weight: 600;
-        letter-spacing: 0.06em;
-        text-transform: uppercase;
-        color: var(--muted);
+        font-size: 10px; font-weight: 600; letter-spacing: 0.06em;
+        text-transform: uppercase; color: var(--muted);
       }
 
       .word {
-        font-family: 'Space Grotesk', sans-serif;
-        font-weight: 700;
-        letter-spacing: -0.03em;
-        color: var(--ink);
-        line-height: 1;
-        white-space: nowrap;
+        font-family: 'Space Grotesk', sans-serif; font-weight: 700;
+        letter-spacing: -0.03em; color: var(--ink); line-height: 1; white-space: nowrap;
       }
 
       /* Baseline anchoring, unchanged: the box is 1em tall with its baseline at
          y=70, so dropping it 0.30em puts the two baselines together. */
-      .wglyph {
-        display: inline;
-        vertical-align: -0.3em;
-        overflow: visible;
-      }
 
       .tile {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        background: var(--ink);
-        border-radius: 22%;
-        --fg: var(--white);
-        --ac: var(--beam);
+        display: inline-flex; align-items: center; justify-content: center;
+        background: var(--ink); border-radius: 22%;
+        --fg: var(--white); --ac: var(--beam);
       }
 
       /* Android 13 themed layer: one colour, no hue to lean on. */
-      .tile.is-mono {
-        --fg: var(--white);
-        --ac: var(--white);
-      }
+      .tile.is-mono { --fg: var(--white); --ac: var(--white); }
     </style>
   </head>
   <body>
     <header>
       <h1>Sweep 35 — refined</h1>
       <p>
-        The angle is chosen, so these vary what changes how it reads at that angle: the end caps,
-        the weight against the stem, the overhang, a narrow bracket of angles either side, and one
-        structural question in the last row — whether the beam should cross the barcode rather than
-        float above it. Every row shows the word, the word small, the mark, the mark small, and the
-        Android themed silhouette.
+        The angle is chosen, so these vary what changes how it reads at that angle: the end
+        caps, the weight against the stem, the overhang, a narrow bracket of angles either side,
+        and one structural question in the last row — whether the beam should cross the barcode
+        rather than float above it. Every row shows the word, the word small, the mark, the mark
+        small, and the Android themed silhouette.
       </p>
     </header>
-    <svg width="0" height="0" style="position: absolute" aria-hidden="true">
-      <symbol id="w-base" viewBox="0 0 30 100" overflow="visible">
-        <rect x="9.0" y="20.4" width="12" height="49.6" rx="6.0" fill="var(--fg)" />
-        <g transform="rotate(-35 15.0 10.5)">
-          <rect x="-2.0" y="6.0" width="34" height="9" rx="4.5" fill="var(--ac)" />
-        </g>
-      </symbol>
-      <symbol id="m-base" viewBox="0 0 30 100" overflow="visible">
-        <rect x="4.0" y="20.4" width="4.5" height="49.6" rx="2.2" fill="var(--fg)" />
-        <rect x="11.0" y="20.4" width="8" height="49.6" rx="4" fill="var(--fg)" />
-        <rect x="22.0" y="20.4" width="3.5" height="49.6" rx="1.7" fill="var(--fg)" />
-        <g transform="rotate(-35 15.0 10.5)">
-          <rect x="-2.0" y="6.0" width="34" height="9" rx="4.5" fill="var(--ac)" />
-        </g>
-      </symbol>
-      <symbol id="w-flat" viewBox="0 0 30 100" overflow="visible">
-        <rect x="9.0" y="20.4" width="12" height="49.6" rx="6.0" fill="var(--fg)" />
-        <g transform="rotate(-35 15.0 10.5)">
-          <rect x="-2.0" y="6.0" width="34" height="9" fill="var(--ac)" />
-        </g>
-      </symbol>
-      <symbol id="m-flat" viewBox="0 0 30 100" overflow="visible">
-        <rect x="4.0" y="20.4" width="4.5" height="49.6" rx="2.2" fill="var(--fg)" />
-        <rect x="11.0" y="20.4" width="8" height="49.6" rx="4" fill="var(--fg)" />
-        <rect x="22.0" y="20.4" width="3.5" height="49.6" rx="1.7" fill="var(--fg)" />
-        <g transform="rotate(-35 15.0 10.5)">
-          <rect x="-2.0" y="6.0" width="34" height="9" fill="var(--ac)" />
-        </g>
-      </symbol>
-      <symbol id="w-shear" viewBox="0 0 30 100" overflow="visible">
-        <rect x="9.0" y="20.4" width="12" height="49.6" rx="6.0" fill="var(--fg)" />
-        <g transform="rotate(-35 15.0 10.5)">
-          <path d="M-2.0 15.0 L4.3 6.0 L32.0 6.0 L25.7 15.0 Z" fill="var(--ac)" />
-        </g>
-      </symbol>
-      <symbol id="m-shear" viewBox="0 0 30 100" overflow="visible">
-        <rect x="4.0" y="20.4" width="4.5" height="49.6" rx="2.2" fill="var(--fg)" />
-        <rect x="11.0" y="20.4" width="8" height="49.6" rx="4" fill="var(--fg)" />
-        <rect x="22.0" y="20.4" width="3.5" height="49.6" rx="1.7" fill="var(--fg)" />
-        <g transform="rotate(-35 15.0 10.5)">
-          <path d="M-2.0 15.0 L4.3 6.0 L32.0 6.0 L25.7 15.0 Z" fill="var(--ac)" />
-        </g>
-      </symbol>
-      <symbol id="w-heavy" viewBox="0 0 30 100" overflow="visible">
-        <rect x="9.0" y="20.4" width="12" height="49.6" rx="6.0" fill="var(--fg)" />
-        <g transform="rotate(-35 15.0 10.5)">
-          <rect x="-2.0" y="4.5" width="34" height="12" rx="6.0" fill="var(--ac)" />
-        </g>
-      </symbol>
-      <symbol id="m-heavy" viewBox="0 0 30 100" overflow="visible">
-        <rect x="4.0" y="20.4" width="4.5" height="49.6" rx="2.2" fill="var(--fg)" />
-        <rect x="11.0" y="20.4" width="8" height="49.6" rx="4" fill="var(--fg)" />
-        <rect x="22.0" y="20.4" width="3.5" height="49.6" rx="1.7" fill="var(--fg)" />
-        <g transform="rotate(-35 15.0 10.5)">
-          <rect x="-2.0" y="4.5" width="34" height="12" rx="6.0" fill="var(--ac)" />
-        </g>
-      </symbol>
-      <symbol id="w-short" viewBox="0 0 30 100" overflow="visible">
-        <rect x="9.0" y="20.4" width="12" height="49.6" rx="6.0" fill="var(--fg)" />
-        <g transform="rotate(-35 15.0 10.5)">
-          <rect x="3.0" y="6.0" width="24" height="9" rx="4.5" fill="var(--ac)" />
-        </g>
-      </symbol>
-      <symbol id="m-short" viewBox="0 0 30 100" overflow="visible">
-        <rect x="4.0" y="20.4" width="4.5" height="49.6" rx="2.2" fill="var(--fg)" />
-        <rect x="11.0" y="20.4" width="8" height="49.6" rx="4" fill="var(--fg)" />
-        <rect x="22.0" y="20.4" width="3.5" height="49.6" rx="1.7" fill="var(--fg)" />
-        <g transform="rotate(-35 15.0 10.5)">
-          <rect x="3.0" y="6.0" width="24" height="9" rx="4.5" fill="var(--ac)" />
-        </g>
-      </symbol>
-      <symbol id="w-long" viewBox="0 0 30 100" overflow="visible">
-        <rect x="9.0" y="20.4" width="12" height="49.6" rx="6.0" fill="var(--fg)" />
-        <g transform="rotate(-35 15.0 10.5)">
-          <rect x="-7.0" y="6.0" width="44" height="9" rx="4.5" fill="var(--ac)" />
-        </g>
-      </symbol>
-      <symbol id="m-long" viewBox="0 0 30 100" overflow="visible">
-        <rect x="4.0" y="20.4" width="4.5" height="49.6" rx="2.2" fill="var(--fg)" />
-        <rect x="11.0" y="20.4" width="8" height="49.6" rx="4" fill="var(--fg)" />
-        <rect x="22.0" y="20.4" width="3.5" height="49.6" rx="1.7" fill="var(--fg)" />
-        <g transform="rotate(-35 15.0 10.5)">
-          <rect x="-7.0" y="6.0" width="44" height="9" rx="4.5" fill="var(--ac)" />
-        </g>
-      </symbol>
-      <symbol id="w-a30" viewBox="0 0 30 100" overflow="visible">
-        <rect x="9.0" y="20.4" width="12" height="49.6" rx="6.0" fill="var(--fg)" />
-        <g transform="rotate(-30 15.0 10.5)">
-          <rect x="-2.0" y="6.0" width="34" height="9" rx="4.5" fill="var(--ac)" />
-        </g>
-      </symbol>
-      <symbol id="m-a30" viewBox="0 0 30 100" overflow="visible">
-        <rect x="4.0" y="20.4" width="4.5" height="49.6" rx="2.2" fill="var(--fg)" />
-        <rect x="11.0" y="20.4" width="8" height="49.6" rx="4" fill="var(--fg)" />
-        <rect x="22.0" y="20.4" width="3.5" height="49.6" rx="1.7" fill="var(--fg)" />
-        <g transform="rotate(-30 15.0 10.5)">
-          <rect x="-2.0" y="6.0" width="34" height="9" rx="4.5" fill="var(--ac)" />
-        </g>
-      </symbol>
-      <symbol id="w-a40" viewBox="0 0 30 100" overflow="visible">
-        <rect x="9.0" y="20.4" width="12" height="49.6" rx="6.0" fill="var(--fg)" />
-        <g transform="rotate(-40 15.0 10.5)">
-          <rect x="-2.0" y="6.0" width="34" height="9" rx="4.5" fill="var(--ac)" />
-        </g>
-      </symbol>
-      <symbol id="m-a40" viewBox="0 0 30 100" overflow="visible">
-        <rect x="4.0" y="20.4" width="4.5" height="49.6" rx="2.2" fill="var(--fg)" />
-        <rect x="11.0" y="20.4" width="8" height="49.6" rx="4" fill="var(--fg)" />
-        <rect x="22.0" y="20.4" width="3.5" height="49.6" rx="1.7" fill="var(--fg)" />
-        <g transform="rotate(-40 15.0 10.5)">
-          <rect x="-2.0" y="6.0" width="34" height="9" rx="4.5" fill="var(--ac)" />
-        </g>
-      </symbol>
-      <symbol id="w-xr" viewBox="0 0 30 100" overflow="visible">
-        <rect x="9.0" y="20.4" width="12" height="49.6" rx="6.0" fill="var(--fg)" />
-        <g transform="rotate(-35 15.0 10.5)">
-          <rect x="-11.0" y="6.0" width="52" height="9" rx="4.5" fill="var(--ac)" />
-        </g>
-      </symbol>
-      <symbol id="m-xr" viewBox="0 0 30 100" overflow="visible">
-        <rect x="4.0" y="20.4" width="4.5" height="49.6" rx="2.2" fill="var(--fg)" />
-        <rect x="11.0" y="20.4" width="8" height="49.6" rx="4" fill="var(--fg)" />
-        <rect x="22.0" y="20.4" width="3.5" height="49.6" rx="1.7" fill="var(--fg)" />
-        <g transform="rotate(-35 15.0 44)">
-          <rect x="-11.0" y="39.5" width="52" height="9" rx="4.5" fill="var(--ac)" />
-        </g>
-      </symbol>
-      <symbol id="w-xf" viewBox="0 0 30 100" overflow="visible">
-        <rect x="9.0" y="20.4" width="12" height="49.6" rx="6.0" fill="var(--fg)" />
-        <g transform="rotate(-35 15.0 10.5)">
-          <rect x="-11.0" y="6.0" width="52" height="9" fill="var(--ac)" />
-        </g>
-      </symbol>
-      <symbol id="m-xf" viewBox="0 0 30 100" overflow="visible">
-        <rect x="4.0" y="20.4" width="4.5" height="49.6" rx="2.2" fill="var(--fg)" />
-        <rect x="11.0" y="20.4" width="8" height="49.6" rx="4" fill="var(--fg)" />
-        <rect x="22.0" y="20.4" width="3.5" height="49.6" rx="1.7" fill="var(--fg)" />
-        <g transform="rotate(-35 15.0 44)">
-          <rect x="-11.0" y="39.5" width="52" height="9" fill="var(--ac)" />
-        </g>
-      </symbol>
-      <symbol id="w-xs" viewBox="0 0 30 100" overflow="visible">
-        <rect x="9.0" y="20.4" width="12" height="49.6" rx="6.0" fill="var(--fg)" />
-        <g transform="rotate(-35 15.0 10.5)">
-          <path d="M-11.0 15.0 L-4.7 6.0 L41.0 6.0 L34.7 15.0 Z" fill="var(--ac)" />
-        </g>
-      </symbol>
-      <symbol id="m-xs" viewBox="0 0 30 100" overflow="visible">
-        <rect x="4.0" y="20.4" width="4.5" height="49.6" rx="2.2" fill="var(--fg)" />
-        <rect x="11.0" y="20.4" width="8" height="49.6" rx="4" fill="var(--fg)" />
-        <rect x="22.0" y="20.4" width="3.5" height="49.6" rx="1.7" fill="var(--fg)" />
-        <g transform="rotate(-35 15.0 44)">
-          <path d="M-11.0 48.5 L-4.7 39.5 L41.0 39.5 L34.7 48.5 Z" fill="var(--ac)" />
-        </g>
-      </symbol>
-      <symbol id="w-xhigh" viewBox="0 0 30 100" overflow="visible">
-        <rect x="9.0" y="20.4" width="12" height="49.6" rx="6.0" fill="var(--fg)" />
-        <g transform="rotate(-35 15.0 10.5)">
-          <path d="M-11.0 15.0 L-4.7 6.0 L41.0 6.0 L34.7 15.0 Z" fill="var(--ac)" />
-        </g>
-      </symbol>
-      <symbol id="m-xhigh" viewBox="0 0 30 100" overflow="visible">
-        <rect x="4.0" y="20.4" width="4.5" height="49.6" rx="2.2" fill="var(--fg)" />
-        <rect x="11.0" y="20.4" width="8" height="49.6" rx="4" fill="var(--fg)" />
-        <rect x="22.0" y="20.4" width="3.5" height="49.6" rx="1.7" fill="var(--fg)" />
-        <g transform="rotate(-35 15.0 32)">
-          <path d="M-11.0 36.5 L-4.7 27.5 L41.0 27.5 L34.7 36.5 Z" fill="var(--ac)" />
-        </g>
-      </symbol>
-      <symbol id="w-xlow" viewBox="0 0 30 100" overflow="visible">
-        <rect x="9.0" y="20.4" width="12" height="49.6" rx="6.0" fill="var(--fg)" />
-        <g transform="rotate(-35 15.0 10.5)">
-          <path d="M-11.0 15.0 L-4.7 6.0 L41.0 6.0 L34.7 15.0 Z" fill="var(--ac)" />
-        </g>
-      </symbol>
-      <symbol id="m-xlow" viewBox="0 0 30 100" overflow="visible">
-        <rect x="4.0" y="20.4" width="4.5" height="49.6" rx="2.2" fill="var(--fg)" />
-        <rect x="11.0" y="20.4" width="8" height="49.6" rx="4" fill="var(--fg)" />
-        <rect x="22.0" y="20.4" width="3.5" height="49.6" rx="1.7" fill="var(--fg)" />
-        <g transform="rotate(-35 15.0 56)">
-          <path d="M-11.0 60.5 L-4.7 51.5 L41.0 51.5 L34.7 60.5 Z" fill="var(--ac)" />
-        </g>
-      </symbol>
-      <symbol id="w-cross" viewBox="0 0 30 100" overflow="visible">
-        <rect x="9.0" y="20.4" width="12" height="49.6" rx="6.0" fill="var(--fg)" />
-        <g transform="rotate(-35 15.0 10.5)">
-          <rect x="-11.0" y="6.0" width="52" height="9" rx="4.5" fill="var(--ac)" />
-        </g>
-      </symbol>
-      <symbol id="m-cross" viewBox="0 0 30 100" overflow="visible">
-        <rect x="4.0" y="20.4" width="4.5" height="49.6" rx="2.2" fill="var(--fg)" />
-        <rect x="11.0" y="20.4" width="8" height="49.6" rx="4" fill="var(--fg)" />
-        <rect x="22.0" y="20.4" width="3.5" height="49.6" rx="1.7" fill="var(--fg)" />
-        <g transform="rotate(-35 15.0 44)">
-          <rect x="-11.0" y="39.5" width="52" height="9" rx="4.5" fill="var(--ac)" />
-        </g>
-      </symbol>
-    </svg>
-    <div class="row">
-      <div class="meta">
-        <h2>35° · round · the choice</h2>
-        <p>Round two's winner, unchanged. The baseline for everything below.</p>
-      </div>
-      <div class="specimens">
-        <div class="stack">
-          <span class="word" style="font-size: 52px"
-            >Card<svg class="wglyph" viewBox="0 0 30 100" width="0.30em" height="1em">
-              <use href="#w-base" /></svg></span
-          ><span class="cap">word 52</span>
-        </div>
-        <div class="stack">
-          <span class="word" style="font-size: 26px"
-            >Card<svg class="wglyph" viewBox="0 0 30 100" width="0.30em" height="1em">
-              <use href="#w-base" /></svg></span
-          ><span class="cap">26</span>
-        </div>
-        <div class="stack">
-          <span class="tile" style="width: 84px; height: 84px"
-            ><svg viewBox="-37.5 -15.5 105.0 105.0" width="84" height="84" overflow="visible">
-              <use href="#m-base" /></svg></span
-          ><span class="cap">mark</span>
-        </div>
-        <div class="stack">
-          <span class="tile" style="width: 30px; height: 30px"
-            ><svg viewBox="-37.5 -15.5 105.0 105.0" width="30" height="30" overflow="visible">
-              <use href="#m-base" /></svg></span
-          ><span class="cap">30</span>
-        </div>
-        <div class="stack">
-          <span class="tile is-mono" style="width: 44px; height: 44px"
-            ><svg viewBox="-37.5 -15.5 105.0 105.0" width="44" height="44" overflow="visible">
-              <use href="#m-base" /></svg></span
-          ><span class="cap">mono</span>
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true"><symbol id="w-base" viewBox="0 0 30 100" overflow="visible"><rect x="9.0" y="20.4" width="12" height="49.6" rx="6.0" fill="var(--fg)" /><g transform="rotate(35 15.0 10.5)"><rect x="-2.0" y="6.0" width="34" height="9" rx="4.5" fill="var(--ac)" /></g></symbol><symbol id="m-base" viewBox="0 0 30 100" overflow="visible"><rect x="4.0" y="20.4" width="4.5" height="49.6" rx="2.2" fill="var(--fg)" /><rect x="11.0" y="20.4" width="8" height="49.6" rx="4" fill="var(--fg)" /><rect x="22.0" y="20.4" width="3.5" height="49.6" rx="1.7" fill="var(--fg)" /><g transform="rotate(35 15.0 10.5)"><rect x="-2.0" y="6.0" width="34" height="9" rx="4.5" fill="var(--ac)" /></g></symbol><symbol id="w-flat" viewBox="0 0 30 100" overflow="visible"><rect x="9.0" y="20.4" width="12" height="49.6" rx="6.0" fill="var(--fg)" /><g transform="rotate(35 15.0 10.5)"><rect x="-2.0" y="6.0" width="34" height="9" fill="var(--ac)" /></g></symbol><symbol id="m-flat" viewBox="0 0 30 100" overflow="visible"><rect x="4.0" y="20.4" width="4.5" height="49.6" rx="2.2" fill="var(--fg)" /><rect x="11.0" y="20.4" width="8" height="49.6" rx="4" fill="var(--fg)" /><rect x="22.0" y="20.4" width="3.5" height="49.6" rx="1.7" fill="var(--fg)" /><g transform="rotate(35 15.0 10.5)"><rect x="-2.0" y="6.0" width="34" height="9" fill="var(--ac)" /></g></symbol><symbol id="w-shear" viewBox="0 0 30 100" overflow="visible"><rect x="9.0" y="20.4" width="12" height="49.6" rx="6.0" fill="var(--fg)" /><g transform="rotate(35 15.0 10.5)"><path d="M4.30 15.00 L-2.00 6.00 L25.70 6.00 L32.00 15.00 Z" fill="var(--ac)" /></g></symbol><symbol id="m-shear" viewBox="0 0 30 100" overflow="visible"><rect x="4.0" y="20.4" width="4.5" height="49.6" rx="2.2" fill="var(--fg)" /><rect x="11.0" y="20.4" width="8" height="49.6" rx="4" fill="var(--fg)" /><rect x="22.0" y="20.4" width="3.5" height="49.6" rx="1.7" fill="var(--fg)" /><g transform="rotate(35 15.0 10.5)"><path d="M4.30 15.00 L-2.00 6.00 L25.70 6.00 L32.00 15.00 Z" fill="var(--ac)" /></g></symbol><symbol id="w-heavy" viewBox="0 0 30 100" overflow="visible"><rect x="9.0" y="20.4" width="12" height="49.6" rx="6.0" fill="var(--fg)" /><g transform="rotate(35 15.0 10.5)"><rect x="-2.0" y="4.5" width="34" height="12" rx="6.0" fill="var(--ac)" /></g></symbol><symbol id="m-heavy" viewBox="0 0 30 100" overflow="visible"><rect x="4.0" y="20.4" width="4.5" height="49.6" rx="2.2" fill="var(--fg)" /><rect x="11.0" y="20.4" width="8" height="49.6" rx="4" fill="var(--fg)" /><rect x="22.0" y="20.4" width="3.5" height="49.6" rx="1.7" fill="var(--fg)" /><g transform="rotate(35 15.0 10.5)"><rect x="-2.0" y="4.5" width="34" height="12" rx="6.0" fill="var(--ac)" /></g></symbol><symbol id="w-short" viewBox="0 0 30 100" overflow="visible"><rect x="9.0" y="20.4" width="12" height="49.6" rx="6.0" fill="var(--fg)" /><g transform="rotate(35 15.0 10.5)"><rect x="3.0" y="6.0" width="24" height="9" rx="4.5" fill="var(--ac)" /></g></symbol><symbol id="m-short" viewBox="0 0 30 100" overflow="visible"><rect x="4.0" y="20.4" width="4.5" height="49.6" rx="2.2" fill="var(--fg)" /><rect x="11.0" y="20.4" width="8" height="49.6" rx="4" fill="var(--fg)" /><rect x="22.0" y="20.4" width="3.5" height="49.6" rx="1.7" fill="var(--fg)" /><g transform="rotate(35 15.0 10.5)"><rect x="3.0" y="6.0" width="24" height="9" rx="4.5" fill="var(--ac)" /></g></symbol><symbol id="w-long" viewBox="0 0 30 100" overflow="visible"><rect x="9.0" y="20.4" width="12" height="49.6" rx="6.0" fill="var(--fg)" /><g transform="rotate(35 15.0 10.5)"><rect x="-7.0" y="6.0" width="44" height="9" rx="4.5" fill="var(--ac)" /></g></symbol><symbol id="m-long" viewBox="0 0 30 100" overflow="visible"><rect x="4.0" y="20.4" width="4.5" height="49.6" rx="2.2" fill="var(--fg)" /><rect x="11.0" y="20.4" width="8" height="49.6" rx="4" fill="var(--fg)" /><rect x="22.0" y="20.4" width="3.5" height="49.6" rx="1.7" fill="var(--fg)" /><g transform="rotate(35 15.0 10.5)"><rect x="-7.0" y="6.0" width="44" height="9" rx="4.5" fill="var(--ac)" /></g></symbol><symbol id="w-a30" viewBox="0 0 30 100" overflow="visible"><rect x="9.0" y="20.4" width="12" height="49.6" rx="6.0" fill="var(--fg)" /><g transform="rotate(30 15.0 10.5)"><rect x="-2.0" y="6.0" width="34" height="9" rx="4.5" fill="var(--ac)" /></g></symbol><symbol id="m-a30" viewBox="0 0 30 100" overflow="visible"><rect x="4.0" y="20.4" width="4.5" height="49.6" rx="2.2" fill="var(--fg)" /><rect x="11.0" y="20.4" width="8" height="49.6" rx="4" fill="var(--fg)" /><rect x="22.0" y="20.4" width="3.5" height="49.6" rx="1.7" fill="var(--fg)" /><g transform="rotate(30 15.0 10.5)"><rect x="-2.0" y="6.0" width="34" height="9" rx="4.5" fill="var(--ac)" /></g></symbol><symbol id="w-a40" viewBox="0 0 30 100" overflow="visible"><rect x="9.0" y="20.4" width="12" height="49.6" rx="6.0" fill="var(--fg)" /><g transform="rotate(40 15.0 10.5)"><rect x="-2.0" y="6.0" width="34" height="9" rx="4.5" fill="var(--ac)" /></g></symbol><symbol id="m-a40" viewBox="0 0 30 100" overflow="visible"><rect x="4.0" y="20.4" width="4.5" height="49.6" rx="2.2" fill="var(--fg)" /><rect x="11.0" y="20.4" width="8" height="49.6" rx="4" fill="var(--fg)" /><rect x="22.0" y="20.4" width="3.5" height="49.6" rx="1.7" fill="var(--fg)" /><g transform="rotate(40 15.0 10.5)"><rect x="-2.0" y="6.0" width="34" height="9" rx="4.5" fill="var(--ac)" /></g></symbol><symbol id="w-xr" viewBox="0 0 30 100" overflow="visible"><rect x="9.0" y="20.4" width="12" height="49.6" rx="6.0" fill="var(--fg)" /><g transform="rotate(35 15.0 10.5)"><rect x="-11.0" y="6.0" width="52" height="9" rx="4.5" fill="var(--ac)" /></g></symbol><symbol id="m-xr" viewBox="0 0 30 100" overflow="visible"><rect x="4.0" y="20.4" width="4.5" height="49.6" rx="2.2" fill="var(--fg)" /><rect x="11.0" y="20.4" width="8" height="49.6" rx="4" fill="var(--fg)" /><rect x="22.0" y="20.4" width="3.5" height="49.6" rx="1.7" fill="var(--fg)" /><g transform="rotate(35 15.0 44)"><rect x="-11.0" y="39.5" width="52" height="9" rx="4.5" fill="var(--ac)" /></g></symbol><symbol id="w-xf" viewBox="0 0 30 100" overflow="visible"><rect x="9.0" y="20.4" width="12" height="49.6" rx="6.0" fill="var(--fg)" /><g transform="rotate(35 15.0 10.5)"><rect x="-11.0" y="6.0" width="52" height="9" fill="var(--ac)" /></g></symbol><symbol id="m-xf" viewBox="0 0 30 100" overflow="visible"><rect x="4.0" y="20.4" width="4.5" height="49.6" rx="2.2" fill="var(--fg)" /><rect x="11.0" y="20.4" width="8" height="49.6" rx="4" fill="var(--fg)" /><rect x="22.0" y="20.4" width="3.5" height="49.6" rx="1.7" fill="var(--fg)" /><g transform="rotate(35 15.0 44)"><rect x="-11.0" y="39.5" width="52" height="9" fill="var(--ac)" /></g></symbol><symbol id="w-xs" viewBox="0 0 30 100" overflow="visible"><rect x="9.0" y="20.4" width="12" height="49.6" rx="6.0" fill="var(--fg)" /><g transform="rotate(35 15.0 10.5)"><path d="M-4.70 15.00 L-11.00 6.00 L34.70 6.00 L41.00 15.00 Z" fill="var(--ac)" /></g></symbol><symbol id="m-xs" viewBox="0 0 30 100" overflow="visible"><rect x="4.0" y="20.4" width="4.5" height="49.6" rx="2.2" fill="var(--fg)" /><rect x="11.0" y="20.4" width="8" height="49.6" rx="4" fill="var(--fg)" /><rect x="22.0" y="20.4" width="3.5" height="49.6" rx="1.7" fill="var(--fg)" /><g transform="rotate(35 15.0 44)"><path d="M-4.70 48.50 L-11.00 39.50 L34.70 39.50 L41.00 48.50 Z" fill="var(--ac)" /></g></symbol><symbol id="w-xhigh" viewBox="0 0 30 100" overflow="visible"><rect x="9.0" y="20.4" width="12" height="49.6" rx="6.0" fill="var(--fg)" /><g transform="rotate(35 15.0 10.5)"><path d="M-4.70 15.00 L-11.00 6.00 L34.70 6.00 L41.00 15.00 Z" fill="var(--ac)" /></g></symbol><symbol id="m-xhigh" viewBox="0 0 30 100" overflow="visible"><rect x="4.0" y="20.4" width="4.5" height="49.6" rx="2.2" fill="var(--fg)" /><rect x="11.0" y="20.4" width="8" height="49.6" rx="4" fill="var(--fg)" /><rect x="22.0" y="20.4" width="3.5" height="49.6" rx="1.7" fill="var(--fg)" /><g transform="rotate(35 15.0 32)"><path d="M-4.70 36.50 L-11.00 27.50 L34.70 27.50 L41.00 36.50 Z" fill="var(--ac)" /></g></symbol><symbol id="w-xlow" viewBox="0 0 30 100" overflow="visible"><rect x="9.0" y="20.4" width="12" height="49.6" rx="6.0" fill="var(--fg)" /><g transform="rotate(35 15.0 10.5)"><path d="M-4.70 15.00 L-11.00 6.00 L34.70 6.00 L41.00 15.00 Z" fill="var(--ac)" /></g></symbol><symbol id="m-xlow" viewBox="0 0 30 100" overflow="visible"><rect x="4.0" y="20.4" width="4.5" height="49.6" rx="2.2" fill="var(--fg)" /><rect x="11.0" y="20.4" width="8" height="49.6" rx="4" fill="var(--fg)" /><rect x="22.0" y="20.4" width="3.5" height="49.6" rx="1.7" fill="var(--fg)" /><g transform="rotate(35 15.0 56)"><path d="M-4.70 60.50 L-11.00 51.50 L34.70 51.50 L41.00 60.50 Z" fill="var(--ac)" /></g></symbol><symbol id="w-c_float" viewBox="0 0 30 100" overflow="visible"><rect x="9.0" y="20.4" width="12" height="49.6" rx="6.0" fill="var(--fg)" /><g transform="rotate(35 15.0 10.5)"><path d="M9.30 15.00 L3.00 6.00 L20.70 6.00 L27.00 15.00 Z" fill="var(--ac)" /></g></symbol><symbol id="m-c_float" viewBox="0 0 30 100" overflow="visible"><rect x="4.0" y="20.4" width="4.5" height="49.6" rx="2.2" fill="var(--fg)" /><rect x="11.0" y="20.4" width="8" height="49.6" rx="4" fill="var(--fg)" /><rect x="22.0" y="20.4" width="3.5" height="49.6" rx="1.7" fill="var(--fg)" /><g transform="rotate(35 15.0 10.5)"><path d="M9.30 15.00 L3.00 6.00 L20.70 6.00 L27.00 15.00 Z" fill="var(--ac)" /></g></symbol><symbol id="w-c_cross" viewBox="0 0 30 100" overflow="visible"><rect x="9.0" y="20.4" width="12" height="49.6" rx="6.0" fill="var(--fg)" /><g transform="rotate(35 15.0 10.5)"><path d="M9.30 15.00 L3.00 6.00 L20.70 6.00 L27.00 15.00 Z" fill="var(--ac)" /></g></symbol><symbol id="m-c_cross" viewBox="0 0 30 100" overflow="visible"><rect x="4.0" y="20.4" width="4.5" height="49.6" rx="2.2" fill="var(--fg)" /><rect x="11.0" y="20.4" width="8" height="49.6" rx="4" fill="var(--fg)" /><rect x="22.0" y="20.4" width="3.5" height="49.6" rx="1.7" fill="var(--fg)" /><g transform="rotate(35 15.0 44)"><path d="M9.30 48.50 L3.00 39.50 L20.70 39.50 L27.00 48.50 Z" fill="var(--ac)" /></g></symbol><symbol id="w-c_cross_long" viewBox="0 0 30 100" overflow="visible"><rect x="9.0" y="20.4" width="12" height="49.6" rx="6.0" fill="var(--fg)" /><g transform="rotate(35 15.0 10.5)"><path d="M9.30 15.00 L3.00 6.00 L20.70 6.00 L27.00 15.00 Z" fill="var(--ac)" /></g></symbol><symbol id="m-c_cross_long" viewBox="0 0 30 100" overflow="visible"><rect x="4.0" y="20.4" width="4.5" height="49.6" rx="2.2" fill="var(--fg)" /><rect x="11.0" y="20.4" width="8" height="49.6" rx="4" fill="var(--fg)" /><rect x="22.0" y="20.4" width="3.5" height="49.6" rx="1.7" fill="var(--fg)" /><g transform="rotate(35 15.0 44)"><path d="M-4.70 48.50 L-11.00 39.50 L34.70 39.50 L41.00 48.50 Z" fill="var(--ac)" /></g></symbol><symbol id="w-cross" viewBox="0 0 30 100" overflow="visible"><rect x="9.0" y="20.4" width="12" height="49.6" rx="6.0" fill="var(--fg)" /><g transform="rotate(35 15.0 10.5)"><rect x="-11.0" y="6.0" width="52" height="9" rx="4.5" fill="var(--ac)" /></g></symbol><symbol id="m-cross" viewBox="0 0 30 100" overflow="visible"><rect x="4.0" y="20.4" width="4.5" height="49.6" rx="2.2" fill="var(--fg)" /><rect x="11.0" y="20.4" width="8" height="49.6" rx="4" fill="var(--fg)" /><rect x="22.0" y="20.4" width="3.5" height="49.6" rx="1.7" fill="var(--fg)" /><g transform="rotate(35 15.0 44)"><rect x="-11.0" y="39.5" width="52" height="9" rx="4.5" fill="var(--ac)" /></g></symbol></svg>
+      <div class="row">
+        <div class="meta"><h2>35° · round · the choice</h2><p>Round two's winner, unchanged. The baseline for everything below.</p></div>
+        <div class="specimens">
+          <div class="stack"><span class="word" style="font-size:52px">Card<svg class="wglyph" viewBox="0 0 30 100" width="0.30em" style="display:inline;vertical-align:-0.30em;overflow:visible" height="1em"><use href="#w-base" /></svg></span><span class="cap">word 52</span></div>
+          <div class="stack"><span class="word" style="font-size:26px">Card<svg class="wglyph" viewBox="0 0 30 100" width="0.30em" style="display:inline;vertical-align:-0.30em;overflow:visible" height="1em"><use href="#w-base" /></svg></span><span class="cap">26</span></div>
+          <div class="stack"><span class="tile" style="width:84px;height:84px"><svg viewBox="-37.5 -15.5 105.0 105.0" width="84" height="84" overflow="visible"><use href="#m-base" /></svg></span><span class="cap">mark</span></div>
+          <div class="stack"><span class="tile" style="width:30px;height:30px"><svg viewBox="-37.5 -15.5 105.0 105.0" width="30" height="30" overflow="visible"><use href="#m-base" /></svg></span><span class="cap">30</span></div>
+          <div class="stack"><span class="tile is-mono" style="width:44px;height:44px"><svg viewBox="-37.5 -15.5 105.0 105.0" width="44" height="44" overflow="visible"><use href="#m-base" /></svg></span><span class="cap">mono</span></div>
         </div>
       </div>
-    </div>
-    <div class="row">
-      <div class="meta">
-        <h2>35° · flat caps</h2>
-        <p>Square ends cut perpendicular to the stroke. Harder, more structural.</p>
-      </div>
-      <div class="specimens">
-        <div class="stack">
-          <span class="word" style="font-size: 52px"
-            >Card<svg class="wglyph" viewBox="0 0 30 100" width="0.30em" height="1em">
-              <use href="#w-flat" /></svg></span
-          ><span class="cap">word 52</span>
-        </div>
-        <div class="stack">
-          <span class="word" style="font-size: 26px"
-            >Card<svg class="wglyph" viewBox="0 0 30 100" width="0.30em" height="1em">
-              <use href="#w-flat" /></svg></span
-          ><span class="cap">26</span>
-        </div>
-        <div class="stack">
-          <span class="tile" style="width: 84px; height: 84px"
-            ><svg viewBox="-37.5 -15.5 105.0 105.0" width="84" height="84" overflow="visible">
-              <use href="#m-flat" /></svg></span
-          ><span class="cap">mark</span>
-        </div>
-        <div class="stack">
-          <span class="tile" style="width: 30px; height: 30px"
-            ><svg viewBox="-37.5 -15.5 105.0 105.0" width="30" height="30" overflow="visible">
-              <use href="#m-flat" /></svg></span
-          ><span class="cap">30</span>
-        </div>
-        <div class="stack">
-          <span class="tile is-mono" style="width: 44px; height: 44px"
-            ><svg viewBox="-37.5 -15.5 105.0 105.0" width="44" height="44" overflow="visible">
-              <use href="#m-flat" /></svg></span
-          ><span class="cap">mono</span>
+      <div class="row">
+        <div class="meta"><h2>35° · flat caps</h2><p>Square ends cut perpendicular to the stroke. Harder, more structural.</p></div>
+        <div class="specimens">
+          <div class="stack"><span class="word" style="font-size:52px">Card<svg class="wglyph" viewBox="0 0 30 100" width="0.30em" style="display:inline;vertical-align:-0.30em;overflow:visible" height="1em"><use href="#w-flat" /></svg></span><span class="cap">word 52</span></div>
+          <div class="stack"><span class="word" style="font-size:26px">Card<svg class="wglyph" viewBox="0 0 30 100" width="0.30em" style="display:inline;vertical-align:-0.30em;overflow:visible" height="1em"><use href="#w-flat" /></svg></span><span class="cap">26</span></div>
+          <div class="stack"><span class="tile" style="width:84px;height:84px"><svg viewBox="-37.5 -15.5 105.0 105.0" width="84" height="84" overflow="visible"><use href="#m-flat" /></svg></span><span class="cap">mark</span></div>
+          <div class="stack"><span class="tile" style="width:30px;height:30px"><svg viewBox="-37.5 -15.5 105.0 105.0" width="30" height="30" overflow="visible"><use href="#m-flat" /></svg></span><span class="cap">30</span></div>
+          <div class="stack"><span class="tile is-mono" style="width:44px;height:44px"><svg viewBox="-37.5 -15.5 105.0 105.0" width="44" height="44" overflow="visible"><use href="#m-flat" /></svg></span><span class="cap">mono</span></div>
         </div>
       </div>
-    </div>
-    <div class="row">
-      <div class="meta">
-        <h2>35° · sheared ends</h2>
-        <p>
-          Ends stay vertical after rotation, like a broad-nib stroke. The only variant with any
-          calligraphic memory in it.
-        </p>
-      </div>
-      <div class="specimens">
-        <div class="stack">
-          <span class="word" style="font-size: 52px"
-            >Card<svg class="wglyph" viewBox="0 0 30 100" width="0.30em" height="1em">
-              <use href="#w-shear" /></svg></span
-          ><span class="cap">word 52</span>
-        </div>
-        <div class="stack">
-          <span class="word" style="font-size: 26px"
-            >Card<svg class="wglyph" viewBox="0 0 30 100" width="0.30em" height="1em">
-              <use href="#w-shear" /></svg></span
-          ><span class="cap">26</span>
-        </div>
-        <div class="stack">
-          <span class="tile" style="width: 84px; height: 84px"
-            ><svg viewBox="-37.5 -15.5 105.0 105.0" width="84" height="84" overflow="visible">
-              <use href="#m-shear" /></svg></span
-          ><span class="cap">mark</span>
-        </div>
-        <div class="stack">
-          <span class="tile" style="width: 30px; height: 30px"
-            ><svg viewBox="-37.5 -15.5 105.0 105.0" width="30" height="30" overflow="visible">
-              <use href="#m-shear" /></svg></span
-          ><span class="cap">30</span>
-        </div>
-        <div class="stack">
-          <span class="tile is-mono" style="width: 44px; height: 44px"
-            ><svg viewBox="-37.5 -15.5 105.0 105.0" width="44" height="44" overflow="visible">
-              <use href="#m-shear" /></svg></span
-          ><span class="cap">mono</span>
+      <div class="row">
+        <div class="meta"><h2>35° · sheared ends</h2><p>Ends stay vertical after rotation, like a broad-nib stroke. The only variant with any calligraphic memory in it.</p></div>
+        <div class="specimens">
+          <div class="stack"><span class="word" style="font-size:52px">Card<svg class="wglyph" viewBox="0 0 30 100" width="0.30em" style="display:inline;vertical-align:-0.30em;overflow:visible" height="1em"><use href="#w-shear" /></svg></span><span class="cap">word 52</span></div>
+          <div class="stack"><span class="word" style="font-size:26px">Card<svg class="wglyph" viewBox="0 0 30 100" width="0.30em" style="display:inline;vertical-align:-0.30em;overflow:visible" height="1em"><use href="#w-shear" /></svg></span><span class="cap">26</span></div>
+          <div class="stack"><span class="tile" style="width:84px;height:84px"><svg viewBox="-37.5 -15.5 105.0 105.0" width="84" height="84" overflow="visible"><use href="#m-shear" /></svg></span><span class="cap">mark</span></div>
+          <div class="stack"><span class="tile" style="width:30px;height:30px"><svg viewBox="-37.5 -15.5 105.0 105.0" width="30" height="30" overflow="visible"><use href="#m-shear" /></svg></span><span class="cap">30</span></div>
+          <div class="stack"><span class="tile is-mono" style="width:44px;height:44px"><svg viewBox="-37.5 -15.5 105.0 105.0" width="44" height="44" overflow="visible"><use href="#m-shear" /></svg></span><span class="cap">mono</span></div>
         </div>
       </div>
-    </div>
-    <div class="row">
-      <div class="meta">
-        <h2>35° · matched weight</h2>
-        <p>The accent as thick as the stem, so the two read as one system of strokes.</p>
-      </div>
-      <div class="specimens">
-        <div class="stack">
-          <span class="word" style="font-size: 52px"
-            >Card<svg class="wglyph" viewBox="0 0 30 100" width="0.30em" height="1em">
-              <use href="#w-heavy" /></svg></span
-          ><span class="cap">word 52</span>
-        </div>
-        <div class="stack">
-          <span class="word" style="font-size: 26px"
-            >Card<svg class="wglyph" viewBox="0 0 30 100" width="0.30em" height="1em">
-              <use href="#w-heavy" /></svg></span
-          ><span class="cap">26</span>
-        </div>
-        <div class="stack">
-          <span class="tile" style="width: 84px; height: 84px"
-            ><svg viewBox="-37.5 -15.5 105.0 105.0" width="84" height="84" overflow="visible">
-              <use href="#m-heavy" /></svg></span
-          ><span class="cap">mark</span>
-        </div>
-        <div class="stack">
-          <span class="tile" style="width: 30px; height: 30px"
-            ><svg viewBox="-37.5 -15.5 105.0 105.0" width="30" height="30" overflow="visible">
-              <use href="#m-heavy" /></svg></span
-          ><span class="cap">30</span>
-        </div>
-        <div class="stack">
-          <span class="tile is-mono" style="width: 44px; height: 44px"
-            ><svg viewBox="-37.5 -15.5 105.0 105.0" width="44" height="44" overflow="visible">
-              <use href="#m-heavy" /></svg></span
-          ><span class="cap">mono</span>
+      <div class="row">
+        <div class="meta"><h2>35° · matched weight</h2><p>The accent as thick as the stem, so the two read as one system of strokes.</p></div>
+        <div class="specimens">
+          <div class="stack"><span class="word" style="font-size:52px">Card<svg class="wglyph" viewBox="0 0 30 100" width="0.30em" style="display:inline;vertical-align:-0.30em;overflow:visible" height="1em"><use href="#w-heavy" /></svg></span><span class="cap">word 52</span></div>
+          <div class="stack"><span class="word" style="font-size:26px">Card<svg class="wglyph" viewBox="0 0 30 100" width="0.30em" style="display:inline;vertical-align:-0.30em;overflow:visible" height="1em"><use href="#w-heavy" /></svg></span><span class="cap">26</span></div>
+          <div class="stack"><span class="tile" style="width:84px;height:84px"><svg viewBox="-37.5 -15.5 105.0 105.0" width="84" height="84" overflow="visible"><use href="#m-heavy" /></svg></span><span class="cap">mark</span></div>
+          <div class="stack"><span class="tile" style="width:30px;height:30px"><svg viewBox="-37.5 -15.5 105.0 105.0" width="30" height="30" overflow="visible"><use href="#m-heavy" /></svg></span><span class="cap">30</span></div>
+          <div class="stack"><span class="tile is-mono" style="width:44px;height:44px"><svg viewBox="-37.5 -15.5 105.0 105.0" width="44" height="44" overflow="visible"><use href="#m-heavy" /></svg></span><span class="cap">mono</span></div>
         </div>
       </div>
-    </div>
-    <div class="row">
-      <div class="meta">
-        <h2>35° · contained</h2>
-        <p>Barely overhangs. Closest to a real grave accent.</p>
-      </div>
-      <div class="specimens">
-        <div class="stack">
-          <span class="word" style="font-size: 52px"
-            >Card<svg class="wglyph" viewBox="0 0 30 100" width="0.30em" height="1em">
-              <use href="#w-short" /></svg></span
-          ><span class="cap">word 52</span>
-        </div>
-        <div class="stack">
-          <span class="word" style="font-size: 26px"
-            >Card<svg class="wglyph" viewBox="0 0 30 100" width="0.30em" height="1em">
-              <use href="#w-short" /></svg></span
-          ><span class="cap">26</span>
-        </div>
-        <div class="stack">
-          <span class="tile" style="width: 84px; height: 84px"
-            ><svg viewBox="-37.5 -15.5 105.0 105.0" width="84" height="84" overflow="visible">
-              <use href="#m-short" /></svg></span
-          ><span class="cap">mark</span>
-        </div>
-        <div class="stack">
-          <span class="tile" style="width: 30px; height: 30px"
-            ><svg viewBox="-37.5 -15.5 105.0 105.0" width="30" height="30" overflow="visible">
-              <use href="#m-short" /></svg></span
-          ><span class="cap">30</span>
-        </div>
-        <div class="stack">
-          <span class="tile is-mono" style="width: 44px; height: 44px"
-            ><svg viewBox="-37.5 -15.5 105.0 105.0" width="44" height="44" overflow="visible">
-              <use href="#m-short" /></svg></span
-          ><span class="cap">mono</span>
+      <div class="row">
+        <div class="meta"><h2>35° · contained</h2><p>Barely overhangs. Closest to a real grave accent.</p></div>
+        <div class="specimens">
+          <div class="stack"><span class="word" style="font-size:52px">Card<svg class="wglyph" viewBox="0 0 30 100" width="0.30em" style="display:inline;vertical-align:-0.30em;overflow:visible" height="1em"><use href="#w-short" /></svg></span><span class="cap">word 52</span></div>
+          <div class="stack"><span class="word" style="font-size:26px">Card<svg class="wglyph" viewBox="0 0 30 100" width="0.30em" style="display:inline;vertical-align:-0.30em;overflow:visible" height="1em"><use href="#w-short" /></svg></span><span class="cap">26</span></div>
+          <div class="stack"><span class="tile" style="width:84px;height:84px"><svg viewBox="-37.5 -15.5 105.0 105.0" width="84" height="84" overflow="visible"><use href="#m-short" /></svg></span><span class="cap">mark</span></div>
+          <div class="stack"><span class="tile" style="width:30px;height:30px"><svg viewBox="-37.5 -15.5 105.0 105.0" width="30" height="30" overflow="visible"><use href="#m-short" /></svg></span><span class="cap">30</span></div>
+          <div class="stack"><span class="tile is-mono" style="width:44px;height:44px"><svg viewBox="-37.5 -15.5 105.0 105.0" width="44" height="44" overflow="visible"><use href="#m-short" /></svg></span><span class="cap">mono</span></div>
         </div>
       </div>
-    </div>
-    <div class="row">
-      <div class="meta">
-        <h2>35° · extended</h2>
-        <p>More overhang, so the sweep travels further past the letter.</p>
-      </div>
-      <div class="specimens">
-        <div class="stack">
-          <span class="word" style="font-size: 52px"
-            >Card<svg class="wglyph" viewBox="0 0 30 100" width="0.30em" height="1em">
-              <use href="#w-long" /></svg></span
-          ><span class="cap">word 52</span>
-        </div>
-        <div class="stack">
-          <span class="word" style="font-size: 26px"
-            >Card<svg class="wglyph" viewBox="0 0 30 100" width="0.30em" height="1em">
-              <use href="#w-long" /></svg></span
-          ><span class="cap">26</span>
-        </div>
-        <div class="stack">
-          <span class="tile" style="width: 84px; height: 84px"
-            ><svg viewBox="-37.5 -15.5 105.0 105.0" width="84" height="84" overflow="visible">
-              <use href="#m-long" /></svg></span
-          ><span class="cap">mark</span>
-        </div>
-        <div class="stack">
-          <span class="tile" style="width: 30px; height: 30px"
-            ><svg viewBox="-37.5 -15.5 105.0 105.0" width="30" height="30" overflow="visible">
-              <use href="#m-long" /></svg></span
-          ><span class="cap">30</span>
-        </div>
-        <div class="stack">
-          <span class="tile is-mono" style="width: 44px; height: 44px"
-            ><svg viewBox="-37.5 -15.5 105.0 105.0" width="44" height="44" overflow="visible">
-              <use href="#m-long" /></svg></span
-          ><span class="cap">mono</span>
+      <div class="row">
+        <div class="meta"><h2>35° · extended</h2><p>More overhang, so the sweep travels further past the letter.</p></div>
+        <div class="specimens">
+          <div class="stack"><span class="word" style="font-size:52px">Card<svg class="wglyph" viewBox="0 0 30 100" width="0.30em" style="display:inline;vertical-align:-0.30em;overflow:visible" height="1em"><use href="#w-long" /></svg></span><span class="cap">word 52</span></div>
+          <div class="stack"><span class="word" style="font-size:26px">Card<svg class="wglyph" viewBox="0 0 30 100" width="0.30em" style="display:inline;vertical-align:-0.30em;overflow:visible" height="1em"><use href="#w-long" /></svg></span><span class="cap">26</span></div>
+          <div class="stack"><span class="tile" style="width:84px;height:84px"><svg viewBox="-37.5 -15.5 105.0 105.0" width="84" height="84" overflow="visible"><use href="#m-long" /></svg></span><span class="cap">mark</span></div>
+          <div class="stack"><span class="tile" style="width:30px;height:30px"><svg viewBox="-37.5 -15.5 105.0 105.0" width="30" height="30" overflow="visible"><use href="#m-long" /></svg></span><span class="cap">30</span></div>
+          <div class="stack"><span class="tile is-mono" style="width:44px;height:44px"><svg viewBox="-37.5 -15.5 105.0 105.0" width="44" height="44" overflow="visible"><use href="#m-long" /></svg></span><span class="cap">mono</span></div>
         </div>
       </div>
-    </div>
-    <div class="row">
-      <div class="meta">
-        <h2>30° · shallower</h2>
-        <p>One notch back from the choice.</p>
-      </div>
-      <div class="specimens">
-        <div class="stack">
-          <span class="word" style="font-size: 52px"
-            >Card<svg class="wglyph" viewBox="0 0 30 100" width="0.30em" height="1em">
-              <use href="#w-a30" /></svg></span
-          ><span class="cap">word 52</span>
-        </div>
-        <div class="stack">
-          <span class="word" style="font-size: 26px"
-            >Card<svg class="wglyph" viewBox="0 0 30 100" width="0.30em" height="1em">
-              <use href="#w-a30" /></svg></span
-          ><span class="cap">26</span>
-        </div>
-        <div class="stack">
-          <span class="tile" style="width: 84px; height: 84px"
-            ><svg viewBox="-37.5 -15.5 105.0 105.0" width="84" height="84" overflow="visible">
-              <use href="#m-a30" /></svg></span
-          ><span class="cap">mark</span>
-        </div>
-        <div class="stack">
-          <span class="tile" style="width: 30px; height: 30px"
-            ><svg viewBox="-37.5 -15.5 105.0 105.0" width="30" height="30" overflow="visible">
-              <use href="#m-a30" /></svg></span
-          ><span class="cap">30</span>
-        </div>
-        <div class="stack">
-          <span class="tile is-mono" style="width: 44px; height: 44px"
-            ><svg viewBox="-37.5 -15.5 105.0 105.0" width="44" height="44" overflow="visible">
-              <use href="#m-a30" /></svg></span
-          ><span class="cap">mono</span>
+      <div class="row">
+        <div class="meta"><h2>30° · shallower</h2><p>One notch back from the choice.</p></div>
+        <div class="specimens">
+          <div class="stack"><span class="word" style="font-size:52px">Card<svg class="wglyph" viewBox="0 0 30 100" width="0.30em" style="display:inline;vertical-align:-0.30em;overflow:visible" height="1em"><use href="#w-a30" /></svg></span><span class="cap">word 52</span></div>
+          <div class="stack"><span class="word" style="font-size:26px">Card<svg class="wglyph" viewBox="0 0 30 100" width="0.30em" style="display:inline;vertical-align:-0.30em;overflow:visible" height="1em"><use href="#w-a30" /></svg></span><span class="cap">26</span></div>
+          <div class="stack"><span class="tile" style="width:84px;height:84px"><svg viewBox="-37.5 -15.5 105.0 105.0" width="84" height="84" overflow="visible"><use href="#m-a30" /></svg></span><span class="cap">mark</span></div>
+          <div class="stack"><span class="tile" style="width:30px;height:30px"><svg viewBox="-37.5 -15.5 105.0 105.0" width="30" height="30" overflow="visible"><use href="#m-a30" /></svg></span><span class="cap">30</span></div>
+          <div class="stack"><span class="tile is-mono" style="width:44px;height:44px"><svg viewBox="-37.5 -15.5 105.0 105.0" width="44" height="44" overflow="visible"><use href="#m-a30" /></svg></span><span class="cap">mono</span></div>
         </div>
       </div>
-    </div>
-    <div class="row">
-      <div class="meta">
-        <h2>40° · steeper</h2>
-        <p>One notch on from the choice.</p>
-      </div>
-      <div class="specimens">
-        <div class="stack">
-          <span class="word" style="font-size: 52px"
-            >Card<svg class="wglyph" viewBox="0 0 30 100" width="0.30em" height="1em">
-              <use href="#w-a40" /></svg></span
-          ><span class="cap">word 52</span>
-        </div>
-        <div class="stack">
-          <span class="word" style="font-size: 26px"
-            >Card<svg class="wglyph" viewBox="0 0 30 100" width="0.30em" height="1em">
-              <use href="#w-a40" /></svg></span
-          ><span class="cap">26</span>
-        </div>
-        <div class="stack">
-          <span class="tile" style="width: 84px; height: 84px"
-            ><svg viewBox="-37.5 -15.5 105.0 105.0" width="84" height="84" overflow="visible">
-              <use href="#m-a40" /></svg></span
-          ><span class="cap">mark</span>
-        </div>
-        <div class="stack">
-          <span class="tile" style="width: 30px; height: 30px"
-            ><svg viewBox="-37.5 -15.5 105.0 105.0" width="30" height="30" overflow="visible">
-              <use href="#m-a40" /></svg></span
-          ><span class="cap">30</span>
-        </div>
-        <div class="stack">
-          <span class="tile is-mono" style="width: 44px; height: 44px"
-            ><svg viewBox="-37.5 -15.5 105.0 105.0" width="44" height="44" overflow="visible">
-              <use href="#m-a40" /></svg></span
-          ><span class="cap">mono</span>
+      <div class="row">
+        <div class="meta"><h2>40° · steeper</h2><p>One notch on from the choice.</p></div>
+        <div class="specimens">
+          <div class="stack"><span class="word" style="font-size:52px">Card<svg class="wglyph" viewBox="0 0 30 100" width="0.30em" style="display:inline;vertical-align:-0.30em;overflow:visible" height="1em"><use href="#w-a40" /></svg></span><span class="cap">word 52</span></div>
+          <div class="stack"><span class="word" style="font-size:26px">Card<svg class="wglyph" viewBox="0 0 30 100" width="0.30em" style="display:inline;vertical-align:-0.30em;overflow:visible" height="1em"><use href="#w-a40" /></svg></span><span class="cap">26</span></div>
+          <div class="stack"><span class="tile" style="width:84px;height:84px"><svg viewBox="-37.5 -15.5 105.0 105.0" width="84" height="84" overflow="visible"><use href="#m-a40" /></svg></span><span class="cap">mark</span></div>
+          <div class="stack"><span class="tile" style="width:30px;height:30px"><svg viewBox="-37.5 -15.5 105.0 105.0" width="30" height="30" overflow="visible"><use href="#m-a40" /></svg></span><span class="cap">30</span></div>
+          <div class="stack"><span class="tile is-mono" style="width:44px;height:44px"><svg viewBox="-37.5 -15.5 105.0 105.0" width="44" height="44" overflow="visible"><use href="#m-a40" /></svg></span><span class="cap">mono</span></div>
         </div>
       </div>
-    </div>
-    <div class="row">
-      <div class="meta">
-        <h2>CROSSING · round caps · mid</h2>
-        <p>The crossing beam, refined. Round caps — the softest of the three.</p>
-      </div>
-      <div class="specimens">
-        <div class="stack">
-          <span class="word" style="font-size: 52px"
-            >Card<svg class="wglyph" viewBox="0 0 30 100" width="0.30em" height="1em">
-              <use href="#w-xr" /></svg></span
-          ><span class="cap">word 52</span>
-        </div>
-        <div class="stack">
-          <span class="word" style="font-size: 26px"
-            >Card<svg class="wglyph" viewBox="0 0 30 100" width="0.30em" height="1em">
-              <use href="#w-xr" /></svg></span
-          ><span class="cap">26</span>
-        </div>
-        <div class="stack">
-          <span class="tile" style="width: 84px; height: 84px"
-            ><svg viewBox="-37.5 -15.5 105.0 105.0" width="84" height="84" overflow="visible">
-              <use href="#m-xr" /></svg></span
-          ><span class="cap">mark</span>
-        </div>
-        <div class="stack">
-          <span class="tile" style="width: 30px; height: 30px"
-            ><svg viewBox="-37.5 -15.5 105.0 105.0" width="30" height="30" overflow="visible">
-              <use href="#m-xr" /></svg></span
-          ><span class="cap">30</span>
-        </div>
-        <div class="stack">
-          <span class="tile is-mono" style="width: 44px; height: 44px"
-            ><svg viewBox="-37.5 -15.5 105.0 105.0" width="44" height="44" overflow="visible">
-              <use href="#m-xr" /></svg></span
-          ><span class="cap">mono</span>
+      <div class="row">
+        <div class="meta"><h2>CROSSING · round caps · mid</h2><p>The crossing beam, refined. Round caps — the softest of the three.</p></div>
+        <div class="specimens">
+          <div class="stack"><span class="word" style="font-size:52px">Card<svg class="wglyph" viewBox="0 0 30 100" width="0.30em" style="display:inline;vertical-align:-0.30em;overflow:visible" height="1em"><use href="#w-xr" /></svg></span><span class="cap">word 52</span></div>
+          <div class="stack"><span class="word" style="font-size:26px">Card<svg class="wglyph" viewBox="0 0 30 100" width="0.30em" style="display:inline;vertical-align:-0.30em;overflow:visible" height="1em"><use href="#w-xr" /></svg></span><span class="cap">26</span></div>
+          <div class="stack"><span class="tile" style="width:84px;height:84px"><svg viewBox="-37.5 -15.5 105.0 105.0" width="84" height="84" overflow="visible"><use href="#m-xr" /></svg></span><span class="cap">mark</span></div>
+          <div class="stack"><span class="tile" style="width:30px;height:30px"><svg viewBox="-37.5 -15.5 105.0 105.0" width="30" height="30" overflow="visible"><use href="#m-xr" /></svg></span><span class="cap">30</span></div>
+          <div class="stack"><span class="tile is-mono" style="width:44px;height:44px"><svg viewBox="-37.5 -15.5 105.0 105.0" width="44" height="44" overflow="visible"><use href="#m-xr" /></svg></span><span class="cap">mono</span></div>
         </div>
       </div>
-    </div>
-    <div class="row">
-      <div class="meta">
-        <h2>CROSSING · flat caps · mid</h2>
-        <p>
-          Square ends. The system calls itself flat and structural, and a round cap is the least
-          structural option available.
-        </p>
-      </div>
-      <div class="specimens">
-        <div class="stack">
-          <span class="word" style="font-size: 52px"
-            >Card<svg class="wglyph" viewBox="0 0 30 100" width="0.30em" height="1em">
-              <use href="#w-xf" /></svg></span
-          ><span class="cap">word 52</span>
-        </div>
-        <div class="stack">
-          <span class="word" style="font-size: 26px"
-            >Card<svg class="wglyph" viewBox="0 0 30 100" width="0.30em" height="1em">
-              <use href="#w-xf" /></svg></span
-          ><span class="cap">26</span>
-        </div>
-        <div class="stack">
-          <span class="tile" style="width: 84px; height: 84px"
-            ><svg viewBox="-37.5 -15.5 105.0 105.0" width="84" height="84" overflow="visible">
-              <use href="#m-xf" /></svg></span
-          ><span class="cap">mark</span>
-        </div>
-        <div class="stack">
-          <span class="tile" style="width: 30px; height: 30px"
-            ><svg viewBox="-37.5 -15.5 105.0 105.0" width="30" height="30" overflow="visible">
-              <use href="#m-xf" /></svg></span
-          ><span class="cap">30</span>
-        </div>
-        <div class="stack">
-          <span class="tile is-mono" style="width: 44px; height: 44px"
-            ><svg viewBox="-37.5 -15.5 105.0 105.0" width="44" height="44" overflow="visible">
-              <use href="#m-xf" /></svg></span
-          ><span class="cap">mono</span>
+      <div class="row">
+        <div class="meta"><h2>CROSSING · flat caps · mid</h2><p>Square ends. The system calls itself flat and structural, and a round cap is the least structural option available.</p></div>
+        <div class="specimens">
+          <div class="stack"><span class="word" style="font-size:52px">Card<svg class="wglyph" viewBox="0 0 30 100" width="0.30em" style="display:inline;vertical-align:-0.30em;overflow:visible" height="1em"><use href="#w-xf" /></svg></span><span class="cap">word 52</span></div>
+          <div class="stack"><span class="word" style="font-size:26px">Card<svg class="wglyph" viewBox="0 0 30 100" width="0.30em" style="display:inline;vertical-align:-0.30em;overflow:visible" height="1em"><use href="#w-xf" /></svg></span><span class="cap">26</span></div>
+          <div class="stack"><span class="tile" style="width:84px;height:84px"><svg viewBox="-37.5 -15.5 105.0 105.0" width="84" height="84" overflow="visible"><use href="#m-xf" /></svg></span><span class="cap">mark</span></div>
+          <div class="stack"><span class="tile" style="width:30px;height:30px"><svg viewBox="-37.5 -15.5 105.0 105.0" width="30" height="30" overflow="visible"><use href="#m-xf" /></svg></span><span class="cap">30</span></div>
+          <div class="stack"><span class="tile is-mono" style="width:44px;height:44px"><svg viewBox="-37.5 -15.5 105.0 105.0" width="44" height="44" overflow="visible"><use href="#m-xf" /></svg></span><span class="cap">mono</span></div>
         </div>
       </div>
-    </div>
-    <div class="row">
-      <div class="meta">
-        <h2>CROSSING · sheared · mid</h2>
-        <p>
-          Ends vertical after rotation. Reads as one confident stroke of a broad nib rather than a
-          bar that happens to be tilted.
-        </p>
-      </div>
-      <div class="specimens">
-        <div class="stack">
-          <span class="word" style="font-size: 52px"
-            >Card<svg class="wglyph" viewBox="0 0 30 100" width="0.30em" height="1em">
-              <use href="#w-xs" /></svg></span
-          ><span class="cap">word 52</span>
-        </div>
-        <div class="stack">
-          <span class="word" style="font-size: 26px"
-            >Card<svg class="wglyph" viewBox="0 0 30 100" width="0.30em" height="1em">
-              <use href="#w-xs" /></svg></span
-          ><span class="cap">26</span>
-        </div>
-        <div class="stack">
-          <span class="tile" style="width: 84px; height: 84px"
-            ><svg viewBox="-37.5 -15.5 105.0 105.0" width="84" height="84" overflow="visible">
-              <use href="#m-xs" /></svg></span
-          ><span class="cap">mark</span>
-        </div>
-        <div class="stack">
-          <span class="tile" style="width: 30px; height: 30px"
-            ><svg viewBox="-37.5 -15.5 105.0 105.0" width="30" height="30" overflow="visible">
-              <use href="#m-xs" /></svg></span
-          ><span class="cap">30</span>
-        </div>
-        <div class="stack">
-          <span class="tile is-mono" style="width: 44px; height: 44px"
-            ><svg viewBox="-37.5 -15.5 105.0 105.0" width="44" height="44" overflow="visible">
-              <use href="#m-xs" /></svg></span
-          ><span class="cap">mono</span>
+      <div class="row">
+        <div class="meta"><h2>CROSSING · sheared · mid</h2><p>Ends vertical after rotation. Reads as one confident stroke of a broad nib rather than a bar that happens to be tilted.</p></div>
+        <div class="specimens">
+          <div class="stack"><span class="word" style="font-size:52px">Card<svg class="wglyph" viewBox="0 0 30 100" width="0.30em" style="display:inline;vertical-align:-0.30em;overflow:visible" height="1em"><use href="#w-xs" /></svg></span><span class="cap">word 52</span></div>
+          <div class="stack"><span class="word" style="font-size:26px">Card<svg class="wglyph" viewBox="0 0 30 100" width="0.30em" style="display:inline;vertical-align:-0.30em;overflow:visible" height="1em"><use href="#w-xs" /></svg></span><span class="cap">26</span></div>
+          <div class="stack"><span class="tile" style="width:84px;height:84px"><svg viewBox="-37.5 -15.5 105.0 105.0" width="84" height="84" overflow="visible"><use href="#m-xs" /></svg></span><span class="cap">mark</span></div>
+          <div class="stack"><span class="tile" style="width:30px;height:30px"><svg viewBox="-37.5 -15.5 105.0 105.0" width="30" height="30" overflow="visible"><use href="#m-xs" /></svg></span><span class="cap">30</span></div>
+          <div class="stack"><span class="tile is-mono" style="width:44px;height:44px"><svg viewBox="-37.5 -15.5 105.0 105.0" width="44" height="44" overflow="visible"><use href="#m-xs" /></svg></span><span class="cap">mono</span></div>
         </div>
       </div>
-    </div>
-    <div class="row">
-      <div class="meta">
-        <h2>CROSSING · high on the bars</h2>
-        <p>The beam near the top of the barcode: caught early in the sweep.</p>
-      </div>
-      <div class="specimens">
-        <div class="stack">
-          <span class="word" style="font-size: 52px"
-            >Card<svg class="wglyph" viewBox="0 0 30 100" width="0.30em" height="1em">
-              <use href="#w-xhigh" /></svg></span
-          ><span class="cap">word 52</span>
-        </div>
-        <div class="stack">
-          <span class="word" style="font-size: 26px"
-            >Card<svg class="wglyph" viewBox="0 0 30 100" width="0.30em" height="1em">
-              <use href="#w-xhigh" /></svg></span
-          ><span class="cap">26</span>
-        </div>
-        <div class="stack">
-          <span class="tile" style="width: 84px; height: 84px"
-            ><svg viewBox="-37.5 -15.5 105.0 105.0" width="84" height="84" overflow="visible">
-              <use href="#m-xhigh" /></svg></span
-          ><span class="cap">mark</span>
-        </div>
-        <div class="stack">
-          <span class="tile" style="width: 30px; height: 30px"
-            ><svg viewBox="-37.5 -15.5 105.0 105.0" width="30" height="30" overflow="visible">
-              <use href="#m-xhigh" /></svg></span
-          ><span class="cap">30</span>
-        </div>
-        <div class="stack">
-          <span class="tile is-mono" style="width: 44px; height: 44px"
-            ><svg viewBox="-37.5 -15.5 105.0 105.0" width="44" height="44" overflow="visible">
-              <use href="#m-xhigh" /></svg></span
-          ><span class="cap">mono</span>
+      <div class="row">
+        <div class="meta"><h2>CROSSING · high on the bars</h2><p>The beam near the top of the barcode: caught early in the sweep.</p></div>
+        <div class="specimens">
+          <div class="stack"><span class="word" style="font-size:52px">Card<svg class="wglyph" viewBox="0 0 30 100" width="0.30em" style="display:inline;vertical-align:-0.30em;overflow:visible" height="1em"><use href="#w-xhigh" /></svg></span><span class="cap">word 52</span></div>
+          <div class="stack"><span class="word" style="font-size:26px">Card<svg class="wglyph" viewBox="0 0 30 100" width="0.30em" style="display:inline;vertical-align:-0.30em;overflow:visible" height="1em"><use href="#w-xhigh" /></svg></span><span class="cap">26</span></div>
+          <div class="stack"><span class="tile" style="width:84px;height:84px"><svg viewBox="-37.5 -15.5 105.0 105.0" width="84" height="84" overflow="visible"><use href="#m-xhigh" /></svg></span><span class="cap">mark</span></div>
+          <div class="stack"><span class="tile" style="width:30px;height:30px"><svg viewBox="-37.5 -15.5 105.0 105.0" width="30" height="30" overflow="visible"><use href="#m-xhigh" /></svg></span><span class="cap">30</span></div>
+          <div class="stack"><span class="tile is-mono" style="width:44px;height:44px"><svg viewBox="-37.5 -15.5 105.0 105.0" width="44" height="44" overflow="visible"><use href="#m-xhigh" /></svg></span><span class="cap">mono</span></div>
         </div>
       </div>
-    </div>
-    <div class="row">
-      <div class="meta">
-        <h2>CROSSING · low on the bars</h2>
-        <p>Near the foot: caught late. The bars read taller above it.</p>
-      </div>
-      <div class="specimens">
-        <div class="stack">
-          <span class="word" style="font-size: 52px"
-            >Card<svg class="wglyph" viewBox="0 0 30 100" width="0.30em" height="1em">
-              <use href="#w-xlow" /></svg></span
-          ><span class="cap">word 52</span>
-        </div>
-        <div class="stack">
-          <span class="word" style="font-size: 26px"
-            >Card<svg class="wglyph" viewBox="0 0 30 100" width="0.30em" height="1em">
-              <use href="#w-xlow" /></svg></span
-          ><span class="cap">26</span>
-        </div>
-        <div class="stack">
-          <span class="tile" style="width: 84px; height: 84px"
-            ><svg viewBox="-37.5 -15.5 105.0 105.0" width="84" height="84" overflow="visible">
-              <use href="#m-xlow" /></svg></span
-          ><span class="cap">mark</span>
-        </div>
-        <div class="stack">
-          <span class="tile" style="width: 30px; height: 30px"
-            ><svg viewBox="-37.5 -15.5 105.0 105.0" width="30" height="30" overflow="visible">
-              <use href="#m-xlow" /></svg></span
-          ><span class="cap">30</span>
-        </div>
-        <div class="stack">
-          <span class="tile is-mono" style="width: 44px; height: 44px"
-            ><svg viewBox="-37.5 -15.5 105.0 105.0" width="44" height="44" overflow="visible">
-              <use href="#m-xlow" /></svg></span
-          ><span class="cap">mono</span>
+      <div class="row">
+        <div class="meta"><h2>CROSSING · low on the bars</h2><p>Near the foot: caught late. The bars read taller above it.</p></div>
+        <div class="specimens">
+          <div class="stack"><span class="word" style="font-size:52px">Card<svg class="wglyph" viewBox="0 0 30 100" width="0.30em" style="display:inline;vertical-align:-0.30em;overflow:visible" height="1em"><use href="#w-xlow" /></svg></span><span class="cap">word 52</span></div>
+          <div class="stack"><span class="word" style="font-size:26px">Card<svg class="wglyph" viewBox="0 0 30 100" width="0.30em" style="display:inline;vertical-align:-0.30em;overflow:visible" height="1em"><use href="#w-xlow" /></svg></span><span class="cap">26</span></div>
+          <div class="stack"><span class="tile" style="width:84px;height:84px"><svg viewBox="-37.5 -15.5 105.0 105.0" width="84" height="84" overflow="visible"><use href="#m-xlow" /></svg></span><span class="cap">mark</span></div>
+          <div class="stack"><span class="tile" style="width:30px;height:30px"><svg viewBox="-37.5 -15.5 105.0 105.0" width="30" height="30" overflow="visible"><use href="#m-xlow" /></svg></span><span class="cap">30</span></div>
+          <div class="stack"><span class="tile is-mono" style="width:44px;height:44px"><svg viewBox="-37.5 -15.5 105.0 105.0" width="44" height="44" overflow="visible"><use href="#m-xlow" /></svg></span><span class="cap">mono</span></div>
         </div>
       </div>
-    </div>
-    <div class="row">
-      <div class="meta">
-        <h2>35° · CROSSING the barcode</h2>
-        <p>
-          In the mark only, the beam passes THROUGH the bars instead of floating above them — the
-          design system's sentence read literally. In the word it still floats, because an accent
-          that crosses its letter is not an accent. Which is the cost: the beam stops being
-          identical in both places.
-        </p>
-      </div>
-      <div class="specimens">
-        <div class="stack">
-          <span class="word" style="font-size: 52px"
-            >Card<svg class="wglyph" viewBox="0 0 30 100" width="0.30em" height="1em">
-              <use href="#w-cross" /></svg></span
-          ><span class="cap">word 52</span>
-        </div>
-        <div class="stack">
-          <span class="word" style="font-size: 26px"
-            >Card<svg class="wglyph" viewBox="0 0 30 100" width="0.30em" height="1em">
-              <use href="#w-cross" /></svg></span
-          ><span class="cap">26</span>
-        </div>
-        <div class="stack">
-          <span class="tile" style="width: 84px; height: 84px"
-            ><svg viewBox="-37.5 -15.5 105.0 105.0" width="84" height="84" overflow="visible">
-              <use href="#m-cross" /></svg></span
-          ><span class="cap">mark</span>
-        </div>
-        <div class="stack">
-          <span class="tile" style="width: 30px; height: 30px"
-            ><svg viewBox="-37.5 -15.5 105.0 105.0" width="30" height="30" overflow="visible">
-              <use href="#m-cross" /></svg></span
-          ><span class="cap">30</span>
-        </div>
-        <div class="stack">
-          <span class="tile is-mono" style="width: 44px; height: 44px"
-            ><svg viewBox="-37.5 -15.5 105.0 105.0" width="44" height="44" overflow="visible">
-              <use href="#m-cross" /></svg></span
-          ><span class="cap">mono</span>
+      <div class="row">
+        <div class="meta"><h2>CHOSEN · contained · mark floats</h2><p>ifero's pick, used in both places unchanged. The word is right. Judge the mark: is a short tick enough at icon size?</p></div>
+        <div class="specimens">
+          <div class="stack"><span class="word" style="font-size:52px">Card<svg class="wglyph" viewBox="0 0 30 100" width="0.30em" style="display:inline;vertical-align:-0.30em;overflow:visible" height="1em"><use href="#w-c_float" /></svg></span><span class="cap">word 52</span></div>
+          <div class="stack"><span class="word" style="font-size:26px">Card<svg class="wglyph" viewBox="0 0 30 100" width="0.30em" style="display:inline;vertical-align:-0.30em;overflow:visible" height="1em"><use href="#w-c_float" /></svg></span><span class="cap">26</span></div>
+          <div class="stack"><span class="tile" style="width:84px;height:84px"><svg viewBox="-37.5 -15.5 105.0 105.0" width="84" height="84" overflow="visible"><use href="#m-c_float" /></svg></span><span class="cap">mark</span></div>
+          <div class="stack"><span class="tile" style="width:30px;height:30px"><svg viewBox="-37.5 -15.5 105.0 105.0" width="30" height="30" overflow="visible"><use href="#m-c_float" /></svg></span><span class="cap">30</span></div>
+          <div class="stack"><span class="tile is-mono" style="width:44px;height:44px"><svg viewBox="-37.5 -15.5 105.0 105.0" width="44" height="44" overflow="visible"><use href="#m-c_float" /></svg></span><span class="cap">mono</span></div>
         </div>
       </div>
-    </div>
+      <div class="row">
+        <div class="meta"><h2>CHOSEN · contained word · CROSSING mark</h2><p>The same contained accent in the word, but the mark's beam crosses the bars — still short, so it does not reach past them.</p></div>
+        <div class="specimens">
+          <div class="stack"><span class="word" style="font-size:52px">Card<svg class="wglyph" viewBox="0 0 30 100" width="0.30em" style="display:inline;vertical-align:-0.30em;overflow:visible" height="1em"><use href="#w-c_cross" /></svg></span><span class="cap">word 52</span></div>
+          <div class="stack"><span class="word" style="font-size:26px">Card<svg class="wglyph" viewBox="0 0 30 100" width="0.30em" style="display:inline;vertical-align:-0.30em;overflow:visible" height="1em"><use href="#w-c_cross" /></svg></span><span class="cap">26</span></div>
+          <div class="stack"><span class="tile" style="width:84px;height:84px"><svg viewBox="-37.5 -15.5 105.0 105.0" width="84" height="84" overflow="visible"><use href="#m-c_cross" /></svg></span><span class="cap">mark</span></div>
+          <div class="stack"><span class="tile" style="width:30px;height:30px"><svg viewBox="-37.5 -15.5 105.0 105.0" width="30" height="30" overflow="visible"><use href="#m-c_cross" /></svg></span><span class="cap">30</span></div>
+          <div class="stack"><span class="tile is-mono" style="width:44px;height:44px"><svg viewBox="-37.5 -15.5 105.0 105.0" width="44" height="44" overflow="visible"><use href="#m-c_cross" /></svg></span><span class="cap">mono</span></div>
+        </div>
+      </div>
+      <div class="row">
+        <div class="meta"><h2>CHOSEN · contained word · crossing LONG mark</h2><p>Contained in the word, extended and crossing in the mark. Strongest icon, but now the two forms share only an angle and a colour, not a stroke.</p></div>
+        <div class="specimens">
+          <div class="stack"><span class="word" style="font-size:52px">Card<svg class="wglyph" viewBox="0 0 30 100" width="0.30em" style="display:inline;vertical-align:-0.30em;overflow:visible" height="1em"><use href="#w-c_cross_long" /></svg></span><span class="cap">word 52</span></div>
+          <div class="stack"><span class="word" style="font-size:26px">Card<svg class="wglyph" viewBox="0 0 30 100" width="0.30em" style="display:inline;vertical-align:-0.30em;overflow:visible" height="1em"><use href="#w-c_cross_long" /></svg></span><span class="cap">26</span></div>
+          <div class="stack"><span class="tile" style="width:84px;height:84px"><svg viewBox="-37.5 -15.5 105.0 105.0" width="84" height="84" overflow="visible"><use href="#m-c_cross_long" /></svg></span><span class="cap">mark</span></div>
+          <div class="stack"><span class="tile" style="width:30px;height:30px"><svg viewBox="-37.5 -15.5 105.0 105.0" width="30" height="30" overflow="visible"><use href="#m-c_cross_long" /></svg></span><span class="cap">30</span></div>
+          <div class="stack"><span class="tile is-mono" style="width:44px;height:44px"><svg viewBox="-37.5 -15.5 105.0 105.0" width="44" height="44" overflow="visible"><use href="#m-c_cross_long" /></svg></span><span class="cap">mono</span></div>
+        </div>
+      </div>
+      <div class="row">
+        <div class="meta"><h2>35° · CROSSING the barcode</h2><p>In the mark only, the beam passes THROUGH the bars instead of floating above them — the design system's sentence read literally. In the word it still floats, because an accent that crosses its letter is not an accent. Which is the cost: the beam stops being identical in both places.</p></div>
+        <div class="specimens">
+          <div class="stack"><span class="word" style="font-size:52px">Card<svg class="wglyph" viewBox="0 0 30 100" width="0.30em" style="display:inline;vertical-align:-0.30em;overflow:visible" height="1em"><use href="#w-cross" /></svg></span><span class="cap">word 52</span></div>
+          <div class="stack"><span class="word" style="font-size:26px">Card<svg class="wglyph" viewBox="0 0 30 100" width="0.30em" style="display:inline;vertical-align:-0.30em;overflow:visible" height="1em"><use href="#w-cross" /></svg></span><span class="cap">26</span></div>
+          <div class="stack"><span class="tile" style="width:84px;height:84px"><svg viewBox="-37.5 -15.5 105.0 105.0" width="84" height="84" overflow="visible"><use href="#m-cross" /></svg></span><span class="cap">mark</span></div>
+          <div class="stack"><span class="tile" style="width:30px;height:30px"><svg viewBox="-37.5 -15.5 105.0 105.0" width="30" height="30" overflow="visible"><use href="#m-cross" /></svg></span><span class="cap">30</span></div>
+          <div class="stack"><span class="tile is-mono" style="width:44px;height:44px"><svg viewBox="-37.5 -15.5 105.0 105.0" width="44" height="44" overflow="visible"><use href="#m-cross" /></svg></span><span class="cap">mono</span></div>
+        </div>
+      </div>
   </body>
 </html>

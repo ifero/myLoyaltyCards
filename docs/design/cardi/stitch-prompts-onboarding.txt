@@ -130,6 +130,9 @@ Applied concretely — at most one beam element per drawing:
   the mark         the **ì** — an ink circle, a white stem, and the grave accent as a short
                    beam-yellow STROKE, not a dot. At rest a dot, in motion a beam, so the accent
                    is the beam. Not a credit card, not a wallet, not a generic card glyph.
+                   The accent DESCENDS from upper-left to lower-right, like a backslash:
+                   its high end is on the LEFT. An accent that rises to the right is an
+                   acute and spells a different word.
 
   welcome band     three card outlines in 2px ink line-work, ROTATED about a shared pivot below
                    the group the way cards held in a hand are — about -17°, -1° and +15°. The
@@ -185,11 +188,14 @@ MARGINS: 24px left and right.
 1. THE MARK, centred, 64px below the status bar: a 96px fully-round circle filled ink #181824,
    holding the letter "ì" in white #FFFFFF, Space Grotesk bold at about 44px — a lowercase i
    with a grave accent. The accent stroke above the i is BEAM #FCCC0C rather than white, and it
-   is the only yellow on this screen. This is the brand's logo: do NOT draw a credit card, a
+   is the only yellow on this screen. That stroke DESCENDS from upper-left to lower-right,
+   like a backslash, with its high end on the LEFT — it must NOT rise to the right, which
+   would be an acute and a different word. This is the brand's logo: do NOT draw a credit card, a
    wallet, a card stack, a barcode, a shopping bag or any generic icon in this circle.
 
 2. THE TITLE "Cardì" centred 32px beneath the circle, in Space Grotesk bold 34px, ink #181824 —
-   ALL of it, the grave accent on the final ì included.
+   ALL of it, the grave accent on the final ì included. That accent descends left to right
+   (high end on the LEFT, like a backslash); it never rises.
 
    (An earlier draft asked for that accent in beam. Drawing it disproved the idea: beam on cream
    fails contrast, which is exactly why the design system pairs beam with ink and never with
