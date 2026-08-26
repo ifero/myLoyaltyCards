@@ -12,13 +12,16 @@
 import {
   CARD_COLORS as CARD_COLORS_TOKENS,
   DARK_THEME_COLORS,
+  IDENTITY_COLORS,
   LIGHT_THEME_COLORS,
   NEUTRAL_COLORS,
   PRIMARY_COLORS
 } from './tokens.generated';
 import catalogueData from '../../catalogue/italy.json';
 
-export { NEUTRAL_COLORS, PRIMARY_COLORS };
+// IDENTITY_COLORS is OURS -- the Cardi ink/beam/cream marks. Not to be confused
+// with BRAND_COLORS below, which maps ~45 RETAILER brands to their own colours.
+export { IDENTITY_COLORS, NEUTRAL_COLORS, PRIMARY_COLORS };
 
 /**
  * Card color type - matches core/schemas/card.ts CardColor

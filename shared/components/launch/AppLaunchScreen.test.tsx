@@ -91,10 +91,10 @@ beforeEach(() => {
 
 describe('AppLaunchScreen', () => {
   describe('rendering (AC3, AC4, AC6)', () => {
-    it('renders the aurora mark square at SPLASH_LOGO_WIDTH on both axes', () => {
+    it('renders the Cardì mark square at SPLASH_LOGO_WIDTH on both axes', () => {
       render(<AppLaunchScreen />);
 
-      // Both axes, not just width: the aurora viewBox is square, and a
+      // Both axes, not just width: the mark's viewBox is square, and a
       // flex-driven height would break the pixel-identity that conceals the
       // native→JS handoff on Android (where there is no fade).
       const logo = screen.getByTestId('app-launch-mark-logo', HIDDEN);

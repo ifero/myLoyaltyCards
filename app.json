@@ -23,7 +23,8 @@
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#ffffff"
+        "monochromeImage": "./assets/adaptive-icon-monochrome.png",
+        "backgroundColor": "#181824"
       },
       "package": "com.iferoporefi.myloyaltycards"
     },
@@ -68,7 +69,7 @@
         {
           "image": "./assets/splash-icon.png",
           "imageWidth": 260,
-          "backgroundColor": "#1A73E8"
+          "backgroundColor": "#181824"
         }
       ]
     ],

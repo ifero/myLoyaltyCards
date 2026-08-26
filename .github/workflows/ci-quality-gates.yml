@@ -94,8 +94,8 @@ jobs:
       # artwork. Also catches the trap that shipped a hard-edged blue square on the
       # launch field: `assets/icon.png` is intentionally opaque and full-bleed (the OS
       # masks app icons itself), so it must never be used as the splash image.
-      - name: Check the splash icon is in sync with its source artwork
-        run: yarn splash:check
+      - name: Brand icons are in sync with the mark
+        run: yarn icons:check
 
       # Regenerates the Wear OS brand catalogue from catalogue/italy.json and fails if the
       # committed Brands.kt differs. It lives HERE rather than in wear-os-build.yml

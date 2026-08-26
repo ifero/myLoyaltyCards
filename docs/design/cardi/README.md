@@ -142,6 +142,43 @@ Wave B is blocked until the illustration set exists.
   real EAN-13 from the L/R code tables; treat the Stitch barcode as a placeholder and never as
   a reference.
 
+## The mark is decided, and it is now built
+
+**35°, grave, contained in the word; in the icon the beam crosses the bars high** — variant
+C of [`frames/cardi-icon-explore.html`](frames/cardi-icon-explore.html), chosen 2026-08-26
+over five alternatives. The square is allowed to differ from the word because it has no
+neighbouring letter to anchor the accent against; what settled it was the Android 13 themed
+layer, which redraws the icon in one wallpaper-derived colour. A floating tick is a speck
+once the hue is gone; a crossing beam survives, because it is a shape rather than a colour.
+
+Everything shipped is generated from one geometry definition:
+
+```bash
+yarn icons:build     # write the assets
+yarn icons:check     # fail if any drifted (pre-push + CI)
+```
+
+`scripts/build-brand-icons.mjs` renders eight artefacts — three SVGs and five PNGs — from
+the same constants, so the app icon, the launch mark, the Android foreground, the themed
+layer, the favicon and the in-app glyph cannot disagree with each other. The Android
+foreground scale is **derived** (`33 / bounding radius` = ×0.873), not hardcoded, so
+changing the artwork updates the export scale instead of silently invalidating it.
+
+Two constraints that are easy to get wrong and are now enforced by tests:
+
+- **`icon.png` must have NO alpha channel** — iOS rejects an app icon that carries one —
+  while the splash and Android foreground must be transparent, because the platform paints
+  the field. `constants.test.ts` asserts that colour-type split; it caught the first build
+  writing RGBA for everything.
+- **The splash `backgroundColor` and `LAUNCH_FIELD_COLOR` must be identical.** The native
+  splash background is baked at build time and cannot read a runtime theme, so any
+  disagreement shows as a full luminance inversion on every cold start.
+
+The colour migration is still **not** done: `PRIMARY_COLORS` remains the pre-rebrand Google
+Blue ramp. The brand colours were added additively as `IDENTITY_COLORS`
+(`ink` / `beam` / `cream`) so the assets have a real token to derive from without
+recolouring the app — that remains a separate big-bang change.
+
 ## Where it stopped
 
 Stitch project `7004325876123157178` ("Cardì"), design system asset `484682383639656270`

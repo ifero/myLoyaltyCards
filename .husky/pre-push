@@ -7,8 +7,8 @@ yarn typecheck || exit 1
 echo "Checking design tokens are in sync..."
 yarn tokens:check || exit 1
 
-echo "Checking the splash icon is in sync with the app icon..."
-yarn splash:check || exit 1
+echo "Checking the brand icons are in sync with the mark..."
+yarn icons:check || exit 1
 
 # Pure Node, unlike the watchOS equivalent (`check:catalogue-generated` needs `xcrun swift`),
 # so it runs on any machine and belongs here rather than only in CI.

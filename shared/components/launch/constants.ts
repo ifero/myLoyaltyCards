@@ -16,7 +16,7 @@
  * `scripts/token-format.mjs`, both guarded by `yarn tokens:check`; that is a
  * separate story.
  */
-import { PRIMARY_COLORS } from '@/shared/theme/colors';
+import { IDENTITY_COLORS } from '@/shared/theme/colors';
 
 /**
  * The launch field — a single brand colour, identical in both schemes.
@@ -31,11 +31,13 @@ import { PRIMARY_COLORS } from '@/shared/theme/colors';
  * mitigating it, and it is the only field that is neither white nor black.
  *
  * Derived from the design token rather than hardcoded, so it tracks
- * `tokens/*.json`. The same value is duplicated as `backgroundColor` in
+ * `tokens/*.json`. It is `IDENTITY_COLORS.ink` -- the Cardi mark's own field --
+ * and NOT `PRIMARY_COLORS[500]`, which is still the pre-rebrand Google Blue
+ * because the app-wide colour migration is a separate big-bang change. The same value is duplicated as `backgroundColor` in
  * `app.json`'s `expo-splash-screen` entry — strict JSON cannot hold a comment
  * pointing here, so `constants.test.ts` asserts the two agree.
  */
-export const LAUNCH_FIELD_COLOR = PRIMARY_COLORS[500];
+export const LAUNCH_FIELD_COLOR = IDENTITY_COLORS.ink;
 
 /**
  * Logo edge length in points, square.
@@ -52,7 +54,7 @@ export const LAUNCH_FIELD_COLOR = PRIMARY_COLORS[500];
  * native PNG and the JS-rendered SVG is the ONLY thing concealing the handoff
  * there. A few points of drift turns an invisible transition into a flicker.
  *
- * Applied to BOTH `width` and `height`: the aurora `viewBox` is `0 0 1024 1024`
+ * Applied to BOTH `width` and `height`: the mark's `viewBox` is `0 0 1024 1024`
  * (square), and setting width alone invites a flex-driven height that breaks the
  * identity above. Larger than Expo's 200 default because the mark is now the
  * wallet FOREGROUND rather than the boxed icon — without the container around it,
