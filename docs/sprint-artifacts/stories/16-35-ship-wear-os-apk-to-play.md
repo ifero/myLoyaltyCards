@@ -103,10 +103,10 @@ space. The existing bands (`watch-android/README.md` § versionCode bands):
 `GITHUB_RUN_NUMBER` is **per workflow file**. `beta-releases.yml` run 40 and `store-upload.yml` run 40
 are unrelated releases. Wiring both pipelines to `WEAR_VERSION_CODE=$GITHUB_RUN_NUMBER` would make
 both compute `2000040` — the exact two-counters-one-band collision Story 16.7 exists to document.
-A **fourth band** is therefore required, and it must follow the phone's own precedent: the offset is
-_declared_ as a named constant in the build config and _applied_ as arithmetic in the workflow, which
-is how `PRODUCTION_VERSION_CODE_OFFSET` in `app.config.ts` and `$((GITHUB_RUN_NUMBER + 1000000))` in
-`store-upload.yml` already work.
+A **fourth band** is therefore required. The phone's precedent — offset _declared_ in `app.config.ts`,
+_applied_ as `$((GITHUB_RUN_NUMBER + 1000000))` in `store-upload.yml`, held together by a "must stay in
+sync" comment — was considered and rejected: it is a workaround for `app.config.ts` running at prebuild
+with a single env var, and Gradle has no such constraint. See AC4.
 
 ## Acceptance Criteria
 
@@ -129,10 +129,13 @@ is how `PRODUCTION_VERSION_CODE_OFFSET` in `app.config.ts` and `$((GITHUB_RUN_NU
 
 - **AC4 — a fourth versionCode band, with no possible collision.** Wear alpha/beta stays at
   `2_000_000 + GITHUB_RUN_NUMBER`; Wear production becomes `3_000_000 + GITHUB_RUN_NUMBER`. The
-  `1_000_000` offset is declared as a named constant in `watch-android/app/build.gradle.kts` (mirroring
-  `PRODUCTION_VERSION_CODE_OFFSET`) and applied as arithmetic in `store-upload.yml`. The existing
-  positive-integer validation and the `2_100_000_000` ceiling check must still apply to the larger
-  value — verified, not assumed. The README band table gains the fourth row.
+  `1_000_000` offset is a named constant in `watch-android/app/build.gradle.kts` and is **applied
+  there**, selected by `WEAR_RELEASE_TRACK` — which the Fastfile sets from the upload track, so the
+  band cannot disagree with the destination. (The draft proposed YAML arithmetic mirroring the phone;
+  that was reversed during implementation — see the Dev Agent Record for why the phone's shape is a
+  constraint of `app.config.ts`, not a pattern worth copying.) The existing positive-integer validation
+  and the `2_100_000_000` ceiling check must still apply to the larger value — verified, not assumed.
+  The README band table gains the fourth row.
 
 - **AC5 — the Wear APK's signing certificate is verified against the phone's before upload.** The
   build injects the phone's keystore via the `android.injected.signing.*` properties the phone lane
