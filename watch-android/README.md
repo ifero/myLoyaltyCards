@@ -421,8 +421,11 @@ things there are load-bearing and must not be "tidied":
    the second call would publish a release containing only the Wear APK — un-delivering the phone,
    with the Play Console looking healthy either way.
 2. **Two calls, not one.** `supply` cannot carry an AAB and an APK in a single invocation (hence
-   `skip_upload_apk` / `skip_upload_aab`), and multiple AABs are unsupported. The phone ships an AAB
-   and this app ships an APK, so two sequential calls is the only shape that exists.
+   `skip_upload_apk` / `skip_upload_aab`): `:apk`/`:apk_paths` are declared `conflicting_options`
+   with `:aab`/`:aab_paths` in `supply/lib/supply/options.rb`, so one invocation carries APKs or
+   bundles, never a mix. (It _can_ carry several bundles via `:aab_paths` — `Uploader#upload_bundles`
+   iterates — which does not help when one artifact is an APK.) The phone ships an AAB and this app
+   ships an APK, so two sequential calls is the only shape available.
 3. **One job, never two.** Parallel jobs race the same Play track edit and one silently loses. That
    is why the release job carries both the Node/Expo toolchain and JDK 17 + Android SDK 36.
 

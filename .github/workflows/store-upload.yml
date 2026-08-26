@@ -224,6 +224,16 @@ jobs:
         with:
           ruby-version: '4.0.5'
           bundler-cache: true
+      # NOTE: this is $GRADLE_USER_HOME/gradle.properties, which OVERRIDES a project's own
+      # gradle.properties — the user-home file is consulted first and `org.gradle.jvmargs` is a
+      # whole-value replace, not a merge. Since Story 16.35 this job also builds `watch-android`,
+      # so these args now govern BOTH builds: the Wear project's own `-Xmx2048m` has no effect
+      # here and it runs at 4096m like the phone. That is deliberate headroom, not an accident —
+      # but tuning `watch-android/gradle.properties` will not change what CI does.
+      #
+      # The two projects also pin DIFFERENT Gradle distributions (phone 9.0.0 from the
+      # prebuild-generated wrapper, Wear 9.6.1 from its tracked one), so this job provisions two
+      # of them. Sequential, never concurrent — `build_wear_apk!` runs after the phone build.
       - name: Tune Gradle memory for CI
         run: |
           mkdir -p "$HOME/.gradle"

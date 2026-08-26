@@ -284,18 +284,39 @@ end
 # Required, never inferred: locally `resolveAndroidVersionCode` falls back to a Unix
 # timestamp that Fastlane cannot see, and guessing wrong here would drop the phone
 # from the Play release rather than fail.
+PLAY_MAX_VERSION_CODE = 2_147_483_647
+
 def phone_version_code!
   raw = ENV['ANDROID_VERSION_CODE'].to_s.strip
-  # Base 10 is PINNED. Bare `Integer()` honours radix prefixes, so "042" would parse
-  # as octal 34 while `app.config.ts`'s `Number("042")` — the value actually baked
-  # into the AAB — is 42. `version_codes_to_retain: [34]` would then retain a
-  # versionCode that does not exist and drop the phone from the release.
-  parsed = Integer(raw, 10, exception: false)
+
+  # DIGITS ONLY — deliberately stricter than `Integer(raw, 10)`.
+  #
+  # The authority on this value is `app.config.ts`, whose `Number()` is what decides the
+  # versionCode actually baked into the AAB. Ruby's `Integer()` diverges from it in both
+  # directions, and only one of those is safe:
+  #   * bare `Integer()` reads radix prefixes ("042" -> octal 34) where `Number("042")` is 42;
+  #   * even base-10 `Integer()` accepts underscore grouping ("1_000" -> 1000) and a leading
+  #     "+", where `Number()` returns NaN and app.config.ts falls back to a Unix timestamp.
+  # The second case is the dangerous one: we would accept a value the AAB does NOT carry, and
+  # `version_codes_to_retain` would then retain a version code Play never received — dropping
+  # the phone from the release. A plain digit string is the only input both parsers agree on.
+  parsed = raw.match?(/\A\d+\z/) ? Integer(raw, 10) : nil
+
   unless parsed&.positive?
     UI.user_error!(
-      "ANDROID_VERSION_CODE is #{raw.empty? ? 'unset' : "\"#{raw}\""} but must be a positive " \
-      "integer. It is the phone versionCode that version_codes_to_retain must carry, so an " \
-      "unknown value would publish a Play release containing ONLY the Wear APK (Story 16.35, AC3)."
+      "ANDROID_VERSION_CODE is #{raw.empty? ? 'unset' : "\"#{raw}\""} but must be a plain " \
+      "positive integer (digits only). It is the phone versionCode that version_codes_to_retain " \
+      "must carry, so an unknown value would publish a Play release containing ONLY the Wear " \
+      "APK (Story 16.35, AC3)."
+    )
+  end
+  # Android's versionCode is a signed 32-bit int; Play rejects anything larger. Checked here
+  # rather than discovered at upload time, which for the Wear call would be AFTER the phone
+  # AAB is already committed.
+  if parsed > PLAY_MAX_VERSION_CODE
+    UI.user_error!(
+      "ANDROID_VERSION_CODE #{parsed} exceeds Android's maximum versionCode " \
+      "(#{PLAY_MAX_VERSION_CODE})."
     )
   end
   parsed
@@ -323,10 +344,12 @@ platform :android do
   #    it is called, so without `version_codes_to_retain` this second call would
   #    publish a release containing only the Wear APK — un-delivering the phone.
   #    The Play Console would look perfectly healthy either way.
-  # 2. APK **OR** AAB, NEVER BOTH. `supply` cannot carry an AAB and an APK in one
-  #    invocation (hence `skip_upload_apk`/`skip_upload_aab`), and multiple AABs are
-  #    unsupported. The phone ships an AAB and Wear ships an APK, so two calls is
-  #    not a style choice — it is the only shape that exists.
+  # 2. APK **OR** AAB, NEVER BOTH. `supply` declares `:apk`/`:apk_paths` as
+  #    `conflicting_options` with `:aab`/`:aab_paths` (supply/lib/supply/options.rb:125,136,153),
+  #    so a single invocation carries APKs or bundles, never a mix. (It CAN carry several
+  #    bundles via `:aab_paths` — `Uploader#upload_bundles` iterates — but that does not help
+  #    here.) The phone ships an AAB and Wear ships an APK, so two calls is not a style
+  #    choice; it is the only shape available.
   # 3. SEQUENTIAL, SAME JOB. Two jobs uploading concurrently race the same Play
   #    track edit and one silently loses. The toolchain cost of merging the Node/
   #    Expo half and the JDK 17/Android SDK half into one job is deliberate.
@@ -340,7 +363,9 @@ platform :android do
   # mode — a Kotlin compile error, an R8 failure, a missing or unsigned artifact, a
   # signing-certificate mismatch — then happens while nothing has been uploaded yet.
   # What remains inside the risk window is only the two `upload_to_play_store` calls,
-  # and that window is irreducible: `supply` cannot carry an AAB and an APK together.
+  # and that window is irreducible: `supply` declares `:apk`/`:apk_paths` as
+  # `conflicting_options` with `:aab`/`:aab_paths` (supply/lib/supply/options.rb:125,136,153),
+  # so one invocation carries APKs or bundles, never both.
   # Interleaving would reintroduce the phone-only release through a different door.
   #
   # The Wear versionCode band is chosen HERE from the upload track, not in the
@@ -402,20 +427,46 @@ platform :android do
   #    track edit and one silently loses. The toolchain cost of merging the Node/
   #    Expo half and the JDK 17/Android SDK half into one job is deliberate.
   private_lane :upload_wear_apk! do |options|
-    upload_to_play_store(
-      package_name: package_name,
-      json_key_data: json_key_data,
-      track: options.fetch(:track),
-      release_status: options.fetch(:release_status),
-      apk: options.fetch(:apk),
-      # Without this the phone's versionCode drops out of the track release.
-      version_codes_to_retain: [options.fetch(:phone_version_code)],
-      skip_upload_aab: true,
-      skip_upload_metadata: true,
-      skip_upload_changelogs: true,
-      skip_upload_images: true,
-      skip_upload_screenshots: true
-    )
+    track = options.fetch(:track)
+    release_status = options.fetch(:release_status)
+
+    begin
+      upload_to_play_store(
+        package_name: package_name,
+        json_key_data: json_key_data,
+        track: track,
+        release_status: release_status,
+        apk: options.fetch(:apk),
+        # Without this the phone's versionCode drops out of the track release:
+        # `Uploader#update_track` assigns `track.releases = [track_release]`, replacing whatever
+        # the first call published rather than merging with it.
+        version_codes_to_retain: [options.fetch(:phone_version_code)],
+        skip_upload_aab: true,
+        skip_upload_metadata: true,
+        skip_upload_changelogs: true,
+        skip_upload_images: true,
+        skip_upload_screenshots: true
+      )
+    rescue StandardError
+      # The job fails loudly either way — nothing here swallows the error, and the `raise`
+      # below re-throws it untouched. What this block adds is the STATE, which a bare red X
+      # does not convey: by this point the phone AAB is already committed to the track, so
+      # "the release failed" and "the release is half-published" look identical to whoever is
+      # on call. Say which one it is.
+      UI.error("=" * 78)
+      UI.error("WEAR OS UPLOAD FAILED — THE PHONE AAB IS ALREADY PUBLISHED.")
+      UI.error("Play now holds a PHONE-ONLY '#{release_status}' release on the '#{track}' track,")
+      UI.error("version code #{options.fetch(:phone_version_code)}. The watch app is NOT in it.")
+      if release_status == "draft"
+        UI.error("It is a DRAFT, so nothing has reached testers; re-running this workflow")
+        UI.error("publishes a fresh release carrying both artifacts.")
+      else
+        UI.error("It is LIVE. Re-running this workflow publishes a new release with both")
+        UI.error("artifacts, but until then users are on a build with no watch app.")
+      end
+      UI.error("=" * 78)
+      raise
+    end
   end
 
   desc "Build Android AdHoc app"

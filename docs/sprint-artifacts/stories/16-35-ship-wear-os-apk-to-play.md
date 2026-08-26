@@ -32,10 +32,11 @@ Epic: 16 — Platform & Tech Debt
 > plausible-looking result that is wrong.
 >
 > **⚠️ AND fastlane cannot carry both artifacts in one call.** `supply` accepts an APK **or** an AAB,
-> not both (`skip_upload_apk` / `skip_upload_aab` exist precisely to disambiguate), and multiple AABs
-> are not supported. The phone ships an AAB; the Wear app ships an APK. They are structurally unable
-> to travel in a single `upload_to_play_store` invocation. The mechanism that does work is
-> `version_codes_to_retain` — see AC3.
+> not both: `:apk`/`:apk_paths` are declared `conflicting_options` with `:aab`/`:aab_paths` in
+> `supply/lib/supply/options.rb`, so one invocation carries APKs or bundles, never a mix. The phone
+> ships an AAB; the Wear app ships an APK. They are structurally unable to travel in a single
+> `upload_to_play_store` invocation. The mechanism that does work is `version_codes_to_retain` —
+> see AC3.
 >
 > **The scope decisions below are binding, not questions.** ifero chose the wider read on both forks
 > (party mode, 2026-08-26): fix **beta and production**, and **verify the signing certificate**.
@@ -323,6 +324,60 @@ release reached through a different door than findings 1 and 2.
 Every non-Play failure mode now happens while nothing has been uploaded. What is left inside the risk
 window is only the two `upload_to_play_store` calls, and that window is irreducible — `supply` cannot
 carry an AAB and an APK in one invocation.
+
+### Third review pass — three Sonnet reviewers (fastlane / GitHub Actions / Gradle+Play)
+
+Run at ifero's request, one reviewer per domain so none of them skimmed four systems at once. Every
+claim below was re-verified locally before being acted on.
+
+**Two things this pass CONFIRMED that the story had listed as unproven.** Both were read out of the
+installed `fastlane-2.232.2` gem source rather than reasoned about:
+
+- `Uploader#update_track` builds a fresh `TrackRelease` and assigns `track.releases = [track_release]`
+  — a **full replacement**, not a merge — and `version_codes_to_retain` is concatenated into
+  `apk_version_codes` immediately before that (`supply/lib/supply/uploader.rb:22`). So the premise of
+  this whole story is correct: without it, the second call drops the phone. `verify_config!` was also
+  run live against the exact option hashes both lanes build, for `draft` and `completed`; both pass.
+- `android-actions/setup-android@v4` adds only `cmdline-tools` and `platform-tools` to `PATH`, never
+  `build-tools` (verified against the action's bundled `dist/index.js` at v4.0.1). The signing check's
+  glob-based `apksigner` resolution is therefore necessary, not over-engineering.
+
+**The JDK 17 pin — the riskiest incidental change — is safe, and is not even a change.** `ubuntu-latest`
+(Ubuntu 24.04) already defaults to Temurin 17; AGP 8.12 (phone) and AGP 9.3 (Wear) both require JDK 17
+minimum; JDK 17 runs both Gradle 9.0.0 and 9.6.1. The same `setup-java` + `setup-android` +
+`expo prebuild` sequence already runs green in `phone-wear-module-tests.yml`.
+
+**Three findings acted on:**
+
+1. **A claim in the comments was false.** "Multiple AABs are unsupported" — `supply` does expose
+   `:aab_paths` and `Uploader#upload_bundles` iterates. The real constraint is the declared
+   `conflicting_options` between `:apk`/`:apk_paths` and `:aab`/`:aab_paths`, so the _conclusion_ (two
+   calls) stands but the stated reason did not. Corrected in the Fastfile, this story, `epics.md` and
+   `watch-android/README.md`.
+2. **`phone_version_code!` was still not a parity match for `app.config.ts`.** Base-10 `Integer()`
+   accepts underscore grouping (`"1_000"` → `1000`) where `Number("1_000")` is `NaN` and app.config.ts
+   falls back to a Unix timestamp — i.e. we would have retained a version code the AAB never carried.
+   Now digits-only, plus an explicit `2_147_483_647` ceiling. Verified with a cross-language table:
+   where the Fastfile accepts (`42`, `042`, `2147483647`) both parsers agree **exactly**; everywhere
+   they differ (`1_000`, `+7`, `0x1f`, `1e3`, `2147483648`) Ruby is stricter and fails at preflight,
+   before anything uploads.
+3. **A failure after the phone upload was operationally ambiguous.** No code path swallows the error
+   (there is no `rescue`/`ensure` anywhere in the file), so the job always fails loudly — but a red X
+   looks identical whether nothing shipped or the phone shipped alone. `upload_wear_apk!` now names the
+   state explicitly, and distinguishes a `draft` release (nothing reached testers) from a `completed`
+   one (live, with no watch app until the next run).
+
+**Flagged, not fixed** — genuinely adjacent, and I lack the data to pick numbers:
+
+- The two Android release jobs have **no `timeout-minutes`** (pre-existing across all four release
+  jobs). The stakes rose: a hang now strands an already-uploaded phone AAB, and `cancel-in-progress`
+  blocks re-running that tag. Set it once one real RC gives a measured duration.
+- `~/.gradle/gradle.properties` overrides `watch-android/gradle.properties`'s `-Xmx2048m` with the
+  CI-wide `-Xmx4096m` (user-home wins; `org.gradle.jvmargs` is a whole-value replace). Harmless
+  direction, now documented in both workflows so nobody tunes the project file expecting CI to follow.
+- The job now provisions **two** Gradle distributions (phone 9.0.0, Wear 9.6.1). Sequential, but new.
+- `android-release.yml` (AdHoc) does not pin JDK 17 like its siblings. Identical today; drifts only if
+  GitHub changes the image default, and AdHoc builds are never uploaded.
 
 Also verified in this pass, against fastlane 2.232.2 and the real repo rather than by assumption:
 private lanes do return values (so `build_wear_apk!` can hand back the APK path); a `!` in a lane name
