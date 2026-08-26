@@ -177,7 +177,8 @@ Notes:
 
 - The iOS job runs `npx expo prebuild --platform ios` and generates the watchOS catalogue before Fastlane.
 - There is no separate `watch_beta` lane; the watch companion is included in the iOS `beta` lane.
-- **Neither is there a separate Wear OS job, and that is deliberate (Story 16.35).** The Wear APK shares `applicationId` with the phone app, so Play sees one app whose track release must list **both** version codes. `upload_to_play_store` creates a new track release on every call, so a parallel Wear job would race the same Play edit and one artifact would silently vanish from the release. The Android job therefore carries both toolchains — Node/Expo for the phone, JDK 17 + Android SDK 36 for `watch-android` — and the Fastfile builds both artifacts (`build_wear_apk!`) before uploading either, then adds the APK to the phone's release with `version_codes_to_retain` (`upload_wear_apk!`). `scripts/check-android-signing-parity.mjs` fails the job — while nothing has been uploaded yet — unless the Wear APK and the phone AAB carry the same signing certificate.
+- **Neither is there a separate Wear OS job, and that is deliberate (Story 16.35).** The two artifacts are one release intent, so a partial ship should be one red X rather than two independently-green jobs. The Android job therefore carries both toolchains — Node/Expo for the phone, JDK 17 + Android SDK 36 for `watch-android` — and the Fastfile builds and verifies both artifacts (`build_wear_apk!`) before uploading either, so a Kotlin, R8 or signing failure cannot strand a phone-only release. `scripts/check-android-signing-parity.mjs` fails the job — while nothing has been uploaded yet — unless the Wear APK and the phone AAB carry the same signing certificate.
+- **The Wear APK goes to Play's dedicated `wear:` form-factor track, not the phone's track.** Play rejects an artifact declaring `uses-feature android.hardware.type.watch` uploaded to a mobile track; the track id is `wear:` + the mobile track name (`wear:alpha`, `wear:production`). This needs a **one-time manual Play Console step** — Advanced settings → Form factors → Wear OS → Manage → "Use a dedicated release track for Wear OS" — without which every Wear upload fails with `Track not found`. Because it is a separate track it is a separate release, so nothing needs `version_codes_to_retain` and the Wear upload cannot disturb the phone's.
 
 ### Store Upload (Final Release)
 
@@ -227,10 +228,10 @@ iOS lanes summary:
 Android lanes summary:
 
 - `android adhoc` — Release APK build (phone only; no Wear artifact, nothing is uploaded)
-- `android beta` — Builds the phone AAB and the Wear OS APK, and uploads both into one Play Console alpha (testing) release
-- `android upload_release` — the same pair, uploaded into one Play Store production release
+- `android beta` — Builds the phone AAB and the Wear OS APK; uploads them to the `alpha` and `wear:alpha` tracks respectively
+- `android upload_release` — the same pair, to `production` and `wear:production`
 - `build_wear_apk!` (private) — builds and signing-parity-checks the Wear APK; runs **before** either upload so a build failure cannot strand a phone-only release
-- `upload_wear_apk!` (private) — adds that APK to the release the phone AAB just created, retaining the phone's version code
+- `upload_wear_apk!` (private) — uploads that APK to the `wear:` form-factor track, and translates Play's `Track not found` into the Console steps that fix it
 
 ## Release Runbooks
 
@@ -256,7 +257,7 @@ gh release create v1.0.0-rc.1 --prerelease --generate-notes --target main
 
 4. Monitor `.github/workflows/beta-releases.yml` in GitHub Actions. `Store Upload (Final Release)` will also appear with all jobs `skipped` — that is the pre-release guard working, not a failure.
 5. Verify the iOS build appears in App Store Connect → TestFlight.
-6. Verify the Android build appears in the Play Console alpha (testing) track, and that the release lists **two** version codes — the phone (`<run>`) and the Wear OS APK (`2000000 + <run>`). One version code means the watch app did not ship; see Story 16.35.
+6. Verify the Android build appears in the Play Console alpha (testing) track (phone, version code `<run>`), **and** that the `wear:alpha` form-factor track has a matching release (Wear OS APK, version code `2000000 + <run>`). An empty `wear:alpha` track means the watch app did not ship; see Story 16.35.
 7. Distribute to testers.
 
 ### Release to Production
@@ -269,7 +270,7 @@ gh release create v1.0.0 --generate-notes --target main
 ```
 
 3. Monitor `.github/workflows/store-upload.yml` in GitHub Actions. `Beta Releases (RC)` will appear with all jobs `skipped`.
-4. Verify the Play Console production release lists **two** version codes — the phone (`<run> + 1000000`) and the Wear OS APK (`3000000 + <run>`). Shipping a production release with only the phone code would silently downgrade every tester who already has the watch app.
+4. Verify **both** Play Console production tracks: the mobile track (phone, version code `<run> + 1000000`) and `wear:production` (Wear OS APK, version code `3000000 + <run>`). Shipping the phone without the Wear half would silently downgrade every tester who already has the watch app.
 5. After upload completes, submit the build for App Store / Play Store review.
 
 ### Manual / AdHoc Build

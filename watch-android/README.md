@@ -402,37 +402,51 @@ lane uses), which is what turns that artifact into a signed `app-release.apk`.
 
 ### How a release actually ships
 
-Both Android release pipelines build and upload the phone AAB and this Wear APK **in one job, in one
-Play release**, because the shared `applicationId` means Play sees a single app whose track release
-must list **both** version codes:
+Both Android release pipelines build and upload the phone AAB and this Wear APK **in one job**. They
+go to **different Play tracks**: the phone to the mobile track, and this app to Play's dedicated
+Wear OS **form-factor track**, whose id is `wear:` + the mobile track name.
 
-| Pipeline            | Track        | Lane                              |
-| ------------------- | ------------ | --------------------------------- |
-| `beta-releases.yml` | `alpha`      | `fastlane android beta`           |
-| `store-upload.yml`  | `production` | `fastlane android upload_release` |
+| Pipeline            | Phone track  | Wear track        | Lane                              |
+| ------------------- | ------------ | ----------------- | --------------------------------- |
+| `beta-releases.yml` | `alpha`      | `wear:alpha`      | `fastlane android beta`           |
+| `store-upload.yml`  | `production` | `wear:production` | `fastlane android upload_release` |
+
+> ⚠️ **The dedicated Wear track is mandatory, and it needs a one-time Play Console step.** Play
+> rejects an artifact declaring `uses-feature android.hardware.type.watch` uploaded to a mobile
+> track — _"you must use dedicated Wear OS tracks and create new releases on these tracks"_
+> ([support.google.com](https://support.google.com/googleplay/android-developer/answer/13295490)).
+> The `"[prefix]:defaultTrackName"` id rule is at
+> [developers.google.com/android-publisher/tracks](https://developers.google.com/android-publisher/tracks).
+> Enable it once, by hand: **Advanced settings → Form factors → Wear OS → Manage → "Use a dedicated
+> release track for Wear OS"**. Until that is done every Wear upload fails with `Track not found`,
+> which `upload_wear_apk!` detects and explains rather than surfacing raw.
 
 The mechanics live in the Fastfile's `build_wear_apk!` and `upload_wear_apk!` private lanes, with the
 rationale inline. Both artifacts are built and verified before either is uploaded, so a Kotlin, R8 or
-signing failure cannot strand a phone-only release. Three
-things there are load-bearing and must not be "tidied":
+signing failure cannot strand a phone-only release. Four things are load-bearing and must not be
+"tidied":
 
-1. **The Wear upload runs second, and passes `version_codes_to_retain`** with the phone's
-   `versionCode`. `upload_to_play_store` creates a _new_ track release on every call, so without it
-   the second call would publish a release containing only the Wear APK — un-delivering the phone,
-   with the Play Console looking healthy either way.
+1. **The Wear APK goes to `wear:<track>`, never the phone's track** — the constraint the whole design
+   turns on; see the callout above. Because it is a separate track it is a separate release, so
+   nothing needs `version_codes_to_retain` and the Wear upload cannot disturb the phone's release.
+   An earlier draft of this story did put both on one track with `version_codes_to_retain`; Play
+   would have rejected it on the first real run, after the phone AAB was already committed.
 2. **Two calls, not one.** `supply` cannot carry an AAB and an APK in a single invocation (hence
    `skip_upload_apk` / `skip_upload_aab`): `:apk`/`:apk_paths` are declared `conflicting_options`
-   with `:aab`/`:aab_paths` in `supply/lib/supply/options.rb`, so one invocation carries APKs or
-   bundles, never a mix. (It _can_ carry several bundles via `:aab_paths` — `Uploader#upload_bundles`
-   iterates — which does not help when one artifact is an APK.) The phone ships an AAB and this app
-   ships an APK, so two sequential calls is the only shape available.
-3. **One job, never two.** Parallel jobs race the same Play track edit and one silently loses. That
-   is why the release job carries both the Node/Expo toolchain and JDK 17 + Android SDK 36.
+   with `:aab`/`:aab_paths` in `supply/lib/supply/options.rb`. (It _can_ carry several bundles via
+   `:aab_paths` — `Uploader#upload_bundles` iterates — which does not help when one artifact is an
+   APK.) The phone ships an AAB and this app ships an APK, so two calls is the only shape available.
+3. **`versionCode` is still globally unique per `applicationId`, ACROSS form factors.** Separate
+   tracks are not separate counter spaces, which is why the band scheme below is unchanged.
+4. **One job, never two.** Not a race any more — different tracks, different edits — but the two
+   artifacts are one release intent, so a partial ship should be one red X rather than two
+   independently-green jobs. That is why the release job carries both the Node/Expo toolchain and
+   JDK 17 + Android SDK 36.
 
 Before uploading, `scripts/check-android-signing-parity.mjs` asserts the Wear APK and the phone AAB
-carry the **same** signing certificate and fails the job if not — see constraint 2 above; that failure
-is otherwise completely silent. It prints the certificate SHA-256, which is also the value the Digital
-Asset Links entry needs.
+carry the **same** signing certificate and fails the job if not — the Wearable Data Layer refuses to
+connect two artifacts signed differently, and that failure is otherwise completely silent. It prints
+the certificate SHA-256, which is also the value the Digital Asset Links entry needs.
 
 **Still @ifero's, still not in this repo:** the release keystore itself, the Play Console setup, the
 Wear OS store-listing assets, and the Digital Asset Links publication.

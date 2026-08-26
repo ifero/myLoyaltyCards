@@ -110,13 +110,11 @@ jobs:
       - name: Build iOS TestFlight (RC)
         run: bundle exec fastlane ios beta
 
-  # Builds and uploads BOTH Android artifacts of one release: the phone AAB and the
-  # Wear OS companion APK. They are deliberately one job, not two (Story 16.35).
-  # The Wear APK shares `applicationId` with the phone app, so Play sees a single app
-  # whose track release must list BOTH version codes — two jobs would race the same
-  # Play track edit and the loser's artifact would silently vanish from the release.
-  # The ordering and the `version_codes_to_retain` mechanics live in the Fastfile's
-  # `upload_wear_apk!`; read that before splitting this job for speed.
+  # Builds and uploads BOTH Android artifacts of one release: the phone AAB to the mobile
+  # track, and the Wear OS companion APK to Play's dedicated `wear:` form-factor track
+  # (Story 16.35). One job, not two: the artifacts are two halves of one release intent, and a
+  # partial ship should be one red X rather than two independently-green jobs. See the
+  # Fastfile's `upload_wear_apk!` for why the Wear half cannot go on the phone's track.
   android-beta:
     name: Build Android Alpha + Wear OS (RC)
     runs-on: ubuntu-latest
@@ -190,8 +188,6 @@ jobs:
         # production offset. The band is selected from the upload track by the
         # Fastfile's build_wear_apk!, so it cannot disagree with the destination.
         #
-        # The phone code is also what version_codes_to_retain must carry so the Wear
-        # upload does not drop the phone from the Play release (Story 16.35, AC3).
         run: |
           echo "ANDROID_VERSION_CODE=$GITHUB_RUN_NUMBER" >> "$GITHUB_ENV"
           echo "WEAR_VERSION_CODE=$GITHUB_RUN_NUMBER" >> "$GITHUB_ENV"

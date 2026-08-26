@@ -23,20 +23,29 @@ Epic: 16 — Platform & Tech Debt
 > **two** places in this repository: that build file, and the README table describing it. **No
 > workflow sets it.** There is no CI wiring for a release to have broken.
 >
-> **⚠️ THE NAIVE FIX UN-DELIVERS THE PHONE. Read AC3 before writing any YAML.** The Wear APK shares
-> `applicationId` with the phone app, so Play does not see two apps — it sees **one app whose track
-> release must list both version codes**. A second, independent `upload_to_play_store` call creates a
-> **new release on the same track**, and the phone's version code silently drops out of it. Adding a
-> parallel `wear-beta` job would therefore trade a missing watch app for a missing phone app, and the
-> Play Console would look correct in both cases. This is the Story 16.7 failure class — a
-> plausible-looking result that is wrong.
+> **⚠️ THE WEAR APK DOES NOT GO ON THE PHONE'S PLAY TRACK. Read AC3 before writing any YAML.** Play
+> requires a dedicated Wear OS **form-factor track** — id `wear:` + the mobile track name, so
+> `wear:alpha` and `wear:production` — and rejects an artifact declaring
+> `uses-feature android.hardware.type.watch` uploaded to a mobile track: _"you must use dedicated
+> Wear OS tracks and create new releases on these tracks"_
+> ([support.google.com/.../13295490](https://support.google.com/googleplay/android-developer/answer/13295490);
+> the `"[prefix]:defaultTrackName"` id rule is at
+> [developers.google.com/android-publisher/tracks](https://developers.google.com/android-publisher/tracks)).
 >
-> **⚠️ AND fastlane cannot carry both artifacts in one call.** `supply` accepts an APK **or** an AAB,
-> not both: `:apk`/`:apk_paths` are declared `conflicting_options` with `:aab`/`:aab_paths` in
-> `supply/lib/supply/options.rb`, so one invocation carries APKs or bundles, never a mix. The phone
-> ships an AAB; the Wear app ships an APK. They are structurally unable to travel in a single
-> `upload_to_play_store` invocation. The mechanism that does work is `version_codes_to_retain` —
-> see AC3.
+> **This corrected an earlier version of this very story**, which uploaded the Wear APK to the phone's
+> own track and used `version_codes_to_retain` to hold both version codes in one release. Play would
+> have rejected that on the first real run — **after** the phone AAB was already committed, which on
+> the production lane means a live phone-only release. Do not reintroduce it.
+>
+> **⚠️ ONE-TIME PLAY CONSOLE STEP, AND IT IS A HARD PREREQUISITE.** Advanced settings → Form factors →
+> Wear OS → Manage → **"Use a dedicated release track for Wear OS"**. Until that is done every Wear
+> upload fails with `Track not found` on any track. `upload_wear_apk!` detects that specific error and
+> prints the Console steps rather than surfacing the raw API message.
+>
+> **⚠️ It is still a SECOND `supply` call.** `:apk`/`:apk_paths` are declared `conflicting_options`
+> with `:aab`/`:aab_paths` in `supply/lib/supply/options.rb`, so one invocation carries APKs or
+> bundles, never a mix. The phone ships an AAB and Wear ships an APK. But because the tracks differ,
+> that second call needs **no** `version_codes_to_retain` and cannot disturb the phone's release.
 >
 > **The scope decisions below are binding, not questions.** ifero chose the wider read on both forks
 > (party mode, 2026-08-26): fix **beta and production**, and **verify the signing certificate**.
@@ -120,13 +129,14 @@ with a single env var, and Gradle has no such constraint. See AC4.
   a production release that silently drops the watch app testers already have — a downgrade with no
   crash and no telemetry.
 
-- **AC3 — one Play release carries both version codes, and the ordering is enforced.** The phone AAB
-  is uploaded **first**; the Wear APK is uploaded **second, in the same job**, with
-  `skip_upload_aab: true` and `version_codes_to_retain` carrying the phone's `versionCode`, so the
-  resulting track release lists **both** codes. It must **not** be a parallel job — two jobs race the
-  same Play track edit and one silently loses. Both calls use the same `release_status` so the end
-  state is a single coherent release. The reason for each of these three constraints is written into
-  the Fastfile, not left to review memory.
+- **AC3 — the Wear APK goes to its own `wear:` form-factor track, and nothing is uploaded until both
+  artifacts exist.** Order, in one job: build phone AAB → build + signing-verify the Wear APK →
+  upload phone to the mobile track → upload Wear to `wear:<track>`. Every non-Play failure mode
+  therefore happens while nothing has been uploaded. The Wear call passes `skip_upload_aab: true` and
+  **no** `version_codes_to_retain` — a separate track holds nothing of the phone's to preserve, and
+  naming a version code that track has never seen would be worse than useless. A `Track not found`
+  failure must be translated into the Play Console steps that fix it. The reason for each constraint
+  is written into the Fastfile, not left to review memory.
 
 - **AC4 — a fourth versionCode band, with no possible collision.** Wear alpha/beta stays at
   `2_000_000 + GITHUB_RUN_NUMBER`; Wear production becomes `3_000_000 + GITHUB_RUN_NUMBER`. The
@@ -198,12 +208,10 @@ job: the phone half needs Node + `expo prebuild`; the Wear half needs JDK 17 and
 platform 36. That is slower than two parallel jobs and it is the price of not racing a Play track
 edit. Do not "optimise" it back into parallel jobs — the reason is written into the Fastfile per AC3.
 
-**The one thing that cannot be proven from this repository.** Whether `version_codes_to_retain`
-composes cleanly with an existing **draft** release on the same track is a Play Console behaviour, not
-a fastlane one, and no local run can settle it. AC9 is the gate. If it does not behave, the documented
-fallback is a single `upload_to_play_store` call issued _after_ both artifacts exist, using
-`version_codes_to_retain` for the phone code and treating the phone AAB upload as a separate
-non-track-modifying step — record whichever shape actually works.
+**The one thing that cannot be proven from this repository.** Whether this app's Play Console has the
+Wear OS form factor enabled with a dedicated release track. That is a manual, one-time Console action
+owned by @ifero, and nothing here can read it. Until it is done `wear:alpha` does not exist and every
+Wear upload fails with `Track not found` — which the lane detects and explains. AC9 is the gate.
 
 **Retro material.** Epic 10's definition of done stopped at `assembleDebug` while its own README
 predicted this exact failure in prose. Worth naming at the next retrospective: a gap recorded only in
@@ -275,8 +283,67 @@ No local run can exercise the Play Console, so two things remain unproven and ga
    The signing material is not in this repo. Both `wear_release_apk!` and the parity check fail loudly
    if it does not, so the failure mode is a red job — not a bad upload.
 
-**Next step for @ifero:** cut an RC and confirm the alpha release lists two version codes (phone `N`,
-Wear `2000000 + N`), then record them and the certificate fingerprint here.
+### Fourth pass — the Wear track was WRONG, and this is the correction
+
+The Gradle/Play reviewer found, and Google's own documentation confirms, that everything above about
+"one Play release carrying two version codes" was **wrong**. Wear OS artifacts require a dedicated
+form-factor track (`wear:alpha`, `wear:production`); Play rejects a `uses-feature
+android.hardware.type.watch` artifact uploaded to a mobile track. The original design would have
+failed on the first real RC — **after** the phone AAB was committed, and on the production lane that
+means a live phone-only release. Reworked at ifero's direction (2026-08-26).
+
+The correction makes the design **simpler**, not more complex:
+
+| Was                                                           | Now                                                  |
+| ------------------------------------------------------------- | ---------------------------------------------------- |
+| Wear APK onto the phone's track                               | Wear APK onto `wear:` + the phone's track name       |
+| `version_codes_to_retain` carrying the phone's versionCode    | none — a separate track holds nothing of the phone's |
+| Ordering guarded against a shared-track edit race             | no race possible; different tracks, different edits  |
+| `phone_version_code!` + a preflight + a strict parser + tests | **deleted** — its only consumer was the retain list  |
+
+What survives unchanged: the versionCode band scheme (Play still enforces uniqueness per
+`applicationId` **across** form factors), the build-before-upload ordering, the signing-parity gate,
+and one job rather than two — no longer to avoid a race, but because the two artifacts are one release
+intent and a partial ship should be one red X.
+
+**New hard prerequisite, and it is not code:** the Play Console needs Advanced settings → Form factors
+→ Wear OS → Manage → "Use a dedicated release track for Wear OS". Until then `wear:alpha` does not
+exist. `upload_wear_apk!` matches Play's `Track not found` specifically and prints those steps.
+
+### Also fixed in this pass — `apksigner`'s output format is not stable
+
+Measured against one identical, validly-signed APK:
+
+| build-tools          | `apksigner verify --print-certs`             |
+| -------------------- | -------------------------------------------- |
+| 35.0.0/36.0.0/36.1.0 | `Signer #1 certificate SHA-256 digest: …`    |
+| **37.0.0**           | `V3.0 Signer: certificate SHA-256 digest: …` |
+
+The parser was anchored on `Signer #N`, which matches the 37.0.0 line **zero** times — so a correctly
+signed APK would have been reported "probably unsigned" and failed the release. `resolveApksigner`
+picks the newest installed build-tools, so this fires the moment a runner image ships 37, outside this
+repo's control. The prefix is now matched loosely with the word `certificate` as the anchor (which is
+also what excludes the sibling `public key SHA-256 digest` line), and identical repeats across
+signature schemes are accepted while distinct certificates remain an error.
+
+### Two of this story's "unverifiable risks" are now RESOLVED
+
+Both by direct experiment in this worktree, building a signed APK and AAB with a throwaway key:
+
+- **`android.injected.signing.*` DOES apply with no declared `signingConfig`** on AGP 9.3.1. Output is
+  `app-release.apk`, not `-unsigned` — which is exactly what `wear_release_apk!`'s guard keys off.
+- **`keytool -printcert -jarfile` DOES read the AAB.** A full end-to-end
+  `check-android-signing-parity.mjs` run over the real pair exited 0 with matching fingerprints, using
+  build-tools 37.0.0 (i.e. exercising the new format above).
+
+**Next step for @ifero:**
+
+1. Enable the Wear OS form-factor track in the Play Console (see above) — nothing can ship without it.
+2. Upload store-listing screenshots for the Wear form factor. Placeholders captured from the debug
+   build are in [`docs/design/wear-store-screenshots/`](../../design/wear-store-screenshots/) with a
+   README explaining why they are placeholders.
+3. Cut an RC and confirm the phone lands on `alpha` (versionCode `N`) and the Wear APK on `wear:alpha`
+   (versionCode `2000000 + N`), then record both plus the certificate fingerprint here.
 
 ### Code review — 4 findings, all fixed
 
