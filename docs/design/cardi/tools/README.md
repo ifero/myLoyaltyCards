@@ -27,11 +27,14 @@ Note that the entry above it, `docs/design/cardi/*.html`, does **not** cover thi
 
 | script               | builds                       |
 | -------------------- | ---------------------------- |
+| `icon_decision.py`   | `cardi-icon-decision.html`   |
 | `mark_locked.py`     | `cardi-mark-locked.html`     |
 | `mark_sweep35.py`    | `cardi-mark-sweep35.html`    |
 | `mark_candidates.py` | `cardi-mark-candidates.html` |
 | `brand_lockup.py`    | `cardi-brand-lockup.html`    |
 | `grave_vs_acute.py`  | `cardi-grave-vs-acute.html`  |
+
+`icon_decision.py` is the live one: the wordmark is settled, the square is not. It computes each variant's bounding radius and derives the Android foreground scale from it (`33 / radius`) rather than hardcoding a number, so changing the artwork updates the export scale on its own.
 
 ## What is deliberately NOT here
 
