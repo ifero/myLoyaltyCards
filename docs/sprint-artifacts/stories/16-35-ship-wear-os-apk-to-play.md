@@ -214,17 +214,17 @@ Implemented 2026-08-26 in the same pass that drafted the story (party mode: Amel
 
 ### Files changed
 
-| File                                                         | Why                                                                                    |
-| ------------------------------------------------------------ | -------------------------------------------------------------------------------------- |
-| `watch-android/app/build.gradle.kts`                         | AC4 — `wearProductionVersionCodeOffset` + `WEAR_RELEASE_TRACK` band selector           |
-| `fastlane/Fastfile`                                          | AC1/AC2/AC3/AC5/AC6 — `ship_wear_apk!`, `wear_release_apk!`, `phone_version_code!`     |
-| `scripts/lib/signing-fingerprints.mjs`                       | AC5 — pure fingerprint parsing/normalisation/comparison                                |
-| `scripts/check-android-signing-parity.mjs`                   | AC5 — the gate itself (resolves `apksigner`, runs `keytool`, compares, prints SHA-256) |
-| `scripts/lib/signing-fingerprints.test.js`                   | AC5 — 12 unit tests over the parsing, incl. the public-key-digest trap                 |
-| `.github/workflows/beta-releases.yml`                        | AC1 — JDK 17 + Android SDK 36 in `android-beta`, `WEAR_VERSION_CODE`                   |
-| `.github/workflows/store-upload.yml`                         | AC2 — the same for `upload-android-release`                                            |
-| `.github/workflows/wear-os-build.yml`                        | AC7 — `assembleRelease` added                                                          |
-| `watch-android/README.md`, `docs/cicd.md`, `CONTRIBUTING.md` | AC8                                                                                    |
+| File                                                         | Why                                                                                                                     |
+| ------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------- |
+| `watch-android/app/build.gradle.kts`                         | AC4 — `wearProductionVersionCodeOffset` + `WEAR_RELEASE_TRACK` band selector                                            |
+| `fastlane/Fastfile`                                          | AC1/AC2/AC3/AC5/AC6 — `build_wear_apk!`, `upload_wear_apk!`, `wear_release_apk!`, `phone_version_code!`, `project_path` |
+| `scripts/lib/signing-fingerprints.mjs`                       | AC5 — pure fingerprint parsing/normalisation/comparison                                                                 |
+| `scripts/check-android-signing-parity.mjs`                   | AC5 — the gate itself (resolves `apksigner`, runs `keytool`, compares, prints SHA-256)                                  |
+| `scripts/lib/signing-fingerprints.test.js`                   | AC5 — 12 unit tests over the parsing, incl. the public-key-digest trap                                                  |
+| `.github/workflows/beta-releases.yml`                        | AC1 — JDK 17 + Android SDK 36 in `android-beta`, `WEAR_VERSION_CODE`                                                    |
+| `.github/workflows/store-upload.yml`                         | AC2 — the same for `upload-android-release`                                                                             |
+| `.github/workflows/wear-os-build.yml`                        | AC7 — `assembleRelease` added                                                                                           |
+| `watch-android/README.md`, `docs/cicd.md`, `CONTRIBUTING.md` | AC8                                                                                                                     |
 
 ### Design decision reversed mid-implementation (AC4)
 
@@ -233,7 +233,7 @@ phone's `$((GITHUB_RUN_NUMBER + 1000000))`. **That was reversed.** The phone doe
 because `app.config.ts` runs at prebuild and reads a single env var, and it pays for it with a "must
 stay in sync" comment — the exact fragility this story is about. Gradle has no such constraint, so the
 band, the offset and the validation now all live in `build.gradle.kts`, and `WEAR_RELEASE_TRACK` is set
-by `ship_wear_apk!` **from the upload track**, so the band cannot disagree with the destination.
+by `build_wear_apk!` **from the upload track**, so the band cannot disagree with the destination.
 `store-upload.yml` therefore passes the **bare** run number to `WEAR_VERSION_CODE` while passing an
 offset one to `ANDROID_VERSION_CODE`; the asymmetry is commented at both sites.
 
@@ -293,7 +293,7 @@ source or a real artifact, not argued from reading.
    Fixed by routing every path through a new `project_path` helper (absolute paths are correct under
    both working directories), with the rule written into the file as a warning banner.
 2. **The `ANDROID_VERSION_CODE` guard ran too late.** `phone_version_code!` was evaluated as an
-   argument to `ship_wear_apk!`, i.e. after the phone upload — so a missing value produced the
+   argument to the Wear lane, i.e. after the phone upload — so a missing value produced the
    phone-only release its own error message warns about. Moved to a preflight beside
    `ensure_android_signing_env!` in both lanes.
 3. **`Integer(raw, exception: false)` honours radix prefixes.** `042` parsed as octal `34` while
@@ -307,3 +307,26 @@ source or a real artifact, not argued from reading.
 The review's own lesson is worth keeping: **findings 1 and 2 both produce the exact defect the story
 was written to fix.** A change that hardens a release path is itself a release path, and deserves the
 same suspicion.
+
+### Second review pass — build/upload split
+
+The follow-up pass found no new defect but one structural problem: the lane order was
+`build phone → upload phone → build Wear → verify → upload Wear`, so a Kotlin compile error, an R8
+failure or a signing mismatch landed **after** the phone was already on the track — a phone-only
+release reached through a different door than findings 1 and 2.
+
+`ship_wear_apk!` was therefore split into `build_wear_apk!` (build + resolve + parity check) and
+`upload_wear_apk!` (the supply call), and both release lanes now read:
+
+    build phone AAB → build + verify Wear APK → upload phone → upload Wear
+
+Every non-Play failure mode now happens while nothing has been uploaded. What is left inside the risk
+window is only the two `upload_to_play_store` calls, and that window is irreducible — `supply` cannot
+carry an AAB and an APK in one invocation.
+
+Also verified in this pass, against fastlane 2.232.2 and the real repo rather than by assumption:
+private lanes do return values (so `build_wear_apk!` can hand back the APK path); a `!` in a lane name
+is accepted (`Lane.verify_lane_name` only rejects spaces and reserved names, and
+`Actions.action_class_ref('build_wear_apk!')` returns `nil` cleanly rather than raising); and
+`watch-android/gradlew` is committed mode `100755`, so the fastlane `gradle` action can execute it on
+a fresh runner.

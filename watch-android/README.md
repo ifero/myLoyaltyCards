@@ -411,7 +411,9 @@ must list **both** version codes:
 | `beta-releases.yml` | `alpha`      | `fastlane android beta`           |
 | `store-upload.yml`  | `production` | `fastlane android upload_release` |
 
-The mechanics live in the Fastfile's `ship_wear_apk!` private lane, with the rationale inline. Three
+The mechanics live in the Fastfile's `build_wear_apk!` and `upload_wear_apk!` private lanes, with the
+rationale inline. Both artifacts are built and verified before either is uploaded, so a Kotlin, R8 or
+signing failure cannot strand a phone-only release. Three
 things there are load-bearing and must not be "tidied":
 
 1. **The Wear upload runs second, and passes `version_codes_to_retain`** with the phone's
@@ -469,7 +471,7 @@ band would have them both compute `2000040` — the two-counters-one-band collis
 `2_000_000`. Only the exact literal `production` opts in, so a typo lands on the beta band, where a
 collision is a hard Play rejection rather than a plausible-looking success.
 
-The variable is set by the Fastfile's `ship_wear_apk!` **from the upload track**, not by the workflow,
+The variable is set by the Fastfile's `build_wear_apk!` **from the upload track**, not by the workflow,
 so the band and the destination track cannot disagree.
 
 Both are set in **this project's own Gradle build, not in `app.config.ts`**: the two projects share no

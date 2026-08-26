@@ -177,7 +177,7 @@ Notes:
 
 - The iOS job runs `npx expo prebuild --platform ios` and generates the watchOS catalogue before Fastlane.
 - There is no separate `watch_beta` lane; the watch companion is included in the iOS `beta` lane.
-- **Neither is there a separate Wear OS job, and that is deliberate (Story 16.35).** The Wear APK shares `applicationId` with the phone app, so Play sees one app whose track release must list **both** version codes. `upload_to_play_store` creates a new track release on every call, so a parallel Wear job would race the same Play edit and one artifact would silently vanish from the release. The Android job therefore carries both toolchains — Node/Expo for the phone, JDK 17 + Android SDK 36 for `watch-android` — and the Fastfile's `ship_wear_apk!` uploads the APK second with `version_codes_to_retain`. Before uploading, `scripts/check-android-signing-parity.mjs` fails the job unless the Wear APK and the phone AAB carry the same signing certificate.
+- **Neither is there a separate Wear OS job, and that is deliberate (Story 16.35).** The Wear APK shares `applicationId` with the phone app, so Play sees one app whose track release must list **both** version codes. `upload_to_play_store` creates a new track release on every call, so a parallel Wear job would race the same Play edit and one artifact would silently vanish from the release. The Android job therefore carries both toolchains — Node/Expo for the phone, JDK 17 + Android SDK 36 for `watch-android` — and the Fastfile builds both artifacts (`build_wear_apk!`) before uploading either, then adds the APK to the phone's release with `version_codes_to_retain` (`upload_wear_apk!`). `scripts/check-android-signing-parity.mjs` fails the job — while nothing has been uploaded yet — unless the Wear APK and the phone AAB carry the same signing certificate.
 
 ### Store Upload (Final Release)
 
@@ -229,7 +229,8 @@ Android lanes summary:
 - `android adhoc` — Release APK build (phone only; no Wear artifact, nothing is uploaded)
 - `android beta` — Builds the phone AAB and the Wear OS APK, and uploads both into one Play Console alpha (testing) release
 - `android upload_release` — the same pair, uploaded into one Play Store production release
-- `ship_wear_apk!` (private) — the Wear half of both lanes above; builds, signing-parity-checks and uploads the Wear APK into the release the phone AAB just created
+- `build_wear_apk!` (private) — builds and signing-parity-checks the Wear APK; runs **before** either upload so a build failure cannot strand a phone-only release
+- `upload_wear_apk!` (private) — adds that APK to the release the phone AAB just created, retaining the phone's version code
 
 ## Release Runbooks
 

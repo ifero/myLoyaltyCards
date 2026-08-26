@@ -116,7 +116,7 @@ jobs:
   # whose track release must list BOTH version codes — two jobs would race the same
   # Play track edit and the loser's artifact would silently vanish from the release.
   # The ordering and the `version_codes_to_retain` mechanics live in the Fastfile's
-  # `ship_wear_apk!`; read that before splitting this job for speed.
+  # `upload_wear_apk!`; read that before splitting this job for speed.
   android-beta:
     name: Build Android Alpha + Wear OS (RC)
     runs-on: ubuntu-latest
@@ -188,7 +188,7 @@ jobs:
         # own band (2,000,000 for beta) in watch-android/app/build.gradle.kts, so this
         # workflow carries no band arithmetic to keep in sync — unlike the phone's
         # production offset. The band is selected from the upload track by the
-        # Fastfile's ship_wear_apk!, so it cannot disagree with the destination.
+        # Fastfile's build_wear_apk!, so it cannot disagree with the destination.
         #
         # The phone code is also what version_codes_to_retain must carry so the Wear
         # upload does not drop the phone from the Play release (Story 16.35, AC3).

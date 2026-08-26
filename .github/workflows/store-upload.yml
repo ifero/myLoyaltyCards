@@ -126,7 +126,7 @@ jobs:
   # Wear OS companion APK. Deliberately one job, not two (Story 16.35) — the Wear APK
   # shares `applicationId`, so Play sees a single app whose track release must list
   # BOTH version codes, and two jobs would race the same Play track edit. See the
-  # Fastfile's `ship_wear_apk!` before splitting this for speed.
+  # Fastfile's `upload_wear_apk!` before splitting this for speed.
   upload-android-release:
     name: Upload Android Release Build (phone + Wear OS)
     runs-on: ubuntu-latest
@@ -204,7 +204,7 @@ jobs:
         # asymmetry is deliberate. `GITHUB_RUN_NUMBER` is scoped per workflow file, so
         # the Wear build needs its own production band too, but it applies that band
         # itself (`wearProductionVersionCodeOffset` in watch-android/app/build.gradle.kts,
-        # selected from the upload track by the Fastfile's ship_wear_apk!). Gradle has
+        # selected from the upload track by the Fastfile's build_wear_apk!). Gradle has
         # no single-env-var constraint the way app.config.ts does at prebuild time, so
         # the band, the offset and the validation stay in one file with nothing to keep
         # in sync. Do NOT "restore consistency" by adding arithmetic here.

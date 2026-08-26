@@ -279,7 +279,7 @@ end
 
 # The phone's versionCode for the release currently being shipped. `app.config.ts`
 # bakes it into the AAB manifest at prebuild time from ANDROID_VERSION_CODE, and the
-# Wear upload needs it verbatim for `version_codes_to_retain` — see ship_wear_apk!.
+# Wear upload needs it verbatim for `version_codes_to_retain` — see upload_wear_apk!.
 #
 # Required, never inferred: locally `resolveAndroidVersionCode` falls back to a Unix
 # timestamp that Fastlane cannot see, and guessing wrong here would drop the phone
@@ -331,13 +331,25 @@ platform :android do
   #    track edit and one silently loses. The toolchain cost of merging the Node/
   #    Expo half and the JDK 17/Android SDK half into one job is deliberate.
   #
+  # BUILD EVERYTHING BEFORE UPLOADING ANYTHING. The two halves are deliberately
+  # separate lanes so a release lane reads:
+  #
+  #   build phone AAB -> build+verify Wear APK -> upload phone -> upload Wear
+  #
+  # rather than interleaving a build between the two uploads. Every non-Play failure
+  # mode — a Kotlin compile error, an R8 failure, a missing or unsigned artifact, a
+  # signing-certificate mismatch — then happens while nothing has been uploaded yet.
+  # What remains inside the risk window is only the two `upload_to_play_store` calls,
+  # and that window is irreducible: `supply` cannot carry an AAB and an APK together.
+  # Interleaving would reintroduce the phone-only release through a different door.
+  #
   # The Wear versionCode band is chosen HERE from the upload track, not in the
   # workflow, so the band and the destination track cannot disagree. See
   # `wearProductionVersionCodeOffset` in watch-android/app/build.gradle.kts.
-  private_lane :ship_wear_apk! do |options|
+  #
+  # Returns the absolute path to the verified, signed Wear APK.
+  private_lane :build_wear_apk! do |options|
     track = options.fetch(:track)
-    retain = [options.fetch(:phone_version_code)]
-
     ENV['WEAR_RELEASE_TRACK'] = track == "production" ? "production" : "beta"
 
     gradle(
@@ -351,8 +363,7 @@ platform :android do
       }
     )
 
-    # AC6: never degrade to a phone-only release. Resolves the artifact and rejects
-    # both "nothing was built" and "what was built is unsigned".
+    # AC6: rejects both "nothing was built" and "what was built is unsigned".
     wear_apk = wear_release_apk!
 
     # AC5: the Wear APK and the phone AAB must carry the SAME signing certificate.
@@ -367,14 +378,38 @@ platform :android do
       wear_apk
     )
 
+    wear_apk
+  end
+
+  # Add the already-built, already-verified Wear APK to the Play track release the
+  # phone AAB was JUST uploaded into. Call this IMMEDIATELY after the phone upload,
+  # in the same lane — never as a parallel job.
+  #
+  # Three constraints are load-bearing; changing any of them silently ships a
+  # broken release:
+  #
+  # 1. ONE RELEASE, TWO VERSION CODES. The Wear APK shares `applicationId` with the
+  #    phone app, so Play sees one app whose track release must list both version
+  #    codes. `upload_to_play_store` creates a NEW release on the track every time
+  #    it is called, so without `version_codes_to_retain` this second call would
+  #    publish a release containing only the Wear APK — un-delivering the phone.
+  #    The Play Console would look perfectly healthy either way.
+  # 2. APK **OR** AAB, NEVER BOTH. `supply` cannot carry an AAB and an APK in one
+  #    invocation (hence `skip_upload_apk`/`skip_upload_aab`), and multiple AABs are
+  #    unsupported. The phone ships an AAB and Wear ships an APK, so two calls is
+  #    not a style choice — it is the only shape that exists.
+  # 3. SEQUENTIAL, SAME JOB. Two jobs uploading concurrently race the same Play
+  #    track edit and one silently loses. The toolchain cost of merging the Node/
+  #    Expo half and the JDK 17/Android SDK half into one job is deliberate.
+  private_lane :upload_wear_apk! do |options|
     upload_to_play_store(
       package_name: package_name,
       json_key_data: json_key_data,
-      track: track,
+      track: options.fetch(:track),
       release_status: options.fetch(:release_status),
-      apk: wear_apk,
+      apk: options.fetch(:apk),
       # Without this the phone's versionCode drops out of the track release.
-      version_codes_to_retain: retain,
+      version_codes_to_retain: [options.fetch(:phone_version_code)],
       skip_upload_aab: true,
       skip_upload_metadata: true,
       skip_upload_changelogs: true,
@@ -426,6 +461,11 @@ platform :android do
         "android.injected.signing.key.password" => ENV['ANDROID_KEY_PASSWORD']
       }
     )
+
+    # Build and verify the watch half BEFORE either upload, so a Kotlin/R8/signing
+    # failure cannot leave a phone-only release behind (Story 16.35).
+    wear_apk = build_wear_apk!(track: "alpha")
+
     upload_to_play_store(
       package_name: package_name,
       json_key_data: json_key_data,
@@ -438,12 +478,12 @@ platform :android do
       skip_upload_screenshots: true
     )
 
-    # The watch half of the same release. MUST come after the phone upload and stay
-    # in this lane — see ship_wear_apk! for why splitting it drops the phone from
-    # the Play release (Story 16.35).
-    ship_wear_apk!(
+    # Immediately after the phone upload, into the SAME track release — see
+    # upload_wear_apk! for why order and same-lane execution are load-bearing.
+    upload_wear_apk!(
       track: "alpha",
       release_status: "draft",
+      apk: wear_apk,
       phone_version_code: phone_version_code
     )
   end
@@ -471,6 +511,10 @@ platform :android do
         "android.injected.signing.key.password" => ENV['ANDROID_KEY_PASSWORD']
       }
     )
+
+    # Build and verify the watch half BEFORE either upload — see the `beta` lane.
+    wear_apk = build_wear_apk!(track: "production")
+
     upload_to_play_store(
       package_name: package_name,
       json_key_data: json_key_data,
@@ -487,11 +531,12 @@ platform :android do
     # production would silently DOWNGRADE those users on the next release — no
     # crash, no telemetry, and the Play Console would look correct.
     #
-    # `release_status` is left at supply's default (`completed`) to match the phone
-    # upload directly above, so both artifacts land in one fully-released release.
-    ship_wear_apk!(
+    # `release_status` is supply's default (`completed`), matching the phone upload
+    # directly above, so both artifacts land in one fully-released release.
+    upload_wear_apk!(
       track: "production",
       release_status: "completed",
+      apk: wear_apk,
       phone_version_code: phone_version_code
     )
   end
