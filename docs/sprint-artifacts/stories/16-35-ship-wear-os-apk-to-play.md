@@ -4,7 +4,7 @@ baseline_commit: 652f3c61442ab02841180e7bc837556721576165
 
 # Story 16.35: Ship the Wear OS APK to Play — the watch app has never been delivered to any track
 
-Status: review
+Status: done
 
 Epic: 16 — Platform & Tech Debt
 
