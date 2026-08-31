@@ -202,6 +202,81 @@ def ensure_android_signing_env!
   UI.user_error!("Missing Android release-signing env var(s): #{missing.join(', ')}") unless missing.empty?
 end
 
+# Artifact paths shared by the phone and Wear halves of an Android release
+# (Story 16.35). Named here rather than inlined so the upload, the signing-parity
+# check and the "did it actually build" guard can never drift apart.
+#
+# Kept project-root-relative for readability, and ALWAYS passed through
+# `project_path` before use — see the warning on that method. Do not hand a bare
+# constant to `Dir.glob`, `File.exist?` or `sh`.
+PHONE_RELEASE_AAB = "android/app/build/outputs/bundle/release/app-release.aab".freeze
+WEAR_RELEASE_APK_DIR = "watch-android/app/build/outputs/apk/release".freeze
+
+# ⚠️ A LANE BODY'S WORKING DIRECTORY IS `fastlane/`, NOT THE PROJECT ROOT.
+#
+# fastlane wraps the entire lane in `Dir.chdir(FastlaneCore::FastlaneFolder.path)`
+# (`runner.rb`) and chdirs out to the project root only *inside* an action
+# (`execute_action`'s `custom_dir` defaults to `".."`). So within one lane there are
+# two different working directories:
+#
+#   * action PARAMETERS (`gradle(project_dir:)`, `upload_to_play_store(aab:)`) are
+#     resolved by the action, i.e. against the PROJECT ROOT — which is why the
+#     relative paths elsewhere in this file work;
+#   * raw Ruby in the lane body (`Dir.glob`, `File.exist?`) and `sh` both run
+#     against `fastlane/`, because `FastFile#sh` calls `Actions.sh_no_action`
+#     directly and never chdirs.
+#
+# That split silently broke the first draft of `wear_release_apk!`: its glob found
+# nothing even with the APK on disk, aborting the lane AFTER the phone AAB had been
+# uploaded — the phone-only release this whole story exists to prevent. Absolute
+# paths are correct under both directories, so everything goes through here.
+def project_path(relative)
+  File.expand_path(relative, File.expand_path("..", FastlaneCore::FastlaneFolder.path || Dir.pwd))
+end
+
+# Resolve the Wear OS release APK by globbing rather than by name, and refuse the
+# unsigned one.
+#
+# AGP names the artifact from whether a signing config APPLIED: `app-release.apk`
+# when one did, `app-release-unsigned.apk` when none did. `watch-android` declares no
+# `signingConfig` on purpose (no keystore lives in this repo), so a local
+# `assembleRelease` genuinely produces the `-unsigned` name — verified locally. The
+# release lanes get the signed name only because they inject
+# `android.injected.signing.*`. Hardcoding either name therefore encodes an assumption
+# about whether injection worked, which is precisely the thing being checked.
+#
+# The signing-parity check downstream would also catch an unsigned APK (apksigner
+# prints no certificate digest for one), but failing here says WHY in one line
+# instead of making someone read apksigner output.
+def wear_release_apk!
+  # Absolute — a lane body's cwd is `fastlane/`. See `project_path`.
+  candidates = Dir.glob(File.join(project_path(WEAR_RELEASE_APK_DIR), "*.apk")).sort
+
+  if candidates.empty?
+    UI.user_error!(
+      "No Wear OS release APK in #{WEAR_RELEASE_APK_DIR}. The phone AAB has already been " \
+      "uploaded; failing here rather than publishing a phone-only release (Story 16.35, AC6)."
+    )
+  end
+  if candidates.length > 1
+    UI.user_error!(
+      "Expected exactly one Wear OS release APK in #{WEAR_RELEASE_APK_DIR}, found " \
+      "#{candidates.length}: #{candidates.join(', ')}. Refusing to guess which one to ship."
+    )
+  end
+
+  apk = candidates.first
+  if File.basename(apk).include?("-unsigned")
+    UI.user_error!(
+      "Wear OS release APK is UNSIGNED (#{apk}). The `android.injected.signing.*` " \
+      "properties did not take effect, so Play would reject it — and a wrong-key APK " \
+      "would be worse: it uploads cleanly and breaks the Wearable Data Layer silently."
+    )
+  end
+
+  apk
+end
+
 platform :android do
   package_name = ENV['ANDROID_PACKAGE_NAME'] || CredentialsManager::AppfileConfig.try_fetch_value(:package_name)
   json_key_data = ENV['PLAY_STORE_API_KEY']
@@ -209,6 +284,146 @@ platform :android do
   desc "Build Android Dev app"
   lane :build_dev do
     gradle(task: "assembleDebug", project_dir: "android")
+  end
+
+  # Build, sign and verify the Wear OS companion APK (Story 16.35). Uploading it is
+  # `upload_wear_apk!`'s job, and it goes to its own `wear:` form-factor track.
+  #
+  # BUILD EVERYTHING BEFORE UPLOADING ANYTHING. The two halves are deliberately
+  # separate lanes so a release lane reads:
+  #
+  #   build phone AAB -> build+verify Wear APK -> upload phone -> upload Wear
+  #
+  # rather than interleaving a build between the two uploads. Every non-Play failure
+  # mode — a Kotlin compile error, an R8 failure, a missing or unsigned artifact, a
+  # signing-certificate mismatch — then happens while nothing has been uploaded yet.
+  # What remains inside the risk window is only the two `upload_to_play_store` calls,
+  # and that window is irreducible: `supply` declares `:apk`/`:apk_paths` as
+  # `conflicting_options` with `:aab`/`:aab_paths` (supply/lib/supply/options.rb:125,136,153),
+  # so one invocation carries APKs or bundles, never both. The two uploads target DIFFERENT
+  # tracks (the phone's, and `wear:<track>`), so they cannot race each other — see
+  # `upload_wear_apk!`.
+  # Interleaving would reintroduce the phone-only release through a different door.
+  #
+  # The Wear versionCode band is chosen HERE from the upload track, not in the
+  # workflow, so the band and the destination track cannot disagree. See
+  # `wearProductionVersionCodeOffset` in watch-android/app/build.gradle.kts.
+  #
+  # Returns the absolute path to the verified, signed Wear APK.
+  private_lane :build_wear_apk! do |options|
+    track = options.fetch(:track)
+    ENV['WEAR_RELEASE_TRACK'] = track == "production" ? "production" : "beta"
+
+    gradle(
+      task: "assembleRelease",
+      project_dir: "watch-android",
+      properties: {
+        "android.injected.signing.store.file" => ENV['ANDROID_KEYSTORE_PATH'],
+        "android.injected.signing.store.password" => ENV['ANDROID_KEYSTORE_PASSWORD'],
+        "android.injected.signing.key.alias" => ENV['ANDROID_KEY_ALIAS'],
+        "android.injected.signing.key.password" => ENV['ANDROID_KEY_PASSWORD']
+      }
+    )
+
+    # AC6: rejects both "nothing was built" and "what was built is unsigned".
+    wear_apk = wear_release_apk!
+
+    # AC5: the Wear APK and the phone AAB must carry the SAME signing certificate.
+    # An unsigned APK fails loudly at Play, but a wrong-key APK uploads cleanly and
+    # then breaks the Wearable Data Layer with no crash and no telemetry. The check
+    # also prints the fingerprint the Digital Asset Links entry needs.
+    # All paths absolute: `sh` runs from `fastlane/`. See `project_path`.
+    sh(
+      "node",
+      project_path("scripts/check-android-signing-parity.mjs"),
+      project_path(PHONE_RELEASE_AAB),
+      wear_apk
+    )
+
+    wear_apk
+  end
+
+  # Prefix Play uses for Wear OS form-factor track IDs (Story 16.35).
+  #
+  # Wear OS artifacts DO NOT go on the phone's track. Play requires a dedicated
+  # form-factor track whose id is `"[prefix]:defaultTrackName"` — `wear:alpha`,
+  # `wear:production` — and it REJECTS an artifact declaring
+  # `uses-feature android.hardware.type.watch` uploaded to a mobile track:
+  #
+  #   "If you want to continue distributing your app to Wear OS devices, you must use
+  #    dedicated Wear OS tracks and create new releases on these tracks."
+  #    — support.google.com/googleplay/android-developer/answer/13295490
+  #   Track-id rule: developers.google.com/android-publisher/tracks
+  #
+  # This corrected an earlier design in this same story that uploaded the Wear APK to the
+  # phone's own track and used `version_codes_to_retain` to keep both version codes in one
+  # release. That would have been rejected by Play on the first real run — AFTER the phone
+  # AAB was already committed. Do not reintroduce it.
+  WEAR_TRACK_PREFIX = "wear".freeze
+
+  # Upload the already-built, already-verified Wear APK to its own form-factor track.
+  #
+  # Because this is a SEPARATE track from the phone's, the release is independent — which
+  # removes three hazards the previous same-track design had to defend against:
+  #
+  #   * no `version_codes_to_retain`. Nothing of the phone's lives on this track, so there is
+  #     no release for this call to overwrite. (Passing the phone's code here would be worse
+  #     than useless: it names a version code this track has never seen.)
+  #   * no track-edit race between the phone and Wear uploads — different tracks, different
+  #     edits. They stay in one job because the two artifacts belong to one release *intent*
+  #     and a partial ship should be one red X, not two green ones.
+  #   * `versionCode` still has to be globally unique per applicationId ACROSS form factors,
+  #     which is why the band scheme in watch-android/app/build.gradle.kts is unchanged.
+  #
+  # `supply` still cannot carry an AAB and an APK in one invocation — `:apk`/`:apk_paths` are
+  # declared `conflicting_options` with `:aab`/`:aab_paths` — so this remains a second call.
+  private_lane :upload_wear_apk! do |options|
+    phone_track = options.fetch(:track)
+    wear_track = "#{WEAR_TRACK_PREFIX}:#{phone_track}"
+    release_status = options.fetch(:release_status)
+
+    begin
+      upload_to_play_store(
+        package_name: package_name,
+        json_key_data: json_key_data,
+        track: wear_track,
+        release_status: release_status,
+        apk: options.fetch(:apk),
+        skip_upload_aab: true,
+        skip_upload_metadata: true,
+        skip_upload_changelogs: true,
+        skip_upload_images: true,
+        skip_upload_screenshots: true
+      )
+    rescue StandardError => error
+      # Nothing here swallows the failure — the `raise` below re-throws it untouched. What
+      # this adds is the STATE, which a bare red X does not convey: by this point the phone
+      # AAB is already committed, so "the release failed" and "the phone shipped without the
+      # watch" look identical to whoever is on call.
+      UI.error("=" * 78)
+      UI.error("WEAR OS UPLOAD FAILED — THE PHONE AAB IS ALREADY PUBLISHED.")
+      UI.error("Phone: '#{release_status}' release on '#{phone_track}' — already published,")
+      UI.error("       and unaffected by this failure (it is a different track).")
+      UI.error("Watch: NOT published. Target track was '#{wear_track}'.")
+      UI.error("")
+      # `Track not found` is the signature of the one-time Play Console step never having been
+      # done, and it is worth naming explicitly: the raw API error does not say what to click.
+      if error.message.to_s.match?(/track not found/i)
+        UI.error("'#{wear_track}' DOES NOT EXIST. Wear OS needs a dedicated form-factor track,")
+        UI.error("enabled once by hand in the Play Console:")
+        UI.error("  Advanced settings -> Form factors -> Wear OS -> Manage")
+        UI.error("  -> 'Use a dedicated release track for Wear OS'")
+        UI.error("Until that is done, no Wear upload can succeed on any track.")
+      elsif release_status == "draft"
+        UI.error("The phone release is a DRAFT, so nothing reached testers; re-running this")
+        UI.error("workflow publishes both artifacts afresh.")
+      else
+        UI.error("The phone release is LIVE with no watch app. Re-running this workflow ships")
+        UI.error("both, but users are without the watch app until then.")
+      end
+      UI.error("=" * 78)
+      raise
+    end
   end
 
   desc "Build Android AdHoc app"
@@ -249,17 +464,26 @@ platform :android do
         "android.injected.signing.key.password" => ENV['ANDROID_KEY_PASSWORD']
       }
     )
+
+    # Build and verify the watch half BEFORE either upload, so a Kotlin/R8/signing
+    # failure cannot leave a phone-only release behind (Story 16.35).
+    wear_apk = build_wear_apk!(track: "alpha")
+
     upload_to_play_store(
       package_name: package_name,
       json_key_data: json_key_data,
       track: "alpha",
       release_status: "draft",
-      aab: "android/app/build/outputs/bundle/release/app-release.aab",
+      aab: project_path(PHONE_RELEASE_AAB),
       skip_upload_metadata: true,
       skip_upload_changelogs: true,
       skip_upload_images: true,
       skip_upload_screenshots: true
     )
+
+    # Immediately after the phone upload, into the SAME track release — see
+    # upload_wear_apk! for why order and same-lane execution are load-bearing.
+    upload_wear_apk!(track: "alpha", release_status: "draft", apk: wear_apk)
   end
 
   desc "Build and upload to Play Store (release)"
@@ -282,15 +506,28 @@ platform :android do
         "android.injected.signing.key.password" => ENV['ANDROID_KEY_PASSWORD']
       }
     )
+
+    # Build and verify the watch half BEFORE either upload — see the `beta` lane.
+    wear_apk = build_wear_apk!(track: "production")
+
     upload_to_play_store(
       package_name: package_name,
       json_key_data: json_key_data,
       track: "production",
-      aab: "android/app/build/outputs/bundle/release/app-release.aab",
+      aab: project_path(PHONE_RELEASE_AAB),
       skip_upload_metadata: true,
       skip_upload_changelogs: true,
       skip_upload_images: true,
       skip_upload_screenshots: true
     )
+
+    # The watch half of the same release (Story 16.35, AC2). Production needs this
+    # as much as the RC track does: shipping the watch app to testers but not to
+    # production would silently DOWNGRADE those users on the next release — no
+    # crash, no telemetry, and the Play Console would look correct.
+    #
+    # `release_status` is supply's default (`completed`), matching the phone upload
+    # directly above, so both artifacts land in one fully-released release.
+    upload_wear_apk!(track: "production", release_status: "completed", apk: wear_apk)
   end
 end

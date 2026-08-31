@@ -122,8 +122,12 @@ jobs:
       - name: Upload iOS Release Build
         run: bundle exec fastlane ios upload_release
 
+  # Builds and uploads BOTH Android artifacts of one release: the phone AAB to the mobile
+  # track, and the Wear OS companion APK to Play's dedicated `wear:` form-factor track
+  # (Story 16.35). One job, not two: the two artifacts are one release intent, so a partial
+  # ship should be one red X. See the Fastfile's `upload_wear_apk!`.
   upload-android-release:
-    name: Upload Android Release Build
+    name: Upload Android Release Build (phone + Wear OS)
     runs-on: ubuntu-latest
     # See upload-ios-release above for why this guard exists.
     if: >-
@@ -157,6 +161,21 @@ jobs:
         with:
           node-version: '24'
           cache: 'yarn'
+      # Pinned rather than inherited from the runner image, which drifts. AGP 9.3
+      # requires JDK 17 as a minimum for the Wear OS project this job now also
+      # builds, and wear-os-build.yml already pins the same version — keep them equal.
+      - name: Set up JDK 17
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '17'
+      # `watch-android` compiles against API 36, and `apksigner` (used by the
+      # signing-parity check) ships in build-tools, which is not otherwise on PATH.
+      # Both are no-ops when the runner image already provides them.
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v4
+        with:
+          packages: 'platforms;android-36 build-tools;36.0.0'
       - name: Install dependencies
         run: yarn install --frozen-lockfile
       - name: Create .env file
@@ -173,13 +192,26 @@ jobs:
             echo "::warning::SENTRY_AUTH_TOKEN not set — skipping Sentry symbol upload (crashes won't be symbolicated). Add the SENTRY_AUTH_TOKEN repo secret to enable."
             echo "SENTRY_DISABLE_AUTO_UPLOAD=true" >> "$GITHUB_ENV"
           fi
-      - name: Compute Android versionCode
+      - name: Compute Android versionCodes (phone + Wear)
         # Authoritative versionCode baked into the AAB manifest by app.config.ts
         # during prebuild. Production band = run number + 1,000,000 so this
         # workflow's counter can never collide with the alpha/beta workflow's in
         # Play's shared versionCode space. The +1,000,000 offset must stay in
         # sync with PRODUCTION_VERSION_CODE_OFFSET in app.config.ts.
-        run: echo "ANDROID_VERSION_CODE=$((GITHUB_RUN_NUMBER + 1000000))" >> "$GITHUB_ENV"
+        #
+        # WEAR_VERSION_CODE carries the BARE run number, with no offset — and that
+        # asymmetry is deliberate. `GITHUB_RUN_NUMBER` is scoped per workflow file, so
+        # the Wear build needs its own production band too, but it applies that band
+        # itself (`wearProductionVersionCodeOffset` in watch-android/app/build.gradle.kts,
+        # selected from the upload track by the Fastfile's build_wear_apk!). Gradle has
+        # no single-env-var constraint the way app.config.ts does at prebuild time, so
+        # the band, the offset and the validation stay in one file with nothing to keep
+        # in sync. Do NOT "restore consistency" by adding arithmetic here.
+        #   Wear beta       = 2,000,000 + run   (beta-releases.yml)
+        #   Wear production = 3,000,000 + run   (this workflow)
+        run: |
+          echo "ANDROID_VERSION_CODE=$((GITHUB_RUN_NUMBER + 1000000))" >> "$GITHUB_ENV"
+          echo "WEAR_VERSION_CODE=$GITHUB_RUN_NUMBER" >> "$GITHUB_ENV"
       - name: Prebuild native projects
         run: npx expo prebuild --platform android
       - name: Decode Android release keystore
@@ -191,6 +223,16 @@ jobs:
         with:
           ruby-version: '4.0.5'
           bundler-cache: true
+      # NOTE: this is $GRADLE_USER_HOME/gradle.properties, which OVERRIDES a project's own
+      # gradle.properties — the user-home file is consulted first and `org.gradle.jvmargs` is a
+      # whole-value replace, not a merge. Since Story 16.35 this job also builds `watch-android`,
+      # so these args now govern BOTH builds: the Wear project's own `-Xmx2048m` has no effect
+      # here and it runs at 4096m like the phone. That is deliberate headroom, not an accident —
+      # but tuning `watch-android/gradle.properties` will not change what CI does.
+      #
+      # The two projects also pin DIFFERENT Gradle distributions (phone 9.0.0 from the
+      # prebuild-generated wrapper, Wear 9.6.1 from its tracked one), so this job provisions two
+      # of them. Sequential, never concurrent — `build_wear_apk!` runs after the phone build.
       - name: Tune Gradle memory for CI
         run: |
           mkdir -p "$HOME/.gradle"
@@ -200,5 +242,7 @@ jobs:
           org.gradle.workers.max=2
           org.gradle.daemon=false
           EOF
-      - name: Upload Android Release Build
+      # One lane, two artifacts: the phone AAB is built and uploaded, then the Wear
+      # OS APK is built, signing-parity-checked and added to the SAME Play release.
+      - name: Upload Android Release Build (phone + Wear OS)
         run: bundle exec fastlane android upload_release

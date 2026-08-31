@@ -8,12 +8,13 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.TimeoutCancellationException
-import kotlinx.coroutines.cancel
+import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.job
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withTimeout
 import org.json.JSONArray
@@ -90,9 +91,24 @@ class WearSyncCoordinatorTest {
         syncScope = CoroutineScope(Dispatchers.Default + SupervisorJob())
     }
 
+    /**
+     * Await the coordinator's coroutines before closing the database — do not just cancel.
+     *
+     * `CoroutineScope.cancel()` only *signals* cancellation and returns immediately. A coroutine
+     * that is already inside a non-suspending Room call keeps running, and `database.close()`
+     * lands underneath it: the Room call then throws `IllegalStateException` inside a
+     * `SupervisorJob` carrying **no** `CoroutineExceptionHandler`, so it is routed to the JVM's
+     * global uncaught-exception handler. `kotlinx-coroutines-test` installs a collector there,
+     * and the next `runTest` to start in the same JVM fails with `UncaughtExceptionsBeforeTest`
+     * — in a DIFFERENT test class, which did nothing wrong. CI caught exactly that once
+     * (`UsageOutboxTest > a backlog larger than one batch is drained completely`), and the
+     * window is narrow enough that it passes locally every time.
+     *
+     * `cancelAndJoin` closes the window: the database outlives every coroutine that can touch it.
+     */
     @After
     fun tearDown() {
-        syncScope.cancel()
+        runBlocking { syncScope.coroutineContext.job.cancelAndJoin() }
         database.close()
     }
 
