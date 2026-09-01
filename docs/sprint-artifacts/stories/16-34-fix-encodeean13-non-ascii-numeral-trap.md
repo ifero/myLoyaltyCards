@@ -4,7 +4,7 @@ baseline_commit: 73e8eca1c0d3fc8b5f45968240bdb42c99df6fec
 
 # Story 16.34: Fix the `encodeEAN13` crash on non-ASCII numerals
 
-Status: review
+Status: done
 
 Epic: 16 — Platform & Tech Debt
 
