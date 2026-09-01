@@ -35,6 +35,7 @@
  * would throw. It also avoids the `@/shared/theme` barrel, which all three
  * root-layout suites replace wholesale.
  */
+import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { View, type LayoutChangeEvent } from 'react-native';
@@ -129,6 +130,15 @@ export const AppLaunchScreen = ({ onLayout, testID }: AppLaunchScreenProps) => {
       style={styles.surface}
       testID={testID}
     >
+      {/* The launch surface returns EARLY from `app/_layout.tsx`, above the
+          `<StatusBar>` that the rest of the app renders — so without this the
+          status bar keeps the OS default, which in light mode is dark glyphs.
+          On the old Google-blue field that measured 4.66:1; on the ink field it
+          is 1.19:1, i.e. an invisible clock and battery on every light-mode cold
+          start. `light` is hardcoded rather than theme-derived for the same
+          reason LAUNCH_FIELD_COLOR is: this surface is deliberately
+          scheme-independent, so the glyphs over it must be too. */}
+      <StatusBar style="light" />
       {/* The mark is decorative — the root above already carries the one label a
           screen reader should hear. Both props, per FannedCardIllustration. */}
       <Animated.View

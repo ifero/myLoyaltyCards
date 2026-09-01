@@ -40,6 +40,21 @@ const mockWithTiming = jest.fn((value: unknown) => value);
 const mockWithRepeat = jest.fn((value: unknown) => value);
 const mockCancelAnimation = jest.fn();
 
+// Recorded rather than stubbed to `() => null` like the root-layout suites do:
+// the point of rendering a StatusBar here is the STYLE, so it has to be
+// observable. The launch field is near-black ink and the surface returns EARLY
+// from `app/_layout.tsx`, above the app's own <StatusBar> — without an explicit
+// `light` the OS default paints dark glyphs at 1.19:1 on every light-mode cold
+// start.
+jest.mock('expo-status-bar', () => {
+  const { View } = jest.requireActual('react-native');
+  return {
+    StatusBar: ({ style }: { style?: string }) => (
+      <View testID="launch-status-bar" accessibilityLabel={style} />
+    )
+  };
+});
+
 jest.mock('react-native/Libraries/Utilities/useColorScheme', () => ({
   __esModule: true,
   default: () => mockUseColorScheme()
@@ -91,6 +106,14 @@ beforeEach(() => {
 
 describe('AppLaunchScreen', () => {
   describe('rendering (AC3, AC4, AC6)', () => {
+    it('paints a light status bar, because the field is ink in both schemes', () => {
+      render(<AppLaunchScreen />);
+
+      // Not theme-derived, deliberately: this surface is scheme-independent by
+      // design (see LAUNCH_FIELD_COLOR), so the glyphs over it must be too.
+      expect(screen.getByTestId('launch-status-bar')).toHaveProp('accessibilityLabel', 'light');
+    });
+
     it('renders the Cardì mark square at SPLASH_LOGO_WIDTH on both axes', () => {
       render(<AppLaunchScreen />);
 

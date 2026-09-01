@@ -46,7 +46,11 @@ export const BrandedIcon = ({
   children
 }: BrandedIconProps) => {
   const { theme } = useTheme();
-  const showsMark = !children && !icon && !communityIcon;
+  // `children == null`, not `!children`: the render below uses `children ??`,
+  // which falls through only for null/undefined. With `!children`, passing
+  // `children={false}` claimed the mark was showing (ink field) while the
+  // render emitted `false` — a solid ink circle with nothing in it.
+  const showsMark = children == null && !icon && !communityIcon;
 
   const circleStyle: ViewStyle = {
     width: size,
