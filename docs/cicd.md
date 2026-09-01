@@ -171,7 +171,7 @@ Because `on.release` cannot filter by tag pattern, the RC selection lives in a j
 Jobs:
 
 - `ios-testflight-beta` builds and uploads the iOS app to TestFlight using `bundle exec fastlane ios beta`
-- `android-beta` builds and uploads **both** the phone AAB and the Wear OS companion APK to the Play Console alpha track using `bundle exec fastlane android beta`.
+- `android-beta` builds and uploads **both** the phone AAB (to the `alpha` track) and the Wear OS companion AAB (to its `wear:` form-factor track) using `bundle exec fastlane android beta`. It also publishes the signed Wear bundle as a workflow artifact, even when the job fails — see below.
 
 Notes:
 

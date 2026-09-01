@@ -111,10 +111,11 @@ jobs:
         run: bundle exec fastlane ios beta
 
   # Builds and uploads BOTH Android artifacts of one release: the phone AAB to the mobile
-  # track, and the Wear OS companion APK to Play's dedicated `wear:` form-factor track
+  # track, and the Wear OS companion AAB to Play's dedicated `wear:` form-factor track
   # (Story 16.35). One job, not two: the artifacts are two halves of one release intent, and a
   # partial ship should be one red X rather than two independently-green jobs. See the
-  # Fastfile's `upload_wear_apk!` for why the Wear half cannot go on the phone's track.
+  # Fastfile's `upload_wear_bundle!` for why the Wear half cannot go on the phone's track,
+  # and `wear_play_track` for why its track name is not derived from the phone's.
   android-beta:
     name: Build Android Alpha + Wear OS (RC)
     runs-on: ubuntu-latest
@@ -221,7 +222,25 @@ jobs:
           org.gradle.workers.max=2
           org.gradle.daemon=false
           EOF
-      # One lane, two artifacts: the phone AAB is built and uploaded, then the Wear
-      # OS APK is built, signing-parity-checked and added to the SAME Play release.
+      # One lane, two artifacts: both are built and signing-parity-checked, then the
+      # phone AAB goes to the mobile track and the Wear AAB to its `wear:` track.
       - name: Build and upload Android Alpha + Wear OS (RC)
         run: bundle exec fastlane android beta
+
+      # `if: always()` is the point of this step, not an afterthought: the Wear bundle is
+      # most worth having when the lane FAILED at the upload, which is exactly when the
+      # default (success-only) behaviour would throw it away.
+      #
+      # It exists because Play may require the first artifact for a new form factor to be
+      # uploaded by hand through the Console before the API can target that track — the
+      # same bootstrap the phone app needed once. A hand upload needs a SIGNED bundle, and
+      # the only signed one is built here: the release keystore is not in the repo, so a
+      # local `bundleRelease` can only ever produce an unsigned artifact.
+      - name: Upload Wear OS bundle artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: wear-os-bundle-${{ github.run_id }}
+          path: watch-android/app/build/outputs/bundle/release/*.aab
+          if-no-files-found: warn
+          retention-days: 14

@@ -123,9 +123,10 @@ jobs:
         run: bundle exec fastlane ios upload_release
 
   # Builds and uploads BOTH Android artifacts of one release: the phone AAB to the mobile
-  # track, and the Wear OS companion APK to Play's dedicated `wear:` form-factor track
+  # track, and the Wear OS companion AAB to Play's dedicated `wear:` form-factor track
   # (Story 16.35). One job, not two: the two artifacts are one release intent, so a partial
-  # ship should be one red X. See the Fastfile's `upload_wear_apk!`.
+  # ship should be one red X. See the Fastfile's `upload_wear_bundle!`, and `wear_play_track`
+  # for why the Wear track name is not derived from the phone's.
   upload-android-release:
     name: Upload Android Release Build (phone + Wear OS)
     runs-on: ubuntu-latest
