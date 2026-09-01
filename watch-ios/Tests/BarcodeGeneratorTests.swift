@@ -217,6 +217,44 @@ final class BarcodeGeneratorTests: XCTestCase {
       BarcodeGenerator.modulesForTesting(value: "95200002", formatString: "EAN8"))
   }
 
+  // MARK: Story 16.34 — EAN-13 must refuse what it cannot represent, never trap
+
+  func test_encodeEAN13_matchesReferenceSymbol() {
+    // Unchanged by 16.34's digit-parsing fix; here so a regression is visible.
+    assertModules(
+      "5901234123457", "EAN13",
+      equal:
+        "1,1,1,3,1,1,2,1,1,2,3,1,2,2,2,2,1,2,2,1,4,1,1,2,3,1,1,1,1,1,1,1,2,2,2,1,2,1,2,2,1,4,1,1,1,1,3,2,1,2,3,1,1,3,1,2,1,1,1"
+    )
+  }
+
+  func test_ean13_refusesNonAsciiNumerals_insteadOfTrapping() {
+    // Before 16.34 each of these exited 133 (SIGTRAP) rather than returning nil:
+    // U+0663 parses to nil under Int(String(_:)); U+2167 reads as the digit 8 the card
+    // does not contain; U+3248 reads as 10, past the ten-entry pattern tables.
+    XCTAssertNil(
+      BarcodeGenerator.modulesForTesting(value: "\u{0663}901234123457", formatString: "EAN13"))
+    XCTAssertNil(
+      BarcodeGenerator.modulesForTesting(value: "590123412345\u{2167}", formatString: "EAN13"))
+    XCTAssertNil(
+      BarcodeGenerator.modulesForTesting(value: "\u{3248}901234123457", formatString: "EAN13"))
+  }
+
+  func test_ean13_contractIsOtherwiseUnchanged() {
+    let canonical = BarcodeGenerator.modulesForTesting(
+      value: "5901234123457", formatString: "EAN13")
+
+    // 12 digits still computes the check digit.
+    XCTAssertEqual(
+      BarcodeGenerator.modulesForTesting(value: "590123412345", formatString: "EAN13"), canonical)
+    // Separators are still ignored, as they always were.
+    XCTAssertEqual(
+      BarcodeGenerator.modulesForTesting(value: "5901234-123457", formatString: "EAN13"), canonical)
+    // A bad check digit still fails, and so does a wrong length.
+    XCTAssertNil(BarcodeGenerator.modulesForTesting(value: "5901234123458", formatString: "EAN13"))
+    XCTAssertNil(BarcodeGenerator.modulesForTesting(value: "59012341234", formatString: "EAN13"))
+  }
+
   // MARK: The regression this story exists to prevent (AC3)
 
   func test_noFormatFallsBackToCode128() {

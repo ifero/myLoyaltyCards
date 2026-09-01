@@ -213,6 +213,38 @@ const REFERENCE_SYMBOLS: ReadonlyArray<{ format: string; value: string; modules:
     value: '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ-. $/+%',
     modules:
       '1,3,1,1,3,1,3,1,1,1,1,1,1,3,3,1,3,1,1,1,3,1,1,3,1,1,1,1,3,1,1,1,3,3,1,1,1,1,3,1,3,1,3,3,1,1,1,1,1,1,1,1,1,3,3,1,1,1,3,1,3,1,1,3,3,1,1,1,1,1,1,1,3,3,3,1,1,1,1,1,1,1,1,3,1,1,3,1,3,1,3,1,1,3,1,1,3,1,1,1,1,1,3,3,1,1,3,1,1,1,3,1,1,1,1,3,1,1,3,1,1,1,3,1,1,3,1,1,3,1,3,1,3,1,1,3,1,1,1,1,1,1,1,1,3,3,1,1,3,1,3,1,1,1,3,3,1,1,1,1,1,1,3,1,3,3,1,1,1,1,1,1,1,1,1,3,3,1,3,1,3,1,1,1,1,3,3,1,1,1,1,1,3,1,1,3,3,1,1,1,1,1,1,1,3,3,3,1,1,1,3,1,1,1,1,1,1,3,3,1,1,1,3,1,1,1,1,3,3,1,3,1,3,1,1,1,1,3,1,1,1,1,1,1,3,1,1,3,3,1,3,1,1,1,3,1,1,3,1,1,1,1,3,1,3,1,1,3,1,1,1,1,1,1,1,1,3,3,3,1,3,1,1,1,1,1,3,3,1,1,1,1,3,1,1,1,3,3,1,1,1,1,1,1,3,1,3,3,1,1,3,3,1,1,1,1,1,1,3,1,1,3,3,1,1,1,1,1,3,1,3,3,3,1,1,1,1,1,1,1,1,3,1,1,3,1,1,1,3,1,3,3,1,1,3,1,1,1,1,1,1,3,3,1,3,1,1,1,1,1,1,3,1,1,1,1,3,1,3,1,3,3,1,1,1,1,3,1,1,1,1,3,3,1,1,1,3,1,1,1,1,3,1,3,1,3,1,1,1,1,1,3,1,3,1,1,1,3,1,1,1,3,1,1,1,3,1,3,1,1,1,1,1,3,1,3,1,3,1,1,1,3,1,1,3,1,3,1,1'
+  },
+  // EAN-13 was already correct; it is here so the executed harness proves Story 16.34's
+  // digit-parsing change altered no output.
+  {
+    format: 'EAN13',
+    value: '5901234123457',
+    modules:
+      '1,1,1,3,1,1,2,1,1,2,3,1,2,2,2,2,1,2,2,1,4,1,1,2,3,1,1,1,1,1,1,1,2,2,2,1,2,1,2,2,1,4,1,1,1,1,3,2,1,2,3,1,1,3,1,2,1,1,1'
+  },
+  // 12 digits drives the *compute the check digit* branch, as the EAN-8 and UPC-A rows
+  // above do for theirs. BWIPP renders it identically to the 13-digit form.
+  //
+  // The value is chosen to DISCRIMINATE, not merely to be valid: `encodeEAN13` weights its
+  // 12 data digits 1,3,1,… while `upcEANCheckDigit` weights odd-length data 3,1,3,…, and
+  // the two agree whenever (sum of even-index digits − sum of odd-index digits) % 5 == 0.
+  // `590123412345` is such a coincidence — both helpers yield check digit 7 — so it cannot
+  // detect the two being swapped. For `590123412341` they yield 9 and 1, so it can.
+  {
+    format: 'EAN13',
+    value: '590123412341',
+    modules:
+      '1,1,1,3,1,1,2,1,1,2,3,1,2,2,2,2,1,2,2,1,4,1,1,2,3,1,1,1,1,1,1,1,2,2,2,1,2,1,2,2,1,4,1,1,1,1,3,2,2,2,2,1,3,1,1,2,1,1,1'
+  },
+  // Separator tolerance, which `encodeEAN13` has always had and AC2 requires it to keep.
+  // BWIPP cannot supply this vector — it rejects the value as "EAN-13 must be 12 or 13
+  // digits" — so the expectation is derived: a separator is ignored, therefore the symbol
+  // must equal the clean value's BWIPP symbol above.
+  {
+    format: 'EAN13',
+    value: '5901234-123457',
+    modules:
+      '1,1,1,3,1,1,2,1,1,2,3,1,2,2,2,2,1,2,2,1,4,1,1,2,3,1,1,1,1,1,1,1,2,2,2,1,2,1,2,2,1,4,1,1,1,1,3,2,1,2,3,1,1,3,1,2,1,1,1'
   }
 ];
 
@@ -228,9 +260,18 @@ const UNENCODABLE: ReadonlyArray<{ format: string; value: string }> = [
   { format: 'CODE39', value: 'abc' },
   { format: 'CODE39', value: 'ABC!' },
   { format: 'CODE39', value: '' },
+  // EAN-13 shares the family's contract: bad checksum and wrong length both refuse.
+  { format: 'EAN13', value: '5901234123458' },
+  { format: 'EAN13', value: '59012341234' },
   // Non-ASCII numerals: `isWholeNumber` is true, but every reading of them is wrong.
   { format: 'EAN8', value: '\u0663' + '5200002' },
-  { format: 'UPCA', value: '\u3248' + '12345000058' }
+  { format: 'UPCA', value: '\u3248' + '12345000058' },
+  // EAN-13 traps on all three before Story 16.34 (exit 133, SIGTRAP): \u0663 parses to
+  // nil under `Int(String(_:))`, \u2167 reads as the digit 8 it is not, and \u3248 reads
+  // as 10 — past the end of the ten-entry pattern tables.
+  { format: 'EAN13', value: '\u0663' + '901234123457' },
+  { format: 'EAN13', value: '590123412345' + '\u2167' },
+  { format: 'EAN13', value: '\u3248' + '901234123457' }
 ];
 
 /**
@@ -299,12 +340,21 @@ const swiftDeclaration = (source: string, signature: string) => {
   throw new Error(`Unbalanced delimiters while slicing "${signature}"`);
 };
 
-/** Declarations the harness needs; all are pure and free of SwiftUI/UIKit. */
+/**
+ * Declarations the harness needs; all are pure and free of SwiftUI/UIKit.
+ *
+ * Deliberately exact signatures, not prefixes: they must anchor unambiguously, and a
+ * loose match could latch onto a doc comment instead. Renaming a parameter therefore
+ * fails here — loudly, naming the declaration it could not find, which is the right
+ * trade for a harness whose whole value is running the real shipped code.
+ */
 const HARNESS_DECLARATIONS = [
   'private static let eanLeftOddPatterns: [String] = [',
   'private static let eanRightPatterns: [String] = [',
   'private static func asciiDigits(of value: String) -> [Int]? {',
   'private static func upcEANCheckDigit(for digits: [Int]) -> Int {',
+  'private static func encodeEAN13(value: String) -> [Int]? {',
+  'private static func ean13CheckDigit(for digits: [Int]) -> Int {',
   'private static func encodeEAN8(value: String) -> [Int]? {',
   'private static func encodeUPCA(value: String) -> [Int]? {',
   'private static let code39Patterns: [Character: String] = [',
@@ -343,6 +393,7 @@ const buildHarness = (source: string) => {
     '  guard parts.count == 2, let format = WatchBarcodeFormat(rawValue: parts[0]) else { continue }',
     '  let modules: [Int]?',
     '  switch format {',
+    '  case .EAN13: modules = Encoders.encodeEAN13(value: parts[1])',
     '  case .EAN8: modules = Encoders.encodeEAN8(value: parts[1])',
     '  case .UPCA: modules = Encoders.encodeUPCA(value: parts[1])',
     '  case .CODE39: modules = Encoders.encodeCode39(value: parts[1])',
@@ -355,17 +406,51 @@ const buildHarness = (source: string) => {
 
 /** Run the harness over `cases`, returning "FORMAT|value" -> module string. */
 const runSwiftEncoders = (cases: ReadonlyArray<{ format: string; value: string }>) => {
+  // Assemble BEFORE creating the temp directory. Extraction throws when a pinned
+  // declaration has moved or been renamed, and doing it first means that failure has
+  // nothing to clean up — rather than skipping a `finally` that had not been entered yet.
+  const harnessSource = buildHarness(readGenerator());
   const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'watch-barcode-'));
   const harness = path.join(directory, 'EncoderHarness.swift');
 
   try {
-    fs.writeFileSync(harness, buildHarness(readGenerator()));
+    fs.writeFileSync(harness, harnessSource);
 
-    const stdout = execFileSync('xcrun', ['--sdk', 'macosx', 'swift', harness], {
-      input: cases.map(({ format, value }) => `${format}|${value}`).join('\n'),
-      encoding: 'utf8',
-      maxBuffer: 8 * 1024 * 1024
-    });
+    let stdout: string;
+
+    try {
+      stdout = execFileSync('xcrun', ['--sdk', 'macosx', 'swift', harness], {
+        input: cases.map(({ format, value }) => `${format}|${value}`).join('\n'),
+        encoding: 'utf8',
+        maxBuffer: 8 * 1024 * 1024
+      });
+    } catch (error) {
+      // Swift prints ~40 lines of LLVM stack dump after a trap, which buries the one
+      // line that says what went wrong. Keep the diagnosis, drop the noise.
+      const output = String(
+        (error as { stderr?: Buffer | string }).stderr ?? (error as Error).message
+      );
+      const diagnosis = output
+        .split('\n')
+        .filter((line) => /Fatal error|error:|warning:/.test(line))
+        .slice(0, 8)
+        .join('\n');
+
+      // Swift's line number refers to the assembled harness, which is deleted below and
+      // does not share BarcodeGenerator.swift's numbering. Quote the line itself, so the
+      // offending code is greppable in the real source.
+      const harnessLine = Number(output.match(/EncoderHarness\.swift:(\d+)/)?.[1]);
+      const culprit = Number.isFinite(harnessLine)
+        ? '\n\nThat line, lifted verbatim from BarcodeGenerator.swift (grep for it there — ' +
+          `the number above is harness-relative):\n    ${harnessSource.split('\n')[harnessLine - 1]?.trim()}`
+        : '';
+
+      throw new Error(
+        'The encoders lifted from BarcodeGenerator.swift failed to run. A "Fatal error: ' +
+          'Unexpectedly found nil" here means an encoder force-unwraps something that can be ' +
+          `nil — a crash on real card data, not a wrong barcode.\n\n${diagnosis || output.slice(0, 600)}${culprit}`
+      );
+    }
 
     return new Map(
       stdout
@@ -488,17 +573,35 @@ describe('watch barcode symbology contract', () => {
     expect(encoders.CODE39).not.toBe('encodeCode128');
   });
 
-  it('parses digits without a trapping force-unwrap in the new encoders', () => {
+  it('parses digits without a trapping force-unwrap in any encoder', () => {
     const source = readGenerator();
-    const start = source.indexOf('private static func encodeEAN8');
-    const end = source.indexOf('// MARK: Code 39');
-    const newEncoders = source.slice(start, end);
 
     // `Character.isWholeNumber` is true for non-ASCII numerals whose `Int(String(_:))`
-    // is nil, so the older `.map { Int(String($0))! }` idiom traps on them.
-    expect(newEncoders).not.toContain('Int(String($0))!');
-    expect(newEncoders).toContain('asciiDigits(of: value)');
-    expect(source).toContain('private static func asciiDigits(of value: String) -> [Int]?');
+    // is nil, so the `.map { Int(String($0))! }` idiom traps on them — a crash, not a
+    // wrong barcode. It is gone from the whole file, not merely from the encoders
+    // Story 16.28 introduced.
+    // Matched by SHAPE rather than by one exact spelling, so a differently-written but
+    // equally unsafe variant — `Int(String(ch))!`, `Int("\(c)")!` — is caught too.
+    const unsafeParse = /Int\(\s*(?:String\(|")[^)]*\)?\s*\)!/;
+    const offending = source
+      .split('\n')
+      .map((text, index) => ({ line: index + 1, text: text.trim() }))
+      .filter(({ text }) => unsafeParse.test(text));
+
+    expect(offending).toEqual([]);
+    expect(source).toMatch(/private static func asciiDigits\(of \w+: String\) -> \[Int\]\?/);
+
+    // Every EAN/UPC-family encoder routes its digit parsing through the safe helper. The
+    // helper NAME is asserted, not a full call expression, so renaming its parameter does
+    // not fail a test that has no business caring about it.
+    for (const encoder of ['encodeEAN13', 'encodeEAN8', 'encodeUPCA']) {
+      const body = swiftDeclaration(
+        source,
+        `private static func ${encoder}(value: String) -> [Int]? {`
+      );
+
+      expect(body).toMatch(/asciiDigits\(/);
+    }
   });
 
   it('gives every linear format its own distinct encoder', () => {
