@@ -103,11 +103,37 @@ struct BarcodeGenerator {
     }
   }
 
+  /// The ASCII digits of `value`, or `nil` when it holds a numeral the EAN/UPC
+  /// encoders cannot represent. Shared by EAN-13, EAN-8 and UPC-A.
+  ///
+  /// Non-numeric characters are ignored, matching `encodeEAN13`'s tolerance for a
+  /// value stored as `"5901234-123457"`. A **non-ASCII numeral** is a different case
+  /// and is refused outright, because every way of handling it is wrong: `٣`, `Ⅷ` and
+  /// `㉈` all satisfy `Character.isWholeNumber`, yet `Int(String("٣"))` is `nil` so a
+  /// force-unwrap traps, `"Ⅷ".wholeNumberValue` is `8` so it would encode a digit the
+  /// card does not contain, and `"㉈"` is `10` so it would index past the ten-entry
+  /// pattern tables. Dropping it silently is no better — that encodes a shorter number
+  /// than the one stored. Returning `nil` sends the caller to the human-readable
+  /// placeholder, which is the AC3 contract.
+  private static func asciiDigits(of value: String) -> [Int]? {
+    var digits: [Int] = []
+
+    for character in value {
+      guard let digit = character.wholeNumberValue else { continue }
+      guard character.isASCII, (0...9).contains(digit) else { return nil }
+      digits.append(digit)
+    }
+
+    return digits
+  }
+
   /// Encode numeric `value` into EAN-13 module widths (alternating bars/spaces).
-  /// Accepts 12 digits (computes check digit) or 13 digits (validates checksum).
+  /// Accepts 12 digits (computes check digit) or 13 digits (validates checksum), and
+  /// returns `nil` for a value carrying a numeral it cannot represent.
   private static func encodeEAN13(value: String) -> [Int]? {
-    let digits = value.filter { $0.isWholeNumber }.map { Int(String($0))! }
-    guard digits.count == 12 || digits.count == 13 else { return nil }
+    guard let digits = asciiDigits(of: value), digits.count == 12 || digits.count == 13 else {
+      return nil
+    }
 
     var d = digits
     if d.count == 12 {
@@ -188,30 +214,6 @@ struct BarcodeGenerator {
     "1110010", "1100110", "1101100", "1000010", "1011100",
     "1001110", "1010000", "1000100", "1001000", "1110100",
   ]
-
-  /// The ASCII digits of `value`, or `nil` when it holds a numeral these encoders
-  /// cannot represent.
-  ///
-  /// Non-numeric characters are ignored, matching `encodeEAN13`'s tolerance for a
-  /// value stored as `"5901234-123457"`. A **non-ASCII numeral** is a different case
-  /// and is refused outright, because every way of handling it is wrong: `٣`, `Ⅷ` and
-  /// `㉈` all satisfy `Character.isWholeNumber`, yet `Int(String("٣"))` is `nil` so a
-  /// force-unwrap traps, `"Ⅷ".wholeNumberValue` is `8` so it would encode a digit the
-  /// card does not contain, and `"㉈"` is `10` so it would index past the ten-entry
-  /// pattern tables. Dropping it silently is no better — that encodes a shorter number
-  /// than the one stored. Returning `nil` sends the caller to the human-readable
-  /// placeholder, which is the AC3 contract.
-  private static func asciiDigits(of value: String) -> [Int]? {
-    var digits: [Int] = []
-
-    for character in value {
-      guard let digit = character.wholeNumberValue else { continue }
-      guard character.isASCII, (0...9).contains(digit) else { return nil }
-      digits.append(digit)
-    }
-
-    return digits
-  }
 
   /// Check digit for the UPC/EAN members whose data section has an odd length —
   /// EAN-8's 7 digits and UPC-A's 11 — where the weights alternate 3,1,… starting
