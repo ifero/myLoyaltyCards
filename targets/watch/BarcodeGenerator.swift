@@ -24,7 +24,9 @@ enum WatchBarcodeFormat: String {
 /// Helper to generate barcode images on the watch.
 ///
 struct BarcodeGenerator {
-  private static let cacheVersion = "watch-barcode-v2"
+  // v3: EAN-8, UPC-A and Code39 stopped rendering as Code128 (Story 16.28), so any
+  // image cached under v2 for those formats is the wrong symbology and must not be served.
+  private static let cacheVersion = "watch-barcode-v3"
 
   private static let uiImageCache: NSCache<NSString, UIImage> = {
     let c = NSCache<NSString, UIImage>()
@@ -34,8 +36,10 @@ struct BarcodeGenerator {
     return c
   }()
 
-  /// Generates a barcode image for `value` using a watchOS-friendly
-  /// renderer. Supports EAN-13, Code128, and QR. Image rendering is cached.
+  /// Generates a barcode image for `value` using a watchOS-friendly renderer.
+  /// Supports every case of `WatchBarcodeFormat`, each in its own symbology.
+  /// Returns `nil` when `value` cannot be encoded in the requested format, so the
+  /// caller can fall back to the human-readable placeholder. Rendering is cached.
   static func generateImage(value: String, formatString: String?, targetSize: CGSize) async
     -> Image?
   {
@@ -47,17 +51,8 @@ struct BarcodeGenerator {
       return Image(uiImage: cached)
     }
 
-    // Choose encoder depending on requested format
-    var modules: [Int]? = nil
-    switch fmt {
-    case .EAN13:
-      modules = encodeEAN13(value: value)
-    case .CODE128:
-      modules = encodeCode128(value: value)
-    case .EAN8, .UPCA, .CODE39:
-      // pragmatic fallback: render as Code128 so scanners can still read it
-      modules = encodeCode128(value: value)
-    case .QR:
+    // QR is drawn by Core Image; every other format goes through the module renderer.
+    if fmt == .QR {
       if let uiImage = renderQRCodeImage(text: value, size: targetSize) {
         cacheImage(uiImage, forKey: key, targetSize: targetSize)
         return Image(uiImage: uiImage)
@@ -66,12 +61,14 @@ struct BarcodeGenerator {
       return nil
     }
 
-    guard let mod = modules else { return nil }
+    guard let mod = modules(for: fmt, value: value) else { return nil }
 
     // Render CGImage off the main thread for performance
     let cgImage: CGImage? = await withCheckedContinuation { cont in
       DispatchQueue.global(qos: .userInitiated).async {
-        let cg = renderCGImage(fromModules: mod, targetSize: targetSize, quietZoneModules: 10)
+        let cg = renderCGImage(
+          fromModules: mod, targetSize: targetSize,
+          quietZoneModules: quietZone(for: fmt))
         cont.resume(returning: cg)
       }
     }
@@ -89,6 +86,22 @@ struct BarcodeGenerator {
   }
 
   // MARK: - Encoders & renderer (watchOS-friendly)
+
+  /// The module widths for `value` in `format`, or `nil` when it cannot be encoded.
+  ///
+  /// This is the *only* place a format chooses an encoder. Keeping it single means a
+  /// format can never quietly borrow another's symbology — the defect Story 16.28
+  /// removed, where EAN-8, UPC-A and Code39 all resolved to `encodeCode128`.
+  private static func modules(for format: WatchBarcodeFormat, value: String) -> [Int]? {
+    switch format {
+    case .EAN13: return encodeEAN13(value: value)
+    case .CODE128: return encodeCode128(value: value)
+    case .EAN8: return encodeEAN8(value: value)
+    case .UPCA: return encodeUPCA(value: value)
+    case .CODE39: return encodeCode39(value: value)
+    case .QR: return nil  // drawn by Core Image, never by the module renderer
+    }
+  }
 
   /// Encode numeric `value` into EAN-13 module widths (alternating bars/spaces).
   /// Accepts 12 digits (computes check digit) or 13 digits (validates checksum).
@@ -157,6 +170,171 @@ struct BarcodeGenerator {
       sum += d * ((i % 2 == 0) ? 1 : 3)
     }
     return (10 - (sum % 10)) % 10
+  }
+
+  // MARK: EAN-8 / UPC-A
+
+  /// Left-hand "odd parity" (A) digit patterns, shared by EAN-8 and UPC-A, which
+  /// encode *every* left digit with this set. `encodeEAN13` keeps its own copies
+  /// because it also needs the B set for its first-digit parity table, and it is
+  /// deliberately left untouched.
+  private static let eanLeftOddPatterns: [String] = [
+    "0001101", "0011001", "0010011", "0111101", "0100011",
+    "0110001", "0101111", "0111011", "0110111", "0001011",
+  ]
+
+  /// Right-hand digit patterns — the bitwise complement of `eanLeftOddPatterns`.
+  private static let eanRightPatterns: [String] = [
+    "1110010", "1100110", "1101100", "1000010", "1011100",
+    "1001110", "1010000", "1000100", "1001000", "1110100",
+  ]
+
+  /// The ASCII digits of `value`, or `nil` when it holds a numeral these encoders
+  /// cannot represent.
+  ///
+  /// Non-numeric characters are ignored, matching `encodeEAN13`'s tolerance for a
+  /// value stored as `"5901234-123457"`. A **non-ASCII numeral** is a different case
+  /// and is refused outright, because every way of handling it is wrong: `٣`, `Ⅷ` and
+  /// `㉈` all satisfy `Character.isWholeNumber`, yet `Int(String("٣"))` is `nil` so a
+  /// force-unwrap traps, `"Ⅷ".wholeNumberValue` is `8` so it would encode a digit the
+  /// card does not contain, and `"㉈"` is `10` so it would index past the ten-entry
+  /// pattern tables. Dropping it silently is no better — that encodes a shorter number
+  /// than the one stored. Returning `nil` sends the caller to the human-readable
+  /// placeholder, which is the AC3 contract.
+  private static func asciiDigits(of value: String) -> [Int]? {
+    var digits: [Int] = []
+
+    for character in value {
+      guard let digit = character.wholeNumberValue else { continue }
+      guard character.isASCII, (0...9).contains(digit) else { return nil }
+      digits.append(digit)
+    }
+
+    return digits
+  }
+
+  /// Check digit for the UPC/EAN members whose data section has an odd length —
+  /// EAN-8's 7 digits and UPC-A's 11 — where the weights alternate 3,1,… starting
+  /// at 3.
+  ///
+  /// Deliberately *not* `ean13CheckDigit`: that one starts at weight 1 because its
+  /// data section is 12 digits long. Reusing it here yields a well-formed but wrong
+  /// check digit, which is exactly the kind of plausible-looking failure this story
+  /// removes.
+  private static func upcEANCheckDigit(for digits: [Int]) -> Int {
+    var sum = 0
+    for (i, d) in digits.enumerated() {
+      sum += d * ((i % 2 == 0) ? 3 : 1)
+    }
+    return (10 - (sum % 10)) % 10
+  }
+
+  /// Encode numeric `value` into EAN-8 module widths (alternating bars/spaces).
+  /// Accepts 7 digits (computes the check digit) or 8 (validates it), mirroring
+  /// `encodeEAN13`'s contract. Returns `nil` on a checksum mismatch so a corrupt
+  /// payload fails visibly rather than rendering a wrong-but-plausible symbol.
+  private static func encodeEAN8(value: String) -> [Int]? {
+    guard let digits = asciiDigits(of: value), digits.count == 7 || digits.count == 8 else {
+      return nil
+    }
+
+    var d = digits
+    if d.count == 7 {
+      d.append(upcEANCheckDigit(for: d))
+    } else {
+      guard upcEANCheckDigit(for: Array(d[0..<7])) == d[7] else { return nil }
+    }
+
+    var bits = "101"  // left guard
+    for digit in d[0..<4] { bits += eanLeftOddPatterns[digit] }
+    bits += "01010"  // centre guard
+    for digit in d[4..<8] { bits += eanRightPatterns[digit] }
+    bits += "101"  // right guard
+
+    return compressBitStringToModuleWidths(bits)
+  }
+
+  /// Encode numeric `value` into UPC-A module widths (alternating bars/spaces).
+  /// Accepts 11 digits (computes the check digit) or 12 (validates it).
+  ///
+  /// A UPC-A symbol is module-identical to the EAN-13 symbol of the same digits
+  /// prefixed with `0`, but it is **not** implemented that way: `encodeEAN13`
+  /// reads a 12-digit argument as EAN-13 data awaiting a check digit, so handing
+  /// it a complete 12-digit UPC-A produces a different — and wrong — symbol. UPC-A
+  /// also has its own 11-digit check-digit contract, which `encodeEAN13` cannot
+  /// express.
+  private static func encodeUPCA(value: String) -> [Int]? {
+    guard let digits = asciiDigits(of: value), digits.count == 11 || digits.count == 12 else {
+      return nil
+    }
+
+    var d = digits
+    if d.count == 11 {
+      d.append(upcEANCheckDigit(for: d))
+    } else {
+      guard upcEANCheckDigit(for: Array(d[0..<11])) == d[11] else { return nil }
+    }
+
+    var bits = "101"  // left guard
+    for digit in d[0..<6] { bits += eanLeftOddPatterns[digit] }
+    bits += "01010"  // centre guard
+    for digit in d[6..<12] { bits += eanRightPatterns[digit] }
+    bits += "101"  // right guard
+
+    return compressBitStringToModuleWidths(bits)
+  }
+
+  // MARK: Code 39
+
+  /// The `*` start/stop delimiter, in the same nine-element form as `code39Patterns`.
+  private static let code39Delimiter = "131131311"
+
+  /// The 43 encodable Code 39 characters, each as nine element widths — five bars
+  /// and four spaces, alternating and starting with a bar, three of them wide.
+  /// Widths are narrow `1` : wide `3`, the ratio ISO/IEC 16388 recommends.
+  private static let code39Patterns: [Character: String] = [
+    "0": "111331311", "1": "311311113", "2": "113311113", "3": "313311111",
+    "4": "111331113", "5": "311331111", "6": "113331111", "7": "111311313",
+    "8": "311311311", "9": "113311311", "A": "311113113", "B": "113113113",
+    "C": "313113111", "D": "111133113", "E": "311133111", "F": "113133111",
+    "G": "111113313", "H": "311113311", "I": "113113311", "J": "111133311",
+    "K": "311111133", "L": "113111133", "M": "313111131", "N": "111131133",
+    "O": "311131131", "P": "113131131", "Q": "111111333", "R": "311111331",
+    "S": "113111331", "T": "111131331", "U": "331111113", "V": "133111113",
+    "W": "333111111", "X": "131131113", "Y": "331131111", "Z": "133131111",
+    "-": "131111313", ".": "331111311", " ": "133111311", "$": "131313111",
+    "/": "131311131", "+": "131113131", "%": "111313131",
+  ]
+
+  /// Encode `value` into Code 39 module widths (alternating bars/spaces), wrapped
+  /// in the `*` start/stop delimiters and separated by a narrow inter-character gap.
+  ///
+  /// Returns `nil` for an empty value or any character outside the 43-character set.
+  /// Lower-case is rejected rather than upper-cased: Code 39 has no lower-case, and
+  /// silently changing the payload would make the watch encode a different string
+  /// from the one on the card — the same class of substitution this story removes.
+  ///
+  /// No mod-43 check digit is appended. It is optional in the symbology, and the
+  /// phone renders these cards without one; adding it only on the watch would make
+  /// the wrist symbol decode to a different string than the plastic.
+  private static func encodeCode39(value: String) -> [Int]? {
+    guard !value.isEmpty else { return nil }
+
+    var modules: [Int] = []
+    func appendPattern(_ pattern: String) {
+      for ch in pattern { modules.append(ch.wholeNumberValue ?? 0) }
+    }
+
+    appendPattern(code39Delimiter)
+    for ch in value {
+      guard let pattern = code39Patterns[ch] else { return nil }
+      modules.append(1)  // narrow inter-character gap
+      appendPattern(pattern)
+    }
+    modules.append(1)
+    appendPattern(code39Delimiter)
+
+    return modules
   }
 
   /// Encode using Code128 with automatic Code Set C optimization.
@@ -305,6 +483,24 @@ struct BarcodeGenerator {
     }
     if currentChar != nil { result.append(count) }
     return result
+  }
+
+  /// Minimum quiet zone, in modules, for each side of `format`'s symbol.
+  ///
+  /// Per-symbology rather than one flat value: on a wrist-sized symbol an
+  /// over-wide margin buys nothing and narrows every bar, which is the opposite of
+  /// what scannability needs. The figures are the published minima — 7X for EAN-8
+  /// and 9X for UPC-A (GS1 General Specifications), 10 narrow elements for Code 39
+  /// (ISO/IEC 16388). EAN-13 and Code128 keep the 10 they already ship with;
+  /// revisiting those belongs to the geometry story, not this one.
+  private static func quietZone(for format: WatchBarcodeFormat) -> Int {
+    switch format {
+    case .EAN8: return 7
+    case .UPCA: return 9
+    // QR never reaches the module renderer, but naming it keeps this switch
+    // exhaustive so a seventh format cannot be added without deciding here.
+    case .CODE39, .CODE128, .EAN13, .QR: return 10
+    }
   }
 
   /// Render a CGImage from alternating module widths (bars/spaces) where the
@@ -490,6 +686,23 @@ struct BarcodeGenerator {
   }
 
   #if DEBUG
+    /// Test helper: the module widths `generateImage` would render for this
+    /// value and format, or `nil` when the value cannot be encoded. Routes through
+    /// the same `modules(for:value:)` the renderer uses, so a vector test exercises
+    /// the shipped path rather than a copy of it.
+    static func modulesForTesting(value: String, formatString: String?) -> [Int]? {
+      let fmtKey = (formatString ?? "").trimmingCharacters(in: .whitespacesAndNewlines).uppercased()
+      guard !fmtKey.isEmpty, let fmt = WatchBarcodeFormat(rawValue: fmtKey) else { return nil }
+      return modules(for: fmt, value: value)
+    }
+
+    /// Test helper: the quiet zone, in modules, `generateImage` applies to `format`.
+    static func quietZoneForTesting(formatString: String) -> Int? {
+      let fmtKey = formatString.trimmingCharacters(in: .whitespacesAndNewlines).uppercased()
+      guard let fmt = WatchBarcodeFormat(rawValue: fmtKey) else { return nil }
+      return quietZone(for: fmt)
+    }
+
     /// Test helper: check whether a generated image is present in the cache.
     static func isImageCached(value: String, formatString: String?, targetSize: CGSize) -> Bool {
       let fmtKey = (formatString ?? "").trimmingCharacters(in: .whitespacesAndNewlines).uppercased()

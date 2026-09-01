@@ -28,7 +28,8 @@ plugins {
  * Bands (see ../README.md § versionCode bands):
  *   0         phone, alpha/beta   (`beta-releases.yml`, bare run number)
  *   1_000_000 phone, production   (`store-upload.yml`)
- *   2_000_000 Wear OS APK         (this build)
+ *   2_000_000 Wear OS APK, alpha/beta   (`beta-releases.yml`)
+ *   3_000_000 Wear OS APK, production   (`store-upload.yml`)
  *
  * Deliberately NOT read from `app.config.ts`: the two projects share no build
  * system, and coupling them would reintroduce the "anything in `android/` is
@@ -36,8 +37,45 @@ plugins {
  */
 val wearVersionCodeBand = 2_000_000
 
+/**
+ * Offset added to {@link wearVersionCodeBand} for a **production** Wear release
+ * (Story 16.35). It exists because `GITHUB_RUN_NUMBER` is scoped **per workflow
+ * file**: `beta-releases.yml` run 40 and `store-upload.yml` run 40 are unrelated
+ * releases, so feeding both into one band would have them both compute
+ * `2_000_040` — the two-counters-one-band collision Story 16.7 documents.
+ *
+ * The offset is applied **here**, not as arithmetic in the workflow. That
+ * deliberately diverges from the phone app, whose `PRODUCTION_VERSION_CODE_OFFSET`
+ * is declared in `app.config.ts` but applied as `$((GITHUB_RUN_NUMBER + 1000000))`
+ * in `store-upload.yml`, kept honest only by a "must stay in sync" comment. The
+ * phone has to do that because `app.config.ts` runs at prebuild and reads a single
+ * env var; Gradle has no such constraint, so the band, the offset and the
+ * validation all stay in one file with nothing to keep in sync. Do not "restore
+ * consistency" with the phone by moving the arithmetic into YAML.
+ */
+val wearProductionVersionCodeOffset = 1_000_000
+
 /** Play rejects any `versionCode` above this. */
 val playMaxVersionCode = 2_100_000_000
+
+/**
+ * Which release band this build targets. `production` selects the
+ * `3_000_000` band; anything else (including the variable being unset, the local
+ * and RC cases) stays on the `2_000_000` band.
+ *
+ * Only the exact literal `production` opts in, and the comparison is
+ * case-insensitive on a trimmed value. A typo therefore lands on the beta band
+ * rather than silently sharing a counter space with the RC pipeline: colliding
+ * with a *future* production release is a hard Play rejection, while colliding
+ * with an already-uploaded RC code is the plausible-looking failure this whole
+ * band scheme exists to prevent.
+ */
+val wearIsProductionRelease: Boolean =
+    providers.environmentVariable("WEAR_RELEASE_TRACK").orNull?.trim()?.lowercase() == "production"
+
+/** The band this build actually lands in, after the production offset. */
+val wearEffectiveBand: Int =
+    wearVersionCodeBand + if (wearIsProductionRelease) wearProductionVersionCodeOffset else 0
 
 /**
  * CI supplies the per-release counter in `WEAR_VERSION_CODE` (a distinct name
@@ -68,7 +106,7 @@ val wearVersionCounter: Int =
         raw.toIntOrNull()?.takeIf { it > 0 }
             ?: throw GradleException(
                 "WEAR_VERSION_CODE is set to \"$raw\" but must be a positive integer. " +
-                    "Refusing to fall back to the bare band ($wearVersionCodeBand): a bad " +
+                    "Refusing to fall back to the bare band ($wearEffectiveBand): a bad " +
                     "counter that still yields a plausible versionCode is exactly the " +
                     "failure mode Story 16.7 documents. Unset the variable for a local build.",
             )
@@ -79,11 +117,11 @@ val wearVersionCounter: Int =
  * negative versionCode before the ceiling is checked.
  */
 val wearVersionCode: Int =
-    (wearVersionCodeBand.toLong() + wearVersionCounter.toLong()).let { computed ->
+    (wearEffectiveBand.toLong() + wearVersionCounter.toLong()).let { computed ->
         if (computed > playMaxVersionCode) {
             throw GradleException(
                 "Computed versionCode $computed exceeds Play's maximum of " +
-                    "$playMaxVersionCode (band $wearVersionCodeBand + " +
+                    "$playMaxVersionCode (band $wearEffectiveBand + " +
                     "WEAR_VERSION_CODE $wearVersionCounter).",
             )
         }
