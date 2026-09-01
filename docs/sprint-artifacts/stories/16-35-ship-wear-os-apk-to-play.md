@@ -452,3 +452,72 @@ is accepted (`Lane.verify_lane_name` only rejects spaces and reserved names, and
 `Actions.action_class_ref('build_wear_apk!')` returns `nil` cleanly rather than raising); and
 `watch-android/gradlew` is committed mode `100755`, so the fastlane `gradle` action can execute it on
 a fresh runner.
+
+---
+
+## Post-merge: RC v1.0.0-rc.19 failed — AC9 is NOT satisfied
+
+⚠️ **The tracker says `done` (set automatically on merge), but AC9 explicitly required a successful
+RC and the first one failed.** Treat this story as open until an RC actually lands both artifacts.
+
+**Nothing was published.** The failure was at the **phone's** `upload_to_play_store` — the first
+upload of the lane — so the Play track was never touched. The build-before-upload ordering did its
+job; there was no half-published release to clean up.
+
+### What failed
+
+```
+Cannot provide both apk(s) and aab - use `skip_upload_apk`, `skip_upload_aab`, or
+make sure to remove any existing .apk or .aab files that are no longer needed
+```
+
+`upload_to_play_store.rb:10-17` fills in `apk:` from the lane context when neither `apk:` nor
+`apk_paths:` was passed:
+
+```ruby
+if params[:apk_paths].nil? && params[:apk].nil?
+  params[:apk] = Actions.lane_context[SharedValues::GRADLE_APK_OUTPUT_PATH]
+end
+```
+
+By the time the phone uploads, `build_wear_apk!` has already run `assembleRelease`, so that lane
+context slot holds the **Wear APK**. The phone's call therefore carried the phone AAB _and_ the Wear
+APK, and `Uploader#verify_config!` refuses the combination. The CI log's Lane Context dump shows it
+plainly: `GRADLE_APK_OUTPUT_PATH` pointing into `watch-android/`.
+
+**This was self-inflicted, and specifically by the safety refactor.** Before both artifacts were built
+up front, the Wear build ran _after_ the phone upload, so the lane context was empty at that moment.
+The reordering that makes a build failure unable to strand a phone-only release is exactly what
+introduced this. The ordering is still right; the guard is its cost.
+
+### Fix
+
+`skip_upload_apk: true` on **both** phone uploads. Verified locally by reproducing the real failure:
+building the Configuration from the lane args and then assigning `apk:` from lane context the way the
+action does (creating it with both at once trips a _different_, earlier `ConfigItem` conflict, which
+is not what CI hit).
+
+| Case                         | Result                                                        |
+| ---------------------------- | ------------------------------------------------------------- |
+| phone upload, before the fix | `Cannot provide both apk(s) and aab …` — byte-identical to CI |
+| phone upload, after the fix  | passes                                                        |
+| Wear upload, unchanged       | passes (it passes `apk:` explicitly, so nothing is injected)  |
+
+`skip_upload_apk` does more than silence the check — `uploader.rb:15` reads
+`apk_version_codes.concat(upload_apks) unless Supply.config[:skip_upload_apk]`, so the stray value is
+never uploaded.
+
+### Checked at the same time, and clean
+
+The Wear build also overwrote `GRADLE_MAPPING_TXT_OUTPUT_PATH` in the lane context, which would have
+attached the **watch app's** ProGuard mapping to the phone's AAB — silent, and ruinous for
+symbolication. It does not happen: `upload_to_play_store` never reads mapping from lane context, and
+supply's `:mapping` has no `default_value` (only the unset `SUPPLY_MAPPING` env var). Neither upload
+sends a mapping file at all, which is pre-existing behaviour, not a regression — the phone's
+symbolication comes from `sentry.gradle`.
+
+### Still to prove
+
+The whole Play-facing half of AC9 remains untested: the `wear:alpha` track's existence, the
+form-factor Console opt-in, and whether both artifacts land. The next RC is the first run that can
+reach an actual Play API call for the Wear APK.

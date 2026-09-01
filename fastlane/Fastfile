@@ -475,6 +475,18 @@ platform :android do
       track: "alpha",
       release_status: "draft",
       aab: project_path(PHONE_RELEASE_AAB),
+      # REQUIRED, and not redundant with passing `aab:` explicitly.
+      #
+      # `build_wear_apk!` has already run `assembleRelease`, so the Wear APK is sitting in
+      # `lane_context[:GRADLE_APK_OUTPUT_PATH]`. When neither `apk:` nor `apk_paths:` is given,
+      # upload_to_play_store.rb:10-17 helpfully fills `apk:` from exactly that — so this call
+      # would carry the phone AAB *and* the Wear APK, and supply's verify_config! refuses:
+      # "Cannot provide both apk(s) and aab". That is what failed RC v1.0.0-rc.19.
+      #
+      # The trap only exists because the build order was changed so BOTH artifacts are built
+      # before either is uploaded. That ordering is deliberate and worth keeping (a build
+      # failure then cannot strand a phone-only release), so this guard is its cost.
+      skip_upload_apk: true,
       skip_upload_metadata: true,
       skip_upload_changelogs: true,
       skip_upload_images: true,
@@ -515,6 +527,18 @@ platform :android do
       json_key_data: json_key_data,
       track: "production",
       aab: project_path(PHONE_RELEASE_AAB),
+      # REQUIRED, and not redundant with passing `aab:` explicitly.
+      #
+      # `build_wear_apk!` has already run `assembleRelease`, so the Wear APK is sitting in
+      # `lane_context[:GRADLE_APK_OUTPUT_PATH]`. When neither `apk:` nor `apk_paths:` is given,
+      # upload_to_play_store.rb:10-17 helpfully fills `apk:` from exactly that — so this call
+      # would carry the phone AAB *and* the Wear APK, and supply's verify_config! refuses:
+      # "Cannot provide both apk(s) and aab". That is what failed RC v1.0.0-rc.19.
+      #
+      # The trap only exists because the build order was changed so BOTH artifacts are built
+      # before either is uploaded. That ordering is deliberate and worth keeping (a build
+      # failure then cannot strand a phone-only release), so this guard is its cost.
+      skip_upload_apk: true,
       skip_upload_metadata: true,
       skip_upload_changelogs: true,
       skip_upload_images: true,
