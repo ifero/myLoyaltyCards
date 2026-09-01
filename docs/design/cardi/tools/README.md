@@ -18,6 +18,12 @@ No dependencies beyond the Python standard library.
 
 A stale generator is worse than no generator: it looks authoritative, and the moment someone runs it, it silently reverts whatever was fixed by hand in the HTML. That is not hypothetical. An older lockup generator was left behind in a scratch directory still emitting **acute** accents, and when it ran it wrote `Cardí` back over a corrected `Cardì`. Only the order the scripts happened to run in saved that file. `verify.py` is the guard that turns that class of accident into a failing check.
 
+**Adding a shared module?** Name it with a leading underscore (`_shared.py`). Every other
+`.py` here is run as a generator and expected to write a frame, so a helper without the
+underscore is reported `NO-OUTPUT` and turns the gate red for doing its job correctly.
+Sibling imports work — the check puts each generator's own directory on `sys.path`, which
+`runpy.run_path` does not do by default.
+
 If it reports `STALE`, either the generator drifted or someone hand-edited the HTML. Decide which is the source of truth and fix **that** one. Do not simply regenerate — that is how hand fixes get lost.
 
 ## Prettier

@@ -93,7 +93,14 @@ pathlib.Path.write_bytes = _p_write_bytes
 pathlib.Path.open = _p_open
 builtins.open = _open
 
-sys.argv = [sys.argv[3]]
+# `runpy.run_path` does NOT put the script's own directory on sys.path, unlike
+# running `python3 tools/x.py`. Without this a generator that imports a sibling
+# module works standalone and fails only here -- which would block every push
+# and PR, from a gate whose whole job is to be trustworthy.
+script = pathlib.Path(sys.argv[3]).resolve()
+sys.path.insert(0, str(script.parent))
+
+sys.argv = [str(script)]
 runpy.run_path(sys.argv[0], run_name="__main__")
 '''
 
@@ -109,7 +116,13 @@ def digest_frames():
 
 
 def main() -> int:
-    gens = sorted(p for p in TOOLS.glob("*.py") if p.name != "verify.py")
+    # Leading underscore = a helper module, not a generator. Without this rule a
+    # shared module is run as a script, writes nothing, and is reported NO-OUTPUT
+    # -- a red gate caused entirely by adding a file that does its job correctly.
+    gens = sorted(
+        p for p in TOOLS.glob("*.py")
+        if p.name != "verify.py" and not p.name.startswith("_")
+    )
     if not gens:
         print("no generators found in", TOOLS)
         return 1

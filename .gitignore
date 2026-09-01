@@ -150,3 +150,8 @@ _bmad-output/
 # working directory while the server drives a browser. Per-session tool noise, never
 # a project record, and it lands in whichever directory the session happens to run in.
 .playwright-mcp/
+
+# Python bytecode caches — the design-frame generators and their check are Python,
+# so running any of them leaves these behind next to the source.
+__pycache__/
+*.py[cod]
