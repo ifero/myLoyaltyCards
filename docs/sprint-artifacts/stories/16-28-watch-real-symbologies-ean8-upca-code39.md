@@ -4,7 +4,7 @@ baseline_commit: 115709db1516be13e449145bcc6ac9ac139e5c97
 
 # Story 16.28: Render EAN-8, UPC-A and Code39 with their real symbologies on Apple Watch
 
-Status: review
+Status: done
 
 Epic: 16 — Platform & Tech Debt
 
