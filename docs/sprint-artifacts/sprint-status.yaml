@@ -603,6 +603,68 @@ development_status:
   19-9-folder-sync-privacy-and-docs: backlog
   epic-19-retrospective: optional
 
+  # --- Epic 20: Cardì Identity & Design System -------------------------------
+  # DONE, written up retroactively on 2026-09-01. The work landed across August
+  # 2026 on `docs/cardi-redesign-carry-over` and is committed; it simply never had
+  # an epic around it, which left 21-23 referencing artefacts from nowhere.
+  # Artefacts: docs/design/cardi/ (system doc, 35 frames, 9 prompt sets, tools/)
+  # and scripts/build-brand-icons.mjs (8 artefacts, gated by `yarn icons:check`).
+  epic-20: done
+  20-1-cardi-design-system: done
+  20-2-nine-screen-patterns-drawn: done
+  20-3-the-mark-35-grave-contained: done
+  20-4-one-generator-every-icon: done
+  20-5-design-frames-reproducible-source: done
+  epic-20-retrospective: optional
+
+  # --- Epic 21: Cardì Rebrand — Native Identity ------------------------------
+  # SHIPS AS ONE RELEASE. Every story here is a native asset or a build-time value
+  # and `runtimeVersion.policy` is `appVersion`, so none of it can go out as an OTA
+  # update. Sequencing them into separate releases buys a store review to put users
+  # into an icon/name/colour mismatch and another to get them out. 21-6 is the gate.
+  # 21-2 is a BIG BANG by design: tokens funnel into all three apps, so there is no
+  # supported half-migrated state.
+  epic-21: backlog
+  21-1-rename-the-app-to-cardi: backlog # name only; slug + scheme deliberately unchanged
+  21-2-migrate-colour-tokens-to-ink-and-beam: backlog # big bang; absorbs the 9 styling items
+  21-3-watchos-app-and-widget-icons: backlog
+  21-4-wear-os-launcher-icons: backlog
+  21-5-store-artwork: backlog
+  21-6-single-rebrand-release: backlog # GATE: 21-1..21-5 ship together or not at all
+  epic-21-retrospective: optional
+
+  # --- Epic 22: Cardì Redesign — Screen Implementation -----------------------
+  # Screen by screen, NOT a big bang: unlike colour tokens, layout has a supported
+  # half-migrated state. 22-1 first — eight stories consume its primitives.
+  # Wave A (22-2..22-9) is illustration-free and can start as soon as 22-1 lands.
+  # 22-10 is Wave B and is BLOCKED on a commissioned illustration set that does not
+  # exist; inventing a per-screen illustration style is forbidden by the system.
+  epic-22: backlog
+  22-1-design-system-components: backlog # BLOCKS 22-2..22-10; absorbs 16-30..16-33
+  22-2-wallet: backlog
+  22-3-card-detail: backlog
+  22-4-barcode-flash: backlog
+  22-5-capture: backlog
+  22-6-the-form-pattern: backlog
+  22-7-settings: backlog
+  22-8-document-screens: backlog
+  22-9-authentication: backlog
+  22-10-onboarding: backlog # BLOCKED: needs commissioned illustrations
+  epic-22-retrospective: optional
+
+  # --- Epic 23: Cardì on the Watch -------------------------------------------
+  # Six surfaces with NO Cardì design at all — watchOS ContentView/CardListView/
+  # BarcodeFlashView, Wear OS CardListScreen/BarcodeScreen/SortPickerScreen, and the
+  # widget. Cannot fold into Epic 22, which implements designs that already exist.
+  # 23-1 is a DESIGN story and gates the rest: a 384px round screen with rotary input
+  # and no header is a different grammar, not the phone system scaled down.
+  epic-23: backlog
+  23-1-the-watch-grammar: backlog # DESIGN; GATES 23-2..23-4
+  23-2-watchos-implementation: backlog
+  23-3-wear-os-implementation: backlog
+  23-4-watch-widget-and-complication: backlog
+  epic-23-retrospective: optional
+
 # ============================================
 # ACTION ITEMS
 # ============================================

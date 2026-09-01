@@ -11,8 +11,8 @@ completedDate: '2025-01-03'
 project_name: 'myLoyaltyCards'
 user_name: 'Ifero'
 date: '2025-01-03'
-totalEpics: 19
-totalStories: 171 # counted from `### Story` headings on 2026-08-26
+totalEpics: 23
+totalStories: 196 # counted from `### Story` headings on 2026-09-01
 aligned_with_tracker: '2026-08-02'
 authoritative_source: 'docs/sprint-artifacts/sprint-status.yaml'
 ---
@@ -3507,3 +3507,508 @@ Story 19-1 is a feasibility gate: 19-3 onward must not start until it reports. S
 - The GDPR position is recorded for the case where a user syncs another household member's data into a folder they control.
 - `docs/project-context.md` gains folder sync in its Sync Patterns section, and the README describes the feature and its trust model.
 - Copy is provided in **both** `en.ts` and `it.ts`.
+
+---
+
+## Epic 20: Cardì Identity & Design System
+
+Establish **Cardì** as an identity: a design system, a mark, and a reference drawing of every
+screen the phone app has — so that Epics 21–23 implement against a decided thing rather than
+negotiating taste per screen.
+
+**Phase:** 3 · **Epic Type:** Design/Enabling · **Status:** done (written up retroactively 2026-09-01)
+
+This epic is documented after the fact. The work was done on `docs/cardi-redesign-carry-over`
+across August 2026 and is complete; it simply never had an epic around it, which left Epics
+21–23 referencing artefacts that appeared from nowhere and left `create-story` with nothing to
+hang the rest of the rebrand off.
+
+**The thesis, and it outranks the palette: _the content is the colour._** The home grid already
+carries ~45 third-party brand colours that arrive with the data. Our chrome stays quiet so the
+brands can be loud, which makes playfulness a **layout** decision — tile size, logo scale, grid
+rhythm — and never a palette one. Three hard rules fall out of it and are enforced in
+`cardi-design-system.md`: never tint, wash or recolour a branded card tile; never replace the
+two-column grid with single-column rows; and never put a large yellow chrome surface near the
+grid, because Esselunga is `#FFCC00` and beam is `#FCCC0C` — three points apart, and the
+most-used card would vanish into the furniture.
+
+**Also forbidden, and each one cost an argument:** bottom tab bars · floating action buttons ·
+coral/salmon/terracotta · drop shadows · gradients · glassmorphism · **anything overlaying a
+barcode, especially a drawn beam** · an accent that rises to the right.
+
+### Story 20.1: The Cardì Design System [Enabling]
+
+**As a** designer and developer, **I want** one written system covering colour, type, spacing and
+the things we refuse to draw, **So that** every screen design and every implementation decision
+has a source of truth that is not a conversation.
+
+**Acceptance Criteria:**
+
+- `docs/design/cardi/cardi-design-system.md` defines the **Ink & Beam** palette: ink `#181824`
+  as structure and light-mode actions, beam `#FCCC0C` as signature and dark-mode actions
+  (a deliberate inversion), cream `#F0F0E8` as the light ground, white cards on it.
+- Typography is fixed: Space Grotesk for headlines, Inter for body, JetBrains Mono for card
+  numbers.
+- The five logo-bar accents are declared **data only** — virtual-logo tiles for cards with no
+  official brand — and never chrome.
+- A **Forbidden** section lists every rejected pattern with its reason, so the same argument is
+  not had twice.
+- The beam rule is written in both directions: the ì carries the beam as the brand's promise;
+  the real beam belongs to the scanner at the till, so nothing is ever drawn over a barcode and
+  the barcode surround stays neutral.
+- The accent's **direction** is specified mechanically, not just typographically: `rotate(35)`
+  is the grave, `rotate(-35)` is an acute and spells a different word. (Added after every one of
+  the first 50 drawn accents used the negative angle.)
+
+### Story 20.2: Nine Screen Patterns, Drawn [Enabling]
+
+**As a** developer implementing the redesign, **I want** every screen in the app drawn as a
+reference frame, **So that** implementation is a transcription rather than a design exercise.
+
+**Acceptance Criteria:**
+
+- Thirty-five frames across nine patterns exist under `docs/design/cardi/frames/`: wallet (4),
+  card-detail (4), barcode (3), capture (4), form (4 states), settings (6), document (3),
+  auth (6) and onboarding (6).
+- Every one of the app's 21 routes maps onto a pattern, including the two that are not obvious:
+  `data-summary` is covered by the document prompts, and `recovery-otp` reuses
+  `VerifyEmailScreen` rather than having a frame of its own.
+- Each frame is 393 × 852 and includes the states that actually break layouts — empty, single
+  item, no results, error, saving, permission refused, offline.
+- A matching Stitch prompt file exists per pattern, each block standalone: a prompt may not
+  refer to anything outside itself, including a shared preamble.
+- Colours in prompts are literal hexes, never token names — the project theme resolves `primary`
+  to `#000000`, so a semantic name silently produces the wrong screen.
+
+### Story 20.3: The Mark — 35°, Grave, Contained [Enabling]
+
+**As a** brand owner, **I want** a mark that is genuinely ours and survives every size it ships
+at, **So that** the app is recognisable without a wordmark next to it.
+
+**Acceptance Criteria:**
+
+- The mark is the Italian **ì** of _Cardì_: a barcode stem and a beam-yellow accent, and nothing
+  else — no card, no wallet, no shield.
+- The accent is **35°**, a **grave** (descending left to right), and **contained** within the
+  letter's own advance in the wordmark, so it never collides with the `d`.
+- Its vertical placement is measured, not eyeballed: the accent tops out at 0.7007em, matching
+  both the `d` ascender and Space Grotesk's own `ì` at 0.700em.
+- For the square icon the beam **crosses** the bars high rather than floating above them —
+  chosen from six alternatives because the Android 13 themed layer redraws the icon in one
+  wallpaper-derived colour, where a floating tick becomes a speck and a crossing beam survives
+  as a shape.
+- The baseline anchoring ships inline on the `<svg>` (`vertical-align: -0.30em`, derived as
+  `(100 − BASELINE) / 100`) and never as a stylesheet rule, because a stylesheet rule was
+  dropped twice and floated the glyph above the word.
+
+### Story 20.4: One Generator, Every Icon [Enabling]
+
+**As a** developer, **I want** every shipped icon rendered from a single geometry definition and
+checked in CI, **So that** the app icon, the launch mark and the in-app glyph cannot drift apart.
+
+**Acceptance Criteria:**
+
+- `scripts/build-brand-icons.mjs` renders eight artefacts — three SVGs and five PNGs — from one
+  set of constants. `yarn icons:build` writes them; `yarn icons:check` regenerates and compares
+  hashes in pre-push and CI.
+- It is dependency-free: the repo has no rasteriser at all (sharp, rsvg-convert, ImageMagick,
+  Inkscape and pyobjc are absent), so primitives are drawn with signed distance fields and the
+  PNG is written by hand.
+- The Android adaptive-foreground scale is **derived** from the artwork's bounding radius
+  (`33 / radius` = ×0.873), never hardcoded, and is clamped at 1.0 so it can only ever shrink.
+- `assets/icon.png` is written **without an alpha channel** (colour type 2) because iOS rejects
+  an app icon that carries one, while the splash and Android foreground are RGBA because the
+  platform paints their field. `constants.test.ts` asserts the split.
+- The splash `backgroundColor` in `app.json` and `LAUNCH_FIELD_COLOR` are identical, and a test
+  asserts it: the native splash background is baked at build time and cannot read a runtime
+  theme, so any disagreement is a full luminance inversion on every cold start.
+- The in-app mark draws its stem in `currentColor` so one asset serves a cream surface and an
+  ink one; the beam stays literal, because it is the signature and never themes.
+- The two stock Material glyphs standing in for the brand — `card-account-details-outline` in
+  `AppIconHeader` and `credit-card` in `BrandedIcon` — are replaced by the real mark.
+
+### Story 20.5: The Design Frames Become Reproducible Source [Enabling]
+
+**As a** future maintainer, **I want** the specimen sheets to be built by committed scripts with
+a check that they still match, **So that** a stale generator cannot silently revert corrected
+artwork.
+
+**Acceptance Criteria:**
+
+- `docs/design/cardi/tools/` holds the generators that verifiably rebuild their frame, named
+  after what they build, resolving their output path from `__file__` so they work in any
+  checkout.
+- `tools/verify.py` reruns every generator into a temporary directory and asserts byte-identical
+  output. It redirects writes at `pathlib.Path.write_text` rather than by rewriting paths in the
+  source, because the generators build paths from concatenated literals and a string-replace
+  sandbox silently wrote to the real directory and compared a file against itself.
+- `docs/design/cardi/frames/*.html` is `.prettierignore`d, because Prettier reflows the HTML and
+  a formatted frame could never match its generator again. The pre-existing
+  `docs/design/cardi/*.html` entry does **not** cover it — a single `*` does not cross a
+  directory separator.
+- The frames with no working generator are named in `tools/README.md` with the reason, rather
+  than left to be rediscovered.
+
+---
+
+## Epic 21: Cardì Rebrand — Native Identity
+
+Finish making the app _Cardì_ everywhere the operating system shows it: the name under the icon,
+the colours inside it, and the four separate icon sets across phone, watch and wear.
+
+**Phase:** 3 · **Epic Type:** Feature/Implementation
+
+**The release constraint is the whole shape of this epic.** Every item here is a **native** asset
+or a build-time value. `runtimeVersion.policy` is `appVersion`, so none of it can ship as an OTA
+update — each needs a store build. That means the pieces cannot be sequenced independently
+without buying a store review to put users into a mismatch and another to get them out. **Epic 21
+ships as one release**, and story 21.6 is the gate that enforces it.
+
+Story 20.4 already delivered the phone icon, the Android foreground, the themed layer, the
+favicon and the splash mark. Everything below points that same generator at the surfaces it did
+not cover, or changes a value it does not own.
+
+### Story 21.1: Rename the App to Cardì
+
+**As a** user, **I want** the app to be called what its icon says it is, **So that** the name on
+my home screen matches the brand.
+
+**Acceptance Criteria:**
+
+- `expo.name` becomes `Cardì`, and the name renders correctly with its grave accent on both
+  platforms' home screens, in the app switcher, and in Settings.
+- `expo.slug` and `expo.scheme` are **deliberately unchanged**. `scheme` is the deep-link
+  namespace (`myloyaltycards://`) referenced by the Supabase redirect allowlist and every OAuth
+  callback; `slug` binds the EAS project. Renaming either is a migration, not a rename, and is
+  explicitly out of scope.
+- `ios.bundleIdentifier` and `android.package` are unchanged, so the store listing keeps its
+  reviews, ratings and install base.
+- Every user-visible occurrence of "myLoyaltyCards" in copy is audited: i18n strings, the Help
+  screen, the privacy policy, legal documents and store metadata.
+- Accent handling is verified on a device with a non-Latin keyboard locale, and in Android's
+  launcher label truncation at the narrowest supported density.
+
+### Story 21.2: Migrate the Colour Tokens to Ink & Beam
+
+**As a** user, **I want** the app I open to look like the icon I tapped, **So that** the identity
+is not a promise the first screen breaks.
+
+**Acceptance Criteria:**
+
+- `PRIMARY_COLORS` stops being the Google Blue ramp. The Cardì palette becomes the app's colours,
+  flowing through `tokens/color.json` → Style Dictionary → `tokens.generated.ts` → Unistyles.
+- `IDENTITY_COLORS` (added additively in 20.4 so the icon work could land without recolouring the
+  app) is reconciled with the migrated palette rather than left as a parallel truth.
+- **This is a big bang, by design.** Tokens funnel into all three apps, so there is no supported
+  half-migrated state; the migration lands in one change rather than screen by screen.
+- Light and dark are both verified: ink structure on cream in light, beam actions on true black
+  in dark.
+- Every WCAG contrast assertion in `shared/theme/colors.contrast.test.ts` still passes, and beam
+  `#FCCC0C` always carries dark text.
+- No branded card tile is tinted, washed or recoloured by the migration — the ~45 third-party
+  brand colours are content and must survive untouched.
+- The nine known styling items are folded in here rather than left loose: `theme.warning` used
+  across 5 files, `theme.success` being a green that is not in the palette, and the 70 instances
+  of sub-15px body text across 40 files (which needs a policy decision, not a find-and-replace).
+
+### Story 21.3: watchOS App and Widget Icons
+
+**As an** Apple Watch user, **I want** the watch app to carry the same mark as the phone, **So
+that** one glance at both devices does not show two different brands.
+
+**Acceptance Criteria:**
+
+- `targets/watch/AppIcon.png` and `targets/watch/Assets.xcassets/AppIcon.appiconset/` carry the
+  Cardì mark, rendered by `scripts/build-brand-icons.mjs` rather than by hand.
+- The watch-widget set is complete: all fifteen `App-Icon-*` sizes,`ItunesArtwork@2x.png`, and
+  the `OpenAppIcon` imageset in `targets/watch-widget/Assets.xcassets/`.
+- watchOS masks its icon to a **circle**, so the mark is verified against a circular crop, not
+  only the squircle the phone uses.
+- `AccentColor.colorset` on both watch targets is updated — it tints watchOS controls and is
+  still the pre-rebrand colour.
+- `AppIcon.appiconset/Contents.json` is left to `expo prebuild`, which owns and rewrites it
+  (it is `.prettierignore`d for exactly this reason). It is not hand-edited.
+- `yarn icons:check` covers the new artefacts, so the watch icons cannot drift from the phone's.
+
+### Story 21.4: Wear OS Launcher Icons
+
+**As a** Wear OS user, **I want** the watch app to carry the Cardì mark, **So that** the
+identity is consistent across every device the app runs on.
+
+**Acceptance Criteria:**
+
+- `ic_launcher_foreground.png` is generated for all four densities under
+  `watch-android/app/src/main/res/mipmap-{h,xh,xxh,xxxh}dpi/`.
+- `mipmap-anydpi-v26/ic_launcher.xml` declares the correct foreground and a background matching
+  the phone's `adaptiveIcon.backgroundColor`.
+- The mark is verified against Wear OS's **circular** launcher mask and at the smallest
+  launcher size on a 384px round device.
+- Rendering is verified on both a round and a square AVD, since Wear OS ships both.
+- The generator produces these too, so there is one definition of the mark and not two.
+
+### Story 21.5: Store Artwork
+
+**As a** prospective user browsing the store, **I want** the listing to show Cardì, **So that**
+what I install matches what I was shown.
+
+**Acceptance Criteria:**
+
+- `assets/store/android-app-icon-512x512.png` and its `-alpha` variant carry the new mark.
+- `assets/store/android-store-banner-1024x500.png` is redrawn, and its source
+  `assets/images/android-store-banner.svg` is updated with it.
+- `assets/store/google-developer-banner-4096x2304.jpg` is redrawn.
+- iOS App Store artwork and any screenshots showing the old identity are refreshed, including
+  the Wear OS store screenshots added under `docs/design/wear-store-screenshots/`.
+- Listing **text** is updated with the name change from 21.1 — title, subtitle, description and
+  keywords.
+
+### Story 21.6: The Single Rebrand Release [Enabling]
+
+**As a** user, **I want** the rebrand to arrive complete, **So that** I never see an app whose
+icon, name and colours disagree with each other.
+
+**Acceptance Criteria:**
+
+- Stories 21.1–21.5 ship in **one** store release on both platforms. None is released alone.
+- The release is verified on real devices before submission: home-screen icon and label, app
+  switcher, launch surface into first screen with no colour discontinuity, watch face and watch
+  app icon, and the themed (Material You) icon on Android 13+.
+- The legacy identity is removed in this release: `assets/app-icons/variants/` (aurora, sunset,
+  forest) and the eight orphaned `app-icon-*.svg` files, together with the test fixture in
+  `test/svg-module-resolution.test.tsx` that still points at one of them.
+- A rollback position is written down before submission, given that no part of this can be
+  undone by an OTA update.
+- `currentColor` rendering in the in-app mark is confirmed **on a device**. The jest SVG mock
+  means a green test suite is no evidence for it.
+
+---
+
+## Epic 22: Cardì Redesign — Screen Implementation
+
+Implement the thirty-five frames from Epic 20 across the phone app's 21 routes.
+
+**Phase:** 3 · **Epic Type:** Feature/Implementation
+
+Epic 20 produced the designs and Epic 21 makes the app _called_ and _coloured_ Cardì. This epic
+is the one that makes it _look_ like Cardì. It is deliberately **screen by screen**, not a big
+bang: unlike colour tokens, layout has a supported half-migrated state, and shipping a redesigned
+Wallet while Settings still waits costs nothing.
+
+**Sequencing:** 22.1 first — the shared primitives every other story consumes. Then Wave A
+(wallet, card detail, barcode, capture, form, settings, document, auth), which is
+illustration-free and can proceed immediately. **Wave B is onboarding, and it is blocked** on a
+commissioned illustration set that does not exist. That constraint is the design system working,
+not failing: the alternative is inventing a per-screen illustration style, which is explicitly
+forbidden.
+
+### Story 22.1: Design-System Components [Enabling]
+
+**As a** developer implementing the redesign, **I want** the shared primitives to exist first,
+**So that** eight screen stories consume them instead of each inventing its own.
+
+**Acceptance Criteria:**
+
+- The primitives the frames rely on exist as components: the anchored primary-action footer with
+  its 1px hairline rule, the card tile, the section header, the hairline-outlined surface, the
+  form field with its error idiom, and the sheet.
+- The primary-action footer is a flex sibling of the scroll area or an auto-top-margin anchor
+  inside it — **never `position: absolute`**, so it does not fight the keyboard. The button is
+  always enabled; pressing an incomplete form reveals the field errors.
+- Depth comes from tonal layers and hairline outlines only. No shadows, no gradients.
+- Storybook stories cover each primitive in light and dark.
+- The four filed UI-defect stories (16-30 banner occlusion, 16-31 viewfinder geometry, 16-32
+  Button `destructive`, 16-33 touch target 44→48) are resolved here rather than separately,
+  since they all live in components this story rewrites.
+
+### Story 22.2: Wallet
+
+**As a** user, **I want** the home screen redesigned, **So that** my cards read as the content
+and the app around them stays quiet.
+
+**Acceptance Criteria:**
+
+- The four wallet frames are implemented: populated, empty, single card and no-results.
+- The **two-column grid stays** — it is the shipped, correct layout, and replacing it with
+  single-column rows is forbidden.
+- No bottom tab bar and no floating action button. Navigation stays a single Home with `+` left
+  and gear right in the header.
+- Branded tiles are never tinted, washed or recoloured; the ~45 brand colours render exactly as
+  the catalogue supplies them.
+- No large yellow chrome surface sits near the grid.
+
+### Story 22.3: Card Detail
+
+**As a** user, **I want** the card screen redesigned, **So that** the brand owns the top of the
+screen and the chrome recedes as I scroll.
+
+**Acceptance Criteria:**
+
+- The four card-detail frames are implemented, including the scroll transition: header is the
+  brand at rest, hero fades, header condenses to cream with a hairline.
+- The barcode is reachable in one tap and nothing is ever drawn over it.
+- Custom-card accents apply only to cards with no official brand.
+
+### Story 22.4: Barcode Flash
+
+**As a** user at a till, **I want** the barcode screen redesigned, **So that** it scans first try.
+
+**Acceptance Criteria:**
+
+- The three barcode frames are implemented: EAN-13, QR, and card-not-found.
+- **Nothing overlays the barcode** — no beam, no scan line, no watermark, no chrome.
+- The surround is neutral (black, ink, cream or white) and never a saturated field, which is
+  glare beside the scan target at maximum brightness.
+- The screen ignores dark mode and stays white, as specified.
+- Brightness boost and the existing symbology handling are preserved.
+
+### Story 22.5: Capture
+
+**As a** user adding a card, **I want** the capture flow redesigned, **So that** aiming and
+choosing are both obvious.
+
+**Acceptance Criteria:**
+
+- The four capture frames are implemented: brand list, viewfinder, permission refused, and the
+  multiple-codes picker.
+- The viewfinder is shaped to the expected symbology rather than a fixed square (story 16-31).
+- The scan banner is not occluded by the bottom actions (story 16-30).
+- The beam **is** allowed here — this is our scanner, not the shop's.
+
+### Story 22.6: The Form Pattern
+
+**As a** user entering card details, **I want** forms redesigned consistently, **So that** the
+eight form screens behave the same way.
+
+**Acceptance Criteria:**
+
+- The four form states are implemented — default, error, filled, saving — against the anchored
+  footer from 22.1.
+- The app's **two** current form treatments are reconciled into one: `AuthScreenLayout` centres
+  its content vertically while `CardForm` is top-aligned with a trailing button and 100px of
+  bottom padding. Neither is bottom-anchored today.
+- The error idiom distinguishes field validation from a failed request.
+- `add-card/setup` and `card/[id]/edit` both adopt it.
+
+### Story 22.7: Settings
+
+**As a** user, **I want** settings redesigned, **So that** the list and its sheets match the
+system.
+
+**Acceptance Criteria:**
+
+- The six settings frames are implemented, covering both signed-in and guest states and the
+  picker and confirm sheets.
+- Destructive actions use the corrected `destructive` button variant from 22.1.
+
+### Story 22.8: Document Screens
+
+**As a** user reading help or a policy, **I want** long-form screens redesigned, **So that** they
+are legible rather than merely present.
+
+**Acceptance Criteria:**
+
+- The three document frames are implemented: prose, searchable FAQ, and two-column table.
+- `help`, `privacy-policy` and `data-summary` all adopt the pattern.
+- Body text meets the size policy decided in 21.2.
+
+### Story 22.9: Authentication
+
+**As a** user signing in, **I want** the auth flow redesigned, **So that** the first screens a
+new user sees are the brand.
+
+**Acceptance Criteria:**
+
+- The six auth frames are implemented: sign in, create account, forgot password, OTP entry, new
+  password with its strength meter, and the request-failed error idiom.
+- The strength meter varies width (33/66/100%) and does not rely on colour alone; the green it
+  currently uses is not in the palette and is replaced.
+- `AppIconHeader` renders the Cardì mark, already delivered in 20.4.
+
+### Story 22.10: Onboarding [BLOCKED — needs illustrations]
+
+**As a** new user, **I want** onboarding redesigned, **So that** my first impression is the brand
+at its best.
+
+**Acceptance Criteria:**
+
+- The six onboarding frames are implemented: welcome, mode selection, the difference sheet, the
+  scan-or-add-manually screen, and the highlights carousel.
+- **Blocked until a commissioned illustration set exists.** Inventing a per-screen illustration
+  style is forbidden, and the placeholder drawings in the frames are references, not artwork.
+- Illustrations are two-colour — ink line-work plus one beam accent — with no gradients and no
+  third colour.
+- The splash-adjacent brand animation lands here if it lands anywhere: the launch surface is
+  explicitly anti-spectacle (story 16.17), and onboarding is where the user has already agreed
+  to wait.
+
+---
+
+## Epic 23: Cardì on the Watch
+
+Design and then implement the Cardì identity on the two watch apps and the widget — six surfaces
+that have **no Cardì design at all**.
+
+**Phase:** 3 · **Epic Type:** Design/Enabling + Feature/Implementation
+
+Epic 20 drew the phone and stopped there. watchOS has `ContentView`, `CardListView` and
+`BarcodeFlashView`; Wear OS has `CardListScreen`, `BarcodeScreen` and `SortPickerScreen`; and the
+watch widget has its own surface. None of them appears in the thirty-five frames.
+
+**This epic cannot be folded into Epic 22**, which implements designs that already exist. A 384px
+round screen with no room for a header, no bottom navigation and a rotary input is a different
+grammar, not the phone system scaled down — and the phone system's central rule, that the content
+is the colour, behaves differently when only one card is on screen at a time.
+
+### Story 23.1: The Watch Grammar [Enabling]
+
+**As a** designer, **I want** a written watch extension to the design system, **So that** the two
+watch apps are implemented against a decided thing rather than improvised per screen.
+
+**Acceptance Criteria:**
+
+- The system is extended to cover round and square watch faces, at the real sizes: 384px round
+  Wear OS and the watchOS size classes.
+- It states what carries over from the phone (ink and beam, the barcode rules, the refusal to
+  overlay a scan target) and what does not (the two-column grid, the header, the anchored
+  footer).
+- Reference frames are drawn for all six surfaces, on both round and square.
+- Rotary and crown input are designed for, not retrofitted.
+- The barcode-flash rule is re-derived rather than assumed: a watch screen is small and dim, and
+  the constraint that made the phone's surround neutral is stronger here, not weaker.
+
+### Story 23.2: watchOS Implementation
+
+**As an** Apple Watch user, **I want** the watch app to look like Cardì, **So that** it matches
+the phone I set it up from.
+
+**Acceptance Criteria:**
+
+- `CardListView` and `BarcodeFlashView` implement the 23.1 frames.
+- Ink and beam are defined once for the watch target rather than duplicated per view.
+- The barcode flash keeps its current symbology correctness and brightness behaviour.
+- Verified on a real Apple Watch, not only the simulator.
+
+### Story 23.3: Wear OS Implementation
+
+**As a** Wear OS user, **I want** the watch app to look like Cardì, **So that** it matches the
+phone.
+
+**Acceptance Criteria:**
+
+- `CardListScreen`, `BarcodeScreen` and `SortPickerScreen` implement the 23.1 frames.
+- `TransformingLazyColumn` with `ScreenScaffold` and the morph transformation spec is used as
+  the list idiom, per the Wear Compose patterns already established in Epic 10.
+- Verified on both a round and a square AVD, and on a real device.
+- Rotary input is verified on hardware — it cannot be injected headlessly.
+
+### Story 23.4: The Watch Widget and Complication
+
+**As an** Apple Watch user, **I want** the complication to carry the Cardì mark, **So that** the
+brand is right at the one size where only the mark fits.
+
+**Acceptance Criteria:**
+
+- The widget's surface implements the 23.1 frames.
+- The complication uses the mark at complication sizes, where the reduction rather than the full
+  mark may be required — the decision is made against a rendered complication, not asserted.
+- The `OpenAppIcon` imageset is consistent with the icon set delivered in 21.3.
