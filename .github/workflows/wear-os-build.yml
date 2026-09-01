@@ -14,7 +14,7 @@ name: CI — Wear OS build
 # added the first ones — sort comparators, colour maths, the read-only invariant and
 # the sort-preference round-trip). It runs no standalone lint and nothing on a
 # device; the install-and-launch and round/square layout checks are done by hand on
-# Wear OS emulators. The release APK produced here is UNSIGNED and is not uploaded
+# Wear OS emulators. The release bundle produced here is UNSIGNED and is not uploaded
 # anywhere — the release pipelines build their own and inject the keystore. See
 # watch-android/README.md § CI before assuming more.
 #
@@ -53,7 +53,7 @@ jobs:
   wear-os-build:
     name: Wear OS (Gradle) build
     runs-on: ubuntu-latest
-    # Measured at ~1m30s locally from a cold Gradle cache, WITH `assembleRelease`
+    # Measured at ~1m30s locally from a cold Gradle cache, WITH the release variant
     # (R8 + resource shrinking) included — roughly ten seconds more than the
     # debug-only job it replaced. 20m is deliberate headroom for a cold CI cache
     # plus SDK downloads on the first run, and still short enough to catch a
@@ -86,15 +86,20 @@ jobs:
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v6
 
-      # `assembleRelease` is here because Story 16.35 made the release variant the
-      # one users receive. Until then R8 full mode had NEVER run against this app —
-      # `app/proguard-rules.pro` says so in its own header, and its ZXing keep rules
-      # were written blind against a variant CI did not build. The APK it produces is
-      # unsigned (no signingConfig by design; the release lanes inject the keystore),
-      # which is fine: this job proves the variant COMPILES and survives R8, nothing
-      # more. It is also the cheap half of that guarantee — a mis-optimised barcode
-      # path would otherwise only surface on a real watch, and there is no Android
-      # telemetry to notice with.
-      - name: Run unit tests and build Wear OS debug + release APKs
+      # `bundleRelease` is here because Story 16.35 made the release variant the one users
+      # receive — and an AAB specifically, because Play refuses raw APKs for this
+      # application. Building the artifact that actually ships is the point; it runs R8
+      # exactly as `assembleRelease` would.
+      #
+      # Until Story 16.35, R8 full mode had NEVER run against this app.
+      # `app/proguard-rules.pro` says so in its own header: its ZXing keep rules were
+      # written blind, against a variant CI did not build. A mis-optimised barcode path
+      # would otherwise surface only on a real watch, and there is no Android telemetry to
+      # notice with — so this is the cheap half of that guarantee.
+      #
+      # The bundle produced here is UNSIGNED and is uploaded nowhere; the release pipelines
+      # build their own and inject the keystore. Note an unsigned bundle carries the SAME
+      # filename as a signed one, so nothing in this job can or should assert on signing.
+      - name: Run unit tests and build Wear OS debug APK + release bundle
         working-directory: watch-android
-        run: ./gradlew testDebugUnitTest assembleDebug assembleRelease --no-daemon
+        run: ./gradlew testDebugUnitTest assembleDebug bundleRelease --no-daemon

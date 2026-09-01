@@ -7,7 +7,7 @@ watch app runs no JS bundle, so Hermes, `runtimeVersion` and OTA updates are all
 It is a **standalone Gradle project**: it has its own wrapper, its own version catalogue and its own
 `settings.gradle.kts`, and it builds from this directory alone.
 
-## The one thing to understand first: this is a separate APK
+## The one thing to understand first: this is a separate artifact
 
 If you are arriving from the Apple Watch side of this repo, the instinct you have is wrong, and it is
 wrong in a specific way worth spelling out.
@@ -15,14 +15,20 @@ wrong in a specific way worth spelling out.
 | Concern            | watchOS (`targets/watch/`)                                          | Wear OS (here)                                   |
 | ------------------ | ------------------------------------------------------------------- | ------------------------------------------------ |
 | Native project     | **Generated** into the gitignored `ios/` by `@bacons/apple-targets` | **Standalone Gradle project**, self-contained    |
-| Distribution       | **Embedded** in the iOS app bundle — one App Store binary           | **Separate APK**, uploaded independently to Play |
+| Distribution       | **Embedded** in the iOS app bundle — one App Store binary           | **Separate AAB**, uploaded independently to Play |
 | Bundle identity    | `.watch` **suffix** → `com.iferoporefi.myloyaltycards.watch`        | **IDENTICAL** `com.iferoporefi.myloyaltycards`   |
 | Build entry point  | `yarn watch:build` → `xcodebuild`                                   | `./gradlew` in this directory                    |
 | Expo config plugin | Required (`@bacons/apple-targets`)                                  | **None, and none is possible**                   |
 
 Apple embeds a watch app inside its iOS host bundle, so Epic 5 had to _generate_ that target on every
-prebuild. **Wear OS works the opposite way.** Since Wear OS 2 a watch app is a separate APK, uploaded
-and updated independently in the Play Console. There is nothing to embed.
+prebuild. **Wear OS works the opposite way.** Since Wear OS 2 a watch app is a separate artifact,
+uploaded and updated independently in the Play Console. There is nothing to embed.
+
+> ⚠️ **For THIS app that artifact is an AAB, not an APK.** The Wear platform still permits APKs in
+> general, which is what most documentation describes — but this Play listing is App-Bundle-only and
+> the API rejects raw APKs outright: `Invalid request - APKs are not allowed for this application`
+> (RC v1.0.0-rc.20, on the `wear:alpha` track). The release lanes therefore run `bundleRelease`.
+> Do not "correct" this back to an APK on the strength of a general Wear OS doc.
 
 This is not merely a design preference — AGP 9.0 **removed** embedded-Wear-app support (the old
 `wearApp` configurations) outright. There is no supported way to embed a Wear APK any more.
@@ -64,8 +70,13 @@ cd watch-android
 
 The APK lands in `app/build/outputs/apk/debug/app-debug.apk`.
 
-`./gradlew assembleRelease` also works and produces an **unsigned** APK — see
+`./gradlew assembleRelease` also works and produces an **unsigned** APK. Note that what actually
+ships is `./gradlew bundleRelease` → an **AAB** — see
 [Signing, Play and Asset Links](#signing-play-and-asset-links).
+
+⚠️ An unsigned bundle is named `app-release.aab`, **identical** to a signed one — there is no
+`-unsigned` suffix the way APKs get one. The filename tells you nothing about signing; only
+`keytool -printcert -jarfile` does.
 
 ### Run on an emulator
 
@@ -390,10 +401,11 @@ the Wearable Data Layer.
 ## Signing, Play and Asset Links
 
 **Wired in CI since Story 16.35; still unsigned locally.** No keystore, signing secret or
-`local.properties` is committed to this repo, so a local `assembleRelease` produces
-`app-release-unsigned.apk` — that is expected and unchanged. The release pipelines inject @ifero's
-upload keystore via the `android.injected.signing.*` Gradle properties (the same mechanism the phone
-lane uses), which is what turns that artifact into a signed `app-release.apk`.
+`local.properties` is committed to this repo, so a local `bundleRelease` produces an **unsigned**
+`app-release.aab` — expected and unchanged. The release pipelines inject @ifero's upload keystore via
+the `android.injected.signing.*` Gradle properties (the same mechanism the phone lane uses), which is
+what signs it. Because the filename is the same either way, the signing-parity check is what proves
+the injection worked.
 
 > ⚠️ This section used to say _"Documented here, not configured here."_ It was accurate, and the Wear
 > OS app was consequently **never delivered to any Play track** through the whole of Epic 10 — the

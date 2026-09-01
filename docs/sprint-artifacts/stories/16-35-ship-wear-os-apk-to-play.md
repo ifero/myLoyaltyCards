@@ -521,3 +521,68 @@ symbolication comes from `sentry.gradle`.
 The whole Play-facing half of AC9 remains untested: the `wear:alpha` track's existence, the
 form-factor Console opt-in, and whether both artifacts land. The next RC is the first run that can
 reach an actual Play API call for the Wear APK.
+
+---
+
+## Post-merge #2: RC v1.0.0-rc.20 — Wear must ship an AAB, not an APK
+
+**Progress first.** This RC got materially further than rc.19:
+
+- ✅ The phone AAB **uploaded** — `Updating track 'alpha'...`. The `skip_upload_apk` fix worked.
+- ✅ The signing-parity check passed again, against the real upload key.
+- ✅ **`wear:alpha` EXISTS.** No `Track not found`, so the one-time Play Console form-factor opt-in
+  has been done. That prerequisite is now confirmed satisfied, not assumed.
+- ✅ The failure handler fired and reported the state correctly.
+
+### The failure
+
+```
+Google Api Error: Invalid request - APKs are not allowed for this application.
+```
+
+This Play listing is **App-Bundle-only**. Once an app is on App Bundles, Play refuses raw APK uploads
+on _any_ track, form-factor tracks included. The Wear artifact therefore has to be an AAB.
+
+**This invalidates a platform claim this story inherited and repeated.** `watch-android/README.md`
+stated, as a flat fact, that "a Wear OS app ships as its own APK". That is true of the Wear platform
+in general and false for this listing — and it was never questioned because it read like a platform
+constraint rather than a per-app one. Corrected in the README with the error text quoted, so the next
+reader cannot re-derive the wrong conclusion from a general Wear OS doc.
+
+### Change
+
+`assembleRelease` → `bundleRelease` throughout the Wear release path:
+
+| Before                                           | After                                                  |
+| ------------------------------------------------ | ------------------------------------------------------ |
+| `build_wear_apk!` / `upload_wear_apk!`           | `build_wear_bundle!` / `upload_wear_bundle!`           |
+| `wear_release_apk!` globbing `apk/release/*.apk` | `wear_release_bundle!` globbing `bundle/release/*.aab` |
+| upload with `apk:` + `skip_upload_aab: true`     | upload with `aab:` + `skip_upload_apk: true`           |
+| CI `assembleRelease`                             | CI `bundleRelease` — build what actually ships         |
+
+**A guard had to be removed, and its replacement is load-bearing.** The APK path could detect a
+failed signing injection by filename (`app-release-unsigned.apk`). **Bundles have no such suffix** —
+an unsigned bundle is named `app-release.aab`, byte-identical to a signed one. Verified locally. The
+signing-parity check is now the _only_ thing that can catch an unsigned Wear artifact, via `keytool`
+reporting "Not a signed jar file". Do not re-add a name-based guard; it would be theatre.
+
+`scripts/check-android-signing-parity.mjs` now picks its tool by file extension — `keytool` for a
+bundle, `apksigner` for an APK — because `apksigner` cannot read an AAB at all.
+
+### Verified locally with real signed bundles
+
+| Case                            | Result                                            |
+| ------------------------------- | ------------------------------------------------- |
+| two bundles, same key           | exit 0, fingerprint printed                       |
+| two bundles, **different** keys | exit 1, both fingerprints shown                   |
+| **unsigned** wear bundle        | exit 1, "probably unsigned (no v1/jar signature)" |
+
+Signed bundles were produced through the real mechanism (`bundleRelease` +
+`android.injected.signing.*` against a throwaway key), which also re-confirms injected signing works
+for `bundleRelease`, not just `assembleRelease`.
+
+### Still unproven
+
+Whether Play accepts the Wear **bundle** on `wear:alpha`. Every earlier unknown on that path is now
+resolved — the track exists, signing is right, the phone half uploads — so this is the last one, and
+only an RC can close it.

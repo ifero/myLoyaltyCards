@@ -1,15 +1,25 @@
 #!/usr/bin/env node
 /**
- * Assert the Wear OS release APK is signed with the SAME certificate as the phone
- * release AAB, before either is uploaded to Play (Story 16.35, AC5).
+ * Assert the Wear OS release artifact is signed with the SAME certificate as the phone
+ * release artifact, before either is uploaded to Play (Story 16.35, AC5).
  *
  * Why this gate exists: an *unsigned* APK fails loudly at Play, but a *wrong-key*
  * APK uploads cleanly and then breaks silently — the Wearable Data Layer refuses to
  * connect two artifacts signed with different keys, there is no crash, and this
  * project has effectively no Android telemetry to notice with.
  *
+ * Both artifacts are AABs today (Play refuses raw APKs for this application — see the
+ * Fastfile), but the tool is chosen per file extension so an `.apk` still works:
+ * `keytool -printcert -jarfile` reads a bundle, `apksigner` reads an APK. `apksigner`
+ * cannot read an AAB at all, so this is a real dispatch, not a stylistic one.
+ *
+ * For a BUNDLE this doubles as the unsigned check. AGP names an unsigned bundle
+ * `app-release.aab` — identical to a signed one, with no `-unsigned` suffix the way APKs
+ * get — so the filename proves nothing. `keytool` prints "Not a signed jar file", which the
+ * parser turns into a clear error.
+ *
  * Usage:
- *   node scripts/check-android-signing-parity.mjs <phone.aab> <wear.apk>
+ *   node scripts/check-android-signing-parity.mjs <phone artifact> <wear artifact>
  *
  * Exits 0 on parity (printing the shared fingerprint, which is also the value the
  * Digital Asset Links entry needs), non-zero on mismatch or on any failure to read
@@ -28,7 +38,7 @@ import {
   parseKeytoolCertificateFingerprint
 } from './lib/signing-fingerprints.mjs';
 
-const [aabPath, apkPath] = process.argv.slice(2);
+const [phonePath, wearPath] = process.argv.slice(2);
 
 const fail = (message) => {
   console.error(`[check-android-signing-parity] ${message}`);
@@ -36,12 +46,12 @@ const fail = (message) => {
   process.exit(1);
 };
 
-if (!aabPath || !apkPath) {
-  fail('usage: check-android-signing-parity.mjs <phone.aab> <wear.apk>');
+if (!phonePath || !wearPath) {
+  fail('usage: check-android-signing-parity.mjs <phone artifact> <wear artifact>');
 }
 for (const [label, file] of [
-  ['phone AAB', aabPath],
-  ['Wear APK', apkPath]
+  ['phone artifact', phonePath],
+  ['Wear artifact', wearPath]
 ]) {
   if (!existsSync(file)) {
     fail(`${label} not found at ${file}. Nothing was uploaded.`);
@@ -79,24 +89,30 @@ const run = (label, command, args) => {
   }
 };
 
-const apksigner = resolveApksigner();
+/** Read the signing certificate fingerprint, choosing the tool by artifact type. */
+const fingerprintOf = (file) => {
+  if (file.toLowerCase().endsWith('.apk')) {
+    return parseApksignerCertificateFingerprint(
+      run('apksigner verify', resolveApksigner(), ['verify', '--print-certs', file])
+    );
+  }
+  return parseKeytoolCertificateFingerprint(
+    run('keytool -printcert', 'keytool', ['-printcert', '-jarfile', file])
+  );
+};
 
 let wearFingerprint;
 let phoneFingerprint;
 try {
-  wearFingerprint = parseApksignerCertificateFingerprint(
-    run('apksigner verify', apksigner, ['verify', '--print-certs', apkPath])
-  );
-  phoneFingerprint = parseKeytoolCertificateFingerprint(
-    run('keytool -printcert', 'keytool', ['-printcert', '-jarfile', aabPath])
-  );
+  wearFingerprint = fingerprintOf(wearPath);
+  phoneFingerprint = fingerprintOf(phonePath);
 } catch (error) {
   fail(error.message);
 }
 
 const result = compareSigningFingerprints(
-  { label: `Wear APK (${path.basename(apkPath)})`, fingerprint: wearFingerprint },
-  { label: `phone AAB (${path.basename(aabPath)})`, fingerprint: phoneFingerprint }
+  { label: `Wear (${path.basename(wearPath)})`, fingerprint: wearFingerprint },
+  { label: `phone (${path.basename(phonePath)})`, fingerprint: phoneFingerprint }
 );
 
 const writeSummary = (markdown) => {
@@ -111,9 +127,9 @@ const writeSummary = (markdown) => {
 
 if (!result.match) {
   console.error(`[check-android-signing-parity] ${result.message}`);
-  console.error('::error::Wear APK and phone AAB are signed with different certificates.');
+  console.error('::error::Wear and phone artifacts are signed with different certificates.');
   writeSummary(
-    '### ❌ Android signing parity\n\nThe Wear OS APK and the phone AAB are signed with **different** certificates. ' +
+    '### ❌ Android signing parity\n\nThe Wear OS and phone artifacts are signed with **different** certificates. ' +
       'The Wearable Data Layer will not connect and Play will reject the form-factor association.\n'
   );
   process.exit(1);
@@ -125,6 +141,6 @@ console.log(`[check-android-signing-parity] OK — ${result.message}`);
 console.log(`[check-android-signing-parity] Signing certificate SHA-256: ${result.fingerprint}`);
 writeSummary(
   '### ✅ Android signing parity\n\n' +
-    'The Wear OS APK and the phone AAB share one signing certificate.\n\n' +
+    'The Wear OS and phone artifacts share one signing certificate.\n\n' +
     `\`SHA-256: ${result.fingerprint}\`\n`
 );
