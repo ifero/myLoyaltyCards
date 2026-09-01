@@ -356,6 +356,42 @@ platform :android do
   # AAB was already committed. Do not reintroduce it.
   WEAR_TRACK_PREFIX = "wear".freeze
 
+  # Resolve the Play track the Wear bundle goes to.
+  #
+  # ⚠️ `wear:` + the phone's track name is NOT a reliable derivation, and RC v1.0.0-rc.21
+  # proved it: the phone ships to `alpha`, and `wear:alpha` came back
+  # `Track not found`. Per developers.google.com/android-publisher/tracks only three Wear
+  # track names are WELL KNOWN — `wear:production`, `wear:beta` (open testing) and
+  # `wear:qa` (internal testing; note it is "qa", not "internal"). Everything else is a
+  # CLOSED testing track, which is created by hand and carries a custom name, so
+  # `wear:alpha` exists only if someone made a Wear closed track literally called "alpha".
+  #
+  # So the derived value is a DEFAULT, not a rule. `WEAR_PLAY_TRACK` overrides it outright
+  # for whatever this app's Console actually has. Set it in the release workflow rather
+  # than editing the default here, so the phone and Wear tracks stay visibly paired.
+  def wear_play_track(phone_track)
+    override = ENV['WEAR_PLAY_TRACK'].to_s.strip
+    return override unless override.empty?
+
+    "#{WEAR_TRACK_PREFIX}:#{phone_track}"
+  end
+
+  # Ask Play which tracks this app actually has, for the `Track not found` message.
+  #
+  # Wrapped so it can NEVER replace the real failure: a diagnostic that throws while
+  # explaining another throw is worse than no diagnostic. Returns nil when it cannot tell.
+  # A fresh edit is used deliberately — the one the failed upload was holding is dead.
+  def available_play_tracks
+    client = Supply::Client.make_from_config(params: Supply.config)
+    client.begin_edit(package_name: Supply.config[:package_name])
+    names = client.tracks.map(&:track).compact.sort
+    client.abort_current_edit
+    names
+  rescue StandardError => diagnostic_error
+    UI.error("(could not list this app's Play tracks: #{diagnostic_error.message})")
+    nil
+  end
+
   # Upload the already-built, already-verified Wear APK to its own form-factor track.
   #
   # Because this is a SEPARATE track from the phone's, the release is independent — which
@@ -374,7 +410,7 @@ platform :android do
   # declared `conflicting_options` with `:aab`/`:aab_paths` — so this remains a second call.
   private_lane :upload_wear_bundle! do |options|
     phone_track = options.fetch(:track)
-    wear_track = "#{WEAR_TRACK_PREFIX}:#{phone_track}"
+    wear_track = wear_play_track(phone_track)
     release_status = options.fetch(:release_status)
 
     begin
@@ -407,11 +443,24 @@ platform :android do
       # `Track not found` is the signature of the one-time Play Console step never having been
       # done, and it is worth naming explicitly: the raw API error does not say what to click.
       if error.message.to_s.match?(/track not found/i)
-        UI.error("'#{wear_track}' DOES NOT EXIST. Wear OS needs a dedicated form-factor track,")
-        UI.error("enabled once by hand in the Play Console:")
-        UI.error("  Advanced settings -> Form factors -> Wear OS -> Manage")
-        UI.error("  -> 'Use a dedicated release track for Wear OS'")
-        UI.error("Until that is done, no Wear upload can succeed on any track.")
+        UI.error("'#{wear_track}' DOES NOT EXIST for this app. Two possible causes:")
+        UI.error("")
+        UI.error("1. The Wear OS form factor is not enabled. Enable it once, by hand:")
+        UI.error("     Advanced settings -> Form factors -> Wear OS -> Manage")
+        UI.error("     -> 'Use a dedicated release track for Wear OS'")
+        UI.error("2. It IS enabled, but this track name is wrong. Only wear:production,")
+        UI.error("   wear:beta and wear:qa are well-known names; anything else is a CLOSED")
+        UI.error("   track created by hand with a custom name. Note the phone's 'alpha' has")
+        UI.error("   no automatic Wear equivalent.")
+        UI.error("")
+        UI.error("Set WEAR_PLAY_TRACK in the release workflow to override the default.")
+
+        tracks = available_play_tracks
+        if tracks
+          UI.error("")
+          UI.error("Tracks that DO exist for this app right now:")
+          tracks.each { |name| UI.error("  - #{name}") }
+        end
       elsif release_status == "draft"
         UI.error("The phone release is a DRAFT, so nothing reached testers; re-running this")
         UI.error("workflow publishes both artifacts afresh.")

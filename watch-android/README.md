@@ -418,13 +418,24 @@ Both Android release pipelines build and upload the phone AAB and this Wear APK 
 go to **different Play tracks**: the phone to the mobile track, and this app to Play's dedicated
 Wear OS **form-factor track**, whose id is `wear:` + the mobile track name.
 
-| Pipeline            | Phone track  | Wear track        | Lane                              |
-| ------------------- | ------------ | ----------------- | --------------------------------- |
-| `beta-releases.yml` | `alpha`      | `wear:alpha`      | `fastlane android beta`           |
-| `store-upload.yml`  | `production` | `wear:production` | `fastlane android upload_release` |
+| Pipeline            | Phone track  | Wear track                                | Lane                              |
+| ------------------- | ------------ | ----------------------------------------- | --------------------------------- |
+| `beta-releases.yml` | `alpha`      | `WEAR_PLAY_TRACK`, else `wear:alpha` ⚠️   | `fastlane android beta`           |
+| `store-upload.yml`  | `production` | `WEAR_PLAY_TRACK`, else `wear:production` | `fastlane android upload_release` |
 
-> ⚠️ **The dedicated Wear track is mandatory, and it needs a one-time Play Console step.** Play
-> rejects an artifact declaring `uses-feature android.hardware.type.watch` uploaded to a mobile
+> ⚠️ **`wear:` + the phone's track name is a DEFAULT, not a rule — and for `alpha` it is wrong.**
+> RC v1.0.0-rc.21 uploaded the Wear bundle successfully and then failed with
+> `Track not found: wear:alpha`. Only **`wear:production`**, **`wear:beta`** (open testing) and
+> **`wear:qa`** (internal testing — note "qa", not "internal") are well-known names; everything else
+> is a **closed** testing track, created by hand with a custom name
+> ([docs](https://developers.google.com/android-publisher/tracks)). The phone's `alpha` has no
+> automatic Wear counterpart. Set `WEAR_PLAY_TRACK` in the release workflow to whatever this app's
+> Console actually has. When a track is not found, `upload_wear_bundle!` prints the list of tracks
+> that DO exist — read that rather than guessing again.
+
+> ⚠️ **The dedicated Wear track is mandatory, it needs a one-time Play Console step, and as of
+> 2026-09-01 it is NOT confirmed done for this app.** Play rejects an artifact declaring
+> `uses-feature android.hardware.type.watch` uploaded to a mobile
 > track — _"you must use dedicated Wear OS tracks and create new releases on these tracks"_
 > ([support.google.com](https://support.google.com/googleplay/android-developer/answer/13295490)).
 > The `"[prefix]:defaultTrackName"` id rule is at
