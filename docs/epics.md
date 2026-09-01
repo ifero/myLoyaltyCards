@@ -12,7 +12,7 @@ project_name: 'myLoyaltyCards'
 user_name: 'Ifero'
 date: '2025-01-03'
 totalEpics: 19
-totalStories: 171 # counted from `### Story` headings on 2026-08-26
+totalStories: 172 # counted from `### Story` headings on 2026-09-01
 aligned_with_tracker: '2026-08-02'
 authoritative_source: 'docs/sprint-artifacts/sprint-status.yaml'
 ---
@@ -3109,6 +3109,24 @@ iOS 16.4 requirement).
 - **AC9 — verified on device in both a light and a dark watch face context,** with at least one dark-backing brand, one normal-logo brand, and one custom card visible in the same list.
 
 **Notes:** native change → **not OTA-eligible**. **Independent of Stories 16.26–16.28** — it touches `CardListView.swift`, the asset catalogues and the generator script, none of which those three edit, so it can run in parallel or ship first. ⚠️ `expo prebuild` rewrites tracked files inside the watch target's asset catalogue (the `AppIcon` `Contents.json` is a known case and is `.prettierignore`d for exactly this reason) — confirm which files under `targets/watch/Assets.xcassets` are prebuild-owned before adding generated content next to them. Out of scope: changing the logo artwork itself, and bringing logos to the barcode flash screen.
+
+### Story 16.34: Fix the `encodeEAN13` crash on non-ASCII numerals
+
+**As a** user whose card number contains a character that merely looks like a digit, **I want** the watch to fall back to the readable number, **So that** opening the card does not crash the app.
+
+**Root cause, reproduced not inferred.** `encodeEAN13` (`targets/watch/BarcodeGenerator.swift`) parses digits with `value.filter { $0.isWholeNumber }.map { Int(String($0))! }`. `Character.isWholeNumber` is `true` for numerals outside ASCII, but `Int(String(_:))` returns `nil` for them, so the force-unwrap traps. The shipped encoder, compiled standalone on Swift 6.3.3, exits **133 (SIGTRAP)** for `٣901234123457`, `590123412345Ⅷ` and `㉈901234123457`, while returning the correct module array for `5901234123457`. Reachable through manual entry, not through scanning: `core/schemas/card.ts:45` types `barcode` as a bare `z.string()`, `features/cards/components/CardForm.tsx:42` validates only `.min(1)`, and `keyboardType="number-pad"` is a soft keyboard hint that blocks neither paste nor an IME. The OS decoders emit ASCII, so a scanned card cannot reach it. Found during **Story 16.28**, which fixed this exact defect in the two encoders it introduced but was forbidden by its own guardrails from touching `encodeEAN13`.
+
+**⚠️ Parsing more leniently is the wrong repair.** Three different wrong readings hide behind `isWholeNumber`: `Int(String("٣"))` is `nil` and traps; `"Ⅷ".wholeNumberValue` is `8`, which would encode a digit the card does not contain; `"㉈"` is `10`, which would index past the ten-entry pattern tables. Silently dropping such a character is no better — it encodes a **shorter number than the one stored**, the silent-wrongness class Story 16.28 exists to remove.
+
+**Acceptance Criteria:**
+
+- **AC1 — `encodeEAN13` no longer traps.** It uses the same `asciiDigits(of:)` helper as `encodeEAN8` and `encodeUPCA`, so a value carrying a non-ASCII numeral returns `nil` and the view falls back to the human-readable placeholder.
+- **AC2 — no behaviour change for any value that works today.** Separator tolerance survives (`"5901234-123457"` still encodes), 12 digits still computes the check digit, 13 still validates it, and a bad checksum still returns `nil`.
+- **AC3 — byte-identical output for valid input.** `encodeEAN13("5901234123457")` produces exactly the module array it produced before the change, cross-checked against BWIPP.
+- **AC4 — CI enforces it.** `encodeEAN13` joins the executed-Swift contract harness in `targets/watch/__tests__/watch-barcode-symbology-contract.test.ts`, with reference symbols covering the 13-digit validate path, the 12-digit compute path and separator tolerance. Reintroducing the force-unwrap must fail the suite. ⚠️ The 12-digit vector must **discriminate**: `ean13CheckDigit` weights 12 data digits `1,3,1,…` and `upcEANCheckDigit` weights odd-length data `3,1,3,…`, and the two agree whenever `(sum of even-index digits − sum of odd-index digits) % 5 == 0` — so the obvious `590123412345` cannot detect the helpers being swapped.
+- **AC5 — all five linear formats are then trap-free.** No `Int(String($0))!` remains anywhere in `BarcodeGenerator.swift`.
+
+**Notes:** native change → **not OTA-eligible**. **Depends on Story 16.28**, which introduces `asciiDigits(of:)` and the executed-Swift harness — land it first. **Out of scope and flagged:** phone-side input validation, which is _why_ this is reachable but is a product decision about the phone UI rather than a watch fix (the phone already fails these values gracefully — bwip-js throws and `BarcodeRenderer` catches it — so the watch was the only crash surface). **`encodeCode128` was checked and does not share the defect:** it validates `ch.asciiValue` for every character up front and returns `nil` on failure, so its later `asciiValue!` uses are unreachable when `nil`.
 
 ### Story 16.35: Ship the Wear OS APK to Play — the watch app has never been delivered to any track
 
