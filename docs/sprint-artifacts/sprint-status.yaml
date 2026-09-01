@@ -607,7 +607,7 @@ development_status:
   # DONE, written up retroactively on 2026-09-01. The work landed across August
   # 2026 on `docs/cardi-redesign-carry-over` and is committed; it simply never had
   # an epic around it, which left 21-23 referencing artefacts from nowhere.
-  # Artefacts: docs/design/cardi/ (system doc, 35 frames, 9 prompt sets, tools/)
+  # Artefacts: docs/design/cardi/ (system doc, 41 frames, 9 prompt sets, tools/)
   # and scripts/build-brand-icons.mjs (8 artefacts, gated by `yarn icons:check`).
   epic-20: done
   20-1-cardi-design-system: done

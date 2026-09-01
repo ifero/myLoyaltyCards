@@ -96,6 +96,8 @@ jobs:
       # masks app icons itself), so it must never be used as the splash image.
       - name: Brand icons are in sync with the mark
         run: yarn icons:check
+      - name: Design frames match their generators
+        run: yarn frames:check
 
       # Regenerates the Wear OS brand catalogue from catalogue/italy.json and fails if the
       # committed Brands.kt differs. It lives HERE rather than in wear-os-build.yml

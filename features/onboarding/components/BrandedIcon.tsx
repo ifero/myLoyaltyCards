@@ -3,8 +3,14 @@ import React from 'react';
 import { View, type ViewStyle } from 'react-native';
 
 import { useTheme } from '@/shared/theme';
+// From the leaf token module, NOT the `@/shared/theme` barrel: several suites
+// replace that barrel wholesale with a `useTheme`-only mock, so any static
+// token imported through it is `undefined` at render time. `AppLaunchScreen`
+// avoids the barrel for the same reason. `useTheme` still comes from the
+// barrel, because a test legitimately wants to stub runtime theme state.
+import { IDENTITY_COLORS } from '@/shared/theme/tokens.generated';
 
-import CardiMark from '@/assets/images/cardi-mark-adaptive.svg';
+import CardiMark from '@/assets/images/cardi-mark-inline.svg';
 
 /**
  * A glyph in a tinted circle.
@@ -40,6 +46,7 @@ export const BrandedIcon = ({
   children
 }: BrandedIconProps) => {
   const { theme } = useTheme();
+  const showsMark = !children && !icon && !communityIcon;
 
   const circleStyle: ViewStyle = {
     width: size,
@@ -47,7 +54,10 @@ export const BrandedIcon = ({
     borderRadius: size / 2,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: withAlpha(theme.primary, '1A')
+    // Ink when the MARK is showing: the beam is only legible on ink (11.53:1,
+    // against 1.34:1 on the tinted field this used to paint). The tint stays for
+    // the Material-glyph path, which has no beam to lose. See AppIconHeader.
+    backgroundColor: showsMark ? IDENTITY_COLORS.ink : withAlpha(theme.primary, '1A')
   };
 
   return (
@@ -58,9 +68,8 @@ export const BrandedIcon = ({
         ) : icon ? (
           <MaterialIcons name={icon} size={iconSize} color={theme.primary} />
         ) : (
-          // `currentColor` for the stem, brand yellow for the beam — see
-          // AppIconHeader for why the stem follows the theme and the beam does not.
-          <CardiMark width={iconSize} height={iconSize} color={theme.primary} />
+          // White stem, brand yellow beam, on the ink field above.
+          <CardiMark width={iconSize} height={iconSize} />
         ))}
     </View>
   );

@@ -24,6 +24,7 @@
     "tokens:check": "node scripts/build-tokens.mjs --check",
     "icons:build": "node scripts/build-brand-icons.mjs",
     "icons:check": "node scripts/build-brand-icons.mjs --check",
+    "frames:check": "python3 docs/design/cardi/tools/verify.py",
     "wear:catalogue:generate": "node scripts/generate-wear-catalogue.mjs",
     "wear:catalogue:check": "node scripts/generate-wear-catalogue.mjs --check",
     "check:no-tests-folders": "node scripts/check-no-tests-folders.mjs",

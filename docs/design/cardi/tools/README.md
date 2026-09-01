@@ -3,15 +3,18 @@
 The specimen sheets in [`../frames/`](../frames/) are **built**, not hand-written. Each script here emits exactly one of them, and the committed HTML is that script's output byte for byte.
 
 ```bash
-python3 docs/design/cardi/tools/mark_locked.py     # rebuild one sheet
-python3 docs/design/cardi/tools/verify.py          # check every sheet still matches
+python3 docs/design/cardi/tools/mark_locked.py   # rebuild one sheet
+yarn frames:check                                # check every sheet still matches
 ```
+
+`frames:check` runs in pre-push and CI, alongside `tokens:check` and `icons:check` — an
+ungated guard is a comment.
 
 No dependencies beyond the Python standard library.
 
 ## Why the check exists
 
-`verify.py` runs every generator against a temporary directory and diffs the result against the committed frame. It never writes into `../frames/`.
+`verify.py` runs every generator against a temporary directory and diffs the result against the committed frame. It does not write into `../frames/` — and rather than trusting that, it digests the whole directory before and after the run and fails if anything moved. Enumerating write APIs is a losing game: the first version patched only `write_text`, so a generator using `open()` would have escaped it into the real directory during a "read-only" check.
 
 A stale generator is worse than no generator: it looks authoritative, and the moment someone runs it, it silently reverts whatever was fixed by hand in the HTML. That is not hypothetical. An older lockup generator was left behind in a scratch directory still emitting **acute** accents, and when it ran it wrote `Cardí` back over a corrected `Cardì`. Only the order the scripts happened to run in saved that file. `verify.py` is the guard that turns that class of accident into a failing check.
 
@@ -28,6 +31,7 @@ Note that the entry above it, `docs/design/cardi/*.html`, does **not** cover thi
 | script               | builds                       |
 | -------------------- | ---------------------------- |
 | `icon_decision.py`   | `cardi-icon-decision.html`   |
+| `icon_explore.py`    | `cardi-icon-explore.html`    |
 | `mark_locked.py`     | `cardi-mark-locked.html`     |
 | `mark_sweep35.py`    | `cardi-mark-sweep35.html`    |
 | `mark_candidates.py` | `cardi-mark-candidates.html` |
@@ -38,7 +42,7 @@ Note that the entry above it, `docs/design/cardi/*.html`, does **not** cover thi
 
 ## What is deliberately NOT here
 
-Nine of the fourteen frames have **no generator in this folder** — auth, barcode, capture, card-detail, document, form, onboarding, settings and wallet. That is a statement of fact rather than an oversight, and the reasons differ:
+Nine of the sixteen frames have **no generator in this folder** — auth, barcode, capture, card-detail, document, form, onboarding, settings and wallet. That is a statement of fact rather than an oversight, and the reasons differ:
 
 - **`cardi-barcode-frames.html`, `cardi-card-detail-frames.html`** — their generators cannot run at all. Both read an intermediate `shared_layer.txt` that no longer exists.
 - **`cardi-auth-frames.html`, `cardi-onboarding-frames.html`** — their generators predate the grave-accent correction and would rewrite the CSS lockup back to an acute. Beyond that the delta is only Prettier's attribute formatting.

@@ -10,6 +10,12 @@ yarn tokens:check || exit 1
 echo "Checking the brand icons are in sync with the mark..."
 yarn icons:check || exit 1
 
+# The design frames are generated and .prettierignore'd, which makes their
+# generators the source of truth -- so a stale one silently reverting corrected
+# artwork is a real failure mode, and it has happened once already.
+echo "Checking the design frames still match their generators..."
+yarn frames:check || exit 1
+
 # Pure Node, unlike the watchOS equivalent (`check:catalogue-generated` needs `xcrun swift`),
 # so it runs on any machine and belongs here rather than only in CI.
 echo "Checking the Wear OS brand catalogue is in sync..."

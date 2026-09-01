@@ -3567,8 +3567,8 @@ reference frame, **So that** implementation is a transcription rather than a des
 
 **Acceptance Criteria:**
 
-- Thirty-five frames across nine patterns exist under `docs/design/cardi/frames/`: wallet (4),
-  card-detail (4), barcode (3), capture (4), form (4 states), settings (6), document (3),
+- Forty-one frames across nine patterns exist under `docs/design/cardi/frames/`: wallet (4),
+  card-detail (4), barcode (3), capture (5), form (4 states), settings (6), document (3),
   auth (6) and onboarding (6).
 - Every one of the app's 21 routes maps onto a pattern, including the two that are not obvious:
   `data-summary` is covered by the document prompts, and `recovery-otp` reuses
@@ -3785,7 +3785,7 @@ icon, name and colours disagree with each other.
 
 ## Epic 22: Cardì Redesign — Screen Implementation
 
-Implement the thirty-five frames from Epic 20 across the phone app's 21 routes.
+Implement the forty-one frames from Epic 20 across the phone app's 21 routes.
 
 **Phase:** 3 · **Epic Type:** Feature/Implementation
 
@@ -3952,7 +3952,7 @@ that have **no Cardì design at all**.
 
 Epic 20 drew the phone and stopped there. watchOS has `ContentView`, `CardListView` and
 `BarcodeFlashView`; Wear OS has `CardListScreen`, `BarcodeScreen` and `SortPickerScreen`; and the
-watch widget has its own surface. None of them appears in the thirty-five frames.
+watch widget has its own surface. None of them appears in the forty-one frames.
 
 **This epic cannot be folded into Epic 22**, which implements designs that already exist. A 384px
 round screen with no room for a header, no bottom navigation and a rotary input is a different

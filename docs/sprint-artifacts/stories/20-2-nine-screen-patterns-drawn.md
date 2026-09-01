@@ -16,7 +16,7 @@ Epic: 20 — Cardì Identity & Design System
 
 ## What was delivered
 
-Thirty-five frames across nine patterns in `docs/design/cardi/frames/`, and a matching Stitch
+Forty-one frames across nine patterns in `docs/design/cardi/frames/`, and a matching Stitch
 prompt file per pattern.
 
 | pattern     | frames | covers                                                                           |
@@ -24,7 +24,7 @@ prompt file per pattern.
 | wallet      | 4      | populated · empty · single card · no results                                     |
 | card-detail | 4      | at rest · blending · condensed · +                                               |
 | barcode     | 3      | EAN-13 · QR · card not found                                                     |
-| capture     | 4      | brand list · viewfinder · no camera · many codes                                 |
+| capture     | 5      | brand list · viewfinder · no camera · many codes · +                             |
 | form        | 4      | default · error · filled · saving                                                |
 | settings    | 6      | signed in · guest · picker sheet · confirm sheet                                 |
 | document    | 3      | prose · searchable FAQ · two-column table                                        |

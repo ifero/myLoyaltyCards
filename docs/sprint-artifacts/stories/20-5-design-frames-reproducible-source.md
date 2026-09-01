@@ -57,6 +57,6 @@ a single `*` does not cross a directory separator.
 
 ## Not done
 
-Nine of the fourteen frames have no generator: `barcode` and `card-detail` crash on a deleted
+Nine of the sixteen frames have no generator: `barcode` and `card-detail` crash on a deleted
 `shared_layer.txt` intermediate; `auth`, `onboarding` and `capture` predate the grave-accent
 correction and would revert it; four never had one. They are hand-maintained HTML.

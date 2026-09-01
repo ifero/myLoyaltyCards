@@ -326,12 +326,33 @@ const hex = (colour) =>
 
 const n = (value) => Number(value.toFixed(3)).toString();
 
-const buildSvg = ({ size, scale, field, stem, accent }) => {
+/**
+ * `tight` crops the viewBox to the artwork instead of the icon canvas.
+ *
+ * The icon canvas carries deliberate padding — the mark fills ~48% × 59% of it,
+ * which is right for something the OS masks and wrong for something a component
+ * sizes. An in-app `<CardiMark width={34} />` on the padded box draws a mark
+ * about half the size of the Material glyph it replaced, which is exactly what
+ * happened at both call sites. The launch surface had been compensated for the
+ * same effect by hand (`SPLASH_LOGO_WIDTH` 200 → 260); a tight box removes the
+ * need to compensate at all.
+ *
+ * The padded box is NOT merely legacy: `cardi-mark.svg` must stay pixel-identical
+ * to `splash-icon.png` at the same width, because that identity is what conceals
+ * the native→JS splash handoff. So both boxes exist, on purpose.
+ */
+const buildSvg = ({ size, scale, field, stem, accent, tight = false }) => {
   const { bars, beam, pivot } = shapes(scale);
-  const k = size / CANVAS;
+  const w = tight ? B.x1 - B.x0 : CANVAS;
+  const h = tight ? B.y1 - B.y0 : CANVAS;
+  const k = size / Math.max(w, h);
+  const ox = tight ? B.x0 : originX;
+  const oy = tight ? B.y0 : originY;
+  const vw = w * k;
+  const vh = h * k;
   const map = (rect) => ({
-    x: (rect.x - originX) * k,
-    y: (rect.y - originY) * k,
+    x: (rect.x - ox) * k,
+    y: (rect.y - oy) * k,
     w: rect.w * k,
     h: rect.h * k,
     r: rect.r * k
@@ -339,12 +360,12 @@ const buildSvg = ({ size, scale, field, stem, accent }) => {
   const rect = (r_, colour) =>
     `  <rect x="${n(r_.x)}" y="${n(r_.y)}" width="${n(r_.w)}" height="${n(r_.h)}" ` +
     `rx="${n(r_.r)}" fill="${hex(colour)}" />`;
-  const p = { x: (pivot.x - originX) * k, y: (pivot.y - originY) * k };
+  const p = { x: (pivot.x - ox) * k, y: (pivot.y - oy) * k };
   const beamRect = map(beam);
   return [
-    `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${size} ${size}" ` +
-      `width="${size}" height="${size}" role="img" aria-label="Cardì">`,
-    field ? `  <rect width="${size}" height="${size}" fill="${hex(field)}" />` : null,
+    `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${n(vw)} ${n(vh)}" ` +
+      `width="${n(vw)}" height="${n(vh)}" role="img" aria-label="Cardì">`,
+    field ? `  <rect width="${n(vw)}" height="${n(vh)}" fill="${hex(field)}" />` : null,
     ...bars.map((bar) => rect(map(bar), stem)),
     `  <g transform="rotate(${ANGLE} ${n(p.x)} ${n(p.y)})">`,
     `  ${rect(beamRect, accent)}`,
@@ -379,12 +400,18 @@ const SVGS = [
   ['assets/images/cardi-mark.svg', { size: 1024, field: null, ...FULL }],
   ['assets/images/cardi-icon.svg', { size: 1024, field: INK, ...FULL }],
   [
-    // The in-app mark. The stem is `currentColor` so one asset serves a cream
-    // surface and an ink one — the component passes the theme's foreground and
-    // it stays correct through the colour migration without being regenerated.
-    // The beam stays literal: it is the brand's signature and does not theme.
-    'assets/images/cardi-mark-adaptive.svg',
-    { size: 1024, field: null, scale: 1, stem: 'currentColor', accent: BEAM_YELLOW }
+    // The in-app mark: tight box, WHITE stem, on whatever ink field the component
+    // paints behind it.
+    //
+    // This replaced a `currentColor` variant whose stem followed the theme. That
+    // idea does not survive contact with the palette: the beam is only legible on
+    // ink. Measured — beam on ink 11.53:1, on white 1.52:1, on cream 1.33:1. A
+    // theme-following stem therefore buys nothing, because the accent that makes
+    // the mark "Cardì" disappears on every light ground regardless of what the
+    // stem does. The design system already says this: beam is a FILL that carries
+    // dark text, never a stroke on a light surface.
+    'assets/images/cardi-mark-inline.svg',
+    { size: 1024, field: null, scale: 1, stem: WHITE, accent: BEAM_YELLOW, tight: true }
   ]
 ];
 

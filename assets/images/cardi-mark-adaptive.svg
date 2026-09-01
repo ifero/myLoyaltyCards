@@ -1,8 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024" role="img" aria-label="Cardì">
-  <rect x="399.36" y="304.124" width="46.08" height="507.904" rx="22.528" fill="currentColor" />
-  <rect x="465.92" y="304.124" width="92.16" height="507.904" rx="46.08" fill="currentColor" />
-  <rect x="583.68" y="304.124" width="40.96" height="507.904" rx="20.48" fill="currentColor" />
-  <g transform="rotate(35 512 402.428)">
-    <rect x="245.76" y="356.348" width="532.48" height="92.16" rx="46.08" fill="#FCCC0C" />
-  </g>
-</svg>
