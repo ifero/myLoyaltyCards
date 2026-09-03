@@ -1,6 +1,6 @@
 # CI/CD Pipeline & Quality Gates
 
-_Last updated: 2026-08-03_
+_Last updated: 2026-09-03_
 
 This document describes the current GitHub Actions and Fastlane CI/CD pipeline for the myLoyaltyCards repository. It is the single source of truth for how builds, tests, tags, and deploys run across iOS, Android, and watchOS.
 
@@ -82,9 +82,12 @@ Triggers:
 - `pull_request` on opened, synchronize, reopened, ready_for_review
 - `push` to `main`
 
-Path filters:
+Path filters — the generator's **inputs** as well as its outputs, or a brand-add PR that forgot to
+regenerate would match nothing and skip the drift check entirely (Story 16.29):
 
 - `targets/watch/**`
+- `catalogue/**`
+- `targets/watch-widget/**`
 - `watch-ios/**`
 - `ios/**`
 - `app.json`
@@ -94,9 +97,11 @@ What it runs:
 
 - `yarn install --frozen-lockfile`
 - Jest tests for `targets/watch/__tests__`
+- `yarn check:catalogue-generated` — **against the pristine checkout, before anything regenerates.**
+  Order is load-bearing: this step used to sit after a plain write-mode generator run, so it compared
+  freshly generated output against output generated seconds earlier and could never fail.
 - `npx expo prebuild --clean --platform ios`
-- `xcrun --sdk macosx swift watch-ios/Scripts/generate-catalogue.swift`
-- `yarn watch:build:ci`
+- `yarn watch:build:ci` (its own `pre` hook regenerates the catalogue for the build)
 
 Purpose:
 
