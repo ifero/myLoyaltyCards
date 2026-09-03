@@ -273,13 +273,14 @@ The pre-push hook and the quality-gates workflow run the **same set of checks in
 
 1. `yarn typecheck`
 2. `yarn tokens:check`
-3. `yarn splash:check`
-4. `yarn wear:catalogue:check`
-5. `yarn lint`
-6. `yarn check:native-patches`
-7. `yarn check:native-strings`
-8. `yarn format:check`
-9. `yarn test`
+3. `yarn icons:check`
+4. `yarn frames:check`
+5. `yarn wear:catalogue:check`
+6. `yarn lint`
+7. `yarn check:native-patches`
+8. `yarn check:native-strings`
+9. `yarn format:check`
+10. `yarn test`
 
 **CI — quality** ([`ci-quality-gates.yml`](.github/workflows/ci-quality-gates.yml)):
 
@@ -289,11 +290,12 @@ The pre-push hook and the quality-gates workflow run the **same set of checks in
 4. `yarn format:check`
 5. `yarn typecheck`
 6. `yarn tokens:check`
-7. `yarn splash:check`
-8. `yarn wear:catalogue:check`
-9. `yarn check:no-tests-folders`
-10. `yarn check:story-catalogue-sync`
-11. `yarn test:coverage`
+7. `yarn icons:check`
+8. `yarn frames:check`
+9. `yarn wear:catalogue:check`
+10. `yarn check:no-tests-folders`
+11. `yarn check:story-catalogue-sync`
+12. `yarn test:coverage`
 
 **CI — watchOS** ([`watchos-tests.yml`](.github/workflows/watchos-tests.yml)) is a **separate, path-filtered workflow** — it runs only when `targets/watch/**`, `watch-ios/**`, `ios/**`, `app.json`, `fastlane/Fastfile`, or the workflow itself changes, so most PRs never trigger it. It runs the watch catalogue Jest tests, then `expo prebuild`, regenerates `Brands.swift`, verifies it with `yarn check:catalogue-generated`, and builds the watch target via `yarn watch:build:ci`. Locally, `yarn test:all` covers the watch tests.
 

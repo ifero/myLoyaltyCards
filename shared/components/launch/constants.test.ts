@@ -163,11 +163,14 @@ describe('launch constants', () => {
     });
 
     it('is not a copy of the app icon', () => {
-      // Continuity now comes from shared ARTWORK (both are aurora) rather than from
-      // shared bytes: `yarn splash:build` rasterises
-      // `app-icon-variant-aurora-transparent.svg`, and `yarn splash:check`
-      // regenerates it in CI and compares hashes, so the raster cannot drift from
-      // the SVG.
+      // Continuity comes from shared GEOMETRY rather than from shared bytes:
+      // `yarn icons:build` renders the splash mark, the app icon, the Android
+      // foreground and the themed layer from one definition in
+      // `scripts/build-brand-icons.mjs`, and `yarn icons:check` regenerates them
+      // in CI and compares hashes, so none of them can drift from the others.
+      // They must still differ as FILES -- the icon is opaque and full-bleed
+      // because the OS masks it itself, the splash is a transparent foreground
+      // on a field the plugin paints.
       expect(sha256('assets/splash-icon.png')).not.toBe(sha256('assets/icon.png'));
     });
   });

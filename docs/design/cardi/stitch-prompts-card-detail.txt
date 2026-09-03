@@ -1,0 +1,456 @@
+CARDÌ — THE CARD DETAIL SCREEN, FOUR FRAMES
+===========================================
+
+The screen you pass through to reach the barcode. It is the only scroll-linked screen in the
+app, and the frames exist mainly to pin down that transition.
+
+  A. AT REST     — header IS the brand colour, seamless with the hero. The exemplar.
+  B. BLENDING    — hero gone, header fading out over cream, title fading in
+  C. CONDENSED   — cream plus a hairline, title settled
+  D. CUSTOM CARD — no brand logo; a dark accent, so the controls flip to white
+
+Every prompt is self-contained and repeats its own chrome in full. A prompt may NEVER refer to
+another frame. Write every correction as a NUMBERED DEFECT.
+
+Screen source of truth: features/cards/screens/CardDetailScreen.tsx and
+features/cards/components/CardDetails.tsx, BrandHero.tsx, DetailRow.tsx; contrast helper in
+shared/theme/luminance.ts; strings in shared/i18n/locales/en.ts under `cards.details`.
+
+
+-------------------------------------------------------------------------------
+WHAT READING THE CODE TURNED UP
+-------------------------------------------------------------------------------
+
+1. THE HEADER FOLLOWS THE BRAND — AS A TRANSITION, NOT A TINT.
+
+   `headerBg = brand ? brand.color : theme.primary` tints both the navigation header and the
+   `BrandHero` band. An earlier draft of this spec took the colour OFF the header on the
+   grounds that navigation should not wear a third-party brand's colour. That was wrong: it
+   cut a horizontal cream band straight across the top of the hero, so the brand block read as
+   interrupted rather than as one field.
+
+   What that argument was actually protecting against is narrower than the rule it produced:
+   **brand-coloured chrome with nothing beneath it to identify.** That only happens once the
+   hero has scrolled away. So the colour is a transition:
+
+     at rest    the header IS the brand colour, and so is the status-bar inset. The field runs
+                unbroken from the top of the screen to the bottom of the hero.
+     blending   once the hero has gone, the brand fades out over cream and the title fades in.
+     condensed  cream plus a hairline. Nothing is left for the colour to identify.
+
+   The endpoints stay clean — full brand, or full cream — so this never becomes forty-five
+   permanent pastel tints. The mid-state is one frame of a transition, not a resting style.
+
+2. THE ORDER OF THE TRANSITION MATTERS. The header stays matched to the hero for as long as
+   ANY of the hero is visible: they are one field, and a header a shade paler than the band
+   directly beneath it reads as a rendering fault, not a transition. The blend belongs to the
+   tail of the scroll, after the band has gone. Drafted the other way round it looked broken.
+
+3. "ONE UNBROKEN FIELD" IS A FACT ABOUT THE MARKUP, NOT ABOUT THE COLOUR VALUES.
+   The first HTML draft gave the status-bar inset, the header and the hero each their own
+   background, every one set to the same brand colour. It rendered with faint horizontal lines
+   at both boundaries — visible enough that ifero read them as navigation-bar borders. Nothing
+   drew a border. The element edges land on fractional device pixels (measured at .391 on a 2x
+   display), so a hairline of the PARENT's cream leaked between siblings that agreed with each
+   other but not with what was behind them. A computed `outline: 1.5px` on every element was
+   checked and cleared — `outline-style: none`, so it never paints.
+
+   The fix is structural rather than a tweak: ONE element paints the field and the three sit on
+   it transparently. Then there is no second colour in that region left to leak. The seam was
+   possible only because "three things that match" is not the same object as "three things on
+   one field", and the markup was saying the first.
+
+   **This is a live hazard in the shipped app, not only in the frames.** `headerBg` tints the
+   navigation header and `BrandHero` as two separately-filled views; any layout PR that keeps
+   them separate inherits the same seam. The band wants one filled parent.
+
+4. THE CONTROLS FLIP WITH LUMINANCE, AND THE HELPER IS ALMOST RIGHT.
+   `shared/theme/luminance.ts` returns `#FFFFFF` below 0.5 luminance and `#1F1F24` above — so
+   ink on Esselunga's `#FFCC00` (luminance ≈ 0.79) and white on the `#0C843C` accent
+   (≈ 0.40). Correct behaviour, but `#1F1F24` is **not** ink `#181824`. Another near-palette
+   value; it should be ink.
+
+5. THE CONDENSED HEADER USES A DROP SHADOW. `headerShadowVisible: isHeaderCondensed`. The
+   system forbids drop shadows anywhere; a **1px `#D6D6CB` hairline** does the same job and is
+   already the established pattern for the anchored footer.
+
+6. THE TITLE IS HIDDEN WITH `fontSize: 0`. At rest the title is `''` at size 0; past the hero
+   it becomes the card name at 17. These frames specify the intent instead: **no title at
+   rest, card name once condensed** — and in Inter, not Space Grotesk, because it is a
+   third-party brand's name doing navigation duty and the display face is ours.
+
+7. THE FAVOURITE STAR IS `theme.warning` — amber. The same off-palette colour already replaced
+   on the wallet tile. It becomes **beam `#FCCC0C`** when filled, outline in the foreground
+   colour when not. One of the very few places beam legitimately appears: an active state.
+
+8. THERE ARE TWO IMPLEMENTATIONS OF THE BARCODE SCREEN, AND THEY HAVE ALREADY DRIFTED.
+   `BarcodeFlash` serves the `barcode/[id]` route; `FullscreenBarcode` opens from inside
+   `CardDetails` by tapping the barcode. Both maximise brightness — the critical behaviour is
+   intact in both — but `shadowOpacity` is 0.05 vs **0.08** and radius 8 vs **12**, and both
+   use Tailwind `#1F2937`. **These should be one component.** Not a design task; a note for the
+   tokens and layout PRs.
+
+9. THE BARCODE GETS A WHITE CARD HERE, AND NO PLATE AT ALL ON THE FULLSCREEN VIEW. It looks
+   like a contradiction and is not. On cream, and tappable, the card separates the code and
+   marks it interactive. On a white field a white plate defines a boundary carrying no
+   information. **White card means interactive; bare ground means content.**
+
+
+Every prompt below is LITERALLY STANDALONE: it repeats the chrome and the content stack in
+full and refers to nothing outside its delimiters. Paste one whole block. Write every
+correction as a NUMBERED DEFECT.
+
+  > This file previously kept the chrome in a shared "COMMON CHROME" preamble, with each prompt
+  > saying "apply the COMMON CHROME above". Frame A came back right and frames B, C and D each
+  > invented a DIFFERENT card detail screen — Notes fields, "Code 128" rows, Edit/Share button
+  > pairs, a black "Show Barcode" pill, red delete buttons, no barcode at all. A was right only
+  > because it sits directly beneath the preamble in this file, so a copy of it tends to take
+  > the preamble along. "Above" does not survive a clipboard.
+  >
+  > The earlier rule — a prompt may never refer to another FRAME — was too narrow. A prompt may
+  > not refer to anything outside itself at all. And the tell is diagnostic: a shared missing
+  > spec does not produce a shared wrong answer, it produces N independent guesses. Frames that
+  > diverge from each other in DIFFERENT directions mean a dangling reference, not a bad
+  > instruction.
+
+-------------------------------------------------------------------------------
+PROMPT A — AT REST  (the exemplar)
+-------------------------------------------------------------------------------
+=========== PASTE EVERYTHING BETWEEN THIS LINE AND "END OF PROMPT A" ===========
+
+Design ONE mobile screen at 393x852, light mode: the card detail screen for Cardì — a
+loyalty card wallet — at rest, with the brand hero fully visible.
+
+FOREGROUND COLOUR for every glyph and control sitting on the coloured field:
+ink #181824, because Esselunga's yellow is a light fill.
+
+GROUND: the page beneath the header is cream #F0F0E8.
+
+SYSTEM INSETS: 59px top carrying the iOS status bar — "9:41" at the left in Inter 15px
+semibold, then signal, wifi and battery icons at the right, all in the foreground colour. 34px
+bottom on cream carrying a 140 x 5 fully-rounded pill in ink #181824 at 85% opacity, centred.
+
+HEADER: 56px tall, flat, and NEVER a drop shadow. A back chevron at the left on a 48x48 target,
+a favourite star at the right on a 48x48 target.
+
+MARGINS: 24px left and right for everything except the hero band, which is full-bleed to both
+frame edges.
+
+THE CONTENT STACK — at 24px margins, in this order, and it is EXACTLY these four things:
+
+  1. a white #FFFFFF card, 16px radius, 1px #D6D6CB outline, NO shadow, holding a centred
+     EAN-13 barcode 280 wide x 100 tall in true black #000000 on white with 20px of padding,
+     and beneath the bars "Tap to enlarge" in Inter 13px muted #55555F, centred;
+
+  2. a 24px gap, then a white #FFFFFF card, 16px radius, 1px #D6D6CB outline, holding three
+     hairline-divided rows — label at the left in Inter 15px muted #55555F, value at the right
+     in Inter 15px ink #181824:
+         "Number"  /  "2000 0123 4567 8"
+         "Color"   /  "Yellow"
+         "Added"   /  "12 August 2026"
+
+  3. "MANAGE" in Inter 12px semibold uppercase, letter-spacing 0.05em, muted #55555F;
+
+  4. a white #FFFFFF card, 16px radius, 1px #D6D6CB outline, holding two rows: "Edit card" in
+     Inter 17px ink #181824 with a chevron-right at the far right, and "Delete card" in
+     Inter 17px #C41E1E with NO chevron.
+
+NOTHING MAY BE ADDED TO THAT STACK. Specifically: no "Notes" field or note card, no "Format" or
+"Code 128" or "CODE128" row, no "Card Details" or "CARD DETAILS" section heading, no "Show
+Barcode" button, no Edit/Share button pair, no pencil or copy icon, no coloured swatch dot
+beside the colour value, and no relabelling of "Number" as "Card Number". The barcode card is
+the FIRST item in the stack and is never omitted. "Delete card" is TEXT: no red fill, no red or
+pink background, no border, no outline, no trash icon — one line of #C41E1E type in a white
+card row.
+
+COLOURS ARE LITERAL HEXES, NEVER TOKENS. Write #181824, #FCCC0C, #F0F0E8, #FFFFFF,
+#D6D6CB, #55555F and #C41E1E exactly as written. Do NOT reach for a semantic colour name
+instead — not `primary`, not `on-surface`, not `on-background`, not `surface`, not `outline`,
+not `outline-variant`, and not a Tailwind utility built on one such as text-primary,
+bg-primary, border-primary or border-outline-variant. In this project's theme `primary`
+resolves to #000000 and `on-surface` to #1a1c18, so a screen assembled out of tokens comes
+out in two wrong near-blacks that look almost right and are not. A literal hex survives; a
+token does not.
+
+FORBIDDEN: bottom tab bars, floating action buttons, drop shadows, gradients, glassmorphism,
+illustrations, a device bezel or phone frame drawn around the screen, and
+coral/salmon/terracotta/orange. Beam #FCCC0C appears ONLY as a filled favourite star.
+
+1. THE TOP INSET AND THE HEADER ARE BOTH FILLED #FFCC00, Esselunga's own colour, and so is
+   the hero beneath them. Paint it as ONE filled region containing all three, not three regions
+   that happen to share a value: three separately filled boxes leave visible hairlines where
+   they meet. There must be NO seam, NO divider and NO change of tone from the very top of the
+   screen down to the bottom of the hero band — one unbroken field of #FFCC00.
+
+2. NO TITLE in the header at rest. Back chevron at the left, star OUTLINE at the right, and
+   nothing at all between them.
+
+3. THE HERO: full-bleed edge to edge, 200px tall, #FFCC00, with the Esselunga wordmark centred
+   at about 32px in ink #181824 — ink, not white, because the fill is light. No gradient, no
+   overlay, no shadow, no rounded corners, no inset.
+
+4. Below the hero the page is cream #F0F0E8. The card name "Esselunga" in Space Grotesk 24px
+   BOLD ink #181824 — a heading, not a caption: not 13px, not grey, not muted. 16px of space
+   above and below it. Then the content stack, complete, ending with the Edit/Delete card.
+
+TONE
+The brand owns the top of the screen as one continuous block and stops dead at the bottom
+of the hero. Everything below is cream, white cards and ink — the same furniture as settings.
+
+=============================== END OF PROMPT A ===============================
+
+-------------------------------------------------------------------------------
+PROMPT B — BLENDING  (hero gone, header fading)
+-------------------------------------------------------------------------------
+=========== PASTE EVERYTHING BETWEEN THIS LINE AND "END OF PROMPT B" ===========
+
+Design ONE mobile screen at 393x852, light mode: the card detail screen for Cardì — a
+loyalty card wallet — caught mid-scroll, at the moment the hero has just left the screen and
+the header is fading from the brand colour towards cream.
+
+FOREGROUND COLOUR for every glyph and control sitting on the coloured field: ink #181824.
+
+GROUND: the page beneath the header is cream #F0F0E8.
+
+SYSTEM INSETS: 59px top carrying the iOS status bar — "9:41" at the left in Inter 15px
+semibold, then signal, wifi and battery icons at the right, all in the foreground colour. 34px
+bottom on cream carrying a 140 x 5 fully-rounded pill in ink #181824 at 85% opacity, centred.
+
+HEADER: 56px tall, flat, and NEVER a drop shadow. A back chevron at the left on a 48x48 target,
+a favourite star at the right on a 48x48 target.
+
+MARGINS: 24px left and right for everything except the hero band, which is full-bleed to both
+frame edges.
+
+THE CONTENT STACK — at 24px margins, in this order, and it is EXACTLY these four things:
+
+  1. a white #FFFFFF card, 16px radius, 1px #D6D6CB outline, NO shadow, holding a centred
+     EAN-13 barcode 280 wide x 100 tall in true black #000000 on white with 20px of padding,
+     and beneath the bars "Tap to enlarge" in Inter 13px muted #55555F, centred;
+
+  2. a 24px gap, then a white #FFFFFF card, 16px radius, 1px #D6D6CB outline, holding three
+     hairline-divided rows — label at the left in Inter 15px muted #55555F, value at the right
+     in Inter 15px ink #181824:
+         "Number"  /  "2000 0123 4567 8"
+         "Color"   /  "Yellow"
+         "Added"   /  "12 August 2026"
+
+  3. "MANAGE" in Inter 12px semibold uppercase, letter-spacing 0.05em, muted #55555F;
+
+  4. a white #FFFFFF card, 16px radius, 1px #D6D6CB outline, holding two rows: "Edit card" in
+     Inter 17px ink #181824 with a chevron-right at the far right, and "Delete card" in
+     Inter 17px #C41E1E with NO chevron.
+
+NOTHING MAY BE ADDED TO THAT STACK. Specifically: no "Notes" field or note card, no "Format" or
+"Code 128" or "CODE128" row, no "Card Details" or "CARD DETAILS" section heading, no "Show
+Barcode" button, no Edit/Share button pair, no pencil or copy icon, no coloured swatch dot
+beside the colour value, and no relabelling of "Number" as "Card Number". The barcode card is
+the FIRST item in the stack and is never omitted. "Delete card" is TEXT: no red fill, no red or
+pink background, no border, no outline, no trash icon — one line of #C41E1E type in a white
+card row.
+
+COLOURS ARE LITERAL HEXES, NEVER TOKENS. Write #181824, #FCCC0C, #F0F0E8, #FFFFFF,
+#D6D6CB, #55555F and #C41E1E exactly as written. Do NOT reach for a semantic colour name
+instead — not `primary`, not `on-surface`, not `on-background`, not `surface`, not `outline`,
+not `outline-variant`, and not a Tailwind utility built on one such as text-primary,
+bg-primary, border-primary or border-outline-variant. In this project's theme `primary`
+resolves to #000000 and `on-surface` to #1a1c18, so a screen assembled out of tokens comes
+out in two wrong near-blacks that look almost right and are not. A literal hex survives; a
+token does not.
+
+FORBIDDEN: bottom tab bars, floating action buttons, drop shadows, gradients, glassmorphism,
+illustrations, a device bezel or phone frame drawn around the screen, and
+coral/salmon/terracotta/orange. Beam #FCCC0C appears ONLY as a filled favourite star.
+
+1. THE TOP INSET AND THE HEADER ARE BOTH FILLED #F8DE74 — Esselunga's #FFCC00 at half
+   strength over cream #F0F0E8. This is a transient blend caught halfway through a fade, not a
+   resting colour. Paint the inset and the header as ONE filled region containing both, not two
+   regions that happen to share a value: two separately filled boxes leave a visible hairline
+   where they meet.
+
+2. THE TITLE "Esselunga" centred in the header in Inter 17px semibold ink #181824 at HALF
+   OPACITY — it is fading in, so it must read as visibly translucent, not solid.
+
+3. Back chevron at the left, star OUTLINE at the right, both ink #181824. NO hairline beneath
+   the header yet; the rule belongs to the settled state.
+
+4. NO HERO. It has scrolled away entirely — there is no band, no sliver and no yellow anywhere
+   below the header. The page beneath is cream #F0F0E8 and the content stack begins 16px under
+   the header, complete, ending with the Edit/Delete card.
+
+TONE
+Do not show any part of the hero. The header only begins to blend once the band has gone —
+while any hero is visible the header matches it exactly.
+
+=============================== END OF PROMPT B ===============================
+
+-------------------------------------------------------------------------------
+PROMPT C — CONDENSED  (settled)
+-------------------------------------------------------------------------------
+=========== PASTE EVERYTHING BETWEEN THIS LINE AND "END OF PROMPT C" ===========
+
+Design ONE mobile screen at 393x852, light mode: the card detail screen for Cardì — a
+loyalty card wallet — scrolled and settled, with the header fully condensed.
+
+FOREGROUND COLOUR for every glyph and control sitting on the coloured field: ink #181824.
+
+GROUND: the page beneath the header is cream #F0F0E8.
+
+SYSTEM INSETS: 59px top carrying the iOS status bar — "9:41" at the left in Inter 15px
+semibold, then signal, wifi and battery icons at the right, all in the foreground colour. 34px
+bottom on cream carrying a 140 x 5 fully-rounded pill in ink #181824 at 85% opacity, centred.
+
+HEADER: 56px tall, flat, and NEVER a drop shadow. A back chevron at the left on a 48x48 target,
+a favourite star at the right on a 48x48 target.
+
+MARGINS: 24px left and right for everything except the hero band, which is full-bleed to both
+frame edges.
+
+THE CONTENT STACK — at 24px margins, in this order, and it is EXACTLY these four things:
+
+  1. a white #FFFFFF card, 16px radius, 1px #D6D6CB outline, NO shadow, holding a centred
+     EAN-13 barcode 280 wide x 100 tall in true black #000000 on white with 20px of padding,
+     and beneath the bars "Tap to enlarge" in Inter 13px muted #55555F, centred;
+
+  2. a 24px gap, then a white #FFFFFF card, 16px radius, 1px #D6D6CB outline, holding three
+     hairline-divided rows — label at the left in Inter 15px muted #55555F, value at the right
+     in Inter 15px ink #181824:
+         "Number"  /  "2000 0123 4567 8"
+         "Color"   /  "Yellow"
+         "Added"   /  "12 August 2026"
+
+  3. "MANAGE" in Inter 12px semibold uppercase, letter-spacing 0.05em, muted #55555F;
+
+  4. a white #FFFFFF card, 16px radius, 1px #D6D6CB outline, holding two rows: "Edit card" in
+     Inter 17px ink #181824 with a chevron-right at the far right, and "Delete card" in
+     Inter 17px #C41E1E with NO chevron.
+
+NOTHING MAY BE ADDED TO THAT STACK. Specifically: no "Notes" field or note card, no "Format" or
+"Code 128" or "CODE128" row, no "Card Details" or "CARD DETAILS" section heading, no "Show
+Barcode" button, no Edit/Share button pair, no pencil or copy icon, no coloured swatch dot
+beside the colour value, and no relabelling of "Number" as "Card Number". The barcode card is
+the FIRST item in the stack and is never omitted. "Delete card" is TEXT: no red fill, no red or
+pink background, no border, no outline, no trash icon — one line of #C41E1E type in a white
+card row.
+
+COLOURS ARE LITERAL HEXES, NEVER TOKENS. Write #181824, #FCCC0C, #F0F0E8, #FFFFFF,
+#D6D6CB, #55555F and #C41E1E exactly as written. Do NOT reach for a semantic colour name
+instead — not `primary`, not `on-surface`, not `on-background`, not `surface`, not `outline`,
+not `outline-variant`, and not a Tailwind utility built on one such as text-primary,
+bg-primary, border-primary or border-outline-variant. In this project's theme `primary`
+resolves to #000000 and `on-surface` to #1a1c18, so a screen assembled out of tokens comes
+out in two wrong near-blacks that look almost right and are not. A literal hex survives; a
+token does not.
+
+FORBIDDEN: bottom tab bars, floating action buttons, drop shadows, gradients, glassmorphism,
+illustrations, a device bezel or phone frame drawn around the screen, and
+coral/salmon/terracotta/orange. Beam #FCCC0C appears ONLY as a filled favourite star.
+
+1. THE TOP INSET AND THE HEADER ARE BOTH CREAM #F0F0E8 — the fade has completed. No yellow
+   remains anywhere on this screen. Not #FAFAF2, not a near-white, not a tint: cream.
+
+2. THE TITLE "Esselunga" centred in the header in Inter 17px semibold ink #181824 at FULL
+   opacity.
+
+3. Back chevron at the left, star OUTLINE at the right, both ink #181824. Beneath the header a
+   1px #D6D6CB HAIRLINE spanning the full frame width. There is NO drop shadow under this
+   header; the hairline is the whole boundary.
+
+4. No hero. The content stack begins 16px below the hairline, complete, ending with the
+   Edit/Delete card. The rows live INSIDE white cards as described — they are not bare
+   hairline-divided lines sitting directly on the cream.
+
+TONE
+Once the hero is gone the brand is gone with it, and the screen is indistinguishable in
+furniture from settings. That is the intended end state.
+
+=============================== END OF PROMPT C ===============================
+
+-------------------------------------------------------------------------------
+PROMPT D — CUSTOM CARD  (dark accent, controls flip to white)
+-------------------------------------------------------------------------------
+=========== PASTE EVERYTHING BETWEEN THIS LINE AND "END OF PROMPT D" ===========
+
+Design ONE mobile screen at 393x852, light mode: the card detail screen for Cardì — a
+loyalty card wallet — at rest, for a card the person created themselves, which has no brand
+logo.
+
+FOREGROUND COLOUR for every glyph and control sitting on the coloured field:
+WHITE #FFFFFF, because the green accent is a dark fill.
+
+GROUND: the page beneath the header is cream #F0F0E8.
+
+SYSTEM INSETS: 59px top carrying the iOS status bar — "9:41" at the left in Inter 15px
+semibold, then signal, wifi and battery icons at the right, all in the foreground colour. 34px
+bottom on cream carrying a 140 x 5 fully-rounded pill in ink #181824 at 85% opacity, centred.
+
+HEADER: 56px tall, flat, and NEVER a drop shadow. A back chevron at the left on a 48x48 target,
+a favourite star at the right on a 48x48 target.
+
+MARGINS: 24px left and right for everything except the hero band, which is full-bleed to both
+frame edges.
+
+THE CONTENT STACK — at 24px margins, in this order, and it is EXACTLY these four things:
+
+  1. a white #FFFFFF card, 16px radius, 1px #D6D6CB outline, NO shadow, holding a centred
+     EAN-13 barcode 280 wide x 100 tall in true black #000000 on white with 20px of padding,
+     and beneath the bars "Tap to enlarge" in Inter 13px muted #55555F, centred;
+
+  2. a 24px gap, then a white #FFFFFF card, 16px radius, 1px #D6D6CB outline, holding three
+     hairline-divided rows — label at the left in Inter 15px muted #55555F, value at the right
+     in Inter 15px ink #181824:
+         "Number"  /  "2000 0123 4567 8"
+         "Color"   /  "Green"
+         "Added"   /  "12 August 2026"
+
+  3. "MANAGE" in Inter 12px semibold uppercase, letter-spacing 0.05em, muted #55555F;
+
+  4. a white #FFFFFF card, 16px radius, 1px #D6D6CB outline, holding two rows: "Edit card" in
+     Inter 17px ink #181824 with a chevron-right at the far right, and "Delete card" in
+     Inter 17px #C41E1E with NO chevron.
+
+NOTHING MAY BE ADDED TO THAT STACK. Specifically: no "Notes" field or note card, no "Format" or
+"Code 128" or "CODE128" row, no "Card Details" or "CARD DETAILS" section heading, no "Show
+Barcode" button, no Edit/Share button pair, no pencil or copy icon, no coloured swatch dot
+beside the colour value, and no relabelling of "Number" as "Card Number". The barcode card is
+the FIRST item in the stack and is never omitted. "Delete card" is TEXT: no red fill, no red or
+pink background, no border, no outline, no trash icon — one line of #C41E1E type in a white
+card row.
+
+COLOURS ARE LITERAL HEXES, NEVER TOKENS. Write #181824, #FCCC0C, #F0F0E8, #FFFFFF,
+#D6D6CB, #55555F and #C41E1E exactly as written. Do NOT reach for a semantic colour name
+instead — not `primary`, not `on-surface`, not `on-background`, not `surface`, not `outline`,
+not `outline-variant`, and not a Tailwind utility built on one such as text-primary,
+bg-primary, border-primary or border-outline-variant. In this project's theme `primary`
+resolves to #000000 and `on-surface` to #1a1c18, so a screen assembled out of tokens comes
+out in two wrong near-blacks that look almost right and are not. A literal hex survives; a
+token does not.
+
+FORBIDDEN: bottom tab bars, floating action buttons, drop shadows, gradients, glassmorphism,
+illustrations, a device bezel or phone frame drawn around the screen, and
+coral/salmon/terracotta/orange. Beam #FCCC0C appears ONLY as a filled favourite star.
+
+1. THE TOP INSET AND THE HEADER ARE BOTH FILLED #0C843C, the green card accent, and so is
+   the hero beneath them. Paint it as ONE filled region containing all three, not three regions
+   that happen to share a value: three separately filled boxes leave visible hairlines where
+   they meet. One unbroken field from the top of the screen to the bottom of the band, no seam.
+
+2. NO TITLE at rest. Back chevron at the left in WHITE #FFFFFF. At the right, a FILLED star in
+   beam #FCCC0C — this card IS a favourite, and that star is the only yellow on the screen.
+
+3. THE HERO: full-bleed, 200px tall, #0C843C, holding a centred 80px fully-round circle filled
+   rgba(255, 255, 255, 0.16) with the single letter "F" in white, Space Grotesk 28px bold. The
+   circle must be visible AS a circle — not a bare letter floating on the green. No logo, no
+   gradient, no shadow, no rounded band corners.
+
+4. Below the hero the page is cream #F0F0E8. The card name "Farmacia Centrale" in Space Grotesk
+   24px BOLD ink #181824 — a heading, not a caption. 16px above and below. Then the content
+   stack, complete, ending with the Edit/Delete card.
+
+TONE
+The five accent colours exist for exactly this case — a card with no brand of its own. Use
+#0C843C at that value; do not tint, darken or gradient it, and do not put a logo, icon or
+pattern in the band. A letter on a colour is the whole design.
+
+=============================== END OF PROMPT D ===============================
+

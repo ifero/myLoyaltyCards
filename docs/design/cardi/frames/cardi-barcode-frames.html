@@ -1,0 +1,826 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Cardì — the barcode screen, three frames</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=JetBrains+Mono:wght@500&family=Space+Grotesk:wght@700&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      /* ==================================================================
+         SHARED FRAME LAYER — the same tokens and frame primitives as the form,
+         wallet, settings and document frame files. Keep the VALUES in step;
+         copied rather than linked, because any viewer that inlines the HTML
+         drops a linked stylesheet and renders a broken frame.
+         cardi-design-system.md is the source of truth for these values.
+         ================================================================== */
+
+      :root {
+        --ink: #181824;
+        --beam: #fccc0c;
+        --cream: #f0f0e8;
+        --white: #ffffff;
+        --hairline: #d6d6cb;
+        --placeholder: #55555f;
+        --error: #c41e1e;
+
+        --swatch-red: #e42424;
+        --swatch-blue: #0c3c84;
+        --swatch-azure: #0c84cc;
+        --swatch-green: #0c843c;
+        --swatch-yellow: #fccc0c;
+
+        /* TWO margins, deliberately. 24px is the SINGLE-COLUMN margin — forms,
+           settings, documents. The card grid uses 16px, and that is not a style
+           choice: TILE_WIDTH 171 in features/cards/utils/gridLayout.ts is
+           (390 − 2×16 − 16) / 2, frozen with tests. At 24px the tile stops being 171.
+           The design system currently states one figure and needs amending. */
+        --screen-margin: 24px;
+        --grid-margin: 16px;
+        --gutter: 16px;
+
+        --touch: 48px;
+        --radius-control: 12px;
+        --radius-tile: 16px;
+        --safe-top: 59px;
+        --safe-bottom: 34px;
+        --header-h: 56px;
+      }
+
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+
+      body {
+        background: #c9c9c2;
+        font-family: Inter, system-ui, sans-serif;
+        padding: 48px 32px;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 48px;
+        justify-content: center;
+        align-items: flex-start;
+      }
+
+      .plate {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        align-items: center;
+      }
+
+      .plate figcaption {
+        font:
+          600 12px/1.4 Inter,
+          sans-serif;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: #3d3d46;
+      }
+
+      /* ---- the frame: exactly 393 x 852, never anything else ---- */
+      .frame {
+        width: 393px;
+        height: 852px;
+        background: var(--cream);
+        color: var(--ink);
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+        position: relative;
+      }
+
+      /* Reserved system insets — 59px top / 34px bottom, the real values for a
+         393 x 852 Dynamic Island device.
+
+         These were originally left blank. That was a mistake of presentation, not of
+         measurement: on a real phone the top inset is OCCUPIED by the clock and
+         indicators, so drawing it empty makes a correct 59px read as careless
+         padding, and invites the exact wrong fix (shrink it — which would push
+         content under the live status bar at build time).
+
+         The status bar is SYSTEM chrome, not ours: ink only, no beam, and nothing
+         here is a control. Same for the home indicator. */
+      .safe-top {
+        height: var(--safe-top);
+        flex: 0 0 auto;
+      }
+
+      .safe-bottom {
+        height: var(--safe-bottom);
+        flex: 0 0 auto;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .statusbar {
+        height: 100%;
+        padding: 14px var(--screen-margin) 0;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        color: var(--ink);
+      }
+
+      .statusbar .clock {
+        font-family: Inter, sans-serif;
+        font-size: 15px;
+        font-weight: 600;
+        letter-spacing: 0.01em;
+        font-variant-numeric: tabular-nums;
+      }
+
+      .statusbar .indicators {
+        display: flex;
+        align-items: center;
+        gap: 5px;
+      }
+
+      .statusbar svg {
+        display: block;
+        fill: currentColor;
+      }
+
+      .home-indicator {
+        width: 140px;
+        height: 5px;
+        border-radius: 999px;
+        background: var(--ink);
+        opacity: 0.85;
+      }
+
+      /* ---- header ----
+         A three-column grid: a 48px touch target, the title, a 48px touch target.
+         Icons are optically aligned, not box-aligned — a glyph drawn inside a square
+         icon box carries empty side bearing, so box-aligning it to the margin leaves
+         the visible stroke sitting inboard of the content beneath. The fix is to
+         bleed the touch target to the frame edge and pad the content back to the
+         margin: ink lands on the margin, the target stays 48px. */
+      .header {
+        height: var(--header-h);
+        flex: 0 0 auto;
+        padding: 0 var(--screen-margin);
+        display: grid;
+        grid-template-columns: var(--touch) 1fr var(--touch);
+        align-items: center;
+      }
+
+      .header.grid-margin {
+        padding: 0 var(--grid-margin);
+      }
+
+      .icon-target {
+        width: var(--touch);
+        height: var(--touch);
+        display: flex;
+        align-items: center;
+        background: none;
+        border: 0;
+        cursor: pointer;
+        color: var(--ink);
+      }
+
+      .icon-target.at-start {
+        margin-left: calc(-1 * var(--screen-margin));
+        padding-left: var(--screen-margin);
+        justify-content: flex-start;
+      }
+
+      .icon-target.at-end {
+        margin-right: calc(-1 * var(--screen-margin));
+        padding-right: var(--screen-margin);
+        justify-content: flex-end;
+      }
+
+      .header.grid-margin .icon-target.at-start {
+        margin-left: calc(-1 * var(--grid-margin));
+        padding-left: var(--grid-margin);
+      }
+
+      .header.grid-margin .icon-target.at-end {
+        margin-right: calc(-1 * var(--grid-margin));
+        padding-right: var(--grid-margin);
+      }
+
+      .icon-target svg {
+        display: block;
+      }
+
+      .title {
+        font-family: 'Space Grotesk', sans-serif;
+        font-weight: 700;
+        font-size: 24px;
+        line-height: 32px;
+        letter-spacing: -0.01em;
+        text-align: center;
+        color: var(--ink);
+      }
+
+      /* ---- body ---- */
+      .body {
+        flex: 1 1 auto;
+        min-height: 0;
+        padding: 24px var(--screen-margin) 0;
+        display: flex;
+        flex-direction: column;
+        gap: 32px;
+      }
+
+      .body.grid-margin {
+        padding: 8px var(--grid-margin) 0;
+        gap: 16px;
+      }
+
+      /* ---- footer ----
+         A flex sibling AFTER the scroll area. Never fixed, never absolute — so it
+         cannot fight the keyboard. The gap above it is composition, not absence. */
+      .footer {
+        flex: 0 0 auto;
+      }
+
+      .hairline {
+        height: 1px;
+        background: var(--hairline);
+        width: 100%;
+      }
+
+      .footer-inner {
+        padding: var(--screen-margin);
+      }
+
+      .footer-inner.grid-margin {
+        padding: var(--grid-margin);
+      }
+
+      .btn-primary {
+        width: 100%;
+        height: 52px;
+        background: var(--ink);
+        color: var(--white);
+        border: 0;
+        border-radius: var(--radius-control);
+        font-family: Inter, sans-serif;
+        font-weight: 600;
+        font-size: 17px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      /* ------------------------------------------------------------------
+         Cardì — the barcode screen. The hero moment.
+
+         Specced from features/cards/screens/BarcodeScreen.tsx and
+         features/cards/components/BarcodeFlash.tsx — see
+         stitch-prompts-barcode.txt.
+
+         THIS IS THE ONE SCREEN THAT IS NOT CREAM. Every other frame in this
+         system sits on #F0F0E8. This one is pure white #FFFFFF edge to edge,
+         including both system insets, because the white field is the product
+         feature, not a styling choice.
+
+         NOTHING TOUCHES THE BARS. No container, no plate, no padding box, no
+         border, no radius, no shadow. The shipped screen has a 0.05-opacity
+         shadow and an 8px radius on a barcode container, commented "subtle
+         shadow for definition"; both are dropped here. Not because they scan
+         badly — ifero confirmed the screen works at a real checkout — but
+         because a white plate on a white field is defining a boundary that
+         carries no information, and the system forbids shadows anyway.
+
+         WIDTH IS CONSTRAINED, HEIGHT IS FREE. The white space either side of
+         the bars is not a margin — it is the QUIET ZONE, and it is part of the
+         code. EAN-13 needs roughly 10 blank modules each side for a scanner to
+         find where the code begins and ends. At 314px across 95 modules the
+         module is 3.31px and the surround is 39.5px, about 12 modules: over the
+         minimum with margin to spare. The theoretical maximum here is ~325px,
+         an 11px gain bought by cutting the safety margin to exactly 10. Not
+         worth it, so the width stays.
+
+         Height costs nothing and buys the thing that actually goes wrong: a
+         tilted phone. Taller bars let the scanner's beam cross at a steeper
+         angle and still read a complete slice. The bars are 200px tall here,
+         up from the shipped 120px, using vertical space that was empty.
+         ------------------------------------------------------------------ */
+
+      .frame.is-white {
+        background: var(--white);
+      }
+
+      /* No header on this screen at all: the whole field is the dismiss
+         target, so a nav bar would be a control competing with the code. */
+      .bc-body {
+        flex: 1 1 auto;
+        min-height: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 0 var(--screen-margin);
+      }
+
+      /* Inter, not Space Grotesk. Space Grotesk carries OUR personality; this
+         is a third-party brand's name, and dressing it in our display face
+         contradicts the thesis that our chrome stays quiet. */
+      .bc-name {
+        font-family: Inter, sans-serif;
+        font-weight: 700;
+        font-size: 20px;
+        line-height: 28px;
+        color: var(--ink);
+        text-align: center;
+        margin-bottom: 24px;
+      }
+
+      .bc {
+        display: block;
+        fill: #000000;
+      }
+
+      .bc-num {
+        font-family: 'JetBrains Mono', ui-monospace, monospace;
+        font-size: 16px;
+        line-height: 24px;
+        letter-spacing: 1px;
+        color: var(--ink);
+        text-align: center;
+        margin-top: 16px;
+      }
+
+      .bc-hint {
+        font-family: Inter, sans-serif;
+        font-size: 14px;
+        line-height: 20px;
+        color: var(--placeholder);
+        text-align: center;
+        margin-top: 40px;
+      }
+
+      .bc-err {
+        font-family: Inter, sans-serif;
+        font-weight: 600;
+        font-size: 17px;
+        line-height: 24px;
+        color: var(--error);
+        text-align: center;
+      }
+
+      .bc-link {
+        font-family: Inter, sans-serif;
+        font-size: 16px;
+        line-height: 24px;
+        color: var(--ink);
+        text-align: center;
+        margin-top: 32px;
+      }
+    </style>
+  </head>
+  <body>
+    <figure class="plate">
+      <div class="frame is-white">
+        <div class="safe-top">
+          <div class="statusbar" aria-hidden="true">
+            <span class="clock">9:41</span>
+            <span class="indicators">
+              <svg width="18" height="12" viewBox="0 0 18 12">
+                <rect x="0" y="8.5" width="3" height="3.5" rx="1" />
+                <rect x="5" y="6" width="3" height="6" rx="1" />
+                <rect x="10" y="3" width="3" height="9" rx="1" />
+                <rect x="15" y="0" width="3" height="12" rx="1" />
+              </svg>
+              <svg
+                width="16"
+                height="12"
+                viewBox="0 0 16 12"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.6"
+                stroke-linecap="round"
+              >
+                <path d="M1.2 4.4a10 10 0 0 1 13.6 0" />
+                <path d="M4 7.3a6 6 0 0 1 8 0" />
+                <circle cx="8" cy="10.4" r="1" fill="currentColor" stroke="none" />
+              </svg>
+              <svg width="25" height="12" viewBox="0 0 25 12">
+                <rect
+                  x="0.5"
+                  y="0.5"
+                  width="21"
+                  height="11"
+                  rx="3.2"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-opacity="0.4"
+                />
+                <rect x="2.2" y="2.2" width="14" height="7.6" rx="1.8" />
+                <rect x="22.6" y="4.2" width="1.9" height="3.6" rx="0.95" opacity="0.4" />
+              </svg>
+            </span>
+          </div>
+        </div>
+        <main class="bc-body">
+          <span class="bc-name">Esselunga</span>
+          <svg
+            class="bc"
+            width="314"
+            height="200"
+            viewBox="0 0 95 20"
+            preserveAspectRatio="none"
+            role="img"
+            aria-label="Barcode 2000012345678"
+          >
+            <rect x="0" y="0" width="1" height="20" />
+            <rect x="2" y="0" width="1" height="20" />
+            <rect x="6" y="0" width="2" height="20" />
+            <rect x="9" y="0" width="1" height="20" />
+            <rect x="13" y="0" width="2" height="20" />
+            <rect x="16" y="0" width="1" height="20" />
+            <rect x="20" y="0" width="2" height="20" />
+            <rect x="23" y="0" width="1" height="20" />
+            <rect x="27" y="0" width="2" height="20" />
+            <rect x="30" y="0" width="1" height="20" />
+            <rect x="33" y="0" width="2" height="20" />
+            <rect x="37" y="0" width="1" height="20" />
+            <rect x="40" y="0" width="1" height="20" />
+            <rect x="43" y="0" width="2" height="20" />
+            <rect x="46" y="0" width="1" height="20" />
+            <rect x="48" y="0" width="1" height="20" />
+            <rect x="50" y="0" width="1" height="20" />
+            <rect x="55" y="0" width="1" height="20" />
+            <rect x="57" y="0" width="1" height="20" />
+            <rect x="59" y="0" width="3" height="20" />
+            <rect x="64" y="0" width="1" height="20" />
+            <rect x="67" y="0" width="3" height="20" />
+            <rect x="71" y="0" width="1" height="20" />
+            <rect x="73" y="0" width="1" height="20" />
+            <rect x="78" y="0" width="1" height="20" />
+            <rect x="82" y="0" width="1" height="20" />
+            <rect x="85" y="0" width="1" height="20" />
+            <rect x="88" y="0" width="1" height="20" />
+            <rect x="92" y="0" width="1" height="20" />
+            <rect x="94" y="0" width="1" height="20" />
+          </svg>
+          <span class="bc-num">2000012345678</span>
+          <span class="bc-hint">Tap anywhere to close</span>
+        </main>
+        <div class="safe-bottom"><span class="home-indicator"></span></div>
+      </div>
+      <figcaption>A — EAN-13</figcaption>
+    </figure>
+    <figure class="plate">
+      <div class="frame is-white">
+        <div class="safe-top">
+          <div class="statusbar" aria-hidden="true">
+            <span class="clock">9:41</span>
+            <span class="indicators">
+              <svg width="18" height="12" viewBox="0 0 18 12">
+                <rect x="0" y="8.5" width="3" height="3.5" rx="1" />
+                <rect x="5" y="6" width="3" height="6" rx="1" />
+                <rect x="10" y="3" width="3" height="9" rx="1" />
+                <rect x="15" y="0" width="3" height="12" rx="1" />
+              </svg>
+              <svg
+                width="16"
+                height="12"
+                viewBox="0 0 16 12"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.6"
+                stroke-linecap="round"
+              >
+                <path d="M1.2 4.4a10 10 0 0 1 13.6 0" />
+                <path d="M4 7.3a6 6 0 0 1 8 0" />
+                <circle cx="8" cy="10.4" r="1" fill="currentColor" stroke="none" />
+              </svg>
+              <svg width="25" height="12" viewBox="0 0 25 12">
+                <rect
+                  x="0.5"
+                  y="0.5"
+                  width="21"
+                  height="11"
+                  rx="3.2"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-opacity="0.4"
+                />
+                <rect x="2.2" y="2.2" width="14" height="7.6" rx="1.8" />
+                <rect x="22.6" y="4.2" width="1.9" height="3.6" rx="0.95" opacity="0.4" />
+              </svg>
+            </span>
+          </div>
+        </div>
+        <main class="bc-body">
+          <span class="bc-name">Farmacia Centrale</span>
+          <svg
+            class="bc"
+            width="200"
+            height="200"
+            viewBox="0 0 25 25"
+            role="img"
+            aria-label="QR code"
+          >
+            <rect x="0" y="0" width="1" height="1" />
+            <rect x="1" y="0" width="1" height="1" />
+            <rect x="2" y="0" width="1" height="1" />
+            <rect x="3" y="0" width="1" height="1" />
+            <rect x="4" y="0" width="1" height="1" />
+            <rect x="5" y="0" width="1" height="1" />
+            <rect x="6" y="0" width="1" height="1" />
+            <rect x="9" y="0" width="1" height="1" />
+            <rect x="12" y="0" width="1" height="1" />
+            <rect x="15" y="0" width="1" height="1" />
+            <rect x="18" y="0" width="1" height="1" />
+            <rect x="19" y="0" width="1" height="1" />
+            <rect x="20" y="0" width="1" height="1" />
+            <rect x="21" y="0" width="1" height="1" />
+            <rect x="22" y="0" width="1" height="1" />
+            <rect x="23" y="0" width="1" height="1" />
+            <rect x="24" y="0" width="1" height="1" />
+            <rect x="0" y="1" width="1" height="1" />
+            <rect x="6" y="1" width="1" height="1" />
+            <rect x="8" y="1" width="1" height="1" />
+            <rect x="12" y="1" width="1" height="1" />
+            <rect x="16" y="1" width="1" height="1" />
+            <rect x="18" y="1" width="1" height="1" />
+            <rect x="24" y="1" width="1" height="1" />
+            <rect x="0" y="2" width="1" height="1" />
+            <rect x="2" y="2" width="1" height="1" />
+            <rect x="3" y="2" width="1" height="1" />
+            <rect x="4" y="2" width="1" height="1" />
+            <rect x="6" y="2" width="1" height="1" />
+            <rect x="10" y="2" width="1" height="1" />
+            <rect x="11" y="2" width="1" height="1" />
+            <rect x="12" y="2" width="1" height="1" />
+            <rect x="18" y="2" width="1" height="1" />
+            <rect x="20" y="2" width="1" height="1" />
+            <rect x="21" y="2" width="1" height="1" />
+            <rect x="22" y="2" width="1" height="1" />
+            <rect x="24" y="2" width="1" height="1" />
+            <rect x="0" y="3" width="1" height="1" />
+            <rect x="2" y="3" width="1" height="1" />
+            <rect x="3" y="3" width="1" height="1" />
+            <rect x="4" y="3" width="1" height="1" />
+            <rect x="6" y="3" width="1" height="1" />
+            <rect x="8" y="3" width="1" height="1" />
+            <rect x="15" y="3" width="1" height="1" />
+            <rect x="18" y="3" width="1" height="1" />
+            <rect x="20" y="3" width="1" height="1" />
+            <rect x="21" y="3" width="1" height="1" />
+            <rect x="22" y="3" width="1" height="1" />
+            <rect x="24" y="3" width="1" height="1" />
+            <rect x="0" y="4" width="1" height="1" />
+            <rect x="2" y="4" width="1" height="1" />
+            <rect x="3" y="4" width="1" height="1" />
+            <rect x="4" y="4" width="1" height="1" />
+            <rect x="6" y="4" width="1" height="1" />
+            <rect x="16" y="4" width="1" height="1" />
+            <rect x="18" y="4" width="1" height="1" />
+            <rect x="20" y="4" width="1" height="1" />
+            <rect x="21" y="4" width="1" height="1" />
+            <rect x="22" y="4" width="1" height="1" />
+            <rect x="24" y="4" width="1" height="1" />
+            <rect x="0" y="5" width="1" height="1" />
+            <rect x="6" y="5" width="1" height="1" />
+            <rect x="10" y="5" width="1" height="1" />
+            <rect x="13" y="5" width="1" height="1" />
+            <rect x="16" y="5" width="1" height="1" />
+            <rect x="18" y="5" width="1" height="1" />
+            <rect x="24" y="5" width="1" height="1" />
+            <rect x="0" y="6" width="1" height="1" />
+            <rect x="1" y="6" width="1" height="1" />
+            <rect x="2" y="6" width="1" height="1" />
+            <rect x="3" y="6" width="1" height="1" />
+            <rect x="4" y="6" width="1" height="1" />
+            <rect x="5" y="6" width="1" height="1" />
+            <rect x="6" y="6" width="1" height="1" />
+            <rect x="8" y="6" width="1" height="1" />
+            <rect x="10" y="6" width="1" height="1" />
+            <rect x="12" y="6" width="1" height="1" />
+            <rect x="14" y="6" width="1" height="1" />
+            <rect x="16" y="6" width="1" height="1" />
+            <rect x="18" y="6" width="1" height="1" />
+            <rect x="19" y="6" width="1" height="1" />
+            <rect x="20" y="6" width="1" height="1" />
+            <rect x="21" y="6" width="1" height="1" />
+            <rect x="22" y="6" width="1" height="1" />
+            <rect x="23" y="6" width="1" height="1" />
+            <rect x="24" y="6" width="1" height="1" />
+            <rect x="13" y="7" width="1" height="1" />
+            <rect x="14" y="7" width="1" height="1" />
+            <rect x="1" y="8" width="1" height="1" />
+            <rect x="3" y="8" width="1" height="1" />
+            <rect x="6" y="8" width="1" height="1" />
+            <rect x="10" y="8" width="1" height="1" />
+            <rect x="12" y="8" width="1" height="1" />
+            <rect x="14" y="8" width="1" height="1" />
+            <rect x="16" y="8" width="1" height="1" />
+            <rect x="18" y="8" width="1" height="1" />
+            <rect x="0" y="9" width="1" height="1" />
+            <rect x="11" y="9" width="1" height="1" />
+            <rect x="12" y="9" width="1" height="1" />
+            <rect x="13" y="9" width="1" height="1" />
+            <rect x="14" y="9" width="1" height="1" />
+            <rect x="15" y="9" width="1" height="1" />
+            <rect x="2" y="10" width="1" height="1" />
+            <rect x="5" y="10" width="1" height="1" />
+            <rect x="6" y="10" width="1" height="1" />
+            <rect x="8" y="10" width="1" height="1" />
+            <rect x="11" y="10" width="1" height="1" />
+            <rect x="14" y="10" width="1" height="1" />
+            <rect x="17" y="10" width="1" height="1" />
+            <rect x="20" y="10" width="1" height="1" />
+            <rect x="23" y="10" width="1" height="1" />
+            <rect x="2" y="11" width="1" height="1" />
+            <rect x="9" y="11" width="1" height="1" />
+            <rect x="10" y="11" width="1" height="1" />
+            <rect x="13" y="11" width="1" height="1" />
+            <rect x="17" y="11" width="1" height="1" />
+            <rect x="21" y="11" width="1" height="1" />
+            <rect x="24" y="11" width="1" height="1" />
+            <rect x="0" y="12" width="1" height="1" />
+            <rect x="1" y="12" width="1" height="1" />
+            <rect x="2" y="12" width="1" height="1" />
+            <rect x="6" y="12" width="1" height="1" />
+            <rect x="8" y="12" width="1" height="1" />
+            <rect x="9" y="12" width="1" height="1" />
+            <rect x="15" y="12" width="1" height="1" />
+            <rect x="16" y="12" width="1" height="1" />
+            <rect x="17" y="12" width="1" height="1" />
+            <rect x="23" y="12" width="1" height="1" />
+            <rect x="24" y="12" width="1" height="1" />
+            <rect x="5" y="13" width="1" height="1" />
+            <rect x="7" y="13" width="1" height="1" />
+            <rect x="9" y="13" width="1" height="1" />
+            <rect x="11" y="13" width="1" height="1" />
+            <rect x="13" y="13" width="1" height="1" />
+            <rect x="20" y="13" width="1" height="1" />
+            <rect x="22" y="13" width="1" height="1" />
+            <rect x="24" y="13" width="1" height="1" />
+            <rect x="6" y="14" width="1" height="1" />
+            <rect x="7" y="14" width="1" height="1" />
+            <rect x="8" y="14" width="1" height="1" />
+            <rect x="9" y="14" width="1" height="1" />
+            <rect x="10" y="14" width="1" height="1" />
+            <rect x="21" y="14" width="1" height="1" />
+            <rect x="22" y="14" width="1" height="1" />
+            <rect x="23" y="14" width="1" height="1" />
+            <rect x="24" y="14" width="1" height="1" />
+            <rect x="0" y="15" width="1" height="1" />
+            <rect x="3" y="15" width="1" height="1" />
+            <rect x="9" y="15" width="1" height="1" />
+            <rect x="12" y="15" width="1" height="1" />
+            <rect x="15" y="15" width="1" height="1" />
+            <rect x="18" y="15" width="1" height="1" />
+            <rect x="21" y="15" width="1" height="1" />
+            <rect x="24" y="15" width="1" height="1" />
+            <rect x="1" y="16" width="1" height="1" />
+            <rect x="4" y="16" width="1" height="1" />
+            <rect x="5" y="16" width="1" height="1" />
+            <rect x="6" y="16" width="1" height="1" />
+            <rect x="8" y="16" width="1" height="1" />
+            <rect x="12" y="16" width="1" height="1" />
+            <rect x="16" y="16" width="1" height="1" />
+            <rect x="19" y="16" width="1" height="1" />
+            <rect x="20" y="16" width="1" height="1" />
+            <rect x="23" y="16" width="1" height="1" />
+            <rect x="10" y="17" width="1" height="1" />
+            <rect x="11" y="17" width="1" height="1" />
+            <rect x="12" y="17" width="1" height="1" />
+            <rect x="18" y="17" width="1" height="1" />
+            <rect x="19" y="17" width="1" height="1" />
+            <rect x="0" y="18" width="1" height="1" />
+            <rect x="1" y="18" width="1" height="1" />
+            <rect x="2" y="18" width="1" height="1" />
+            <rect x="3" y="18" width="1" height="1" />
+            <rect x="4" y="18" width="1" height="1" />
+            <rect x="5" y="18" width="1" height="1" />
+            <rect x="6" y="18" width="1" height="1" />
+            <rect x="8" y="18" width="1" height="1" />
+            <rect x="15" y="18" width="1" height="1" />
+            <rect x="17" y="18" width="1" height="1" />
+            <rect x="19" y="18" width="1" height="1" />
+            <rect x="21" y="18" width="1" height="1" />
+            <rect x="23" y="18" width="1" height="1" />
+            <rect x="0" y="19" width="1" height="1" />
+            <rect x="6" y="19" width="1" height="1" />
+            <rect x="16" y="19" width="1" height="1" />
+            <rect x="17" y="19" width="1" height="1" />
+            <rect x="18" y="19" width="1" height="1" />
+            <rect x="19" y="19" width="1" height="1" />
+            <rect x="20" y="19" width="1" height="1" />
+            <rect x="0" y="20" width="1" height="1" />
+            <rect x="2" y="20" width="1" height="1" />
+            <rect x="3" y="20" width="1" height="1" />
+            <rect x="4" y="20" width="1" height="1" />
+            <rect x="6" y="20" width="1" height="1" />
+            <rect x="10" y="20" width="1" height="1" />
+            <rect x="13" y="20" width="1" height="1" />
+            <rect x="16" y="20" width="1" height="1" />
+            <rect x="19" y="20" width="1" height="1" />
+            <rect x="22" y="20" width="1" height="1" />
+            <rect x="0" y="21" width="1" height="1" />
+            <rect x="2" y="21" width="1" height="1" />
+            <rect x="3" y="21" width="1" height="1" />
+            <rect x="4" y="21" width="1" height="1" />
+            <rect x="6" y="21" width="1" height="1" />
+            <rect x="11" y="21" width="1" height="1" />
+            <rect x="14" y="21" width="1" height="1" />
+            <rect x="15" y="21" width="1" height="1" />
+            <rect x="18" y="21" width="1" height="1" />
+            <rect x="22" y="21" width="1" height="1" />
+            <rect x="0" y="22" width="1" height="1" />
+            <rect x="2" y="22" width="1" height="1" />
+            <rect x="3" y="22" width="1" height="1" />
+            <rect x="4" y="22" width="1" height="1" />
+            <rect x="6" y="22" width="1" height="1" />
+            <rect x="13" y="22" width="1" height="1" />
+            <rect x="14" y="22" width="1" height="1" />
+            <rect x="20" y="22" width="1" height="1" />
+            <rect x="21" y="22" width="1" height="1" />
+            <rect x="22" y="22" width="1" height="1" />
+            <rect x="0" y="23" width="1" height="1" />
+            <rect x="6" y="23" width="1" height="1" />
+            <rect x="10" y="23" width="1" height="1" />
+            <rect x="12" y="23" width="1" height="1" />
+            <rect x="14" y="23" width="1" height="1" />
+            <rect x="16" y="23" width="1" height="1" />
+            <rect x="18" y="23" width="1" height="1" />
+            <rect x="0" y="24" width="1" height="1" />
+            <rect x="1" y="24" width="1" height="1" />
+            <rect x="2" y="24" width="1" height="1" />
+            <rect x="3" y="24" width="1" height="1" />
+            <rect x="4" y="24" width="1" height="1" />
+            <rect x="5" y="24" width="1" height="1" />
+            <rect x="6" y="24" width="1" height="1" />
+            <rect x="11" y="24" width="1" height="1" />
+            <rect x="12" y="24" width="1" height="1" />
+            <rect x="13" y="24" width="1" height="1" />
+            <rect x="14" y="24" width="1" height="1" />
+            <rect x="15" y="24" width="1" height="1" />
+          </svg>
+          <span class="bc-num">2000012345678</span>
+          <span class="bc-hint">Tap anywhere to close</span>
+        </main>
+        <div class="safe-bottom"><span class="home-indicator"></span></div>
+      </div>
+      <figcaption>B — QR</figcaption>
+    </figure>
+    <figure class="plate">
+      <div class="frame is-white">
+        <div class="safe-top">
+          <div class="statusbar" aria-hidden="true">
+            <span class="clock">9:41</span>
+            <span class="indicators">
+              <svg width="18" height="12" viewBox="0 0 18 12">
+                <rect x="0" y="8.5" width="3" height="3.5" rx="1" />
+                <rect x="5" y="6" width="3" height="6" rx="1" />
+                <rect x="10" y="3" width="3" height="9" rx="1" />
+                <rect x="15" y="0" width="3" height="12" rx="1" />
+              </svg>
+              <svg
+                width="16"
+                height="12"
+                viewBox="0 0 16 12"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.6"
+                stroke-linecap="round"
+              >
+                <path d="M1.2 4.4a10 10 0 0 1 13.6 0" />
+                <path d="M4 7.3a6 6 0 0 1 8 0" />
+                <circle cx="8" cy="10.4" r="1" fill="currentColor" stroke="none" />
+              </svg>
+              <svg width="25" height="12" viewBox="0 0 25 12">
+                <rect
+                  x="0.5"
+                  y="0.5"
+                  width="21"
+                  height="11"
+                  rx="3.2"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-opacity="0.4"
+                />
+                <rect x="2.2" y="2.2" width="14" height="7.6" rx="1.8" />
+                <rect x="22.6" y="4.2" width="1.9" height="3.6" rx="0.95" opacity="0.4" />
+              </svg>
+            </span>
+          </div>
+        </div>
+        <main class="bc-body">
+          <span class="bc-err">Card not found</span>
+          <span class="bc-link">Go back</span>
+        </main>
+        <div class="safe-bottom"><span class="home-indicator"></span></div>
+      </div>
+      <figcaption>C — Card not found</figcaption>
+    </figure>
+  </body>
+</html>

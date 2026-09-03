@@ -1,0 +1,272 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Cardì — the accent, six explorations</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@700&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      /* ==================================================================
+         Cardì — THE ACCENT, explored. Round two.
+
+         ROUND ONE HAD A REAL BUG, not a preference: the glyph was positioned
+         with a GUESSED translateY(size * 0.28) and negative margins, with no
+         relationship to the text baseline. The stem floated independently of
+         the word it belongs to, which is why it read as disjointed.
+
+         MEASURED Space Grotesk Bold, via canvas TextMetrics:
+
+             x-height        0.496 em
+             ascender (d)    0.700 em
+             lowercase i     0.266 em advance, 0.714 em tall with its tittle
+
+         So the glyph is now built in em space and anchored to the baseline:
+
+             the SVG box is 1em tall and 100 viewBox units = 1em
+             the BASELINE sits at y = 70, since the ascender is 0.70em above it
+             the stem runs y = 20.4 -> y = 70, x-height down to baseline
+             the accent lives above y = 20.4
+             the box is 0.30em WIDE, near the real i advance of 0.266em, so
+             letter-spacing does not lie — the accent overhangs by
+             overflow: visible rather than by widening the letter
+
+         WHAT IS BEING EXPLORED, now the rest is settled: only the accent. The
+         stem is fixed, because the previous round established that the stem
+         varies with available space (single in the word, barcode in the mark)
+         while THE BEAM IS THE CONSTANT that joins them. So the accent is the
+         one shape that has to work everywhere, and it is the only variable
+         here.
+
+         Every row shows the same accent in all four places it must live: the
+         wordmark large, the wordmark small, the mark, and the mark small.
+         ================================================================== */
+
+      :root {
+        --ink: #181824;
+        --beam: #fccc0c;
+        --cream: #f0f0e8;
+        --white: #ffffff;
+        --hairline: #d6d6cb;
+        --muted: #55555f;
+        --fg: var(--ink);
+        --ac: var(--beam);
+      }
+
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+
+      body {
+        background: var(--cream);
+        font-family: Inter, system-ui, sans-serif;
+        color: var(--ink);
+        padding: 48px 32px 80px;
+      }
+
+      h1 {
+        font-family: 'Space Grotesk', sans-serif;
+        font-weight: 700;
+        font-size: 28px;
+        letter-spacing: -0.02em;
+      }
+
+      header p {
+        font-size: 15px;
+        line-height: 22px;
+        color: var(--muted);
+        max-width: 66ch;
+        margin-top: 8px;
+      }
+
+      .row {
+        display: flex;
+        gap: 40px;
+        align-items: center;
+        padding: 28px 0;
+        border-bottom: 1px solid var(--hairline);
+      }
+
+      .meta {
+        flex: 0 0 240px;
+      }
+
+      .meta h2 {
+        font-family: 'Space Grotesk', sans-serif;
+        font-weight: 700;
+        font-size: 20px;
+      }
+
+      .meta p {
+        font-size: 15px;
+        line-height: 22px;
+        color: var(--muted);
+        margin-top: 4px;
+      }
+
+      .specimens {
+        display: flex;
+        gap: 36px;
+        align-items: flex-end;
+        flex-wrap: wrap;
+      }
+
+      .stack {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .cap {
+        font-size: 11px;
+        font-weight: 600;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        color: var(--muted);
+      }
+
+      .word {
+        font-family: 'Space Grotesk', sans-serif;
+        font-weight: 700;
+        letter-spacing: -0.03em;
+        color: var(--ink);
+        line-height: 1;
+        white-space: nowrap;
+      }
+
+      /* THE FIX. The box is 1em tall with the baseline at y=70 of its viewBox,
+         so dropping the box 0.30em below the text baseline lands the glyph's
+         baseline exactly on the text's. No magic numbers, no negative margins:
+         the two now share one baseline because the geometry says so. */
+      .wglyph {
+        display: inline;
+        vertical-align: -0.30em;
+        overflow: visible;
+      }
+
+      .tile {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        background: var(--ink);
+        border-radius: 22%;
+        --fg: var(--white);
+        --ac: var(--beam);
+      }
+
+      .rule {
+        position: relative;
+      }
+
+      /* A hairline drawn ON the baseline, so "does it sit on the baseline?" is
+         answered by looking rather than by trusting. */
+      .rule::after {
+        content: '';
+        position: absolute;
+        left: -8px;
+        right: -8px;
+        bottom: 0;
+        border-bottom: 1px dashed #c41e1e;
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <h1>The accent — six explorations</h1>
+      <p>
+        The stem is settled: it varies with the space available, single inside the word and a
+        barcode inside the mark, because the beam is what joins them. So the accent is the one
+        shape that has to work everywhere, and it is the only variable on this sheet. Each row
+        shows the same accent in all four places it lives. The glyph is now built in em units
+        from the measured font and anchored to the text baseline, which round one did not do.
+      </p>
+      <p style="margin-top: 12px">
+        <span class="rule" style="display: inline-block; padding-bottom: 2px">
+          <span class="word" style="font-size: 44px">Card<svg class="wglyph"
+            viewBox="0 0 30 100" width="0.30em" height="1em"><use
+            href="#g-sweep20" /></svg></span></span>
+        <span class="cap" style="margin-left: 12px">the dashed rule is the text baseline</span>
+      </p>
+    </header>
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true"><symbol id="g-sweep20" viewBox="0 0 30 100" overflow="visible"><rect x="9.0" y="20.4" width="12" height="49.6" rx="6.0" fill="var(--fg)" /><rect x="-2.0" y="6" width="34" height="9" rx="4.5" fill="var(--ac)" transform="rotate(20 15.0 10.5)" /></symbol><symbol id="b-sweep20" viewBox="0 0 30 100" overflow="visible"><rect x="4.0" y="20.4" width="4.5" height="49.6" rx="2.2" fill="var(--fg)" /><rect x="11.0" y="20.4" width="8" height="49.6" rx="4" fill="var(--fg)" /><rect x="22.0" y="20.4" width="3.5" height="49.6" rx="1.7" fill="var(--fg)" /><rect x="-2.0" y="6" width="34" height="9" rx="4.5" fill="var(--ac)" transform="rotate(20 15.0 10.5)" /></symbol><symbol id="g-sweep35" viewBox="0 0 30 100" overflow="visible"><rect x="9.0" y="20.4" width="12" height="49.6" rx="6.0" fill="var(--fg)" /><rect x="-2.0" y="6" width="34" height="9" rx="4.5" fill="var(--ac)" transform="rotate(35 15.0 10.5)" /></symbol><symbol id="b-sweep35" viewBox="0 0 30 100" overflow="visible"><rect x="4.0" y="20.4" width="4.5" height="49.6" rx="2.2" fill="var(--fg)" /><rect x="11.0" y="20.4" width="8" height="49.6" rx="4" fill="var(--fg)" /><rect x="22.0" y="20.4" width="3.5" height="49.6" rx="1.7" fill="var(--fg)" /><rect x="-2.0" y="6" width="34" height="9" rx="4.5" fill="var(--ac)" transform="rotate(35 15.0 10.5)" /></symbol><symbol id="g-flat" viewBox="0 0 30 100" overflow="visible"><rect x="9.0" y="20.4" width="12" height="49.6" rx="6.0" fill="var(--fg)" /><rect x="0.0" y="6" width="30" height="9" rx="4.5" fill="var(--ac)" /></symbol><symbol id="b-flat" viewBox="0 0 30 100" overflow="visible"><rect x="4.0" y="20.4" width="4.5" height="49.6" rx="2.2" fill="var(--fg)" /><rect x="11.0" y="20.4" width="8" height="49.6" rx="4" fill="var(--fg)" /><rect x="22.0" y="20.4" width="3.5" height="49.6" rx="1.7" fill="var(--fg)" /><rect x="0.0" y="6" width="30" height="9" rx="4.5" fill="var(--ac)" /></symbol><symbol id="g-tight" viewBox="0 0 30 100" overflow="visible"><rect x="9.0" y="20.4" width="12" height="49.6" rx="6.0" fill="var(--fg)" /><rect x="7.0" y="7" width="16" height="8" rx="4" fill="var(--ac)" transform="rotate(20 15.0 11)" /></symbol><symbol id="b-tight" viewBox="0 0 30 100" overflow="visible"><rect x="4.0" y="20.4" width="4.5" height="49.6" rx="2.2" fill="var(--fg)" /><rect x="11.0" y="20.4" width="8" height="49.6" rx="4" fill="var(--fg)" /><rect x="22.0" y="20.4" width="3.5" height="49.6" rx="1.7" fill="var(--fg)" /><rect x="7.0" y="7" width="16" height="8" rx="4" fill="var(--ac)" transform="rotate(20 15.0 11)" /></symbol><symbol id="g-taperbeam" viewBox="0 0 30 100" overflow="visible"><rect x="9.0" y="20.4" width="12" height="49.6" rx="6.0" fill="var(--fg)" /><path d="M-2.0 7 L32.0 11 L32.0 17 L-2.0 15 Z" fill="var(--ac)" transform="rotate(20 15.0 11)" /></symbol><symbol id="b-taperbeam" viewBox="0 0 30 100" overflow="visible"><rect x="4.0" y="20.4" width="4.5" height="49.6" rx="2.2" fill="var(--fg)" /><rect x="11.0" y="20.4" width="8" height="49.6" rx="4" fill="var(--fg)" /><rect x="22.0" y="20.4" width="3.5" height="49.6" rx="1.7" fill="var(--fg)" /><path d="M-2.0 7 L32.0 11 L32.0 17 L-2.0 15 Z" fill="var(--ac)" transform="rotate(20 15.0 11)" /></symbol><symbol id="g-dot" viewBox="0 0 30 100" overflow="visible"><rect x="9.0" y="20.4" width="12" height="49.6" rx="6.0" fill="var(--fg)" /><circle cx="15.0" cy="11" r="5.5" fill="var(--ac)" /></symbol><symbol id="b-dot" viewBox="0 0 30 100" overflow="visible"><rect x="4.0" y="20.4" width="4.5" height="49.6" rx="2.2" fill="var(--fg)" /><rect x="11.0" y="20.4" width="8" height="49.6" rx="4" fill="var(--fg)" /><rect x="22.0" y="20.4" width="3.5" height="49.6" rx="1.7" fill="var(--fg)" /><circle cx="15.0" cy="11" r="5.5" fill="var(--ac)" /></symbol></svg>
+      <div class="row">
+        <div class="meta">
+          <h2>Sweep · 20°</h2>
+          <p>The current one. Overhangs the stem on both sides.</p>
+        </div>
+        <div class="specimens">
+          <div class="stack"><span class="word " style="font-size:56px">Card<svg class="wglyph" viewBox="0 0 30 100" width="0.30em" height="1em"><use href="#g-sweep20" /></svg></span><span class="cap">wordmark · 56</span></div>
+          <div class="stack"><span class="word " style="font-size:28px">Card<svg class="wglyph" viewBox="0 0 30 100" width="0.30em" height="1em"><use href="#g-sweep20" /></svg></span><span class="cap">28</span></div>
+          <div class="stack"><span class="tile" style="width:88px;height:88px"><svg viewBox="-37.5 -15.5 105.0 105.0" width="88" height="88" overflow="visible"><use href="#b-sweep20" /></svg></span><span class="cap">mark</span></div>
+          <div class="stack"><span class="tile" style="width:32px;height:32px"><svg viewBox="-37.5 -15.5 105.0 105.0" width="32" height="32" overflow="visible"><use href="#b-sweep20" /></svg></span><span class="cap">32</span></div>
+        </div>
+      </div>
+      <div class="row">
+        <div class="meta">
+          <h2>Sweep · 35°</h2>
+          <p>Steeper. Reads faster, more like a stroke in motion.</p>
+        </div>
+        <div class="specimens">
+          <div class="stack"><span class="word " style="font-size:56px">Card<svg class="wglyph" viewBox="0 0 30 100" width="0.30em" height="1em"><use href="#g-sweep35" /></svg></span><span class="cap">wordmark · 56</span></div>
+          <div class="stack"><span class="word " style="font-size:28px">Card<svg class="wglyph" viewBox="0 0 30 100" width="0.30em" height="1em"><use href="#g-sweep35" /></svg></span><span class="cap">28</span></div>
+          <div class="stack"><span class="tile" style="width:88px;height:88px"><svg viewBox="-37.5 -15.5 105.0 105.0" width="88" height="88" overflow="visible"><use href="#b-sweep35" /></svg></span><span class="cap">mark</span></div>
+          <div class="stack"><span class="tile" style="width:32px;height:32px"><svg viewBox="-37.5 -15.5 105.0 105.0" width="32" height="32" overflow="visible"><use href="#b-sweep35" /></svg></span><span class="cap">32</span></div>
+        </div>
+      </div>
+      <div class="row">
+        <div class="meta">
+          <h2>Flat bar · 0°</h2>
+          <p>No rotation at all. Calm, and closest to a macron than a grave.</p>
+        </div>
+        <div class="specimens">
+          <div class="stack"><span class="word " style="font-size:56px">Card<svg class="wglyph" viewBox="0 0 30 100" width="0.30em" height="1em"><use href="#g-flat" /></svg></span><span class="cap">wordmark · 56</span></div>
+          <div class="stack"><span class="word " style="font-size:28px">Card<svg class="wglyph" viewBox="0 0 30 100" width="0.30em" height="1em"><use href="#g-flat" /></svg></span><span class="cap">28</span></div>
+          <div class="stack"><span class="tile" style="width:88px;height:88px"><svg viewBox="-37.5 -15.5 105.0 105.0" width="88" height="88" overflow="visible"><use href="#b-flat" /></svg></span><span class="cap">mark</span></div>
+          <div class="stack"><span class="tile" style="width:32px;height:32px"><svg viewBox="-37.5 -15.5 105.0 105.0" width="32" height="32" overflow="visible"><use href="#b-flat" /></svg></span><span class="cap">32</span></div>
+        </div>
+      </div>
+      <div class="row">
+        <div class="meta">
+          <h2>Contained · 20°</h2>
+          <p>Same angle, but never wider than the stem's own column.</p>
+        </div>
+        <div class="specimens">
+          <div class="stack"><span class="word " style="font-size:56px">Card<svg class="wglyph" viewBox="0 0 30 100" width="0.30em" height="1em"><use href="#g-tight" /></svg></span><span class="cap">wordmark · 56</span></div>
+          <div class="stack"><span class="word " style="font-size:28px">Card<svg class="wglyph" viewBox="0 0 30 100" width="0.30em" height="1em"><use href="#g-tight" /></svg></span><span class="cap">28</span></div>
+          <div class="stack"><span class="tile" style="width:88px;height:88px"><svg viewBox="-37.5 -15.5 105.0 105.0" width="88" height="88" overflow="visible"><use href="#b-tight" /></svg></span><span class="cap">mark</span></div>
+          <div class="stack"><span class="tile" style="width:32px;height:32px"><svg viewBox="-37.5 -15.5 105.0 105.0" width="32" height="32" overflow="visible"><use href="#b-tight" /></svg></span><span class="cap">32</span></div>
+        </div>
+      </div>
+      <div class="row">
+        <div class="meta">
+          <h2>Tapered beam · 20°</h2>
+          <p>Wider at the leading end, so the sweep has a direction.</p>
+        </div>
+        <div class="specimens">
+          <div class="stack"><span class="word " style="font-size:56px">Card<svg class="wglyph" viewBox="0 0 30 100" width="0.30em" height="1em"><use href="#g-taperbeam" /></svg></span><span class="cap">wordmark · 56</span></div>
+          <div class="stack"><span class="word " style="font-size:28px">Card<svg class="wglyph" viewBox="0 0 30 100" width="0.30em" height="1em"><use href="#g-taperbeam" /></svg></span><span class="cap">28</span></div>
+          <div class="stack"><span class="tile" style="width:88px;height:88px"><svg viewBox="-37.5 -15.5 105.0 105.0" width="88" height="88" overflow="visible"><use href="#b-taperbeam" /></svg></span><span class="cap">mark</span></div>
+          <div class="stack"><span class="tile" style="width:32px;height:32px"><svg viewBox="-37.5 -15.5 105.0 105.0" width="32" height="32" overflow="visible"><use href="#b-taperbeam" /></svg></span><span class="cap">32</span></div>
+        </div>
+      </div>
+      <div class="row">
+        <div class="meta">
+          <h2>Dot · at rest</h2>
+          <p>The other half of the idea: at rest it is a dot. The still frame.</p>
+        </div>
+        <div class="specimens">
+          <div class="stack"><span class="word " style="font-size:56px">Card<svg class="wglyph" viewBox="0 0 30 100" width="0.30em" height="1em"><use href="#g-dot" /></svg></span><span class="cap">wordmark · 56</span></div>
+          <div class="stack"><span class="word " style="font-size:28px">Card<svg class="wglyph" viewBox="0 0 30 100" width="0.30em" height="1em"><use href="#g-dot" /></svg></span><span class="cap">28</span></div>
+          <div class="stack"><span class="tile" style="width:88px;height:88px"><svg viewBox="-37.5 -15.5 105.0 105.0" width="88" height="88" overflow="visible"><use href="#b-dot" /></svg></span><span class="cap">mark</span></div>
+          <div class="stack"><span class="tile" style="width:32px;height:32px"><svg viewBox="-37.5 -15.5 105.0 105.0" width="32" height="32" overflow="visible"><use href="#b-dot" /></svg></span><span class="cap">32</span></div>
+        </div>
+      </div>
+  </body>
+</html>

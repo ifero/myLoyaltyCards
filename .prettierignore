@@ -44,3 +44,19 @@ watch-android/app/schemas/
 # no upside. Sibling CSS is NOT ignored -- prettier's CSS output is safe.
 docs/*.html
 supabase/templates/*.html
+
+# Design-exploration artifacts kept as authored records, not as maintained source.
+# palette-bench.html is a single self-contained comparison board emitted by a Claude
+# Artifact: ~45k of inlined CSS and SVG specimens whose exact bytes are the record of
+# what the room actually judged. Reformatting it would churn the whole file and prove
+# nothing, and nothing builds from it — same generated-artifact case as the docs/ HTML.
+docs/design/cardi/*.html
+
+# The design frames, and their generators of record in docs/design/cardi/tools/.
+# The entry above uses a single `*`, which does not cross a directory separator, so
+# frames/ was never covered by it. These files are BUILT -- `python3 tools/verify.py`
+# asserts that every generator still reproduces its frame byte for byte, which is the
+# guard against a stale generator silently reverting a hand fix. Prettier reformatting
+# the committed output would break that check permanently and for no gain, so the
+# generators stay the source of truth here. Same case as the Room schemas above.
+docs/design/cardi/frames/*.html

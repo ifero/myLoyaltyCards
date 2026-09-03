@@ -1,0 +1,286 @@
+CARDÌ — THE WALLET PATTERN, FOUR STATE FRAMES
+=============================================
+
+The wallet is the app's front door and the only screen where the thesis is visible: the
+home grid already carries 57 third-party brand colours that arrive with the data. Every
+decision below exists to keep our chrome out of their way.
+
+One frame per prompt. States are separate frames, never combined.
+Frame A (POPULATED) is THE exemplar. The other three are its siblings.
+
+Before generating:
+  - Model selector on 3.1 Pro.
+  - Seed from an existing corrected-geometry screen where possible. Generation FROM ZERO
+    only works in the Stitch web prompt box; `generate_screen_from_text` over MCP times out
+    and lands nothing. `generate_variants` from a seed works and returns synchronously
+    (though it can time out at the MCP layer and still land — poll, never retry).
+  - Stitch cannot emit 393 x 852; it injects `body { min-height: max(884px, 100dvh) }`.
+    Treat whatever it returns as the argument, not the artifact, and author the final frame
+    into `frames/cardi-form-frames.html`.
+
+Screen source of truth: features/cards/components/CardList.tsx, CardTile.tsx,
+EmptyState.tsx; geometry in features/cards/utils/gridLayout.ts; strings in
+shared/i18n/locales/en.ts. Every label below is the real one.
+
+
+-------------------------------------------------------------------------------
+WHAT READING THE CODE TURNED UP  (decisions baked into the prompts)
+-------------------------------------------------------------------------------
+
+1. THE WALLET HAS SIX STATES, NOT TWO. `CardList` branches on loading, error, single-card,
+   multi-card grid, empty, and no-results. The single-card state — an enlarged centred tile
+   at 220 x 180 with the tip "Tap + to add more cards to your wallet" — has never been
+   designed. Loading and error are a spinner and a line of text; they do not earn frames.
+
+2. SEARCH AND SORT APPEAR ONLY AT TWO OR MORE CARDS. `showControls = totalCount >= 2`. So
+   the single-card frame has no search bar, and the empty frame has no search bar. Drawing
+   one is wrong, not merely extra.
+
+3. THE SCREEN MARGIN HERE IS 16pt, NOT THE DESIGN SYSTEM'S 24px — AND THE TILE MATH DEPENDS
+   ON IT. `TILE_WIDTH = 171` is `(390 − 2 x 16 − 16) / 2`, frozen in gridLayout.ts with a
+   documented derivation and tests. At 24px margins the tile stops being 171. These prompts
+   use 16pt and the design system needs amending to say so: 24px is the SINGLE-COLUMN
+   (form / settings / document) margin; the grid is 16. This is now the FOURTH answer to the
+   margin question in this codebase — see § Three answers to the screen margin.
+
+4. THE SHIPPED EMPTY STATE VIOLATES THE DESIGN SYSTEM FOUR TIMES. It carries a per-screen
+   invented wallet illustration; accent dots in `#FFCC00` (Esselunga's exact yellow) and
+   `#E2231A` (Coop's exact red) used as decoration; a coloured GLOW SHADOW under the CTA
+   (`shadowOpacity: 0.3, shadowRadius: 12`, elevation 6); and a 240 x 50 centred button
+   where the system specifies a full-width 52px one. All four are corrected below.
+
+5. THE EMPTY STATE GETS NO ILLUSTRATION. Wave A is illustration-free, and the system forbids
+   inventing an illustration style per screen. The empty state is TYPOGRAPHIC. If it feels
+   bare, that is the correct amount of bare until the commissioned set exists.
+
+6. THE CARD TILE HAS A DROP SHADOW IN LIGHT MODE (`shadowColor: '#000'`). The system says no
+   drop shadows anywhere. Removed below; hierarchy comes from the brand colour itself.
+
+7. THE HEADER IS ALREADY RIGHT. `HeaderLeft` is `+` -> /add-card, `HeaderRight` is the gear
+   -> /settings. The design system's hard rule ratifies shipped behaviour rather than
+   inventing it. The title, however, is still `navigation.home: 'myLoyaltyCards'` — under the
+   rebrand it reads "Cardì", and that string change belongs to the rename, not the redesign.
+
+8. THE FAVOURITE BADGE NEEDS A NEW TREATMENT. Shipped is an amber star on a 95%-white plate,
+   chosen so it survives any tile colour. Amber is not in this system and white plates go
+   invisible on light brands. Replaced below with an INK plate carrying a BEAM star: legal
+   (icons take ink or beam, never a card accent), and legible on all 57 brand colours
+   including Esselunga's yellow.
+
+
+-------------------------------------------------------------------------------
+PROMPT A — POPULATED  (the canonical exemplar)
+-------------------------------------------------------------------------------
+
+Design ONE mobile screen at 393x852, light mode: the wallet home screen for Cardì, holding
+eight loyalty cards. This is the app's front door and the screen the whole product exists to
+serve, so density and calm matter more than any flourish.
+
+There is NO bottom tab bar and NO floating action button. Do not draw either. Do not add an
+illustration. No drop shadows, no gradients, no glassmorphism.
+
+GROUND: cream #F0F0E8 across the whole screen.
+
+HEADER
+A `+` icon on the LEFT, the title "Cardì" centred, a gear icon on the RIGHT. Both icons are
+outline style, 1.5px stroke, ink #181824, each on a 48x48 touch target. Flat — no shadow, no
+coloured bar, no divider under it. Title in Space Grotesk 24px bold, ink #181824.
+
+SEARCH
+Below the header, a single search field: white #FFFFFF fill, 1px #D6D6CB outline, 12px
+radius, 48px height, with an outline magnifier icon in muted #55555F at its left and the
+placeholder "Search loyalty cards" in #55555F.
+
+SORT ROW
+Directly beneath, one row: on the left "8 cards" in Inter 13px semibold, ink #181824; on the
+right a small text button reading "Recently used" in Inter 13px semibold, ink #181824, with
+a small outline chevron-down after it. No borders, no pills, no filter chips.
+
+THE GRID — this is the point of the screen
+A TWO-COLUMN grid of brand tiles. 16px screen margins, 16px gutter between columns and rows.
+Each tile is 171 wide x 140 tall with a 16px radius, and is FILLED EDGE TO EDGE with that
+brand's own colour. Centred inside each tile is that brand's logo or wordmark in white, sized
+to about 60% of the tile width. Beneath each tile, outside it, the card name in Inter 13px
+semibold ink #181824, one line, centred.
+
+Use exactly these eight brands, in this order, with these exact fills:
+  1. Esselunga  #FFCC00   (wordmark in ink #181824, NOT white — the fill is too light)
+  2. Conad      #DA291C
+  3. Coop       #E2231A
+  4. Carrefour  #004E9F
+  5. Lidl       #0050AA
+  6. Eurospin   #0069B1
+  7. Pam        #165226
+  8. Decathlon  #0082C3
+
+The FIRST tile (Esselunga) is a favourite: it carries a small circular badge in the top-right
+corner, inset 8px — an ink #181824 filled circle, 24px, holding a beam #FCCC0C star at 16px.
+No other tile has a badge.
+
+TONE AND THE ONE RULE THAT GOVERNS THIS SCREEN
+The chrome is quiet so the brands can be loud. Every pixel that is not a tile is cream, ink,
+white or hairline grey. The signature yellow #FCCC0C appears ONLY in that one favourite star
+— never as a background, a button, a header, a chip or a highlight anywhere on this screen,
+because Esselunga's #FFCC00 is effectively the same yellow and a yellow chrome surface next
+to that grid would make the tile vanish into the furniture.
+
+Tiles are flat: no shadow, no border, no gloss, no inner glow, no tint or wash over the brand
+colour. Do not unify the tiles — their clashing is the content. Do not add an "add card" tile
+to the grid, do not add category headers, and do not put a floating button over the grid.
+
+Headings in Space Grotesk, everything else Inter.
+
+
+-------------------------------------------------------------------------------
+PROMPT B — EMPTY  (zero cards, first launch)
+-------------------------------------------------------------------------------
+
+Design ONE mobile screen at 393x852, light mode: the wallet home screen for Cardì with NO
+cards at all — a person's first launch. Sibling frame to the populated wallet.
+
+There is NO bottom tab bar and NO floating action button. Do not draw either. No drop
+shadows, no gradients, no glassmorphism.
+
+GROUND: cream #F0F0E8 across the whole screen.
+
+HEADER
+Identical to the populated frame: `+` on the LEFT, title "Cardì" centred, gear on the RIGHT,
+outline icons at 1.5px stroke in ink #181824, flat, no divider.
+
+NO SEARCH FIELD AND NO SORT ROW. They do not exist below two cards. Do not draw them, not
+even greyed out.
+
+BODY — vertically centred in the space between header and footer.
+1. A title "No cards yet" in Space Grotesk 24px bold, ink #181824, centred.
+2. Beneath it, two lines of subtitle, centred, Inter 15px, muted #55555F, reading exactly:
+   "Add your first loyalty card and"
+   "never miss rewards at checkout"
+
+ABSOLUTELY NO ILLUSTRATION. No wallet graphic, no card graphic, no icon, no sparkles, no
+dashed outlines, no decorative dots, no empty-box drawing. This screen is TYPE ONLY. The
+illustration set for this product does not exist yet, and inventing one here is the specific
+failure this instruction exists to prevent.
+
+FOOTER — anchored to the BOTTOM of the frame.
+A 1px #D6D6CB hairline rule spanning the full frame width, and below it a full-width button
+labelled "Add your first card": ink #181824 fill, white text in Inter 17px semibold, 52px
+tall, 12px radius, 16px side margins, sitting above the safe area.
+
+The button is in the page flow: it does not float, it is not a FAB, and it casts NO shadow
+and NO coloured glow of any kind. Draw it fully enabled at full ink #181824.
+
+Leave the space between the subtitle and the hairline EMPTY cream #F0F0E8.
+
+COLOURS ARE LITERAL HEXES, NEVER TOKENS. Write #181824, #FCCC0C, #F0F0E8, #FFFFFF,
+#D6D6CB, #55555F and #C41E1E exactly as written. Do NOT reach for a semantic colour name
+instead — not `primary`, not `on-surface`, not `on-background`, not `surface`, not `outline`,
+not `outline-variant`, and not a Tailwind utility built on one such as text-primary,
+bg-primary, border-primary or border-outline-variant. In this project's theme `primary`
+resolves to #000000 and `on-surface` to #1a1c18, so a screen assembled out of tokens comes
+out in two wrong near-blacks that look almost right and are not. A literal hex survives; a
+token does not.
+
+TONE
+Quiet and unembarrassed. An empty wallet is a beginning, not an error — nothing here is
+apologetic, nothing is grey-on-grey, and nothing is decorated to compensate for the
+emptiness.
+
+
+-------------------------------------------------------------------------------
+PROMPT C — SINGLE CARD  (exactly one card)
+-------------------------------------------------------------------------------
+
+Design ONE mobile screen at 393x852, light mode: the wallet home screen for Cardì holding
+EXACTLY ONE card. Sibling frame to the populated wallet. This state exists because a
+two-column grid holding a single tile looks broken.
+
+There is NO bottom tab bar and NO floating action button. Do not draw either. Do not add an
+illustration. No drop shadows, no gradients, no glassmorphism.
+
+GROUND: cream #F0F0E8 across the whole screen.
+
+HEADER
+Identical to the populated frame: `+` on the LEFT, title "Cardì" centred, gear on the RIGHT,
+outline icons at 1.5px stroke in ink #181824, flat, no divider.
+
+NO SEARCH FIELD AND NO SORT ROW — they appear only at two or more cards.
+
+BODY
+A single ENLARGED tile, horizontally centred, sitting 32px below the header. It is 220 wide x
+180 tall with a 20px radius — deliberately larger and rounder than a grid tile. It is filled
+edge to edge with Esselunga's #FFCC00, carrying the Esselunga wordmark centred in ink #181824
+at about 60% of the tile width. Flat: no shadow, no border, no gloss.
+
+Beneath the tile, centred, the card name "Esselunga" in Inter 13px semibold, ink #181824.
+
+Below that, with 16px of space, one line of muted guidance in Inter 15px, #55555F, centred,
+reading exactly: "Tap + to add more cards to your wallet"
+
+Everything below that line is EMPTY cream #F0F0E8, all the way down. There is no footer
+button on this screen, no hairline rule, and no second placeholder tile. The `+` in the
+header is the only way to add a card, and the tip already points at it.
+
+COLOURS ARE LITERAL HEXES, NEVER TOKENS. Write #181824, #FCCC0C, #F0F0E8, #FFFFFF,
+#D6D6CB, #55555F and #C41E1E exactly as written. Do NOT reach for a semantic colour name
+instead — not `primary`, not `on-surface`, not `on-background`, not `surface`, not `outline`,
+not `outline-variant`, and not a Tailwind utility built on one such as text-primary,
+bg-primary, border-primary or border-outline-variant. In this project's theme `primary`
+resolves to #000000 and `on-surface` to #1a1c18, so a screen assembled out of tokens comes
+out in two wrong near-blacks that look almost right and are not. A literal hex survives; a
+token does not.
+
+TONE
+One card should feel like a deliberate beginning, not a half-filled grid. The tile is bigger
+because it is alone, and the emptiness beneath it is patience, not absence.
+
+
+-------------------------------------------------------------------------------
+PROMPT D — NO RESULTS  (search matches nothing)
+-------------------------------------------------------------------------------
+
+Design ONE mobile screen at 393x852, light mode: the wallet home screen for Cardì where the
+person has typed a search that matches none of their cards. Sibling frame to the populated
+wallet.
+
+There is NO bottom tab bar and NO floating action button. Do not draw either. Do not add an
+illustration. No drop shadows, no gradients, no glassmorphism.
+
+GROUND: cream #F0F0E8 across the whole screen.
+
+HEADER
+Identical to the populated frame: `+` on the LEFT, title "Cardì" centred, gear on the RIGHT,
+outline icons at 1.5px stroke in ink #181824, flat, no divider.
+
+SEARCH — present and ACTIVE
+The search field is filled, not placeholder: white #FFFFFF fill, 1px #D6D6CB outline, 12px
+radius, 48px height, an outline magnifier icon in #55555F at its left, the typed value
+"Ikea" in ink #181824 Inter 17px, and a small outline clear (x) icon in #55555F at its right
+end on a 48x48 target.
+
+SORT ROW
+Beneath it, one row: on the left "0 cards" in Inter 13px semibold, ink #181824; on the right
+the text button "Recently used" in Inter 13px semibold, ink #181824, with a small outline
+chevron-down. The row stays visible — the controls do not disappear just because the result
+set is empty.
+
+BODY
+Below the sort row, a single line of muted text, horizontally centred, sitting about 80px
+below the controls, in Inter 15px, #55555F, reading exactly:
+  No cards matching "Ikea"
+
+Nothing else. No illustration, no icon, no "try again" button, no suggestions list, no
+"clear search" button — the x in the field already does that. Everything below that line is
+EMPTY cream #F0F0E8.
+
+COLOURS ARE LITERAL HEXES, NEVER TOKENS. Write #181824, #FCCC0C, #F0F0E8, #FFFFFF,
+#D6D6CB, #55555F and #C41E1E exactly as written. Do NOT reach for a semantic colour name
+instead — not `primary`, not `on-surface`, not `on-background`, not `surface`, not `outline`,
+not `outline-variant`, and not a Tailwind utility built on one such as text-primary,
+bg-primary, border-primary or border-outline-variant. In this project's theme `primary`
+resolves to #000000 and `on-surface` to #1a1c18, so a screen assembled out of tokens comes
+out in two wrong near-blacks that look almost right and are not. A literal hex survives; a
+token does not.
+
+TONE
+A search miss is not an error and must not be dressed as one. No red, no warning colour, no
+sad face, no exclamation. One quiet sentence, and the controls still in reach.

@@ -1,0 +1,293 @@
+CARDÌ — FORM PATTERN, THE FOUR STATE FRAMES
+===========================================
+
+One frame per prompt, generated in sequence. States are separate frames, never combined:
+baking an error into the canonical screen makes every one of the seven derived screens
+inherit a permanent red field.
+
+Frame 1 (DEFAULT) is THE exemplar. The other three are its siblings.
+
+STATUS 2026-08-14: ALL FOUR FRAMES GENERATED AND ACCEPTED. See README.md § "UNBLOCKED" for
+the screen ids. These prompts are kept as the record of intent and as the source for
+regenerating any frame from scratch.
+
+How they were actually made — do this again rather than re-running the prompts verbatim:
+  - Frame 1 was generated from its full prompt (below). Frames 2-4 were made with
+    `generate_variants` SEEDED from an existing frame, with creativeRange REFINE and
+    aspects ["TEXT_CONTENT"], asking only for the delta. That route returns a completed
+    screen synchronously over MCP; `generate_screen_from_text` from zero does not return
+    at all.
+  - Seed chain: DEFAULT -> ERROR, and DEFAULT -> FILLED -> SAVING.
+  - Pass `designSystem: "assets/484682383639656270"` and `modelId: "GEMINI_3_1_PRO"` on the
+    call. This makes the two checks below obsolete:
+
+Before generating (OBSOLETE — kept for context):
+  - ~~Confirm the model selector is on 3.1 Pro.~~ pass modelId instead.
+  - ~~Confirm the Cardì design system is ACTIVE as the project theme.~~ pass the asset id as
+    designSystem instead; the stale project theme is then irrelevant.
+  - Re-verify the asset hasn't been clobbered by Stitch's in-app agent since it was last
+    pushed. (Still worth doing, but not load-bearing — the prompts carry every rule.)
+
+Every prompt below is deliberately self-contained and repeats the full chrome. Stitch has no
+memory between generations — it re-invents the form every time — so a prompt that says
+"same as before" gets a different screen. Every colour is spelled as a literal hex for the
+same reason: the tonal engine turns #FCCC0C into brown no matter what the design system's
+prose forbids.
+
+Screen source of truth: features/add-card/screens/CardSetupScreen.tsx, custom mode. Every
+label, placeholder and error string below is the real one from shared/i18n/locales/en.ts.
+
+
+-------------------------------------------------------------------------------
+PROMPT 1 — DEFAULT  (the canonical exemplar)
+-------------------------------------------------------------------------------
+
+Design ONE mobile screen at 393x852, light mode: the "New Card" form for Cardì, in its clean
+default state with nothing filled in yet. This screen is the app's form pattern and seven
+other screens derive from it, so the field rhythm matters more than any flourish.
+
+There is NO bottom tab bar and NO floating action button. Do not draw either. Do not add an
+illustration. No drop shadows, no gradients, no glassmorphism.
+
+GROUND: cream #F0F0E8 across the whole screen.
+
+HEADER
+A back chevron on the left, the title "New Card" centred, nothing on the right. Flat — no
+shadow, no coloured bar, no divider under it. Title in Space Grotesk 24px bold, ink #181824.
+
+BODY — single column, 24px side margins, 8px-grid vertical rhythm, generous air between
+fields.
+
+1. Label "STORE NAME" — uppercase, Inter 13px semibold, letter-spacing 0.02em, ink #181824,
+   sitting ABOVE the input. Never a floating label. Below it a text input: white #FFFFFF
+   fill, 1px #D6D6CB outline, 12px radius, 48px minimum height, placeholder "Enter store
+   name" in muted #55555F.
+
+2. Label "CARD NUMBER", same treatment. Below it a row containing a text input that fills
+   most of the width with placeholder "Enter or scan card number", and to its right a
+   separate square button, 48x48, white #FFFFFF fill, 1px #D6D6CB outline, 12px radius,
+   holding an outline camera icon in ink #181824 at 1.5px stroke.
+
+3. Label "CARD COLOR", same treatment. Below it a horizontal row of five circular swatches,
+   each a 48px touch target, in exactly these colours left to right: #E42424, #0C3C84,
+   #0C84CC, #0C843C, #FCCC0C. The SECOND swatch (#0C3C84) is selected: it carries a 2px ink
+   #181824 selection ring and a small white check. The other four are plain filled circles.
+
+FOOTER — anchored to the BOTTOM of the frame.
+A 1px #D6D6CB hairline rule spanning the full frame width, and below it a full-width button
+labelled "Done": ink #181824 fill, white text in Inter 17px semibold, 52px tall, 12px
+radius, 24px side margins, sitting above the safe area.
+
+Leave the space between the colour swatches and that hairline EMPTY cream #F0F0E8. That gap
+is deliberate — do not fill it, do not add a card preview or helper text, and do not move the
+button up to meet the last field.
+
+The button is in the page flow: it does not float, it is not a FAB, and it casts no shadow.
+Draw it fully enabled at full ink #181824 — never greyed out, never at reduced opacity.
+
+COLOURS ARE LITERAL HEXES, NEVER TOKENS. Write #181824, #FCCC0C, #F0F0E8, #FFFFFF,
+#D6D6CB, #55555F and #C41E1E exactly as written. Do NOT reach for a semantic colour name
+instead — not `primary`, not `on-surface`, not `on-background`, not `surface`, not `outline`,
+not `outline-variant`, and not a Tailwind utility built on one such as text-primary,
+bg-primary, border-primary or border-outline-variant. In this project's theme `primary`
+resolves to #000000 and `on-surface` to #1a1c18, so a screen assembled out of tokens comes
+out in two wrong near-blacks that look almost right and are not. A literal hex survives; a
+token does not.
+
+TONE
+This screen carries no brand colour at all, so it stays quiet: cream ground, white input
+surfaces, ink text, hairline outlines, flat throughout. The signature yellow #FCCC0C appears
+nowhere except as the fifth colour swatch. Headings in Space Grotesk, everything else Inter.
+
+
+-------------------------------------------------------------------------------
+PROMPT 2 — ERROR
+-------------------------------------------------------------------------------
+
+Design ONE mobile screen at 393x852, light mode: the "New Card" form for Cardì, in its error
+state. The person typed a card number, left the store name blank, and pressed Done — so the
+form is telling them what is missing. This is a sibling frame to the clean default, not a
+replacement for it.
+
+There is NO bottom tab bar and NO floating action button. Do not draw either. Do not add an
+illustration. No drop shadows, no gradients, no glassmorphism.
+
+GROUND: cream #F0F0E8 across the whole screen.
+
+HEADER
+A back chevron on the left, the title "New Card" centred, nothing on the right. Flat — no
+shadow, no coloured bar, no divider. Title in Space Grotesk 24px bold, ink #181824.
+
+BODY — single column, 24px side margins, 8px-grid vertical rhythm.
+
+1. Label "STORE NAME" — uppercase, Inter 13px semibold, letter-spacing 0.02em, ink #181824,
+   above the input. The input is EMPTY and in its error state: white #FFFFFF fill, 1px
+   #C41E1E outline, 12px radius, 48px minimum height, placeholder "Enter store name" in
+   muted #55555F. Directly beneath the input, an error message reading "Store name is
+   required" in #C41E1E, Inter 13px, left-aligned, 4px below the field.
+
+   The label stays ink #181824 — it does not turn red. Only the outline and the message
+   carry the error colour. Do not add an error icon inside the field, and do not tint the
+   field's fill.
+
+2. Label "CARD NUMBER", normal treatment, ink #181824. Below it a row containing a text
+   input in its NORMAL valid state — white #FFFFFF fill, 1px #D6D6CB outline, 12px radius —
+   holding the typed value "2000012345678" in ink #181824, JetBrains Mono 16px. To its right
+   a separate square button, 48x48, white #FFFFFF fill, 1px #D6D6CB outline, 12px radius,
+   holding an outline camera icon in ink #181824 at 1.5px stroke.
+
+3. Label "CARD COLOR", normal treatment. Below it a horizontal row of five circular
+   swatches, each a 48px touch target, left to right: #E42424, #0C3C84, #0C84CC, #0C843C,
+   #FCCC0C. The SECOND swatch (#0C3C84) is selected with a 2px ink #181824 ring and a small
+   white check.
+
+FOOTER — anchored to the BOTTOM of the frame.
+A 1px #D6D6CB hairline rule spanning the full frame width, and below it a full-width button
+labelled "Done": ink #181824 fill, white text in Inter 17px semibold, 52px tall, 12px
+radius, 24px side margins, above the safe area.
+
+Leave the space between the colour swatches and the hairline EMPTY cream #F0F0E8.
+
+The button stays FULLY ENABLED at full ink #181824 even though the form is invalid — pressing
+it is what surfaced this error. Never grey it out and never reduce its opacity.
+
+Exactly one field is in error. Do not put the card number or the colour row into an error
+state, and do not add a summary banner at the top of the screen.
+
+COLOURS ARE LITERAL HEXES, NEVER TOKENS. Write #181824, #FCCC0C, #F0F0E8, #FFFFFF,
+#D6D6CB, #55555F and #C41E1E exactly as written. Do NOT reach for a semantic colour name
+instead — not `primary`, not `on-surface`, not `on-background`, not `surface`, not `outline`,
+not `outline-variant`, and not a Tailwind utility built on one such as text-primary,
+bg-primary, border-primary or border-outline-variant. In this project's theme `primary`
+resolves to #000000 and `on-surface` to #1a1c18, so a screen assembled out of tokens comes
+out in two wrong near-blacks that look almost right and are not. A literal hex survives; a
+token does not.
+
+TONE
+Quiet and corrective, not alarming. #C41E1E appears in exactly two places on this screen —
+the store name outline and its message — and nowhere else. Everything else is identical to
+the default frame: cream ground, white inputs, ink text, hairline outlines, flat.
+
+
+-------------------------------------------------------------------------------
+PROMPT 3 — FILLED
+-------------------------------------------------------------------------------
+
+Design ONE mobile screen at 393x852, light mode: the "New Card" form for Cardì, completely
+filled in and ready to submit. Every field holds real content. This is a sibling frame to
+the clean default.
+
+There is NO bottom tab bar and NO floating action button. Do not draw either. Do not add an
+illustration. No drop shadows, no gradients, no glassmorphism.
+
+GROUND: cream #F0F0E8 across the whole screen.
+
+HEADER
+A back chevron on the left, the title "New Card" centred, nothing on the right. Flat — no
+shadow, no coloured bar, no divider. Title in Space Grotesk 24px bold, ink #181824.
+
+BODY — single column, 24px side margins, 8px-grid vertical rhythm.
+
+1. Label "STORE NAME" — uppercase, Inter 13px semibold, letter-spacing 0.02em, ink #181824,
+   above the input. The input holds the typed value "Farmacia Centrale" in ink #181824,
+   Inter 17px — a real value, not placeholder grey. White #FFFFFF fill, 1px #D6D6CB outline,
+   12px radius, 48px minimum height.
+
+2. Label "CARD NUMBER", same treatment. Below it a row containing a text input holding
+   "2000012345678" in ink #181824, JetBrains Mono 16px, so the digits align. White #FFFFFF
+   fill, 1px #D6D6CB outline, 12px radius. To its right a separate square button, 48x48,
+   white #FFFFFF fill, 1px #D6D6CB outline, 12px radius, holding an outline camera icon in
+   ink #181824 at 1.5px stroke.
+
+3. Label "CARD COLOR", same treatment. Below it a horizontal row of five circular swatches,
+   each a 48px touch target, left to right: #E42424, #0C3C84, #0C84CC, #0C843C, #FCCC0C. The
+   FOURTH swatch (#0C843C green) is selected here, with a 2px ink #181824 ring and a small
+   white check — this person chose green for their pharmacy card.
+
+FOOTER — anchored to the BOTTOM of the frame.
+A 1px #D6D6CB hairline rule spanning the full frame width, and below it a full-width button
+labelled "Done": ink #181824 fill, white text in Inter 17px semibold, 52px tall, 12px
+radius, 24px side margins, above the safe area, fully enabled.
+
+Leave the space between the colour swatches and the hairline EMPTY cream #F0F0E8. A filled
+form does not earn the right to fill that gap.
+
+No success ticks, no green outlines, no "looks good" affirmations on the filled fields. A
+valid field looks exactly like an empty one except that it holds text — validity is the
+absence of an error, not a decoration.
+
+COLOURS ARE LITERAL HEXES, NEVER TOKENS. Write #181824, #FCCC0C, #F0F0E8, #FFFFFF,
+#D6D6CB, #55555F and #C41E1E exactly as written. Do NOT reach for a semantic colour name
+instead — not `primary`, not `on-surface`, not `on-background`, not `surface`, not `outline`,
+not `outline-variant`, and not a Tailwind utility built on one such as text-primary,
+bg-primary, border-primary or border-outline-variant. In this project's theme `primary`
+resolves to #000000 and `on-surface` to #1a1c18, so a screen assembled out of tokens comes
+out in two wrong near-blacks that look almost right and are not. A literal hex survives; a
+token does not.
+
+TONE
+Identical to the default frame in every respect except the content. Cream ground, white
+inputs, ink text, hairline outlines, flat. The signature yellow #FCCC0C appears nowhere
+except the fifth colour swatch.
+
+
+-------------------------------------------------------------------------------
+PROMPT 4 — SAVING
+-------------------------------------------------------------------------------
+
+Design ONE mobile screen at 393x852, light mode: the "New Card" form for Cardì at the moment
+the person has pressed Done and the card is being saved. Identical to the filled frame except
+for the button. This is a sibling frame to the clean default.
+
+There is NO bottom tab bar and NO floating action button. Do not draw either. Do not add an
+illustration. No drop shadows, no gradients, no glassmorphism.
+
+GROUND: cream #F0F0E8 across the whole screen.
+
+HEADER
+A back chevron on the left, the title "New Card" centred, nothing on the right. Flat — no
+shadow, no coloured bar, no divider. Title in Space Grotesk 24px bold, ink #181824.
+
+BODY — single column, 24px side margins, 8px-grid vertical rhythm.
+
+1. Label "STORE NAME" — uppercase, Inter 13px semibold, letter-spacing 0.02em, ink #181824,
+   above the input. The input holds "Farmacia Centrale" in ink #181824, Inter 17px. White
+   #FFFFFF fill, 1px #D6D6CB outline, 12px radius, 48px minimum height.
+
+2. Label "CARD NUMBER", same treatment. Below it a row containing a text input holding
+   "2000012345678" in ink #181824, JetBrains Mono 16px. White #FFFFFF fill, 1px #D6D6CB
+   outline, 12px radius. To its right a separate square button, 48x48, white #FFFFFF fill,
+   1px #D6D6CB outline, 12px radius, holding an outline camera icon in ink #181824.
+
+3. Label "CARD COLOR", same treatment. Below it five circular swatches, each a 48px touch
+   target, left to right: #E42424, #0C3C84, #0C84CC, #0C843C, #FCCC0C, with the FOURTH
+   (#0C843C) selected, carrying a 2px ink #181824 ring and a small white check.
+
+FOOTER — anchored to the BOTTOM of the frame.
+A 1px #D6D6CB hairline rule spanning the full frame width, and below it the full-width
+button, 52px tall, 12px radius, 24px side margins, above the safe area.
+
+THE BUTTON IS BUSY, NOT DISABLED. It keeps its full ink #181824 fill. The word "Done" is
+replaced by a single small circular loading spinner in white, centred in the button. Do not
+grey the button out, do not reduce its opacity, do not draw a progress bar, and do not add
+the word "Saving" alongside the spinner. A busy control says "working"; a grey one says "no",
+and this button is working.
+
+Leave the space between the colour swatches and the hairline EMPTY cream #F0F0E8.
+
+The rest of the screen is unchanged and undimmed — no overlay, no scrim, no modal, no
+blurring of the fields behind. Saving a card takes a moment, not a takeover.
+
+COLOURS ARE LITERAL HEXES, NEVER TOKENS. Write #181824, #FCCC0C, #F0F0E8, #FFFFFF,
+#D6D6CB, #55555F and #C41E1E exactly as written. Do NOT reach for a semantic colour name
+instead — not `primary`, not `on-surface`, not `on-background`, not `surface`, not `outline`,
+not `outline-variant`, and not a Tailwind utility built on one such as text-primary,
+bg-primary, border-primary or border-outline-variant. In this project's theme `primary`
+resolves to #000000 and `on-surface` to #1a1c18, so a screen assembled out of tokens comes
+out in two wrong near-blacks that look almost right and are not. A literal hex survives; a
+token does not.
+
+TONE
+Identical to the filled frame except the button. Cream ground, white inputs, ink text,
+hairline outlines, flat. The signature yellow #FCCC0C appears nowhere except the fifth
+colour swatch.

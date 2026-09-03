@@ -8,6 +8,8 @@ export {
   PRIMARY_COLORS,
   CARD_COLORS,
   NEUTRAL_COLORS,
+  // OURS (Cardi ink/beam/cream). BRAND_COLORS below is the ~45 RETAILER brands.
+  IDENTITY_COLORS,
   BRAND_COLORS,
   getBrandColor,
   LIGHT_THEME,

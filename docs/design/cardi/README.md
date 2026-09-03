@@ -1,0 +1,1252 @@
+# Cardì redesign — session carry-over
+
+Rescued from a Claude Desktop session (`809c5078-1eaf-43bf-8079-d4734cbd5808`, party-mode
+run started 2026-08-11) whose scratchpad lived in `/tmp` and whose API connection died on
+2026-08-12. Everything here was produced in that session; this README is the handover.
+
+## Files
+
+| File                                   | What it is                                                                                                                                                                             |
+| -------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `cardi-design-system.md`               | **The canonical Cardì design system.** Stitch gets a disposable render of this — this repo copy is the source of truth.                                                                |
+| `palette-bench.html`                   | Five-direction palette comparison board (01 Ink & Beam … 05 Night Market). Superseded as a _layout_ study, still valid on chrome.                                                      |
+| `stitch-prompts-form-states.txt`       | **The four state frames** — default / error / filled / saving. Frame 1 is the exemplar the other seven screens derive from.                                                            |
+| `stitch-prompt-01-form-pattern.txt`    | Superseded. The prompt actually sent on 2026-08-11, kept as a record — it describes a screen that does not exist.                                                                      |
+| `stitch-prompts-wallet.txt`            | **The wallet pattern** — populated / empty / single-card / no-results, specced against the real `CardList`. Carries eight findings from reading the code.                              |
+| `stitch-prompts-settings.txt`          | **The settings pattern** — screen (signed-in / guest) plus the four sheet SHAPES the eight sheets reduce to. Specced against the real `SettingsScreen`.                                |
+| `stitch-prompts-document.txt`          | **The document pattern** — prose / searchable FAQ / two-column table. Three screens, three shapes, not the "document (2)" the plan assumed.                                            |
+| `stitch-prompts-barcode.txt`           | **The barcode screen** — EAN-13 / QR / not-found. The hero moment, and the last screen to be specced.                                                                                  |
+| `stitch-prompts-card-detail.txt`       | **The card detail screen** — at rest / blending / condensed / custom card. The barcode's parent, and the only scroll-linked screen in the app.                                         |
+| `frames/cardi-card-detail-frames.html` | **The card detail frames** — four, at 393 × 852. The header follows the brand as a scroll transition: brand → blend → cream.                                                           |
+| `stitch-prompts-capture.txt`           | **The capture pattern** — how a card gets in: choose the brand, then point the camera. The only pattern that is a camera.                                                              |
+| `frames/cardi-capture-frames.html`     | **The capture frames** — five, at 393 × 852. Choose / aim / no camera / many codes / no code. The one screen where beam is mandatory.                                                  |
+| `stitch-prompts-onboarding.txt`        | **The pitch pattern** — the first ninety seconds. The only flow with no user content in it, and the one place the brand speaks in its own voice.                                       |
+| `frames/cardi-onboarding-frames.html`  | **The onboarding frames** — six, at 393 × 852. Welcome / modes / difference / and all three carousel slides. Where Wave B stopped being blocked.                                       |
+| `stitch-prompts-auth.txt`              | **The account pattern** — six frames. One shape with five fillings; the code got there first.                                                                                          |
+| `frames/cardi-auth-frames.html`        | **The auth frames** — six, at 393 × 852. Sign in / create / forgot / code / new password / request failed.                                                                             |
+| `frames/cardi-barcode-frames.html`     | **The barcode frames** — three, at 393 × 852. The only frames on **white**, not cream; the white field is the product feature.                                                         |
+| `frames/cardi-form-frames.html`        | **The reference implementation.** Hand-authored, exactly 393 × 852, all four states. This is what screens derive from — not the PNGs. Open with `?probe` for a measured geometry dump. |
+| `frames/cardi-wallet-frames.html`      | **The wallet frames** — populated / empty / single-card / no-results, hand-authored at 393 × 852. Self-contained; shares its token block with the form file by copy, not by link.      |
+| `frames/cardi-settings-frames.html`    | **The settings frames** — signed-in / guest plus one frame per sheet shape, hand-authored at 393 × 852. Frames C–F share one backdrop string, so it cannot drift.                      |
+| `frames/cardi-document-frames.html`    | **The document frames** — prose / searchable FAQ / two-column table, hand-authored at 393 × 852. No repeated body title; 20px margins.                                                 |
+| `frames/0*.png`                        | Stitch's actual output, kept as evidence. Faithful to what the generator produced, including three defects it cannot avoid — see _The 2026-08-15 audit_.                               |
+
+## The thesis
+
+> **The content is the colour.** The home screen already carries ~45 third-party brand
+> colours that arrive with the data. Our palette exists to stay _out of their way_, not to
+> compete. Playfulness comes from big, uncropped, correctly-coloured brand marks — a
+> **layout** decision, never a palette one.
+
+Ink `#181824` · Beam `#FCCC0C` · Cream `#F0F0E8` · Deep blue `#0C3C84`.
+Coral / salmon / terracotta / orange are **banned** (the "new" coral `#FF6B6B` was the old
+terracotta renamed — and it's Monzo's, on a card app).
+
+## Decided order of work
+
+|     |                           |                                                         |
+| --- | ------------------------- | ------------------------------------------------------- |
+| ✅  | 0. Design system          | done — this folder                                      |
+| ✅  | 1. Form pattern exemplar  | all **four state frames** generated + judged 2026-08-14 |
+| →   | 2. Remaining screens      | 17 own-screens reduce to **4 patterns**                 |
+|     | 3. Icon set               | inventory falls out of 1–2                              |
+|     | 4. Illustrations          | commissioned as a set; onboarding + empty states only   |
+|     | 5. Code: tokens PR        | phone + watchOS + Wear OS together, one PR              |
+|     | 6. Code: layout           | screen by screen, normal stories, behind the new tokens |
+|     | 7. Brand + native release | name, icon, splash — one binary, no OTA                 |
+
+The four patterns: **form** (8 screens) · **settings list** (2) · **document** (2) ·
+**pitch** (3 + empty state). Wave A is illustration-free (form, settings, empty state);
+Wave B is blocked until the illustration set exists.
+
+## Stitch mechanics learned the hard way
+
+- **Write literal hexes into every prompt; never trust a token name.** Material's tonal
+  engine turns beam `#FCCC0C` into brown `#735c00` and ink into pure black, no matter what
+  the prose forbids. The one screen that came out right did so because the prompt spelled
+  every hex out character by character.
+- **Touching the design system in the Stitch UI regenerates it** and silently reverts MCP
+  edits (the asset reached v5 and restored two rules we had killed). Paste the system in
+  fresh rather than letting the UI panel regenerate it.
+- **Activate the design system _before_ generating.** `apply_design_system` afterwards only
+  re-skins colour; the load-bearing rules (no tab bar, no FAB, label-above-field, 2-column
+  grid) live in the designMd prose and only influence _generation_.
+- `update_design_system` replaces the whole object — a partial call wipes the designMd.
+- `BRICOLAGE_GROTESQUE` is in the font enum but rejected by the backend. Use
+  `SPACE_GROTESK`.
+- Theme-level `typography`/`spacing` maps are accepted then not persisted — keep them in
+  the designMd frontmatter.
+- `generate_screen_from_text` over MCP times out **and never lands a screen** — verified
+  2026-08-14 with three attempts and 13 minutes of polling. Generation _from zero_ is what
+  fails.
+- **`generate_variants` is the working MCP route.** Seed it with an existing screen id and it
+  returns the finished screen synchronously in the tool result. Use
+  `creativeRange: REFINE` + `aspects: ["TEXT_CONTENT"]` + `variantCount: 1`, and describe
+  only the delta. See § _UNBLOCKED_ below.
+- **Both generate calls take `designSystem: "assets/<id>"` and `modelId: "GEMINI_3_1_PRO"`.**
+  Passing the asset id points at the live asset instead of the project's rotting snapshot, so
+  the UI "apply" step is not needed to generate correctly.
+- **`edit_screens` is the route for a corrective pass**, and it works: it returns a
+  `DomOperationEvent` listing every operation with the `verified_html_context` it matched
+  against, which is more auditable than a fresh generation. Numbered defects land; the same
+  fixes in prose do not.
+- **A prompt may not refer to ANYTHING outside itself** — not another frame, and not a shared
+  preamble in the same file. "Apply the COMMON CHROME above" does not survive a clipboard, and
+  the frame that happens to sit directly beneath the preamble is the only one that comes back
+  right. The tell is diagnostic: a shared missing spec produces N _different_ wrong answers,
+  not one shared wrong answer, so **frames diverging from each other in different directions
+  means a dangling reference, not a bad instruction.** Prompts now carry
+  `PASTE EVERYTHING BETWEEN…` / `END OF PROMPT x` delimiters so the rule is checkable by eye.
+- **Audit the DOM, never the screenshot.** The returned screenshot is 884px tall so it
+  **clips** the bottom of the stack, and it is wrapped in a rendered device bezel. Reading
+  defects off it produced three false positives out of seven on one pass — a circle that was
+  already there, a bezel that does not exist in the design, and a "missing" Edit/Delete card
+  that was merely below the fold. `curl` the `htmlCode.downloadUrl` and grep it. Use the
+  render to decide where to look, never as the finding.
+- **The written file and the screenshot both lag the edit.** Straight after `edit_screens`,
+  `get_screen` still returns the _previous_ file id and the _previous_ screenshot URL, so the
+  old content downloads and the edit looks like it silently failed. It has not — the
+  `DomOperationEvent` in the tool result is the receipt.
+- **`list_screens` OMITS screens that exist — it is not merely stale.** Verified 2026-08-21:
+  three calls over several minutes each returned a differently-ordered 27 screens, and none
+  included `24ad8fff…`, which `get_screen` fetches happily and whose HTML was audited. So
+  exactly two confirmations are trustworthy: **the `design.screens` block** in the generate
+  response, and **`get_screen` with a known id**. A generation that **times out** gives neither —
+  no id comes back — so there is no way to check it over MCP at all, and the canvas is the only
+  authority. Do not retry a timed-out `generate_variants`; it often landed.
+- **Stitch ADDS reliably and MOVES unreliably.** In one three-part delta the new node — a banner
+  with an absolute offset — landed first time and exactly on the specified 171px, while
+  repositioning an existing caption out of a centred flex group failed for the third time across
+  two independent attempts. The instruction was wrong, not ignored: _"move it 16px below the
+  brackets"_ describes a **position**, when what needs saying is a **structure** — take the
+  caption out of the group that centres the brackets. Same class as the standalone-prompt rule:
+  when a generator fails the same way repeatedly, the prompt is describing the wrong _kind_ of
+  thing.
+- **`colors.primary` CANNOT BE FIXED IN THE ASSET, because it is derived.** Verified against the
+  `update_design_system` schema 2026-08-24: the settable colour fields are `customColor`,
+  `overridePrimaryColor`, `overrideNeutralColor`, `overrideSecondaryColor` and
+  `overrideTertiaryColor` — there is **no `colors.primary`**. That value is computed by
+  Material's tonal engine from `customColor` under `colorVariant`, and `customColor` and
+  `overridePrimaryColor` are **both already `#181824`**. A tonal engine handed a near-black seed
+  floors `primary` to `#000000`; that is the same mechanism already recorded here as "turns beam
+  into brown `#735c00` and ink into pure black", just applied to a field nobody had checked.
+
+  **So there is nothing to repair.** The fix is not an asset edit, it is the prompt rule:
+  **name the hex AND forbid the token**, which is now inside all 31 prompt blocks. Do not spend
+  another session trying to make `primary` come back as `#181824` — it cannot, by construction.
+
+- **Gemini will not draw a real barcode.** Three passes produced three different fakes: a
+  `bg-black` box wrapping a white inner with seven `flex-1` bars, a ~40-bar approximation, and
+  a completely empty `bg-primary` rectangle. Nothing in a prompt fixes this, because the model
+  is drawing a picture of a barcode rather than encoding a number. The HTML frames compute a
+  real EAN-13 from the L/R code tables; treat the Stitch barcode as a placeholder and never as
+  a reference.
+
+## The mark is decided, and it is now built
+
+**35°, grave, contained in the word; in the icon the beam crosses the bars high** — variant
+C of [`frames/cardi-icon-explore.html`](frames/cardi-icon-explore.html), chosen 2026-08-26
+over five alternatives. The square is allowed to differ from the word because it has no
+neighbouring letter to anchor the accent against; what settled it was the Android 13 themed
+layer, which redraws the icon in one wallpaper-derived colour. A floating tick is a speck
+once the hue is gone; a crossing beam survives, because it is a shape rather than a colour.
+
+Everything shipped is generated from one geometry definition:
+
+```bash
+yarn icons:build     # write the assets
+yarn icons:check     # fail if any drifted (pre-push + CI)
+```
+
+`scripts/build-brand-icons.mjs` renders eight artefacts — three SVGs and five PNGs — from
+the same constants, so the app icon, the launch mark, the Android foreground, the themed
+layer, the favicon and the in-app glyph cannot disagree with each other. The Android
+foreground scale is **derived** (`33 / bounding radius` = ×0.873), not hardcoded, so
+changing the artwork updates the export scale instead of silently invalidating it.
+
+Two constraints that are easy to get wrong and are now enforced by tests:
+
+- **`icon.png` must have NO alpha channel** — iOS rejects an app icon that carries one —
+  while the splash and Android foreground must be transparent, because the platform paints
+  the field. `constants.test.ts` asserts that colour-type split; it caught the first build
+  writing RGBA for everything.
+- **The splash `backgroundColor` and `LAUNCH_FIELD_COLOR` must be identical.** The native
+  splash background is baked at build time and cannot read a runtime theme, so any
+  disagreement shows as a full luminance inversion on every cold start.
+
+The colour migration is still **not** done: `PRIMARY_COLORS` remains the pre-rebrand Google
+Blue ramp. The brand colours were added additively as `IDENTITY_COLORS`
+(`ink` / `beam` / `cream`) so the assets have a real token to derive from without
+recolouring the app — that remains a separate big-bang change.
+
+## Where it stopped
+
+Stitch project `7004325876123157178` ("Cardì"), design system asset `484682383639656270`
+("Cardì — Ink & Beam").
+
+### Resolved 2026-08-14 — the primary-action footer
+
+> _"Why shouldn't we stick the add button to the bottom? It's the most intuitive thing."_
+> — asked 2026-08-13, answered after the carry-over.
+
+**Yes, anchor it.** The objection it was pushing back on ("a swimming pool of nothing… a
+button glued to the floor") made a real observation with the wrong cause attached: the gap
+and the anchoring are the _same thing_, and what made the gap read as unfinished was a lone
+button floating in cream with nothing marking it as a footer. Decided:
+
+- Anchored bottom footer, separated by a **1px hairline rule** — the gap above is
+  composition, not absence.
+- **Never `position: absolute`** — a flex sibling below the scroll area, or an
+  auto-top-margin anchor inside it when the button must live in scrollable content, so it
+  never fights the keyboard. See below: `CardSetupScreen` already does exactly this.
+- **Always enabled**; pressing an incomplete form reveals the field errors.
+
+Both are now in `cardi-design-system.md` (§ _The primary-action footer_, plus two new
+Forbidden entries) and in the prompt template's FOOTER block.
+
+Two code findings that fed the decision, neither fixed here:
+
+- The app has **two form treatments, not one**. `AuthScreenLayout` — the shared layout for
+  6 of the 8 pattern screens — centres its content vertically (`centerContent` defaults to
+  `true`), while `CardForm` is top-aligned with the button trailing the last field and
+  `paddingBottom: 100` after it. Neither is bottom-anchored, so the anchored footer isn't
+  fighting a shipped convention; it's filling a vacuum and unifying a fork. That unification
+  is the actual implementation story.
+- **Three answers to the screen margin:** `CardForm` hardcodes `paddingHorizontal: 32`,
+  `AuthScreenLayout` uses the `layout.screenHorizontalMargin` token, and the DS specifies
+  20px. Worth a separate pass.
+
+### Resolved 2026-08-14 — the four state frames, and the label case
+
+`stitch-prompts-form-states.txt` holds four self-contained prompts (default / error /
+filled / saving), ready to generate in sequence. States are separate frames because baking
+an error into the canonical screen would make all seven derived screens inherit a permanent
+red field. Each prompt repeats the full chrome deliberately — Stitch has no memory between
+generations, so "same as before" gets a different screen.
+
+**Form field labels are UPPERCASE** (`label-bold`, Inter 13/600/+0.02em). Ratifying what the
+generator chose by accident: the tracking already in the token is an uppercase idiom, and
+casing the label differently from its value is what lets someone parse the form's structure
+at a glance. Checked first that it wasn't a constraint problem — labels are short in both
+locales (`Store name` / `Nome negozio`), so it cost nothing either way and came down to
+voice.
+
+Writing the prompts meant reading the real screen, which turned up three things:
+
+- **`CardSetupScreen` already implements both footer rules.** Its Done button sits outside
+  the `ScrollView` as a flex sibling — a genuinely pinned footer — and it is
+  `disabled={isLoading}` only, with validation raised on press (`setStoreNameError` inside
+  `handleDone`). So yesterday's decision ratifies shipped behaviour rather than inventing
+  it, and `CardForm` is the outlier that gates on `!isValid`. The design system now cites
+  it as the reference implementation.
+- **The superseded prompt described a screen that does not exist.** It blended fields from
+  `CardForm` and `CardSetupScreen`, invented an "Add to favourites" toggle that exists in
+  neither, got the labels wrong, and called the button "Save card" when it reads "Done".
+  The one generated screen was judged good against that prompt — worth knowing before
+  trusting it.
+- **The shipped card colours are not the Cardì five.** `CARD_COLORS` in
+  `shared/theme/tokens.generated.ts` is `blue #1A73E8`, `red #E2231A`, `green #16A34A`,
+  `orange #F59E0B`, `grey #64748B` — against the DS's `#E42424 / #0C3C84 / #0C84CC /
+#0C843C / #FCCC0C`. **One of the shipped five is orange, which this system bans
+  outright.** This is not a repaint: the `CardColor` union has members (`orange`, `grey`)
+  that Cardì has no equivalent for, and existing users have cards persisted against them.
+  The tokens PR (step 5) needs a data migration decision, not just new hexes.
+
+### Stitch state, verified 2026-08-14 — the divergence is real, but it does NOT block generating
+
+> **Superseded in part.** Everything below about the asset/theme divergence is still true and
+> re-verified today. The conclusion that it _blocks the frames_ was wrong: pass the asset id
+> as `designSystem` on the generate call and the stale project theme is bypassed entirely.
+> See "UNBLOCKED" below. The UI re-apply is still worth doing eventually so the Stitch canvas
+> and the repo agree, but nothing is waiting on it.
+
+Read back over MCP. The asset and the project theme have diverged, which is the documented
+trap: activating a design system snapshots its designMd into `project.designTheme`, and
+later asset edits do not propagate.
+
+- **Asset `484682383639656270` (now version 7) — designMd is CORRECT.** It carries "The
+  content is the colour", Card **tile**, `CUSTOM CARDS ONLY`, the Esselunga collision and
+  the full Forbidden list. The 2026-08-12 corrections survived.
+- **`project.designTheme.designMd` is STALE — it is the pre-correction text.** It still
+  says _"The beam motif may animate once across the barcode on open"_ and _"Never a
+  two-column grid of cards on mobile"_, still calls the component a Card **row**, still
+  marks the accents `DATA ONLY`, and has no content-is-the-colour section at all. Its
+  Forbidden list bans two-column card grids. **This is what the generator reads.**
+- **The tonal palette is mangled in both**, unchanged since 2026-08-12: `primary #000000`,
+  `secondary #375ca6`, `tertiary #735c00` (brown) with `#cfa700` mustard, `surface #fafaf2`
+  instead of cream, `error #ba1a1a` instead of `#C41E1E`, `ROUND_EIGHT` instead of 12px.
+  The overrides are all set correctly and all ignored. This is why every prompt spells
+  literal hexes.
+- The asset also carries the competing **`styleGuidelines`** field. It currently paraphrases
+  the corrected designMd rather than contradicting it, but it drops the content-is-the-colour
+  thesis and the Esselunga collision.
+- The canvas holds a **780×1768** frame and a **390×852** one — neither is the mandated
+  393×852.
+
+### 2026-08-14 — the push was attempted, and the DS compressed it
+
+Pushed the full repo designMd to the asset. Two new mechanics, both worse than the ones
+already recorded:
+
+- **`update_design_system` is asynchronous.** It returns
+  `projects/{id}/sessions/{session_id}` — a session, not the asset — and the asset is
+  unchanged when read back immediately. It settled about a minute later.
+- **The write triggers an agent regeneration that SUMMARISES your designMd.** The asset went
+  7 → 8 and what landed is a paraphrase, not the text sent. Casualties, in one round trip:
+  the entire **primary-action footer** section, the **uppercase label** rule, the thesis
+  sentence _"Playfulness in Cardì comes from big, uncropped, correctly-coloured brand
+  marks — a layout decision, never a palette one"_, and six Forbidden entries including both
+  new ones and _"replacing the home grid with a single-column list of rows"_. `ROUND_TWELVE`
+  was reverted to `ROUND_EIGHT` and the tonal palette is untouched.
+
+Net: **v8 holds fewer rules than v7 did.** The push cost more than it bought.
+
+The conclusion is structural rather than procedural: **the Stitch design system cannot hold
+this system.** It compresses on every write, and it drops the longest and most recently
+added prose first — which is always the rule you just fought for. Treat it as a lossy cache
+of the hard constraints, never the contract. Anything that must survive belongs in the
+prompt, spelled out, every time. That is now load-bearing rather than belt-and-braces: the
+four state prompts are self-sufficient by design and do not depend on the DS being right.
+
+If it is worth another attempt, send a deliberately **short** designMd — prohibitions only,
+no rationale — on the theory that compression is length-driven and a flat constraint list is
+the highest-signal shape a generator can be given anyway.
+
+~~Before generating, in order:~~ **This three-step ritual turned out to be unnecessary — see
+"UNBLOCKED" below. Kept as a record of the assumption.**
+
+1. ~~Push the current repo designMd to the asset~~ — actively harmful; the push compresses.
+2. ~~Re-apply the design system in the Stitch UI~~ — not required for generation; pass
+   `designSystem: "assets/484682383639656270"` on the call instead.
+3. ~~Re-read `get_project` and confirm~~ — `project.designTheme.designMd` is, as of
+   2026-08-14, **still stale** (still contains "may animate once across the barcode"). The
+   four frames were generated correctly anyway.
+
+The asset went from version 5 on 2026-08-12 to version 7, and the project's `updateTime` is
+today — so something is still editing it. The original desktop session was still running as
+PID 24364; quitting it removes one candidate.
+
+### 2026-08-14 — UNBLOCKED. All four state frames exist. The route is `generate_variants`.
+
+The re-apply above was never the only door, and the frames were never actually blocked.
+Two findings, in order of importance:
+
+**1. `generate_variants` works over MCP where `generate_screen_from_text` does not.**
+
+| tool                        | seed               | result over MCP                                                    |
+| --------------------------- | ------------------ | ------------------------------------------------------------------ |
+| `generate_screen_from_text` | nothing            | timed out ×3, and **no screen ever appeared** after 13 min polling |
+| `generate_variants`         | an existing screen | returned **synchronously and COMPLETE** ×3, under ~2 min each      |
+
+So the old note ("generate over MCP times out; the web prompt box is the reliable path") is
+correct but incomplete — it's _generation from zero_ that fails. Generation _from a seed_
+returns the finished screen, its id, and its screenshot url in the tool result itself. No
+polling, no browser, no login.
+
+`generate_variants` also takes `variantOptions.creativeRange: REFINE` ("subtle refinements,
+closely adhering to original") and an `aspects` allow-list — pass `["TEXT_CONTENT"]` and the
+tool is _structurally incapable_ of drifting the layout. The set-level bar ("all four frames
+identical except where intended") stops being something you inspect for afterwards and
+becomes something the call cannot violate. Use `variantCount: 1` — the count produces N
+variations of one prompt, not N different states.
+
+**2. Both generation tools take an explicit `designSystem` asset id and a `modelId`.**
+
+`designSystem: "assets/484682383639656270"` points the generator at the _asset_, so the stale
+`project.designTheme` snapshot never enters the picture and the UI re-apply is unnecessary
+for generation. `modelId: "GEMINI_3_1_PRO"` removes the "check the model selector" step.
+This is the snapshot-versus-reference distinction: the UI's _apply_ copies the designMd into
+the project and it rots; the API parameter _points_ at the live asset.
+
+(The asset is still v8, still the compressed one, and the tonal palette is still mangled.
+It did not matter — every rule that mattered was in the prompt. This is the compression
+finding holding up under test.)
+
+#### The four frames, and how they were seeded
+
+Seed chain — each hop asks for the smallest possible delta:
+`DEFAULT → ERROR`, and `DEFAULT → FILLED → SAVING`.
+
+| frame     | screen id                          | seeded from | local copy              |
+| --------- | ---------------------------------- | ----------- | ----------------------- |
+| 1 DEFAULT | `1bed6a8525e44b7fbad9cf85b467c92a` | —           | `frames/01-default.png` |
+| 2 ERROR   | `66fd99fdc0784a469a1d198a52339e20` | frame 1     | `frames/02-error.png`   |
+| 3 FILLED  | `a541546fbb6348c4aa7d35a46092fe5b` | frame 1     | `frames/03-filled.png`  |
+| 4 SAVING  | `cafd14e73078487ba0ef969d79204ec3` | **frame 3** | `frames/04-saving.png`  |
+
+> **Superseded 2026-08-15.** All four of the screens above were deleted, and the set was
+> regenerated from the corrected-geometry seed. See _The regenerated set_ at the end of this
+> document for the current ids — the PNGs in `frames/` are now the new renders.
+
+The PNGs in `frames/` are 711 × 1600 renders committed to the repo because Stitch's
+screenshot URLs are ephemeral `googleusercontent` links that will rot. Fetch a fresh, larger
+render by appending `=s1600` (or `=s2048`) to a screenshot `downloadUrl`.
+
+Frame 4 is seeded from frame 3, not from frame 1 — it is "identical to filled except the
+button", so it should never see the empty form. That is why 3 and 4 are pixel-siblings.
+
+Frame 1 already existed and was already correct; it was generated in the web UI before the
+theme divergence was noticed, which is itself the proof that a self-sufficient prompt beats a
+correct design system.
+
+**All four judged and accepted, by eye.** Header, labels, field rhythm and the deliberate
+empty gap are identical across the set; the error frame's card number sits one line lower
+only because the error message occupies a line. Specifically verified: no summary banner or
+toast on the error frame, the `STORE NAME` label stays ink rather than turning red, the Done
+button is at full ink and enabled in all four, the saving button is a spinner on full ink
+with no "Saving" text and no scrim, and the filled frame carries no success ticks or green
+outlines.
+
+> **Corrected 2026-08-15.** This paragraph originally claimed the saving button was "a
+> **white** spinner". Measured, it is `#DDDDDF` — the other three frames render white text at
+> exactly `#FFFFFF`, so it is the one place white is not white. Every structural claim above
+> survived the audit; three colour/geometry claims did not. See below. The lesson is narrow
+> and worth keeping: _"judged and accepted" recorded an eyeball pass as though it were a
+> measurement._
+
+**The transferable rule:** _generators hallucinate in proportion to how much you leave
+undecided._ Seed from a screen, allow-list the aspects, spell out the deltas, and forbid the
+specific embellishment you fear by name.
+
+### The 2026-08-15 audit — the frames were measured, and the reference moved to HTML
+
+The four frames had been accepted by eye. Measuring them changed the conclusion. Method:
+sample the PNGs with Pillow and take the **modal** colour of a region rather than the most
+saturated pixel — antialiasing against cream blends toward the background, so a max-saturation
+sample overshoots and invents deviations that aren't there.
+
+| check                         | result                                                                                         |
+| ----------------------------- | ---------------------------------------------------------------------------------------------- |
+| cream, ink, all five swatches | **pixel-exact, `dmax=0`**, in all four frames                                                  |
+| frame geometry                | `711 × 1600` = **393 × 884** — `+32px` against the mandated 393 × 852, identically in all four |
+| error red (frame 2)           | **≈`#BF0000`** (89% of border pixels) against a specified `#C41E1E`                            |
+| saving spinner (frame 4)      | brightest pixel **`#DDDDDF`**; frames 1–3 reach `#FFFFFF`                                      |
+| footer hairline               | `#D3D3C8` vs `#D6D6CB` — within blend noise, fine                                              |
+
+**Stitch cannot draw this frame.** Not "did not" — cannot. It injects
+`body { min-height: max(884px, 100dvh) }` into every screen it generates, which is exactly
+the +32px measured above. The design system's own Forbidden list bans _"any frame that is not
+393 × 852"_, so the generator is structurally incapable of obeying the first rule in the
+document. Two further defects in the same output: a `position: fixed` footer (forbidden by
+§ _The primary-action footer_) and a back chevron pulled outside the 20px margin with a
+negative margin.
+
+**Which of the three are prompt-fixable — settled by experiment, same day.** A
+_"Fix ONLY the geometry"_ run was made against the form screen, producing
+`1c57d246642e49d596edfc95c8dbb96f`, titled "New Card Form (Fixed Geometry)". It reports
+having aligned the chevron to the 20px margin and converted the footer from `position: fixed`
+to a natural flex child — so **two of the three defects are ordinary CSS and do fix on
+request.** The result is `786 × 1768`, i.e. **393 × 884, unchanged.** A prompt whose entire
+and only instruction was to fix the geometry could not move the height.
+
+That is the cleanest available proof of the distinction, and it is worth more than the
+original claim it replaces: the chevron and the footer are _mistakes_, and mistakes can be
+corrected. The 884 floor is not a mistake — it is the platform, and no prompt reaches it.
+**All ten screens now in the project are `height: 1768`. There is no counter-example.**
+
+**So the reference moved.** `frames/cardi-form-frames.html` is hand-authored, exactly
+393 × 852, and is now what the remaining screens derive from. The PNGs stay as evidence of
+what Stitch produced. This does not retire Stitch — it stays the right tool for _exploring_ a
+screen that doesn't exist yet (the wallet empty state still needs a fresh seed). It is no
+longer the tool for _geometry and chrome_.
+
+**The literal-hex rule needs one caveat.** Six literal hexes came through byte-exact; the
+seventh did not. The difference is not literalness — it is whether the colour collides with a
+**semantic role the theme already owns.** `error` is a Material role (the theme holds
+`#ba1a1a`), and it is the one that drifted; the card accents, cream and ink own no role and
+passed through untouched. Amended rule: _spell literal hexes — and expect the ones that
+shadow a theme token to be overridden anyway._
+
+**The safe-area insets are now drawn.** They were reserved at the correct 59px / 34px but left
+blank, which made a correct measurement read as careless padding — and invited the actively
+wrong fix of shrinking it, which would push content under the live status bar at build time.
+The 59px stays; it now carries a clock and indicators, and the bottom inset carries the home
+indicator. Both are ink-only system chrome, never beam, and never controls.
+
+The geometry harness that used to live in a duplicate `_probe.html` is now a `?probe`-guarded
+block inside the reference file itself — two near-identical 575-line copies could only drift.
+Open `cardi-form-frames.html?probe`; expect `size=393x852`, `chevronL=20.0`, `labelL=20.0`,
+`inputL=20.0`, `btnL=20.0`, `btnH=52` on all four.
+
+### The regenerated set — 2026-08-15, from the corrected-geometry seed
+
+The canvas was cleared to a single screen, `1c57d246…` "New Card Form (Fixed Geometry)", and
+the three states were regenerated from it with `generate_variants` — `creativeRange: REFINE`,
+`aspects: ["TEXT_CONTENT"]`, `variantCount: 1`, `modelId: GEMINI_3_1_PRO`.
+
+| frame     | screen id                          | seeded from      | local copy              |
+| --------- | ---------------------------------- | ---------------- | ----------------------- |
+| 1 DEFAULT | `1c57d246642e49d596edfc95c8dbb96f` | the geometry fix | `frames/01-default.png` |
+| 2 ERROR   | `3805431b57c441e9a133df7572c9e99b` | frame 1          | `frames/02-error.png`   |
+| 3 FILLED  | `6d4cfe6e04794bf093c14dee6ed9e265` | frame 1          | `frames/03-filled.png`  |
+| 4 SAVING  | `d39488ce83bc40dfab0a2851e940abde` | **frame 3**      | `frames/04-saving.png`  |
+
+**The spinner is fixed. The geometry is not. The error red is not.** Measured on the new
+renders:
+
+| check                         | result                                                                  |
+| ----------------------------- | ----------------------------------------------------------------------- |
+| saving spinner                | **`#FFFFFF`, luma 255** — was `#DDDDDF`. Fixed.                         |
+| cream, ink, all five swatches | **pixel-exact in all four frames**                                      |
+| footer band                   | `y=1351..1442` **identical in all four** — the set is truly aligned     |
+| geometry                      | `711 × 1600` = **393 × 884**, all four. Third independent confirmation. |
+| error red                     | **still `#BF0000`** against `#C41E1E`                                   |
+
+The spinner fix is the transferable bit: it came right because the prompt **named the value
+it had drifted to and forbade it** ("pure white `#FFFFFF` — not grey, not `#DDDDDF`"). The
+error red did not come right, even though `#C41E1E` was spelled three times in the same
+prompt. That is the semantic-token caveat holding under a controlled retest: `error` is a
+role the theme owns, and owning the role beats spelling the hex.
+
+**Two MCP mechanics worth keeping.**
+
+- **`generate_variants` can time out at the MCP layer and still land the screen.** FILLED
+  returned `The operation timed out`, and the screen existed server-side moments later. Poll
+  `list_screens` — **do not retry**, or you will mint a duplicate. This is different from
+  `generate_screen_from_text`, which times out and lands nothing.
+- **`generate_variants` has no `designSystem` parameter**, contrary to the note further up
+  this document. The seed screen carries the system; there is nothing to pass.
+
+**One divergence to hold in view.** The Fixed Geometry seed reserves the 59px / 34px insets
+but leaves them **blank** — its own prompt says "keeping the canvas blank as requested" —
+whereas `frames/cardi-form-frames.html` now draws the status bar and home indicator into
+them. Every Stitch render from here will differ from the reference at the top and bottom of
+the frame. That is intended, and the reference is the one that is right.
+
+### 2026-08-15 — the wallet pattern, specced from the code
+
+`stitch-prompts-wallet.txt` holds four self-contained prompts: **populated / empty /
+single-card / no-results.** Written by reading `CardList.tsx`, `CardTile.tsx`,
+`EmptyState.tsx` and `gridLayout.ts` first — the discipline the superseded form prompt
+skipped, at the cost of a whole frame. Four things it turned up that change the system, not
+just the frames:
+
+- **The wallet has six states, not two.** `CardList` branches on loading, error,
+  single-card, grid, empty and no-results. The **single-card** state — an enlarged 220 × 180
+  centred tile with the tip _"Tap + to add more cards to your wallet"_ — has never been
+  designed by anyone. Search and sort only exist at `totalCount >= 2`, so drawing them on
+  the empty or single-card frame is wrong, not merely extra.
+- **The grid margin is 16pt and the design system's 20px cannot apply here.**
+  `TILE_WIDTH = 171` is `(390 − 2×16 − 16) / 2`, frozen in `gridLayout.ts` with a documented
+  derivation and tests; at 20px the tile stops being 171. **The system needs amending:**
+  20px is the single-column (form / settings / document) margin, the grid is 16. This is the
+  _fourth_ answer to the margin question in this repo.
+- **The shipped empty state violates the system four times** — a per-screen invented
+  illustration, accent dots in `#FFCC00` (Esselunga's exact yellow) and `#E2231A` (Coop's
+  exact red) used as decoration, a coloured **glow shadow** under the CTA, and a 240 × 50
+  centred button where the system says full-width 52px. The new frame is **typographic, with
+  no illustration at all** — Wave A is illustration-free, and inventing one here is the exact
+  failure the system's illustration rule exists to prevent.
+- **The card tile carries a drop shadow in light mode** (`shadowColor: '#000'`), against
+  _no drop shadows anywhere_. Removed in the spec; on this screen the brand colour is the
+  hierarchy.
+
+Two things came out **right** and are ratified rather than changed: the header is already
+`+` on the left and gear on the right, and the tile is already 171 × 140 at 16px radius with
+the name in `label-bold` below it. The one header change is the title, still
+`navigation.home: 'myLoyaltyCards'` — that string belongs to the rename.
+
+One new decision: **the favourite badge becomes an ink `#181824` plate carrying a beam
+`#FCCC0C` star.** Shipped is an amber star on a 95%-white plate, which is illegal in this
+system (amber is not in it) and invisible on light brands. Ink + beam is legal and survives
+all 57 brand colours, Esselunga's yellow included.
+
+### 2026-08-15 — the parallel Stitch run, and the one idea worth stealing
+
+The four wallet prompts were also sent through the Stitch **web prompt box** as an
+independent exploration, in parallel with the hand-authored frames: `6a2c2781…` (Populated),
+`2b0c1e6f…` (Empty), `a000f361…` (Single Card), `1d84102f…` (No Results). Kept on the canvas
+only — the PNGs in `frames/` remain the form set.
+
+**It got every colour right.** All eight catalogue hexes came back **pixel-exact** — Esselunga
+`#FFCC00`, Conad `#DA291C`, Coop `#E2231A`, Carrefour `#004E9F`, Lidl `#0050AA`, Eurospin
+`#0069B1`, Pam `#165226`, Decathlon `#0082C3` — plus cream exact and no shadow under any
+tile. Consistent with the literal-hex rule, and none of these shadow a semantic theme role.
+
+**One idea beat ours and has been adopted.** Stitch typeset each wordmark in its _own_
+idiom — lowercase `esselunga`, heavy caps `CONAD`, lowercase `coop`, tight `LIDL`, light and
+wide `DECATHLON`. The hand-authored frames had set all eight in one house style, which is
+exactly the failure the system names outright: _"do not unify the tiles — their clashing is
+the content."_ The HTML now carries per-brand treatments. They are still stand-ins for the
+real SVGs in `brandLogos.ts`; the point is that a stand-in must not flatten what production
+actually shows.
+
+**Six things it got wrong, every one of them pinned by the code:**
+
+| defect                                                        | why it is wrong                                                       |
+| ------------------------------------------------------------- | --------------------------------------------------------------------- |
+| No-results header has a **back chevron** and **no gear**      | The wallet is the root screen; `HeaderLeft` is unconditionally `+`    |
+| Frames are **711 and 706** wide within one set                | 393 × 884 vs 393 × 890 — the set is not even internally consistent    |
+| Empty frame has **dark bars** in the safe areas               | The ground is cream across the whole screen                           |
+| Empty subtitle **reflowed**                                   | The real string carries an explicit `\n` after "and"                  |
+| **Divider under the header** on two frames, not the other two | The system says no divider — and it contradicts itself across the set |
+| **No status bar, no home indicator** anywhere                 | The insets are real and occupied                                      |
+
+**The split this settles.** Stitch is worth running for a screen where its ideas might beat
+ours — it found the wordmark point that four reviewers and a written thesis had missed. It is
+not worth trusting for anything the code already decides, because it drifts on exactly those
+details and it cannot hold the geometry. Explore there, author here.
+
+### 2026-08-15 — bringing the Stitch wallet screens back into compliance
+
+The four exploration screens were then corrected against the HTML so a future illustration
+pass starts from a sound screen rather than inheriting the defects. Compliant versions, all
+verified by pixel sampling: **empty `7c5de427…`**, **single-card `543cbab4…`**,
+**no-results `0dcda2f2…`** — cream `#F0F0E8` edge to edge, status bar and home indicator
+present, no header divider. The **populated** screen is the gap: its compliance pass timed
+out three times and never returned an id.
+
+Four MCP mechanics came out of it, all new:
+
+- **`list_screens` lags far behind generation, so it CANNOT tell you whether a timed-out call
+  landed.** Two screens whose calls returned complete data — ids and working screenshot URLs
+  — were still absent from the listing many minutes and several polls later. This corrects
+  the earlier note that said to poll it. **Fetch the screenshot URL from the tool result
+  instead; it works immediately while the listing is still blind.**
+- **Heavy screens time out, light ones don't.** The eight-tile grid failed every attempt;
+  the three sparse screens returned in one or two. Budget for the busiest screen needing the
+  web UI.
+- **`Request contains an invalid argument` is transient** on both `list_screens` and
+  `generate_variants`. It is rejected before any work happens, so an immediate identical
+  retry is safe and succeeds.
+- **A third instance of the theme token beating the literal.** Told _"cream `#F0F0E8` covers
+  the ENTIRE frame"_, the generator obeyed for the page and then painted the header
+  **`#FAFAF2`** — precisely the theme's mangled `surface`. Same shape as the error red. The
+  phrasing that actually fixes it is to **name the component and forbid the token's value by
+  hex**: _"the header has NO background of its own; do NOT use `#FAFAF2`."_ That worked in
+  one pass — exactly as naming `#DDDDDF` fixed the spinner. **Generalised rule: when a
+  literal loses, it is losing to a token with a claim on that component; say the component's
+  name and ban the value you keep getting.**
+
+### 2026-08-15 — the settings pattern, and eight sheets reduced to four shapes
+
+`stitch-prompts-settings.txt` holds six prompts: the screen **signed-in** and **guest**, plus
+one frame for each sheet **shape**. The plan called this "settings list (2 screens)". The code
+holds one screen with two account forks, a separate `LanguageListScreen`, and **eight bottom
+sheets**.
+
+**The reduction.** Fingerprinting the sheets by button count and whether they map a list:
+
+| shape                | sheets                                                      |
+| -------------------- | ----------------------------------------------------------- |
+| Pick one from a list | Theme, Language — no buttons; choosing IS the action        |
+| Confirm              | Export confirm, Sign out, Import preview, **Delete step 1** |
+| Acknowledge          | Export empty, Import error — one button                     |
+| Type-to-confirm      | **Delete step 2** — the only sheet in the app with an input |
+
+`DeleteAccountSheet` is a **two-step** sheet (`useState<1 | 2>`), which is why it showed four
+buttons; step 2 gates its destructive button on `confirmationText === 'DELETE'`. Every other
+sheet in the app is one of these four with different words.
+
+**Three findings that outlive the frames:**
+
+- **The chrome is already a component.** All eight sheets are built on `BottomSheet` from
+  `shared/components/ui`, and rows are `ActionRow` — both with stories and tests. Unlike the
+  wallet, this pattern is constrained by an existing API and the design must fit it.
+- **A fifth answer to the screen margin.** Settings uses `paddingHorizontal: 24`. The tally is
+  now `CardForm` 32 · `AuthScreenLayout` token · system 20 · grid 16 · settings 24. The frames
+  use **20** and the code should move 24 → 20 — the opposite call from the grid, because 16 is
+  _derived_ (the 171px tile depends on it, with tests) and 24 is not.
+- **The destructive button contradicts the system.** The system says borderless, `#C41E1E`
+  text. `Button.tsx` renders a **filled** `theme.error` block with white text and a border, so
+  sign-out and delete are solid red slabs today. The frames follow the system. Separately: the
+  variant is an **unguarded fall-through** — `primary`/`secondary`/`tertiary` each get an `if`
+  and everything else returns error-red — so any variant added to that union silently becomes
+  destructive.
+
+### 2026-08-15 — the settings frames, and a prompt rule broken by its own author
+
+All six settings frames are hand-authored in `frames/cardi-settings-frames.html`. The Stitch
+run happened in parallel: `8d208789…` (Signed In), `4602b9d1…` (Guest), `734465a7…` (Theme),
+`7bc1305d…` (Sign Out), `9626cba4…` (Export Acknowledge), `6b336e24…` (Delete Step 2).
+
+**The sheets came out excellent and the backdrops came out fabricated.** All four sheet
+_contents_ matched the spec — including the hard one: sign-out drew a borderless `#C41E1E`
+"Sign Out" above an outlined "Cancel", and delete-step-2 drew the destructive button at
+reduced opacity with an empty field. That validates the four-shape reduction.
+
+But every screen _behind_ a sheet was invented, and each one differently:
+
+| frame       | invented backdrop                                          |
+| ----------- | ---------------------------------------------------------- |
+| Theme       | ACCOUNT / Profile / Security                               |
+| Sign out    | ACCOUNT / Profile Information / **Payment Methods**        |
+| Acknowledge | Account Details / Data & Privacy, drawn as a floating card |
+| Delete      | ACCOUNT / Profile Details / **DANGER ZONE**                |
+
+The guest frame drifted the same way, inventing Notifications, Clear Cache "12 MB" and a
+build number, and dropping the Create Account button entirely. "Payment Methods" in a
+loyalty-card app is the tell.
+
+**The cause was the prompt, and the rule it broke was already written down here.**
+`stitch-prompts-form-states.txt` says: _"Stitch has no memory between generations — so a
+prompt that says 'same as before' gets a different screen."_ The settings prompts then said
+_"identical to Frame A except the account block"_ and _"the Settings screen from Frame A
+behind a scrim"_, four times over. The generator was not drifting from a spec; it was filling
+a vacuum the prompt created by refusing to repeat one.
+
+**Rule, stated so it survives:** a prompt may never refer to another frame. Every frame
+repeats its own chrome in full, however tedious — the tedium IS the mechanism. When a frame
+is "screen X behind a sheet", the whole of X must be in that prompt.
+
+This failure mode does not exist in HTML, which is the quiet argument for authoring there:
+frames C–F share **one backdrop string reused four times**, so it is not merely consistent,
+it is incapable of differing.
+
+### 2026-08-15 — the document pattern, and the margin question finally resolves
+
+`stitch-prompts-document.txt` holds three prompts. The plan called this "document (2
+screens)". The code holds **three screens and three different shapes**, which only share a
+margin:
+
+| screen         | shape                                                                    |
+| -------------- | ------------------------------------------------------------------------ |
+| Privacy Policy | **prose document** — title, meta, section headers, bullets, body         |
+| Help           | **searchable FAQ** — search field, expand/collapse list, two end actions |
+| Data Summary   | **two-column table** — header row, ruled rows, download link, footnote   |
+
+Filing Help under "document" would have produced a wall of text and missed a live search
+field, an accordion and two buttons.
+
+**THE SCREEN MARGIN IS ONE NUMBER, WITH ONE DERIVED EXCEPTION.**
+
+| value    | where           | why                                                  |
+| -------- | --------------- | ---------------------------------------------------- |
+| **16px** | card grid       | derived — `TILE_WIDTH` 171 depends on it, with tests |
+| **20px** | everything else | the system default                                   |
+
+`CardForm`'s 32, `SettingsScreen`'s 24 and these three screens' 48 are all drift, and all of
+them should become 20.
+
+> **Corrected 2026-08-15, after seeing it drawn.** This section first claimed the margin was
+> "a function of content" and defended the document screens' 48px as a _reading measure_.
+> That was wrong, and wrong in a way worth keeping: **the measure rule is desktop typography
+> imported to a phone.** It exists to bring a WIDE column down to 45–75 characters. A 393px
+> frame at 15px type is already near the bottom of that band; removing another 96px leaves a
+> 297px column — about **38 characters**, below the comfortable minimum. It does not read
+> better, it reads cramped, which is exactly how it looked once it was on screen.
+>
+> The tell I missed: I reached for a rule I already knew instead of measuring the result. The
+> earlier "20 single-column, 16 grid" note was right all along; it did not need the exception
+> I invented for it.
+
+Two more findings:
+
+- **All three screens set body text at 14px**, against a system minimum of 15px — and these
+  are the screens people actually read. Systematic, not a one-off. The frames use 15px.
+- **The system has no table.** `DataSummaryScreen` renders a real one and nothing in
+  `cardi-design-system.md` describes it. Frame C defines it: **ruled, not boxed** — hairlines
+  between rows and under the header, no outer border, no card, no fills, no zebra striping,
+  and no colour on the "Not collected" values. They are not a warning and not a success.
+- One rebrand string hides here: `privacy.dataSummary.description` still reads "the data
+  **myLoyaltyCards** collects".
+
+### 2026-08-15 — the document frames, and where a card belongs
+
+All three drawn in `frames/cardi-document-frames.html`. The Stitch run —
+`d22ecfc9…` (Prose), `32b5732b…` (FAQ), `a38494ef…` (Table) — was strong on two of three:
+the prose page and the table both came back essentially right, the table correctly showing
+"Not collected" in plain muted text with no colour. All three, however, omitted the status
+bar.
+
+**The FAQ disagreement was the useful one, and Stitch was half right.** The spec said the
+question rows should be bare hairline rules with "no card, no box". Stitch wrapped them in an
+outlined container with a **cream** fill — an outline enclosing nothing different, which is
+in neither the spec nor the system. But its instinct was better than the spec: those rows are
+**tappable**, and everywhere else in this app interactive rows sit on a **white card with a
+hairline outline**. So the frames adopt a rule rather than either version:
+
+> **A white card means interactive rows. Bare cream means prose.**
+> Help's accordion gets the card; the privacy policy does not.
+
+Two smaller things taken from the run: the table gets a **closing rule under the last row**,
+so it ends rather than trailing off, and bullets use a **hanging indent** so wrapped lines
+align under the text rather than under the bullet.
+
+**The Stitch screens were then brought into line with the corrected HTML** — prose
+`1cd3875b…`, FAQ `045dc4e9…`, table `ddcad879…`. Measured before and after: the left margin
+moved from **48px to 20–21px** on all three, and the status bar went from absent to present
+on all three. The duplicated body titles are gone, and the FAQ accordion now sits on a solid
+white fill instead of an outlined cream box. Each was a single prompt of three or four
+**numbered defects** — the phrasing that has landed every time, where the same requirement
+written into descriptive prose has not.
+
+### 2026-08-15 — the barcode screen, and the flow nobody had noticed was missing
+
+An audit against the 21 real routes found that the "17 screens → 4 patterns" reduction, while
+sound, **did not cover everything.** Five routes belong to no pattern — and they are not a
+remainder, they are one flow: `add-card/index` → `scan` / `add-card/scan` → `card/[id]` →
+**`barcode/[id]`**. That is the loop the product exists to serve. The reduction was built from
+screens that share a shape, and each of these has a shape of its own, so they fell out of a
+taxonomy organised by similarity.
+
+The barcode screen was the sharpest omission: the most heavily specified screen in the system
+— an entire § _Barcode view (the hero moment)_ plus four Forbidden entries protecting it — and
+the only one never drawn. `stitch-prompts-barcode.txt` and `frames/cardi-barcode-frames.html`
+now cover EAN-13, QR and not-found.
+
+**What reading it turned up.** The hard part was already right: pure white `#FFFFFF`, true
+black bars, brightness maximised on mount and restored on unmount, the status bar forced
+dark-on-white, and nothing overlaying the code — `BarcodeFlash` is named for the use case
+(flash your card at the till), not a visual effect. **ifero confirmed it works at a real
+checkout**, which settled the one question the room could not answer from the code.
+
+Two corrections, and the reason matters:
+
+- **The barcode container's drop shadow and 8px radius are removed** —
+  `shadowOpacity: 0.05`, commented _"subtle shadow for definition"_. They were suspected of
+  costing scan contrast; the real-checkout test says otherwise, and the shadow renders outside
+  the white plate anyway. They go for two smaller, honest reasons: the system forbids shadows,
+  and **a white plate on a white field is defining a boundary that carries no information.**
+- **Every colour on the screen was off-palette** — card name and number `#1F2937`, hint
+  `#9CA3AF`, error `#EF4444`, dismiss `#4B5563`. A Tailwind grey ramp. None of it reads as
+  _wrong_ on a white field at full brightness, which is exactly why it survived every pass. It
+  is corrected because **this is the screen the system points at when it claims to be real.**
+
+One thing ratified rather than changed: the store name stays in **Inter, not Space Grotesk**.
+Space Grotesk carries our personality, and this text is a third-party brand's name — dressing
+someone else's brand in our display face contradicts the thesis that our chrome stays quiet.
+The shipped code already had this right.
+
+And the hint line **stays**. "Nothing else on this screen" was written against nav, chrome and
+ads; "Tap anywhere to close" is the only affordance telling someone how to leave a modal with
+no visible dismiss control.
+
+### 2026-08-15 — card detail, and where a brand colour stops being content
+
+`stitch-prompts-card-detail.txt` and `frames/cardi-card-detail-frames.html` cover four
+frames: **at rest**, **blending**, **condensed**, **custom card**.
+
+**The header follows the brand — as a transition, not a tint.**
+
+> **Corrected 2026-08-15, after seeing it drawn.** This section first argued the header should
+> be cream at every scroll position, because navigation should not wear a third-party brand's
+> colour. ifero rejected it, correctly: a cream header cuts a horizontal band straight across
+> the top of the hero, so the brand block reads as _interrupted_ rather than as one field.
+>
+> The argument was protecting something real but stated it too broadly. What is actually
+> objectionable is **brand-coloured chrome with nothing beneath it to identify** — and that
+> only happens once the hero has scrolled away. So the colour became a transition:
+
+| state     | header + top inset                                                                                      |
+| --------- | ------------------------------------------------------------------------------------------------------- |
+| at rest   | **the brand colour** — one unbroken field from the top of the screen to the bottom of the hero, no seam |
+| blending  | the brand at half strength over cream, title fading in                                                  |
+| condensed | **cream + a 1px hairline** — nothing left for the colour to identify                                    |
+
+The endpoints stay clean — full brand or full cream — so this never becomes forty-five
+permanent pastel tints. And **the order matters**: the header stays matched to the hero for as
+long as any of the band is visible, because they are one field and a header a shade paler than
+the band beneath it reads as a rendering fault. Drafted the other way round it looked broken,
+which is why frame B shows no hero at all.
+
+> **"One unbroken field" turned out to be a fact about the markup, not about the colour
+> values.** The first draft of the HTML gave the status-bar inset, the header and the hero each
+> their own background, every one set to the same brand colour — and it rendered with faint
+> horizontal lines at both boundaries. ifero read them as navigation-bar borders, which is
+> exactly what they looked like.
+>
+> Nothing drew a border. The element edges land on **fractional device pixels** — measured at
+> `.391` on a 2x display — so a hairline of the _parent's_ cream leaked between siblings that
+> agreed with each other but not with what sat behind them. (A computed `outline: 1.5px` on
+> every element was checked and cleared: `outline-style: none`, so it never paints.)
+>
+> The fix is structural rather than a nudge: **one element paints the field and the three sit
+> on it transparently**, so there is no second colour left in that region to leak. The seam was
+> possible only because _"three things that match"_ is a different object from _"three things
+> on one field"_, and the markup was saying the first.
+>
+> **This is a live hazard in the shipped app, not only in the frames.** `headerBg` tints the
+> navigation header and `BrandHero` as two separately-filled views; any layout PR that keeps
+> them separate inherits the same seam. The band wants one filled parent.
+
+The controls flip with luminance — ink on Esselunga's yellow, white on the green accent.
+`shared/theme/luminance.ts` already does this, though it returns **`#1F1F24` rather than ink
+`#181824`**: another near-palette value worth fixing.
+
+Three more findings:
+
+- **The condensed header uses a drop shadow** (`headerShadowVisible`). Replaced with a 1px
+  `#D6D6CB` hairline — same job, and already the established pattern for the anchored footer.
+- **The favourite star is `theme.warning`** — amber, the same off-palette colour already
+  replaced on the wallet tile. It becomes **beam `#FCCC0C`** when filled. One of the very few
+  places beam legitimately appears: an active state.
+- **THERE ARE TWO IMPLEMENTATIONS OF THE BARCODE SCREEN, AND THEY HAVE ALREADY DRIFTED.**
+  `BarcodeFlash` serves the `barcode/[id]` route; `FullscreenBarcode` opens from inside
+  `CardDetails`. Both maximise brightness — the critical behaviour is intact in both — but the
+  plate differs: `shadowOpacity` 0.05 vs **0.08**, radius 8 vs **12**, and both use Tailwind
+  `#1F2937`. **These should be one component.** Not a design task; a note for the tokens and
+  layout PRs, and the reason `stitch-prompts-barcode.txt` alone does not cover the hero moment.
+
+One distinction worth keeping, because it looks like a contradiction: the barcode gets a
+**white card here** and **no plate at all** on the fullscreen view. On cream, and tappable, the
+card separates the code and marks it interactive. On a white field it would be defining a
+boundary that carries no information. Same element, opposite treatment — _white card means
+interactive, bare ground means content._
+
+### 2026-08-21 — bringing the Stitch card-detail screens back into compliance
+
+The four Stitch screens had drifted badly, and the shape of the drift turned out to be the
+diagnosis. Frame A was close. Frames B, C and D had each invented a **different** card detail
+screen: a Notes field and a `Code 128` row and an Edit/Share button pair; a `Remove Card`
+button with a red outline and a trash icon; a black `Show Barcode` pill, a copy icon and a
+green swatch dot. None of them drew the barcode at all — on the screen whose whole job is to
+show a barcode.
+
+**The cause was in this repo, not in Stitch.** `stitch-prompts-card-detail.txt` kept the chrome
+and the content stack in a shared `COMMON CHROME` preamble and had each prompt say "apply the
+COMMON CHROME above". "Above" does not survive a clipboard. Frame A came back right only
+because it sits directly beneath the preamble in the file, so copying it tends to take the
+preamble along; B, C and D travelled alone and Gemini filled the gap from its own priors about
+what a loyalty-card screen contains.
+
+The rule recorded on 2026-08-15 — _a prompt may never refer to another frame_ — was too narrow.
+**A prompt may not refer to anything outside itself at all.** Every prompt in that file now
+repeats the chrome and the stack in full and is fenced by `PASTE EVERYTHING BETWEEN…` /
+`END OF PROMPT x` delimiters, so the rule is checkable by eye instead of by discipline.
+
+And the divergence pattern is worth keeping as a diagnostic: **a shared missing spec does not
+produce a shared wrong answer, it produces N independent guesses.** Frames that are wrong in
+the same direction mean a bad instruction. Frames that are wrong in different directions mean
+a dangling reference.
+
+Three things learned about the tooling in the process, all recorded in § _Stitch mechanics_:
+
+- **`edit_screens` is a silent no-op**, and so is `generate_variants` when the delta is small.
+  Both return a confident narrative and a detailed `DomOperationEvent` listing operations with
+  the `verified_html_context` they matched — and write nothing. Five calls, byte-identical
+  files afterwards. **The discriminator is the response shape**: a `design.screens` block means
+  a real screen was written, a bare `DomOperationEvent` means nothing happened. The corollary
+  inverts the usual instinct — asking for _less_ makes a change _less_ likely to land, so a
+  one-line fix has to ride along inside a full regeneration.
+- **Audit the DOM, never the screenshot.** The returned render is 884px tall so it clips the
+  bottom of the stack, and it is wrapped in a device bezel. Reading defects off it produced
+  three false positives out of seven: a circle that was already there, a bezel that does not
+  exist in the design, and a "missing" Edit/Delete card that was merely below the fold.
+- **The semantic-token trap has a second form.** The card-name heading was marked up as
+  `font-headline-md`, which the design system defines as Space Grotesk 24/700 — and it rendered
+  small and grey, because the utility class does not exist in the generated stylesheet, so it
+  silently resolved to nothing. The fix is explicit inline values. This is the same failure as
+  a literal hex being overridden by a theme token, arriving from the opposite direction: there
+  the token won, here the token was never there.
+
+The compliant set, seeded from frame A and verified at DOM level with nothing missing and
+nothing invented:
+
+| frame         | screen id                          |
+| ------------- | ---------------------------------- |
+| A at rest     | `6d0e19c350fe4c0099fcc96a602f92fe` |
+| B blending    | `c617f0b38b724a9fb91ec3b5338538cc` |
+| C condensed   | `c0f8371dde504752bc2d776be528124a` |
+| D custom card | `96479924cff546be9760cad8fe85234b` |
+
+Four superseded screens should be deleted in the Stitch UI, since MCP cannot delete:
+`dc5ce30093d54901a07e4516e919798a`, `aa3f4175af4141bd98a15d4c9a89c4c8`,
+`20ea80642a2e4cea8a9a99e7032c090f`, and the intermediate `05e8ea43789240e4bb592782b61c7ac7`
+whose star came back as a white outline.
+
+Two things left deliberately unfixed, both cosmetically inert and both inherited from frame A:
+a `box-shadow: 0 0 0 1px rgba(0,0,0,0.05)` used as a border rather than a shadow — zero blur,
+so it reads as a hairline — and a dead `.esselunga-yellow` rule in frame C that is defined and
+never applied. And **Gemini will not draw a real barcode**: three passes produced three
+different fakes, including a completely empty rectangle. The HTML frames compute a real EAN-13;
+the Stitch barcode is a placeholder and never a reference.
+
+### 2026-08-21 — the capture pattern, and the one screen that can falsify the system
+
+`stitch-prompts-capture.txt` and `frames/cardi-capture-frames.html` cover five frames:
+**choose**, **aim**, **no camera**, **many codes**, **no code**.
+
+Reading the code overturned the plan twice before a line was drawn.
+
+**There is one viewfinder, not two.** The plan carried `scan` and `add-card/scan` as "two
+viewfinders to unify". `app/scan.tsx` is a bare `<Redirect>` to `/add-card/scan` — a legacy
+bridge from the old entrypoint, still reached from `CatalogueGrid`. There was nothing to unify.
+
+**And the scan is brand-_first_, so there is no "brand not found".** This was expected to be the
+interesting fork: scan a code, look it up, design the moment it is not among the 45 catalogue
+brands. It cannot happen. You pick the brand from a searchable list and _then_ scan;
+`BrandScannerScreen` receives `brandId` and shows a `BrandPill`, and the catalogue is consulted
+before the camera opens, never after. The custom-card path is a **list row** — "Other card" —
+which routes into the very same scanner with `mode: 'custom'`. The door into a custom card was
+already built; it just was not where anyone looked for it.
+
+The real junction is **no code / one code / many codes, plus no camera**: five states, counting
+three distinct failure reasons in `NoCodeFoundBanner` (`notFound`, `scanFailed`, `pickerFailed`)
+and up to six rows in `MultiCodePickerSheet`.
+
+#### The design system contradicts itself here, and it resolves cleanly
+
+`stitch-prompts-barcode.txt` forbids, by name, "a frame, a corner marker, a viewfinder bracket".
+`ScannerOverlay` draws corner brackets **and** a sweeping line over a live camera. Both are
+correct.
+
+That rule governs the barcode you are **displaying** — your own card, held up to a scanner, where
+anything on top of the bars costs you a read. This screen is the barcode you are **reading** —
+someone else's code, through a lens, where the overlay _is_ the affordance that says where to
+aim. **Same mark, opposite verdict, decided by which way the light is travelling.** The rule did
+not need weakening; it needed a direction.
+
+#### And this is the one screen where beam is mandatory rather than banned
+
+The scan line is `theme.primary`, which the design asset resolves to `#000000` — a 2px near-black
+line, over a camera feed, under a 40% black scrim. Effectively invisible, and nobody would notice
+because the screen still works.
+
+Meanwhile the brand's entire ornament is, in the design system's own words, "a **scan beam**
+passing over a barcode", and the barcode-display spec banned beam from that screen with the line
+_"the real beam comes from the scanner at the till"_. **On this screen we are the scanner.** The
+beam is ours, at `#FCCC0C`, here and nowhere else. The identity's central metaphor has precisely
+one screen where it is literal, and this is it.
+
+#### The rest, in order of how much they matter
+
+- **The viewfinder is a square framing something that is not.** `screenWidth * 0.7` is used as
+  both width and height — a ~275px square around an EAN-13 that is roughly 95 : 20. And the
+  screen **already knows** which to expect: `expectedFormat` is threaded from the catalogue into
+  the overlay and on into the scanner hook. A square bracket around a linear code teaches the
+  wrong gesture — centre it in the box and you stand too far back, which is the one failure a
+  viewfinder exists to prevent. The frames use **300 × 120**.
+- **The banner covers one of its own escape routes.** `NoCodeFoundBanner` sits at `bottom: 96`
+  while `bottomActions` spans from 0 up to `insets.bottom + SPACING.md` + two 48px rows + a
+  divider ≈ **155px**. On a real phone the banner overlaps "Scan from image" — one of the two
+  ways out the banner is offering. The frames put it at 171px, clearing the stack with a 16px
+  gap. A real bug, not a style note.
+- **The failure states leave the dark, and that is right.** Permission-denied and camera-error
+  render on cream while the live screen is `#000000`. It looks like an inconsistency and is not:
+  same logic as the card-detail header — **the dark ground exists to serve the camera. No camera,
+  no dark.** Ratified, not changed.
+- **The text shadow stays.** `textShadowColor: 'rgba(0,0,0,0.75)'` on the instruction line. The
+  system forbids shadows everywhere; this one is legibility over a background nobody controls,
+  the same class of exception as the barcode's quiet zone, where the space is an input to the
+  scanner rather than a margin. Ratified explicitly so it stops reading as drift — and it applies
+  only to type set directly on the camera feed.
+- **Cream, not white, for text on the dark.** Every glyph over the camera is `#FFFFFF`; the
+  system's dark mode specifies body text as cream `#F0F0E8`. The corner brackets stay pure white
+  — they are a mark, not text.
+- **`theme.warning`, third sighting.** The banner puts `warning-amber` beside its message, the
+  same off-palette amber already replaced on the wallet tile and the favourite star. Here the
+  honest fix is to **delete the icon**: the plate already carries a sentence, and a 20px triangle
+  on it is decoration doing no work.
+- **The banner's action links are invisible for the same reason as the scan line** — both
+  `theme.primary` on `rgba(0,0,0,0.80)`, near-black on near-black. They take the beam too.
+- **48px MaterialIcons standing in for illustrations** on the two failure screens. The system has
+  no icon at that size (24px on a 48px target), so a 48px glyph is an illustration placeholder —
+  the same note the wallet `EmptyState` was pulled up for. Left as a plain icon; illustrations
+  are Wave B.
+- **Margins drift, third sighting.** `bottomActions` and `centeredContent` are both
+  `paddingHorizontal: 24`, joining `CardForm` 32 and settings 24.
+- **The brand pill is positioned off the back button, not the grid** —
+  `insets.top + SPACING.sm + TOUCH_TARGET.min + SPACING.md`, four values added at the call site.
+  It lands somewhere sane today and drifts the moment any one of them moves.
+
+One authoring note: this file's shared frame layer is **extracted verbatim from
+`cardi-card-detail-frames.html` by the generator**, rather than retyped, so the token values
+cannot drift between the two. Duplication by copy is still the rule — a linked stylesheet dies in
+any viewer that inlines the HTML — but the copy is now made by a script instead of by hand.
+
+### 2026-08-21 — the pitch pattern, and Wave B was never blocked
+
+`stitch-prompts-onboarding.txt` and `frames/cardi-onboarding-frames.html` cover six frames:
+**welcome**, **modes**, **difference**, and **all three** carousel slides.
+
+> **Corrected after ifero looked at it.** The first pass drew only the first and last slides — to
+> pin the carousel's endpoints, the dots and the button label — and skipped the middle one. That
+> was the wrong one to skip: **"Scan or add manually" is the slide carrying the beam motif**, so
+> it holds the best drawing in the set. Pinning the endpoints was a reason to draw two frames,
+> never a reason to draw only two.
+
+**Wave B has been marked "blocked on illustrations" since 2026-08-14. It was blocked on a
+belief.** Four illustrations already exist in onboarding, all placeholders, all built the same
+way — monochrome alpha-tints of `theme.primary` assembled out of plain `View`s: three offset rects
+on welcome (no rotation, so not a fan at all — a staircase), a 160px circle holding four rects, a
+circle holding a rect and seven bars, and one that is just `MaterialIcons verified-user` at 60px.
+**The slots already existed at known sizes** — one 200 × 80 band and three 160px circles. The job
+was never "design an illustration system"; it was "draw four things into four holes".
+
+And the highest-leverage fix in the flow is not a design question at all: **`BrandedIcon` defaults
+to `MaterialIcons name="credit-card"`**, so the screen introducing a brand whose entire ornament
+is the ì shows stock clip art. That is a missing asset.
+
+#### The decision this pattern turns on
+
+Onboarding is **the only flow with no user content in it**, and that changes what the palette is
+for. Everywhere else "the content is the colour" — forty-five brand colours are the content, so
+our chrome stays quiet and beam is rationed to almost nothing. On these three screens there are no
+cards yet. Nothing is competing. The quiet was protecting something that is not there.
+
+So this is where the brand speaks in its own voice, and the design system already licensed exactly
+that in a line nobody had applied: _"Illustrations: flat, two-tone (ink line-work on cream) with
+beam yellow as the single accent."_ One beam element per drawing, never two:
+
+> **And the first attempt at these was terrible, which is worth writing down rather than quietly
+> fixing.** It replaced four _tinted_ rectangles with four _outlined_ rectangles. That is an
+> improvement in colour discipline and nothing else: the placeholders were boxes and the
+> replacements were also boxes. _"Flat two-tone ink line-work"_ does not mean "rectangles with a
+> 2px stroke" — line-work implies drawing. The 2×2 grid read as a keypad; the export/import
+> arrows read as a UML sketch.
+>
+> Worse, the welcome fan **reproduced the exact defect this section criticises in the shipped
+> one**: diagonal offsets with no rotation, which makes a staircase, not a fan.
+
+| slot        | drawing                                                                                |
+| ----------- | -------------------------------------------------------------------------------------- |
+| the mark    | the **ì** — an ink circle, a white stem, the grave accent as a short beam **stroke**   |
+| welcome     | three card outlines **rotated** about a shared pivot (−17° / −1° / +15°), real barcode |
+| highlight 1 | **a miniature of the real wallet** — four tiles in four true brand colours. No beam    |
+| highlight 2 | a card holding a real EAN-13, one beam line sweeping past both its edges               |
+| highlight 3 | a **dashed** boundary and a card crossing out of it. Not a shield, and not arrows      |
+
+Two of those are worth the reasoning.
+
+**Highlight 1 stopped being line-work.** This slide promises "your brands, together", and the
+product's entire visual identity is many clashing brand hues — so a small **true picture** of the
+wallet beats a symbol for it. Four filled tiles at `#FFCC00` / `#E2231A` / `#0C84CC` / `#0050AA`,
+no outlines and no beam. That is not an exception to _"the content is the colour"_; it is the one
+place in onboarding that demonstrates it.
+
+**Highlight 3 needed a shape for "no lock-in".** Its shipped `verified-user` shield promises
+**security** while the copy promises **portability** — the picture was making the weaker claim.
+Arrows in and out of a box say the words without drawing anything. A **dashed** boundary with a
+card crossing freely out of it says the same thing as a picture: the perimeter is permeable.
+
+#### Two things drawing it settled that writing it could not
+
+- **The mark has to be constructed, not typeset.** No font lets you paint half a glyph, so "ì" as
+  a character cannot carry an ink stem and a beam accent. It is a logotype; building it from a
+  stem and a stroke is the honest approach — and it makes the identity literal: _at rest a dot, in
+  motion a beam_, so the accent is a **stroke**, not a dot.
+- **The spec asked for beam on the wordmark's accent, and that was wrong.** Beam on cream fails
+  contrast, which is precisely why the system pairs beam with ink and never with cream. The prompt
+  is corrected: the wordmark is entirely ink and the beam lives on the mark, where it sits on an
+  ink circle. Drawing a thing is still the only way to find this class of error.
+
+#### The rest, found by reading
+
+- **`fontSize: 42 - 16`**, left in `ModeSelectionScreen` as arithmetic. It evaluates to 26px,
+  which is not on the type scale (34 / 24 / 20 / 17 / 15 / 13). It renders fine, which is why it
+  survived.
+- **Body text below the 15px minimum in seven places**: the mode subtitle at `footnote`, its
+  footer at 13, "What's the difference?" at 14, the option-card subtitle at 14, its eyebrow at 12,
+  the "Recommended" badge at 12, and "Skip" at 14. The smallest legitimate size here is
+  `label-bold` 13/600/0.02em — and that is a **label**, not body copy.
+- **Four of fourteen vertical gaps land on the 8px grid.** Welcome 64/38/6/44/74/18, modes
+  30/8/28/34/4, highlights 8/4/20/10. This is the flow that sets the first impression of how
+  carefully the app is built.
+- **Three consecutive screens, three different top treatments.** Welcome: no header,
+  `insets.top + 64`. Modes: a 56px header **with** a 1px bottom border and 12px horizontal
+  padding. Highlights: no header but a right-aligned "Skip" at `insets.top + 8`. The frames unify
+  on a flat 56px header with no border, and no header at all where there is nothing to go back to.
+- **`theme.link` is not in the palette.** All three screens use it. The frames use **ink
+  #181824**, underlined only where the link sits inside prose.
+- **The recommended card carried a 2px border _and_ a 5% ink wash.** The wash goes: every card in
+  this app is white on cream, and a border weight plus one beam pill carries a recommendation
+  without making the other option look broken.
+
+### 2026-08-21 — the account pattern, and the error rule gets a direction
+
+`stitch-prompts-auth.txt` and `frames/cardi-auth-frames.html` cover six frames: **sign in**,
+**create account**, **forgot password**, **code**, **new password**, **request failed**.
+
+**It looks like six screens and it is one shape with five fillings — and the code got there
+first.** `AuthScreenLayout` is a single keyboard-aware shape and every screen is it plus a
+different `children` block. `RecoveryOtpScreen` is **thirteen lines** returning
+`<VerifyEmailScreen purpose="recovery" />`, which is why that one file runs to 552 lines while
+nothing else in the folder passes 300. Auth is also **already on the ratified 24px margin**,
+because it reads `layout.screenHorizontalMargin` instead of a literal.
+
+#### The decision this pattern turns on
+
+The error idiom contradicted the form pattern, and **both sides were right**.
+`stitch-prompts-form-states.txt` says a field error is a 1px `#C41E1E` outline plus 13px helper
+text, with _"no error icon"_, _"do not tint the field's fill"_ and _"do not add a summary banner
+at the top of the screen"_. `ErrorBanner` is exactly that: a top banner, fill tinted
+`theme.error` at 8%, with an `error-outline` icon.
+
+The rule needed a **direction** — the third time in this system that a conflict resolved that way
+rather than by picking a winner:
+
+| the error is…                                | where it belongs                                                               |
+| -------------------------------------------- | ------------------------------------------------------------------------------ |
+| **validation** — "Email is required."        | the **field**. It is what is wrong, so it carries it — and never more than one |
+| **a request failure** — "Unable to connect." | the **submission**. There is no field to attach a dropped connection to        |
+
+So the banner stays and loses the tint and the icon: **a white card with a 1px `#C41E1E`
+outline**. That honours "do not tint the fill" while permitting the banner the form spec forbade,
+and keeps `#C41E1E` to two uses — the outline and the sentence. Measured on frame F: banner fill
+`#FFFFFF`, border `#C41E1E`, no icon, both field borders at the ordinary `#D6D6CB`, and exactly
+**two** uses of the error colour in the frame.
+
+#### Two findings worth acting on
+
+- **A network failure currently reddens both fields.** `SignInScreen` computes
+  `hasFormError = Boolean(error)` and passes `hasError={hasFormError}` to the email field _and_
+  the password field, so "Unable to connect. Check your internet and try again." marks both as
+  invalid though neither is. It contradicts the form spec's "exactly one field is in error", and
+  it is wrong on its own terms: a dropped connection is not a claim about your typing. Frame F is
+  drawn to show the opposite.
+- **A second stock-icon placeholder, and it is a different one.** `AppIconHeader` renders
+  `MaterialCommunityIcons 'card-account-details-outline'` at 80px; onboarding's `BrandedIcon`
+  renders `MaterialIcons 'credit-card'` at 100px. Two generic glyphs standing in for one missing
+  logo, in two flows, at two sizes — which is the argument for **drawing the ì once as a real
+  asset** rather than patching each site.
+
+#### The rest
+
+- **The strength meter is the one place a third colour would be unavoidable**, so it **counts
+  instead of judging**: one, two or three ink segments against `#D6D6CB`, never a red/amber/green
+  ramp. That keeps the palette honest and it also survives colour-blindness, which a traffic
+  light does not.
+- **The code field is one field, not eight boxes.** An 8-digit code is pasted from an email as
+  often as it is typed, and eight cells fight the paste. One 56px field, JetBrains Mono 22px,
+  letter-spaced 8px so the digits stay countable.
+- **`AuthLink` and `ErrorBanner` both set body copy at `footnote`** — below the 15px minimum, on
+  the copy people read most carefully in the app.
+- **`theme.link` — third flow, still not in the palette.** The frames use ink, underlined only
+  inside prose.
+- **`auth.verifyEmail` and `auth.recoveryOtp` duplicate twelve byte-identical strings.** One
+  shared component reading from two copied sets, with no test that they agree.
+- **The password rule is stated three times in three wordings** — the placeholder, the validation
+  message and `createAccount.passwordRequirements`. The frames use the first two and drop the
+  third.
+
+### Still open
+
+1. ~~Generate the four state frames and judge them~~ — **done 2026-08-14**; measured and
+   corrected 2026-08-15, reference moved to HTML. Do **not** regenerate the PNGs to chase the
+   32px: Stitch injects the 884 floor, so a regenerated frame would come back with the same
+   defect. That door is closed, deliberately.
+2. ~~Design the wallet empty state~~ — **specced and drawn 2026-08-15.** All four wallet
+   states are hand-authored at 393 × 852 in `frames/cardi-wallet-frames.html`. Stitch was
+   not used: it cannot make this geometry, and the wallet needed a new seed it could not be
+   given (generation from zero still fails over MCP). A parallel Stitch run was made from
+   the web prompt box as an independent exploration — compare, don't merge blindly.
+
+   One authoring decision worth keeping: the frames are **self-contained, with the token
+   block duplicated** between the form and wallet files rather than linked from a shared
+   `.css`. A linked stylesheet was tried and reverted — any viewer that inlines the HTML
+   (preview panes, the Artifact CSP, pasting it anywhere) silently drops it and renders a
+   broken frame, which reads as _"the reference is wrong"_. Duplication is the cheaper
+   failure, and neither file was ever the source of truth for those values:
+   `cardi-design-system.md` is.
+
+3. **Amend the design system on the screen margin.** 20px is the single-column margin; the
+   grid is 16pt, and the 171px tile arithmetic depends on it. Right now the system states a
+   single figure that the wallet cannot honour.
+4. Re-verify the Stitch design system hasn't been clobbered again since 2026-08-12.
+5. ~~The Stitch canvas is ten screens and needs a clear-out~~ — **done 2026-08-15.** The
+   superseded decoy (`b1a1e6e6…` "Add Card Form" — barcode format row, "Save card", an
+   invented favourites toggle, a baked-in red error, and freshly repainted by
+   `apply_design_system` so that it _looked_ trustworthy) was deleted along with three
+   unlabelled duplicates and the four original frames. Stitch has **no delete-screen over
+   MCP**, so this was done in the UI. The canvas is now the geometry seed, the three
+   regenerated states, and the DS text render.
+
+   Still true and still worth knowing: `apply_design_system` is **per-screen only** — it does
+   not update `project.designTheme`, which remains stale. There is no MCP path to the project
+   default; that really is UI-only, and the canvas is inert to synthetic clicks.
+
+6. Decide the `orange` / `grey` → Cardì card-colour migration before the tokens PR.
+7. Three answers to the screen margin (`CardForm` 32px hardcoded, `AuthScreenLayout` token,
+   DS 20px) and the busy-button divergence — the shared `Button` greys its fill when
+   `loading`, where the DS now says busy keeps the ink.
