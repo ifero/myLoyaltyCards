@@ -100,7 +100,7 @@ jobs:
         run: yarn check:native-patches
       - name: Prebuild native projects
         run: npx expo prebuild --platform ios
-      - name: Generate watchOS catalogue (Brands.swift)
+      - name: Generate watchOS catalogue (brands + brand-logo assets)
         run: xcrun --sdk macosx swift watch-ios/Scripts/generate-catalogue.swift
       - name: Set up Ruby
         uses: ruby/setup-ruby@v1
