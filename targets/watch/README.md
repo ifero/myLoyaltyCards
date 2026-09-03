@@ -19,13 +19,21 @@ targets/watch/
 ├── WatchCardEntity.swift
 ├── Assets.xcassets/
 ├── Preview Content/
-├── Scripts/
-│   └── generate-catalogue.swift
-├── Generated/                   ← gitignored, auto-generated
-│   └── Brands.swift
+├── Generated/                   ← auto-generated, COMMITTED (drift-checked in CI)
+│   ├── Brands.swift
+│   ├── BrandLogoCatalog.generated.swift
+│   └── BrandLogoCatalog.swift   ← mirror of the widget's authored copy
 └── __tests__/
-    └── generate-catalogue.test.ts
+    ├── generate-catalogue.test.ts
+    ├── watch-brand-logo-contract.test.ts
+    └── watch-catalogue-helpers.ts
 ```
+
+The generator itself lives one level up, at `watch-ios/Scripts/generate-catalogue.swift` — not under
+this folder, which only holds target sources. That is a build constraint, not a filing preference:
+`@bacons/apple-targets` maps `targets/watch/` to a `PBXFileSystemSynchronizedRootGroup`, so Xcode
+compiles **everything** here into the watch target. A Swift script left in this folder becomes part
+of the app — it briefly lived at `targets/watch/Scripts/` until `28b9c32` moved it back out.
 
 ## Requirements
 
@@ -112,7 +120,7 @@ The `targets/watch/__tests__/generate-catalogue.test.ts` file is a Node.js/Jest 
 
 ### watchOS tests workflow
 
-The `.github/workflows/watchos-tests.yml` workflow runs on pull requests and on pushes to `main` that touch `targets/watch/**`, `watch-ios/**`, `app.json`, `fastlane/Fastfile` or the workflow itself, plus `workflow_dispatch` for a manual run on any branch. It runs the Jest catalogue tests, then `expo prebuild --clean --platform ios`, regenerates `Brands.swift`, checks the committed catalogue is in sync (`yarn check:catalogue-generated`), and finally `yarn watch:build:ci` to verify the watch target compiles. See [`docs/cicd.md`](../../docs/cicd.md) for the full pipeline.
+The `.github/workflows/watchos-tests.yml` workflow runs on pull requests and on pushes to `main` that touch `targets/watch/**`, `catalogue/**`, `targets/watch-widget/**`, `watch-ios/**`, `ios/**`, `app.json`, `fastlane/Fastfile` or the workflow itself, plus `workflow_dispatch` for a manual run on any branch. It runs the Jest catalogue tests, then `yarn check:catalogue-generated` **against the pristine checkout** — before anything regenerates, which is what makes it a real drift gate — then `expo prebuild --clean --platform ios`, and finally `yarn watch:build:ci` to verify the watch target compiles. The check covers all four generated sources (`Brands.swift`, both targets' `BrandLogoCatalog.generated.swift`, and the watch app's `BrandLogoCatalog.swift` mirror) plus a byte-for-byte comparison of the 57 `BrandLogo-*.imageset` copies. See [`docs/cicd.md`](../../docs/cicd.md) for the full pipeline.
 
 Two notes:
 
@@ -131,8 +139,8 @@ The watchOS app is **automatically embedded** in the iOS archive. No separate bu
 
 - **Companion-only**: no card creation or editing on watch
 - **Sync**: the iPhone publishes the full card list via `WCSession.updateApplicationContext` (last-write-wins snapshot). `WatchSessionManager` (in this folder) activates `WCSession`, receives the snapshot, and upserts into SwiftData — `CardListView`'s `@Query` then renders it. The phone↔watch link needs no App Group; the watch app→widget link does (below).
-- **Complication support**: implemented with **WidgetKit** (no ClockKit). The widget extension lives in `targets/watch-widget/WatchComplicationWidget.swift` (`AppIntentConfiguration` + `AppIntentTimelineProvider`) and supports the accessory families (`accessoryCircular`/`accessoryRectangular`/`accessoryInline`/`accessoryCorner`). `ComplicationProvider.swift` (in the watch app) writes a card snapshot to the shared App Group suite `group.com.iferoporefi.myloyaltycards.watch-complication` and calls `WidgetCenter.reloadTimelines` after every sync; the extension reads that suite. A configuration intent lets the user pick **Open App** mode or a **specific card** — the latter deep-links via `myloyaltycards://watch-card?id=…`, handled by `.onOpenURL` in `CardListView`.
-- **Complication fallback**: when no synced cards exist, the complication shows a localized "sync your cards" state and refreshes on the hourly timeline cadence.
+- **Complication support**: implemented with **WidgetKit** (no ClockKit), and deliberately **static**. The widget extension lives in `targets/watch-widget/WatchComplicationWidget.swift` — a `StaticConfiguration` with a plain `TimelineProvider` (`policy: .never`) that shows the app icon and opens the app via `myloyaltycards://watch`. There is **no** configuration intent, no card selection, and no per-card deep link: read the file's own header comment before assuming otherwise. Supported families are `accessoryCircular`/`accessoryRectangular`/`accessoryInline`/`accessoryCorner` — `ComplicationImage.swift` sizes the icon against the corner slot's tighter budget, which is the strictest of the four.
+- **Retained but dormant**: the per-card infrastructure is still in the tree so a card complication can be reintroduced without rebuilding it — `ComplicationProvider.swift` (in the watch app) writes a card snapshot to the shared App Group suite `group.com.iferoporefi.myloyaltycards.watch-complication` and calls `WidgetCenter.reloadTimelines` after every sync, `BrandLogoCatalog` + the 57 bundled `BrandLogo-*` imagesets and `WidgetCardPalette.swift` (a mirror of the app's `ColorHelpers`/`CARD_COLORS`, so a complication reads as the same colour as the in-app row) sit in the widget target, and `CardListView.swift` still carries a `WatchComplicationDeepLink` parser plus the `.onOpenURL` routing for `myloyaltycards://watch-card?id=…`. Nothing in the extension reads any of it today, and nothing anywhere constructs that URL — the only occurrence of `watch-card` in the repo is the parser's own constant. Story 16.29 made the **watch app's card list** the first live consumer of the logo half of that pipeline.
 - **Watch face limitations**: full brand color shows in the Smart Stack and full-color faces; faces that render accessory widgets in accented/vibrant mode will tint the complication per watchOS design.
 - **No React Native**: the watch app is pure Swift/SwiftUI; the `@bacons/apple-targets` plugin just handles Xcode project generation
 - **Future targets**: adding additional Apple targets follows the same pattern — create `targets/<name>/expo-target.config.js` and add source files

@@ -369,26 +369,55 @@ struct CardRowView: View {
   @ViewBuilder
   private var logoView: some View {
     if let brand = resolvedBrand {
-      // Catalogue brand — initials on brand-colored circle
-      let bgColor = accentColor
-      let useWhite = shouldUseWhiteText(onBackgroundHex: resolvedColorHex)
-      ZStack {
-        bgColor
-        Text(initials(from: brand.name ?? brand.id))
-          .font(.system(size: 12, weight: .bold))
-          .foregroundColor(useWhite ? .white : .black)
+      if let assetName = BrandLogoCatalog.assetName(for: brand.id) {
+        // Catalogue brand with bundled artwork — the real logo
+        brandLogo(
+          assetName: assetName,
+          prefersDarkBacking: BrandLogoCatalog.prefersDarkBacking(for: brand.id)
+        )
+      } else {
+        // Catalogue brand with no bundled imageset — initials on brand-colored circle
+        initialsAvatar(text: initials(from: brand.name ?? brand.id), backgroundHex: resolvedColorHex)
       }
     } else {
       // Custom card — user-selected color with initials
-      let bgColor = accentColor
-      let colorHex = card.colorHex ?? ""
-      let useWhite = shouldUseWhiteText(onBackgroundHex: colorHex)
-      ZStack {
-        bgColor
-        Text(initials(from: card.name))
-          .font(.system(size: 12, weight: .bold))
-          .foregroundColor(useWhite ? .white : .black)
-      }
+      initialsAvatar(text: initials(from: card.name), backgroundHex: card.colorHex ?? "")
+    }
+  }
+
+  /// Real brand artwork on a chip. Whether a logo needs a dark chip is the
+  /// generator's luminance decision (`BrandLogoCatalogData.lightLogoBrandIds`),
+  /// shared with the complication rather than re-derived here. The dark chip gets
+  /// the same hairline the row uses for near-black accents, so the disc stays
+  /// distinguishable from the row background.
+  @ViewBuilder
+  private func brandLogo(assetName: String, prefersDarkBacking: Bool) -> some View {
+    ZStack {
+      prefersDarkBacking ? Color.black : Color.white
+
+      // Decorative on purpose: the row is a single combined accessibility element
+      // labelled with the card name, so the logo must not add a second element.
+      Image(decorative: assetName)
+        .resizable()
+        .scaledToFit()
+        .padding(metrics.avatarLogoInset)
+    }
+    .overlay(
+      Circle()
+        .strokeBorder(prefersDarkBacking ? Color.white.opacity(0.15) : Color.clear, lineWidth: 1)
+    )
+  }
+
+  /// Initials on the resolved accent color — the fallback for custom cards and for
+  /// catalogue brands with no bundled artwork. `backgroundHex` decides the text
+  /// color and differs per branch, which is why it is passed in rather than derived.
+  @ViewBuilder
+  private func initialsAvatar(text: String, backgroundHex: String) -> some View {
+    ZStack {
+      accentColor
+      Text(text)
+        .font(.system(size: 12, weight: .bold))
+        .foregroundColor(shouldUseWhiteText(onBackgroundHex: backgroundHex) ? .white : .black)
     }
   }
 }

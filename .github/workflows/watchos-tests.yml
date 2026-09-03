@@ -8,6 +8,16 @@ on:
     types: [opened, synchronize, reopened, ready_for_review]
     paths:
       - 'targets/watch/**'
+      # The generator's INPUTS, not just its outputs. Without these two, a PR that adds
+      # a brand and forgets `yarn watch:catalogue:generate` touches only
+      # `catalogue/italy.json` and the widget's imageset — so this workflow would never
+      # run and the drift check would never fire, which is the exact failure that check
+      # exists to catch. It cannot live in the always-on quality-gates job either: that
+      # runs on ubuntu and `check:catalogue-generated` needs `xcrun swift`. (The Wear OS
+      # twin is pure Node, which is why it sits in the always-on job instead — see the
+      # comment beside `wear:catalogue:check` in ci-quality-gates.yml.)
+      - 'catalogue/**'
+      - 'targets/watch-widget/**'
       - 'watch-ios/**'
       - 'ios/**'
       - 'app.json'
@@ -17,6 +27,9 @@ on:
     branches: [main]
     paths:
       - 'targets/watch/**'
+      # Generator inputs too — see the pull_request filter above for why.
+      - 'catalogue/**'
+      - 'targets/watch-widget/**'
       - 'watch-ios/**'
       - 'ios/**'
       - 'app.json'
@@ -105,16 +118,21 @@ jobs:
         env:
           CI: true
 
-      - name: Generate iOS project with watch target
-        run: npx expo prebuild --clean --platform ios
-
-      - name: Generate watchOS catalogue (Brands.swift)
-        run: xcrun --sdk macosx swift watch-ios/Scripts/generate-catalogue.swift
-
-      - name: Check generated watchOS catalogue
+      # MUST run before anything regenerates. This step used to sit AFTER a plain
+      # `generate-catalogue.swift` run, so it compared freshly generated output
+      # against output generated moments earlier and could never fail — a
+      # contributor who edited catalogue/italy.json or a logo PNG without
+      # regenerating got a green board and shipped a stale catalogue. Against the
+      # pristine checkout it compares committed vs. regenerated, which is the gate.
+      # (`watch:build:ci` regenerates via its own `pre` hook, so the build below
+      # still gets fresh output regardless.)
+      - name: Check generated watchOS catalogue is in sync with its sources
         run: yarn check:catalogue-generated
         env:
           CI: true
+
+      - name: Generate iOS project with watch target
+        run: npx expo prebuild --clean --platform ios
 
       - name: Build watchOS target (xcodebuild)
         run: yarn watch:build:ci
