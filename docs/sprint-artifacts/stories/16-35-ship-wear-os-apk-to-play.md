@@ -586,3 +586,64 @@ for `bundleRelease`, not just `assembleRelease`.
 Whether Play accepts the Wear **bundle** on `wear:alpha`. Every earlier unknown on that path is now
 resolved — the track exists, signing is right, the phone half uploads — so this is the last one, and
 only an RC can close it.
+
+---
+
+## Post-merge #3: RC v1.0.0-rc.21 — `wear:alpha` does not exist
+
+**The AAB switch worked.** The Wear bundle built, passed signing parity, and **uploaded to Play
+successfully** — `Preparing aab at path .../watch-android/...`. The "APKs are not allowed" problem is
+solved. It then failed at the track step:
+
+```
+Google Api Error: Invalid request - Track not found: wear:alpha.
+```
+
+### ⚠️ Correcting a claim this record made after rc.20
+
+The rc.20 entry above states that `wear:alpha` exists and the Console form-factor opt-in is therefore
+done. **That was an unfounded inference and it is wrong.** `Uploader#perform_upload` uploads the
+artifact FIRST and calls `update_track` afterwards, so rc.20's APK rejection happened before track
+resolution ever ran — "no `Track not found`" was not evidence of anything. Whether the Console opt-in
+has been done is still **unconfirmed**.
+
+### The other cause, which is at least as likely
+
+`wear:` + the phone's track name is not a valid derivation.
+[developers.google.com/android-publisher/tracks](https://developers.google.com/android-publisher/tracks)
+lists only three well-known Wear names:
+
+| Track             | Meaning                                          |
+| ----------------- | ------------------------------------------------ |
+| `wear:production` | production                                       |
+| `wear:beta`       | open testing                                     |
+| `wear:qa`         | internal testing — note "qa", **not** "internal" |
+
+Everything else is a **closed** testing track, "created manually" with a "custom name". The phone
+ships to `alpha`, a closed track, which has **no automatic Wear counterpart** — `wear:alpha` would
+exist only if a Wear closed track were hand-created with exactly that name. So the default was wrong
+regardless of the opt-in question.
+
+### Change: stop guessing, make CI answer
+
+- **`WEAR_PLAY_TRACK`** overrides the track outright. The derived `wear:<phone track>` stays as a
+  default, now documented as a guess rather than a rule.
+- **On `Track not found`, the lane lists the tracks that actually exist**, via
+  `Supply::Client#tracks` on a fresh edit. Wrapped so it can never replace the real error — a
+  diagnostic that throws while explaining a throw is worse than none.
+
+Deliberately **no new default was invented**. `wear:beta` is _open_ testing; defaulting there to make
+the pipeline go green would publish the watch app more widely than the phone's closed alpha. Failing
+loudly with the real track list is the correct behaviour.
+
+### Where the pipeline stands
+
+| Stage                                      | Status                        |
+| ------------------------------------------ | ----------------------------- |
+| Wear bundle builds, signed, parity-checked | ✅ proven in CI               |
+| Wear bundle **accepted by Play**           | ✅ proven in rc.21            |
+| Phone AAB uploads to `alpha`               | ✅ proven in rc.20 and rc.21  |
+| Wear track resolves                        | ❌ the last remaining unknown |
+
+Everything except the track name is now proven against production. AC9 needs either the Console
+checked by hand, or one more RC to print the list.
