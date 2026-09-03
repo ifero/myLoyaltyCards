@@ -622,7 +622,7 @@ development_status:
   # SHIPS AS ONE RELEASE. Every story here is a native asset or a build-time value
   # and `runtimeVersion.policy` is `appVersion`, so none of it can go out as an OTA
   # update. Sequencing them into separate releases buys a store review to put users
-  # into an icon/name/colour mismatch and another to get them out. 21-6 is the gate.
+  # into an icon/name/colour mismatch and another to get them out. 21-7 is the gate.
   # 21-2 is a BIG BANG by design: tokens funnel into all three apps, so there is no
   # supported half-migrated state.
   epic-21: backlog
@@ -631,7 +631,8 @@ development_status:
   21-3-watchos-app-and-widget-icons: backlog
   21-4-wear-os-launcher-icons: backlog
   21-5-store-artwork: backlog
-  21-6-single-rebrand-release: backlog # GATE: 21-1..21-5 ship together or not at all
+  21-6-bundle-and-adopt-brand-typefaces: backlog # big bang, like 21-2; touches the boot path
+  21-7-single-rebrand-release: backlog # GATE: 21-1..21-6 ship together or not at all
   epic-21-retrospective: optional
 
   # --- Epic 22: Cardì Redesign — Screen Implementation -----------------------

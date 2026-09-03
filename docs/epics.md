@@ -12,7 +12,7 @@ project_name: 'myLoyaltyCards'
 user_name: 'Ifero'
 date: '2025-01-03'
 totalEpics: 23
-totalStories: 197 # counted from `### Story` headings on 2026-09-01
+totalStories: 198 # counted from `### Story` headings on 2026-09-01
 aligned_with_tracker: '2026-08-02'
 authoritative_source: 'docs/sprint-artifacts/sprint-status.yaml'
 ---
@@ -3680,7 +3680,7 @@ the colours inside it, and the four separate icon sets across phone, watch and w
 or a build-time value. `runtimeVersion.policy` is `appVersion`, so none of it can ship as an OTA
 update — each needs a store build. That means the pieces cannot be sequenced independently
 without buying a store review to put users into a mismatch and another to get them out. **Epic 21
-ships as one release**, and story 21.6 is the gate that enforces it.
+ships as one release**, and story 21.7 is the gate that enforces it.
 
 Story 20.4 already delivered the phone icon, the Android foreground, the themed layer, the
 favicon and the splash mark. Everything below points that same generator at the surfaces it did
@@ -3780,14 +3780,61 @@ what I install matches what I was shown.
 - Listing **text** is updated with the name change from 21.1 — title, subtitle, description and
   keywords.
 
-### Story 21.6: The Single Rebrand Release [Enabling]
+### Story 21.6: Bundle and Adopt the Brand Typefaces
+
+**As a** user, **I want** the app set in the brand's own typefaces, **So that** it reads as Cardì
+rather than as a default.
+
+The app ships **no custom font at all** — no font files, `expo-font` is not a dependency, and
+`TypographyToken` has no `fontFamily` field — so everything renders in the system face while the
+design system specifies Space Grotesk, Inter and JetBrains Mono. Every frame in
+`docs/design/cardi/frames/` is drawn in a typeface the app has never rendered.
+
+This is **one story, not two**, for the same reason the colour migration is a big bang: bundling
+the faces without re-deriving the scale ships something visibly worse than today, because the
+current tracking is SF Pro's.
+
+**Acceptance Criteria:**
+
+- Space Grotesk, Inter and JetBrains Mono are bundled at the weights actually used, and no
+  others. Licences are confirmed and recorded (all three are OFL) and the bundle-size cost is
+  measured, not assumed.
+- Fonts load before first paint. This touches the **boot path**, which is the risk: story 16.17
+  spent its budget making the native→JS launch handoff seamless, and a face that is not ready at
+  first paint reflows text exactly where that work was done. The launch surface must show no
+  reflow on a cold start.
+- `TypographyToken` gains `fontFamily`, and a decision is made and recorded on whether typography
+  joins the Style Dictionary pipeline — today `tokens/` holds only `color.json` and
+  `spacing.json`, and `shared/theme/typography.ts` is hand-authored.
+- **The scale is re-derived, not re-labelled.** The app carries Apple's HIG taxonomy and metrics;
+  the design system carries its own. Eleven app tokens map onto seven design-system tokens, so
+  the mapping is decided explicitly and the losses are named:
+
+  |          | app today              | design system                          |
+  | -------- | ---------------------- | -------------------------------------- |
+  | display  | 34/41 · w700 · +0.37pt | 34/40 · w800 · −0.03em · Space Grotesk |
+  | headline | 22/28 · w700 · +0.35pt | 24/32 · w700 · −0.01em · Space Grotesk |
+  | body     | 17/22 · w400 · −0.41pt | 17/24 · w400 · Inter                   |
+  | label    | 13/18 · w400 · −0.08pt | 13/18 · w600 · +0.02em · Inter         |
+
+- **Tracking units are converted, not copied.** The design system specifies `em`; React Native's
+  `letterSpacing` is in points, so each value is resolved against its own size.
+- All 13 `TYPOGRAPHY` consumers are migrated, and the four hardcoded monospace sites
+  (`Menlo` / `monospace` / `Courier` in the card-number and barcode components) become JetBrains
+  Mono.
+- The two watch apps are covered or explicitly deferred to Epic 23 — they carry their own type
+  stacks and do not inherit this change.
+- Verified on device in both schemes, at the largest and smallest Dynamic Type settings, and the
+  contrast suite still passes.
+
+### Story 21.7: The Single Rebrand Release [Enabling]
 
 **As a** user, **I want** the rebrand to arrive complete, **So that** I never see an app whose
 icon, name and colours disagree with each other.
 
 **Acceptance Criteria:**
 
-- Stories 21.1–21.5 ship in **one** store release on both platforms. None is released alone.
+- Stories 21.1–21.6 ship in **one** store release on both platforms. None is released alone.
 - The release is verified on real devices before submission: home-screen icon and label, app
   switcher, launch surface into first screen with no colour discontinuity, watch face and watch
   app icon, and the themed (Material You) icon on Android 13+.
