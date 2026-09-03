@@ -477,15 +477,33 @@ Wear OS store-listing assets, and the Digital Asset Links publication.
 ### versionCode bands
 
 Play allocates `versionCode` **per application ID**, and this Wear APK shares
-`com.iferoporefi.myloyaltycards` with the phone app. It is therefore a **third and fourth consumer of
-one shared counter space**. Story 16.7 exists because two counters already collided there.
+`com.iferoporefi.myloyaltycards` with the phone app. The Wear bands are therefore the **third through sixth
+consumers of one shared counter space**. Story 16.7 exists because two counters already collided there.
 
-| Band        | Consumer                    | Set by                                                                                       |
-| ----------- | --------------------------- | -------------------------------------------------------------------------------------------- |
-| `0`         | phone, alpha/beta           | `beta-releases.yml` — bare `GITHUB_RUN_NUMBER`                                               |
-| `1_000_000` | phone, production           | `store-upload.yml` — `PRODUCTION_VERSION_CODE_OFFSET` in [`app.config.ts`](../app.config.ts) |
-| `2_000_000` | **Wear OS APK, alpha/beta** | [`app/build.gradle.kts`](app/build.gradle.kts) in this project                               |
-| `3_000_000` | **Wear OS APK, production** | the same file — band + `wearProductionVersionCodeOffset`                                     |
+| Band        | Consumer                | Set by                                                                                       |
+| ----------- | ----------------------- | -------------------------------------------------------------------------------------------- |
+| `0`         | phone, alpha/beta       | `beta-releases.yml` — bare `GITHUB_RUN_NUMBER`                                               |
+| `1_000_000` | phone, production       | `store-upload.yml` — `PRODUCTION_VERSION_CODE_OFFSET` in [`app.config.ts`](../app.config.ts) |
+| `2_000_000` | **Wear OS, alpha/beta** | [`app/build.gradle.kts`](app/build.gradle.kts) in this project                               |
+| `3_000_000` | **Wear OS, production** | the same file — band + `wearProductionVersionCodeOffset`                                     |
+| `4_000_000` | phone, nightly          | `nightly-builds.yml` — workflow arithmetic, as `store-upload.yml` does (Story 16.36)         |
+| `5_000_000` | **Wear OS, nightly**    | the same file — band + `wearNightlyVersionCodeOffset` (Story 16.36)                          |
+
+> **Why a fifth and sixth band (Story 16.36).** `GITHUB_RUN_NUMBER` is scoped **per workflow
+> file**, so `nightly-builds.yml` starts an independent counter at 1. Without its own bands,
+> nightly run 40 and RC run 40 would both compute `2_000_040` — the two-counters-one-band
+> collision Story 16.7 documents. `WEAR_RELEASE_TRACK` is therefore three-state:
+> `production` → `3_000_000`, `nightly` → `5_000_000`, anything else (including unset)
+> → `2_000_000`. A **typo lands on the beta band deliberately** — colliding with a _future_
+> production or nightly code is a hard Play rejection you find immediately, while colliding
+> with an already-uploaded RC code is the plausible-looking failure the scheme exists to
+> prevent.
+>
+> **⚠️ The nightly bands sit ABOVE production, and that has a user-visible consequence.** A
+> device on a nightly carries a higher `versionCode` than any production release, so it will
+> **never receive a production build as an update**. That is acceptable for an internal track
+> whose testers opted in, and it is the price of collision-free counters — but leaving the
+> nightly track means reinstalling, not waiting.
 
 The Wear counter comes from the `WEAR_VERSION_CODE` environment variable — a **distinct name** from the
 phone's `ANDROID_VERSION_CODE`, so a Wear build can never silently inherit the phone's counter.

@@ -14,11 +14,14 @@ This document describes the current GitHub Actions and Fastlane CI/CD pipeline f
   - [Android AdHoc Build](#android-adhoc-build)
   - [Beta Releases (RC)](#beta-releases-rc)
   - [Store Upload (Final Release)](#store-upload-final-release)
+  - [Nightly Internal Builds](#nightly-internal-builds)
 - [Fastlane & Native Build Notes](#fastlane--native-build-notes)
 - [Release Runbooks](#release-runbooks)
   - [Why releases are published, not just tagged](#why-releases-are-published-not-just-tagged)
   - [Ship to TestFlight](#ship-to-testflight)
   - [Release to Production](#release-to-production)
+  - [Run a nightly by hand](#run-a-nightly-by-hand)
+  - [The nightly did not ship](#the-nightly-did-not-ship)
   - [Manual / AdHoc Build](#manual--adhoc-build)
 - [watchOS CI/CD](#watchos-ci-cd)
 - [Provisioning & match](#provisioning--match)
@@ -35,6 +38,10 @@ flowchart LR
   PUSH -->|binary-affecting paths change| ANDA["android-release.yml"]
   RCREL["Published pre-release v*.*.*-rc.*"] --> BETA["beta-releases.yml"]
   RELREL["Published release v*.*.*"] --> STORE["store-upload.yml"]
+  CRON["Nightly cron 02:17 UTC<br/>or workflow_dispatch"] --> NIGHTLY["nightly-builds.yml"]
+  NIGHTLY --> PRE{"preflight: anything<br/>binary-affecting changed<br/>since nightly/*?"}
+  PRE -->|no| SKIP["skipped (green)"]
+  PRE -->|yes| NB["TestFlight + Play internal + wear:qa"]
   BETA -->|builds| TF["TestFlight + Android Beta"]
   STORE -->|uploads| STORE2["App Store + Play Store"]
 ```
@@ -47,6 +54,7 @@ flowchart LR
 - `.github/workflows/android-release.yml`
 - `.github/workflows/beta-releases.yml`
 - `.github/workflows/store-upload.yml`
+- `.github/workflows/nightly-builds.yml`
 
 ## Workflow Details
 
@@ -207,6 +215,35 @@ Notes:
 - The iOS release job includes the watchOS companion app build and signing as part of the same lane.
 - This workflow uploads to App Store Connect and Play Store production.
 
+### Nightly Internal Builds
+
+File: `.github/workflows/nightly-builds.yml` (Story 16.36)
+
+Triggers:
+
+- `schedule` — `17 2 * * *` (02:17 UTC). Off-peak and off-the-hour deliberately: GitHub queues every `0 * * * *` job on the hour and delays scheduled runs under load. Unlike `push`, a scheduled run is **not** suppressed by the `[skip ci]` marker `mark-story-done.yml` lands on `main` — that commit still reaches the preflight, which correctly classifies it as a docs-only change and skips.
+- `workflow_dispatch` — a first-class entry point, not an escape hatch. Four inputs: `platform` (`both`/`ios`/`android`), `force` (**default true**), `dry_run`, `ref`.
+
+⚠️ **`schedule:` only ever runs the default branch's copy of the file.** Nothing in this workflow can be exercised from a branch by the cron; use a dispatch with `ref` to test it before merge.
+
+Jobs:
+
+- `preflight` decides, per platform, whether anything binary-affecting changed. It cannot use `paths:` — GitHub applies those only to `push`/`pull_request` — so it runs `scripts/nightly-build-decision.mjs`, which diffs the current commit against that platform's baseline tag using the same committed definition in `.github/build-path-filters.json` that `yarn check:build-path-filters` holds the release workflows to.
+- `ios` builds and uploads to TestFlight via `bundle exec fastlane ios nightly`. The Apple Watch app and complication ride along in the same IPA — there is no standalone watchOS upload (ADR-2026-04-11-002).
+- `android` builds and uploads **both** Android artifacts via `bundle exec fastlane android nightly`: the phone AAB to Play `internal`, the Wear OS AAB to **`wear:qa`**. One job carrying both toolchains, for the same reason as the RC pipeline — the two artifacts are one release intent, so a partial ship is one red X.
+- `record-baseline` moves the baseline tags. **Schedule only.**
+- `notify-failure` posts a job-result table, and Slack when `SLACK_WEBHOOK_URL` is set.
+
+Notes:
+
+- **The Wear track is `wear:qa`, and it is set explicitly.** Play names the Wear internal-testing track `qa`, so `wear:internal` does not exist and the phone's `internal` has no derivable counterpart. The workflow sets `WEAR_PLAY_TRACK: wear:qa`, and the `android nightly` lane **refuses to start without it** — before the phone AAB is uploaded, so a missing value cannot produce a phone-only nightly.
+- **Nightly uploads are `release_status: "completed"`, not the RC lane's `draft`.** The RC lane uses a draft so promoting to testers stays a human action; a nightly whose whole purpose is unattended delivery cannot require a nightly human click. Do not "restore consistency" — it would turn the nightly into a queue of undelivered drafts that looks green from CI.
+- **Two new versionCode bands.** `GITHUB_RUN_NUMBER` is scoped per workflow file, so this file starts a fifth independent counter. The phone uses `4_000_000 + run` (arithmetic in the workflow, as `store-upload.yml` does); Wear uses `5_000_000 + run` (applied in `watch-android/app/build.gradle.kts`, selected from the upload track so the band cannot disagree with the destination). ⚠️ Nightly codes are **higher than production codes**, so a device on a nightly never receives a production build as an update — leaving the nightly track means reinstalling.
+- **iOS needs no band.** `fastlane ios nightly` derives its build number from `latest_testflight_build_number + 1`, the only build number in this repo read from remote state, so it is inherently workflow-independent.
+- **Baselines are the moving tags `nightly/ios` and `nightly/android`**, force-pushed with the default `GITHUB_TOKEN` after a successful upload. They match no existing tag trigger (`v*.*.*-rc.*`, `v*.*.*`), and pushes made with `GITHUB_TOKEN` do not trigger workflow runs — two independent guards against a nightly tag firing a store upload. Each tag moves only if **its** platform succeeded, so a failed platform retries tomorrow rather than swallowing the change. **A `workflow_dispatch` never moves a tag**, whatever its inputs.
+- **A skip is a green run**, never a red X and never a warning: the common case must not train everyone to ignore the signal. It explains itself in the job summary — baseline SHA, head SHA, file counts and the triggering files.
+- Every job sets `timeout-minutes`. The older release workflows do not, which is worth fixing separately.
+
 ## Fastlane & Native Build Notes
 
 Location:
@@ -228,6 +265,7 @@ iOS lanes summary:
 
 - `ios adhoc` — AdHoc distribution build
 - `ios beta` — TestFlight upload
+- `ios nightly` — the same build as `beta`; accepts `dry_run:true` to build without uploading
 - `ios upload_release` — App Store release upload
 
 Android lanes summary:
@@ -235,6 +273,8 @@ Android lanes summary:
 - `android adhoc` — Release APK build (phone only; no Wear artifact, nothing is uploaded)
 - `android beta` — Builds the phone AAB and the Wear OS AAB; uploads them to the `alpha` track and the Wear track (`WEAR_PLAY_TRACK`) respectively
 - `android upload_release` — the same pair, to `production` and `wear:production`
+- `android nightly` — the same pair, to `internal` and `WEAR_PLAY_TRACK` (`wear:qa`), with `release_status: "completed"`; accepts `dry_run:true`
+- `ship_ios!` / `ship_android!` (private) — the shared lane bodies. `beta`, `upload_release` and `nightly` differ only in track, release status and whether they upload
 - `build_wear_bundle!` (private) — builds and signing-parity-checks the Wear AAB; runs **before** either upload so a build failure cannot strand a phone-only release
 - `upload_wear_bundle!` (private) — uploads that AAB to the `wear:` form-factor track, and translates Play's `Track not found` into the Console steps that fix it
 
@@ -277,6 +317,29 @@ gh release create v1.0.0 --generate-notes --target main
 3. Monitor `.github/workflows/store-upload.yml` in GitHub Actions. `Beta Releases (RC)` will appear with all jobs `skipped`.
 4. Verify **both** Play Console production tracks: the mobile track (phone, version code `<run> + 1000000`) and `wear:production` (Wear OS AAB, version code `3000000 + <run>`). Shipping the phone without the Wear half would silently downgrade every tester who already has the watch app.
 5. After upload completes, submit the build for App Store / Play Store review.
+
+### Run a nightly by hand
+
+Actions → **Nightly Internal Builds** → _Run workflow_. Useful combinations:
+
+| Goal                                      | Inputs                                                                                                                 |
+| ----------------------------------------- | ---------------------------------------------------------------------------------------------------------------------- |
+| Test the pipeline without shipping        | `dry_run: true` — builds and verifies everything, uploads nothing; the IPA and both AABs are attached as run artifacts |
+| Get an Android build to testers right now | `platform: android` (skips the 10× macOS job)                                                                          |
+| Exercise this workflow before it merges   | `ref: <your-branch>` — `schedule:` only ever runs the default branch's copy                                            |
+| Re-ship an unchanged commit               | `force: true` (already the default on a dispatch)                                                                      |
+
+A manual run **never moves a baseline tag**, so it cannot make the next scheduled run skip a change.
+
+### The nightly did not ship
+
+Check in this order:
+
+1. **Did the run happen?** Actions → Nightly Internal Builds. GitHub disables scheduled workflows in repositories with no activity for 60 days; re-enable from the Actions tab.
+2. **Was it a deliberate skip?** Open the run summary. A skip is green and states the baseline SHA, the head SHA and how many changed files were binary-affecting. `0 of N` means the gate worked.
+3. **Is the baseline stale or wrong?** `git fetch --tags && git log nightly/ios..main --oneline` shows exactly what the next nightly considers pending. Deleting the tag makes the next run fail open and build.
+4. **Did the path definition drift?** `yarn check:build-path-filters`. If a new source directory is missing from `.github/build-path-filters.json`, changes inside it will never trigger a nightly.
+5. **Did the Wear half fail alone?** Look for `Track not found` — the lane prints the tracks this app actually has. Note the phone AAB is uploaded before the Wear AAB, so this state means Play `internal` has a phone build with no matching watch build.
 
 ### Manual / AdHoc Build
 
@@ -424,3 +487,4 @@ CI keychain setup:
 - `.github/workflows/android-release.yml`
 - `.github/workflows/beta-releases.yml`
 - `.github/workflows/store-upload.yml`
+- `.github/workflows/nightly-builds.yml`

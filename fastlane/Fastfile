@@ -115,8 +115,23 @@ platform :ios do
     )
   end
 
-  desc "Build and upload to TestFlight"
-  lane :beta do
+  # Build the app-store IPA and (unless told not to) send it to TestFlight.
+  #
+  # ONE BODY, TWO LANES: `beta` (RC) and `nightly` (Story 16.36) ship the same binary to the
+  # same place by the same rules. They are separate lanes only so the intent is visible in the
+  # workflow that calls them; a second copy of this body would be a place for them to drift.
+  #
+  # THE APPLE WATCH RIDES ALONG, and needs nothing here. `apply_distribution_signing` wires all
+  # three targets — phone, watch app, WidgetKit complication — and Apple provides no standalone
+  # watchOS upload at all (ADR-2026-04-11-002), so one TestFlight upload delivers all three.
+  #
+  # THE BUILD NUMBER COMES FROM REMOTE STATE, not from GITHUB_RUN_NUMBER, and that is why iOS
+  # needs no versionCode-style band scheme the way Android does: asking App Store Connect for
+  # the highest build number is inherently workflow-independent, so the RC and nightly
+  # pipelines cannot collide however many times either runs.
+  private_lane :ship_ios! do |options|
+    upload = options.fetch(:upload)
+
     api_key = app_store_connect_api_key(
       key_id: ENV['APP_STORE_CONNECT_API_KEY_KEY_ID'],
       issuer_id: ENV['APP_STORE_CONNECT_API_KEY_ISSUER_ID'],
@@ -145,9 +160,34 @@ platform :ios do
       },
       xcargs: "DEVELOPMENT_TEAM='#{ENV['FASTLANE_TEAM_ID']}'"
     )
+
+    unless upload
+      # `dry_run` from the nightly's workflow_dispatch. Everything expensive and everything
+      # that can fail has already run; what is skipped is the one irreversible step. A
+      # TestFlight build number is consumed by an UPLOAD, not by asking for the last one, so a
+      # dry run costs nothing but minutes and leaves the IPA as a workflow artifact.
+      UI.important("DRY RUN — built the app-store IPA, skipping the TestFlight upload.")
+      next
+    end
+
     upload_to_testflight(
       api_key: api_key
     )
+  end
+
+  desc "Build and upload to TestFlight"
+  lane :beta do
+    ship_ios!(upload: true)
+  end
+
+  # Nightly internal build (Story 16.36). Identical to `beta` by design — see `ship_ios!`.
+  #
+  # There is deliberately NO `groups:` here and none in `beta`: a bare `upload_to_testflight`
+  # delivers to App Store Connect INTERNAL users, which is already exactly what "the internal
+  # track" means on iOS. Adding a group would change who gets RC builds too.
+  desc "Nightly internal build → TestFlight (Story 16.36)"
+  lane :nightly do |options|
+    ship_ios!(upload: !options[:dry_run])
   end
 
   desc "Build and upload to App Store Connect (release)"
@@ -304,9 +344,25 @@ platform :android do
   # `wearProductionVersionCodeOffset` in watch-android/app/build.gradle.kts.
   #
   # Returns the absolute path to the verified, signed Wear bundle.
+  # Which Wear `versionCode` band each phone track implies. Derived from the destination
+  # rather than passed in separately, so the band can never disagree with where the artifact
+  # is going — see `wearVersionCodeBand` in watch-android/app/build.gradle.kts.
+  #
+  # `internal` maps to the nightly band because the nightly is the only pipeline that uploads
+  # there (Story 16.36). Anything unlisted falls through to `beta`, which is the deliberate
+  # safe default: colliding with a *future* production or nightly code is a hard Play
+  # rejection you find immediately, while colliding with an already-uploaded RC code is the
+  # plausible-looking failure the band scheme exists to prevent.
+  # A `def`, not a constant, deliberately: a constant assigned inside a `platform` block is not
+  # reachable from every scope the Fastfile evaluates in, while a `def` is — the same shape
+  # `wear_play_track` uses.
+  def wear_band_for(phone_track)
+    { "production" => "production", "internal" => "nightly" }.fetch(phone_track, "beta")
+  end
+
   private_lane :build_wear_bundle! do |options|
     track = options.fetch(:track)
-    ENV['WEAR_RELEASE_TRACK'] = track == "production" ? "production" : "beta"
+    ENV['WEAR_RELEASE_TRACK'] = wear_band_for(track)
 
     gradle(
       task: "bundleRelease",
@@ -374,6 +430,39 @@ platform :android do
     return override unless override.empty?
 
     "#{WEAR_TRACK_PREFIX}:#{phone_track}"
+  end
+
+  # Wear track names that are NOT derivable from the phone track they pair with, and what to
+  # use instead. Play's three WELL-KNOWN Wear names are `wear:production`, `wear:beta` and
+  # `wear:qa`; everything else is a hand-created closed track. `wear:alpha` therefore exists
+  # for THIS app only because someone made a closed track called "alpha" — which is why the
+  # derivation is a default rather than a rule, and why this list is a deny-list of known-bad
+  # derivations rather than an allow-list of good ones. An allow-list would break the RC lane.
+  UNDERIVABLE_WEAR_TRACKS = {
+    # Play names the Wear internal-testing track `qa`, not `internal`.
+    "internal" => "wear:qa"
+  }.freeze
+
+  # Fail BEFORE anything is built or uploaded when the Wear destination cannot be derived and
+  # no override was given.
+  #
+  # This lives in `ship_android!`, not in the `nightly` lane, on purpose: `wear_play_track` is
+  # only consulted inside `upload_wear_bundle!` — i.e. AFTER the phone AAB has been uploaded —
+  # so relying on it to fail would produce exactly the phone-only release Story 16.35 exists to
+  # prevent, and exactly the "guard evaluated too late" defect its review finding #2 caught.
+  # Putting it here means any future caller of `ship_android!` inherits the protection instead
+  # of having to remember it.
+  def ensure_wear_track_resolvable!(phone_track)
+    return unless UNDERIVABLE_WEAR_TRACKS.key?(phone_track)
+    return unless ENV['WEAR_PLAY_TRACK'].to_s.strip.empty?
+
+    expected = UNDERIVABLE_WEAR_TRACKS.fetch(phone_track)
+    UI.user_error!(
+      "WEAR_PLAY_TRACK is not set, and `wear:#{phone_track}` DOES NOT EXIST — Play names " \
+      "the Wear counterpart of `#{phone_track}` `#{expected}`. Set WEAR_PLAY_TRACK=#{expected} " \
+      "in the workflow. Failing now, before anything is built or uploaded, so this cannot " \
+      "ship the phone without the watch (Story 16.35's failure mode)."
+    )
   end
 
   # Ask Play which tracks this app actually has, for the `Track not found` message.
@@ -491,16 +580,38 @@ platform :android do
     )
   end
 
-  desc "Build and upload to Play Console (alpha)"
-  lane :beta do
+  # Build BOTH Android artifacts, then upload BOTH — the phone AAB to a mobile track and the
+  # Wear OS AAB to its own `wear:` form-factor track.
+  #
+  # ONE BODY, THREE LANES (`beta`, `upload_release`, `nightly`). These were two near-identical
+  # 50-line copies before Story 16.36; a third would have been the one that drifted. What
+  # actually differs between them is three values, so three values are what they pass.
+  #
+  # ORDER IS LOAD-BEARING — build everything before uploading anything:
+  #
+  #   build phone AAB -> build+verify Wear AAB -> upload phone -> upload Wear
+  #
+  # so a Kotlin error, an R8 failure, a missing artifact or a signing-certificate mismatch all
+  # happen while NOTHING has been uploaded. What remains inside the risk window is only the two
+  # `upload_to_play_store` calls, and that window is irreducible: `supply` declares
+  # `:apk`/`:apk_paths` as `conflicting_options` with `:aab`/`:aab_paths`, so one invocation
+  # carries bundles or APKs, never both. Do not interleave a build between the two uploads —
+  # that reintroduces the phone-only release through a different door (Story 16.35, review #2).
+  private_lane :ship_android! do |options|
+    track = options.fetch(:track)
+    release_status = options.fetch(:release_status)
+    upload = options.fetch(:upload)
+
     UI.user_error!("Missing ANDROID_PACKAGE_NAME") unless package_name
     UI.user_error!("Missing PLAY_STORE_API_KEY") unless json_key_data
 
     ensure_android_signing_env!
+    ensure_wear_track_resolvable!(track)
 
-    # versionCode is set authoritatively by app.config.ts at `expo prebuild`
-    # time (from ANDROID_VERSION_CODE) and baked into the generated build.gradle
-    # — see beta-releases.yml. This lane only signs and uploads the AAB.
+    # versionCode is set authoritatively by app.config.ts at `expo prebuild` time (from
+    # ANDROID_VERSION_CODE, in the band the calling workflow chose) and baked into the
+    # generated build.gradle — see beta-releases.yml, store-upload.yml and
+    # nightly-builds.yml. This lane only signs and uploads.
     gradle(
       task: "bundleRelease",
       project_dir: "android",
@@ -514,13 +625,21 @@ platform :android do
 
     # Build and verify the watch half BEFORE either upload, so a Kotlin/R8/signing
     # failure cannot leave a phone-only release behind (Story 16.35).
-    wear_bundle = build_wear_bundle!(track: "alpha")
+    wear_bundle = build_wear_bundle!(track: track)
+
+    unless upload
+      # `dry_run` from the nightly's workflow_dispatch. Both artifacts are built and the
+      # signing-parity gate has passed; the only thing skipped is the pair of irreversible
+      # `supply` calls. The workflow keeps both bundles as artifacts.
+      UI.important("DRY RUN — built and verified both bundles, skipping both Play uploads.")
+      next
+    end
 
     upload_to_play_store(
       package_name: package_name,
       json_key_data: json_key_data,
-      track: "alpha",
-      release_status: "draft",
+      track: track,
+      release_status: release_status,
       aab: project_path(PHONE_RELEASE_AAB),
       # REQUIRED, and not redundant with passing `aab:` explicitly.
       #
@@ -541,66 +660,41 @@ platform :android do
       skip_upload_screenshots: true
     )
 
-    # Immediately after the phone upload, into the SAME track release — see
+    # Immediately after the phone upload, onto the Wear form-factor track — see
     # upload_wear_bundle! for why order and same-lane execution are load-bearing.
-    upload_wear_bundle!(track: "alpha", release_status: "draft", aab: wear_bundle)
+    upload_wear_bundle!(track: track, release_status: release_status, aab: wear_bundle)
+  end
+
+  desc "Build and upload to Play Console (alpha)"
+  lane :beta do
+    # `draft` is deliberate on the RC lane: promoting an RC to testers stays a human action.
+    ship_android!(track: "alpha", release_status: "draft", upload: true)
   end
 
   desc "Build and upload to Play Store (release)"
   lane :upload_release do
-    UI.user_error!("Missing ANDROID_PACKAGE_NAME") unless package_name
-    UI.user_error!("Missing PLAY_STORE_API_KEY") unless json_key_data
+    ship_android!(track: "production", release_status: "completed", upload: true)
+  end
 
-    ensure_android_signing_env!
-
-    # versionCode is set authoritatively by app.config.ts at `expo prebuild`
-    # time (from ANDROID_VERSION_CODE, production offset band) and baked into the
-    # generated build.gradle — see store-upload.yml. This lane signs and uploads.
-    gradle(
-      task: "bundleRelease",
-      project_dir: "android",
-      properties: {
-        "android.injected.signing.store.file" => ENV['ANDROID_KEYSTORE_PATH'],
-        "android.injected.signing.store.password" => ENV['ANDROID_KEYSTORE_PASSWORD'],
-        "android.injected.signing.key.alias" => ENV['ANDROID_KEY_ALIAS'],
-        "android.injected.signing.key.password" => ENV['ANDROID_KEY_PASSWORD']
-      }
+  # Nightly internal build (Story 16.36): phone AAB -> `internal`, Wear AAB -> `wear:qa`.
+  #
+  # `release_status: "completed"`, NOT the `draft` the RC lane uses, and the difference is the
+  # whole point rather than an oversight. `beta` uploads a draft so that promoting an RC to
+  # testers is a deliberate human click; a nightly whose purpose is unattended delivery cannot
+  # require a nightly human click, or it delivers nothing. **Do not "restore consistency" with
+  # `beta` here** — that would silently turn the nightly into a queue of undelivered drafts,
+  # which looks green from CI and is invisible to the testers waiting for a build.
+  #
+  # The Wear track is NOT derived from `internal`: Play names the Wear internal-testing track
+  # `qa`, so `wear:internal` does not exist. `nightly-builds.yml` sets `WEAR_PLAY_TRACK=wear:qa`
+  # and `wear_play_track` uses it verbatim — see that helper for why the derivation is only ever
+  # a default (RC v1.0.0-rc.21 died on `Track not found: wear:alpha`).
+  desc "Nightly internal build → Play internal + wear:qa (Story 16.36)"
+  lane :nightly do |options|
+    ship_android!(
+      track: "internal",
+      release_status: "completed",
+      upload: !options[:dry_run]
     )
-
-    # Build and verify the watch half BEFORE either upload — see the `beta` lane.
-    wear_bundle = build_wear_bundle!(track: "production")
-
-    upload_to_play_store(
-      package_name: package_name,
-      json_key_data: json_key_data,
-      track: "production",
-      aab: project_path(PHONE_RELEASE_AAB),
-      # REQUIRED, and not redundant with passing `aab:` explicitly.
-      #
-      # upload_to_play_store.rb:10-17 fills `apk:` from `lane_context` whenever neither
-      # `apk:` nor `apk_paths:` is given, so a stray APK left by an earlier Gradle step in
-      # this lane lands here and supply's verify_config! refuses the pair with "Cannot
-      # provide both apk(s) and aab". That is exactly what failed RC v1.0.0-rc.19, when the
-      # Wear half still built an APK. It builds a bundle now, so nothing sets that slot —
-      # but the guard stays: the failure mode is invisible until a release dies on it.
-      #
-      # The trap only exists because the build order was changed so BOTH artifacts are built
-      # before either is uploaded. That ordering is deliberate and worth keeping (a build
-      # failure then cannot strand a phone-only release), so this guard is its cost.
-      skip_upload_apk: true,
-      skip_upload_metadata: true,
-      skip_upload_changelogs: true,
-      skip_upload_images: true,
-      skip_upload_screenshots: true
-    )
-
-    # The watch half of the same release (Story 16.35, AC2). Production needs this
-    # as much as the RC track does: shipping the watch app to testers but not to
-    # production would silently DOWNGRADE those users on the next release — no
-    # crash, no telemetry, and the Play Console would look correct.
-    #
-    # `release_status` is supply's default (`completed`), matching the phone upload
-    # directly above, so both artifacts land in one fully-released release.
-    upload_wear_bundle!(track: "production", release_status: "completed", aab: wear_bundle)
   end
 end

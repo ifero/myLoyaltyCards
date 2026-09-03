@@ -26,6 +26,7 @@
     "splash:check": "node scripts/build-splash-icon.mjs --check",
     "wear:catalogue:generate": "node scripts/generate-wear-catalogue.mjs",
     "wear:catalogue:check": "node scripts/generate-wear-catalogue.mjs --check",
+    "check:build-path-filters": "node scripts/check-build-path-filters.mjs",
     "check:no-tests-folders": "node scripts/check-no-tests-folders.mjs",
     "check:native-patches": "node scripts/verify-native-patches.mjs",
     "check:native-strings": "node scripts/verify-native-strings.mjs",
