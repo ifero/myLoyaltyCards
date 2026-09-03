@@ -187,8 +187,9 @@ final class CardRowHelpersTests: XCTestCase {
 
   // MARK: - Brand Identity Display
 
-  func test_catalogueBrand_usesInitials() throws {
-    // Catalogue brand should show initials derived from brand name
+  func test_catalogueBrand_initialsFallback_derivesFromBrandName() throws {
+    // Initials are the fallback for a catalogue brand with no bundled imageset
+    // (Story 16.29); brands that ship artwork render the logo instead.
     let name = "Esselunga"
     XCTAssertEqual(initials(from: name), "ES")
   }
@@ -197,6 +198,62 @@ final class CardRowHelpersTests: XCTestCase {
     // Custom card with no brandId should fall back to mapColor from colorHex
     let color = mapColor(hex: "#ff4d4d")
     XCTAssertNotNil(color)
+  }
+
+  // MARK: - Brand logo resolution (Story 16.29 / AC2, AC3)
+  //
+  // BrandLogoCatalog is the generator-mirrored resolver shared with the watch
+  // complication (targets/watch/Generated/BrandLogoCatalog.swift). These cover the
+  // two fallback paths the card list depends on: an unknown brand must resolve to
+  // nil so the row draws initials rather than an empty circle.
+
+  func test_assetName_knownBrand_returnsImagesetName() throws {
+    XCTAssertEqual(BrandLogoCatalog.assetName(for: "esselunga"), "BrandLogo-esselunga")
+  }
+
+  func test_assetName_normalizesCasingAndWhitespace() throws {
+    // The row trims and lowercases brand ids before lookup; the resolver must agree.
+    XCTAssertEqual(BrandLogoCatalog.assetName(for: "  Esselunga  "), "BrandLogo-esselunga")
+  }
+
+  func test_assetName_unknownBrand_returnsNil() throws {
+    // A brand added to catalogue/italy.json with no bundled PNG lands here.
+    XCTAssertNil(BrandLogoCatalog.assetName(for: "brand-with-no-artwork"))
+  }
+
+  func test_assetName_nilOrEmptyBrandId_returnsNil() throws {
+    // Custom cards carry no brandId at all.
+    XCTAssertNil(BrandLogoCatalog.assetName(for: nil))
+    XCTAssertNil(BrandLogoCatalog.assetName(for: ""))
+    XCTAssertNil(BrandLogoCatalog.assetName(for: "   "))
+  }
+
+  func test_prefersDarkBacking_lightLogo_isTrue() throws {
+    // conad is classified light by the generator's luminance analysis, so it needs
+    // a dark chip to stay visible on the row.
+    XCTAssertTrue(BrandLogoCatalog.prefersDarkBacking(for: "conad"))
+  }
+
+  func test_prefersDarkBacking_normalLogo_isFalse() throws {
+    XCTAssertFalse(BrandLogoCatalog.prefersDarkBacking(for: "esselunga"))
+  }
+
+  func test_prefersDarkBacking_unknownBrand_isFalse() throws {
+    XCTAssertFalse(BrandLogoCatalog.prefersDarkBacking(for: "brand-with-no-artwork"))
+    XCTAssertFalse(BrandLogoCatalog.prefersDarkBacking(for: nil))
+  }
+
+  // MARK: - Avatar logo inset (Story 16.29 / AC1)
+
+  func test_avatarLogoInset_keepsArtworkInsideTheInscribedSquare() throws {
+    let metrics = WatchCardRowLayoutMetrics.compact
+    let usableSide = metrics.avatarSize - (metrics.avatarLogoInset * 2)
+
+    // The avatar is clipped to a circle, so the widest artwork that cannot be
+    // clipped spans the inscribed square: diameter / √2.
+    XCTAssertEqual(usableSide, metrics.avatarSize / 2.0.squareRoot(), accuracy: 0.0001)
+    XCTAssertLessThan(usableSide, metrics.avatarSize)
+    XCTAssertGreaterThan(metrics.avatarLogoInset, 0)
   }
 
   // MARK: - Favourite badge accessibility (Story 9.4 / C3)

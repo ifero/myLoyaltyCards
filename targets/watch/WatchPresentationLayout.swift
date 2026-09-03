@@ -22,6 +22,14 @@ struct WatchCardRowLayoutMetrics {
     max(max(accentHeight, avatarSize) + (verticalPadding * 2), minimumTapHeight)
   }
 
+  /// Inset for brand-logo artwork drawn in the circular avatar. The avatar is
+  /// clipped to a circle, so artwork is confined to the circle's inscribed square
+  /// (side = diameter / √2); without the inset a wide wordmark would have its ends
+  /// clipped by the mask. Derived from `avatarSize` so the two cannot drift.
+  var avatarLogoInset: CGFloat {
+    (avatarSize * (1 - (1 / 2.0.squareRoot()))) / 2
+  }
+
   static let compact = WatchCardRowLayoutMetrics(
     rowSpacing: 10,
     horizontalPadding: 10,
