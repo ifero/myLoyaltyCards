@@ -4,7 +4,7 @@ baseline_commit: 7b05c1301d89086f74b01de7ac2049b5ede5d56b
 
 # Story 16.29: Show brand logos instead of initials in the Apple Watch card list
 
-Status: review
+Status: done
 
 Epic: 16 — Platform & Tech Debt
 
