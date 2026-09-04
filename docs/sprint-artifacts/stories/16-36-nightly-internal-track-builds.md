@@ -4,7 +4,7 @@ baseline_commit: fe0febc # PR #218 merge — the WEAR_PLAY_TRACK override this s
 
 # Story 16.36: Nightly internal-track builds for all four apps, skipped when nothing that ships has changed
 
-Status: review
+Status: done
 
 Epic: 16 — Platform & Tech Debt
 
