@@ -12,7 +12,7 @@ project_name: 'myLoyaltyCards'
 user_name: 'Ifero'
 date: '2025-01-03'
 totalEpics: 19
-totalStories: 174 # counted from `### Story` headings on 2026-09-04
+totalStories: 175 # counted from `### Story` headings on 2026-09-04
 aligned_with_tracker: '2026-08-02'
 authoritative_source: 'docs/sprint-artifacts/sprint-status.yaml'
 ---
@@ -3127,6 +3127,34 @@ iOS 16.4 requirement).
 - **AC5 — all five linear formats are then trap-free.** No `Int(String($0))!` remains anywhere in `BarcodeGenerator.swift`.
 
 **Notes:** native change → **not OTA-eligible**. **Depends on Story 16.28**, which introduces `asciiDigits(of:)` and the executed-Swift harness — land it first. **Out of scope and flagged:** phone-side input validation, which is _why_ this is reachable but is a product decision about the phone UI rather than a watch fix (the phone already fails these values gracefully — bwip-js throws and `BarcodeRenderer` catches it — so the watch was the only crash surface). **`encodeCode128` was checked and does not share the defect:** it validates `ch.asciiValue` for every character up front and returns `nil` on failure, so its later `asciiValue!` uses are unreachable when `nil`.
+
+### Story 16.38: Give the Wear OS barcode the whole screen, as watchOS now does
+
+**As a** user presenting my Wear OS watch at a checkout, **I want** the barcode drawn as large as the display allows, **So that** the scanner reads it as reliably as it does from the Apple Watch.
+
+**Raised by ifero while reviewing Story 16.27:** _"this is also valid for android, which I recall made the same mistake as you did by making it too narrow."_ Confirmed from source rather than from memory. `watch-android/app/src/main/kotlin/com/iferoporefi/myloyaltycards/wear/barcode/BarcodeLayoutMetrics.kt` states in its own doc comment that it is _"ported from watchOS's `WatchBarcodeLayoutMetrics.make`"_ and that _"the linear `0.52`-of-height / 88–110 clamp are reproduced verbatim"_ — so it inherited every sizing decision Story 16.27 has now reversed: `BOX_INNER_PADDING = 2`, `LINEAR_HEIGHT_RATIO = 0.52`, `LINEAR_MIN_HEIGHT = 88`, `LINEAR_MAX_HEIGHT = 110`.
+
+It is **narrower still** than watchOS was. On a round display it additionally inscribes the entire box — title, symbol and value — in the circle (`boxW² + boxH² ≤ D²`), and its own documentation concedes the fill ratio can fall below 0.8 under roughly 181 dp of diameter.
+
+**What Story 16.27 established and this should inherit:**
+
+1. Bar height is the **whole cross axis**, not 52 % of it clamped to 88–110. Bar height costs the module nothing — the module divides the length axis — and a taller bar is strictly easier for a scanner to intersect and to aim at.
+2. `boxInnerPadding` is 0: an invisible white inset inside a white card that cost real width.
+3. Reclaim every safe-area edge the system does not draw into, and only those.
+4. **The largest lever:** size the module against the **symbol's** modules, not the symbol plus its quiet zone. A quiet zone is white space; making it compete for pixels at a bar's price is what held the symbol narrow. The leftover becomes the quiet zone, split in the symbology's own ratio with a guaranteed floor per side. On watchOS this alone took a 40 mm from 2 px per module to 3 (0.156 mm → 0.234 mm, **+50 %**) and a 46 mm from 3 to 4 (**+33 %**), measured on device.
+
+**⚠️ Establish before sizing, do not assume.** Wear encodes with ZXing's `MultiFormatWriter` into a `BitMatrix` at a requested pixel size (`WearBarcodeGenerator.kt`, rasterised by `BarcodeBitmap.toBarcodeImageBitmap`). The **module-quantisation** half of Story 16.27 — every bar an exact whole number of device pixels — may already be handled by ZXing's own scaling, or may not be. Check what ZXing produces at an arbitrary requested width before porting the integer snap. The **sizing** half above applies either way.
+
+**Acceptance Criteria:**
+
+- **AC1 — the symbol is sized against its own modules.** The module divides the symbol's bars and spaces; the quiet zone takes the remainder, in the symbology's ratio, never below a documented floor per side.
+- **AC2 — the bar spans the whole cross axis,** and `boxInnerPadding` is 0.
+- **AC3 — every safe-area edge the system does not draw into is reclaimed,** and the ones it does are kept, with the reason recorded at the call site as on watchOS.
+- **AC4 — round screens get their own answer.** The inscribed-circle clamp is a real constraint watchOS does not have, so "use the whole screen" is not the same instruction; whatever replaces it must still guarantee the symbol is not clipped.
+- **AC5 — module uniformity is established, not assumed.** Either ZXing is shown to produce whole-pixel modules at the requested size, or the integer snap is ported.
+- **AC6 — the improvement is measured, not asserted.** Record the module width achieved on a round and a square emulator, the way `BarcodeGeometry` does on watchOS.
+
+**Notes:** native Kotlin → **not OTA-eligible**. Independent of Story 16.37 — different platform, no shared file. Story 16.27 is the reference implementation and its Dev Agent Record carries the measurements.
 
 ### Story 16.35: Ship the Wear OS APK to Play — the watch app has never been delivered to any track
 

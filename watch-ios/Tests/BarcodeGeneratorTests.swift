@@ -5,84 +5,84 @@ import XCTest
 final class BarcodeGeneratorTests: XCTestCase {
   func test_generateImage_acceptsCaseInsensitiveFormat() async throws {
     let img = await BarcodeGenerator.generateImage(
-      value: "test", formatString: "qr", targetSize: CGSize(width: 160, height: 160))
+      value: "test", formatString: "qr", pixelSize: CGSize(width: 320, height: 320))
     XCTAssertNotNil(img)
   }
 
   func test_generateImage_isCached() async throws {
-    let size = CGSize(width: 160, height: 80)
+    let size = CGSize(width: 320, height: 160)
     let value = "5901234123457"
     let format = "EAN13"
 
     let img1 = await BarcodeGenerator.generateImage(
-      value: value, formatString: format, targetSize: size)
+      value: value, formatString: format, pixelSize: size)
     XCTAssertNotNil(img1)
     XCTAssertTrue(
-      BarcodeGenerator.isImageCached(value: value, formatString: format, targetSize: size))
+      BarcodeGenerator.isImageCached(value: value, formatString: format, pixelSize: size))
 
     // case-insensitive key should hit the same cache entry
     let img2 = await BarcodeGenerator.generateImage(
-      value: value, formatString: "ean13", targetSize: size)
+      value: value, formatString: "ean13", pixelSize: size)
     XCTAssertNotNil(img2)
 
     // whitespace should be trimmed for the cache key
     let img3 = await BarcodeGenerator.generateImage(
-      value: value, formatString: " eAn13 ", targetSize: size)
+      value: value, formatString: " eAn13 ", pixelSize: size)
     XCTAssertNotNil(img3)
     XCTAssertTrue(
-      BarcodeGenerator.isImageCached(value: value, formatString: " eAn13 ", targetSize: size))
+      BarcodeGenerator.isImageCached(value: value, formatString: " eAn13 ", pixelSize: size))
   }
 
   func test_generateImage_returnsNil_forUnknownOrNilFormat() async throws {
-    let size = CGSize(width: 160, height: 80)
+    let size = CGSize(width: 320, height: 160)
 
     let resultNil = await BarcodeGenerator.generateImage(
-      value: "x", formatString: nil, targetSize: size)
+      value: "x", formatString: nil, pixelSize: size)
     XCTAssertNil(resultNil)
 
     let resultUnknown = await BarcodeGenerator.generateImage(
-      value: "x", formatString: "UNKNOWN", targetSize: size)
+      value: "x", formatString: "UNKNOWN", pixelSize: size)
     XCTAssertNil(resultUnknown)
   }
 
   func test_generateImage_forEAN13_returnsImage_and_validatesChecksum() async throws {
-    let size = CGSize(width: 160, height: 80)
+    let size = CGSize(width: 320, height: 160)
     // valid 13-digit EAN-13
     let img = await BarcodeGenerator.generateImage(
-      value: "5901234123457", formatString: "EAN13", targetSize: size)
+      value: "5901234123457", formatString: "EAN13", pixelSize: size)
     XCTAssertNotNil(img)
 
     // invalid length should return nil
     let invalid = await BarcodeGenerator.generateImage(
-      value: "5901234", formatString: "EAN13", targetSize: size)
+      value: "5901234", formatString: "EAN13", pixelSize: size)
     XCTAssertNil(invalid)
   }
 
   func test_generateImage_forCode128_returnsImage_forAlphanumeric() async throws {
-    let size = CGSize(width: 280, height: 80)
+    let size = CGSize(width: 560, height: 160)
     let img = await BarcodeGenerator.generateImage(
-      value: "ABC123-xyz", formatString: "CODE128", targetSize: size)
+      value: "ABC123-xyz", formatString: "CODE128", pixelSize: size)
     XCTAssertNotNil(img)
   }
 
   func test_generateImage_code128_usesCodeC_forEvenDigits() async throws {
-    let size = CGSize(width: 280, height: 80)
+    let size = CGSize(width: 560, height: 160)
     let img = await BarcodeGenerator.generateImage(
-      value: "12345678", formatString: "CODE128", targetSize: size)
+      value: "12345678", formatString: "CODE128", pixelSize: size)
     XCTAssertNotNil(img)
   }
 
   func test_generateImage_code128_handlesOddDigitRun() async throws {
-    let size = CGSize(width: 300, height: 80)
+    let size = CGSize(width: 600, height: 160)
     let img = await BarcodeGenerator.generateImage(
-      value: "A12345B", formatString: "CODE128", targetSize: size)
+      value: "A12345B", formatString: "CODE128", pixelSize: size)
     XCTAssertNotNil(img)
   }
 
   func test_generateImage_code128_twoDigits_entireString() async throws {
-    let size = CGSize(width: 60, height: 40)
+    let size = CGSize(width: 120, height: 80)
     let img = await BarcodeGenerator.generateImage(
-      value: "12", formatString: "CODE128", targetSize: size)
+      value: "12", formatString: "CODE128", pixelSize: size)
     XCTAssertNotNil(img)
   }
 
@@ -286,28 +286,113 @@ final class BarcodeGeneratorTests: XCTestCase {
   // MARK: Per-symbology quiet zones (AC7 / Task 6)
 
   func test_quietZones_usePublishedMinimaPerSymbology() {
-    // GS1 General Specifications: EAN-8 7X, UPC-A 9X. ISO/IEC 16388: Code 39 10X.
-    XCTAssertEqual(BarcodeGenerator.quietZoneForTesting(formatString: "EAN8"), 7)
-    XCTAssertEqual(BarcodeGenerator.quietZoneForTesting(formatString: "UPCA"), 9)
-    XCTAssertEqual(BarcodeGenerator.quietZoneForTesting(formatString: "CODE39"), 10)
-    // Unchanged from what these already shipped with.
-    XCTAssertEqual(BarcodeGenerator.quietZoneForTesting(formatString: "EAN13"), 10)
-    XCTAssertEqual(BarcodeGenerator.quietZoneForTesting(formatString: "CODE128"), 10)
+    // GS1 General Specifications: EAN-8 7X, UPC-A 9X. ISO/IEC 16388: Code 39 10X,
+    // ISO/IEC 15417: Code 128 10X. EAN-13 is the asymmetric one — 11X leading, 7X
+    // trailing (Story 16.27); it used to ship the flat 10 + 10.
+    XCTAssertEqual(
+      BarcodeGenerator.quietZoneForTesting(formatString: "EAN13"),
+      WatchBarcodeQuietZone(leading: 11, trailing: 7))
+    XCTAssertEqual(
+      BarcodeGenerator.quietZoneForTesting(formatString: "EAN8"),
+      WatchBarcodeQuietZone(leading: 7, trailing: 7))
+    XCTAssertEqual(
+      BarcodeGenerator.quietZoneForTesting(formatString: "UPCA"),
+      WatchBarcodeQuietZone(leading: 9, trailing: 9))
+    XCTAssertEqual(
+      BarcodeGenerator.quietZoneForTesting(formatString: "CODE39"),
+      WatchBarcodeQuietZone(leading: 10, trailing: 10))
+    XCTAssertEqual(
+      BarcodeGenerator.quietZoneForTesting(formatString: "CODE128"),
+      WatchBarcodeQuietZone(leading: 10, trailing: 10))
+  }
+
+  // MARK: - Story 16.27 — symbol units and the render boundary
+
+  func test_symbolModuleUnits_areComputedPerSymbol_notAssumedFromEAN13() throws {
+    // Bars and spaces only — the quiet zone is white space and is NOT part of what the
+    // module divides, which is what lets a 40 mm reach 3 px/module instead of 2.
+    XCTAssertEqual(
+      BarcodeGenerator.symbolModuleUnits(value: "5901234123457", formatString: "EAN13"), 95)
+    // EAN-8 is narrower than EAN-13, so its module GROWS on the same screen.
+    XCTAssertEqual(BarcodeGenerator.symbolModuleUnits(value: "95200002", formatString: "EAN8"), 67)
+    // UPC-A is the same symbol width as EAN-13 but a different quiet zone.
+    XCTAssertEqual(
+      BarcodeGenerator.symbolModuleUnits(value: "012345000058", formatString: "UPCA"), 95)
+
+    // A 13-digit Code128 is materially wider than EAN-13 at the same digit count,
+    // which is why nothing may assume EAN-13's geometry.
+    let code128 = try XCTUnwrap(
+      BarcodeGenerator.symbolModuleUnits(value: "5901234123457", formatString: "CODE128"))
+    XCTAssertGreaterThan(code128, 95)
+
+    // QR is 2D and never reaches the module renderer; an unencodable value has no
+    // symbol to measure.
+    XCTAssertNil(BarcodeGenerator.symbolModuleUnits(value: "anything", formatString: "QR"))
+    XCTAssertNil(
+      BarcodeGenerator.symbolModuleUnits(value: "5901234123458", formatString: "EAN13"))
+    XCTAssertNil(BarcodeGenerator.symbolModuleUnits(value: "x", formatString: nil))
+  }
+
+  func test_generateImage_refusesOnlyWhenAModuleCannotBeOnePixel() async throws {
+    let symbolUnits = try XCTUnwrap(
+      BarcodeGenerator.symbolModuleUnits(value: "5901234123457", formatString: "EAN13"))
+    // The renderer reserves a guaranteed quiet zone on each side before dividing.
+    let divisor = symbolUnits + (WatchBarcodeModulePlan.minimumQuietZoneUnitsPerSide * 2)
+
+    // Exactly one pixel per module still draws: AC2 says maximise the module, never
+    // refuse on magnification. One pixel is small, but it is UNIFORM, and the
+    // human-readable number is on screen beside it either way.
+    let atFloor = await BarcodeGenerator.generateImage(
+      value: "5901234123457", formatString: "EAN13",
+      pixelSize: CGSize(width: divisor, height: 80))
+    XCTAssertNotNil(atFloor)
+
+    // One pixel short of that, no uniform symbol exists, so the view must fall back
+    // to the placeholder rather than draw an unreadable smear.
+    let belowFloor = await BarcodeGenerator.generateImage(
+      value: "5901234123457", formatString: "EAN13",
+      pixelSize: CGSize(width: divisor - 1, height: 80))
+    XCTAssertNil(belowFloor)
+  }
+
+  func test_generateImage_cachesOrientationsSeparately() async throws {
+    let value = "5901234123457"
+    let size = CGSize(width: 240, height: 400)
+
+    let horizontal = await BarcodeGenerator.generateImage(
+      value: value, formatString: "EAN13", pixelSize: size, orientation: .horizontal)
+    XCTAssertNotNil(horizontal)
+
+    // The two orientations are different bitmaps at the same pixel size, so the key
+    // must separate them or a rotation would serve the horizontal image.
+    XCTAssertTrue(
+      BarcodeGenerator.isImageCached(
+        value: value, formatString: "EAN13", pixelSize: size, orientation: .horizontal))
+    XCTAssertFalse(
+      BarcodeGenerator.isImageCached(
+        value: value, formatString: "EAN13", pixelSize: size, orientation: .rotated))
+
+    let rotated = await BarcodeGenerator.generateImage(
+      value: value, formatString: "EAN13", pixelSize: size, orientation: .rotated)
+    XCTAssertNotNil(rotated)
+    XCTAssertTrue(
+      BarcodeGenerator.isImageCached(
+        value: value, formatString: "EAN13", pixelSize: size, orientation: .rotated))
   }
 
   // MARK: End-to-end through generateImage
 
   func test_generateImage_rendersAllThreeNewlySupportedFormats() async throws {
-    let size = CGSize(width: 160, height: 80)
+    let size = CGSize(width: 320, height: 160)
     for (value, format) in [("95200002", "EAN8"), ("012345000058", "UPCA"), ("ABC123", "CODE39")] {
       let img = await BarcodeGenerator.generateImage(
-        value: value, formatString: format, targetSize: size)
+        value: value, formatString: format, pixelSize: size)
       XCTAssertNotNil(img, "\(format) produced no image")
     }
   }
 
   func test_generateImage_returnsNil_soTheViewCanShowThePlaceholder() async throws {
-    let size = CGSize(width: 160, height: 80)
+    let size = CGSize(width: 320, height: 160)
 
     // AC3: an unencodable value must yield nil, never a substituted symbology.
     //
@@ -325,7 +410,7 @@ final class BarcodeGeneratorTests: XCTestCase {
       ("abc123", "CODE39"),  // Code 39 has no lower case
     ] {
       let image = await BarcodeGenerator.generateImage(
-        value: value, formatString: format, targetSize: size)
+        value: value, formatString: format, pixelSize: size)
       XCTAssertNil(image, "\(format) \(value) must fall through to the placeholder")
     }
   }
