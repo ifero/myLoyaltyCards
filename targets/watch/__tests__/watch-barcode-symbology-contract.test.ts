@@ -55,6 +55,21 @@ const REFERENCE_EAN_RIGHT = [
 /** The Code 39 `*` start/stop delimiter, as nine element widths. */
 const REFERENCE_CODE39_DELIMITER = '131131311';
 
+/**
+ * Code 128's three start code words and its STOP, as element widths — BWIPP `code128` `encs`
+ * entries 103-106, the last four in that 107-entry table.
+ *
+ * Keyed by index on purpose: the value alone would not prove the STOP sits at 106, and the
+ * defect Story 16.37 fixed was an entry in the right shape at the right index with the wrong
+ * content, surrounded by three unreachable duplicates that hid it.
+ */
+const REFERENCE_CODE128_DELIMITERS: Record<number, string> = {
+  103: '211412', // Start A
+  104: '211214', // Start B
+  105: '211232', // Start C
+  106: '2331112' // STOP — seven elements, 13 modules
+};
+
 /** All 43 encodable Code 39 characters, as nine element widths each. */
 const REFERENCE_CODE39: Record<string, string> = {
   '0': '111331311',
@@ -245,6 +260,98 @@ const REFERENCE_SYMBOLS: ReadonlyArray<{ format: string; value: string; modules:
     value: '5901234-123457',
     modules:
       '1,1,1,3,1,1,2,1,1,2,3,1,2,2,2,2,1,2,2,1,4,1,1,2,3,1,1,1,1,1,1,1,2,2,2,1,2,1,2,2,1,4,1,1,1,1,3,2,1,2,3,1,1,3,1,2,1,1,1'
+  },
+  // ---- Code 128 ----------------------------------------------------------------------
+  // Absent until Story 16.37, which is why a truncated STOP pattern — `widthsTable[106]`
+  // holding "233111" where Code 128 specifies "2331112" — shipped unnoticed while the three
+  // formats 16.28 introduced were covered. Every row below ends `...,3,3,1,1,1,2`; that final
+  // 2 is the bar the defect dropped.
+  //
+  // ⚠️ CHECK a new value before adding it. Code 128's code-set switches are an OPTIMISATION,
+  // so several encodings of the same text are valid, and this encoder's heuristics are simpler
+  // than BWIPP's. They diverge on `A12345` (9 code words vs BWIPP's 8) and on
+  // `CARD 12345 ABC` (same length, different set choices). Both still DECODE correctly — they
+  // are less compact, not wrong — so they are deliberately excluded rather than treated as
+  // failures. Only values where the two agree exactly belong here.
+  // Start C on a >=4 digit run, then the C->B switch (100) for the odd trailing digit.
+  {
+    format: 'CODE128',
+    value: '5901234123457',
+    modules:
+      '2,1,1,2,3,2,3,3,2,1,1,1,2,2,2,1,2,2,3,1,2,1,3,1,2,3,1,3,1,1,3,1,2,1,3,1,1,1,3,1,2,3,1,1,4,1,3,1,3,1,2,1,3,1,2,2,1,2,3,1,2,3,3,1,1,1,2'
+  },
+  // All digits, even length: Start C and never leaves it.
+  {
+    format: 'CODE128',
+    value: '12345678',
+    modules: '2,1,1,2,3,2,1,1,2,2,3,2,1,3,1,1,2,3,3,3,1,1,2,1,2,4,1,1,1,2,1,3,3,1,2,1,2,3,3,1,1,1,2'
+  },
+  // One digit — odd, so the all-digits Start C heuristic declines and it starts in B.
+  {
+    format: 'CODE128',
+    value: '7',
+    modules: '2,1,1,2,1,4,3,1,2,1,3,1,3,1,1,2,2,2,2,3,3,1,1,1,2'
+  },
+  // Non-digit first character: Start B, and the trailing 3-digit run is under the 4 that would switch to C.
+  {
+    format: 'CODE128',
+    value: 'ABC-123',
+    modules:
+      '2,1,1,2,1,4,1,1,1,3,2,3,1,3,1,1,2,3,1,3,1,3,2,1,1,2,2,1,3,2,1,2,3,2,2,1,2,2,3,2,1,1,2,2,1,1,3,2,1,1,2,4,1,2,2,3,3,1,1,1,2'
+  },
+  // Start B, then the B->C switch (99) once a 4+ digit run appears.
+  {
+    format: 'CODE128',
+    value: 'AB123456',
+    modules:
+      '2,1,1,2,1,4,1,1,1,3,2,3,1,3,1,1,2,3,1,1,3,1,4,1,1,1,2,2,3,2,1,3,1,1,2,3,3,3,1,1,2,1,3,2,1,2,2,1,2,3,3,1,1,1,2'
+  },
+  // The full round trip: Start C, drop to B for the letters, return to C.
+  {
+    format: 'CODE128',
+    value: '1234ABCD5678',
+    modules:
+      '2,1,1,2,3,2,1,1,2,2,3,2,1,3,1,1,2,3,1,1,4,1,3,1,1,1,1,3,2,3,1,3,1,1,2,3,1,3,1,3,2,1,1,1,2,3,1,3,1,1,3,1,4,1,3,3,1,1,2,1,2,4,1,1,1,2,3,2,2,2,1,1,2,3,3,1,1,1,2'
+  },
+  // Shortest B-with-a-digit form; the 1-digit run must not trigger C.
+  {
+    format: 'CODE128',
+    value: 'A1',
+    modules: '2,1,1,2,1,4,1,1,1,3,2,3,1,2,3,2,2,1,1,4,1,2,2,1,2,3,3,1,1,1,2'
+  },
+  // Code B across lower case, space and punctuation.
+  {
+    format: 'CODE128',
+    value: 'Hello World!',
+    modules:
+      '2,1,1,2,1,4,2,3,1,1,1,3,1,1,2,2,1,4,2,2,1,1,1,4,2,2,1,1,1,4,1,3,4,1,1,1,2,1,2,2,2,2,3,1,1,3,2,1,1,3,4,1,1,1,1,2,1,2,4,1,2,2,1,1,1,4,1,4,1,2,2,1,2,2,2,1,2,2,3,1,1,3,2,1,2,3,3,1,1,1,2'
+  },
+  // The ASCII gate boundaries — 32 and 126, the lowest and highest characters it accepts.
+  {
+    format: 'CODE128',
+    value: ' ~',
+    modules: '2,1,1,2,1,4,2,1,2,2,2,2,1,3,1,1,4,1,4,1,1,2,1,2,2,3,3,1,1,1,2'
+  },
+  // A checksum whose data code words are all zero.
+  {
+    format: 'CODE128',
+    value: '0000000000',
+    modules:
+      '2,1,1,2,3,2,2,1,2,2,2,2,2,1,2,2,2,2,2,1,2,2,2,2,2,1,2,2,2,2,2,1,2,2,2,2,2,2,2,2,2,1,2,3,3,1,1,1,2'
+  },
+  // Longest pure Code C case here; 16 digits is 8 pairs.
+  {
+    format: 'CODE128',
+    value: '9999999999999999',
+    modules:
+      '2,1,1,2,3,2,1,1,3,1,4,1,1,1,3,1,4,1,1,1,3,1,4,1,1,1,3,1,4,1,1,1,3,1,4,1,1,1,3,1,4,1,1,1,3,1,4,1,1,1,3,1,4,1,1,1,1,4,2,2,2,3,3,1,1,1,2'
+  },
+  // Leading zeros, which pair-encoding must not normalise away.
+  {
+    format: 'CODE128',
+    value: '000012345678',
+    modules:
+      '2,1,1,2,3,2,2,1,2,2,2,2,2,1,2,2,2,2,1,1,2,2,3,2,1,3,1,1,2,3,3,3,1,1,2,1,2,4,1,1,1,2,4,1,1,3,1,1,2,3,3,1,1,1,2'
   }
 ];
 
@@ -271,7 +378,15 @@ const UNENCODABLE: ReadonlyArray<{ format: string; value: string }> = [
   // as 10 — past the end of the ten-entry pattern tables.
   { format: 'EAN13', value: '\u0663' + '901234123457' },
   { format: 'EAN13', value: '590123412345' + '\u2167' },
-  { format: 'EAN13', value: '\u3248' + '901234123457' }
+  { format: 'EAN13', value: '\u3248' + '901234123457' },
+  // Code 128 accepts ASCII 32..126 and nothing else. That gate is what makes its later
+  // `asciiValue!` uses unreachable (checked in Story 16.34), so it has to keep refusing:
+  // BWIPP would encode 'CAF\u00c9' through a latin-1 path, and matching that would trade a
+  // readable fallback for a symbol the card does not carry.
+  { format: 'CODE128', value: 'CAF\u00c9' },
+  { format: 'CODE128', value: '\u0663' + '5901234' },
+  // Tab is ASCII, but below 32.
+  { format: 'CODE128', value: '5901234\t123' }
 ];
 
 /**
@@ -359,6 +474,9 @@ const HARNESS_DECLARATIONS = [
   'private static func encodeUPCA(value: String) -> [Int]? {',
   'private static let code39Patterns: [Character: String] = [',
   'private static func encodeCode39(value: String) -> [Int]? {',
+  // Self-contained: its only helper, `digitRunLength`, is nested inside it, and its
+  // `widthsTable` is a local `let` — so it needs no companion declaration here.
+  'private static func encodeCode128(value: String) -> [Int]? {',
   'private static func compressBitStringToModuleWidths(_ bits: String) -> [Int] {',
   'private static func quietZone(for format: WatchBarcodeFormat) -> Int {'
 ];
@@ -397,6 +515,7 @@ const buildHarness = (source: string) => {
     '  case .EAN8: modules = Encoders.encodeEAN8(value: parts[1])',
     '  case .UPCA: modules = Encoders.encodeUPCA(value: parts[1])',
     '  case .CODE39: modules = Encoders.encodeCode39(value: parts[1])',
+    '  case .CODE128: modules = Encoders.encodeCode128(value: parts[1])',
     '  default: modules = nil',
     '  }',
     '  print("\\(parts[0])|\\(parts[1])|\\(render(modules))")',
@@ -535,6 +654,19 @@ const parseStringArray = (source: string, name: string) => {
   return [...body.matchAll(/"([01]+)"/g)].map((match) => match[1]);
 };
 
+/**
+ * The `widthsTable` local to `encodeCode128`, as element-width strings.
+ *
+ * A local `let`, not a static member, so `parseStringArray` cannot reach it — and its widths
+ * run 1-4 rather than the EAN tables' binary. `swiftDeclaration` does the bracket matching.
+ */
+const parseCode128Widths = (source: string) =>
+  [...swiftDeclaration(source, 'let widthsTable: [String] = [').matchAll(/"(\d+)"/g)]
+    .map((match) => match[1])
+    // A capture group always matches when its pattern does; the filter is here to narrow
+    // `string | undefined` away, so the widths can be measured rather than only compared.
+    .filter((widths) => widths !== undefined);
+
 /** `private static let code39Patterns: [Character: String] = [ "A": "31..." ]` */
 const parseCode39Table = (source: string) => {
   const start = source.indexOf('private static let code39Patterns: [Character: String] = [');
@@ -626,10 +758,16 @@ describe('watch barcode symbology contract', () => {
     const source = readGenerator();
     const version = source.match(/private static let cacheVersion = "([^"]+)"/)?.[1];
 
-    // An EAN-8 card already has a *Code128* image cached under v2, keyed by the same
-    // value+format+size. Without a bump the device keeps serving the wrong symbol.
+    // The cache key is value+format+size and carries no renderer version of its own, so a
+    // card cached under a superseded version keeps being served the symbol that version drew.
+    // Each entry below is a version whose Code 128 or symbology output is now known wrong:
+    //   v2 — EAN-8, UPC-A and Code39 were drawn as Code128 (Story 16.28).
+    //   v3 — every Code 128 symbol was missing its final 2-module stop bar (Story 16.37).
+    // Append, never replace: dropping an old value lets that bump be quietly reverted.
+    const SUPERSEDED = ['watch-barcode-v2', 'watch-barcode-v3'];
+
     expect(version).toBeDefined();
-    expect(version).not.toBe('watch-barcode-v2');
+    expect(SUPERSEDED).not.toContain(version);
   });
 
   it('keeps the six-format contract in step with the shared card schema', () => {
@@ -677,6 +815,36 @@ describe('watch barcode symbology contract', () => {
     }
 
     expect(new Set(Object.values(table)).size).toBe(43);
+  });
+
+  it('terminates every Code 128 symbol with the full stop pattern', () => {
+    const table = parseCode128Widths(readGenerator());
+
+    // Code words run 0...106 and no further — `encodeCode128` never appends one above 106, so
+    // anything past the end is unreachable. It is not harmless: it pushes the STOP out of the
+    // table's last slot, and a six-character entry stops looking wrong among six-character
+    // neighbours. That is how a truncated "233111" survived three stories of barcode work.
+    expect(table).toHaveLength(107);
+
+    for (const [index, widths] of Object.entries(REFERENCE_CODE128_DELIMITERS)) {
+      expect(table[Number(index)]).toBe(widths);
+    }
+
+    // The STOP is the ONE seven-element code word. Its trailing 2-module BAR is what a decoder
+    // matches to terminate the read; without it the symbol ends on a space and is
+    // indistinguishable from a scan that was cut short.
+    const modules = (widths: string) => [...widths].reduce((sum, w) => sum + Number(w), 0);
+
+    const stop = table[106] ?? '';
+
+    expect(stop).toHaveLength(7);
+    expect(modules(stop)).toBe(13);
+
+    // Every other code word is six elements over 11 modules.
+    for (const widths of table.slice(0, 106)) {
+      expect(widths).toHaveLength(6);
+      expect(modules(widths)).toBe(11);
+    }
   });
 
   it('uses the published per-symbology quiet zone minima', () => {

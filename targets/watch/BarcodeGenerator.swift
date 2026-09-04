@@ -26,7 +26,9 @@ enum WatchBarcodeFormat: String {
 struct BarcodeGenerator {
   // v3: EAN-8, UPC-A and Code39 stopped rendering as Code128 (Story 16.28), so any
   // image cached under v2 for those formats is the wrong symbology and must not be served.
-  private static let cacheVersion = "watch-barcode-v3"
+  // v4: every Code128 symbol drawn under v1-v3 is missing its final 2-module stop bar
+  // (Story 16.37), so it must be re-rendered rather than served from the cache.
+  private static let cacheVersion = "watch-barcode-v4"
 
   private static let uiImageCache: NSCache<NSString, UIImage> = {
     let c = NSCache<NSString, UIImage>()
@@ -426,7 +428,10 @@ struct BarcodeGenerator {
     codes.append(check)
     codes.append(106)  // STOP
 
-    // Code128 widths table (6-run widths strings for codes 0..106; stop is 7 runs)
+    // Code128 element widths for code words 0...106. Six elements each, EXCEPT the STOP at 106,
+    // which is seven (13 modules) — its trailing 2-module bar is what tells a decoder the symbol
+    // has ended. Exactly 107 entries: a longer table pushes the stop away from the end, which is
+    // how a truncated "233111" hid here until Story 16.37. Values are BWIPP's `code128` `encs`.
     let widthsTable: [String] = [
       "212222", "222122", "222221", "121223", "121322", "131222", "122213", "122312", "132212",
       "221213",
@@ -448,8 +453,7 @@ struct BarcodeGenerator {
       "212141",
       "214121", "412121", "111143", "111341", "131141", "114113", "114311", "411113", "411311",
       "113141",
-      "114131", "311141", "411131", "211412", "211214", "211232", "233111", "211214", "233111",
-      "211214",
+      "114131", "311141", "411131", "211412", "211214", "211232", "2331112",
     ]
 
     // convert codes -> module widths

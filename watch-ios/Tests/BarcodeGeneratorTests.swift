@@ -329,4 +329,67 @@ final class BarcodeGeneratorTests: XCTestCase {
       XCTAssertNil(image, "\(format) \(value) must fall through to the placeholder")
     }
   }
+  // MARK: Story 16.37 — the Code 128 STOP pattern must carry its final bar
+
+  func test_encodeCode128_matchesReferenceSymbols() {
+    // Before 16.37 every one of these came back two modules short: `widthsTable[106]`
+    // held "233111" where Code 128 specifies "2331112". The values span the encoder's
+    // code-set branches — Start C, pure C, Start B, the C→B→C round trip, and the
+    // ASCII 32/126 boundaries.
+    assertModules(
+      "5901234123457", "CODE128",
+      equal:
+        "2,1,1,2,3,2,3,3,2,1,1,1,2,2,2,1,2,2,3,1,2,1,3,1,2,3,1,3,1,1,3,1,2,1,3,1,1,1,3,1,2,3,1,1,4,1,3,1,3,1,2,1,3,1,2,2,1,2,3,1,2,3,3,1,1,1,2"
+    )
+    assertModules(
+      "12345678", "CODE128",
+      equal:
+        "2,1,1,2,3,2,1,1,2,2,3,2,1,3,1,1,2,3,3,3,1,1,2,1,2,4,1,1,1,2,1,3,3,1,2,1,2,3,3,1,1,1,2"
+    )
+    assertModules(
+      "ABC-123", "CODE128",
+      equal:
+        "2,1,1,2,1,4,1,1,1,3,2,3,1,3,1,1,2,3,1,3,1,3,2,1,1,2,2,1,3,2,1,2,3,2,2,1,2,2,3,2,1,1,2,2,1,1,3,2,1,1,2,4,1,2,2,3,3,1,1,1,2"
+    )
+    assertModules(
+      "1234ABCD5678", "CODE128",
+      equal:
+        "2,1,1,2,3,2,1,1,2,2,3,2,1,3,1,1,2,3,1,1,4,1,3,1,1,1,1,3,2,3,1,3,1,1,2,3,1,3,1,3,2,1,1,1,2,3,1,3,1,1,3,1,4,1,3,3,1,1,2,1,2,4,1,1,1,2,3,2,2,2,1,1,2,3,3,1,1,1,2"
+    )
+    assertModules(
+      " ~", "CODE128",
+      equal:
+        "2,1,1,2,1,4,2,1,2,2,2,2,1,3,1,1,4,1,4,1,1,2,1,2,2,3,3,1,1,1,2"
+    )
+  }
+
+  func test_code128_stopPatternEndsOnABar() {
+    // Elements alternate bar/space from a leading bar, so an odd count ends on a bar.
+    // A decoder terminates the symbol by matching the 13-module STOP; ending on a space
+    // leaves the symbol indistinguishable from a scan that was cut short.
+    for value in ["5901234123457", "12345678", "ABC-123"] {
+      guard
+        let actual = BarcodeGenerator.modulesForTesting(value: value, formatString: "CODE128")
+      else {
+        XCTFail("CODE128 \(value) must encode")
+        continue
+      }
+
+      XCTAssertEqual(actual.count % 2, 1, "\(value) must end on a bar")
+      XCTAssertEqual(Array(actual.suffix(7)), [2, 3, 3, 1, 1, 1, 2], "\(value) STOP pattern")
+      // 11 modules per code word, 13 for the STOP.
+      XCTAssertEqual(actual.reduce(0, +) % 11, 2, "\(value) total width")
+    }
+  }
+
+  func test_code128_refusesCharactersOutsideItsAsciiRange() {
+    // The 32...126 gate is what makes the encoder's later `asciiValue!` uses unreachable
+    // (Story 16.34 verified this). Refusing falls through to the readable-number
+    // placeholder; encoding a substitute would be the silent wrongness 16.28 removed.
+    for value in ["CAF\u{00c9}", "\u{0663}5901234", "5901234\u{0009}123"] {
+      XCTAssertNil(
+        BarcodeGenerator.modulesForTesting(value: value, formatString: "CODE128"),
+        "CODE128 must refuse \(value)")
+    }
+  }
 }
