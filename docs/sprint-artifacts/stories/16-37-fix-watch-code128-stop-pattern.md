@@ -4,7 +4,7 @@ baseline_commit: 13b39a3486ad21ff341aff9275fbfcf678dfa72f
 
 # Story 16.37: Fix the Apple Watch Code 128 stop pattern — every symbol ends two modules short
 
-Status: review
+Status: done
 
 Epic: 16 — Platform & Tech Debt
 
