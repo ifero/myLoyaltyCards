@@ -4,7 +4,7 @@ baseline_commit: 115709db1516be13e449145bcc6ac9ac139e5c97
 
 # Story 16.27: Fix Apple Watch barcode geometry — uniform module width, spec quiet zones, adaptive rotation
 
-Status: review
+Status: done
 
 Epic: 16 — Platform & Tech Debt
 
