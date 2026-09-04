@@ -14,6 +14,7 @@
 "watch.debug.import_sample_cards" = "Importa carte di esempio";
 "watch.barcode.accessibility.image_format" = "Codice a barre per %@";
 "watch.barcode.accessibility.value_format" = "Valore codice a barre per %@";
+"watch.barcode.accessibility.image_rotated_format" = "Codice a barre per %@, in verticale — ruota il polso per la scansione";
 "watch.complication.accessibility.card_format" = "Carta fedelta: %@";
 "watch.complication.display_name" = "Carta fedelta";
 "watch.complication.description" = "Mostra la tua carta fedelta piu usata.";

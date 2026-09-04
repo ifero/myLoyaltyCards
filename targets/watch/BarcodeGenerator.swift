@@ -21,14 +21,36 @@ enum WatchBarcodeFormat: String {
   case QR
 }
 
+/// The quiet zone a symbology requires on each side of its symbol, in modules.
+///
+/// Asymmetric because the specifications are: EAN-13 mandates 11 modules before the
+/// symbol and 7 after it. Measured in *modules* rather than points, a quiet zone that
+/// is wider than the spec demands is not free — it divides the same pixels among more
+/// units and narrows every bar.
+struct WatchBarcodeQuietZone: Equatable {
+  let leading: Int
+  let trailing: Int
+
+  var total: Int { leading + trailing }
+}
+
 /// Helper to generate barcode images on the watch.
 ///
 struct BarcodeGenerator {
-  // v3: EAN-8, UPC-A and Code39 stopped rendering as Code128 (Story 16.28), so any
-  // image cached under v2 for those formats is the wrong symbology and must not be served.
+  // The cache key carries the value, format, pixel size and orientation but NOT the
+  // renderer, so every change to how a symbol is drawn needs a bump here or a device
+  // keeps serving the image it drew under the old maths.
+  //
+  // v5: modules are an integer number of device pixels and quiet zones follow the
+  // symbology (Story 16.27), so a v4 image has the ±1 px bar-width spread this
+  // version exists to remove. Numbered 5 rather than 4 because Story 16.37 landed its
+  // own v4 while this was in review — two stories bumping to the same version would
+  // have let each other's stale images through.
   // v4: every Code128 symbol drawn under v1-v3 is missing its final 2-module stop bar
   // (Story 16.37), so it must be re-rendered rather than served from the cache.
-  private static let cacheVersion = "watch-barcode-v4"
+  // v3: EAN-8, UPC-A and Code39 stopped rendering as Code128 (Story 16.28), so any
+  // image cached under v2 for those formats is the wrong symbology and must not be served.
+  private static let cacheVersion = "watch-barcode-v5"
 
   private static let uiImageCache: NSCache<NSString, UIImage> = {
     let c = NSCache<NSString, UIImage>()
@@ -40,23 +62,39 @@ struct BarcodeGenerator {
 
   /// Generates a barcode image for `value` using a watchOS-friendly renderer.
   /// Supports every case of `WatchBarcodeFormat`, each in its own symbology.
-  /// Returns `nil` when `value` cannot be encoded in the requested format, so the
-  /// caller can fall back to the human-readable placeholder. Rendering is cached.
-  static func generateImage(value: String, formatString: String?, targetSize: CGSize) async
-    -> Image?
-  {
-    let fmtKey = (formatString ?? "").trimmingCharacters(in: .whitespacesAndNewlines).uppercased()
-    guard !fmtKey.isEmpty, let fmt = WatchBarcodeFormat(rawValue: fmtKey) else { return nil }
+  ///
+  /// `pixelSize` is in **whole device pixels**, not points, and is exactly the size
+  /// the caller frames the returned image at. Pixels are the only unit in which
+  /// "every bar is the same width" can be stated, and handing the renderer the frame
+  /// it will be drawn in is what stops SwiftUI rescaling the bitmap by a fraction of
+  /// a pixel — which `.interpolation(.none)` resolves by duplicating a pixel column,
+  /// reintroducing the very bar-width jitter the integer module removes.
+  ///
+  /// `orientation` says which axis the symbol runs along; plan it with
+  /// `WatchBarcodeLayoutMetrics.make`, which resolves it from the same module
+  /// arithmetic this renderer uses.
+  ///
+  /// Returns `nil` when `value` cannot be encoded in the requested format, or when
+  /// the symbol does not fit at even one pixel per module, so the caller can fall
+  /// back to the human-readable placeholder. Rendering is cached.
+  static func generateImage(
+    value: String,
+    formatString: String?,
+    pixelSize: CGSize,
+    orientation: WatchBarcodeOrientation = .horizontal
+  ) async -> Image? {
+    guard let fmt = format(from: formatString) else { return nil }
 
-    let key = "\(cacheVersion)|\(value)|\(fmtKey)|\(Int(targetSize.width))x\(Int(targetSize.height))" as NSString
+    let key = cacheKey(
+      value: value, format: fmt, pixelSize: pixelSize, orientation: orientation)
     if let cached = uiImageCache.object(forKey: key) {
       return Image(uiImage: cached)
     }
 
     // QR is drawn by Core Image; every other format goes through the module renderer.
     if fmt == .QR {
-      if let uiImage = renderQRCodeImage(text: value, size: targetSize) {
-        cacheImage(uiImage, forKey: key, targetSize: targetSize)
+      if let uiImage = renderQRCodeImage(text: value, pixelSize: pixelSize) {
+        cacheImage(uiImage, forKey: key, pixelSize: pixelSize)
         return Image(uiImage: uiImage)
       }
 
@@ -64,13 +102,13 @@ struct BarcodeGenerator {
     }
 
     guard let mod = modules(for: fmt, value: value) else { return nil }
+    let quiet = quietZone(for: fmt)
 
     // Render CGImage off the main thread for performance
     let cgImage: CGImage? = await withCheckedContinuation { cont in
       DispatchQueue.global(qos: .userInitiated).async {
         let cg = renderCGImage(
-          fromModules: mod, targetSize: targetSize,
-          quietZoneModules: quietZone(for: fmt))
+          fromModules: mod, quietZone: quiet, pixelSize: pixelSize, orientation: orientation)
         cont.resume(returning: cg)
       }
     }
@@ -83,8 +121,31 @@ struct BarcodeGenerator {
     }
 
     // Cache and return
-    cacheImage(uiImage, forKey: key, targetSize: targetSize)
+    cacheImage(uiImage, forKey: key, pixelSize: pixelSize)
     return Image(uiImage: uiImage)
+  }
+
+  /// The number of module-width units `value`'s SYMBOL occupies in `formatString` —
+  /// its bars and spaces, quiet zones excluded — or `nil` when no encoder accepts it
+  /// or the format is QR.
+  ///
+  /// Quiet zones are excluded because they are white space, not bars: making them
+  /// compete for pixels at the same price is what held a 40 mm EAN-13 to a 2 px module
+  /// when the screen affords 3. `WatchBarcodeBarLayout` gives them the remainder.
+  ///
+  /// Computed per symbol rather than assumed: a 13-digit Code128 is ≈121 modules
+  /// against EAN-13's 95 — ≈27 % wider, which crosses the rotation threshold on more
+  /// devices — while an EAN-8 is 67, so its module *grows* to use the space instead
+  /// of leaving it blank. Nothing here assumes EAN-13's geometry.
+  ///
+  /// Cheap enough to call from a view body: the widest supported payload runs one
+  /// encoder over a couple of dozen characters. Caching it would trade that for a
+  /// lifetime and an invalidation rule, which is the worse deal at this size.
+  static func symbolModuleUnits(value: String, formatString: String?) -> Int? {
+    guard let fmt = format(from: formatString), fmt != .QR else { return nil }
+    guard let mod = modules(for: fmt, value: value) else { return nil }
+
+    return mod.reduce(0, +)
   }
 
   // MARK: - Encoders & renderer (watchOS-friendly)
@@ -495,32 +556,64 @@ struct BarcodeGenerator {
   ///
   /// Per-symbology rather than one flat value: on a wrist-sized symbol an
   /// over-wide margin buys nothing and narrows every bar, which is the opposite of
-  /// what scannability needs. The figures are the published minima — 7X for EAN-8
-  /// and 9X for UPC-A (GS1 General Specifications), 10 narrow elements for Code 39
-  /// (ISO/IEC 16388). EAN-13 and Code128 keep the 10 they already ship with;
-  /// revisiting those belongs to the geometry story, not this one.
-  private static func quietZone(for format: WatchBarcodeFormat) -> Int {
+  /// what scannability needs. The figures are the published minima — 11X leading /
+  /// 7X trailing for EAN-13, 7X for EAN-8 and 9X for UPC-A (GS1 General
+  /// Specifications), 10 narrow elements for Code 39 (ISO/IEC 16388) and Code 128
+  /// (ISO/IEC 15417).
+  private static func quietZone(for format: WatchBarcodeFormat) -> WatchBarcodeQuietZone {
     switch format {
-    case .EAN8: return 7
-    case .UPCA: return 9
+    // EAN-13 is the one asymmetric case in the set, and the only one whose figures
+    // this story changed: it used to ship the flat 10 + 10, spending 2 modules that
+    // buy nothing. Measured in MODULES, those 2 narrowed every bar to pay for them.
+    case .EAN13: return WatchBarcodeQuietZone(leading: 11, trailing: 7)
+    case .EAN8: return WatchBarcodeQuietZone(leading: 7, trailing: 7)
+    case .UPCA: return WatchBarcodeQuietZone(leading: 9, trailing: 9)
     // QR never reaches the module renderer, but naming it keeps this switch
     // exhaustive so a seventh format cannot be added without deciding here.
-    case .CODE39, .CODE128, .EAN13, .QR: return 10
+    case .CODE39, .CODE128, .QR: return WatchBarcodeQuietZone(leading: 10, trailing: 10)
     }
   }
 
-  /// Render a CGImage from alternating module widths (bars/spaces) where the
-  /// first entry is a bar. `quietZoneModules` are added as margins on both
-  /// sides (measured in module units).
+  /// Render a CGImage from alternating module widths (bars/spaces) where the first
+  /// entry is a bar, with `quietZone` as margins measured in module units.
+  ///
+  /// **Every element is an exact multiple of one integer module width**, so the
+  /// 1-module element — the measurement every 1D decoder normalises its digit
+  /// classification against — has a single pixel width across the whole symbol. The
+  /// predecessor accumulated fractional module boundaries and snapped each with
+  /// `Int(round(_:))`; because the module width was not an integer, 1-module elements
+  /// landed on 2 px in one place and 3 px in another, a spread of up to 50 % on the
+  /// narrow element (Story 16.23 measured the mechanism, 16.27 removes it).
+  ///
+  /// `pixelSize` is in whole device pixels. The pixels the symbol cannot use are
+  /// **centred** and left white — the same "fit an integer multiple, then centre"
+  /// shape `renderQRCodeImage` has always used — so they read as extra quiet zone
+  /// rather than as a bar drawn in the wrong place.
+  ///
+  /// Returns `nil` when the symbol does not fit at even one pixel per module, which
+  /// is the only case that refuses: no magnification floor gates this path. See
+  /// `WatchBarcodeModulePlan.canRender`.
   private static func renderCGImage(
-    fromModules modules: [Int], targetSize: CGSize, quietZoneModules: Int
+    fromModules modules: [Int],
+    quietZone: WatchBarcodeQuietZone,
+    pixelSize: CGSize,
+    orientation: WatchBarcodeOrientation
   ) -> CGImage? {
-    let scale = deviceScale
-    let widthPx = max(1, Int(round(targetSize.width * scale)))
-    let heightPx = max(1, Int(round(targetSize.height * scale)))
+    let widthPx = max(Int(pixelSize.width.rounded(.down)), 1)
+    let heightPx = max(Int(pixelSize.height.rounded(.down)), 1)
 
-    let totalUnits = modules.reduce(0, +) + quietZoneModules * 2
-    guard totalUnits > 0 else { return nil }
+    // Where the bars go is pure arithmetic and lives in `WatchBarcodeBarLayout`, which
+    // the contract test lifts out and executes. Everything below is the part that
+    // cannot be — a CoreGraphics context and a fill loop.
+    let bars = WatchBarcodeBarLayout.bars(
+      modules: modules, quietZone: quietZone, widthPixels: widthPx, heightPixels: heightPx,
+      orientation: orientation)
+
+    // Empty means the symbol does not fit at even one pixel per module, so no uniform
+    // symbol exists. Refusing sends the caller to the human-readable placeholder — a
+    // defined outcome rather than a smear that looks scannable. This is the ONLY
+    // refusal: no magnification floor gates this path.
+    guard !bars.isEmpty else { return nil }
 
     // Prepare bitmap context (ARGB)
     let colorSpace = CGColorSpaceCreateDeviceRGB()
@@ -536,47 +629,65 @@ struct BarcodeGenerator {
 
     ctx.setAllowsAntialiasing(false)
     ctx.interpolationQuality = .none
+    ctx.setFillColor(UIColor.black.cgColor)
 
-    // Accumulate pixel widths using rounding to ensure total fills exactly
-    var acc: Double = Double(quietZoneModules) * Double(widthPx) / Double(totalUnits)
-    var consumed = 0
-
-    var x = Int(round(acc))
-    consumed += x
-
-    // Draw modules (first module corresponds to a bar)
-    var isBar = true
-    for u in modules {
-      acc += Double(u) * Double(widthPx) / Double(totalUnits)
-      let toX = Int(round(acc))
-      let w = toX - consumed
-      if w > 0 {
-        if isBar {
-          ctx.setFillColor(UIColor.black.cgColor)
-          ctx.fill(CGRect(x: x, y: 0, width: w, height: heightPx))
-        }
-        x += w
-        consumed += w
-      }
-      isBar.toggle()
+    for bar in bars {
+      ctx.fill(
+        CGRect(
+          x: CGFloat(bar.x), y: CGFloat(bar.y), width: CGFloat(bar.width),
+          height: CGFloat(bar.height)))
     }
 
-    // If there is remaining width (due to rounding), leave it white (quiet zone)
     return ctx.makeImage()
   }
 
   // MARK: - Helpers
 
+  /// `formatString` as a `WatchBarcodeFormat`, tolerating the surrounding whitespace
+  /// and casing a synced value can carry, or `nil` when it names no supported format.
+  private static func format(from formatString: String?) -> WatchBarcodeFormat? {
+    let key = (formatString ?? "").trimmingCharacters(in: .whitespacesAndNewlines).uppercased()
+    guard !key.isEmpty else { return nil }
+
+    return WatchBarcodeFormat(rawValue: key)
+  }
+
+  /// The cache key for one rendered image.
+  ///
+  /// Built in one place because `isImageCached` needs the identical key: when the two
+  /// derived it independently, a change to either silently turned every lookup into a
+  /// miss. Keyed on **pixels** rather than points — two point sizes half a pixel
+  /// apart used to truncate to the same key and collide — and on the orientation,
+  /// which changes the bitmap entirely.
+  private static func cacheKey(
+    value: String,
+    format: WatchBarcodeFormat,
+    pixelSize: CGSize,
+    orientation: WatchBarcodeOrientation
+  ) -> NSString {
+    let width = Int(pixelSize.width.rounded(.down))
+    let height = Int(pixelSize.height.rounded(.down))
+
+    return "\(cacheVersion)|\(value)|\(format.rawValue)|\(width)x\(height)|\(orientation.rawValue)"
+      as NSString
+  }
+
   private static func cacheImage(
     _ image: UIImage,
     forKey key: NSString,
-    targetSize: CGSize
+    pixelSize: CGSize
   ) {
-    let cost = Int(targetSize.width * targetSize.height * deviceScale * 4)
+    let cost = Int(pixelSize.width * pixelSize.height) * 4
     uiImageCache.setObject(image, forKey: key, cost: cost)
   }
 
-  private static func renderQRCodeImage(text: String, size: CGSize) -> UIImage? {
+  /// Draw `text` as a QR symbol.
+  ///
+  /// Untouched apart from its unit: `pixelSize` arrives in device pixels instead of
+  /// points, so the caller's frame and this bitmap agree exactly. The square-fit
+  /// branch — the integer `floor` scale and the centring — is the precedent the 1D
+  /// renderer was rewritten to match, not something this story changed.
+  private static func renderQRCodeImage(text: String, pixelSize: CGSize) -> UIImage? {
     #if canImport(CoreImage)
       guard let data = text.data(using: .utf8) else { return nil }
       guard let filter = CIFilter(name: "CIQRCodeGenerator") else { return nil }
@@ -589,8 +700,8 @@ struct BarcodeGenerator {
       let qrExtent = outputImage.extent.integral
       guard !qrExtent.isEmpty else { return nil }
 
-      let widthPx = max(1, Int(round(size.width * deviceScale)))
-      let heightPx = max(1, Int(round(size.height * deviceScale)))
+      let widthPx = max(1, Int(pixelSize.width.rounded(.down)))
+      let heightPx = max(1, Int(pixelSize.height.rounded(.down)))
       let scale = max(
         floor(min(CGFloat(widthPx) / qrExtent.width, CGFloat(heightPx) / qrExtent.height)),
         1
@@ -680,16 +791,9 @@ struct BarcodeGenerator {
     return UIGraphicsGetImageFromCurrentImageContext() ?? UIImage()
   }
 
-  // Platform-safe scale accessor
-  private static var deviceScale: CGFloat {
-    #if os(watchOS)
-      return WKInterfaceDevice.current().screenScale
-    #elseif canImport(UIKit)
-      return UIScreen.main.scale
-    #else
-      return 1.0
-    #endif
-  }
+  /// Pixels per point. Shared with the layout so the geometry it plans in pixels and
+  /// the `UIImage` scale the bitmap is wrapped in can never disagree.
+  private static var deviceScale: CGFloat { WatchDisplayMetrics.scale }
 
   #if DEBUG
     /// Test helper: the module widths `generateImage` would render for this
@@ -703,16 +807,23 @@ struct BarcodeGenerator {
     }
 
     /// Test helper: the quiet zone, in modules, `generateImage` applies to `format`.
-    static func quietZoneForTesting(formatString: String) -> Int? {
-      let fmtKey = formatString.trimmingCharacters(in: .whitespacesAndNewlines).uppercased()
-      guard let fmt = WatchBarcodeFormat(rawValue: fmtKey) else { return nil }
+    static func quietZoneForTesting(formatString: String) -> WatchBarcodeQuietZone? {
+      guard let fmt = format(from: formatString) else { return nil }
       return quietZone(for: fmt)
     }
 
-    /// Test helper: check whether a generated image is present in the cache.
-    static func isImageCached(value: String, formatString: String?, targetSize: CGSize) -> Bool {
-      let fmtKey = (formatString ?? "").trimmingCharacters(in: .whitespacesAndNewlines).uppercased()
-      let key = "\(cacheVersion)|\(value)|\(fmtKey)|\(Int(targetSize.width))x\(Int(targetSize.height))" as NSString
+    /// Test helper: check whether a generated image is present in the cache. Routes
+    /// through the same `cacheKey` the renderer stores under, so a key change cannot
+    /// turn this into a silent always-false.
+    static func isImageCached(
+      value: String,
+      formatString: String?,
+      pixelSize: CGSize,
+      orientation: WatchBarcodeOrientation = .horizontal
+    ) -> Bool {
+      guard let fmt = format(from: formatString) else { return false }
+      let key = cacheKey(
+        value: value, format: fmt, pixelSize: pixelSize, orientation: orientation)
       return uiImageCache.object(forKey: key) != nil
     }
   #endif

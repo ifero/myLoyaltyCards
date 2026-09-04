@@ -1,10 +1,17 @@
-import { execFileSync } from 'node:child_process';
 import fs from 'node:fs';
-import os from 'node:os';
 import path from 'node:path';
+
+import {
+  describeOnMac,
+  runSwiftProgram,
+  swiftDeclaration,
+  switchBody
+} from './swift-source-helpers';
 
 const repoRoot = path.resolve(__dirname, '../../..');
 const generatorPath = path.join(repoRoot, 'targets', 'watch', 'BarcodeGenerator.swift');
+/** Named in every extraction failure, so it says which file moved under the test. */
+const GENERATOR = 'BarcodeGenerator.swift';
 const cardSchemaPath = path.join(repoRoot, 'core', 'schemas', 'card.ts');
 
 /**
@@ -117,18 +124,23 @@ const REFERENCE_CODE39: Record<string, string> = {
   '%': '111313131'
 };
 
-/** Published minimum quiet zone per symbology, in modules. */
-const REFERENCE_QUIET_ZONES: Record<string, number> = {
+/**
+ * Published minimum quiet zone per symbology, in modules, per side.
+ *
+ * Asymmetric where the specification is. Story 16.28 set EAN-8 and UPC-A; Story
+ * 16.27 corrected EAN-13, which had been shipping a flat 10 + 10 — 2 modules more
+ * than GS1 asks for, and on a wrist-sized symbol those 2 are paid for by narrowing
+ * every bar.
+ */
+const REFERENCE_QUIET_ZONES: Record<string, { leading: number; trailing: number }> = {
   // GS1 General Specifications.
-  EAN8: 7,
-  UPCA: 9,
-  // ISO/IEC 16388: ten narrow elements.
-  CODE39: 10,
-  // Unchanged from what they already shipped with; revisiting them belongs to the
-  // geometry story, not 16.28.
-  EAN13: 10,
-  CODE128: 10,
-  QR: 10
+  EAN13: { leading: 11, trailing: 7 },
+  EAN8: { leading: 7, trailing: 7 },
+  UPCA: { leading: 9, trailing: 9 },
+  // ISO/IEC 16388 (Code 39) and ISO/IEC 15417 (Code 128): ten narrow elements.
+  CODE39: { leading: 10, trailing: 10 },
+  CODE128: { leading: 10, trailing: 10 },
+  QR: { leading: 10, trailing: 10 }
 };
 
 /**
@@ -390,72 +402,6 @@ const UNENCODABLE: ReadonlyArray<{ format: string; value: string }> = [
 ];
 
 /**
- * Slice a Swift declaration out of `source`, brace/bracket-matched.
- *
- * Anchors on the signature's OWN trailing delimiter: `[String] = [` contains an
- * earlier `[` belonging to the type annotation, not to the array literal.
- */
-const swiftDeclaration = (source: string, signature: string) => {
-  const start = source.indexOf(signature);
-
-  if (start === -1) {
-    throw new Error(`Unable to find "${signature}" in BarcodeGenerator.swift`);
-  }
-
-  const open = signature.trimEnd().endsWith('[') ? '[' : '{';
-  const close = open === '[' ? ']' : '}';
-  let depth = 0;
-  let inString = false;
-
-  for (let i = start + signature.length - 1; i < source.length; i += 1) {
-    const character = source[i];
-
-    if (character === '"' && source[i - 1] !== '\\') {
-      inString = !inString;
-    }
-
-    if (inString) {
-      continue;
-    }
-
-    // Skip comments: a brace or bracket written in prose must not move the depth.
-    if (character === '/' && source[i + 1] === '/') {
-      const newline = source.indexOf('\n', i);
-
-      if (newline === -1) {
-        break;
-      }
-
-      i = newline;
-      continue;
-    }
-
-    if (character === '/' && source[i + 1] === '*') {
-      const commentEnd = source.indexOf('*/', i + 2);
-
-      if (commentEnd === -1) {
-        break;
-      }
-
-      i = commentEnd + 1;
-      continue;
-    }
-
-    if (character === open) {
-      depth += 1;
-    } else if (character === close) {
-      depth -= 1;
-
-      if (depth === 0) {
-        return source.slice(start, i + 1);
-      }
-    }
-  }
-
-  throw new Error(`Unbalanced delimiters while slicing "${signature}"`);
-};
-
-/**
  * Declarations the harness needs; all are pure and free of SwiftUI/UIKit.
  *
  * Deliberately exact signatures, not prefixes: they must anchor unambiguously, and a
@@ -478,7 +424,8 @@ const HARNESS_DECLARATIONS = [
   // `widthsTable` is a local `let` — so it needs no companion declaration here.
   'private static func encodeCode128(value: String) -> [Int]? {',
   'private static func compressBitStringToModuleWidths(_ bits: String) -> [Int] {',
-  'private static func quietZone(for format: WatchBarcodeFormat) -> Int {'
+  'private static func quietZone(for format: WatchBarcodeFormat) -> WatchBarcodeQuietZone {',
+  'struct WatchBarcodeQuietZone: Equatable {'
 ];
 
 /**
@@ -495,12 +442,15 @@ const buildHarness = (source: string) => {
     throw new Error('Unable to find code39Delimiter in BarcodeGenerator.swift');
   }
 
-  const members = [delimiter, ...HARNESS_DECLARATIONS.map((s) => swiftDeclaration(source, s))]
+  const members = [
+    delimiter,
+    ...HARNESS_DECLARATIONS.map((declaration) => swiftDeclaration(source, declaration, GENERATOR))
+  ]
     .map((member) => '  ' + member.replace(/^ +/, '').replace(/^private /, ''))
     .join('\n\n');
 
   return [
-    swiftDeclaration(source, 'enum WatchBarcodeFormat: String {'),
+    swiftDeclaration(source, 'enum WatchBarcodeFormat: String {', GENERATOR),
     `enum Encoders {\n${members}\n}`,
     'func render(_ m: [Int]?) -> String {',
     '  m.map { $0.map(String.init).joined(separator: ",") } ?? "nil"',
@@ -525,86 +475,36 @@ const buildHarness = (source: string) => {
 
 /** Run the harness over `cases`, returning "FORMAT|value" -> module string. */
 const runSwiftEncoders = (cases: ReadonlyArray<{ format: string; value: string }>) => {
-  // Assemble BEFORE creating the temp directory. Extraction throws when a pinned
-  // declaration has moved or been renamed, and doing it first means that failure has
-  // nothing to clean up — rather than skipping a `finally` that had not been entered yet.
-  const harnessSource = buildHarness(readGenerator());
-  const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'watch-barcode-'));
-  const harness = path.join(directory, 'EncoderHarness.swift');
+  const stdout = runSwiftProgram({
+    program: buildHarness(readGenerator()),
+    input: cases.map(({ format, value }) => `${format}|${value}`).join('\n'),
+    label: GENERATOR,
+    hint:
+      'A "Fatal error: Unexpectedly found nil" here means an encoder force-unwraps ' +
+      'something that can be nil — a crash on real card data, not a wrong barcode.'
+  });
 
-  try {
-    fs.writeFileSync(harness, harnessSource);
+  return new Map(
+    stdout
+      .split('\n')
+      .filter(Boolean)
+      .map((line) => {
+        const separator = line.lastIndexOf('|');
 
-    let stdout: string;
-
-    try {
-      stdout = execFileSync('xcrun', ['--sdk', 'macosx', 'swift', harness], {
-        input: cases.map(({ format, value }) => `${format}|${value}`).join('\n'),
-        encoding: 'utf8',
-        maxBuffer: 8 * 1024 * 1024
-      });
-    } catch (error) {
-      // Swift prints ~40 lines of LLVM stack dump after a trap, which buries the one
-      // line that says what went wrong. Keep the diagnosis, drop the noise.
-      const output = String(
-        (error as { stderr?: Buffer | string }).stderr ?? (error as Error).message
-      );
-      const diagnosis = output
-        .split('\n')
-        .filter((line) => /Fatal error|error:|warning:/.test(line))
-        .slice(0, 8)
-        .join('\n');
-
-      // Swift's line number refers to the assembled harness, which is deleted below and
-      // does not share BarcodeGenerator.swift's numbering. Quote the line itself, so the
-      // offending code is greppable in the real source.
-      const harnessLine = Number(output.match(/EncoderHarness\.swift:(\d+)/)?.[1]);
-      const culprit = Number.isFinite(harnessLine)
-        ? '\n\nThat line, lifted verbatim from BarcodeGenerator.swift (grep for it there — ' +
-          `the number above is harness-relative):\n    ${harnessSource.split('\n')[harnessLine - 1]?.trim()}`
-        : '';
-
-      throw new Error(
-        'The encoders lifted from BarcodeGenerator.swift failed to run. A "Fatal error: ' +
-          'Unexpectedly found nil" here means an encoder force-unwraps something that can be ' +
-          `nil — a crash on real card data, not a wrong barcode.\n\n${diagnosis || output.slice(0, 600)}${culprit}`
-      );
-    }
-
-    return new Map(
-      stdout
-        .split('\n')
-        .filter(Boolean)
-        .map((line) => {
-          const separator = line.lastIndexOf('|');
-
-          return [line.slice(0, separator), line.slice(separator + 1)] as const;
-        })
-    );
-  } finally {
-    fs.rmSync(directory, { recursive: true, force: true });
-  }
+        return [line.slice(0, separator), line.slice(separator + 1)] as const;
+      })
+  );
 };
 
 const readGenerator = () => fs.readFileSync(generatorPath, 'utf8');
 
-/** Body of a `switch format { ... }` inside the named function. */
-const switchBody = (source: string, funcSignature: string) => {
-  const start = source.indexOf(funcSignature);
-
-  if (start === -1) {
-    throw new Error(`Unable to find ${funcSignature} in BarcodeGenerator.swift`);
-  }
-
-  const open = source.indexOf('switch format {', start);
-  const close = source.indexOf('\n    }', open);
-
-  return source.slice(open, close);
-};
-
 /** `case .EAN13: return encodeEAN13(...)` -> { EAN13: 'encodeEAN13' } */
 const parseEncoderMap = (source: string) => {
-  const body = switchBody(source, 'private static func modules(for format: WatchBarcodeFormat');
+  const body = switchBody(
+    source,
+    'private static func modules(for format: WatchBarcodeFormat',
+    GENERATOR
+  );
   const map: Record<string, string> = {};
 
   for (const match of body.matchAll(/case \.(\w+): return (encode\w+|nil)/g)) {
@@ -618,20 +518,29 @@ const parseEncoderMap = (source: string) => {
   return map;
 };
 
-/** `case .CODE39, .CODE128: return 10` -> { CODE39: 10, CODE128: 10 } */
+/**
+ * `case .CODE39, .CODE128: return WatchBarcodeQuietZone(leading: 10, trailing: 10)`
+ * -> `{ CODE39: { leading: 10, trailing: 10 }, CODE128: { … } }`
+ */
 const parseQuietZones = (source: string) => {
-  const body = switchBody(source, 'private static func quietZone(for format: WatchBarcodeFormat');
-  const map: Record<string, number> = {};
+  const body = switchBody(
+    source,
+    'private static func quietZone(for format: WatchBarcodeFormat',
+    GENERATOR
+  );
+  const map: Record<string, { leading: number; trailing: number }> = {};
+  const pattern =
+    /case ((?:\.\w+(?:, )?)+): return WatchBarcodeQuietZone\(\s*leading: (\d+), trailing: (\d+)\)/g;
 
-  for (const match of body.matchAll(/case ((?:\.\w+(?:, )?)+): return (\d+)/g)) {
-    const [, names, modules] = match;
+  for (const match of body.matchAll(pattern)) {
+    const [, names, leading, trailing] = match;
 
-    if (!names || !modules) {
+    if (!names || !leading || !trailing) {
       continue;
     }
 
     for (const name of names.split(', ')) {
-      map[name.replace('.', '')] = Number(modules);
+      map[name.replace('.', '')] = { leading: Number(leading), trailing: Number(trailing) };
     }
   }
 
@@ -661,7 +570,7 @@ const parseStringArray = (source: string, name: string) => {
  * run 1-4 rather than the EAN tables' binary. `swiftDeclaration` does the bracket matching.
  */
 const parseCode128Widths = (source: string) =>
-  [...swiftDeclaration(source, 'let widthsTable: [String] = [').matchAll(/"(\d+)"/g)]
+  [...swiftDeclaration(source, 'let widthsTable: [String] = [', GENERATOR).matchAll(/"(\d+)"/g)]
     .map((match) => match[1])
     // A capture group always matches when its pattern does; the filter is here to narrow
     // `string | undefined` away, so the widths can be measured rather than only compared.
@@ -729,7 +638,8 @@ describe('watch barcode symbology contract', () => {
     for (const encoder of ['encodeEAN13', 'encodeEAN8', 'encodeUPCA']) {
       const body = swiftDeclaration(
         source,
-        `private static func ${encoder}(value: String) -> [Int]? {`
+        `private static func ${encoder}(value: String) -> [Int]? {`,
+        GENERATOR
       );
 
       expect(body).toMatch(/asciiDigits\(/);
@@ -857,8 +767,6 @@ describe('watch barcode symbology contract', () => {
   // and a change that kept the names and tables intact while breaking the maths —
   // `encodeUPCA` delegating to `encodeCode128`, a flipped check-digit weight, an
   // off-by-one slice — would pass every other gate on a non-OTA native path.
-  const describeOnMac = process.platform === 'darwin' ? describe : describe.skip;
-
   describeOnMac('executed against the real Swift encoders', () => {
     it('reproduces every BWIPP reference symbol, and refuses every unencodable value', () => {
       const results = runSwiftEncoders([...REFERENCE_SYMBOLS, ...UNENCODABLE]);
