@@ -46,6 +46,14 @@ Build iOS AdHoc app
 
 Build and upload to TestFlight
 
+### ios nightly
+
+```sh
+[bundle exec] fastlane ios nightly
+```
+
+Nightly internal build → TestFlight (Story 16.36)
+
 ### ios upload_release
 
 ```sh
@@ -80,7 +88,7 @@ Build Android AdHoc app
 [bundle exec] fastlane android beta
 ```
 
-Build and upload to Play Console (beta)
+Build and upload to Play Console (alpha)
 
 ### android upload_release
 
@@ -89,6 +97,14 @@ Build and upload to Play Console (beta)
 ```
 
 Build and upload to Play Store (release)
+
+### android nightly
+
+```sh
+[bundle exec] fastlane android nightly
+```
+
+Nightly internal build → Play internal + wear:qa (Story 16.36)
 
 ---
 

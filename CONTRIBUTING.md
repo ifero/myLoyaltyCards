@@ -275,11 +275,12 @@ The pre-push hook and the quality-gates workflow run the **same set of checks in
 2. `yarn tokens:check`
 3. `yarn splash:check`
 4. `yarn wear:catalogue:check`
-5. `yarn lint`
-6. `yarn check:native-patches`
-7. `yarn check:native-strings`
-8. `yarn format:check`
-9. `yarn test`
+5. `yarn check:build-path-filters`
+6. `yarn lint`
+7. `yarn check:native-patches`
+8. `yarn check:native-strings`
+9. `yarn format:check`
+10. `yarn test`
 
 **CI — quality** ([`ci-quality-gates.yml`](.github/workflows/ci-quality-gates.yml)):
 
@@ -292,12 +293,15 @@ The pre-push hook and the quality-gates workflow run the **same set of checks in
 7. `yarn splash:check`
 8. `yarn wear:catalogue:check`
 9. `yarn check:no-tests-folders`
-10. `yarn check:story-catalogue-sync`
-11. `yarn test:coverage`
+10. `yarn check:build-path-filters`
+11. `yarn check:story-catalogue-sync`
+12. `yarn test:coverage`
 
 **CI — watchOS** ([`watchos-tests.yml`](.github/workflows/watchos-tests.yml)) is a **separate, path-filtered workflow** — it runs only when `targets/watch/**`, `catalogue/**`, `targets/watch-widget/**`, `watch-ios/**`, `ios/**`, `app.json`, `fastlane/Fastfile`, or the workflow itself changes (the two middle entries are the generator's inputs — without them a brand-add PR that forgot to regenerate would skip the drift check), so most PRs never trigger it. It runs the watch catalogue Jest tests, then `yarn check:catalogue-generated` **against the pristine checkout** — before anything regenerates, which is what makes it a real drift gate — then `expo prebuild`, then builds the watch target via `yarn watch:build:ci` (whose own `pre` hook regenerates the catalogue for the build). Locally, `yarn test:all` covers the watch tests.
 
-**CI — Wear OS** ([`wear-os-build.yml`](.github/workflows/wear-os-build.yml)) is likewise path-filtered, to `watch-android/**` — it compiles the standalone Gradle project with `./gradlew assembleDebug` and runs no tests. Note that the Wear brand-catalogue drift check is **not** here: `yarn wear:catalogue:check` runs in the always-on quality-gates job above, because a PR editing only `catalogue/italy.json` would never trigger a `watch-android/**`-filtered job. Locally, `cd watch-android && ./gradlew assembleDebug`.
+**CI — Wear OS** ([`wear-os-build.yml`](.github/workflows/wear-os-build.yml)) is likewise path-filtered, to `watch-android/**` — it runs `./gradlew testDebugUnitTest assembleDebug bundleRelease` on the standalone Gradle project — the JVM unit tests, plus BOTH variants, since Story 16.35 made the release bundle the artifact users receive (the bundle built here is unsigned and uploaded nowhere). Note that the Wear brand-catalogue drift check is **not** here: `yarn wear:catalogue:check` runs in the always-on quality-gates job above, because a PR editing only `catalogue/italy.json` would never trigger a `watch-android/**`-filtered job. Locally, `cd watch-android && ./gradlew assembleDebug`.
+
+**Nightly internal builds** ([`nightly-builds.yml`](.github/workflows/nightly-builds.yml)) ship `main` to TestFlight and Play `internal` every night — **but only when something that can reach a binary has changed**. That definition lives in [`.github/build-path-filters.json`](.github/build-path-filters.json) and is the same one `ios-release.yml` and `android-release.yml` duplicate into their `on.push.paths`; `yarn check:build-path-filters` fails when they disagree. **A change outside that set produces no nightly build** — if you add a new source directory, add it to the config in the same PR. Run one by hand from Actions → Nightly Internal Builds (`dry_run: true` builds everything and uploads nothing). See [docs/cicd.md](docs/cicd.md#nightly-internal-builds).
 
 The **PR conventions** check ([`pr-conventions.yml`](.github/workflows/pr-conventions.yml)) fails the PR if the title isn't a Conventional Commit, the branch doesn't use an allowed prefix, or a **code change** references no story. `docs:`/`chore:` titles and catalogue- or `design`-labelled PRs are exempt from the story requirement (the `design` label covers token/visual polish — see [Design / UI Changes](#design--ui-changes)).
 

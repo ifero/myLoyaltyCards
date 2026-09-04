@@ -1,0 +1,121 @@
+{
+  "$comment": [
+    "THE SINGLE SOURCE OF TRUTH for 'can this change reach a shipped binary?' (Story 16.36).",
+    "",
+    "WHY THIS FILE EXISTS. The same allow-list used to live twice, as `on.push.paths` in",
+    "ios-release.yml and android-release.yml, and the two copies had already drifted apart:",
+    "neither listed `modules/**`, so a change to the local Expo module modules/wear-data-layer/",
+    "triggered no build at all. nightly-builds.yml would have been a THIRD copy, and the worst",
+    "one — GitHub applies `paths:`/`paths-ignore:` only to the push and pull_request events, so a",
+    "`schedule:` run gets no path filtering whatsoever and has to compute the decision itself.",
+    "A stale entry in an unattended 03:00 job means 'we quietly stopped shipping'.",
+    "",
+    "WHY THE DUPLICATION IS STILL THERE. `on.push.paths` cannot reference an external file. So",
+    "the duplication is irreducible and is instead made LOUD: `yarn check:build-path-filters`",
+    "fails when either release workflow's `on.push.paths` disagrees with this file. Edit here",
+    "first, then mirror into the workflow the guard names.",
+    "",
+    "ORDER IS LOAD-BEARING. GitHub resolves these per file by LAST match wins, so a negative",
+    "pattern after a positive one excludes that path, while a commit that ALSO touches real",
+    "source still matches and still builds. `excludes` is therefore appended last to every set.",
+    "",
+    "JSON, not YAML, on purpose: no YAML parser is a declared dependency of this repo, and every",
+    "script under scripts/ imports node builtins only. JSON.parse is one.",
+    "",
+    "`$comment` keys are documentation and are stripped by loadFilterConfig()."
+  ],
+
+  "ios": {
+    "$comment": [
+      "Shared verbatim with ios-release.yml's `on.push.paths`, and with the nightly's iOS set.",
+      "One iOS build ships three targets — the phone app, the watchOS app and the WidgetKit",
+      "complication — because Apple has no standalone watchOS upload (ADR-2026-04-11-002).",
+      "catalogue/** is here because watch-ios/Scripts/generate-catalogue.swift reads",
+      "catalogue/italy.json during the build, so a brand added to the catalogue alone still",
+      "changes what ships."
+    ],
+    "paths": [
+      "app/**",
+      "core/**",
+      "features/**",
+      "shared/**",
+      "modules/**",
+      "ios/**",
+      "targets/**",
+      "watch-ios/**",
+      "catalogue/**",
+      "assets/**",
+      "tokens/**",
+      "app.json",
+      "app.config.ts",
+      "package.json",
+      "yarn.lock",
+      "babel.config.js",
+      "metro.config.js",
+      "patches/**",
+      "fastlane/**"
+    ]
+  },
+
+  "android": {
+    "$comment": [
+      "Shared verbatim with android-release.yml's `on.push.paths`, and with the nightly's",
+      "Android set. targets/** and watch-ios/** are DELIBERATELY absent: the watch companion is",
+      "iOS-only. watch-android/** is deliberately absent too, but only from the release",
+      "workflow — see nightlyExtra.",
+      "",
+      "modules/** is here for the obvious reason (modules/wear-data-layer is the phone-side Wear",
+      "transport) and is ALSO in the iOS list for a less obvious one: core/wear-connectivity.ts",
+      "does `require('@/modules/wear-data-layer')`, so the module's TypeScript is bundled for",
+      "both platforms even though its native half is Android-only."
+    ],
+    "paths": [
+      "app/**",
+      "core/**",
+      "features/**",
+      "shared/**",
+      "modules/**",
+      "android/**",
+      "catalogue/**",
+      "assets/**",
+      "tokens/**",
+      "app.json",
+      "app.config.ts",
+      "package.json",
+      "yarn.lock",
+      "babel.config.js",
+      "metro.config.js",
+      "patches/**",
+      "fastlane/**"
+    ],
+    "nightlyExtra": {
+      "$comment": [
+        "NIGHTLY ONLY, and the asymmetry is deliberate. `fastlane android adhoc` builds no Wear",
+        "artifact, so a Wear-only change must NOT trigger android-release.yml — but the nightly",
+        "ships the Wear AAB, so it must. The nightly makes ONE Android decision over the union of",
+        "the phone and Wear sets, keeping Story 16.35's stance that the two artifacts are one",
+        "release intent and a partial ship should be one red X, not two green ones."
+      ],
+      "paths": ["watch-android/**"]
+    }
+  },
+
+  "nightly": {
+    "$comment": [
+      "Added to BOTH platforms' nightly sets, replacing the per-workflow self-reference the",
+      "release workflows carry. A change to the nightly pipeline or to this config should produce",
+      "a nightly build, for the same reason ios-release.yml lists itself: so a pipeline change is",
+      "exercised rather than merely merged."
+    ],
+    "paths": [".github/workflows/nightly-builds.yml", ".github/build-path-filters.json"]
+  },
+
+  "excludes": {
+    "$comment": [
+      "Appended LAST to every set. Files that cannot reach a binary: tests are co-located beside",
+      "their subject and stories are Storybook-only (Chromatic covers those, and there is no web",
+      "target). A commit that also touches real source still builds."
+    ],
+    "paths": ["!**/*.test.ts", "!**/*.test.tsx", "!**/*.stories.tsx"]
+  }
+}

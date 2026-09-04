@@ -423,6 +423,21 @@ Key documentation points for watchOS:
 | **Approval**             | None                       | Required (GitHub Environment)  |
 | **Logging**              | Verbose (console + Sentry) | Errors only (Sentry)           |
 
+> **Implemented, as of Story 16.36 — and note what "Trigger" now means.** The Dev row above was
+> specified when this architecture was written and went unbuilt for a long time: the pipeline
+> drifted to Play's `alpha` track, and no push-to-main trigger ever shipped anything to a tester.
+> [`nightly-builds.yml`](../.github/workflows/nightly-builds.yml) implements it as a **nightly
+> cron plus a manual dispatch** rather than a literal push trigger, because a build per push to
+> `main` would spend the 10× macOS multiplier re-shipping identical bytes — most pushes to `main`
+> are the `[skip ci]` sprint-status commit. The delivered behaviour is the intent of this row:
+> internal testers get the latest `main` on TestFlight and Play `internal` (plus `wear:qa` for
+> Wear OS), with **no approval**, and nothing is built on a night when nothing that reaches a
+> binary has changed. See [docs/cicd.md](cicd.md#nightly-internal-builds).
+>
+> ⚠️ **The "CI/CD Workflow Files" tree below is stale** — none of `dev-phone.yml`,
+> `dev-watch-ios.yml`, `dev-watch-android.yml`, `prod-release.yml` or `test-schemas.yml` exists.
+> `docs/cicd.md` carries the real list.
+
 **CI/CD Workflow Files:**
 
 ```

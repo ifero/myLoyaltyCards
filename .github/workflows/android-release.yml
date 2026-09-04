@@ -13,8 +13,14 @@ on:
       - 'core/**'
       - 'features/**'
       - 'shared/**'
+      # Local Expo modules — `modules/wear-data-layer` is the phone-side Wearable Data
+      # Layer transport. Absent until Story 16.36, so a change to it built nothing.
+      - 'modules/**'
       # Native project. The watch companion is iOS-only, so targets/ and
       # watch-ios/ are deliberately absent here — see ios-release.yml.
+      # `watch-android/**` is absent too, and deliberately: `fastlane android adhoc`
+      # builds no Wear artifact. The NIGHTLY does, so it adds that path itself via
+      # `android.nightlyExtra` in .github/build-path-filters.json.
       - 'android/**'
       # Data and assets compiled into the binary.
       - 'catalogue/**'

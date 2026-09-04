@@ -1,0 +1,534 @@
+# Nightly internal-track builds (Story 16.36)
+#
+# Ships yesterday's `main` to the internal tracks on every platform — iOS + Apple Watch to
+# TestFlight, Android phone + Wear OS to Play — and skips entirely on nights when nothing that
+# can reach a binary has changed.
+#
+# ⚠️ `paths:` FILTERS DO NOT WORK ON A `schedule:` TRIGGER. GitHub applies `paths`/`paths-ignore`
+# only to the push and pull_request events, so the allow-list that `ios-release.yml` and
+# `android-release.yml` express declaratively is unavailable here. The `preflight` job computes
+# the same decision from the same committed definition, `.github/build-path-filters.json`, which
+# `yarn check:build-path-filters` holds those two workflows to. Do NOT paste a `paths:` list into
+# this file — it would be a third copy, and the one nobody notices going stale.
+#
+# ⚠️ THIS FILE HAS ITS OWN `GITHUB_RUN_NUMBER`, WHICH IS WHY THE BANDS EXIST. Run numbers are
+# scoped per workflow file, so nightly run 40 and RC run 40 are unrelated. Without dedicated
+# bands both would compute the same Android versionCode — the Story 16.7 collision. Phone
+# nightlies use 4,000,000+; Wear nightlies use 5,000,000+ (applied in
+# watch-android/app/build.gradle.kts, selected from the upload track by the Fastfile).
+#
+# ⚠️ `schedule:` RUNS ONLY THE DEFAULT BRANCH'S COPY OF THIS FILE. Nothing here can be exercised
+# from a branch by the cron; use `workflow_dispatch` (which accepts a `ref`) to test it.
+
+name: Nightly Internal Builds
+
+on:
+  # 02:17 UTC. An off-peak, off-the-hour minute deliberately: GitHub queues every `0 * * * *`
+  # job on the hour and delays scheduled runs under load, so a :00 cron is the slowest choice.
+  # Unlike `push`, a scheduled run is NOT suppressed by the `[skip ci]` marker that
+  # mark-story-done.yml lands on main after nearly every merge — that commit still reaches the
+  # preflight, which correctly classifies it as a docs-only change and skips.
+  schedule:
+    - cron: '17 2 * * *'
+
+  # A FIRST-CLASS ENTRY POINT, not an escape hatch (Story 16.36 AC13). The expensive half (iOS,
+  # billed at a 10x macOS multiplier) and the irreversible half (a consumed TestFlight build
+  # number, a consumed Play versionCode, a build pushed to real testers) are separable, and a
+  # tester needs to reach them independently.
+  workflow_dispatch:
+    inputs:
+      platform:
+        description: 'Which platform(s) to build'
+        type: choice
+        default: both
+        options: [both, ios, android]
+      force:
+        description: 'Build even if nothing that ships has changed'
+        type: boolean
+        # Defaults TRUE on dispatch: a manual run exists to build regardless of the diff, and a
+        # dispatch that silently skipped would be indistinguishable from a broken trigger.
+        default: true
+      dry_run:
+        description: 'Build and verify everything, upload nothing'
+        type: boolean
+        default: false
+      ref:
+        description: 'Branch or tag to build (default: the default branch)'
+        type: string
+        default: ''
+
+# One nightly at a time, across BOTH entry points. `cancel-in-progress: false` on purpose — the
+# opposite of the release workflows: a run that has already uploaded the phone AAB must not be
+# killed midway, or it leaves exactly the phone-only state the Fastfile orders its steps to
+# prevent.
+#
+# ⚠️ KNOWN TRADE-OFF, accepted deliberately. `cancel-in-progress: false` protects the RUNNING
+# run, but GitHub still cancels a previously *pending* run when a newer one queues in the same
+# group. So if two dispatches are queued behind an in-flight nightly, the first is dropped
+# (visible as "cancelled", not silent). A per-event or per-input group would avoid that, but it
+# would also let two runs upload to the same Play track and TestFlight concurrently — racing
+# track edits and burning two version codes. Mutual exclusion is the more important property;
+# if a dispatch is dropped, re-run it.
+concurrency:
+  group: ${{ github.workflow }}
+  cancel-in-progress: false
+
+# Read by default. ONLY `record-baseline` gets `contents: write`, as a job-level override:
+# the jobs that carry signing secrets have no reason to hold a token that can push to the repo,
+# and keeping the blast radius small is free.
+permissions:
+  contents: read
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: 'true'
+
+jobs:
+  # ---------------------------------------------------------------------------------------
+  # Decide, once, what tonight is for. Both build jobs gate on these outputs, and both entry
+  # points reach the same code — nothing downstream branches on `github.event_name` except the
+  # tag move, or the thing you tested by hand is not the thing that runs at 03:00.
+  # ---------------------------------------------------------------------------------------
+  preflight:
+    name: Decide what changed
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    outputs:
+      build_ios: ${{ steps.ios.outputs.build }}
+      build_android: ${{ steps.android.outputs.build }}
+      head: ${{ steps.head.outputs.sha }}
+      dry_run: ${{ steps.plan.outputs.dry_run }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.ref || github.ref }}
+          # Full history AND tags: the baselines are the `nightly/*` tags, and a shallow
+          # clone cannot diff against them. `fetch-tags` is not implied by fetch-depth: 0
+          # for a workflow triggered on a branch.
+          fetch-depth: 0
+          fetch-tags: true
+
+      # Resolved ONCE, independently of either decision step. Deriving it from the iOS step
+      # would leave it empty on a `platform: android` run, and every downstream `checkout`
+      # would silently fall back to the default branch instead of the decided commit.
+      - name: Resolve the commit under test
+        id: head
+        run: echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+
+      # ⚠️ EVERY dispatch input reaches the shell through `env:`, never through `${{ }}`
+      # splicing. `type: choice` and `type: boolean` constrain the *web form*; the
+      # workflow_dispatch REST API accepts arbitrary strings for any input. Splicing one into
+      # a `run:` body would execute it — in jobs that carry MATCH_PASSWORD, PLAY_STORE_API_KEY
+      # and the keystore password. This is the pattern `record-baseline` already uses.
+      #
+      # Both outputs are NORMALISED here to a fixed literal, so nothing downstream ever handles
+      # attacker-shaped text: `dry_run` becomes exactly `true` or `false`, and `force` becomes
+      # exactly `--force` or empty.
+      - name: Resolve the plan
+        id: plan
+        env:
+          RAW_PLATFORM: ${{ inputs.platform }}
+          RAW_FORCE: ${{ inputs.force }}
+          RAW_DRY_RUN: ${{ inputs.dry_run }}
+        run: |
+          set -euo pipefail
+          # Unset on a schedule; default to building both platforms.
+          PLATFORM="${RAW_PLATFORM:-both}"
+          case "$PLATFORM" in
+            both) WANT_IOS=true;  WANT_ANDROID=true ;;
+            ios) WANT_IOS=true;  WANT_ANDROID=false ;;
+            android) WANT_IOS=false; WANT_ANDROID=true ;;
+            *) echo "::error::unrecognised platform input"; exit 1 ;;
+          esac
+          {
+            echo "platform=$PLATFORM"
+            echo "want_ios=$WANT_IOS"
+            echo "want_android=$WANT_ANDROID"
+            # Normalised to a fixed literal — never the raw input.
+            [ "${RAW_FORCE:-false}" = 'true' ] && echo 'force=--force' || echo 'force='
+            [ "${RAW_DRY_RUN:-false}" = 'true' ] && echo 'dry_run=true' || echo 'dry_run=false'
+          } >> "$GITHUB_OUTPUT"
+
+      # Two independent decisions. iOS is one binary carrying three targets; Android is ONE
+      # decision over the union of the phone and Wear path sets, because Story 16.35 established
+      # that the two Android artifacts are a single release intent and a partial ship should be
+      # one red X. A phone update paired with a stale watch app is a silent-compatibility risk
+      # with no telemetry to surface it.
+      - name: Decide — iOS (phone + Apple Watch)
+        id: ios
+        if: steps.plan.outputs.want_ios == 'true'
+        run: node scripts/nightly-build-decision.mjs --platform ios ${{ steps.plan.outputs.force }}
+
+      # `!cancelled()` rather than a bare condition: without a status function GitHub implicitly
+      # ANDs `success()`, so a FAILING iOS decision (bad config, transient git error) would skip
+      # this step too and lose the Android build as collateral. The decisions are meant to be
+      # independent; this is what makes them so.
+      - name: Decide — Android (phone + Wear OS)
+        id: android
+        if: ${{ !cancelled() && steps.plan.outputs.want_android == 'true' }}
+        run: node scripts/nightly-build-decision.mjs --platform android ${{ steps.plan.outputs.force }}
+
+      # A platform the operator excluded is not "skipped because nothing changed", and saying so
+      # keeps the summary honest.
+      # `continue-on-error` because this step is pure decoration: without it, a failure here
+      # would fail the whole `preflight` job and — via the implicit `success()` on the build
+      # jobs' `if:` — silently discard a build that had already been legitimately decided.
+      - name: Note the platforms this run excluded
+        if: always() && (steps.plan.outputs.want_ios != 'true' || steps.plan.outputs.want_android != 'true')
+        continue-on-error: true
+        env:
+          PLATFORM: ${{ steps.plan.outputs.platform }}
+          WANT_IOS: ${{ steps.plan.outputs.want_ios }}
+          WANT_ANDROID: ${{ steps.plan.outputs.want_android }}
+        run: |
+          {
+            printf '### ⏭️ Excluded by `platform: %s`\n\n' "$PLATFORM"
+            [ "$WANT_IOS" = 'true' ] || echo "- iOS not requested"
+            [ "$WANT_ANDROID" = 'true' ] || echo "- Android not requested"
+            echo
+          } >> "$GITHUB_STEP_SUMMARY"
+
+  # ---------------------------------------------------------------------------------------
+  # iOS + Apple Watch → TestFlight. One upload delivers phone, watch app and complication:
+  # Apple provides no standalone watchOS upload (ADR-2026-04-11-002).
+  # ---------------------------------------------------------------------------------------
+  ios:
+    name: iOS + Apple Watch → TestFlight
+    needs: preflight
+    if: needs.preflight.outputs.build_ios == 'true'
+    runs-on: macos-latest
+    # The existing release jobs set no timeout, so a hung macOS job can burn the 360-minute
+    # default at a 10x multiplier. An unattended nightly must not be able to do that.
+    timeout-minutes: 90
+    outputs:
+      shipped: ${{ steps.ship.outputs.shipped }}
+    env:
+      MATCH_PASSWORD: ${{ secrets.MATCH_PASSWORD }}
+      MATCH_GIT_BASIC_AUTHORIZATION: ${{ secrets.MATCH_GIT_BASIC_AUTHORIZATION }}
+      MATCH_USERNAME: ${{ secrets.MATCH_USERNAME }}
+      FASTLANE_TEAM_ID: ${{ secrets.FASTLANE_TEAM_ID }}
+      APP_STORE_CONNECT_API_KEY_KEY_ID: ${{ secrets.APP_STORE_CONNECT_API_KEY_KEY_ID }}
+      APP_STORE_CONNECT_API_KEY_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_API_KEY_ISSUER_ID }}
+      APP_STORE_CONNECT_API_KEY_KEY: ${{ secrets.APP_STORE_CONNECT_API_KEY_KEY }}
+      EXPO_PUBLIC_SUPABASE_URL: ${{ secrets.EXPO_PUBLIC_SUPABASE_URL }}
+      EXPO_PUBLIC_SUPABASE_KEY: ${{ secrets.EXPO_PUBLIC_SUPABASE_KEY }}
+      EXPO_PUBLIC_SENTRY_DSN: ${{ secrets.EXPO_PUBLIC_SENTRY_DSN }}
+      SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+      FASTLANE_SKIP_UPDATE_CHECK: '1'
+      FASTLANE_DISABLE_COLORS: '1'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          # The exact commit the preflight decided on, not `main`'s tip — a merge landing
+          # mid-run must not silently change what ships.
+          ref: ${{ needs.preflight.outputs.head }}
+      - name: Select Xcode (latest stable for iOS 26 SDK)
+        uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: latest-stable
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: 'yarn'
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+      - name: Create .env file
+        run: |
+          echo "EXPO_PUBLIC_SUPABASE_URL=${{ secrets.EXPO_PUBLIC_SUPABASE_URL }}" >> .env
+          echo "EXPO_PUBLIC_SUPABASE_KEY=${{ secrets.EXPO_PUBLIC_SUPABASE_KEY }}" >> .env
+          echo "EXPO_PUBLIC_SENTRY_DSN=${{ secrets.EXPO_PUBLIC_SENTRY_DSN }}" >> .env
+      - name: Configure Sentry symbol upload
+        run: |
+          if [ -n "$SENTRY_AUTH_TOKEN" ]; then
+            echo "SENTRY_AUTH_TOKEN present — Sentry symbol/source-map upload enabled."
+            echo "SENTRY_DISABLE_AUTO_UPLOAD=false" >> "$GITHUB_ENV"
+          else
+            echo "::warning::SENTRY_AUTH_TOKEN not set — skipping Sentry symbol upload (crashes won't be symbolicated). Add the SENTRY_AUTH_TOKEN repo secret to enable."
+            echo "SENTRY_DISABLE_AUTO_UPLOAD=true" >> "$GITHUB_ENV"
+          fi
+      # A patch-package patch lives in the uncommitted node_modules, so a build can silently
+      # ship WITHOUT it — `--error-on-fail` only fails on a CONFLICT, and an absent patch is a
+      # successful no-op (Story 16.23 AC7). Verified in every pipeline that produces a binary.
+      - name: Verify native patches are applied
+        run: yarn check:native-patches
+      - name: Prebuild native projects
+        run: npx expo prebuild --platform ios
+      # Without this the watch app ships a stale brand catalogue. Present in all three existing
+      # iOS paths; the nightly is the fourth.
+      - name: Generate watchOS catalogue (brands + brand-logo assets)
+        run: xcrun --sdk macosx swift watch-ios/Scripts/generate-catalogue.swift
+      - name: Set up Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '4.0.5'
+          bundler-cache: true
+      # `shipped` is set ONLY if fastlane itself succeeded. The baseline tag keys off this
+      # rather than the job's conclusion, because the artifact-upload steps below run
+      # `if: always()` AFTER the real upload — so a flaky `upload-artifact` would otherwise mark
+      # the job failed and prevent the tag moving for a build that had already reached
+      # TestFlight, costing a duplicate 10x-multiplier upload the next night.
+      - name: Build and upload iOS + Apple Watch (nightly)
+        id: ship
+        run: |
+          bundle exec fastlane ios nightly dry_run:${{ needs.preflight.outputs.dry_run }}
+          echo 'shipped=true' >> "$GITHUB_OUTPUT"
+
+      # `if: always()` for the same reason #218 added it on the Wear side: the artifact is most
+      # worth having when the lane FAILED, or when `dry_run` deliberately skipped the upload.
+      # The release signing material is not in the repo, so this is the only signed IPA anyone
+      # can get hold of.
+      - name: Upload IPA artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: nightly-ios-${{ github.run_id }}
+          path: output/*.ipa
+          if-no-files-found: warn
+          retention-days: 14
+
+  # ---------------------------------------------------------------------------------------
+  # Android phone → Play `internal`, Wear OS → Play `wear:qa`. ONE job carrying both toolchains
+  # (Node/Expo for the phone, JDK 17 + Android SDK 36 for watch-android), because the two
+  # artifacts are one release intent — Story 16.35. Do not split it into parallel jobs.
+  # ---------------------------------------------------------------------------------------
+  android:
+    name: Android + Wear OS → Play internal
+    needs: preflight
+    if: needs.preflight.outputs.build_android == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    outputs:
+      shipped: ${{ steps.ship.outputs.shipped }}
+    env:
+      ANDROID_PACKAGE_NAME: ${{ secrets.ANDROID_PACKAGE_NAME }}
+      PLAY_STORE_API_KEY: ${{ secrets.PLAY_STORE_API_KEY }}
+      ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+      ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+      ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+      ANDROID_KEYSTORE_PATH: ${{ github.workspace }}/android/app/release.keystore
+      # ⛔ MANDATORY, AND NOT DERIVABLE. `wear_play_track` would otherwise derive
+      # `wear:internal` from the phone's `internal` — and that track DOES NOT EXIST. Play names
+      # the Wear internal-testing track `qa`; only `wear:production`, `wear:beta` and `wear:qa`
+      # are well-known names (developers.google.com/android-publisher/tracks), and RC
+      # v1.0.0-rc.21 already died proving the derivation wrong with `Track not found:
+      # wear:alpha`. The `android nightly` lane refuses to start without this, deliberately
+      # BEFORE the phone AAB is uploaded, so a missing value cannot produce a phone-only nightly.
+      WEAR_PLAY_TRACK: wear:qa
+      EXPO_PUBLIC_SUPABASE_URL: ${{ secrets.EXPO_PUBLIC_SUPABASE_URL }}
+      EXPO_PUBLIC_SUPABASE_KEY: ${{ secrets.EXPO_PUBLIC_SUPABASE_KEY }}
+      EXPO_PUBLIC_SENTRY_DSN: ${{ secrets.EXPO_PUBLIC_SENTRY_DSN }}
+      SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+      FASTLANE_SKIP_UPDATE_CHECK: '1'
+      FASTLANE_DISABLE_COLORS: '1'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.preflight.outputs.head }}
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: 'yarn'
+      # Pinned, not inherited from the runner image. AGP 9.3 requires JDK 17 minimum for the
+      # Wear project; beta-releases.yml and wear-os-build.yml pin the same — keep them equal.
+      - name: Set up JDK 17
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '17'
+      # `watch-android` compiles against API 36, and `keytool`/`apksigner` resolution in the
+      # signing-parity check needs build-tools, which setup-android does not put on PATH.
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v4
+        with:
+          packages: 'platforms;android-36 build-tools;36.0.0'
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+      - name: Create .env file
+        run: |
+          echo "EXPO_PUBLIC_SUPABASE_URL=${{ secrets.EXPO_PUBLIC_SUPABASE_URL }}" >> .env
+          echo "EXPO_PUBLIC_SUPABASE_KEY=${{ secrets.EXPO_PUBLIC_SUPABASE_KEY }}" >> .env
+          echo "EXPO_PUBLIC_SENTRY_DSN=${{ secrets.EXPO_PUBLIC_SENTRY_DSN }}" >> .env
+      - name: Configure Sentry symbol upload
+        run: |
+          if [ -n "$SENTRY_AUTH_TOKEN" ]; then
+            echo "SENTRY_AUTH_TOKEN present — Sentry symbol/source-map upload enabled."
+            echo "SENTRY_DISABLE_AUTO_UPLOAD=false" >> "$GITHUB_ENV"
+          else
+            echo "::warning::SENTRY_AUTH_TOKEN not set — skipping Sentry symbol upload (crashes won't be symbolicated). Add the SENTRY_AUTH_TOKEN repo secret to enable."
+            echo "SENTRY_DISABLE_AUTO_UPLOAD=true" >> "$GITHUB_ENV"
+          fi
+      - name: Compute Android versionCodes (phone + Wear)
+        # THE NIGHTLY BANDS. `GITHUB_RUN_NUMBER` is scoped per workflow file, so this file's
+        # run 40 is unrelated to beta-releases.yml run 40 — without dedicated bands both would
+        # compute the same code, which is the Story 16.7 collision.
+        #
+        # The two halves are deliberately ASYMMETRIC, exactly as store-upload.yml is:
+        #   * the PHONE offset is arithmetic here, because app.config.ts reads one env var at
+        #     prebuild time and has no other way to learn the band. 4_000_000 must stay in sync
+        #     with the band table in watch-android/README.md.
+        #   * the WEAR counter is the BARE run number. Its band (5_000_000) is applied in
+        #     watch-android/app/build.gradle.kts and selected from the upload track by the
+        #     Fastfile's `wear_band_for`, so the band cannot disagree with the destination.
+        #     Do NOT "restore consistency" by adding arithmetic here — build.gradle.kts says so
+        #     in its own comments.
+        run: |
+          echo "ANDROID_VERSION_CODE=$((GITHUB_RUN_NUMBER + 4000000))" >> "$GITHUB_ENV"
+          echo "WEAR_VERSION_CODE=$GITHUB_RUN_NUMBER" >> "$GITHUB_ENV"
+      - name: Prebuild native projects
+        run: npx expo prebuild --platform android
+      - name: Decode Android release keystore
+        run: |
+          mkdir -p "$(dirname "$ANDROID_KEYSTORE_PATH")"
+          echo "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" | base64 --decode > "$ANDROID_KEYSTORE_PATH"
+      - name: Set up Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '4.0.5'
+          bundler-cache: true
+      # $GRADLE_USER_HOME/gradle.properties OVERRIDES each project's own — see beta-releases.yml
+      # for the full rationale. This job builds both projects, which pin different Gradle
+      # distributions, so it provisions two of them; sequentially, never concurrently.
+      - name: Tune Gradle memory for CI
+        run: |
+          mkdir -p "$HOME/.gradle"
+          cat > "$HOME/.gradle/gradle.properties" <<'EOF'
+          org.gradle.jvmargs=-Xmx4096m -XX:MaxMetaspaceSize=1536m -Dfile.encoding=UTF-8
+          kotlin.daemon.jvmargs=-Xmx2048m -XX:MaxMetaspaceSize=768m
+          org.gradle.workers.max=2
+          org.gradle.daemon=false
+          EOF
+      # See the iOS job: `shipped` is the baseline's real signal, not the job conclusion.
+      - name: Build and upload Android + Wear OS (nightly)
+        id: ship
+        run: |
+          bundle exec fastlane android nightly dry_run:${{ needs.preflight.outputs.dry_run }}
+          echo 'shipped=true' >> "$GITHUB_OUTPUT"
+
+      - name: Upload phone AAB artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: nightly-android-${{ github.run_id }}
+          path: android/app/build/outputs/bundle/release/*.aab
+          if-no-files-found: warn
+          retention-days: 14
+
+      - name: Upload Wear OS bundle artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: nightly-wear-${{ github.run_id }}
+          path: watch-android/app/build/outputs/bundle/release/*.aab
+          if-no-files-found: warn
+          retention-days: 14
+
+  # ---------------------------------------------------------------------------------------
+  # Move the baselines, so tomorrow diffs against what actually shipped tonight.
+  #
+  # ⛔ SCHEDULE ONLY. A `workflow_dispatch` must NEVER move a tag, for three independent
+  # reasons, any one of which is sufficient:
+  #   1. a `platform: ios` run knows nothing about the Android diff, so advancing
+  #      `nightly/android` would silently consume an unshipped Android change;
+  #   2. a `force` run ships a commit the gate would have skipped, so recording it rewrites the
+  #      history the cron reasons from;
+  #   3. a `dry_run` uploads nothing, so there is nothing for a baseline to attest to.
+  # Expressed as a one-event allow-list rather than a chain of input checks, so a future fifth
+  # input cannot accidentally satisfy it.
+  #
+  # Each tag moves only if ITS platform actually uploaded — `always()` plus per-tag result
+  # checks, so a night where iOS shipped and Android failed advances iOS alone and retries
+  # Android tomorrow. Moving a tag for a failed build would swallow the change forever.
+  #
+  # The default GITHUB_TOKEN is a second, independent guard: pushes made with it do not trigger
+  # workflow runs. `nightly/*` also matches no existing tag trigger (`v*.*.*-rc.*`, `v*.*.*`) —
+  # verified with the repo's own matcher, not reasoned about, because a tag that DID match would
+  # fire a production store upload every night.
+  # ---------------------------------------------------------------------------------------
+  record-baseline:
+    name: Record what shipped
+    needs: [preflight, ios, android]
+    if: always() && github.event_name == 'schedule'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: write # the only job that needs it
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.preflight.outputs.head }}
+          fetch-depth: 0
+      - name: Move the baseline tags
+        env:
+          HEAD_SHA: ${{ needs.preflight.outputs.head }}
+          IOS_RESULT: ${{ needs.ios.outputs.shipped }}
+          ANDROID_RESULT: ${{ needs.android.outputs.shipped }}
+        run: |
+          set -euo pipefail
+          git config user.name  'github-actions[bot]'
+          git config user.email 'github-actions[bot]@users.noreply.github.com'
+
+          moved=()
+          for pair in "ios:$IOS_RESULT" "android:$ANDROID_RESULT"; do
+            platform="${pair%%:*}"; result="${pair#*:}"
+            if [ "$result" = 'true' ]; then
+              git tag -f "nightly/$platform" "$HEAD_SHA"
+              git push -f origin "refs/tags/nightly/$platform"
+              moved+=("nightly/$platform")
+              echo "moved nightly/$platform -> $HEAD_SHA"
+            else
+              echo "nightly/$platform NOT moved (did not ship)"
+            fi
+          done
+
+          {
+            echo "### 🔖 Baselines"
+            echo
+            if [ ${#moved[@]} -eq 0 ]; then
+              echo "No tag moved — nothing shipped tonight."
+            else
+              for t in "${moved[@]}"; do echo "- \`$t\` → \`${HEAD_SHA:0:12}\`"; done
+            fi
+            echo
+          } >> "$GITHUB_STEP_SUMMARY"
+
+  # ---------------------------------------------------------------------------------------
+  # A failed nightly must be loud. A SKIPPED nightly must not be — a red X on the common case
+  # trains everyone to ignore the signal, and the skip already explains itself in the summary.
+  # Slack is optional: it fires only when the secret exists, exactly as ci-quality-gates.yml
+  # does, and costs nothing when it does not.
+  # ---------------------------------------------------------------------------------------
+  notify-failure:
+    name: Report a failed nightly
+    needs: [preflight, ios, android, record-baseline]
+    if: always() && contains(needs.*.result, 'failure')
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    env:
+      SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+    steps:
+      - name: Summarise the failure
+        run: |
+          {
+            echo "### ❌ Nightly failed"
+            echo
+            echo "| job | result |"
+            echo "| --- | --- |"
+            echo "| preflight | ${{ needs.preflight.result }} |"
+            echo "| ios | ${{ needs.ios.result }} |"
+            echo "| android | ${{ needs.android.result }} |"
+            echo "| record-baseline | ${{ needs['record-baseline'].result }} |"
+            echo
+            echo "A platform whose job failed keeps yesterday's baseline tag, so tonight's"
+            echo "change is retried tomorrow rather than swallowed."
+          } >> "$GITHUB_STEP_SUMMARY"
+      - name: Notify Slack
+        if: env.SLACK_WEBHOOK_URL != ''
+        uses: 8398a7/action-slack@v3
+        with:
+          status: failure
+          fields: repo,commit,author,job

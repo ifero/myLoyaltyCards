@@ -26,10 +26,19 @@ plugins {
  * `app.config.ts` for exactly this reason; the Wear APK takes the next band up.
  *
  * Bands (see ../README.md § versionCode bands):
- *   0         phone, alpha/beta   (`beta-releases.yml`, bare run number)
- *   1_000_000 phone, production   (`store-upload.yml`)
- *   2_000_000 Wear OS APK, alpha/beta   (`beta-releases.yml`)
- *   3_000_000 Wear OS APK, production   (`store-upload.yml`)
+ *   0         phone,   alpha/beta   (`beta-releases.yml`, bare run number)
+ *   1_000_000 phone,   production   (`store-upload.yml`)
+ *   2_000_000 Wear OS, alpha/beta   (`beta-releases.yml`)
+ *   3_000_000 Wear OS, production   (`store-upload.yml`)
+ *   4_000_000 phone,   nightly      (`nightly-builds.yml`, Story 16.36)
+ *   5_000_000 Wear OS, nightly      (`nightly-builds.yml`, Story 16.36)
+ *
+ * ⚠️ THE NIGHTLY BANDS SIT ABOVE PRODUCTION, and that has a consequence worth
+ * knowing before it surprises someone: a device on a nightly build carries a
+ * HIGHER versionCode than any production release, so it will never receive a
+ * production build as an update. That is acceptable for an internal track whose
+ * testers opted in, and it is the price of keeping every pipeline's counter in
+ * its own collision-free band. Leaving the internal track means reinstalling.
  *
  * Deliberately NOT read from `app.config.ts`: the two projects share no build
  * system, and coupling them would reintroduce the "anything in `android/` is
@@ -59,23 +68,45 @@ val wearProductionVersionCodeOffset = 1_000_000
 val playMaxVersionCode = 2_100_000_000
 
 /**
- * Which release band this build targets. `production` selects the
- * `3_000_000` band; anything else (including the variable being unset, the local
- * and RC cases) stays on the `2_000_000` band.
+ * Offset added to {@link wearVersionCodeBand} for a **nightly** Wear build
+ * (Story 16.36), landing it in the `5_000_000` band.
  *
- * Only the exact literal `production` opts in, and the comparison is
- * case-insensitive on a trimmed value. A typo therefore lands on the beta band
- * rather than silently sharing a counter space with the RC pipeline: colliding
- * with a *future* production release is a hard Play rejection, while colliding
- * with an already-uploaded RC code is the plausible-looking failure this whole
- * band scheme exists to prevent.
+ * It exists for exactly the reason the production offset does: `GITHUB_RUN_NUMBER`
+ * is scoped **per workflow file**, so `nightly-builds.yml` starts a FIFTH
+ * independent counter at 1. Without its own band, nightly run 40 and RC run 40
+ * would both compute `2_000_040` — the two-counters-one-band collision Story 16.7
+ * documents. Applied here rather than as workflow arithmetic, same as the
+ * production offset, and for the same reason: Gradle has no `app.config.ts`-style
+ * single-env-var constraint, so the band, the offset and the validation stay in
+ * one file with nothing to keep in sync.
  */
-val wearIsProductionRelease: Boolean =
-    providers.environmentVariable("WEAR_RELEASE_TRACK").orNull?.trim()?.lowercase() == "production"
+val wearNightlyVersionCodeOffset = 3_000_000
 
-/** The band this build actually lands in, after the production offset. */
+/**
+ * Which release band this build targets, selected by `WEAR_RELEASE_TRACK`:
+ *
+ *   `production` -> `3_000_000` (band + production offset)
+ *   `nightly`    -> `5_000_000` (band + nightly offset)
+ *   anything else, including unset -> `2_000_000` (local and RC builds)
+ *
+ * Only an exact literal opts in, on a trimmed, case-insensitive value. **A typo
+ * therefore lands on the beta band, deliberately**: colliding with a *future*
+ * production or nightly release is a hard Play rejection you find immediately,
+ * while colliding with an already-uploaded RC code is the plausible-looking
+ * failure this whole band scheme exists to prevent. Do not "helpfully" add a
+ * fuzzy match or a default-to-nightly branch.
+ */
+val wearReleaseTrack: String =
+    providers.environmentVariable("WEAR_RELEASE_TRACK").orNull?.trim()?.lowercase() ?: ""
+
+/** The band this build actually lands in, after the selected offset. */
 val wearEffectiveBand: Int =
-    wearVersionCodeBand + if (wearIsProductionRelease) wearProductionVersionCodeOffset else 0
+    wearVersionCodeBand +
+        when (wearReleaseTrack) {
+            "production" -> wearProductionVersionCodeOffset
+            "nightly" -> wearNightlyVersionCodeOffset
+            else -> 0
+        }
 
 /**
  * CI supplies the per-release counter in `WEAR_VERSION_CODE` (a distinct name

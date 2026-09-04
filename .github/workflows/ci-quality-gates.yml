@@ -122,6 +122,14 @@ jobs:
       # `totalStories` frontmatter field to the literal `### Story ` heading count,
       # the rule epics.md records inline, after three different counting rules let
       # the number drift.
+      # `on.push.paths` cannot reference an external file, so ios-release.yml and
+      # android-release.yml each duplicate the "can this change reach a shipped
+      # binary?" allow-list. The two copies had already drifted — neither listed
+      # `modules/**` — and nightly-builds.yml reads the same definition unattended,
+      # where a stale entry does not fail, it quietly stops shipping (Story 16.36).
+      - name: Check the build path filters are in sync
+        run: yarn check:build-path-filters
+
       - name: Check the story catalogue matches the sprint tracker
         run: yarn check:story-catalogue-sync
 

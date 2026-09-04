@@ -15,6 +15,12 @@ yarn splash:check || exit 1
 echo "Checking the Wear OS brand catalogue is in sync..."
 yarn wear:catalogue:check || exit 1
 
+# The release workflows duplicate the "can this reach a binary?" path list, because
+# `on.push.paths` cannot reference a file. Pure Node, and the nightly reads the same
+# config unattended, so drift here means a build that quietly stops happening.
+echo "Checking the build path filters are in sync..."
+yarn check:build-path-filters || exit 1
+
 echo "Running lint..."
 yarn lint || exit 1
 
