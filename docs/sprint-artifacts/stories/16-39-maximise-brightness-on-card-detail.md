@@ -4,7 +4,7 @@ baseline_commit: 4de43079a64a6a73514d187d285a637614467946
 
 # Story 16.39: Full brightness on the card detail screen — by setting or by button
 
-Status: review
+Status: done
 
 Epic: 16 — Platform & Tech Debt
 
