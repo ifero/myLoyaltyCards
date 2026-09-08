@@ -8,6 +8,15 @@ Status: done
 
 Epic: 16 — Platform & Tech Debt
 
+> ⛔ **SUPERSEDED IN ONE RESPECT — READ [Post-merge](#post-merge-three-nightlies-failed--the-wear-track-is-wearinternal-not-wearqa) BEFORE ACTING ON ANY `wear:qa` STATEMENT BELOW.**
+> Everything in this story that names the Wear destination **`wear:qa`** — the banner below, AC7,
+> AC12, the Dev Notes and the verification checklist — is **wrong**. This listing's Wear internal
+> track is **`wear:internal`**, read live from the Play Publishing API on 2026-09-07. Three nightly
+> runs failed on `Track not found: wear:qa`, each _after_ the phone AAB had already shipped.
+> The 2026-09-03 "inventory confirmed" claim came from Play Console **display names**, not API
+> **identifiers**. Those statements are left in place as the historical record of what was believed
+> when this story shipped; the Post-merge section carries the corrected facts and the fix.
+
 > **🟢 THIS IS NEW CAPABILITY, NOT A DEFECT.** Every existing release path is triggered by a
 > **published GitHub Release** (`beta-releases.yml`, `store-upload.yml`) or a **push to `main`**
 > (`ios-release.yml`, `android-release.yml`). `grep -rn "schedule\|cron" .github/` returns **zero
@@ -896,8 +905,9 @@ TestFlight. Outstanding:
 3. A real-change night builds and uploads both platforms.
 4. The iOS build reaches TestFlight and the Apple Watch app installs from it.
 5. The phone AAB appears on Play `internal` with `versionCode 4 000 000 + N`.
-6. The Wear AAB appears on **`wear:qa`** with `versionCode 5 000 000 + N` and installs on a paired
-   device. The track's existence is confirmed (ifero, 2026-09-03); what is unproven is the upload.
+6. The Wear AAB appears on **`wear:internal`** with `versionCode 5 000 000 + N` and installs on a
+   paired device. ⛔ **This item read `wear:qa` and called the track's existence confirmed. It was
+   wrong — see Post-merge below.**
 7. Both baseline tags advance, and pushing them triggers no `v*` workflow.
 
 **Cheapest first run:** dispatch with `platform: android`, `dry_run: true`. That exercises the
@@ -906,11 +916,75 @@ whole Android path including the signing-parity gate, costs no macOS minutes, co
 
 ### Change Log
 
-| Date       | Change                                                                                                               |
-| ---------- | -------------------------------------------------------------------------------------------------------------------- |
-| 2026-09-03 | Story drafted (`bmad-create-story`), catalogued in `epics.md`, added to Sprint 19 `wave_4`                           |
-| 2026-09-03 | Rebased onto `fe0febc` (#218 merged); AC7 simplified to the `WEAR_PLAY_TRACK` env var                                |
-| 2026-09-03 | AC13 added at ifero's request — `workflow_dispatch` as a first-class testing entry point                             |
-| 2026-09-03 | Wear track inventory confirmed (`qa` = internal, `alpha` = closed); the "release lanes still broken" concern retired |
-| 2026-09-03 | Tasks 1-7 implemented; 11 gates + 178 suites / 2217 tests green. Task 8 (AC12) open by design                        |
-| 2026-09-03 | Code review (3 domain reviewers): 1 critical + 2 high + 5 others fixed; 179 suites / 2236 tests green                |
+| Date       | Change                                                                                                                             |
+| ---------- | ---------------------------------------------------------------------------------------------------------------------------------- |
+| 2026-09-03 | Story drafted (`bmad-create-story`), catalogued in `epics.md`, added to Sprint 19 `wave_4`                                         |
+| 2026-09-03 | Rebased onto `fe0febc` (#218 merged); AC7 simplified to the `WEAR_PLAY_TRACK` env var                                              |
+| 2026-09-03 | AC13 added at ifero's request — `workflow_dispatch` as a first-class testing entry point                                           |
+| 2026-09-03 | Wear track inventory confirmed (`qa` = internal, `alpha` = closed); the "release lanes still broken" concern retired               |
+| 2026-09-03 | Tasks 1-7 implemented; 11 gates + 178 suites / 2217 tests green. Task 8 (AC12) open by design                                      |
+| 2026-09-03 | Code review (3 domain reviewers): 1 critical + 2 high + 5 others fixed; 179 suites / 2236 tests green                              |
+| 2026-09-07 | ⛔ Three nightlies failed on `Track not found: wear:qa`. Real track is `wear:internal`; override removed, live-API preflight added |
+
+## Post-merge: three nightlies failed — the Wear track is `wear:internal`, not `wear:qa`
+
+**AC12 was the gate, and it failed.** The first three scheduled runs all died the same way:
+
+| Run                                                                             | Date       | Result                                     |
+| ------------------------------------------------------------------------------- | ---------- | ------------------------------------------ |
+| [33951247712](https://github.com/ifero/myLoyaltyCards/actions/runs/33951247712) | 2026-09-05 | `Track not found: wear:qa` — phone shipped |
+| [34018414507](https://github.com/ifero/myLoyaltyCards/actions/runs/34018414507) | 2026-09-06 | `Track not found: wear:qa` — phone shipped |
+| [34095184450](https://github.com/ifero/myLoyaltyCards/actions/runs/34095184450) | 2026-09-07 | `Track not found: wear:qa` — phone shipped |
+
+### What this listing actually has
+
+`available_play_tracks` printed the answer on the **first** failure, and on every one after:
+
+```
+alpha · beta · internal · production
+wear:alpha · wear:beta · wear:internal · wear:production
+```
+
+**`wear:internal` exists. `wear:qa` does not.** That is the exact inverse of what AC7, the Fastfile
+deny-list, this story's own banner and five other documents asserted.
+
+### Why the wrong name was written — the doc contradicts the API
+
+Nobody guessed. [developers.google.com/android-publisher/tracks](https://developers.google.com/android-publisher/tracks)
+documents the internal-testing default track name as `qa`, and a form-factor track id as
+`"[prefix]:defaultTrackName"` — compose them and you get `wear:qa`. Verified twice on 2026-09-07
+(Context7 snapshot **and** a live fetch): the page really does say `qa`. **The documentation
+contradicts the API, and the API is authoritative.** Anyone re-reading that page will conclude the
+corrected code is wrong. It is not. Do not revert it.
+
+The 2026-09-03 "inventory confirmed" entry — recorded in this story, `epics.md` and
+`sprint-status.yaml` — came from reading Play Console **display names** ("Internal testing"), not API
+**identifiers**. That is the specific mistake to avoid repeating.
+
+### Severity: three partial ships, not three red builds
+
+The fastlane summary shows step 7 `upload_to_play_store` **succeeding** (~75s) before step 8 dies. So
+each night the phone AAB reached Play `internal` and the watch half did not — three silent phone-only
+releases with unrecoverable `versionCode`s. A wrong Wear track name was never a build failure; it was
+a half-release that looked like one.
+
+### The fix (2026-09-07)
+
+1. **`UNDERIVABLE_WEAR_TRACKS` and `ensure_wear_track_resolvable!` are gone.** A hardcoded table of
+   "known" names is what caused this; it also made the lane _refuse to start_ without the broken
+   value, so deleting the env var alone could not have fixed it.
+2. **`ensure_wear_track_exists!` replaces them** — it asks Play for the real track list in
+   `ship_android!`, **before either artifact is built**, and fails with that list attached when the
+   destination is missing. A wrong name now costs seconds, and can no longer produce a partial ship.
+   An unreachable API is deliberately _not_ a failure (the upload stays authoritative).
+3. **`nightly-builds.yml` sets no `WEAR_PLAY_TRACK` at all.** The derived `wear:internal` is correct,
+   as is `wear:alpha` for the RC lane and `wear:production` for the store lane — all four verified
+   against the live list. The override seam remains for a future hand-named **closed** track.
+4. **Six documents corrected with provenance**, so the stale-doc reasoning cannot be reinstated by
+   someone re-reading Google's page.
+
+### Already-shipped state: no cleanup
+
+The three orphaned phone-only releases stay on `internal`; the next nightly ships a matched pair at
+fresh version codes and supersedes them. Burnt version codes are unrecoverable by design — **nobody
+hand-edits the counter.**

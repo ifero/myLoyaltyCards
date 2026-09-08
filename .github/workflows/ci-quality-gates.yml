@@ -149,3 +149,43 @@ jobs:
         with:
           status: ${{ job.status }}
           fields: repo,commit,author,job
+
+  # Separate job on purpose. These tests need Ruby + the bundled fastlane gem, which the Node-only
+  # `quality-gates` job above has no other use for — installing Ruby there would tax every run of
+  # the repo's most-run gate for a suite that touches one directory. As its own job it runs in
+  # parallel and costs no wall-clock.
+  #
+  # Guards `fastlane/Fastfile`'s release-critical helpers. The one that matters is the liveness
+  # regression: `available_play_tracks` ends in `rescue StandardError => e ... nil`, and
+  # `ensure_wear_track_exists!` treats nil as "cannot verify, carry on" — so anything that breaks
+  # the lookup silently DISARMS the Wear-track preflight without failing a build. Three nightly
+  # builds shipped phone-only releases before that preflight existed; this job is what keeps it
+  # from quietly becoming decorative again.
+  fastlane-gates:
+    name: Quality gates (fastlane release helpers)
+    runs-on: ubuntu-latest
+    env:
+      SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '4.0.5'
+          bundler-cache: true
+
+      # `bundle exec`, not plain `ruby`: `.bundle/config` sets `BUNDLE_PATH: ./bundler`, so the
+      # bundled gems never reach the system GEM_HOME. That also makes `minitest` a required Gemfile
+      # entry — it is a *bundled* gem in Ruby 4.0, which plain `ruby` resolves and bundler does not.
+      - name: Run Fastfile helper tests
+        run: bundle exec ruby fastlane/Fastfile.test.rb
+
+      - name: Slack notification on failure
+        if: ${{ failure() && env.SLACK_WEBHOOK_URL != '' }}
+        uses: 8398a7/action-slack@v3
+        with:
+          status: ${{ job.status }}
+          fields: repo,commit,author,job

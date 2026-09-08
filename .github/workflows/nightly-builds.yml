@@ -289,7 +289,7 @@ jobs:
           retention-days: 14
 
   # ---------------------------------------------------------------------------------------
-  # Android phone → Play `internal`, Wear OS → Play `wear:qa`. ONE job carrying both toolchains
+  # Android phone → Play `internal`, Wear OS → Play `wear:internal`. ONE job carrying both toolchains
   # (Node/Expo for the phone, JDK 17 + Android SDK 36 for watch-android), because the two
   # artifacts are one release intent — Story 16.35. Do not split it into parallel jobs.
   # ---------------------------------------------------------------------------------------
@@ -308,14 +308,20 @@ jobs:
       ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
       ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
       ANDROID_KEYSTORE_PATH: ${{ github.workspace }}/android/app/release.keystore
-      # ⛔ MANDATORY, AND NOT DERIVABLE. `wear_play_track` would otherwise derive
-      # `wear:internal` from the phone's `internal` — and that track DOES NOT EXIST. Play names
-      # the Wear internal-testing track `qa`; only `wear:production`, `wear:beta` and `wear:qa`
-      # are well-known names (developers.google.com/android-publisher/tracks), and RC
-      # v1.0.0-rc.21 already died proving the derivation wrong with `Track not found:
-      # wear:alpha`. The `android nightly` lane refuses to start without this, deliberately
-      # BEFORE the phone AAB is uploaded, so a missing value cannot produce a phone-only nightly.
-      WEAR_PLAY_TRACK: wear:qa
+      # ⛔ DO NOT SET `WEAR_PLAY_TRACK` HERE. The Wear destination is derived — `wear:` +
+      # the phone's `internal` = `wear:internal` — and that is the track this listing actually
+      # has (verified live via the Play Publishing API, 2026-09-07).
+      #
+      # This block used to pin `WEAR_PLAY_TRACK: wear:qa`, because
+      # developers.google.com/android-publisher/tracks says the internal-testing track is named
+      # `qa`. **That documentation contradicts the API.** `wear:qa` does not exist here, and the
+      # override killed three consecutive nightlies (2026-09-05/06/07) with `Track not found`,
+      # each one AFTER the phone AAB had already uploaded — three silent phone-only releases.
+      #
+      # The destination is now validated against Play's live track list by
+      # `ensure_wear_track_exists!` before anything is built, so a wrong name is a fast red X
+      # rather than a partial ship. Re-add an override ONLY for a hand-named closed track, and
+      # only after confirming the name against that live list.
       EXPO_PUBLIC_SUPABASE_URL: ${{ secrets.EXPO_PUBLIC_SUPABASE_URL }}
       EXPO_PUBLIC_SUPABASE_KEY: ${{ secrets.EXPO_PUBLIC_SUPABASE_KEY }}
       EXPO_PUBLIC_SENTRY_DSN: ${{ secrets.EXPO_PUBLIC_SENTRY_DSN }}

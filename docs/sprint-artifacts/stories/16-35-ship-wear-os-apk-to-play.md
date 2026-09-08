@@ -619,6 +619,11 @@ lists only three well-known Wear names:
 | `wear:beta`       | open testing                                     |
 | `wear:qa`         | internal testing — note "qa", **not** "internal" |
 
+> ⛔ **THIS TABLE IS WRONG FOR THIS LISTING — see [Post-merge #4](#post-merge-4-the-list-arrived-the-wear-internal-track-is-wearinternal-not-wearqa).**
+> It is transcribed faithfully from Google's docs, and Google's docs contradict Google's API. Play
+> returns `wear:internal` here, not `wear:qa`. This table is what seeded the `wear:qa` belief that
+> later broke three nightly builds; it is left in place as the historical record.
+
 Everything else is a **closed** testing track, "created manually" with a "custom name". The phone
 ships to `alpha`, a closed track, which has **no automatic Wear counterpart** — `wear:alpha` would
 exist only if a Wear closed track were hand-created with exactly that name. So the default was wrong
@@ -647,3 +652,40 @@ loudly with the real track list is the correct behaviour.
 
 Everything except the track name is now proven against production. AC9 needs either the Console
 checked by hand, or one more RC to print the list.
+
+## Post-merge #4: the list arrived — the Wear internal track is `wear:internal`, not `wear:qa`
+
+The section above closes with _"AC9 needs either the Console checked by hand, or one more RC to print
+the list."_ **The list printed.** `available_play_tracks` — added by this very story — ran in three
+nightly failures on 2026-09-05/06/07 and returned:
+
+```
+alpha · beta · internal · production
+wear:alpha · wear:beta · wear:internal · wear:production
+```
+
+**Every `wear:` counterpart exists, and `wear:qa` is not among them.** Three consequences for this
+story's conclusions:
+
+1. **`wear:` + the phone's track name IS a correct derivation on this listing — for all four
+   tracks.** This story concluded the opposite ("not a valid derivation"), reasonably, from
+   `Track not found: wear:alpha` in rc.21. That failure was real; the `wear:alpha` track was created
+   afterwards. The derivation remains a _default_ rather than a _rule_ — a hand-named **closed**
+   track pairs with no phone track — but nothing on this listing needs an override today.
+2. **The three-well-known-names table above is wrong.**
+   [Google's docs](https://developers.google.com/android-publisher/tracks) do document internal
+   testing as `qa`; the API disagrees. Verified twice on 2026-09-07 (Context7 snapshot and a live
+   fetch). **The API is authoritative.**
+3. **The Console form-factor opt-in is DONE** — four `wear:*` tracks cannot come back otherwise.
+   This retires the long-standing open question in Post-merge #2 and #3.
+
+### What this story got right, and the one thing it got wrong
+
+`available_play_tracks` is the reason this incident took minutes to diagnose rather than days —
+it printed the correct inventory on the very first failure. **The design was right; only the
+hardcoded name was wrong.** The lesson taken forward into the 2026-09-07 fix is that this diagnostic
+belonged in the _preflight_, not only in the `rescue`: as written it explains a partial ship after
+the phone AAB is already committed. It now runs in `ship_android!` as `ensure_wear_track_exists!`,
+before either artifact is built.
+
+**AC9 is satisfied.** The track resolves; the remaining unknown in the table above is closed.

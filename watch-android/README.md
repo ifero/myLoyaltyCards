@@ -418,20 +418,30 @@ Both Android release pipelines build and upload the phone AAB and this Wear APK 
 go to **different Play tracks**: the phone to the mobile track, and this app to Play's dedicated
 Wear OS **form-factor track**, whose id is `wear:` + the mobile track name.
 
-| Pipeline            | Phone track  | Wear track                                | Lane                              |
-| ------------------- | ------------ | ----------------------------------------- | --------------------------------- |
-| `beta-releases.yml` | `alpha`      | `WEAR_PLAY_TRACK`, else `wear:alpha` ⚠️   | `fastlane android beta`           |
-| `store-upload.yml`  | `production` | `WEAR_PLAY_TRACK`, else `wear:production` | `fastlane android upload_release` |
+| Pipeline             | Phone track  | Wear track                  | Lane                              |
+| -------------------- | ------------ | --------------------------- | --------------------------------- |
+| `nightly-builds.yml` | `internal`   | `wear:internal` (derived)   | `fastlane android nightly`        |
+| `beta-releases.yml`  | `alpha`      | `wear:alpha` (derived)      | `fastlane android beta`           |
+| `store-upload.yml`   | `production` | `wear:production` (derived) | `fastlane android upload_release` |
 
-> ⚠️ **`wear:` + the phone's track name is a DEFAULT, not a rule — and for `alpha` it is wrong.**
-> RC v1.0.0-rc.21 uploaded the Wear bundle successfully and then failed with
-> `Track not found: wear:alpha`. Only **`wear:production`**, **`wear:beta`** (open testing) and
-> **`wear:qa`** (internal testing — note "qa", not "internal") are well-known names; everything else
-> is a **closed** testing track, created by hand with a custom name
-> ([docs](https://developers.google.com/android-publisher/tracks)). The phone's `alpha` has no
-> automatic Wear counterpart. Set `WEAR_PLAY_TRACK` in the release workflow to whatever this app's
-> Console actually has. When a track is not found, `upload_wear_bundle!` prints the list of tracks
-> that DO exist — read that rather than guessing again.
+> ✅ **This listing's real Wear tracks, read live from the Play Publishing API on 2026-09-07:**
+> `wear:internal`, `wear:alpha`, `wear:beta`, `wear:production` (alongside the phone's `internal`,
+> `alpha`, `beta`, `production`). So `wear:` + the phone's track name derives correctly for **every**
+> lane, and no pipeline sets `WEAR_PLAY_TRACK` today.
+
+> ⛔ **`wear:qa` DOES NOT EXIST here, even though Google's docs say it should — do not "fix" this
+> back.** [developers.google.com/android-publisher/tracks](https://developers.google.com/android-publisher/tracks)
+> states that the internal-testing default track name is `qa` and that a form-factor track id is
+> `"[prefix]:defaultTrackName"`; composing those gives `wear:qa`. **That documentation contradicts
+> the API.** Pinning `WEAR_PLAY_TRACK: wear:qa` on the strength of it killed three consecutive
+> nightlies (2026-09-05/06/07), each one _after_ the phone AAB had already uploaded — three silent
+> phone-only releases. The API is authoritative; the docs are not.
+
+> ⚠️ **The derivation is still a DEFAULT, not a rule, which is why `WEAR_PLAY_TRACK` remains.** A
+> **closed** testing track is created by hand with a custom name, so a Wear closed track called e.g.
+> `qa-eu` pairs with no phone track at all. Before setting an override, get the name from the live
+> list rather than from any document: `ensure_wear_track_exists!` validates the destination against
+> Play's real track list _before anything is built_, and prints that list when it does not match.
 
 > ⚠️ **The dedicated Wear track is mandatory, it needs a one-time Play Console step, and as of
 > 2026-09-01 it is NOT confirmed done for this app.** Play rejects an artifact declaring
