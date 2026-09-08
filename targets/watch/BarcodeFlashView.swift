@@ -20,6 +20,13 @@ struct BarcodeFlashView: View {
   let card: WatchCard
 
   @Environment(\.dismiss) private var dismiss
+  // The dimmed Always-On state, which is as close as watchOS lets an app get to the
+  // display's luminance: there is no brightness API to call and no keep-awake API to
+  // hold the wake period open (Story 16.26's AC1 determination, recorded in that
+  // story's Dev Agent Record). The system sets this true when the wrist drops and keeps
+  // this view on screen rather than blurring it, so the barcode is still being
+  // presented to the scanner — just dimmer.
+  @Environment(\.isLuminanceReduced) private var isLuminanceReduced
   @State private var barcodeImage: Image? = nil
   @FocusState private var isFocused: Bool
   @State private var crownRotation: Double = 0.0
@@ -60,6 +67,23 @@ struct BarcodeFlashView: View {
     guard let value = card.barcodeValue, !value.isEmpty else { return nil }
 
     return BarcodeGenerator.symbolModuleUnits(value: value, formatString: card.barcodeFormat)
+  }
+
+  /// What to draw for the display's current luminance state.
+  ///
+  /// The single place the luminance flag is consumed. Everything downstream reads the
+  /// resolved presentation instead, which is what keeps the flag out of the geometry:
+  /// see `WatchBarcodeLuminancePresentation.reservesValueStrip` for why feeding
+  /// `showsValueLabel` the raw flag would re-plan the module mid-scan.
+  private var luminancePresentation: WatchBarcodeLuminancePresentation {
+    WatchBarcodeLuminancePresentation.make(
+      isLuminanceReduced: isLuminanceReduced,
+      hasValue: !(card.barcodeValue?.isEmpty ?? true),
+      // The DRAWN orientation, for the same reason `barcodeAccessibilityLabel` uses it:
+      // the digits are judged against the symbol the scanner is actually looking at, not
+      // against a plan that may still be superseded.
+      orientation: renderedOrientation
+    )
   }
 
   /// Accessibility label for the drawn symbol.
@@ -118,12 +142,12 @@ struct BarcodeFlashView: View {
       // 11.5 pt (40 mm) of slack. There is no arrangement that buys both, so the symbol
       // stays intact and the reclaim is width plus bar height.
       GeometryReader { geometry in
-        let showsValueLabel = !(card.barcodeValue?.isEmpty ?? true)
+        let presentation = luminancePresentation
         let layout = WatchBarcodeLayoutMetrics.make(
           containerSize: geometry.size,
           formatString: card.barcodeFormat,
           symbolUnits: symbolUnits,
-          showsValueLabel: showsValueLabel,
+          showsValueLabel: presentation.reservesValueStrip,
           currentOrientation: renderedOrientation
         )
 
@@ -157,6 +181,26 @@ struct BarcodeFlashView: View {
               .minimumScaleFactor(0.5)
               .padding(.top, layout.contentSpacing)
               .padding(.horizontal, layout.valueHorizontalPadding)
+              // Suppress the digits when the dimmed display is showing a ROTATED symbol
+              // — see `WatchBarcodeLuminancePresentation.drawsValueGlyphs` for why the
+              // pairing is the condition and why a horizontal symbol keeps its number.
+              //
+              // `opacity`, not `if` or `.hidden()`, and the difference matters three
+              // times over. The strip keeps its height, so `layout` is untouched and the
+              // symbol cannot be re-planned or re-centred as the wrist drops. It keeps
+              // its WHITE fill, so the strip reads as extra clear space rather than the
+              // black that removing it would expose — which on the rotated axis would
+              // cut the effective quiet zone instead of extending it. And it stays in
+              // the accessibility tree, which is deliberate: this is a change to what a
+              // SCANNER sees, and a VoiceOver user — who cannot perceive the digits
+              // going and still needs the number to key in — should not lose it because
+              // the wrist is down. `.accessibilityHidden(true)` here would be a real
+              // regression for them in exchange for nothing.
+              //
+              // Unanimated on purpose: no `.animation` modifier reaches this, so the
+              // digits cut straight out rather than passing through partial alpha —
+              // grey strokes in the quiet zone would be worse than either endpoint.
+              .opacity(presentation.drawsValueGlyphs ? 1 : 0)
               .accessibilityIdentifier("barcode-number")
           }
 
@@ -176,7 +220,7 @@ struct BarcodeFlashView: View {
             containerSize: newSize,
             formatString: card.barcodeFormat,
             symbolUnits: symbolUnits,
-            showsValueLabel: showsValueLabel,
+            showsValueLabel: presentation.reservesValueStrip,
             currentOrientation: renderedOrientation
           )
           updateBarcodeGeometry(updatedLayout, container: newSize)

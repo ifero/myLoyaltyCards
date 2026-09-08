@@ -366,6 +366,137 @@ enum WatchBarcodeBarLayout {
   }
 }
 
+/// What the barcode screen draws while the display is in the dimmed Always-On state —
+/// and, more importantly, what it refuses to change.
+///
+/// watchOS offers no way to hold the display at full luminance. Compile-probed against
+/// `WatchOS26.5.sdk` at this target's own deployment floor: `UIScreen` is
+/// `API_UNAVAILABLE(watchos)`, `WKInterfaceDevice` has no `brightness`, and the only
+/// keep-awake property that ever existed, `WKExtension.frontmostTimeoutExtended`, has
+/// been `"No longer supported"` since watchOS 7. `WKExtendedRuntimeSession` links, but
+/// it keeps the *app* running "even after the watch's screen turns off" — it never holds
+/// the display — so it cannot deliver the behaviour either, quite apart from the
+/// `WKBackgroundModes` claim Apple's own guidance rules out ("Select a session type
+/// based on the app's intended use—not based on the features that the session
+/// provides"). See Story 16.26's Dev Agent Record for the full determination.
+///
+/// What the platform gives instead is NOTICE. `WKSupportsAlwaysOnDisplay` defaults to
+/// true for watchOS 8 and later, so on wrist-down the system keeps this view on screen —
+/// dimmed, not blurred — and sets `\.isLuminanceReduced`. The symbol is therefore still
+/// in front of the scanner, which makes what the app draws in that state the one real
+/// lever left.
+///
+/// ⚠️ **Apple's guidance for that notice is, for a barcode, the defect rather than the
+/// fix.** The documentation says to "lower the overall brightness of your view … change
+/// large, filled shapes to be stroked, and choose less bright colors". The pure-black /
+/// pure-white pair IS the signal every 1D decoder normalises its narrow element against
+/// (the mechanism Story 16.23 measured), so a stroked or greyed symbol is an unreadable
+/// one. Holding maximum contrast here is a deliberate refusal of the platform example,
+/// and this type is where the refusal is written down so a later edit has to argue with
+/// it rather than reach for the example.
+///
+/// Pure and dependency-free on purpose, like `WatchBarcodeModulePlan` beside it: the
+/// contract test lifts this type out of the source and *runs* it, which a type touching
+/// SwiftUI could not do.
+struct WatchBarcodeLuminancePresentation: Equatable {
+  /// Draw the human-readable digits under the symbol?
+  ///
+  /// False while dimmed **and rotated** — that pairing, and not luminance alone, is the
+  /// condition, because the reason is geometric rather than photometric. The digits are
+  /// the only thing on screen that is neither the symbol nor its quiet zone, and for a
+  /// **rotated** symbol their strip lies along the reading axis immediately past the
+  /// trailing quiet zone, where black glyph strokes are marks a decoder can take for
+  /// bars. Suppressing them leaves that strip clean white instead, which is why this is
+  /// not in tension with `reservesValueStrip`: the space stays, the marks go.
+  ///
+  /// **A horizontal symbol keeps its digits, deliberately.** There the strip sits on the
+  /// axis *across* the bars, so a scan line that reads the symbol never crosses it and
+  /// there is nothing to suppress. Hiding them anyway would cost the user the number they
+  /// can key in by hand — the wrist can be resting flat on a counter rather than lowered
+  /// mid-scan — and would buy nothing: black glyphs on white *emit less* than the blank
+  /// white that replaces them, so even Apple's "lower the overall brightness" ask does
+  /// not argue for it. AC3 says to suppress what *competes* with the symbol; horizontally,
+  /// the digits do not.
+  ///
+  /// The visible cost of that precision is that the behaviour now differs between two
+  /// cards on the same watch. It is accepted: orientation is already per-card and per-watch
+  /// (Story 16.27), and the alternative is taking the number away from everyone to protect
+  /// the minority of layouts that need it.
+  ///
+  /// A `nil` orientation — nothing drawn yet — keeps the digits. On the usual path that
+  /// costs nothing: the view appears because the wrist was just *raised* or the screen
+  /// tapped, so the display is not dimmed and the pairing above is false regardless.
+  ///
+  /// The exception, stated rather than glossed: a view that mounts while the display is
+  /// **already** dimmed shows its digits for the ~120 ms the renderer takes to settle, then
+  /// stops drawing them if the resolved orientation turns out rotated. Accepted — it touches
+  /// only the secondary digits row, never the symbol's geometry or ink, and erring towards
+  /// *showing* the number is the safer default while nothing is drawn yet.
+  ///
+  /// Every such change is an instant cut, not an animated one, and deliberately so: nothing
+  /// on this screen carries an `.animation` modifier, so SwiftUI does not interpolate the
+  /// opacity. A barcode being read by a scanner is the last place to want an interpolated
+  /// frame, and an animation here would also mean the digits spend time at *partial* alpha —
+  /// grey strokes in the quiet zone, which is the one state worse than either endpoint.
+  let drawsValueGlyphs: Bool
+
+  /// Keep the digits' strip reserved in the layout?
+  ///
+  /// **Deliberately independent of `drawsValueGlyphs`, and that independence is the
+  /// whole point of this type.** This is the field that feeds
+  /// `WatchBarcodeLayoutMetrics.make(showsValueLabel:)`, where it becomes
+  /// `footerReservedHeight` and so shortens the axis the module divides. Letting it
+  /// follow the glyphs — the obvious `showsValueLabel: !isLuminanceReduced` — hands the
+  /// solver a container 16 pt taller the instant the wrist drops.
+  ///
+  /// **That is not a theoretical hazard; it was measured.** Running the shipped solver
+  /// both ways over all seven watches and four symbologies, **21 of the 28 combinations
+  /// change the bitmap** — a 32 px height step, so a full re-render — and three of those
+  /// re-resolve the symbol outright:
+  ///
+  /// | Watch | Symbol | Awake | Dimmed |
+  /// | ----- | ------ | ----- | ------ |
+  /// | 40 mm | Code128 | horizontal, module 2 | **rotated, module 3** |
+  /// | 40 mm | EAN-8 | horizontal, module 4 | **rotated, module 5** |
+  /// | 41 mm | EAN-13 | horizontal, module 3 | **rotated, module 4** |
+  ///
+  /// The last row is the common case on a common watch: the barcode would turn 90° and
+  /// re-quantise while the cashier is mid-scan. The seven QR combinations are the ones
+  /// that escape: QR's square fit is `min(contentWidth, max(contentHeight, 112))`, and
+  /// every supported watch is more than 16 pt narrower than it is tall, so the footer
+  /// delta never reaches the binding term. `watch-display-luminance-contract.test.ts`
+  /// reproduces the whole table — QR included, since the invariant has to hold there
+  /// too — so reintroducing the naive form fails loudly.
+  ///
+  /// So luminance must never reach the geometry. It does not reach it here.
+  let reservesValueStrip: Bool
+
+  /// `hasValue` is whether the card carries a payload at all — the same condition the
+  /// view has always used to decide whether a digits row exists.
+  ///
+  /// `orientation` is the orientation of the symbol **already drawn**, not of the last
+  /// layout planned — the same distinction `BarcodeFlashView.renderedOrientation` exists
+  /// for. The digits are being judged against the symbol the scanner is actually looking
+  /// at. `nil` means nothing is drawn yet (QR, or a value no encoder accepts).
+  ///
+  /// Note what this signature deliberately does **not** allow: `orientation` reaches
+  /// `drawsValueGlyphs` only. `reservesValueStrip` still answers `hasValue` alone, so
+  /// neither luminance nor orientation can travel from here back into the geometry that
+  /// produced the orientation in the first place.
+  static func make(
+    isLuminanceReduced: Bool,
+    hasValue: Bool,
+    orientation: WatchBarcodeOrientation?
+  ) -> Self {
+    let competesWithSymbol = isLuminanceReduced && orientation?.isRotated == true
+
+    return WatchBarcodeLuminancePresentation(
+      drawsValueGlyphs: hasValue && !competesWithSymbol,
+      reservesValueStrip: hasValue
+    )
+  }
+}
+
 struct WatchBarcodeLayoutMetrics {
   let outerHorizontalPadding: CGFloat
   let outerVerticalPadding: CGFloat
