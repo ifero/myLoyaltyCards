@@ -47,6 +47,7 @@ on:
       # ALSO touches real source still matches and still builds.
       - '!**/*.test.ts'
       - '!**/*.test.tsx'
+      - '!**/*.test.rb'
       - '!**/*.stories.tsx'
   workflow_dispatch:
 

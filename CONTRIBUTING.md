@@ -180,7 +180,8 @@ The pre-push hook runs these — plus the rest of the [quality gates](#quality-g
 yarn lint
 yarn format:check   # or: yarn format  (to fix in place)
 yarn typecheck
-yarn test           # or: yarn test:all  (includes watchOS tests)
+yarn test           # or: yarn test:all  (adds watchOS + fastlane helper tests)
+yarn test:fastlane  # fastlane/Fastfile release helpers (needs `bundle install` once)
 ```
 
 **Never use `--no-verify`.** If a gate fails, fix it.
@@ -267,7 +268,9 @@ Quality is enforced at three levels. **All must pass — bypassing them is forbi
 
 ### Exactly what runs, in order
 
-The pre-push hook and the quality-gates workflow run the **same set of checks in a different order** — CI adds the test-layout check and collects coverage. If you add or remove a check, update both the file and this list.
+The pre-push hook and the quality-gates workflow run the **same set of checks in a different order** — CI adds the test-layout check, the fastlane helper tests, and collects coverage. If you add or remove a check, update both the file and this list.
+
+> **Why the fastlane tests are CI-only.** They need Ruby and the bundled fastlane gem, and `.bundle/config` sets `BUNDLE_PATH: ./bundler`, which is **per-checkout and gitignored** — so a fresh git worktree has no gems until someone runs `bundle install`. In pre-push that would fail every push from a new worktree, for a suite that guards one directory. Run it by hand with `yarn test:fastlane` when you touch `fastlane/Fastfile`.
 
 **pre-push** ([`.husky/pre-push`](.husky/pre-push)) — stops at the first failure:
 
@@ -296,6 +299,8 @@ The pre-push hook and the quality-gates workflow run the **same set of checks in
 10. `yarn check:build-path-filters`
 11. `yarn check:story-catalogue-sync`
 12. `yarn test:coverage`
+
+Plus a second, parallel job in the same workflow — `fastlane-gates` — which sets up Ruby and runs `bundle exec ruby fastlane/Fastfile.test.rb`. It is a separate job so the Node-only gate above does not pay for a Ruby toolchain on every run. It guards `fastlane/Fastfile`'s release helpers, above all the Wear-track preflight: `available_play_tracks` swallows its own errors and returns `nil`, and `nil` means "cannot verify, carry on" — so anything that breaks that lookup silently disarms the preflight without failing a build. Three nightly builds shipped phone-only releases before it existed.
 
 **CI — watchOS** ([`watchos-tests.yml`](.github/workflows/watchos-tests.yml)) is a **separate, path-filtered workflow** — it runs only when `targets/watch/**`, `catalogue/**`, `targets/watch-widget/**`, `watch-ios/**`, `ios/**`, `app.json`, `fastlane/Fastfile`, or the workflow itself changes (the two middle entries are the generator's inputs — without them a brand-add PR that forgot to regenerate would skip the drift check), so most PRs never trigger it. It runs the watch catalogue Jest tests, then `yarn check:catalogue-generated` **against the pristine checkout** — before anything regenerates, which is what makes it a real drift gate — then `expo prebuild`, then builds the watch target via `yarn watch:build:ci` (whose own `pre` hook regenerates the catalogue for the build). Locally, `yarn test:all` covers the watch tests.
 

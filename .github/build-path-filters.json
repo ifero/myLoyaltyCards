@@ -114,8 +114,12 @@
     "$comment": [
       "Appended LAST to every set. Files that cannot reach a binary: tests are co-located beside",
       "their subject and stories are Storybook-only (Chromatic covers those, and there is no web",
-      "target). A commit that also touches real source still builds."
+      "target). A commit that also touches real source still builds.",
+      "",
+      "`*.test.rb` covers fastlane/Fastfile.test.rb. Without it, `fastlane/**` (in BOTH the iOS and",
+      "Android sets) would make a test-only edit ship a real nightly — burning a TestFlight build",
+      "number and a Play versionCode, neither of which is reusable."
     ],
-    "paths": ["!**/*.test.ts", "!**/*.test.tsx", "!**/*.stories.tsx"]
+    "paths": ["!**/*.test.ts", "!**/*.test.tsx", "!**/*.test.rb", "!**/*.stories.tsx"]
   }
 }
