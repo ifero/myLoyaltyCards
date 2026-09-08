@@ -4,7 +4,7 @@ baseline_commit: 115709db1516be13e449145bcc6ac9ac139e5c97
 
 # Story 16.26: Hold the Apple Watch display at full luminance while a barcode is shown
 
-Status: review
+Status: done
 
 Epic: 16 — Platform & Tech Debt
 
