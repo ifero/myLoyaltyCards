@@ -414,17 +414,18 @@ platform :android do
 
   # Resolve the Play track the Wear bundle goes to.
   #
-  # ⚠️ `wear:` + the phone's track name is NOT a reliable derivation, and RC v1.0.0-rc.21
-  # proved it: the phone ships to `alpha`, and `wear:alpha` came back
-  # `Track not found`. Per developers.google.com/android-publisher/tracks only three Wear
-  # track names are WELL KNOWN — `wear:production`, `wear:beta` (open testing) and
-  # `wear:qa` (internal testing; note it is "qa", not "internal"). Everything else is a
-  # CLOSED testing track, which is created by hand and carries a custom name, so
-  # `wear:alpha` exists only if someone made a Wear closed track literally called "alpha".
+  # `wear:` + the phone's track name is the DEFAULT, and on this listing it is correct for all
+  # four tracks — Play returns `wear:internal`, `wear:alpha`, `wear:beta`, `wear:production`
+  # (verified live via the Publishing API, 2026-09-07; see `ensure_wear_track_exists!`).
   #
-  # So the derived value is a DEFAULT, not a rule. `WEAR_PLAY_TRACK` overrides it outright
-  # for whatever this app's Console actually has. Set it in the release workflow rather
+  # ⚠️ It is still a default and not a rule, which is why `WEAR_PLAY_TRACK` stays: a CLOSED
+  # testing track is created by hand with a custom name, so a Wear closed track called e.g.
+  # "qa-eu" pairs with no phone track at all. Set the override in the release workflow rather
   # than editing the default here, so the phone and Wear tracks stay visibly paired.
+  #
+  # ⛔ DO NOT hardcode a table of "known" Wear names here. That is exactly what broke three
+  # consecutive nightlies (2026-09-05/06/07) — see `ensure_wear_track_exists!` for the full
+  # account. The destination is validated against the LIVE track list instead.
   def wear_play_track(phone_track)
     override = ENV['WEAR_PLAY_TRACK'].to_s.strip
     return override unless override.empty?
@@ -432,47 +433,103 @@ platform :android do
     "#{WEAR_TRACK_PREFIX}:#{phone_track}"
   end
 
-  # Wear track names that are NOT derivable from the phone track they pair with, and what to
-  # use instead. Play's three WELL-KNOWN Wear names are `wear:production`, `wear:beta` and
-  # `wear:qa`; everything else is a hand-created closed track. `wear:alpha` therefore exists
-  # for THIS app only because someone made a closed track called "alpha" — which is why the
-  # derivation is a default rather than a rule, and why this list is a deny-list of known-bad
-  # derivations rather than an allow-list of good ones. An allow-list would break the RC lane.
-  UNDERIVABLE_WEAR_TRACKS = {
-    # Play names the Wear internal-testing track `qa`, not `internal`.
-    "internal" => "wear:qa"
-  }.freeze
-
-  # Fail BEFORE anything is built or uploaded when the Wear destination cannot be derived and
-  # no override was given.
+  # Fail BEFORE anything is built or uploaded when the Wear destination does not exist.
   #
-  # This lives in `ship_android!`, not in the `nightly` lane, on purpose: `wear_play_track` is
-  # only consulted inside `upload_wear_bundle!` — i.e. AFTER the phone AAB has been uploaded —
-  # so relying on it to fail would produce exactly the phone-only release Story 16.35 exists to
-  # prevent, and exactly the "guard evaluated too late" defect its review finding #2 caught.
-  # Putting it here means any future caller of `ship_android!` inherits the protection instead
-  # of having to remember it.
-  def ensure_wear_track_resolvable!(phone_track)
-    return unless UNDERIVABLE_WEAR_TRACKS.key?(phone_track)
-    return unless ENV['WEAR_PLAY_TRACK'].to_s.strip.empty?
+  # ⛔ WHY THIS ASKS PLAY INSTEAD OF CONSULTING A TABLE. This function replaces a hardcoded
+  # `{ "internal" => "wear:qa" }` deny-list that made the `android nightly` lane REFUSE to start
+  # without `WEAR_PLAY_TRACK=wear:qa` — a track that does not exist on this listing. Three
+  # consecutive nightlies died on `Track not found: wear:qa` (runs 33951247712, 34018414507,
+  # 34095184450), each one AFTER the phone AAB had already uploaded: three silent phone-only
+  # releases with unrecoverable version codes.
+  #
+  # The table was not carelessly written. developers.google.com/android-publisher/tracks states
+  # that the internal-testing default track name is `qa` and that a form-factor track is
+  # `"[prefix]:defaultTrackName"` — compose them and you get `wear:qa`. **Google's documentation
+  # contradicts Google's API.** The API is authoritative. Anyone re-reading that page will
+  # conclude this code is wrong; it is not. Do not "fix" it back.
+  #
+  # It lives in `ship_android!` rather than in `upload_wear_bundle!` on purpose: `wear_play_track`
+  # is only consulted AFTER the phone AAB has been uploaded, so a guard there produces exactly the
+  # phone-only release Story 16.35 exists to prevent — the "guard evaluated too late" defect its
+  # review finding #2 caught. Here it also runs before the ~40-minute Gradle builds, so a wrong
+  # destination costs seconds. Any future caller of `ship_android!` inherits the protection.
+  #
+  # An UNREACHABLE API is deliberately NOT a failure: `available_play_tracks` returns nil on any
+  # error, and a transient Play outage must not block a release that would otherwise succeed. The
+  # upload is still authoritative and will fail loudly on `Track not found` if the name is wrong.
+  def ensure_wear_track_exists!(phone_track, package_name:, json_key_data:)
+    wear_track = wear_play_track(phone_track)
+    tracks = available_play_tracks(package_name: package_name, json_key_data: json_key_data)
 
-    expected = UNDERIVABLE_WEAR_TRACKS.fetch(phone_track)
+    if tracks.nil?
+      UI.important(
+        "Could not verify '#{wear_track}' exists (Play's track list was unavailable) — " \
+        "continuing. The Wear upload itself remains the authoritative check."
+      )
+      return
+    end
+
+    return if tracks.include?(wear_track)
+
+    listed = tracks.map { |name| "  - #{name}" }.join("\n")
+    advice =
+      if tracks.none? { |name| name.start_with?("#{WEAR_TRACK_PREFIX}:") }
+        "NO `#{WEAR_TRACK_PREFIX}:` track exists at all, so the Wear OS form factor has never " \
+        "been enabled. Do it once by hand: Advanced settings -> Form factors -> Wear OS -> " \
+        "Manage -> 'Use a dedicated release track for Wear OS'."
+      else
+        "Pick the matching `#{WEAR_TRACK_PREFIX}:` track from the list above and set " \
+        "WEAR_PLAY_TRACK to it in the release workflow."
+      end
+
     UI.user_error!(
-      "WEAR_PLAY_TRACK is not set, and `wear:#{phone_track}` DOES NOT EXIST — Play names " \
-      "the Wear counterpart of `#{phone_track}` `#{expected}`. Set WEAR_PLAY_TRACK=#{expected} " \
-      "in the workflow. Failing now, before anything is built or uploaded, so this cannot " \
-      "ship the phone without the watch (Story 16.35's failure mode)."
+      "Wear destination '#{wear_track}' DOES NOT EXIST for this app. Failing now, before " \
+      "anything is built or uploaded, so this cannot ship the phone without the watch " \
+      "(Story 16.35's failure mode).\n\n" \
+      "Tracks that DO exist right now:\n#{listed}\n\n#{advice}"
     )
   end
 
-  # Ask Play which tracks this app actually has, for the `Track not found` message.
+  # Ask Play which tracks this app actually has.
   #
-  # Wrapped so it can NEVER replace the real failure: a diagnostic that throws while
-  # explaining another throw is worse than no diagnostic. Returns nil when it cannot tell.
-  # A fresh edit is used deliberately — the one the failed upload was holding is dead.
-  def available_play_tracks
-    client = Supply::Client.make_from_config(params: Supply.config)
-    client.begin_edit(package_name: Supply.config[:package_name])
+  # Two roles: the `Track not found` diagnostic in `upload_wear_bundle!` (where `supply` has
+  # already run), and the PREFLIGHT in `ensure_wear_track_exists!` (where it has not). The second
+  # is why credentials are parameters and why `supply` is required explicitly — see below.
+  #
+  # Wrapped so it can NEVER replace the real failure: a diagnostic that throws while explaining
+  # another throw is worse than no diagnostic. Returns nil when it cannot tell. A fresh edit is
+  # used deliberately — the one a failed upload was holding is dead.
+  #
+  # ⛔ TWO REASONS THIS CANNOT JUST READ `Supply.config`, both of which would make the preflight a
+  # SILENT NO-OP (`rescue StandardError` swallows `NameError` and `NoMethodError` alike, so it
+  # would return nil and the guard would wave everything through):
+  #
+  #   1. `Supply.config` is a bare `attr_accessor` (`supply/lib/supply.rb`), nil until the
+  #      `supply` action assigns it — `upload_to_play_store.rb:31`, an unconditional assignment,
+  #      which is also why setting it here is safe: the later upload overwrites it.
+  #   2. `Supply` is not loaded until that action runs, because `require "supply"` sits INSIDE
+  #      `UploadToPlayStoreAction.run` (`:5-6`), not at the top of the file.
+  #
+  # Credentials are parameters rather than the `package_name` / `json_key_data` locals defined at
+  # the top of this platform block because `def` does not close over enclosing locals — only the
+  # lane BLOCKS can see those, so callers pass them in.
+  def available_play_tracks(package_name: nil, json_key_data: nil)
+    require 'supply'
+    require 'supply/options'
+
+    config = Supply.config
+    if config.nil?
+      return nil if package_name.to_s.strip.empty? || json_key_data.to_s.strip.empty?
+
+      config = FastlaneCore::Configuration.create(
+        Supply::Options.available_options,
+        { package_name: package_name, json_key_data: json_key_data }
+      )
+      Supply.config = config
+    end
+
+    client = Supply::Client.make_from_config(params: config)
+    client.begin_edit(package_name: config[:package_name])
     names = client.tracks.map(&:track).compact.sort
     client.abort_current_edit
     names
@@ -537,14 +594,14 @@ platform :android do
         UI.error("1. The Wear OS form factor is not enabled. Enable it once, by hand:")
         UI.error("     Advanced settings -> Form factors -> Wear OS -> Manage")
         UI.error("     -> 'Use a dedicated release track for Wear OS'")
-        UI.error("2. It IS enabled, but this track name is wrong. Only wear:production,")
-        UI.error("   wear:beta and wear:qa are well-known names; anything else is a CLOSED")
-        UI.error("   track created by hand with a custom name. Note the phone's 'alpha' has")
-        UI.error("   no automatic Wear equivalent.")
+        UI.error("2. It IS enabled, but this track name is wrong. Take the name from the")
+        UI.error("   list below — NOT from developers.google.com/android-publisher/tracks,")
+        UI.error("   whose documented `wear:qa` does not exist on this listing (that stale")
+        UI.error("   value is what broke the nightly on 2026-09-05/06/07).")
         UI.error("")
         UI.error("Set WEAR_PLAY_TRACK in the release workflow to override the default.")
 
-        tracks = available_play_tracks
+        tracks = available_play_tracks(package_name: package_name, json_key_data: json_key_data)
         if tracks
           UI.error("")
           UI.error("Tracks that DO exist for this app right now:")
@@ -606,7 +663,7 @@ platform :android do
     UI.user_error!("Missing PLAY_STORE_API_KEY") unless json_key_data
 
     ensure_android_signing_env!
-    ensure_wear_track_resolvable!(track)
+    ensure_wear_track_exists!(track, package_name: package_name, json_key_data: json_key_data)
 
     # versionCode is set authoritatively by app.config.ts at `expo prebuild` time (from
     # ANDROID_VERSION_CODE, in the band the calling workflow chose) and baked into the
@@ -676,7 +733,7 @@ platform :android do
     ship_android!(track: "production", release_status: "completed", upload: true)
   end
 
-  # Nightly internal build (Story 16.36): phone AAB -> `internal`, Wear AAB -> `wear:qa`.
+  # Nightly internal build (Story 16.36): phone AAB -> `internal`, Wear AAB -> `wear:internal`.
   #
   # `release_status: "completed"`, NOT the `draft` the RC lane uses, and the difference is the
   # whole point rather than an oversight. `beta` uploads a draft so that promoting an RC to
@@ -685,11 +742,14 @@ platform :android do
   # `beta` here** — that would silently turn the nightly into a queue of undelivered drafts,
   # which looks green from CI and is invisible to the testers waiting for a build.
   #
-  # The Wear track is NOT derived from `internal`: Play names the Wear internal-testing track
-  # `qa`, so `wear:internal` does not exist. `nightly-builds.yml` sets `WEAR_PLAY_TRACK=wear:qa`
-  # and `wear_play_track` uses it verbatim — see that helper for why the derivation is only ever
-  # a default (RC v1.0.0-rc.21 died on `Track not found: wear:alpha`).
-  desc "Nightly internal build → Play internal + wear:qa (Story 16.36)"
+  # The Wear track IS derived here: `wear:` + `internal` = `wear:internal`, which is what this
+  # listing actually has (verified live via the Publishing API, 2026-09-07). `nightly-builds.yml`
+  # therefore sets NO `WEAR_PLAY_TRACK` override. It used to set `wear:qa` — the name Google's
+  # own docs specify for the internal-testing track — and that killed three consecutive nightlies
+  # with `Track not found`, each after the phone AAB had already shipped. See
+  # `ensure_wear_track_exists!`, which now validates the destination against the live track list
+  # before anything is built.
+  desc "Nightly internal build → Play internal + wear:internal (Story 16.36)"
   lane :nightly do |options|
     ship_android!(
       track: "internal",

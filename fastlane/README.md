@@ -104,7 +104,7 @@ Build and upload to Play Store (release)
 [bundle exec] fastlane android nightly
 ```
 
-Nightly internal build → Play internal + wear:qa (Story 16.36)
+Nightly internal build → Play internal + wear:internal (Story 16.36)
 
 ---
 

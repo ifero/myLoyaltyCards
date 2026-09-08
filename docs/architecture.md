@@ -430,7 +430,7 @@ Key documentation points for watchOS:
 > cron plus a manual dispatch** rather than a literal push trigger, because a build per push to
 > `main` would spend the 10× macOS multiplier re-shipping identical bytes — most pushes to `main`
 > are the `[skip ci]` sprint-status commit. The delivered behaviour is the intent of this row:
-> internal testers get the latest `main` on TestFlight and Play `internal` (plus `wear:qa` for
+> internal testers get the latest `main` on TestFlight and Play `internal` (plus `wear:internal` for
 > Wear OS), with **no approval**, and nothing is built on a night when nothing that reaches a
 > binary has changed. See [docs/cicd.md](cicd.md#nightly-internal-builds).
 >
