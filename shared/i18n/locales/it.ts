@@ -138,7 +138,8 @@ export const it = {
     },
     preferences: {
       themeLabel: 'Tema',
-      languageLabel: 'Lingua'
+      languageLabel: 'Lingua',
+      autoBrightnessLabel: 'Luminosità massima nei dettagli carta'
     },
     about: {
       appVersion: 'Versione app',
@@ -632,7 +633,9 @@ export const it = {
       viewFullscreenAccessibilityLabel: 'Mostra il codice a barre a schermo intero',
       viewFullscreenHint: 'Apre il codice a barre a schermo intero per la scansione',
       tapToEnlarge: 'Tocca per ingrandire',
-      brightnessHint: 'Aumenta la luminosità per la scansione',
+      brightnessToggleLabel: 'Luminosità massima',
+      brightnessToggleHint:
+        'Imposta lo schermo alla massima luminosità per far leggere il codice a barre',
       numberLabel: 'Numero',
       copyAccessibilityHint: 'Tocca due volte per copiare il numero del codice a barre',
       colorLabel: 'Colore',

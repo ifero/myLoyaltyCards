@@ -129,12 +129,6 @@ export const FullscreenBarcode: React.FC<FullscreenBarcodeProps> = ({
           >
             <Text style={styles.barcodeNumber}>{formatBarcodeNumber(card.barcode)}</Text>
           </Pressable>
-
-          {/* Brightness Hint */}
-          <View style={styles.brightnessHint} testID="fullscreen-barcode-brightness-hint">
-            <MaterialIcons name="light-mode" size={20} color="#9CA3AF" />
-            <Text style={styles.brightnessText}>{t('cards.details.brightnessHint')}</Text>
-          </View>
         </View>
       </View>
     </Modal>
@@ -188,15 +182,5 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginTop: 20,
     letterSpacing: 2
-  },
-  brightnessHint: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    marginTop: 40
-  },
-  brightnessText: {
-    fontSize: 14,
-    color: '#9CA3AF'
   }
 });
