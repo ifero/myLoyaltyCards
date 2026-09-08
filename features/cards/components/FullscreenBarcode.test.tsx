@@ -90,18 +90,22 @@ describe('FullscreenBarcode', () => {
       expect(getByTestId('fullscreen-barcode-close')).toBeTruthy();
     });
 
-    it('renders brightness hint', () => {
-      const { getByTestId } = render(
+    // Story 16.39. This overlay has maximised brightness itself since Story 2.5, so
+    // the hint contradicted its own behaviour here even before the detail screen
+    // gained the same treatment — it told the user to raise a brightness the overlay
+    // had already set to 1.0.
+    it('does NOT render the brightness hint row (Story 16.39)', () => {
+      const { queryByTestId } = render(
         <FullscreenBarcode card={mockCard} visible={true} onClose={jest.fn()} />
       );
-      expect(getByTestId('fullscreen-barcode-brightness-hint')).toBeTruthy();
+      expect(queryByTestId('fullscreen-barcode-brightness-hint')).toBeNull();
     });
 
-    it('shows brightness hint text', () => {
-      const { getByText } = render(
+    it('does NOT tell the user to raise a brightness it already maximised', () => {
+      const { queryByText } = render(
         <FullscreenBarcode card={mockCard} visible={true} onClose={jest.fn()} />
       );
-      expect(getByText('Increase brightness for scanning')).toBeTruthy();
+      expect(queryByText('Increase brightness for scanning')).toBeNull();
     });
   });
 

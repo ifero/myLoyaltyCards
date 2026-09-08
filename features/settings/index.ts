@@ -6,6 +6,7 @@ export { default as LanguageListScreen } from './screens/LanguageListScreen';
 
 export { useThemePreference } from './hooks/useThemePreference';
 export { useLanguagePreference } from './hooks/useLanguagePreference';
+export { useAutoBrightnessPreference } from './hooks/useAutoBrightnessPreference';
 export { useExportData } from './hooks/useExportData';
 export { useSyncTrigger } from './hooks/useSyncTrigger';
 
@@ -19,5 +20,7 @@ export {
   getThemePreference,
   setThemePreference,
   getLanguagePreference,
-  setLanguagePreference
+  setLanguagePreference,
+  getAutoBrightnessEnabled,
+  setAutoBrightnessEnabled
 } from './settings-repository';

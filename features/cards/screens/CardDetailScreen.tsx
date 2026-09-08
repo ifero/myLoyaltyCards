@@ -26,6 +26,7 @@ import { showToast } from '@/shared/toast';
 
 import { CardDetails } from '@/features/cards/components/CardDetails';
 import { useBrandLogo } from '@/features/cards/hooks/useBrandLogo';
+import { useCardBrightnessBoost } from '@/features/cards/hooks/useCardBrightnessBoost';
 import { useDeleteCard } from '@/features/cards/hooks/useDeleteCard';
 import { useToggleFavorite } from '@/features/cards/hooks/useToggleFavorite';
 import { useTrackCardUsage } from '@/features/cards/hooks/useTrackCardUsage';
@@ -48,6 +49,14 @@ const CardDetailsScreen = () => {
 
   // Track a usage event each time this card's detail screen gains focus (Story 9.1)
   useTrackCardUsage(id ?? '');
+
+  // Brightness boost for the barcode below, which is meant to be held up to a checkout
+  // scanner (Story 16.39). Two sources, both handled by the hook: the Settings toggle
+  // (a standing preference, OFF by default) and the button on the card (this visit
+  // only). Focus-scoped, not mount-scoped — Expo Router keeps this screen mounted
+  // underneath `/card/[id]/edit`, so a mount-scoped effect would leave the phone at
+  // full brightness on the edit form.
+  const { isBoosted: isBrightnessBoosted, toggle: toggleBrightness } = useCardBrightnessBoost();
 
   // Toggle favourite with optimistic update — setCard reflects the new state in
   // the header star instantly and rolls back on write failure (Story 9.2).
@@ -227,6 +236,8 @@ const CardDetailsScreen = () => {
         }}
       />
       <CardDetails
+        isBrightnessBoosted={isBrightnessBoosted}
+        onToggleBrightness={toggleBrightness}
         card={card}
         onCopy={handleCopy}
         onDelete={deleteCard}

@@ -56,6 +56,10 @@ interface CardDetailsProps {
   isDeleting?: boolean;
   /** Callback when scroll position passes the hero section threshold (AC5 condensing header) */
   onScrollPastHero?: (isPast: boolean) => void;
+  /** Whether the screen is currently held at full brightness (Story 16.39). */
+  isBrightnessBoosted?: boolean;
+  /** Flip the brightness boost for this visit (Story 16.39). */
+  onToggleBrightness?: () => void;
 }
 
 /**
@@ -81,6 +85,8 @@ export const CardDetails: React.FC<CardDetailsProps> = ({
   card,
   onCopy,
   onDelete,
+  isBrightnessBoosted = false,
+  onToggleBrightness,
   isDeleting = false,
   onScrollPastHero
 }) => {
@@ -237,13 +243,47 @@ export const CardDetails: React.FC<CardDetailsProps> = ({
             {t('cards.details.tapToEnlarge')}
           </Text>
 
-          {/* Brightness hint (AC7) */}
-          <View style={styles.brightnessHint} testID="card-details-brightness-hint">
-            <MaterialIcons name="light-mode" size={20} color={theme.textSecondary} />
-            <Text style={[styles.brightnessText, { color: theme.textSecondary }]}>
-              {t('cards.details.brightnessHint')}
-            </Text>
-          </View>
+          {/* Brightness toggle (Story 16.39).
+              Sits where Story 13.3's brightness HINT used to. That row told the user to
+              go and raise their own brightness; this does it for them. Rendered only
+              when the screen supplies a handler, so `CardDetails` stays usable without
+              one (Storybook, and any future read-only surface).
+
+              ICON ONLY, and a BULB (ifero, 2026-09-08 — "isn't it faster to understand?").
+              An earlier revision paired a sun icon with the words "Full brightness"; a
+              bulb reads as light at a glance and needs no caption, which matters on the
+              one screen whose whole job is to present a barcode. The state is carried by
+              `lightbulb` vs `lightbulb-outline` — filled means on — so no word is needed
+              to say which way it is set.
+
+              ⚠️ With no visible text, `accessibilityLabel` is the ONLY thing a screen
+              reader has for this control; it is load-bearing rather than supplementary,
+              and a test pins it. `accessibilityRole="switch"` rather than `"button"`
+              because it has an on/off state, and the role is what makes the platform
+              announce that state. */}
+          {onToggleBrightness ? (
+            <Pressable
+              onPress={onToggleBrightness}
+              accessibilityRole="switch"
+              accessibilityState={{ checked: isBrightnessBoosted }}
+              accessibilityLabel={t('cards.details.brightnessToggleLabel')}
+              accessibilityHint={t('cards.details.brightnessToggleHint')}
+              style={[
+                styles.brightnessToggle,
+                {
+                  borderColor: isBrightnessBoosted ? theme.primary : theme.border,
+                  backgroundColor: isBrightnessBoosted ? `${theme.primary}1A` : 'transparent'
+                }
+              ]}
+              testID="card-details-brightness-toggle"
+            >
+              <MaterialIcons
+                name={isBrightnessBoosted ? 'lightbulb' : 'lightbulb-outline'}
+                size={24}
+                color={isBrightnessBoosted ? theme.primary : theme.textSecondary}
+              />
+            </Pressable>
+          ) : null}
         </View>
 
         {/* Card Info Section (AC3) */}
@@ -387,14 +427,18 @@ const styles = StyleSheet.create({
     ...TYPOGRAPHY.caption1,
     marginTop: SPACING.xs
   },
-  brightnessHint: {
-    flexDirection: 'row',
+  brightnessToggle: {
     alignItems: 'center',
-    gap: 6,
+    justifyContent: 'center',
+    alignSelf: 'center',
+    // A circle, not a pill: there is no label to make room for any more. Sized to the
+    // minimum tap target on both axes so an icon-only control stays reachable — the
+    // 24 pt glyph alone would be well under it.
+    width: TOUCH_TARGET.min,
+    height: TOUCH_TARGET.min,
+    borderRadius: 999,
+    borderWidth: 1,
     marginTop: SPACING.md
-  },
-  brightnessText: {
-    ...TYPOGRAPHY.footnote
   },
   pressed: {
     opacity: 0.7
