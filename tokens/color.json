@@ -13,6 +13,13 @@
     "800": { "$value": "#174EA6" },
     "900": { "$value": "#163A7A" }
   },
+  "IDENTITY_COLORS": {
+    "$type": "color",
+    "$description": "Cardi identity palette. NOT to be confused with BRAND_COLORS in shared/theme/colors.ts, which maps ~45 RETAILER brands to their own colours -- these three are OURS. Ink is the app icon field, the launch surface and the native splash background; beam is the accent on the i. NOT the app's UI palette yet -- the colour migration is a separate big-bang change. See docs/design/cardi/.",
+    "ink": { "$value": "#181824" },
+    "beam": { "$value": "#FCCC0C" },
+    "cream": { "$value": "#F0F0E8" }
+  },
   "CARD_COLORS": {
     "$type": "color",
     "$description": "5-color virtual-logo palette for cards without an official logo.",

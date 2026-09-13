@@ -17,6 +17,8 @@ export const PRIMARY_COLORS = {
   900: '#163A7A'
 } as const;
 
+export const IDENTITY_COLORS = { ink: '#181824', beam: '#FCCC0C', cream: '#F0F0E8' } as const;
+
 export const CARD_COLORS = {
   blue: '#1A73E8',
   red: '#E2231A',

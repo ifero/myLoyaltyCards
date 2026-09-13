@@ -276,14 +276,15 @@ The pre-push hook and the quality-gates workflow run the **same set of checks in
 
 1. `yarn typecheck`
 2. `yarn tokens:check`
-3. `yarn splash:check`
-4. `yarn wear:catalogue:check`
-5. `yarn check:build-path-filters`
-6. `yarn lint`
-7. `yarn check:native-patches`
-8. `yarn check:native-strings`
-9. `yarn format:check`
-10. `yarn test`
+3. `yarn icons:check`
+4. `yarn frames:check`
+5. `yarn wear:catalogue:check`
+6. `yarn check:build-path-filters`
+7. `yarn lint`
+8. `yarn check:native-patches`
+9. `yarn check:native-strings`
+10. `yarn format:check`
+11. `yarn test`
 
 **CI — quality** ([`ci-quality-gates.yml`](.github/workflows/ci-quality-gates.yml)):
 
@@ -293,12 +294,13 @@ The pre-push hook and the quality-gates workflow run the **same set of checks in
 4. `yarn format:check`
 5. `yarn typecheck`
 6. `yarn tokens:check`
-7. `yarn splash:check`
-8. `yarn wear:catalogue:check`
-9. `yarn check:no-tests-folders`
-10. `yarn check:build-path-filters`
-11. `yarn check:story-catalogue-sync`
-12. `yarn test:coverage`
+7. `yarn icons:check`
+8. `yarn frames:check`
+9. `yarn wear:catalogue:check`
+10. `yarn check:no-tests-folders`
+11. `yarn check:build-path-filters`
+12. `yarn check:story-catalogue-sync`
+13. `yarn test:coverage`
 
 Plus a second, parallel job in the same workflow — `fastlane-gates` — which sets up Ruby and runs `bundle exec ruby fastlane/Fastfile.test.rb`. It is a separate job so the Node-only gate above does not pay for a Ruby toolchain on every run. It guards `fastlane/Fastfile`'s release helpers, above all the Wear-track preflight: `available_play_tracks` swallows its own errors and returns `nil`, and `nil` means "cannot verify, carry on" — so anything that breaks that lookup silently disarms the preflight without failing a build. Three nightly builds shipped phone-only releases before it existed.
 

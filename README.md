@@ -190,6 +190,7 @@ myLoyaltyCards/
 - **Node.js 24** (see [`.nvmrc`](.nvmrc)) and **Yarn**
 - **Xcode** (for iOS / Apple Watch) and/or **Android Studio** (for Android)
 - **Ruby 4.0.5** (see [`.ruby-version`](.ruby-version)) + Bundler, for CocoaPods & Fastlane
+- **Python 3** — used by `yarn frames:check` (a pre-push and CI gate) to confirm the design-system frames still match their generators. Standard library only, no packages to install.
 - A device or simulator. The watch app requires a **development build** (it cannot run in Expo Go).
 
 > **CocoaPods note:** on Homebrew Ruby, `pod install` can crash with an `Encoding::CompatibilityError`. Prefix the command with `LANG=en_US.UTF-8 LC_ALL=en_US.UTF-8`.

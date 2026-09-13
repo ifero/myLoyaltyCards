@@ -1,0 +1,142 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Cardì — the locked mark</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@700&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      /* ==================================================================
+         Cardì — THE LOCKED MARK.
+
+         35°, contained, round caps — ifero's choice, unchanged. The accent
+         now DESCENDS left to right, which is what a grave does and what the
+         name requires. Every earlier sheet used a negative SVG rotation and,
+         because SVG's y-axis points down, drew an acute: Cardí.
+
+         One question is left open on purpose. The word wants the contained
+         accent; the icon may not survive it at 30px. Both are drawn below at
+         every size the asset actually ships at.
+         ================================================================== */
+      :root {
+        --ink: #181824;
+        --beam: #FCCC0C;
+        --cream: #F0F0E8;
+        --white: #FFFFFF;
+        --muted: #55555F;
+        --fg: var(--ink);
+        --ac: var(--beam);
+      }
+      * { box-sizing: border-box; margin: 0; padding: 0; }
+      body {
+        background: var(--cream);
+        font-family: Inter, system-ui, sans-serif;
+        color: var(--ink);
+        padding: 36px 32px 56px;
+      }
+      h1 {
+        font-family: 'Space Grotesk', sans-serif;
+        font-weight: 700; font-size: 26px; letter-spacing: -0.02em;
+      }
+      h2 {
+        font-family: 'Space Grotesk', sans-serif;
+        font-weight: 700; font-size: 18px; margin-bottom: 2px;
+      }
+      p { font-size: 14.5px; line-height: 21px; color: var(--muted); max-width: 76ch; }
+      header p { margin-top: 8px; }
+      .rule {
+        margin: 18px 0 4px; padding: 12px 16px;
+        background: var(--white); border: 1px solid #d6d6cb; border-radius: 8px;
+        font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+        font-size: 13px; line-height: 20px; max-width: 76ch;
+      }
+      .rule b { color: #C41E1E; font-weight: 600; }
+      .rule i { color: #1f7a3d; font-style: normal; font-weight: 600; }
+      section { padding: 26px 0; border-bottom: 1px solid #d6d6cb; }
+      .strip { display: flex; gap: 34px; align-items: flex-end; margin-top: 18px; flex-wrap: wrap; }
+      .s { display: flex; flex-direction: column; align-items: center; gap: 8px; }
+      .s em, .strip > em {
+        font-style: normal; font-size: 10.5px; font-weight: 600;
+        letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted);
+      }
+      .word {
+        font-family: 'Space Grotesk', sans-serif; font-weight: 700;
+        letter-spacing: -0.02em; color: var(--ink); white-space: nowrap;
+      }
+      /* Reversed: the live type and the SVG are two different colour channels,
+         so BOTH have to flip or the stem stays dark on a dark field. */
+      .on-ink { color: var(--white); --fg: var(--white); }
+      .inkfield {
+        background: var(--ink); border-radius: 10px;
+        padding: 18px 26px; display: inline-flex; align-items: center;
+      }
+      .tile {
+        display: inline-flex; align-items: center; justify-content: center;
+        background: var(--ink); border-radius: 22%; --fg: var(--white);
+      }
+      .tile.is-mono { --fg: var(--white); --ac: var(--white); }
+    </style>
+  </head>
+  <body>
+    <header>
+      <h1>The locked mark — 35°, contained, grave</h1>
+      <p>
+        Your choice, unchanged in every respect but one: the accent now descends. A grave falls
+        left to right, high end on the left. An acute rises, and <em>Cardí</em> is a different
+        word — so this is spelling, not styling.
+      </p>
+      <div class="rule">
+        <i>rotate(35)</i>&nbsp;&nbsp;✓ grave — descends to the right.&nbsp; Cardì<br />
+        <b>rotate(-35)</b>&nbsp; ✗ acute — rises to the right.&nbsp;&nbsp;&nbsp; Cardí
+      </div>
+      <p style="margin-top:10px">
+        SVG and CSS both put the y-axis pointing <strong>down</strong>, so the correct rotation is
+        the positive one. That sign convention is the whole trap: this document said “grave”
+        throughout while all 50 drawn accents in <code>frames/</code> said otherwise.
+      </p>
+    </header>
+
+    <section>
+      <h2>The wordmark</h2>
+      <p>Contained accent — it stays inside the letter’s own advance, so it never collides with
+         the <strong>d</strong> and it reads as a true grave rather than a slash through the word.</p>
+      <div class="strip">
+        <span class="s"><em>52</em><span class="word " style="font-size:52px">Card<svg class="wglyph" viewBox="0 0 30 100" width="0.30em" height="1em" style="display:inline;vertical-align:-0.30em;overflow:visible" aria-hidden="true"><rect x="9.0" y="20.4" width="12" height="49.6" rx="6.0" fill="var(--fg)" /><rect x="3.00" y="6.00" width="24" height="9" rx="4.50" fill="var(--ac)" transform="rotate(35 15.0 10.5)" /></svg></span></span>
+        <span class="s"><em>34</em><span class="word " style="font-size:34px">Card<svg class="wglyph" viewBox="0 0 30 100" width="0.30em" height="1em" style="display:inline;vertical-align:-0.30em;overflow:visible" aria-hidden="true"><rect x="9.0" y="20.4" width="12" height="49.6" rx="6.0" fill="var(--fg)" /><rect x="3.00" y="6.00" width="24" height="9" rx="4.50" fill="var(--ac)" transform="rotate(35 15.0 10.5)" /></svg></span></span>
+        <span class="s"><em>26</em><span class="word " style="font-size:26px">Card<svg class="wglyph" viewBox="0 0 30 100" width="0.30em" height="1em" style="display:inline;vertical-align:-0.30em;overflow:visible" aria-hidden="true"><rect x="9.0" y="20.4" width="12" height="49.6" rx="6.0" fill="var(--fg)" /><rect x="3.00" y="6.00" width="24" height="9" rx="4.50" fill="var(--ac)" transform="rotate(35 15.0 10.5)" /></svg></span></span>
+        <span class="s"><em>17</em><span class="word " style="font-size:17px">Card<svg class="wglyph" viewBox="0 0 30 100" width="0.30em" height="1em" style="display:inline;vertical-align:-0.30em;overflow:visible" aria-hidden="true"><rect x="9.0" y="20.4" width="12" height="49.6" rx="6.0" fill="var(--fg)" /><rect x="3.00" y="6.00" width="24" height="9" rx="4.50" fill="var(--ac)" transform="rotate(35 15.0 10.5)" /></svg></span></span>
+        <span class="s"><em>reversed</em><span class="inkfield"><span class="word on-ink" style="font-size:34px">Card<svg class="wglyph" viewBox="0 0 30 100" width="0.30em" height="1em" style="display:inline;vertical-align:-0.30em;overflow:visible" aria-hidden="true"><rect x="9.0" y="20.4" width="12" height="49.6" rx="6.0" fill="var(--fg)" /><rect x="3.00" y="6.00" width="24" height="9" rx="4.50" fill="var(--ac)" transform="rotate(35 15.0 10.5)" /></svg></span></span></span>
+      </div>
+    </section>
+
+    <section>
+      <h2>Icon A — floating: the contained accent, used unchanged</h2>
+      <p>One drawing in both places. The honest question is the 30px and mono cells: a 24-unit
+         tick has very little to hold on to once the hue is gone.</p>
+      <div class="strip"><span class="s"><em>84</em><span class="tile" style="width:84px;height:84px"><svg viewBox="-31.0 -11.0 92 92" width="84" height="84"><rect x="4.0" y="20.4" width="4.5" height="49.6" rx="2.2" fill="var(--fg)" /><rect x="10.5" y="20.4" width="9" height="49.6" rx="4.5" fill="var(--fg)" /><rect x="22.0" y="20.4" width="4" height="49.6" rx="2" fill="var(--fg)" /><rect x="3.00" y="6.00" width="24" height="9" rx="4.50" fill="var(--ac)" transform="rotate(35 15.0 10.5)" /></svg></span></span><span class="s"><em>48</em><span class="tile" style="width:48px;height:48px"><svg viewBox="-31.0 -11.0 92 92" width="48" height="48"><rect x="4.0" y="20.4" width="4.5" height="49.6" rx="2.2" fill="var(--fg)" /><rect x="10.5" y="20.4" width="9" height="49.6" rx="4.5" fill="var(--fg)" /><rect x="22.0" y="20.4" width="4" height="49.6" rx="2" fill="var(--fg)" /><rect x="3.00" y="6.00" width="24" height="9" rx="4.50" fill="var(--ac)" transform="rotate(35 15.0 10.5)" /></svg></span></span><span class="s"><em>30</em><span class="tile" style="width:30px;height:30px"><svg viewBox="-31.0 -11.0 92 92" width="30" height="30"><rect x="4.0" y="20.4" width="4.5" height="49.6" rx="2.2" fill="var(--fg)" /><rect x="10.5" y="20.4" width="9" height="49.6" rx="4.5" fill="var(--fg)" /><rect x="22.0" y="20.4" width="4" height="49.6" rx="2" fill="var(--fg)" /><rect x="3.00" y="6.00" width="24" height="9" rx="4.50" fill="var(--ac)" transform="rotate(35 15.0 10.5)" /></svg></span></span><span class="s"><em>16</em><span class="tile" style="width:16px;height:16px"><svg viewBox="-31.0 -11.0 92 92" width="16" height="16"><rect x="4.0" y="20.4" width="4.5" height="49.6" rx="2.2" fill="var(--fg)" /><rect x="10.5" y="20.4" width="9" height="49.6" rx="4.5" fill="var(--fg)" /><rect x="22.0" y="20.4" width="4" height="49.6" rx="2" fill="var(--fg)" /><rect x="3.00" y="6.00" width="24" height="9" rx="4.50" fill="var(--ac)" transform="rotate(35 15.0 10.5)" /></svg></span></span><span class="s"><em>mono</em><span class="tile is-mono" style="width:84px;height:84px"><svg viewBox="-31.0 -11.0 92 92" width="84" height="84"><rect x="4.0" y="20.4" width="4.5" height="49.6" rx="2.2" fill="var(--fg)" /><rect x="10.5" y="20.4" width="9" height="49.6" rx="4.5" fill="var(--fg)" /><rect x="22.0" y="20.4" width="4" height="49.6" rx="2" fill="var(--fg)" /><rect x="3.00" y="6.00" width="24" height="9" rx="4.50" fill="var(--ac)" transform="rotate(35 15.0 10.5)" /></svg></span></span><span class="s"><em>safe zone</em><span class="tile" style="width:84px;height:84px"><svg viewBox="-31.0 -11.0 92 92" width="84" height="84"><rect x="4.0" y="20.4" width="4.5" height="49.6" rx="2.2" fill="var(--fg)" /><rect x="10.5" y="20.4" width="9" height="49.6" rx="4.5" fill="var(--fg)" /><rect x="22.0" y="20.4" width="4" height="49.6" rx="2" fill="var(--fg)" /><rect x="3.00" y="6.00" width="24" height="9" rx="4.50" fill="var(--ac)" transform="rotate(35 15.0 10.5)" /><circle cx="15.0" cy="35.0" r="30.4" fill="none" stroke="#C41E1E" stroke-width="1.1" stroke-dasharray="4 3" opacity="0.9" /></svg></span></span></div>
+    </section>
+
+    <section>
+      <h2>Icon B — crossing: contained in the word, a beam through the bars in the icon</h2>
+      <p>The design system’s sentence drawn literally — a beam passing over a barcode. Survives
+         30px and the themed layer. The cost is that the two forms then share angle, colour,
+         weight and cap, but not length or position.</p>
+      <div class="strip"><span class="s"><em>84</em><span class="tile" style="width:84px;height:84px"><svg viewBox="-31.0 -0.8 92 92" width="84" height="84"><rect x="4.0" y="20.4" width="4.5" height="49.6" rx="2.2" fill="var(--fg)" /><rect x="10.5" y="20.4" width="9" height="49.6" rx="4.5" fill="var(--fg)" /><rect x="22.0" y="20.4" width="4" height="49.6" rx="2" fill="var(--fg)" /><rect x="-11.00" y="39.50" width="52" height="9" rx="4.50" fill="var(--ac)" transform="rotate(35 15.0 44)" /></svg></span></span><span class="s"><em>48</em><span class="tile" style="width:48px;height:48px"><svg viewBox="-31.0 -0.8 92 92" width="48" height="48"><rect x="4.0" y="20.4" width="4.5" height="49.6" rx="2.2" fill="var(--fg)" /><rect x="10.5" y="20.4" width="9" height="49.6" rx="4.5" fill="var(--fg)" /><rect x="22.0" y="20.4" width="4" height="49.6" rx="2" fill="var(--fg)" /><rect x="-11.00" y="39.50" width="52" height="9" rx="4.50" fill="var(--ac)" transform="rotate(35 15.0 44)" /></svg></span></span><span class="s"><em>30</em><span class="tile" style="width:30px;height:30px"><svg viewBox="-31.0 -0.8 92 92" width="30" height="30"><rect x="4.0" y="20.4" width="4.5" height="49.6" rx="2.2" fill="var(--fg)" /><rect x="10.5" y="20.4" width="9" height="49.6" rx="4.5" fill="var(--fg)" /><rect x="22.0" y="20.4" width="4" height="49.6" rx="2" fill="var(--fg)" /><rect x="-11.00" y="39.50" width="52" height="9" rx="4.50" fill="var(--ac)" transform="rotate(35 15.0 44)" /></svg></span></span><span class="s"><em>16</em><span class="tile" style="width:16px;height:16px"><svg viewBox="-31.0 -0.8 92 92" width="16" height="16"><rect x="4.0" y="20.4" width="4.5" height="49.6" rx="2.2" fill="var(--fg)" /><rect x="10.5" y="20.4" width="9" height="49.6" rx="4.5" fill="var(--fg)" /><rect x="22.0" y="20.4" width="4" height="49.6" rx="2" fill="var(--fg)" /><rect x="-11.00" y="39.50" width="52" height="9" rx="4.50" fill="var(--ac)" transform="rotate(35 15.0 44)" /></svg></span></span><span class="s"><em>mono</em><span class="tile is-mono" style="width:84px;height:84px"><svg viewBox="-31.0 -0.8 92 92" width="84" height="84"><rect x="4.0" y="20.4" width="4.5" height="49.6" rx="2.2" fill="var(--fg)" /><rect x="10.5" y="20.4" width="9" height="49.6" rx="4.5" fill="var(--fg)" /><rect x="22.0" y="20.4" width="4" height="49.6" rx="2" fill="var(--fg)" /><rect x="-11.00" y="39.50" width="52" height="9" rx="4.50" fill="var(--ac)" transform="rotate(35 15.0 44)" /></svg></span></span><span class="s"><em>safe zone</em><span class="tile" style="width:84px;height:84px"><svg viewBox="-31.0 -0.8 92 92" width="84" height="84"><rect x="4.0" y="20.4" width="4.5" height="49.6" rx="2.2" fill="var(--fg)" /><rect x="10.5" y="20.4" width="9" height="49.6" rx="4.5" fill="var(--fg)" /><rect x="22.0" y="20.4" width="4" height="49.6" rx="2" fill="var(--fg)" /><rect x="-11.00" y="39.50" width="52" height="9" rx="4.50" fill="var(--ac)" transform="rotate(35 15.0 44)" /><circle cx="15.0" cy="45.2" r="30.4" fill="none" stroke="#C41E1E" stroke-width="1.1" stroke-dasharray="4 3" opacity="0.9" /></svg></span></span></div>
+    </section>
+
+    <section style="border:0">
+      <h2>Reading the safe-zone circle</h2>
+      <p>
+        The dashed circle is Android’s adaptive-icon mask: everything outside it can be cropped.
+        iOS has no equivalent, so this is a <strong>scale factor for the Android foreground</strong>,
+        not a pass or fail. Whichever icon wins, the Android foreground is exported at that scale
+        and the same artwork ships at full size for iOS.
+      </p>
+    </section>
+  </body>
+</html>

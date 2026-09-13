@@ -89,13 +89,21 @@ jobs:
       - name: Check design tokens are in sync
         run: yarn tokens:check
 
-      # Regenerates assets/splash-icon.png from app-icon-variant-aurora-transparent.svg
-      # and fails on any mismatch, so the checked-in raster can never drift from the
-      # artwork. Also catches the trap that shipped a hard-edged blue square on the
-      # launch field: `assets/icon.png` is intentionally opaque and full-bleed (the OS
-      # masks app icons itself), so it must never be used as the splash image.
-      - name: Check the splash icon is in sync with its source artwork
-        run: yarn splash:check
+      # Re-renders every brand asset from the single geometry definition in
+      # scripts/build-brand-icons.mjs and fails on any mismatch, so the app icon, the
+      # launch mark, the Android foreground, the themed layer, the favicon and the
+      # in-app glyph can never drift apart. It also holds the two constraints that are
+      # easy to break by hand: `assets/icon.png` is opaque and full-bleed with NO alpha
+      # channel (iOS rejects an icon that carries one, and the OS masks icons itself),
+      # while the splash and adaptive foreground are transparent because the platform
+      # paints their field — which is what stops `assets/icon.png` being reused as the
+      # splash image and shipping a hard-edged square on the launch field.
+      - name: Brand icons are in sync with the mark
+        run: yarn icons:check
+      # Same idea for the design-system frames, which are .prettierignore'd precisely so
+      # their generators stay the source of truth. Needs python3 (see README).
+      - name: Design frames match their generators
+        run: yarn frames:check
 
       # Regenerates the Wear OS brand catalogue from catalogue/italy.json and fails if the
       # committed Brands.kt differs. It lives HERE rather than in wear-os-build.yml

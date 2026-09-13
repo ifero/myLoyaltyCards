@@ -1,0 +1,1397 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Cardì — onboarding, six frames</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@700&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      /* ==================================================================
+         SHARED FRAME LAYER — extracted VERBATIM from
+         cardi-card-detail-frames.html by scratchpad/gen_onboarding.py, so the
+         token values cannot drift. Copied rather than linked, because any
+         viewer that inlines the HTML drops a linked stylesheet.
+         ================================================================== */
+
+      :root {
+        --ink: #181824;
+        --beam: #fccc0c;
+        --cream: #f0f0e8;
+        --white: #ffffff;
+        --hairline: #d6d6cb;
+        --placeholder: #55555f;
+        --error: #c41e1e;
+
+        --swatch-red: #e42424;
+        --swatch-blue: #0c3c84;
+        --swatch-azure: #0c84cc;
+        --swatch-green: #0c843c;
+        --swatch-yellow: #fccc0c;
+
+        /* TWO margins, deliberately. 24px is the SINGLE-COLUMN margin — forms,
+           settings, documents. The card grid uses 16px, and that is not a style
+           choice: TILE_WIDTH 171 in features/cards/utils/gridLayout.ts is
+           (390 − 2×16 − 16) / 2, frozen with tests. At 24px the tile stops being 171.
+           The design system currently states one figure and needs amending. */
+        --screen-margin: 24px;
+        --grid-margin: 16px;
+        --gutter: 16px;
+
+        --touch: 48px;
+        --radius-control: 12px;
+        --radius-tile: 16px;
+        --safe-top: 59px;
+        --safe-bottom: 34px;
+        --header-h: 56px;
+      }
+
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+
+      body {
+        background: #c9c9c2;
+        font-family: Inter, system-ui, sans-serif;
+        padding: 48px 32px;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 48px;
+        justify-content: center;
+        align-items: flex-start;
+      }
+
+      .plate {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        align-items: center;
+      }
+
+      .plate figcaption {
+        font:
+          600 12px/1.4 Inter,
+          sans-serif;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: #3d3d46;
+      }
+
+      /* ---- the frame: exactly 393 x 852, never anything else ---- */
+      .frame {
+        width: 393px;
+        height: 852px;
+        background: var(--cream);
+        color: var(--ink);
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+        position: relative;
+      }
+
+      /* Reserved system insets — 59px top / 34px bottom, the real values for a
+         393 x 852 Dynamic Island device.
+
+         These were originally left blank. That was a mistake of presentation, not of
+         measurement: on a real phone the top inset is OCCUPIED by the clock and
+         indicators, so drawing it empty makes a correct 59px read as careless
+         padding, and invites the exact wrong fix (shrink it — which would push
+         content under the live status bar at build time).
+
+         The status bar is SYSTEM chrome, not ours: ink only, no beam, and nothing
+         here is a control. Same for the home indicator. */
+      .safe-top {
+        height: var(--safe-top);
+        flex: 0 0 auto;
+      }
+
+      .safe-bottom {
+        height: var(--safe-bottom);
+        flex: 0 0 auto;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .statusbar {
+        height: 100%;
+        padding: 14px var(--screen-margin) 0;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        color: var(--ink);
+      }
+
+      .statusbar .clock {
+        font-family: Inter, sans-serif;
+        font-size: 15px;
+        font-weight: 600;
+        letter-spacing: 0.01em;
+        font-variant-numeric: tabular-nums;
+      }
+
+      .statusbar .indicators {
+        display: flex;
+        align-items: center;
+        gap: 5px;
+      }
+
+      .statusbar svg {
+        display: block;
+        fill: currentColor;
+      }
+
+      .home-indicator {
+        width: 140px;
+        height: 5px;
+        border-radius: 999px;
+        background: var(--ink);
+        opacity: 0.85;
+      }
+
+      /* ---- header ----
+         A three-column grid: a 48px touch target, the title, a 48px touch target.
+         Icons are optically aligned, not box-aligned — a glyph drawn inside a square
+         icon box carries empty side bearing, so box-aligning it to the margin leaves
+         the visible stroke sitting inboard of the content beneath. The fix is to
+         bleed the touch target to the frame edge and pad the content back to the
+         margin: ink lands on the margin, the target stays 48px. */
+      .header {
+        height: var(--header-h);
+        flex: 0 0 auto;
+        padding: 0 var(--screen-margin);
+        display: grid;
+        grid-template-columns: var(--touch) 1fr var(--touch);
+        align-items: center;
+      }
+
+      .header.grid-margin {
+        padding: 0 var(--grid-margin);
+      }
+
+      .icon-target {
+        width: var(--touch);
+        height: var(--touch);
+        display: flex;
+        align-items: center;
+        background: none;
+        border: 0;
+        cursor: pointer;
+        color: var(--ink);
+      }
+
+      .icon-target.at-start {
+        margin-left: calc(-1 * var(--screen-margin));
+        padding-left: var(--screen-margin);
+        justify-content: flex-start;
+      }
+
+      .icon-target.at-end {
+        margin-right: calc(-1 * var(--screen-margin));
+        padding-right: var(--screen-margin);
+        justify-content: flex-end;
+      }
+
+      .header.grid-margin .icon-target.at-start {
+        margin-left: calc(-1 * var(--grid-margin));
+        padding-left: var(--grid-margin);
+      }
+
+      .header.grid-margin .icon-target.at-end {
+        margin-right: calc(-1 * var(--grid-margin));
+        padding-right: var(--grid-margin);
+      }
+
+      .icon-target svg {
+        display: block;
+      }
+
+      .title {
+        font-family: 'Space Grotesk', sans-serif;
+        font-weight: 700;
+        font-size: 24px;
+        line-height: 32px;
+        letter-spacing: -0.01em;
+        text-align: center;
+        color: var(--ink);
+      }
+
+      /* ---- body ---- */
+      .body {
+        flex: 1 1 auto;
+        min-height: 0;
+        padding: 24px var(--screen-margin) 0;
+        display: flex;
+        flex-direction: column;
+        gap: 32px;
+      }
+
+      .body.grid-margin {
+        padding: 8px var(--grid-margin) 0;
+        gap: 16px;
+      }
+
+      /* ---- footer ----
+         A flex sibling AFTER the scroll area. Never fixed, never absolute — so it
+         cannot fight the keyboard. The gap above it is composition, not absence. */
+      .footer {
+        flex: 0 0 auto;
+      }
+
+      .hairline {
+        height: 1px;
+        background: var(--hairline);
+        width: 100%;
+      }
+
+      .footer-inner {
+        padding: var(--screen-margin);
+      }
+
+      .footer-inner.grid-margin {
+        padding: var(--grid-margin);
+      }
+
+      .btn-primary {
+        width: 100%;
+        height: 52px;
+        background: var(--ink);
+        color: var(--white);
+        border: 0;
+        border-radius: var(--radius-control);
+        font-family: Inter, sans-serif;
+        font-weight: 600;
+        font-size: 17px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      /* ------------------------------------------------------------------
+         Cardì — the PITCH pattern: the first ninety seconds.
+
+         Specced from WelcomeScreen / ModeSelectionScreen /
+         FeatureHighlightsScreen and their components — see
+         stitch-prompts-onboarding.txt.
+
+         THIS IS THE ONLY FLOW WITH NO USER CONTENT IN IT, AND THAT CHANGES
+         WHAT THE PALETTE IS FOR.
+
+         Everywhere else the rule is "the content is the colour": 45 brand
+         colours are the content, so our chrome stays quiet and beam is
+         rationed to almost nothing. Here there are no cards yet. Nothing is
+         competing. The quiet was protecting something that is not there.
+
+         So this is where the brand speaks in its own voice — and the design
+         system already licensed exactly that in a line nobody had applied:
+         "Illustrations: flat, two-tone (ink line-work on cream) with beam
+         yellow as the single accent." One beam element per drawing, never two.
+
+         WHAT WAS THERE BEFORE: four placeholders, all monochrome alpha-tints
+         of theme.primary assembled from plain Views — three offset rects on
+         welcome (no rotation, so not a fan), a circle of four rects, a circle
+         with a rect and seven bars, and one that is just MaterialIcons
+         verified-user at 60px. Wave B was never blocked on inventing an
+         illustration system; the slots already existed at known sizes.
+
+         AND THE HIGHEST-LEVERAGE FIX IS NOT A DESIGN QUESTION: BrandedIcon
+         defaults to MaterialIcons 'credit-card', so the screen introducing a
+         brand whose whole ornament is the ì shows stock clip art. Missing
+         asset, not a styling choice.
+         ------------------------------------------------------------------ */
+
+      .pitch {
+        flex: 1 1 auto;
+        min-height: 0;
+        padding: 0 var(--screen-margin);
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+      }
+
+      .centre {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+      }
+
+      /* THE MARK. Constructed from a stem and an accent rather than set as the
+         character "ì", because the accent has to carry its own colour and no
+         font lets you paint half a glyph. It is a logotype: constructing it is
+         the honest way, not a workaround. */
+      .mark {
+        border-radius: 999px;
+        background: var(--ink);
+        position: relative;
+        display: flex;
+        align-items: flex-end;
+        justify-content: center;
+        flex: 0 0 auto;
+      }
+
+      .mark-stem {
+        width: 10px;
+        border-radius: 2px;
+        background: var(--white);
+        margin-bottom: 26px;
+      }
+
+      /* At rest a dot, in motion a beam — so the accent is a stroke, not a dot.
+         GRAVE: it descends left to right. Cardì, not Cardí. A positive CSS
+         rotation drops the right-hand end; a negative one would draw an acute
+         and spell a different word. `margin-left` mirrors with the sign because
+         the bar is placed by its left edge but turns about its centre. */
+      .mark-accent {
+        position: absolute;
+        width: 17px;
+        height: 6px;
+        border-radius: 2px;
+        background: var(--beam);
+        transform: rotate(35deg);
+        left: 50%;
+        margin-left: -5px;
+        top: 26px;
+      }
+
+      .pitch-title {
+        font-family: 'Space Grotesk', sans-serif;
+        font-weight: 700;
+        font-size: 34px;
+        line-height: 40px;
+        letter-spacing: -0.03em;
+        color: var(--ink);
+      }
+
+      /* The spec asked for the wordmark's grave accent in beam too. Drawing it
+         proved that wrong: beam on cream fails contrast, which is why the design
+         system pairs beam with ink and never with cream. The accent stays ink
+         here and the beam lives on the mark, where it sits on ink. One accent,
+         on the surface that can carry it. */
+      .pitch-sub {
+        font-family: Inter, sans-serif;
+        font-size: 17px;
+        line-height: 24px;
+        color: var(--placeholder);
+      }
+
+      .pitch-h2 {
+        font-family: 'Space Grotesk', sans-serif;
+        font-weight: 700;
+        font-size: 24px;
+        line-height: 32px;
+        letter-spacing: -0.01em;
+        color: var(--ink);
+      }
+
+      .pitch-body {
+        font-family: Inter, sans-serif;
+        font-size: 15px;
+        line-height: 22px;
+        color: var(--placeholder);
+      }
+
+      .illo-fan {
+        display: block;
+      }
+
+      /* The three carousel illustrations share one slot: a 160px cream disc with
+         a hairline, so the drawing sits ON the system rather than in a tinted
+         bubble of primary at 10% alpha. */
+      .illo-disc {
+        width: 160px;
+        height: 160px;
+        border-radius: 999px;
+        background: var(--cream);
+        border: 1px solid var(--hairline);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex: 0 0 auto;
+      }
+
+      /* THE BEAM MOVES — see the same note in cardi-capture-frames.html. Taken
+         from the Stitch render, timed from the shipped ScanLine component (2s,
+         ease-in-out, alternating) rather than Stitch's 2.5s linear. Slide 2 is
+         the one slide about scanning, so its beam is the one that should sweep. */
+      @keyframes beam-sweep {
+        from {
+          transform: translateY(-13px);
+        }
+        to {
+          transform: translateY(13px);
+        }
+      }
+
+      .illo-disc .beam-line {
+        animation: beam-sweep 2s ease-in-out infinite alternate;
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        .illo-disc .beam-line {
+          animation: none;
+        }
+      }
+
+      .link-plain {
+        font-family: Inter, sans-serif;
+        font-weight: 600;
+        font-size: 15px;
+        color: var(--ink);
+        height: var(--touch);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .link-underline {
+        text-decoration: underline;
+      }
+
+      /* ---- mode option cards ----
+         The shipped recommended card uses a 2px border AND a 5% ink wash. The
+         wash goes: every card in this app is white on cream, and a border weight
+         plus one beam pill is enough to carry a recommendation without making
+         the other option look broken. */
+      .opt {
+        background: var(--white);
+        border: 1px solid var(--hairline);
+        border-radius: var(--radius-tile);
+        padding: 20px;
+        position: relative;
+      }
+
+      .opt.is-recommended {
+        border: 2px solid var(--ink);
+      }
+
+      .opt-row {
+        display: flex;
+        gap: 16px;
+        align-items: flex-start;
+      }
+
+      .opt-tile {
+        width: 48px;
+        height: 48px;
+        border-radius: 999px;
+        background: var(--cream);
+        border: 1px solid var(--hairline);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--ink);
+        flex: 0 0 auto;
+      }
+
+      .opt-copy {
+        flex: 1;
+        min-width: 0;
+      }
+
+      .opt-copy h3 {
+        font-family: Inter, sans-serif;
+        font-weight: 600;
+        font-size: 17px;
+        line-height: 24px;
+        color: var(--ink);
+      }
+
+      .opt-copy p {
+        font-family: Inter, sans-serif;
+        font-size: 15px;
+        line-height: 22px;
+        color: var(--placeholder);
+        margin-top: 4px;
+      }
+
+      /* 13/600/0.02em is label-bold, the smallest legitimate size in this system
+         — and it is a LABEL. The shipped eyebrow was 12px and the badge 12px,
+         both below the 15px body minimum and off the scale entirely. */
+      .opt-copy .eyebrow {
+        font-family: Inter, sans-serif;
+        font-weight: 600;
+        font-size: 13px;
+        line-height: 18px;
+        letter-spacing: 0.02em;
+        margin-top: 8px;
+        color: var(--ink);
+      }
+
+      .opt-copy .eyebrow.muted {
+        color: var(--placeholder);
+      }
+
+      .badge {
+        position: absolute;
+        top: -11px;
+        right: 16px;
+        background: var(--beam);
+        color: var(--ink);
+        border-radius: 999px;
+        padding: 4px 12px;
+        font-family: Inter, sans-serif;
+        font-weight: 600;
+        font-size: 13px;
+        line-height: 18px;
+        letter-spacing: 0.02em;
+      }
+
+      /* ---- the sheet ---- */
+      .sheet {
+        position: absolute;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        height: 400px;
+        background: var(--white);
+        border-radius: var(--radius-tile) var(--radius-tile) 0 0;
+        display: flex;
+        flex-direction: column;
+        padding: 0 var(--screen-margin);
+      }
+
+      .grab {
+        width: 36px;
+        height: 4px;
+        border-radius: 999px;
+        background: var(--hairline);
+        margin: 12px auto 0;
+      }
+
+      .sheet h2 {
+        font-family: 'Space Grotesk', sans-serif;
+        font-weight: 700;
+        font-size: 24px;
+        line-height: 32px;
+        letter-spacing: -0.01em;
+        margin-top: 24px;
+      }
+
+      .sheet p {
+        font-family: Inter, sans-serif;
+        font-size: 15px;
+        line-height: 22px;
+        color: var(--ink);
+        margin-top: 16px;
+      }
+
+      .sheet-foot {
+        margin-top: auto;
+        padding-bottom: 0;
+      }
+
+      .scrim {
+        position: absolute;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.4);
+      }
+
+      .behind {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        flex-direction: column;
+      }
+
+      /* ---- pagination ---- */
+      .dots {
+        display: flex;
+        gap: 8px;
+        justify-content: center;
+      }
+
+      .dots i {
+        width: 8px;
+        height: 8px;
+        border-radius: 999px;
+        background: var(--hairline);
+      }
+
+      .dots i.on {
+        background: var(--ink);
+      }
+
+      .skip-row {
+        display: flex;
+        justify-content: flex-end;
+        padding-top: 8px;
+        flex: 0 0 auto;
+      }
+
+      /* Centred in the space between Skip and the footer. Pinned to the top it
+         left a ~200px void above the dots — a carousel slide should sit in its
+         own frame, not hang from the ceiling. */
+      .centre.fill {
+        flex: 1 1 auto;
+        min-height: 0;
+        justify-content: center;
+      }
+
+      .pitch-foot {
+        margin-top: auto;
+        padding-bottom: 24px;
+      }
+    </style>
+  </head>
+  <body>
+    <figure class="plate">
+      <div class="frame">
+        <div class="safe-top" style="color: var(--ink)">
+          <div class="statusbar" aria-hidden="true" style="color: var(--ink)">
+            <span class="clock">9:41</span>
+            <span class="indicators">
+              <svg width="18" height="12" viewBox="0 0 18 12">
+                <rect x="0" y="8.5" width="3" height="3.5" rx="1" />
+                <rect x="5" y="6" width="3" height="6" rx="1" />
+                <rect x="10" y="3" width="3" height="9" rx="1" />
+                <rect x="15" y="0" width="3" height="12" rx="1" />
+              </svg>
+              <svg
+                width="16"
+                height="12"
+                viewBox="0 0 16 12"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.6"
+                stroke-linecap="round"
+              >
+                <path d="M1.2 4.4a10 10 0 0 1 13.6 0" />
+                <path d="M4 7.3a6 6 0 0 1 8 0" />
+                <circle cx="8" cy="10.4" r="1" fill="currentColor" stroke="none" />
+              </svg>
+              <svg width="25" height="12" viewBox="0 0 25 12">
+                <rect
+                  x="0.5"
+                  y="0.5"
+                  width="21"
+                  height="11"
+                  rx="3.2"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-opacity="0.4"
+                />
+                <rect x="2.2" y="2.2" width="14" height="7.6" rx="1.8" />
+                <rect x="22.6" y="4.2" width="1.9" height="3.6" rx="0.95" opacity="0.4" />
+              </svg>
+            </span>
+          </div>
+        </div>
+        <div class="pitch">
+          <div class="centre" style="margin-top: 64px">
+            <span class="mark" style="width: 96px; height: 96px">
+              <span class="mark-accent"></span>
+              <span class="mark-stem" style="height: 34px"></span>
+            </span>
+            <h1 class="pitch-title" style="margin-top: 32px">Cardì</h1>
+            <p class="pitch-sub" style="margin-top: 8px">Your loyalty cards, always with you</p>
+            <div style="margin-top: 48px">
+              <svg
+                class="illo-fan"
+                width="230"
+                height="110"
+                viewBox="0 0 230 110"
+                role="img"
+                aria-label="Three loyalty cards held in a fan"
+              >
+                <g transform="rotate(-17 115 118)">
+                  <rect
+                    x="75"
+                    y="24"
+                    width="80"
+                    height="52"
+                    rx="7"
+                    fill="var(--cream)"
+                    stroke="#181824"
+                    stroke-width="2"
+                  />
+                </g>
+                <g transform="rotate(-1 115 118)">
+                  <rect
+                    x="75"
+                    y="22"
+                    width="80"
+                    height="52"
+                    rx="7"
+                    fill="var(--cream)"
+                    stroke="#181824"
+                    stroke-width="2"
+                  />
+                </g>
+                <g transform="rotate(15 115 118)">
+                  <rect
+                    x="75"
+                    y="24"
+                    width="80"
+                    height="52"
+                    rx="7"
+                    fill="var(--cream)"
+                    stroke="#181824"
+                    stroke-width="2"
+                  />
+                  <rect x="84.00" y="34" width="0.65" height="18" fill="#181824" />
+                  <rect x="85.31" y="34" width="0.65" height="18" fill="#181824" />
+                  <rect x="87.92" y="34" width="1.31" height="18" fill="#181824" />
+                  <rect x="89.87" y="34" width="0.65" height="18" fill="#181824" />
+                  <rect x="92.48" y="34" width="1.31" height="18" fill="#181824" />
+                  <rect x="94.44" y="34" width="0.65" height="18" fill="#181824" />
+                  <rect x="97.05" y="34" width="1.31" height="18" fill="#181824" />
+                  <rect x="99.01" y="34" width="0.65" height="18" fill="#181824" />
+                  <rect x="101.62" y="34" width="1.31" height="18" fill="#181824" />
+                  <rect x="103.58" y="34" width="0.65" height="18" fill="#181824" />
+                  <rect x="105.54" y="34" width="1.31" height="18" fill="#181824" />
+                  <rect x="108.15" y="34" width="0.65" height="18" fill="#181824" />
+                  <rect x="110.11" y="34" width="0.65" height="18" fill="#181824" />
+                  <rect x="112.06" y="34" width="1.31" height="18" fill="#181824" />
+                  <rect x="114.02" y="34" width="0.65" height="18" fill="#181824" />
+                  <rect x="115.33" y="34" width="0.65" height="18" fill="#181824" />
+                  <rect x="116.63" y="34" width="0.65" height="18" fill="#181824" />
+                  <rect x="119.89" y="34" width="0.65" height="18" fill="#181824" />
+                  <rect x="121.20" y="34" width="0.65" height="18" fill="#181824" />
+                  <rect x="122.51" y="34" width="1.96" height="18" fill="#181824" />
+                  <rect x="125.77" y="34" width="0.65" height="18" fill="#181824" />
+                  <rect x="127.73" y="34" width="1.96" height="18" fill="#181824" />
+                  <rect x="130.34" y="34" width="0.65" height="18" fill="#181824" />
+                  <rect x="131.64" y="34" width="0.65" height="18" fill="#181824" />
+                  <rect x="134.91" y="34" width="0.65" height="18" fill="#181824" />
+                  <rect x="137.52" y="34" width="0.65" height="18" fill="#181824" />
+                  <rect x="139.47" y="34" width="0.65" height="18" fill="#181824" />
+                  <rect x="141.43" y="34" width="0.65" height="18" fill="#181824" />
+                  <rect x="144.04" y="34" width="0.65" height="18" fill="#181824" />
+                  <rect x="145.35" y="34" width="0.65" height="18" fill="#181824" />
+                  <rect x="84" y="58" width="40" height="5" rx="2.5" fill="var(--beam)" />
+                </g>
+              </svg>
+            </div>
+          </div>
+          <div style="margin-top: 72px">
+            <button class="btn-primary">Get Started</button>
+            <div class="link-plain" style="margin-top: 16px">I already have an account</div>
+          </div>
+        </div>
+        <div class="safe-bottom"><span class="home-indicator"></span></div>
+      </div>
+      <figcaption>A — Welcome: the mark, the promise</figcaption>
+    </figure>
+    <figure class="plate">
+      <div class="frame">
+        <div class="safe-top" style="color: var(--ink)">
+          <div class="statusbar" aria-hidden="true" style="color: var(--ink)">
+            <span class="clock">9:41</span>
+            <span class="indicators">
+              <svg width="18" height="12" viewBox="0 0 18 12">
+                <rect x="0" y="8.5" width="3" height="3.5" rx="1" />
+                <rect x="5" y="6" width="3" height="6" rx="1" />
+                <rect x="10" y="3" width="3" height="9" rx="1" />
+                <rect x="15" y="0" width="3" height="12" rx="1" />
+              </svg>
+              <svg
+                width="16"
+                height="12"
+                viewBox="0 0 16 12"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.6"
+                stroke-linecap="round"
+              >
+                <path d="M1.2 4.4a10 10 0 0 1 13.6 0" />
+                <path d="M4 7.3a6 6 0 0 1 8 0" />
+                <circle cx="8" cy="10.4" r="1" fill="currentColor" stroke="none" />
+              </svg>
+              <svg width="25" height="12" viewBox="0 0 25 12">
+                <rect
+                  x="0.5"
+                  y="0.5"
+                  width="21"
+                  height="11"
+                  rx="3.2"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-opacity="0.4"
+                />
+                <rect x="2.2" y="2.2" width="14" height="7.6" rx="1.8" />
+                <rect x="22.6" y="4.2" width="1.9" height="3.6" rx="0.95" opacity="0.4" />
+              </svg>
+            </span>
+          </div>
+        </div>
+        <header class="header">
+          <button class="icon-target at-start" aria-label="Go back">
+            <svg
+              viewBox="0 0 11 20"
+              width="11"
+              height="20"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.75"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <path d="M9.5 1.5L1.5 10l8 8.5" />
+            </svg>
+          </button>
+          <h1
+            class="list-title"
+            style="
+              font-family: Inter, sans-serif;
+              font-weight: 600;
+              font-size: 17px;
+              text-align: center;
+            "
+          >
+            Get Started
+          </h1>
+          <span></span>
+        </header>
+        <div class="pitch">
+          <div class="centre" style="margin-top: 24px">
+            <h2 class="pitch-h2">How would you like<br />to use the app?</h2>
+            <p class="pitch-body" style="margin-top: 8px">
+              You can always change this later in Settings.
+            </p>
+          </div>
+          <div style="margin-top: 24px">
+            <div class="opt is-recommended">
+              <span class="badge">Recommended</span>
+              <div class="opt-row">
+                <span class="opt-tile"
+                  ><svg
+                    width="24"
+                    height="24"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="1.5"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  >
+                    <rect x="6" y="2.5" width="12" height="19" rx="2.5" />
+                    <path d="M10.5 19h3" /></svg
+                ></span>
+                <div class="opt-copy">
+                  <h3>Keep cards on this device</h3>
+                  <p>Fast and private. Your cards stay right here.</p>
+                  <p class="eyebrow">You can create an account later</p>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div style="margin-top: 16px">
+            <div class="opt">
+              <div class="opt-row">
+                <span class="opt-tile"
+                  ><svg
+                    width="24"
+                    height="24"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="1.5"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  >
+                    <path
+                      d="M6.5 18.5h11a3.5 3.5 0 0 0 .3-6.99A5.5 5.5 0 0 0 7.2 10.2A3.65 3.65 0 0 0 6.5 18.5z"
+                    />
+                    <path d="M12 15V9" />
+                    <path d="M9.5 11.5L12 9l2.5 2.5" /></svg
+                ></span>
+                <div class="opt-copy">
+                  <h3>Sync across all devices</h3>
+                  <p>Create a free account to back up and access your cards everywhere.</p>
+                  <p class="eyebrow muted">Free forever</p>
+                </div>
+              </div>
+            </div>
+          </div>
+          <p class="pitch-body" style="margin-top: 32px; text-align: center">
+            Your data is always yours. Export or import your cards anytime from Settings.
+          </p>
+          <div class="link-plain link-underline" style="margin-top: 8px">
+            What's the difference?
+          </div>
+        </div>
+        <div class="safe-bottom"><span class="home-indicator"></span></div>
+      </div>
+      <figcaption>B — Modes: the only real question</figcaption>
+    </figure>
+    <figure class="plate">
+      <div class="frame">
+        <div class="behind">
+          <div class="safe-top"></div>
+          <header class="header">
+            <button class="icon-target at-start" aria-label="Go back">
+              <svg
+                viewBox="0 0 11 20"
+                width="11"
+                height="20"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.75"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <path d="M9.5 1.5L1.5 10l8 8.5" />
+              </svg>
+            </button>
+            <h1
+              style="
+                font-family: Inter, sans-serif;
+                font-weight: 600;
+                font-size: 17px;
+                text-align: center;
+              "
+            >
+              Get Started
+            </h1>
+            <span></span>
+          </header>
+          <div class="pitch">
+            <div class="centre" style="margin-top: 24px">
+              <h2 class="pitch-h2">How would you like<br />to use the app?</h2>
+              <p class="pitch-body" style="margin-top: 8px">
+                You can always change this later in Settings.
+              </p>
+            </div>
+            <div style="margin-top: 24px">
+              <div class="opt is-recommended">
+                <span class="badge">Recommended</span>
+                <div class="opt-row">
+                  <span class="opt-tile"
+                    ><svg
+                      width="24"
+                      height="24"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="1.5"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    >
+                      <rect x="6" y="2.5" width="12" height="19" rx="2.5" />
+                      <path d="M10.5 19h3" /></svg
+                  ></span>
+                  <div class="opt-copy">
+                    <h3>Keep cards on this device</h3>
+                    <p>Fast and private. Your cards stay right here.</p>
+                    <p class="eyebrow">You can create an account later</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div style="margin-top: 16px">
+              <div class="opt">
+                <div class="opt-row">
+                  <span class="opt-tile"
+                    ><svg
+                      width="24"
+                      height="24"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="1.5"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    >
+                      <path
+                        d="M6.5 18.5h11a3.5 3.5 0 0 0 .3-6.99A5.5 5.5 0 0 0 7.2 10.2A3.65 3.65 0 0 0 6.5 18.5z"
+                      />
+                      <path d="M12 15V9" />
+                      <path d="M9.5 11.5L12 9l2.5 2.5" /></svg
+                  ></span>
+                  <div class="opt-copy">
+                    <h3>Sync across all devices</h3>
+                    <p>Create a free account to back up and access your cards everywhere.</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="scrim"></div>
+        <div class="safe-top" style="color: var(--cream)">
+          <div class="statusbar" aria-hidden="true" style="color: var(--cream)">
+            <span class="clock">9:41</span>
+            <span class="indicators">
+              <svg width="18" height="12" viewBox="0 0 18 12">
+                <rect x="0" y="8.5" width="3" height="3.5" rx="1" />
+                <rect x="5" y="6" width="3" height="6" rx="1" />
+                <rect x="10" y="3" width="3" height="9" rx="1" />
+                <rect x="15" y="0" width="3" height="12" rx="1" />
+              </svg>
+              <svg
+                width="16"
+                height="12"
+                viewBox="0 0 16 12"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.6"
+                stroke-linecap="round"
+              >
+                <path d="M1.2 4.4a10 10 0 0 1 13.6 0" />
+                <path d="M4 7.3a6 6 0 0 1 8 0" />
+                <circle cx="8" cy="10.4" r="1" fill="currentColor" stroke="none" />
+              </svg>
+              <svg width="25" height="12" viewBox="0 0 25 12">
+                <rect
+                  x="0.5"
+                  y="0.5"
+                  width="21"
+                  height="11"
+                  rx="3.2"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-opacity="0.4"
+                />
+                <rect x="2.2" y="2.2" width="14" height="7.6" rx="1.8" />
+                <rect x="22.6" y="4.2" width="1.9" height="3.6" rx="0.95" opacity="0.4" />
+              </svg>
+            </span>
+          </div>
+        </div>
+        <div class="sheet">
+          <div class="grab"></div>
+          <h2>What's the difference?</h2>
+          <p>
+            Keep cards on this device stores your loyalty cards only on this phone. It's fast,
+            private, and works offline.
+          </p>
+          <p>
+            Sync across all devices creates a free account so your cards are backed up and available
+            on any device you sign in to.
+          </p>
+          <p>You can switch anytime from Settings.</p>
+          <div class="sheet-foot">
+            <button class="btn-primary" style="margin-bottom: 24px">Got it</button>
+            <div class="safe-bottom"><span class="home-indicator"></span></div>
+          </div>
+        </div>
+      </div>
+      <figcaption>C — Difference: the sheet behind the link</figcaption>
+    </figure>
+    <figure class="plate">
+      <div class="frame">
+        <div class="safe-top" style="color: var(--ink)">
+          <div class="statusbar" aria-hidden="true" style="color: var(--ink)">
+            <span class="clock">9:41</span>
+            <span class="indicators">
+              <svg width="18" height="12" viewBox="0 0 18 12">
+                <rect x="0" y="8.5" width="3" height="3.5" rx="1" />
+                <rect x="5" y="6" width="3" height="6" rx="1" />
+                <rect x="10" y="3" width="3" height="9" rx="1" />
+                <rect x="15" y="0" width="3" height="12" rx="1" />
+              </svg>
+              <svg
+                width="16"
+                height="12"
+                viewBox="0 0 16 12"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.6"
+                stroke-linecap="round"
+              >
+                <path d="M1.2 4.4a10 10 0 0 1 13.6 0" />
+                <path d="M4 7.3a6 6 0 0 1 8 0" />
+                <circle cx="8" cy="10.4" r="1" fill="currentColor" stroke="none" />
+              </svg>
+              <svg width="25" height="12" viewBox="0 0 25 12">
+                <rect
+                  x="0.5"
+                  y="0.5"
+                  width="21"
+                  height="11"
+                  rx="3.2"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-opacity="0.4"
+                />
+                <rect x="2.2" y="2.2" width="14" height="7.6" rx="1.8" />
+                <rect x="22.6" y="4.2" width="1.9" height="3.6" rx="0.95" opacity="0.4" />
+              </svg>
+            </span>
+          </div>
+        </div>
+        <div class="pitch">
+          <div class="skip-row"><span class="link-plain">Skip</span></div>
+          <div class="centre fill">
+            <div class="illo-disc">
+              <svg
+                width="110"
+                height="94"
+                viewBox="0 0 110 94"
+                role="img"
+                aria-label="A wallet of loyalty cards in their own brand colours"
+              >
+                <rect x="0" y="0" width="51" height="43" rx="6" fill="#FFCC00" />
+                <rect x="59" y="0" width="51" height="43" rx="6" fill="#E2231A" />
+                <rect x="0" y="51" width="51" height="43" rx="6" fill="#0C84CC" />
+                <rect x="59" y="51" width="51" height="43" rx="6" fill="#0050AA" />
+              </svg>
+            </div>
+            <h2 class="pitch-h2" style="margin-top: 40px">All your cards in one place</h2>
+            <p class="pitch-body" style="margin-top: 8px">
+              Store every loyalty card digitally. No more digging through your wallet at the
+              checkout.
+            </p>
+          </div>
+          <div class="pitch-foot">
+            <div class="dots"><i class="on"></i><i class=""></i><i class=""></i></div>
+            <button class="btn-primary" style="margin-top: 24px">Next</button>
+          </div>
+        </div>
+        <div class="safe-bottom"><span class="home-indicator"></span></div>
+      </div>
+      <figcaption>D — Highlight: first slide</figcaption>
+    </figure>
+    <figure class="plate">
+      <div class="frame">
+        <div class="safe-top" style="color: var(--ink)">
+          <div class="statusbar" aria-hidden="true" style="color: var(--ink)">
+            <span class="clock">9:41</span>
+            <span class="indicators">
+              <svg width="18" height="12" viewBox="0 0 18 12">
+                <rect x="0" y="8.5" width="3" height="3.5" rx="1" />
+                <rect x="5" y="6" width="3" height="6" rx="1" />
+                <rect x="10" y="3" width="3" height="9" rx="1" />
+                <rect x="15" y="0" width="3" height="12" rx="1" />
+              </svg>
+              <svg
+                width="16"
+                height="12"
+                viewBox="0 0 16 12"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.6"
+                stroke-linecap="round"
+              >
+                <path d="M1.2 4.4a10 10 0 0 1 13.6 0" />
+                <path d="M4 7.3a6 6 0 0 1 8 0" />
+                <circle cx="8" cy="10.4" r="1" fill="currentColor" stroke="none" />
+              </svg>
+              <svg width="25" height="12" viewBox="0 0 25 12">
+                <rect
+                  x="0.5"
+                  y="0.5"
+                  width="21"
+                  height="11"
+                  rx="3.2"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-opacity="0.4"
+                />
+                <rect x="2.2" y="2.2" width="14" height="7.6" rx="1.8" />
+                <rect x="22.6" y="4.2" width="1.9" height="3.6" rx="0.95" opacity="0.4" />
+              </svg>
+            </span>
+          </div>
+        </div>
+        <div class="pitch">
+          <div class="skip-row"><span class="link-plain">Skip</span></div>
+          <div class="centre fill">
+            <div class="illo-disc">
+              <svg
+                width="116"
+                height="98"
+                viewBox="0 0 116 98"
+                role="img"
+                aria-label="A loyalty card being scanned"
+              >
+                <rect
+                  x="4"
+                  y="20"
+                  width="108"
+                  height="62"
+                  rx="7"
+                  fill="var(--cream)"
+                  stroke="#181824"
+                  stroke-width="2"
+                />
+                <rect x="15.00" y="32" width="0.91" height="28" fill="#181824" />
+                <rect x="16.81" y="32" width="0.91" height="28" fill="#181824" />
+                <rect x="20.43" y="32" width="1.81" height="28" fill="#181824" />
+                <rect x="23.15" y="32" width="0.91" height="28" fill="#181824" />
+                <rect x="26.77" y="32" width="1.81" height="28" fill="#181824" />
+                <rect x="29.48" y="32" width="0.91" height="28" fill="#181824" />
+                <rect x="33.11" y="32" width="1.81" height="28" fill="#181824" />
+                <rect x="35.82" y="32" width="0.91" height="28" fill="#181824" />
+                <rect x="39.44" y="32" width="1.81" height="28" fill="#181824" />
+                <rect x="42.16" y="32" width="0.91" height="28" fill="#181824" />
+                <rect x="44.87" y="32" width="1.81" height="28" fill="#181824" />
+                <rect x="48.49" y="32" width="0.91" height="28" fill="#181824" />
+                <rect x="51.21" y="32" width="0.91" height="28" fill="#181824" />
+                <rect x="53.93" y="32" width="1.81" height="28" fill="#181824" />
+                <rect x="56.64" y="32" width="0.91" height="28" fill="#181824" />
+                <rect x="58.45" y="32" width="0.91" height="28" fill="#181824" />
+                <rect x="60.26" y="32" width="0.91" height="28" fill="#181824" />
+                <rect x="64.79" y="32" width="0.91" height="28" fill="#181824" />
+                <rect x="66.60" y="32" width="0.91" height="28" fill="#181824" />
+                <rect x="68.41" y="32" width="2.72" height="28" fill="#181824" />
+                <rect x="72.94" y="32" width="0.91" height="28" fill="#181824" />
+                <rect x="75.65" y="32" width="2.72" height="28" fill="#181824" />
+                <rect x="79.27" y="32" width="0.91" height="28" fill="#181824" />
+                <rect x="81.08" y="32" width="0.91" height="28" fill="#181824" />
+                <rect x="85.61" y="32" width="0.91" height="28" fill="#181824" />
+                <rect x="89.23" y="32" width="0.91" height="28" fill="#181824" />
+                <rect x="91.95" y="32" width="0.91" height="28" fill="#181824" />
+                <rect x="94.66" y="32" width="0.91" height="28" fill="#181824" />
+                <rect x="98.28" y="32" width="0.91" height="28" fill="#181824" />
+                <rect x="100.09" y="32" width="0.91" height="28" fill="#181824" />
+                <rect x="15" y="65" width="36" height="4" rx="2" fill="#181824" opacity="0.3" />
+                <rect
+                  class="beam-line"
+                  x="0"
+                  y="47"
+                  width="116"
+                  height="3"
+                  rx="1.5"
+                  fill="var(--beam)"
+                />
+              </svg>
+            </div>
+            <h2 class="pitch-h2" style="margin-top: 40px">Scan or add manually</h2>
+            <p class="pitch-body" style="margin-top: 8px">
+              Point your camera at any barcode, or type the number in. Either way, it takes seconds.
+            </p>
+          </div>
+          <div class="pitch-foot">
+            <div class="dots"><i class=""></i><i class="on"></i><i class=""></i></div>
+            <button class="btn-primary" style="margin-top: 24px">Next</button>
+          </div>
+        </div>
+        <div class="safe-bottom"><span class="home-indicator"></span></div>
+      </div>
+      <figcaption>E — Highlight: scan or add manually</figcaption>
+    </figure>
+    <figure class="plate">
+      <div class="frame">
+        <div class="safe-top" style="color: var(--ink)">
+          <div class="statusbar" aria-hidden="true" style="color: var(--ink)">
+            <span class="clock">9:41</span>
+            <span class="indicators">
+              <svg width="18" height="12" viewBox="0 0 18 12">
+                <rect x="0" y="8.5" width="3" height="3.5" rx="1" />
+                <rect x="5" y="6" width="3" height="6" rx="1" />
+                <rect x="10" y="3" width="3" height="9" rx="1" />
+                <rect x="15" y="0" width="3" height="12" rx="1" />
+              </svg>
+              <svg
+                width="16"
+                height="12"
+                viewBox="0 0 16 12"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.6"
+                stroke-linecap="round"
+              >
+                <path d="M1.2 4.4a10 10 0 0 1 13.6 0" />
+                <path d="M4 7.3a6 6 0 0 1 8 0" />
+                <circle cx="8" cy="10.4" r="1" fill="currentColor" stroke="none" />
+              </svg>
+              <svg width="25" height="12" viewBox="0 0 25 12">
+                <rect
+                  x="0.5"
+                  y="0.5"
+                  width="21"
+                  height="11"
+                  rx="3.2"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-opacity="0.4"
+                />
+                <rect x="2.2" y="2.2" width="14" height="7.6" rx="1.8" />
+                <rect x="22.6" y="4.2" width="1.9" height="3.6" rx="0.95" opacity="0.4" />
+              </svg>
+            </span>
+          </div>
+        </div>
+        <div class="pitch">
+          <div class="skip-row"><span class="link-plain">Skip</span></div>
+          <div class="centre fill">
+            <div class="illo-disc">
+              <svg
+                width="120"
+                height="98"
+                viewBox="0 0 120 98"
+                role="img"
+                aria-label="A loyalty card crossing a dashed boundary, freely"
+              >
+                <rect
+                  x="2"
+                  y="16"
+                  width="64"
+                  height="66"
+                  rx="8"
+                  fill="none"
+                  stroke="#181824"
+                  stroke-width="2"
+                  stroke-dasharray="7 6"
+                />
+                <g transform="rotate(-13 76 49)">
+                  <rect
+                    x="44"
+                    y="28"
+                    width="74"
+                    height="46"
+                    rx="6"
+                    fill="var(--cream)"
+                    stroke="#181824"
+                    stroke-width="2"
+                  />
+                  <rect x="53.00" y="36" width="0.59" height="16" fill="#181824" />
+                  <rect x="54.18" y="36" width="0.59" height="16" fill="#181824" />
+                  <rect x="56.54" y="36" width="1.18" height="16" fill="#181824" />
+                  <rect x="58.31" y="36" width="0.59" height="16" fill="#181824" />
+                  <rect x="60.66" y="36" width="1.18" height="16" fill="#181824" />
+                  <rect x="62.43" y="36" width="0.59" height="16" fill="#181824" />
+                  <rect x="64.79" y="36" width="1.18" height="16" fill="#181824" />
+                  <rect x="66.56" y="36" width="0.59" height="16" fill="#181824" />
+                  <rect x="68.92" y="36" width="1.18" height="16" fill="#181824" />
+                  <rect x="70.68" y="36" width="0.59" height="16" fill="#181824" />
+                  <rect x="72.45" y="36" width="1.18" height="16" fill="#181824" />
+                  <rect x="74.81" y="36" width="0.59" height="16" fill="#181824" />
+                  <rect x="76.58" y="36" width="0.59" height="16" fill="#181824" />
+                  <rect x="78.35" y="36" width="1.18" height="16" fill="#181824" />
+                  <rect x="80.12" y="36" width="0.59" height="16" fill="#181824" />
+                  <rect x="81.29" y="36" width="0.59" height="16" fill="#181824" />
+                  <rect x="82.47" y="36" width="0.59" height="16" fill="#181824" />
+                  <rect x="85.42" y="36" width="0.59" height="16" fill="#181824" />
+                  <rect x="86.60" y="36" width="0.59" height="16" fill="#181824" />
+                  <rect x="87.78" y="36" width="1.77" height="16" fill="#181824" />
+                  <rect x="90.73" y="36" width="0.59" height="16" fill="#181824" />
+                  <rect x="92.49" y="36" width="1.77" height="16" fill="#181824" />
+                  <rect x="94.85" y="36" width="0.59" height="16" fill="#181824" />
+                  <rect x="96.03" y="36" width="0.59" height="16" fill="#181824" />
+                  <rect x="98.98" y="36" width="0.59" height="16" fill="#181824" />
+                  <rect x="101.34" y="36" width="0.59" height="16" fill="#181824" />
+                  <rect x="103.11" y="36" width="0.59" height="16" fill="#181824" />
+                  <rect x="104.87" y="36" width="0.59" height="16" fill="#181824" />
+                  <rect x="107.23" y="36" width="0.59" height="16" fill="#181824" />
+                  <rect x="108.41" y="36" width="0.59" height="16" fill="#181824" />
+                  <rect x="53" y="58" width="34" height="5" rx="2.5" fill="var(--beam)" />
+                </g>
+              </svg>
+            </div>
+            <h2 class="pitch-h2" style="margin-top: 40px">Your data, your rules</h2>
+            <p class="pitch-body" style="margin-top: 8px">
+              Export and import your cards anytime. No lock-in, no hidden fees. Your cards belong to
+              you.
+            </p>
+          </div>
+          <div class="pitch-foot">
+            <div class="dots"><i class=""></i><i class=""></i><i class="on"></i></div>
+            <button class="btn-primary" style="margin-top: 24px">Let's go!</button>
+          </div>
+        </div>
+        <div class="safe-bottom"><span class="home-indicator"></span></div>
+      </div>
+      <figcaption>F — Highlight: last slide</figcaption>
+    </figure>
+  </body>
+</html>

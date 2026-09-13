@@ -1,0 +1,890 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Cardì — document pattern, three frames</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Space+Grotesk:wght@700&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      /* ==================================================================
+         SHARED FRAME LAYER — the same tokens and frame primitives as the form,
+         wallet and settings frame files. Keep the VALUES in step; copied rather
+         than linked, because any viewer that inlines the HTML drops a linked
+         stylesheet and renders a broken frame. cardi-design-system.md is the
+         source of truth for these values.
+         ================================================================== */
+
+      :root {
+        --ink: #181824;
+        --beam: #fccc0c;
+        --cream: #f0f0e8;
+        --white: #ffffff;
+        --hairline: #d6d6cb;
+        --placeholder: #55555f;
+        --error: #c41e1e;
+
+        --swatch-red: #e42424;
+        --swatch-blue: #0c3c84;
+        --swatch-azure: #0c84cc;
+        --swatch-green: #0c843c;
+        --swatch-yellow: #fccc0c;
+
+        /* TWO margins, deliberately. 24px is the SINGLE-COLUMN margin — forms,
+           settings, documents. The card grid uses 16px, and that is not a style
+           choice: TILE_WIDTH 171 in features/cards/utils/gridLayout.ts is
+           (390 − 2×16 − 16) / 2, frozen with tests. At 24px the tile stops being 171.
+           The design system currently states one figure and needs amending. */
+        --screen-margin: 24px;
+        --grid-margin: 16px;
+        --gutter: 16px;
+
+        --touch: 48px;
+        --radius-control: 12px;
+        --radius-tile: 16px;
+        --safe-top: 59px;
+        --safe-bottom: 34px;
+        --header-h: 56px;
+      }
+
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+
+      body {
+        background: #c9c9c2;
+        font-family: Inter, system-ui, sans-serif;
+        padding: 48px 32px;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 48px;
+        justify-content: center;
+        align-items: flex-start;
+      }
+
+      .plate {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        align-items: center;
+      }
+
+      .plate figcaption {
+        font:
+          600 12px/1.4 Inter,
+          sans-serif;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: #3d3d46;
+      }
+
+      /* ---- the frame: exactly 393 x 852, never anything else ---- */
+      .frame {
+        width: 393px;
+        height: 852px;
+        background: var(--cream);
+        color: var(--ink);
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+        position: relative;
+      }
+
+      /* Reserved system insets — 59px top / 34px bottom, the real values for a
+         393 x 852 Dynamic Island device.
+
+         These were originally left blank. That was a mistake of presentation, not of
+         measurement: on a real phone the top inset is OCCUPIED by the clock and
+         indicators, so drawing it empty makes a correct 59px read as careless
+         padding, and invites the exact wrong fix (shrink it — which would push
+         content under the live status bar at build time).
+
+         The status bar is SYSTEM chrome, not ours: ink only, no beam, and nothing
+         here is a control. Same for the home indicator. */
+      .safe-top {
+        height: var(--safe-top);
+        flex: 0 0 auto;
+      }
+
+      .safe-bottom {
+        height: var(--safe-bottom);
+        flex: 0 0 auto;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .statusbar {
+        height: 100%;
+        padding: 14px var(--screen-margin) 0;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        color: var(--ink);
+      }
+
+      .statusbar .clock {
+        font-family: Inter, sans-serif;
+        font-size: 15px;
+        font-weight: 600;
+        letter-spacing: 0.01em;
+        font-variant-numeric: tabular-nums;
+      }
+
+      .statusbar .indicators {
+        display: flex;
+        align-items: center;
+        gap: 5px;
+      }
+
+      .statusbar svg {
+        display: block;
+        fill: currentColor;
+      }
+
+      .home-indicator {
+        width: 140px;
+        height: 5px;
+        border-radius: 999px;
+        background: var(--ink);
+        opacity: 0.85;
+      }
+
+      /* ---- header ----
+         A three-column grid: a 48px touch target, the title, a 48px touch target.
+         Icons are optically aligned, not box-aligned — a glyph drawn inside a square
+         icon box carries empty side bearing, so box-aligning it to the margin leaves
+         the visible stroke sitting inboard of the content beneath. The fix is to
+         bleed the touch target to the frame edge and pad the content back to the
+         margin: ink lands on the margin, the target stays 48px. */
+      .header {
+        height: var(--header-h);
+        flex: 0 0 auto;
+        padding: 0 var(--screen-margin);
+        display: grid;
+        grid-template-columns: var(--touch) 1fr var(--touch);
+        align-items: center;
+      }
+
+      .header.grid-margin {
+        padding: 0 var(--grid-margin);
+      }
+
+      .icon-target {
+        width: var(--touch);
+        height: var(--touch);
+        display: flex;
+        align-items: center;
+        background: none;
+        border: 0;
+        cursor: pointer;
+        color: var(--ink);
+      }
+
+      .icon-target.at-start {
+        margin-left: calc(-1 * var(--screen-margin));
+        padding-left: var(--screen-margin);
+        justify-content: flex-start;
+      }
+
+      .icon-target.at-end {
+        margin-right: calc(-1 * var(--screen-margin));
+        padding-right: var(--screen-margin);
+        justify-content: flex-end;
+      }
+
+      .header.grid-margin .icon-target.at-start {
+        margin-left: calc(-1 * var(--grid-margin));
+        padding-left: var(--grid-margin);
+      }
+
+      .header.grid-margin .icon-target.at-end {
+        margin-right: calc(-1 * var(--grid-margin));
+        padding-right: var(--grid-margin);
+      }
+
+      .icon-target svg {
+        display: block;
+      }
+
+      .title {
+        font-family: 'Space Grotesk', sans-serif;
+        font-weight: 700;
+        font-size: 24px;
+        line-height: 32px;
+        letter-spacing: -0.01em;
+        text-align: center;
+        color: var(--ink);
+      }
+
+      /* ---- body ---- */
+      .body {
+        flex: 1 1 auto;
+        min-height: 0;
+        padding: 24px var(--screen-margin) 0;
+        display: flex;
+        flex-direction: column;
+        gap: 32px;
+      }
+
+      .body.grid-margin {
+        padding: 8px var(--grid-margin) 0;
+        gap: 16px;
+      }
+
+      /* ---- footer ----
+         A flex sibling AFTER the scroll area. Never fixed, never absolute — so it
+         cannot fight the keyboard. The gap above it is composition, not absence. */
+      .footer {
+        flex: 0 0 auto;
+      }
+
+      .hairline {
+        height: 1px;
+        background: var(--hairline);
+        width: 100%;
+      }
+
+      .footer-inner {
+        padding: var(--screen-margin);
+      }
+
+      .footer-inner.grid-margin {
+        padding: var(--grid-margin);
+      }
+
+      .btn-primary {
+        width: 100%;
+        height: 52px;
+        background: var(--ink);
+        color: var(--white);
+        border: 0;
+        border-radius: var(--radius-control);
+        font-family: Inter, sans-serif;
+        font-weight: 600;
+        font-size: 17px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      /* ------------------------------------------------------------------
+         Cardì — document pattern reference frames.
+
+         Specced from features/privacy/PrivacyPolicyScreen.tsx,
+         features/help/HelpScreen.tsx and features/privacy/DataSummaryScreen.tsx
+         — see stitch-prompts-document.txt.
+
+         THE MARGIN IS 24px, THE SYSTEM DEFAULT. An earlier version of this file
+         used 48px and defended it as a "reading measure". That was wrong, and
+         wrong in an instructive way: the measure rule comes from DESKTOP
+         typography, where you constrain a wide column down to 45-75 characters.
+         A 393px phone is already at the bottom of that range. Taking another
+         96px out left a 297px column — about 38 characters at 15px, BELOW the
+         comfortable minimum. The rule inverted when it crossed to mobile.
+
+         So there is no "long-form" margin. There are two: 16px for the card
+         grid, because TILE_WIDTH 171 is derived from it and tested, and 24px
+         for everything else. CardForm's 32, SettingsScreen's 24 and this file's
+         former 48 are all drift.
+
+         BODY TEXT IS 15px. All three shipped screens set 14px, against a system
+         minimum of 15px, on the screens people actually read.
+
+         NO REPEATED TITLE. The header carries the screen name; repeating it as
+         a body heading directly beneath itself is redundant, and it reads as an
+         accident rather than a decision.
+         ------------------------------------------------------------------ */
+
+      .doc-body {
+        padding: 16px var(--screen-margin) 0;
+        gap: 0;
+        overflow: hidden;
+        display: block;
+      }
+
+      /* The header carries the screen name. There is no second copy of it in
+         the body — an earlier version had one and defended it as "the header is
+         navigation, this is the document", which is a distinction the eye does
+         not make when the two sit four pixels apart. */
+      .doc-meta {
+        font-family: Inter, sans-serif;
+        font-size: 12px;
+        line-height: 16px;
+        color: var(--placeholder);
+      }
+
+      .doc-sub {
+        font-family: Inter, sans-serif;
+        font-size: 15px;
+        line-height: 22px;
+        color: var(--placeholder);
+      }
+
+      .doc-h2 {
+        font-family: Inter, sans-serif;
+        font-weight: 700;
+        font-size: 16px;
+        line-height: 24px;
+        color: var(--ink);
+        margin-top: 32px;
+        margin-bottom: 8px;
+      }
+
+      .doc-p {
+        font-family: Inter, sans-serif;
+        font-size: 15px;
+        line-height: 22px;
+        color: var(--ink);
+        margin-bottom: 8px;
+      }
+
+      /* Hanging indent: the wrap aligns under the text, not under the bullet. */
+      .doc-li {
+        font-family: Inter, sans-serif;
+        font-size: 15px;
+        line-height: 22px;
+        color: var(--ink);
+        margin-bottom: 8px;
+        padding-left: 32px;
+        text-indent: -14px;
+      }
+
+      /* ---- search field (shared shape with the wallet) ---- */
+      .doc-search {
+        height: var(--touch);
+        background: var(--white);
+        border: 1px solid var(--hairline);
+        border-radius: var(--radius-control);
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 0 14px;
+        color: var(--placeholder);
+        margin-top: 24px;
+      }
+
+      .doc-search .ph {
+        font-family: Inter, sans-serif;
+        font-size: 17px;
+        color: var(--placeholder);
+      }
+
+      /* ---- FAQ accordion ----
+         These rows are TAPPABLE, so they sit on a white card with a hairline
+         outline — the same treatment interactive rows get in settings. Bare
+         cream is for prose; a white card is for controls. Stitch drew an
+         outlined box with a CREAM fill, which is neither. */
+      .faq {
+        margin-top: 24px;
+        background: var(--white);
+        border: 1px solid var(--hairline);
+        border-radius: var(--radius-tile);
+        overflow: hidden;
+      }
+
+      .faq-item + .faq-item {
+        border-top: 1px solid var(--hairline);
+      }
+
+      .faq-q {
+        min-height: var(--touch);
+        padding: 14px 16px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+
+      .faq-q .q {
+        flex: 1 1 auto;
+        font-family: Inter, sans-serif;
+        font-weight: 600;
+        font-size: 16px;
+        line-height: 22px;
+        color: var(--ink);
+      }
+
+      .faq-q .chev {
+        color: var(--placeholder);
+        display: flex;
+        flex: 0 0 auto;
+      }
+
+      .faq-a {
+        padding: 0 16px 16px;
+        font-family: Inter, sans-serif;
+        font-size: 15px;
+        line-height: 22px;
+        color: var(--placeholder);
+      }
+
+      .doc-actions {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        margin-top: 32px;
+      }
+
+      .btn-outline {
+        width: 100%;
+        height: 52px;
+        background: transparent;
+        color: var(--ink);
+        border: 1px solid var(--ink);
+        border-radius: var(--radius-control);
+        font-family: Inter, sans-serif;
+        font-weight: 600;
+        font-size: 17px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      /* ---- table ----
+         RULED, NOT BOXED: hairlines under the header and between rows, plus one
+         closing rule under the last row so the table ends rather than trails
+         off. No outer border, no card, no fills, no zebra striping, no vertical
+         rule, and no colour on "Not collected" — it is neither a warning nor a
+         success. */
+      .tbl {
+        margin-top: 32px;
+      }
+
+      .tbl-head,
+      .tbl-row {
+        display: flex;
+        gap: 16px;
+        padding: 12px 0;
+        border-bottom: 1px solid var(--hairline);
+      }
+
+      .tbl-head span {
+        font-family: Inter, sans-serif;
+        font-weight: 600;
+        font-size: 12px;
+        line-height: 16px;
+        letter-spacing: 0.05em;
+        text-transform: uppercase;
+        color: var(--ink);
+      }
+
+      .tbl-row {
+        min-height: var(--touch);
+        align-items: flex-start;
+      }
+
+      .col-cat {
+        flex: 0 0 40%;
+        font-family: Inter, sans-serif;
+        font-weight: 600;
+        font-size: 15px;
+        line-height: 22px;
+        color: var(--ink);
+      }
+
+      .col-data {
+        flex: 1 1 auto;
+        font-family: Inter, sans-serif;
+        font-size: 15px;
+        line-height: 22px;
+        color: var(--placeholder);
+      }
+
+      .doc-link {
+        margin-top: 32px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-family: Inter, sans-serif;
+        font-weight: 600;
+        font-size: 15px;
+        line-height: 22px;
+        color: var(--ink);
+      }
+
+      .doc-note {
+        margin-top: 8px;
+        font-family: Inter, sans-serif;
+        font-size: 12px;
+        line-height: 18px;
+        color: var(--placeholder);
+      }
+    </style>
+  </head>
+  <body>
+    <figure class="plate">
+      <div class="frame">
+        <div class="safe-top">
+          <div class="statusbar" aria-hidden="true">
+            <span class="clock">9:41</span>
+            <span class="indicators">
+              <svg width="18" height="12" viewBox="0 0 18 12">
+                <rect x="0" y="8.5" width="3" height="3.5" rx="1" />
+                <rect x="5" y="6" width="3" height="6" rx="1" />
+                <rect x="10" y="3" width="3" height="9" rx="1" />
+                <rect x="15" y="0" width="3" height="12" rx="1" />
+              </svg>
+              <svg
+                width="16"
+                height="12"
+                viewBox="0 0 16 12"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.6"
+                stroke-linecap="round"
+              >
+                <path d="M1.2 4.4a10 10 0 0 1 13.6 0" />
+                <path d="M4 7.3a6 6 0 0 1 8 0" />
+                <circle cx="8" cy="10.4" r="1" fill="currentColor" stroke="none" />
+              </svg>
+              <svg width="25" height="12" viewBox="0 0 25 12">
+                <rect
+                  x="0.5"
+                  y="0.5"
+                  width="21"
+                  height="11"
+                  rx="3.2"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-opacity="0.4"
+                />
+                <rect x="2.2" y="2.2" width="14" height="7.6" rx="1.8" />
+                <rect x="22.6" y="4.2" width="1.9" height="3.6" rx="0.95" opacity="0.4" />
+              </svg>
+            </span>
+          </div>
+        </div>
+        <header class="header">
+          <button class="icon-target at-start" aria-label="Go back">
+            <svg
+              viewBox="0 0 11 20"
+              width="11"
+              height="20"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.75"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <path d="M9.5 1.5L1.5 10l8 8.5" />
+            </svg>
+          </button>
+          <h1 class="title">Privacy Policy</h1>
+          <span></span>
+        </header>
+        <main class="body doc-body">
+          <p class="doc-meta">Version 3 &middot; Last updated: 12 August 2026</p>
+
+          <h3 class="doc-h2">What we collect</h3>
+          <p class="doc-p">
+            We only collect what is strictly necessary to make your loyalty cards available at the
+            checkout line instantly.
+          </p>
+          <p class="doc-p">
+            When you use Cardì, we process the following information to provide the core service:
+          </p>
+          <p class="doc-li">&bull;&nbsp; Card names, barcodes and timestamps</p>
+          <p class="doc-li">&bull;&nbsp; Your email address, if you create an account</p>
+          <p class="doc-li">&bull;&nbsp; App version and locale, to fetch the right catalogue</p>
+
+          <h3 class="doc-h2">What we never collect</h3>
+          <p class="doc-p">
+            We believe your privacy is absolute. The following are never tracked, stored or
+            transmitted by our servers:
+          </p>
+          <p class="doc-li">&bull;&nbsp; Your location</p>
+          <p class="doc-li">&bull;&nbsp; Your contacts</p>
+        </main>
+        <div class="safe-bottom"><span class="home-indicator"></span></div>
+      </div>
+      <figcaption>A — Prose document</figcaption>
+    </figure>
+    <figure class="plate">
+      <div class="frame">
+        <div class="safe-top">
+          <div class="statusbar" aria-hidden="true">
+            <span class="clock">9:41</span>
+            <span class="indicators">
+              <svg width="18" height="12" viewBox="0 0 18 12">
+                <rect x="0" y="8.5" width="3" height="3.5" rx="1" />
+                <rect x="5" y="6" width="3" height="6" rx="1" />
+                <rect x="10" y="3" width="3" height="9" rx="1" />
+                <rect x="15" y="0" width="3" height="12" rx="1" />
+              </svg>
+              <svg
+                width="16"
+                height="12"
+                viewBox="0 0 16 12"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.6"
+                stroke-linecap="round"
+              >
+                <path d="M1.2 4.4a10 10 0 0 1 13.6 0" />
+                <path d="M4 7.3a6 6 0 0 1 8 0" />
+                <circle cx="8" cy="10.4" r="1" fill="currentColor" stroke="none" />
+              </svg>
+              <svg width="25" height="12" viewBox="0 0 25 12">
+                <rect
+                  x="0.5"
+                  y="0.5"
+                  width="21"
+                  height="11"
+                  rx="3.2"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-opacity="0.4"
+                />
+                <rect x="2.2" y="2.2" width="14" height="7.6" rx="1.8" />
+                <rect x="22.6" y="4.2" width="1.9" height="3.6" rx="0.95" opacity="0.4" />
+              </svg>
+            </span>
+          </div>
+        </div>
+        <header class="header">
+          <button class="icon-target at-start" aria-label="Go back">
+            <svg
+              viewBox="0 0 11 20"
+              width="11"
+              height="20"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.75"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <path d="M9.5 1.5L1.5 10l8 8.5" />
+            </svg>
+          </button>
+          <h1 class="title">Help &amp; FAQ</h1>
+          <span></span>
+        </header>
+        <main class="body doc-body">
+          <p class="doc-sub">Find quick answers and troubleshooting steps.</p>
+
+          <div class="doc-search">
+            <svg
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.8"
+              stroke-linecap="round"
+            >
+              <circle cx="11" cy="11" r="7" />
+              <path d="M20 20l-3.6-3.6" />
+            </svg>
+            <span class="ph">Search help</span>
+          </div>
+
+          <div class="faq">
+            <div class="faq-item">
+              <div class="faq-q">
+                <span class="q">How do I add my first card?</span>
+                <span class="chev"
+                  ><svg
+                    width="18"
+                    height="18"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  >
+                    <path d="M18 15l-6-6-6 6" /></svg
+                ></span>
+              </div>
+              <p class="faq-a">
+                Tap Add Card on the main screen. If you have no cards yet, the First-Card Guidance
+                overlay appears on the home screen to walk you through it.
+              </p>
+            </div>
+            <div class="faq-item">
+              <div class="faq-q">
+                <span class="q">How do I scan a barcode?</span>
+                <span class="chev"
+                  ><svg
+                    width="18"
+                    height="18"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  >
+                    <path d="M6 9l6 6 6-6" /></svg
+                ></span>
+              </div>
+            </div>
+            <div class="faq-item">
+              <div class="faq-q">
+                <span class="q">Why is my camera not working?</span>
+                <span class="chev"
+                  ><svg
+                    width="18"
+                    height="18"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  >
+                    <path d="M6 9l6 6 6-6" /></svg
+                ></span>
+              </div>
+            </div>
+            <div class="faq-item">
+              <div class="faq-q">
+                <span class="q">Is my data private?</span>
+                <span class="chev"
+                  ><svg
+                    width="18"
+                    height="18"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  >
+                    <path d="M6 9l6 6 6-6" /></svg
+                ></span>
+              </div>
+            </div>
+          </div>
+
+          <div class="doc-actions">
+            <button class="btn-primary">Contact Support</button>
+            <button class="btn-outline">Submit Feedback</button>
+          </div>
+        </main>
+        <div class="safe-bottom"><span class="home-indicator"></span></div>
+      </div>
+      <figcaption>B — Searchable FAQ</figcaption>
+    </figure>
+    <figure class="plate">
+      <div class="frame">
+        <div class="safe-top">
+          <div class="statusbar" aria-hidden="true">
+            <span class="clock">9:41</span>
+            <span class="indicators">
+              <svg width="18" height="12" viewBox="0 0 18 12">
+                <rect x="0" y="8.5" width="3" height="3.5" rx="1" />
+                <rect x="5" y="6" width="3" height="6" rx="1" />
+                <rect x="10" y="3" width="3" height="9" rx="1" />
+                <rect x="15" y="0" width="3" height="12" rx="1" />
+              </svg>
+              <svg
+                width="16"
+                height="12"
+                viewBox="0 0 16 12"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.6"
+                stroke-linecap="round"
+              >
+                <path d="M1.2 4.4a10 10 0 0 1 13.6 0" />
+                <path d="M4 7.3a6 6 0 0 1 8 0" />
+                <circle cx="8" cy="10.4" r="1" fill="currentColor" stroke="none" />
+              </svg>
+              <svg width="25" height="12" viewBox="0 0 25 12">
+                <rect
+                  x="0.5"
+                  y="0.5"
+                  width="21"
+                  height="11"
+                  rx="3.2"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-opacity="0.4"
+                />
+                <rect x="2.2" y="2.2" width="14" height="7.6" rx="1.8" />
+                <rect x="22.6" y="4.2" width="1.9" height="3.6" rx="0.95" opacity="0.4" />
+              </svg>
+            </span>
+          </div>
+        </div>
+        <header class="header">
+          <button class="icon-target at-start" aria-label="Go back">
+            <svg
+              viewBox="0 0 11 20"
+              width="11"
+              height="20"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.75"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <path d="M9.5 1.5L1.5 10l8 8.5" />
+            </svg>
+          </button>
+          <h1 class="title">What We Collect</h1>
+          <span></span>
+        </header>
+        <main class="body doc-body">
+          <p class="doc-sub">
+            This is a summary of the data Cardì collects when you have an account. Guest users have
+            no cloud data &mdash; everything stays on device.
+          </p>
+
+          <div class="tbl">
+            <div class="tbl-head">
+              <span style="flex: 0 0 40%">Category</span><span>Data Collected</span>
+            </div>
+            <div class="tbl-row">
+              <span class="col-cat">Account</span><span class="col-data">Email address</span>
+            </div>
+            <div class="tbl-row">
+              <span class="col-cat">Cards</span
+              ><span class="col-data">Card names, barcodes, timestamps</span>
+            </div>
+            <div class="tbl-row">
+              <span class="col-cat">App</span
+              ><span class="col-data">App version, locale (for catalogue)</span>
+            </div>
+            <div class="tbl-row">
+              <span class="col-cat">Location</span><span class="col-data">Not collected</span>
+            </div>
+            <div class="tbl-row">
+              <span class="col-cat">Contacts</span><span class="col-data">Not collected</span>
+            </div>
+          </div>
+
+          <div class="doc-link">
+            <svg
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.7"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <path d="M12 3v12" />
+              <path d="M7 11l5 5 5-5" />
+              <path d="M4 20h16" />
+            </svg>
+            Download my data
+          </div>
+          <p class="doc-note">A copy of your data will be compiled and prepared for download.</p>
+        </main>
+        <div class="safe-bottom"><span class="home-indicator"></span></div>
+      </div>
+      <figcaption>C — Two-column table</figcaption>
+    </figure>
+  </body>
+</html>

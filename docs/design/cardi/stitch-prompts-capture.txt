@@ -1,0 +1,489 @@
+CARDÌ — THE CAPTURE PATTERN, FIVE FRAMES
+========================================
+
+How a card gets into the wallet. Two screens: you choose the brand, then you point the camera
+at its barcode. This is the only pattern in the app that is a CAMERA rather than a layout, and
+it is the only one where the design system contradicts itself — productively.
+
+  A. CHOOSE     — the searchable brand list. The way in.
+  B. AIM        — the viewfinder, camera live, brand known. The exemplar.
+  C. NO CAMERA  — permission refused. The one dark screen that goes cream.
+  D. MANY CODES — an imported image held more than one barcode.
+  E. NO CODE    — an imported image held none.
+
+Every prompt below is LITERALLY STANDALONE: it repeats the chrome and the content in full and
+refers to nothing outside its delimiters. Paste one whole block. Write every correction as a
+NUMBERED DEFECT.
+
+  > The rule the hard way: a prompt may not refer to another frame OR to a shared preamble.
+  > "Apply the COMMON CHROME above" does not survive a clipboard — it cost three card-detail
+  > frames, which each invented a different screen. Divergence in DIFFERENT directions is the
+  > signature of a dangling reference; divergence in the SAME direction is a bad instruction.
+
+Screen source of truth: app/add-card/index.tsx → features/add-card/screens/
+CardTypeSelectionScreen.tsx (with BrandSearchBar, BrandList, BrandRow, BrandPill, OtherCardRow,
+useBrandSearch); app/add-card/scan.tsx → BrandScannerScreen.tsx (with ScannerOverlay,
+FloatingBackButton, NoCodeFoundBanner, MultiCodePickerSheet, useImageScan, and the shared
+useBarcodeScanner from features/cards/hooks). Strings in shared/i18n/locales/en.ts under
+`addCard`.
+
+
+-------------------------------------------------------------------------------
+WHAT READING THE CODE TURNED UP
+-------------------------------------------------------------------------------
+
+1. THERE IS ONE VIEWFINDER, NOT TWO. The plan carried `scan` and `add-card/scan` as "two
+   viewfinders to unify". `app/scan.tsx` is a bare `<Redirect>` to `/add-card/scan` — a legacy
+   bridge from the old entrypoint, still reached from `CatalogueGrid`. There is nothing to
+   unify. Half of this work item did not exist.
+
+2. THE SCAN IS BRAND-FIRST, SO THERE IS NO "BRAND NOT FOUND". This was expected to be the
+   interesting fork — scan a code, look it up, and design the moment it is not among the 45
+   catalogue brands. It cannot happen. You pick the brand from a searchable list and *then*
+   scan; `BrandScannerScreen` receives `brandId` and shows a `BrandPill`, and the catalogue is
+   consulted before the camera opens, never after. The custom-card path is a **list row**
+   ("Other card"), which routes into the very same scanner with `mode: 'custom'`.
+
+   So the door into a custom card is already built. It is just not where anyone looked for it.
+
+3. THE REAL JUNCTION IS NO CODE / ONE CODE / MANY CODES, PLUS NO CAMERA. Five states live on
+   the scanner screen, not two: camera ready; permission denied; camera mount error; an
+   imported image being decoded; that image failing (`NoCodeFoundBanner`, with **three**
+   distinct reasons — `notFound`, `scanFailed`, `pickerFailed`); and that image yielding
+   several codes (`MultiCodePickerSheet`, up to six rows).
+
+4. THE DESIGN SYSTEM CONTRADICTS ITSELF HERE, AND IT RESOLVES CLEANLY.
+   `stitch-prompts-barcode.txt` forbids, by name: "a frame, a corner marker, a viewfinder
+   bracket". `ScannerOverlay` draws white corner brackets AND an animated scan line over a live
+   camera. Both are correct.
+
+   That rule governs the barcode you are **displaying** — your own card, held up to a scanner,
+   where anything on top of the bars costs you a read. This screen is the barcode you are
+   **reading** — someone else's code, through a lens, where the overlay IS the affordance that
+   tells the person where to aim. **Same mark, opposite verdict, decided by which way the light
+   is travelling.** Nothing needs weakening; the rule needed a direction.
+
+5. AND THIS IS THE ONE SCREEN WHERE BEAM IS MANDATORY RATHER THAN BANNED. The scan line is
+   `theme.primary`, which the design asset resolves to `#000000` — a 2px near-black line, over a
+   camera feed, under a 40% black scrim. Effectively invisible, and nobody would notice because
+   the screen still works.
+
+   Meanwhile the brand's entire ornament is, in the design system's own words, "a **scan beam**
+   passing over a barcode", and the barcode-display spec banned beam from that screen with the
+   line "the real beam comes from the scanner at the till". **On this screen we ARE the
+   scanner.** The beam is ours to draw, at `#FCCC0C`, exactly here and nowhere else. The
+   identity's central metaphor has precisely one screen where it is literal.
+
+6. THE VIEWFINDER IS A SQUARE AND WHAT IT FRAMES IS NOT. `viewfinderSize = screenWidth * 0.7`
+   is used as both width and height — a ~275px square. An EAN-13 is roughly 95 : 20. A QR is
+   1 : 1. And the screen **already knows which to expect**: `expectedFormat={brand?.defaultFormat}`
+   is threaded from the catalogue into the overlay and on into the scanner hook.
+
+   So the brackets can match the code — wide and short for a linear format, square for QR. A
+   square bracket around a linear barcode teaches the wrong gesture: people centre the code in
+   the box and end up standing too far back, which is the one failure mode a viewfinder exists
+   to prevent.
+
+7. THE FAILURE STATES LEAVE THE DARK, AND THAT IS RIGHT. Permission-denied and camera-error
+   render on `theme.background` — cream — with ordinary cream-page furniture, while the live
+   screen is `#000000`. It looks like an inconsistency and is not. It is the same logic as the
+   card-detail header: **the dark ground exists to serve the camera. No camera, no dark.**
+   Ratified, not changed.
+
+8. CREAM, NOT WHITE, FOR TEXT ON THE DARK. Every glyph over the camera is `#FFFFFF`. The design
+   system's dark mode specifies body text as cream `#F0F0E8`. Over a live feed under a scrim,
+   cream reads warmer and matches the rest of the app. The corner brackets stay pure white —
+   they are a mark, not text.
+
+9. THE TEXT SHADOW STAYS. `textShadowColor: 'rgba(0,0,0,0.75)'` on the instruction line. The
+   system forbids shadows everywhere. This one is legibility over a background nobody controls,
+   not decoration — the same class of exception as the barcode's quiet zone, where the space is
+   an input to the scanner rather than a margin. **Ratified explicitly so it stops reading as
+   drift.** It applies only to type set directly on the camera feed.
+
+10. `theme.warning` AGAIN — THIRD SIGHTING. `NoCodeFoundBanner` puts `warning-amber` at
+    `theme.warning` beside its message. The same off-palette amber already replaced on the
+    wallet tile and the favourite star. Here the honest fix is to **delete the icon**: the
+    banner is already a dark plate carrying a sentence, and a 20px amber triangle on it is
+    decoration doing no work.
+
+11. THE BANNER'S ACTION LINKS ARE INVISIBLE FOR THE SAME REASON AS THE SCAN LINE. Both links
+    are `theme.primary` on a `rgba(0,0,0,0.80)` plate — near-black on near-black. They become
+    beam `#FCCC0C`, which on this screen is already established as the interaction colour.
+
+12. 48px MaterialIcons STANDING IN FOR ILLUSTRATIONS. `no-photography` and `error-outline` at
+    48px on the two failure screens. The system has no icon at that size — icons are 24px on a
+    48px target — so a 48px glyph is an illustration placeholder, the same note the wallet
+    `EmptyState` was pulled up for. Left as a plain icon here; illustrations are Wave B.
+
+13. MARGINS DRIFT, THIRD SIGHTING. `bottomActions` and `centeredContent` are both
+    `paddingHorizontal: 24`. Joins `CardForm` 32 and settings 24. The resolved rule is 16 for
+    the derived grid, 20 for everything else.
+
+14. THE BRAND PILL IS POSITIONED OFF THE BACK BUTTON, NOT THE GRID.
+    `insets.top + SPACING.sm + TOUCH_TARGET.min + SPACING.md` — four values added at the call
+    site. It lands at a sane place today and will drift the moment any one of them moves.
+
+
+-------------------------------------------------------------------------------
+PROMPT A — CHOOSE  (the searchable brand list)
+-------------------------------------------------------------------------------
+=========== PASTE EVERYTHING BETWEEN THIS LINE AND "END OF PROMPT A" ===========
+
+Design ONE mobile screen at 393x852, light mode: the "Add Card" screen for Cardì, a loyalty
+card wallet. It is a searchable LIST of shop brands — the first step of adding a card.
+
+GROUND: cream #F0F0E8 for the whole page.
+
+SYSTEM INSETS: 59px top carrying the iOS status bar — "9:41" at the left in Inter 15px
+semibold, then signal, wifi and battery icons at the right, all in ink #181824. 34px bottom on
+cream carrying a 140 x 5 fully-rounded pill in ink #181824 at 85% opacity, centred.
+
+HEADER: 48px tall, flat, no drop shadow and no hairline. A back chevron at the left on a 48x48
+target in ink #181824, the title "Add Card" centred in Inter 17px semibold ink #181824, and
+nothing at the right.
+
+MARGINS: 24px left and right for everything.
+
+1. THE SEARCH FIELD, directly under the header with 16px above it: full width between the
+   margins, 48px tall, white #FFFFFF, 12px radius, a 1px #D6D6CB outline, holding a 20px
+   magnifier glyph in muted #55555F at the left and the placeholder "Search by name" in Inter
+   15px muted #55555F. No fill tint, no shadow, no inner glow.
+
+2. "POPULAR CARDS" 24px below the field, in Inter 12px semibold uppercase, letter-spacing
+   0.05em, muted #55555F.
+
+3. A white #FFFFFF card, 16px radius, 1px #D6D6CB outline, no shadow, holding FOUR
+   hairline-divided rows. Each row is 64px tall and contains, left to right: a 40px
+   FULLY-ROUND tile filled with that shop's own brand colour, carrying the shop's initial in
+   Inter 15px semibold in ink #181824 or white #FFFFFF, whichever reads on that colour; then
+   the shop name in Inter 17px ink #181824; then a chevron-right in muted #55555F at the far
+   right. The four rows, with these exact fills:
+       Esselunga  — #FFCC00, initial in ink #181824
+       Conad      — #E2231A, initial in white #FFFFFF
+       Coop       — #0C84CC, initial in white #FFFFFF
+       Lidl       — #0050AA, initial in white #FFFFFF
+
+4. "ALL CARDS" 24px below that card, same style as the other section label.
+
+5. A second white card, same treatment, holding THREE hairline-divided rows in the same shape:
+       Carrefour  — #004E9F, initial in white #FFFFFF
+       Decathlon  — #0082C3, initial in white #FFFFFF
+       IKEA       — #0058A3, initial in white #FFFFFF
+   This card is cut off by the bottom of the screen — the list scrolls, so the last row is
+   partly visible rather than neatly ending. Do not shrink the rows to make everything fit.
+
+6. Above the bottom inset, pinned nowhere and simply the last item in the list, a white card
+   holding ONE 64px row: a 40px fully-round tile in cream #F0F0E8 with a 1px #D6D6CB outline
+   carrying a "+" in ink #181824; then "Other card" in Inter 17px ink #181824 with "Add a
+   custom loyalty card" beneath it in Inter 13px muted #55555F; then a chevron-right. If this
+   does not fit above the fold, leave it off the frame entirely rather than compressing the
+   list.
+
+COLOURS ARE LITERAL HEXES, NEVER TOKENS. Write #181824, #FCCC0C, #F0F0E8, #FFFFFF,
+#D6D6CB, #55555F and #C41E1E exactly as written. Do NOT reach for a semantic colour name
+instead — not `primary`, not `on-surface`, not `on-background`, not `surface`, not `outline`,
+not `outline-variant`, and not a Tailwind utility built on one such as text-primary,
+bg-primary, border-primary or border-outline-variant. In this project's theme `primary`
+resolves to #000000 and `on-surface` to #1a1c18, so a screen assembled out of tokens comes
+out in two wrong near-blacks that look almost right and are not. A literal hex survives; a
+token does not.
+
+FORBIDDEN: bottom tab bars, floating action buttons, drop shadows, gradients, glassmorphism,
+illustrations, a device bezel or phone frame around the screen, and
+coral/salmon/terracotta/orange. Beam #FCCC0C appears NOWHERE on this screen.
+
+TONE
+The forty-five brand colours are the content of this app, and this is the screen where the most
+of them are visible at once. Our furniture — cream, white cards, hairlines, ink type — stays
+completely quiet so those seven circles carry the whole page.
+
+=============================== END OF PROMPT A ===============================
+
+-------------------------------------------------------------------------------
+PROMPT B — AIM  (the viewfinder; the exemplar)
+-------------------------------------------------------------------------------
+=========== PASTE EVERYTHING BETWEEN THIS LINE AND "END OF PROMPT B" ===========
+
+Design ONE mobile screen at 393x852: the barcode scanner for Cardì, a loyalty card wallet. The
+camera is live and the person is about to scan an Esselunga loyalty card. The whole screen is a
+camera feed with controls floating on it.
+
+GROUND: the entire frame is a live camera photograph, edge to edge, behind everything including
+both system insets. Show what the camera would actually see: a neutral dark grey desk surface,
+and lying on it at a slight angle a white loyalty card carrying a black EAN-13 barcode. Over
+that photograph lay a flat black scrim at 40% opacity across the whole frame, so the controls
+stay legible. No gradient, no vignette, no blur.
+
+SYSTEM INSETS: 59px top carrying the iOS status bar — "9:41" at the left in Inter 15px
+semibold, then signal, wifi and battery icons at the right, all in cream #F0F0E8 because the
+ground is dark. 34px bottom carrying a 140 x 5 fully-rounded pill in cream #F0F0E8 at 85%
+opacity, centred.
+
+MARGINS: 24px left and right.
+
+1. THE BACK CONTROL floats — there is no header bar, no title and no navigation chrome of any
+   kind. A single 40px fully-round button at the top left, 24px in from the edge and 8px below
+   the status bar, filled rgba(0, 0, 0, 0.4), carrying a back chevron in cream #F0F0E8. No
+   label.
+
+2. THE BRAND PILL, centred horizontally, 16px below the back button: a fully-round pill filled
+   #FFCC00 — Esselunga's own colour — holding a 24px round white #FFFFFF dot at the left with
+   the letter "E" in ink #181824, then "Esselunga" in Inter 15px semibold ink #181824. Padded
+   6px top and bottom, 12px left and right. This tells the person which card they are scanning;
+   the brand was chosen on the previous screen, so it is stated, never asked.
+
+3. THE VIEWFINDER, centred in the frame and framing the barcode on the card: four WHITE #FFFFFF
+   corner brackets, each 32px long with a 4px stroke and a 12px outer radius, marking the
+   corners of a rectangle 300 wide by 120 tall. Only the corners are drawn — there is NO full
+   rectangle, no complete border, no rounded box and no dimmed cut-out mask. The rectangle is
+   WIDE, not square, because a linear EAN-13 barcode is wide; do not draw a square viewfinder.
+
+4. THE SCAN BEAM: a single horizontal line spanning the inside of that rectangle, 2px tall,
+   fully rounded, filled beam #FCCC0C, sitting a little above the vertical centre as though
+   sweeping down. This is the one screen in the whole app where this yellow line is correct —
+   draw it at exactly #FCCC0C and do not dim, tint or desaturate it, and do not add a glow, a
+   gradient trail, a blur or a second line.
+
+5. THE INSTRUCTION "Point camera at barcode" centred 16px below the viewfinder, in Inter 15px
+   medium cream #F0F0E8, carrying a soft dark text shadow so it stays readable against whatever
+   the camera happens to be pointing at.
+
+6. THE BOTTOM ACTIONS, sitting directly above the bottom inset, full width between the 24px
+   margins, as two rows each 48px tall separated by a 1px rgba(255,255,255,0.25) divider. Each
+   row is: a 24px outline glyph at the left in cream #F0F0E8, the label in Inter 16px medium
+   cream #F0F0E8, and a chevron-right at the far right in cream #F0F0E8.
+       an image glyph  — "Scan from image"
+       a keyboard glyph — "Enter card number manually"
+   These are plain rows on the camera feed. No filled buttons, no pills, no card, no panel and
+   no plate behind them.
+
+COLOURS ARE LITERAL HEXES, NEVER TOKENS. Write #181824, #FCCC0C, #F0F0E8, #FFFFFF,
+#D6D6CB, #55555F and #C41E1E exactly as written. Do NOT reach for a semantic colour name
+instead — not `primary`, not `on-surface`, not `on-background`, not `surface`, not `outline`,
+not `outline-variant`, and not a Tailwind utility built on one such as text-primary,
+bg-primary, border-primary or border-outline-variant. In this project's theme `primary`
+resolves to #000000 and `on-surface` to #1a1c18, so a screen assembled out of tokens comes
+out in two wrong near-blacks that look almost right and are not. A literal hex survives; a
+token does not.
+
+FORBIDDEN: bottom tab bars, floating action buttons, gradients, glassmorphism, illustrations, a
+device bezel or phone frame around the screen, coral/salmon/terracotta/orange, a torch or flash
+button, a gallery thumbnail, a zoom control, a format selector, a camera-flip button, a
+progress ring, a shutter button, and any drop shadow other than the text shadow named in point
+5. Nothing may cover the barcode inside the viewfinder except the 2px beam.
+
+TONE
+Everything here floats on someone else's world. Our job is to say which card we are looking for,
+draw the smallest possible mark showing where to point, and get out of the light. The beam is
+the only colour we spend, and we spend it because on this screen the app IS the scanner.
+
+=============================== END OF PROMPT B ===============================
+
+-------------------------------------------------------------------------------
+PROMPT C — NO CAMERA  (permission refused)
+-------------------------------------------------------------------------------
+=========== PASTE EVERYTHING BETWEEN THIS LINE AND "END OF PROMPT C" ===========
+
+Design ONE mobile screen at 393x852, light mode: the barcode scanner screen of Cardì, a loyalty
+card wallet, when the person has refused camera access. There is no camera feed, so there is
+nothing dark on this screen.
+
+GROUND: cream #F0F0E8 across the ENTIRE frame, both system insets included. Not black, not a
+dark camera screen, not a dimmed overlay: the camera is gone, so the darkness that served it is
+gone with it.
+
+SYSTEM INSETS: 59px top carrying the iOS status bar — "9:41" at the left in Inter 15px
+semibold, then signal, wifi and battery icons at the right, all in ink #181824. 34px bottom on
+cream carrying a 140 x 5 fully-rounded pill in ink #181824 at 85% opacity, centred.
+
+MARGINS: 24px left and right.
+
+1. THE BACK CONTROL floats — no header bar, no title, no navigation chrome. A single 40px
+   fully-round button at the top left, 24px in from the edge and 8px below the status bar,
+   filled white #FFFFFF with a 1px #D6D6CB outline, carrying a back chevron in ink #181824.
+
+2. Centred as a group on the vertical axis of the frame, and centred horizontally:
+   a 48px outline camera-with-a-slash-through-it glyph in muted #55555F. A plain line icon —
+   not an illustration, not a scene, not a character, not a filled shape.
+
+3. 16px beneath it, "Camera Access Needed" in Inter 20px semibold ink #181824, centred.
+
+4. 8px beneath that, in Inter 15px muted #55555F, centred, on two lines exactly as broken here:
+       "Camera access is needed to scan barcodes."
+       "You can enable it in Settings, or enter the barcode manually."
+
+5. 24px beneath that, two full-width stacked buttons with 12px between them:
+       "Open Settings" — a 52px tall button filled ink #181824, 12px radius, with the label in
+       Inter 17px semibold white #FFFFFF;
+       "Enter card number manually" — a 52px tall button with NO fill, a 1px ink #181824
+       outline, 12px radius, and the label in Inter 17px semibold ink #181824.
+
+Nothing else on the screen. No viewfinder, no brackets, no beam, no brand pill, no barcode, no
+bottom rows, no illustration and no yellow anywhere.
+
+COLOURS ARE LITERAL HEXES, NEVER TOKENS. Write #181824, #FCCC0C, #F0F0E8, #FFFFFF,
+#D6D6CB, #55555F and #C41E1E exactly as written. Do NOT reach for a semantic colour name
+instead — not `primary`, not `on-surface`, not `on-background`, not `surface`, not `outline`,
+not `outline-variant`, and not a Tailwind utility built on one such as text-primary,
+bg-primary, border-primary or border-outline-variant. In this project's theme `primary`
+resolves to #000000 and `on-surface` to #1a1c18, so a screen assembled out of tokens comes
+out in two wrong near-blacks that look almost right and are not. A literal hex survives; a
+token does not.
+
+FORBIDDEN: bottom tab bars, floating action buttons, drop shadows, gradients, glassmorphism,
+illustrations, a device bezel or phone frame around the screen, and
+coral/salmon/terracotta/orange.
+
+TONE
+A refused permission is not an error and must not be dressed as one — no red, no warning
+triangle, no alarm. The person made a choice; this screen states what that choice costs, offers
+the two ways forward, and stays as calm as the settings screen it resembles.
+
+=============================== END OF PROMPT C ===============================
+
+-------------------------------------------------------------------------------
+PROMPT D — MANY CODES  (an imported image held more than one)
+-------------------------------------------------------------------------------
+=========== PASTE EVERYTHING BETWEEN THIS LINE AND "END OF PROMPT D" ===========
+
+Design ONE mobile screen at 393x852: the barcode scanner of Cardì, a loyalty card wallet, at
+the moment a photo the person imported turned out to contain several barcodes and they must say
+which one is their loyalty card. A bottom sheet is open over the live camera screen.
+
+BEHIND THE SHEET, dimmed: the entire frame is a live camera photograph edge to edge — a neutral
+dark grey desk with a white loyalty card lying on it — under a flat black scrim at 40% opacity,
+and then dimmed FURTHER to 60% black overall because a sheet is open in front of it. Blurred is
+wrong; it is dimmed, not defocused. Faintly visible through that dimming, in the upper half:
+a small round back button at the top left and a #FFCC00 pill reading "Esselunga". No viewfinder
+brackets and no beam are visible while the sheet is up.
+
+SYSTEM INSETS: 59px top carrying the iOS status bar — "9:41" at the left in Inter 15px
+semibold, then signal, wifi and battery icons at the right, all in cream #F0F0E8. The bottom
+inset is covered by the sheet; the sheet itself carries the 140 x 5 fully-rounded pill in ink
+#181824 at 85% opacity, centred in a 34px band at its foot.
+
+THE SHEET, anchored to the bottom edge and about 460px tall: white #FFFFFF, with a 16px radius
+on its TOP two corners only and square bottom corners, no shadow and no outline. Inside it,
+with 24px left and right margins:
+
+1. A 36 x 4 fully-rounded grab handle in #D6D6CB, centred, 12px below the sheet's top edge.
+
+2. "Multiple barcodes found" in Space Grotesk 20px bold ink #181824, centred, 20px below the
+   handle.
+
+3. "Tap the one that matches your loyalty card" in Inter 15px muted #55555F, centred, 4px
+   beneath the title.
+
+4. 20px below that, FOUR hairline-divided rows, each 64px tall, each containing left to right:
+   a 40 x 24 miniature barcode drawn as true black #000000 vertical bars on white #FFFFFF; then
+   two stacked lines — the digits in JetBrains Mono 15px ink #181824 above, and the format name
+   in Inter 13px muted #55555F below; then nothing at the right. The four rows:
+       2000 0123 4567 8   /  EAN-13
+       4 006381 333931    /  EAN-13
+       9 780201 379624    /  EAN-13
+       A square QR glyph instead of the bar strip, with  HTTPS://ESSELUNGA.IT  /  QR Code
+   The rows are inside the sheet directly, on white, divided by 1px #D6D6CB hairlines — not
+   nested in a second card.
+
+5. Beneath the last row, "Cancel" centred in Inter 17px ink #181824 on a 48px tall row. Plain
+   text: no fill, no outline, no icon.
+
+COLOURS ARE LITERAL HEXES, NEVER TOKENS. Write #181824, #FCCC0C, #F0F0E8, #FFFFFF,
+#D6D6CB, #55555F and #C41E1E exactly as written. Do NOT reach for a semantic colour name
+instead — not `primary`, not `on-surface`, not `on-background`, not `surface`, not `outline`,
+not `outline-variant`, and not a Tailwind utility built on one such as text-primary,
+bg-primary, border-primary or border-outline-variant. In this project's theme `primary`
+resolves to #000000 and `on-surface` to #1a1c18, so a screen assembled out of tokens comes
+out in two wrong near-blacks that look almost right and are not. A literal hex survives; a
+token does not.
+
+FORBIDDEN: bottom tab bars, floating action buttons, drop shadows, gradients, glassmorphism,
+illustrations, a device bezel or phone frame around the screen,
+coral/salmon/terracotta/orange, checkboxes or radio buttons on the rows, a "select all", a
+thumbnail of the imported photo, and beam #FCCC0C anywhere on this frame — the beam belongs to
+the live viewfinder and the viewfinder is behind a sheet.
+
+TONE
+The app found four codes and has no way to know which is the loyalty card, so it asks plainly
+and shows enough of each code — the bars, the digits, the format — that the person can tell them
+apart at a glance. It does not guess, and it does not rank.
+
+=============================== END OF PROMPT D ===============================
+
+-------------------------------------------------------------------------------
+PROMPT E — NO CODE  (an imported image held none)
+-------------------------------------------------------------------------------
+=========== PASTE EVERYTHING BETWEEN THIS LINE AND "END OF PROMPT E" ===========
+
+Design ONE mobile screen at 393x852: the barcode scanner of Cardì, a loyalty card wallet, just
+after a photo the person imported turned out to have no readable barcode in it. The camera is
+still live underneath and a small dark banner has appeared low on the screen.
+
+GROUND: the entire frame is a live camera photograph, edge to edge, behind everything including
+both system insets — a neutral dark grey desk surface with a white loyalty card lying on it at a
+slight angle carrying a black EAN-13 barcode — under a flat black scrim at 40% opacity. No
+gradient, no vignette, no blur, and no extra dimming: nothing is modal here.
+
+SYSTEM INSETS: 59px top carrying the iOS status bar — "9:41" at the left in Inter 15px
+semibold, then signal, wifi and battery icons at the right, all in cream #F0F0E8. 34px bottom
+carrying a 140 x 5 fully-rounded pill in cream #F0F0E8 at 85% opacity, centred.
+
+MARGINS: 24px left and right.
+
+1. THE BACK CONTROL floats — no header bar, no title, no navigation chrome. A 40px fully-round
+   button at the top left, 24px in from the edge and 8px below the status bar, filled
+   rgba(0, 0, 0, 0.4), carrying a back chevron in cream #F0F0E8.
+
+2. THE BRAND PILL, centred horizontally 16px below the back button: a fully-round pill filled
+   #FFCC00 holding a 24px round white #FFFFFF dot with "E" in ink #181824, then "Esselunga" in
+   Inter 15px semibold ink #181824.
+
+3. THE VIEWFINDER, centred in the frame: four WHITE #FFFFFF corner brackets, each 32px long
+   with a 4px stroke and a 12px outer radius, marking a rectangle 300 wide by 120 tall — wide,
+   not square. Corners only: no full rectangle, no complete border, no cut-out mask. Inside it,
+   a single 2px fully-rounded horizontal line in beam #FCCC0C. The camera never stopped, so the
+   viewfinder and the beam are both still there.
+
+4. THE INSTRUCTION "Point camera at barcode" centred 16px below the viewfinder, in Inter 15px
+   medium cream #F0F0E8 with a soft dark text shadow.
+
+5. THE BANNER, sitting 96px above the bottom edge of the frame, full width between the 24px
+   margins: a plate filled rgba(0, 0, 0, 0.80) with a 12px radius, no outline and no shadow,
+   padded 16px all round. Inside it:
+       "We couldn't read a barcode in this image — try scanning the card itself" in Inter 15px
+       cream #F0F0E8, filling the width and wrapping onto two lines, with a 18px close ✕ in
+       rgba(255,255,255,0.6) at the top right of the plate;
+       then 8px lower, two text links side by side with 16px between them, both in Inter 13px
+       beam #FCCC0C: "Try another image" and "Enter it manually".
+   No icon of any kind in this banner — no warning triangle, no amber circle, no exclamation
+   mark, no red. The plate and the sentence are the whole message.
+
+6. THE BOTTOM ACTIONS, directly above the bottom inset and below the banner, full width between
+   the margins, as two rows each 48px tall separated by a 1px rgba(255,255,255,0.25) divider.
+   Each row is a 24px outline glyph at the left in cream #F0F0E8, the label in Inter 16px medium
+   cream #F0F0E8, and a chevron-right at the far right:
+       an image glyph  — "Scan from image"
+       a keyboard glyph — "Enter card number manually"
+
+COLOURS ARE LITERAL HEXES, NEVER TOKENS. Write #181824, #FCCC0C, #F0F0E8, #FFFFFF,
+#D6D6CB, #55555F and #C41E1E exactly as written. Do NOT reach for a semantic colour name
+instead — not `primary`, not `on-surface`, not `on-background`, not `surface`, not `outline`,
+not `outline-variant`, and not a Tailwind utility built on one such as text-primary,
+bg-primary, border-primary or border-outline-variant. In this project's theme `primary`
+resolves to #000000 and `on-surface` to #1a1c18, so a screen assembled out of tokens comes
+out in two wrong near-blacks that look almost right and are not. A literal hex survives; a
+token does not.
+
+FORBIDDEN: bottom tab bars, floating action buttons, gradients, glassmorphism, illustrations, a
+device bezel or phone frame around the screen, coral/salmon/terracotta/orange, a red or amber
+error colour anywhere, a full-screen error state, a modal dialog, a toast at the top of the
+screen, and any drop shadow other than the text shadow named in point 4.
+
+TONE
+The scan failed and almost nothing changed: the camera is still running, the beam is still
+sweeping, and the person can simply carry on pointing the phone. The banner says which thing
+went wrong, offers the two ways out, and will remove itself after a few seconds without being
+touched. A failure that stops the camera would cost more than the failure did.
+
+=============================== END OF PROMPT E ===============================

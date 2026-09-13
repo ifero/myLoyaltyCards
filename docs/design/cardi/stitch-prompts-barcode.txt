@@ -1,0 +1,186 @@
+CARDÌ — THE BARCODE SCREEN, THREE FRAMES
+========================================
+
+The hero moment. A person is at a checkout, someone is waiting behind them, and the right
+barcode must be on screen and scannable in under three seconds. This is the screen the whole
+product exists to serve, and it is the last one to be drawn.
+
+  A. EAN-13  — the exemplar
+  B. QR      — the square variant; same screen, different code geometry
+  C. NOT FOUND — the error state
+
+Every prompt is self-contained and repeats its own chrome in full. A prompt may NEVER refer to
+another frame. Write every correction as a NUMBERED DEFECT.
+
+Screen source of truth: features/cards/screens/BarcodeScreen.tsx, which delegates to
+features/cards/components/BarcodeFlash.tsx and BarcodeRenderer.tsx; strings in
+shared/i18n/locales/en.ts under `cards.flash`.
+
+
+-------------------------------------------------------------------------------
+WHAT READING THE CODE TURNED UP
+-------------------------------------------------------------------------------
+
+1. THE HARD PART IS ALREADY RIGHT, AND IT HAS BEEN TESTED. Pure white `#FFFFFF` field, true
+   black `#000000` bars, brightness maximised on mount and restored on unmount, the status
+   bar forced to dark-on-white so the screen renders light regardless of theme, and nothing
+   overlaying the code — the 200ms animation fades the whole container, never the bars.
+   `BarcodeFlash` is named for the use case (flash your card at the till), not a visual
+   effect. **Confirmed working at a real checkout by ifero, 2026-08-15.** Nothing in this
+   redesign may put that at risk.
+
+2. THE SHADOW AND THE RADIUS GO — BUT NOT BECAUSE THEY SCAN BADLY. `barcodeContainer` carries
+   `shadowColor: '#000'`, `shadowOpacity: 0.05`, `shadowRadius: 4`, `elevation: 2`, commented
+   "Subtle shadow for definition", plus `borderRadius: 8`. They were suspected of costing
+   contrast; the real-checkout test says otherwise, and the shadow renders outside the white
+   plate anyway. They are removed for two smaller and honest reasons: the system says no drop
+   shadows anywhere, and **a white plate on a white field needs no definition** — the shadow
+   is defining a boundary that carries no information. The barcode sits directly on the field.
+
+3. THE WHOLE SCREEN IS OFF-PALETTE. Every colour is from a Tailwind grey ramp, not this
+   system: card name and number `#1F2937`, hint `#9CA3AF`, error `#EF4444`, dismiss `#4B5563`.
+   None is visible as *wrong* on a white field at full brightness — that is exactly why it
+   survived every pass. It is corrected because **this is the screen the design system points
+   at when it claims to be real.** If the hero moment is not in the palette, the palette is
+   decoration.
+
+4. THIS IS THE ONE SCREEN THAT IS NOT CREAM. Every other frame in this system sits on cream
+   `#F0F0E8`. This one is pure white `#FFFFFF`, edge to edge, including both system insets.
+   That is not an inconsistency to fix — the white field IS the product feature.
+
+5. THE STORE NAME DOES NOT WEAR OUR DISPLAY FACE. It is set in Inter 20/700, not Space
+   Grotesk. Space Grotesk carries *our* personality; the text here is a third-party brand's
+   name, and dressing someone else's brand in our voice contradicts the thesis that the
+   content is the colour and our chrome stays quiet. Inter is the correct choice, and the
+   shipped code already does this — it is ratified, not changed.
+
+6. WIDTH IS CONSTRAINED, HEIGHT IS FREE — DO NOT SHRINK THE SIDE SPACE. The white space
+   either side of the bars is not a margin. It is the QUIET ZONE and it is part of the code:
+   EAN-13 needs roughly 10 blank modules on each side for a scanner to find where the code
+   begins and ends. At 314px across 95 modules the module is 3.31px and the surround is
+   39.5px — about 12 modules, over the minimum with margin to spare. The shipped
+   `Math.min(SCREEN_WIDTH * 0.8, 320)` therefore is not arbitrary; it lands almost exactly on
+   "as wide as possible while staying safe". The theoretical maximum at a 393 frame is ~325px,
+   an 11px gain bought by cutting the margin to exactly 10 modules. Not worth it.
+
+   **This is the opposite verdict from the 48px document margin, and the difference is why.**
+   There, the space was decoration and constrained a text column for no reason. Here the space
+   is an input to the scanner. Same measurement, opposite call, decided by whether anything
+   depends on it.
+
+   Height, by contrast, costs nothing and buys the thing that actually goes wrong: a tilted
+   phone. Taller bars let the beam cross at a steeper angle and still read a complete slice.
+   **The frames use 200px, up from the shipped 120px**, spending vertical space that was empty.
+
+7. THE HINT LINE STAYS. "Nothing else on this screen" was written against nav, chrome and
+   ads. "Tap anywhere to close" is the only affordance telling someone how to leave a modal
+   with no visible dismiss control; removing it would be obedience to the letter of the rule
+   at the cost of the person holding the phone.
+
+
+-------------------------------------------------------------------------------
+COMMON CHROME — true of all three frames
+-------------------------------------------------------------------------------
+
+GROUND: pure white #FFFFFF across the ENTIRE frame, both system insets included. Not cream,
+not #FAFAF2, not off-white. Exactly one background colour and it is #FFFFFF.
+
+SYSTEM INSETS: 59px top carrying the iOS status bar in ink #181824 — "9:41" left in Inter
+15px semibold; signal, wifi and battery icons right. 34px bottom carrying a 140 x 5
+fully-rounded pill in ink #181824 at 85% opacity, centred. Both sit on white.
+
+NO HEADER. There is no navigation bar, no back chevron, no title and no close button. The
+whole screen is the dismiss target.
+
+COLOURS ARE LITERAL HEXES, NEVER TOKENS. Write #181824, #FCCC0C, #F0F0E8, #FFFFFF,
+#D6D6CB, #55555F and #C41E1E exactly as written. Do NOT reach for a semantic colour name
+instead — not `primary`, not `on-surface`, not `on-background`, not `surface`, not `outline`,
+not `outline-variant`, and not a Tailwind utility built on one such as text-primary,
+bg-primary, border-primary or border-outline-variant. In this project's theme `primary`
+resolves to #000000 and `on-surface` to #1a1c18, so a screen assembled out of tokens comes
+out in two wrong near-blacks that look almost right and are not. A literal hex survives; a
+token does not.
+
+FORBIDDEN, and this screen is where it matters most: nothing may overlay the bars — no beam,
+no scan-line, no shimmer, no watermark, no logo, no gradient, no rounded mask cropping the
+code. No drop shadow anywhere, including under the barcode. No card, plate, panel, border or
+container around the code. The surround stays neutral — white here, never a saturated field.
+Beam #FCCC0C appears NOWHERE on this screen; the real beam comes from the scanner at the till.
+No bottom tab bar, no floating action button, no illustration.
+
+
+-------------------------------------------------------------------------------
+PROMPT A — EAN-13  (the exemplar)
+-------------------------------------------------------------------------------
+
+Design ONE mobile screen at 393x852: the full-screen barcode modal for Cardì, showing an
+EAN-13 barcode. Apply the COMMON CHROME above.
+
+Everything is centred on the vertical axis of the frame and centred as a group vertically.
+
+1. The store name "Esselunga" in Inter 20px bold, ink #181824, centred, with 24px beneath it.
+
+2. The barcode: an EAN-13 code, 314 wide x 200 tall, drawn as true black #000000 vertical
+   bars of varying widths directly on the white field. No container, no plate, no padding
+   box, no border, no radius, no shadow. The bars run to the full 200px height. Nothing
+   crosses them. Leave the white space either side of the bars alone — see finding 6.
+
+3. 16px beneath the barcode, the number "2000012345678" in JetBrains Mono 16px, ink #181824,
+   letter-spacing 1px, centred.
+
+4. 40px beneath that, the hint "Tap anywhere to close" in Inter 14px, muted #55555F, centred.
+
+Nothing else. No header, no buttons, no icons, no card, no brand logo, no yellow.
+
+TONE
+The app's job here is to hold up a perfect white field and get out of the way. Everything on
+this screen is either the code, the two labels that identify it, or the one line that says how
+to leave. At maximum brightness this should read as a piece of paper, not an interface.
+
+
+-------------------------------------------------------------------------------
+PROMPT B — QR  (the square variant)
+-------------------------------------------------------------------------------
+
+Design ONE mobile screen at 393x852: the full-screen barcode modal for Cardì, showing a QR
+code instead of a linear barcode. Apply the COMMON CHROME above.
+
+Identical composition to the linear version, with one difference: the code is a QR code,
+200 x 200, drawn as true black #000000 modules directly on the white field — no container,
+no plate, no border, no radius, no shadow, and no logo or icon in its centre.
+
+1. The store name "Farmacia Centrale" in Inter 20px bold, ink #181824, centred, 24px above
+   the code.
+
+2. The 200 x 200 QR code, centred.
+
+3. 16px beneath it, "2000012345678" in JetBrains Mono 16px, ink #181824, letter-spacing 1px.
+
+4. 40px beneath that, "Tap anywhere to close" in Inter 14px, muted #55555F, centred.
+
+A QR code is square and a linear barcode is wide; that is the only thing that changes between
+these two screens. Do not add a frame, a corner marker, a viewfinder bracket or a centred
+logo — every one of those is something drawn on top of a code.
+
+
+-------------------------------------------------------------------------------
+PROMPT C — CARD NOT FOUND  (the error state)
+-------------------------------------------------------------------------------
+
+Design ONE mobile screen at 393x852: the full-screen barcode modal for Cardì when the card
+cannot be loaded. Apply the COMMON CHROME above — including the pure white #FFFFFF ground,
+because this screen is still the barcode modal.
+
+Centred vertically and horizontally, with 24px side margins:
+
+1. The message "Card not found" in Inter 17px semibold, #C41E1E, centred.
+
+2. 32px beneath it, "Go back" in Inter 16px, ink #181824, centred — a text link, not a button.
+   No fill, no outline, no chevron.
+
+Nothing else. No icon, no warning triangle, no illustration, no sad face, no red background,
+no tinted panel. The white field stays white.
+
+TONE
+A missing card is a failure of ours, not a catastrophe. `#C41E1E` appears in exactly one place
+— the message — and nowhere else. The screen stays as quiet in failure as it is in success.

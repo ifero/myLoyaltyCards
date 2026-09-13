@@ -1,0 +1,318 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Cardì — the icon, six explorations</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@700&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      /* ==================================================================
+         Cardì — THE ICON, six explorations. A and B kept, four added.
+
+         A and B were the two ends of one axis — a tick that floats, or a
+         beam that crosses — so the additions are the points between them
+         (C, F) and the two ideas that leave the axis (D, E).
+
+         The THEMED cells decide this. Android 13+ redraws the icon in a
+         single wallpaper-derived colour, so anything distinguished only by
+         being yellow ceases to exist. E cannot fail that test by
+         construction: its beam is a GAP, and you cannot lose a gap by
+         removing colour.
+         ================================================================== */
+      :root {
+        --ink: #181824;
+        --beam: #FCCC0C;
+        --cream: #F0F0E8;
+        --white: #FFFFFF;
+        --muted: #55555F;
+        --rule: #D6D6CB;
+        /* Ink by default: the default context on this page is the wordmark in
+           live type on a light card. Icons override it. Setting white here
+           instead cost a bug once — the wordmark's stem is an <svg> filled
+           with var(--fg), so it rendered white on white and the ì lost its
+           stem. Same two-channel trap as a reversed lockup. */
+        --fg: var(--ink);
+        --ac: var(--beam);
+        --bgfill: var(--cream);
+      }
+      * { box-sizing: border-box; margin: 0; padding: 0; }
+      body {
+        background: var(--cream);
+        font-family: Inter, system-ui, sans-serif;
+        color: var(--ink);
+        padding: 40px 32px 64px;
+        line-height: 1.5;
+      }
+      h1 {
+        font-family: 'Space Grotesk', sans-serif;
+        font-weight: 700; font-size: 27px; letter-spacing: -0.02em;
+      }
+      h2 { font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 20px; }
+      h3 {
+        font-family: 'Space Grotesk', sans-serif; font-weight: 700;
+        font-size: 13px; letter-spacing: 0.04em; text-transform: uppercase;
+      }
+      header p { font-size: 15px; color: var(--muted); max-width: 78ch; margin-top: 8px; }
+      code {
+        font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 12px;
+        background: var(--white); border: 1px solid var(--rule);
+        border-radius: 4px; padding: 1px 5px;
+      }
+
+      .lockup {
+        margin-top: 20px; padding: 14px 20px; background: var(--white);
+        border: 1px solid var(--rule); border-radius: 10px;
+        display: flex; align-items: center; gap: 18px; flex-wrap: wrap;
+      }
+      .word {
+        font-family: 'Space Grotesk', sans-serif; font-weight: 700;
+        letter-spacing: -0.02em; color: var(--ink); font-size: 38px; white-space: nowrap;
+      }
+      .lockup .note { font-size: 14px; color: var(--muted); }
+
+      .v { padding: 28px 0; border-bottom: 1px solid var(--rule); }
+      .vhead { display: flex; align-items: center; gap: 16px; }
+      .vtext { flex: 1; }
+      .badge {
+        width: 32px; height: 32px; flex: 0 0 32px; border-radius: 50%;
+        background: var(--ink); color: var(--white);
+        font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 16px;
+        display: inline-flex; align-items: center; justify-content: center;
+      }
+      .sub { font-size: 14.5px; color: var(--muted); }
+
+      .grid { display: flex; flex-wrap: wrap; gap: 22px 26px; margin-top: 20px; align-items: flex-end; }
+      .c { display: flex; flex-direction: column; align-items: center; gap: 8px; }
+      .c em, .dc em {
+        font-style: normal; font-size: 10px; font-weight: 600;
+        letter-spacing: 0.05em; text-transform: uppercase; color: var(--muted);
+      }
+
+      /* Real crops: `overflow: hidden` is what makes D actually bleed. */
+      .ico {
+        display: inline-flex; align-items: center; justify-content: center;
+        background: var(--ink); overflow: hidden; flex: 0 0 auto;
+        --fg: var(--white);
+        --bgfill: var(--ink);
+      }
+      .ico-squircle { border-radius: 22.5%; }
+      .ico-circle { border-radius: 50%; }
+
+      .m { margin-top: 16px; font-size: 12.5px; color: var(--muted); }
+
+      .dock {
+        margin-top: 14px; padding: 20px 24px; border-radius: 14px;
+        background: linear-gradient(135deg, #6B7A8F 0%, #4A5568 55%, #3C4655 100%);
+        display: flex; gap: 18px; align-items: flex-start; flex-wrap: wrap;
+      }
+      .dc { display: flex; flex-direction: column; align-items: center; gap: 6px; }
+      .dc em { color: rgba(255, 255, 255, 0.88); }
+
+      .note-box {
+        margin-top: 32px; padding: 20px 24px; border-radius: 10px;
+        background: var(--ink); color: #DCDCE4; max-width: 86ch;
+      }
+      .note-box h3 { color: var(--beam); }
+      .note-box p { font-size: 14.5px; margin-top: 8px; }
+      .note-box strong { color: var(--white); }
+      .note-box p + p { margin-top: 12px; }
+    </style>
+  </head>
+  <body>
+    <header>
+      <h1>The icon — six explorations</h1>
+      <p>
+        A and B kept, four added. The two were the ends of one axis — a tick that floats, or a beam
+        that crosses — so these fill in between them (C, F) and step off it entirely (D, E). The
+        wordmark is unchanged in every case; only the square moves.
+      </p>
+      <div class="lockup">
+        <span class="word">Card<svg class="wglyph" viewBox="0 0 30 100" width="0.30em" height="1em" style="display:inline;vertical-align:-0.30em;overflow:visible" aria-hidden="true"><rect x="9.0" y="20.4" width="12" height="49.6" rx="6.0" fill="var(--fg)" /><rect x="3.00" y="6.00" width="24" height="9" rx="4.50" fill="var(--ac)" transform="rotate(35 15.0 10.5)" /></svg></span>
+        <span class="note">Settled: 35°, grave, contained. Not up for discussion here.</span>
+      </div>
+    </header>
+
+    <section class="v">
+      <div class="vhead">
+        <span class="badge">A</span>
+        <div class="vtext">
+          <h2>Accent</h2>
+          <p class="sub">The contained tick, unchanged from the word. One drawing serves both places.</p>
+        </div>
+        <span class="ico ico-squircle" style="width:88px;height:88px"><svg viewBox="-35.00 -15.03 100 100" width="88" height="88"><rect x="4.0" y="20.4" width="4.5" height="49.6" rx="2.2" fill="var(--fg)" /><rect x="10.5" y="20.4" width="9" height="49.6" rx="4.5" fill="var(--fg)" /><rect x="22.0" y="20.4" width="4" height="49.6" rx="2" fill="var(--fg)" /><rect x="3.00" y="6.00" width="24" height="9" rx="4.50" fill="var(--ac)" transform="rotate(35 15.0 10.5)" /></svg></span>
+      </div>
+      <div class="grid">
+        <div class="c"><em>60</em><span class="ico ico-squircle" style="width:60px;height:60px"><svg viewBox="-35.00 -15.03 100 100" width="60" height="60"><rect x="4.0" y="20.4" width="4.5" height="49.6" rx="2.2" fill="var(--fg)" /><rect x="10.5" y="20.4" width="9" height="49.6" rx="4.5" fill="var(--fg)" /><rect x="22.0" y="20.4" width="4" height="49.6" rx="2" fill="var(--fg)" /><rect x="3.00" y="6.00" width="24" height="9" rx="4.50" fill="var(--ac)" transform="rotate(35 15.0 10.5)" /></svg></span></div>
+        <div class="c"><em>30</em><span class="ico ico-squircle" style="width:30px;height:30px"><svg viewBox="-35.00 -15.03 100 100" width="30" height="30"><rect x="4.0" y="20.4" width="4.5" height="49.6" rx="2.2" fill="var(--fg)" /><rect x="10.5" y="20.4" width="9" height="49.6" rx="4.5" fill="var(--fg)" /><rect x="22.0" y="20.4" width="4" height="49.6" rx="2" fill="var(--fg)" /><rect x="3.00" y="6.00" width="24" height="9" rx="4.50" fill="var(--ac)" transform="rotate(35 15.0 10.5)" /></svg></span></div>
+        <div class="c"><em>16</em><span class="ico ico-squircle" style="width:16px;height:16px"><svg viewBox="-35.00 -15.03 100 100" width="16" height="16"><rect x="4.0" y="20.4" width="4.5" height="49.6" rx="2.2" fill="var(--fg)" /><rect x="10.5" y="20.4" width="9" height="49.6" rx="4.5" fill="var(--fg)" /><rect x="22.0" y="20.4" width="4" height="49.6" rx="2" fill="var(--fg)" /><rect x="3.00" y="6.00" width="24" height="9" rx="4.50" fill="var(--ac)" transform="rotate(35 15.0 10.5)" /></svg></span></div>
+        <div class="c"><em>android</em><span class="ico ico-circle" style="width:72px;height:72px"><svg viewBox="-35.00 -15.03 100 100" width="72" height="72"><g transform="translate(1.682 3.921) scale(0.8879)"><rect x="4.0" y="20.4" width="4.5" height="49.6" rx="2.2" fill="var(--fg)" /><rect x="10.5" y="20.4" width="9" height="49.6" rx="4.5" fill="var(--fg)" /><rect x="22.0" y="20.4" width="4" height="49.6" rx="2" fill="var(--fg)" /><rect x="3.00" y="6.00" width="24" height="9" rx="4.50" fill="var(--ac)" transform="rotate(35 15.0 10.5)" /></g></svg></span></div>
+        <div class="c"><em>themed light</em>
+          <span class="ico ico-circle" style="width:72px;height:72px;background:#DDE3EA;--fg:#2A3138;--ac:#2A3138;--bgfill:#DDE3EA"><svg viewBox="-35.00 -15.03 100 100" width="72" height="72"><g transform="translate(1.682 3.921) scale(0.8879)"><rect x="4.0" y="20.4" width="4.5" height="49.6" rx="2.2" fill="var(--fg)" /><rect x="10.5" y="20.4" width="9" height="49.6" rx="4.5" fill="var(--fg)" /><rect x="22.0" y="20.4" width="4" height="49.6" rx="2" fill="var(--fg)" /><rect x="3.00" y="6.00" width="24" height="9" rx="4.50" fill="var(--ac)" transform="rotate(35 15.0 10.5)" /></g></svg></span></div>
+        <div class="c"><em>themed dark</em>
+          <span class="ico ico-circle" style="width:72px;height:72px;background:#2A3138;--fg:#DDE3EA;--ac:#DDE3EA;--bgfill:#2A3138"><svg viewBox="-35.00 -15.03 100 100" width="72" height="72"><g transform="translate(1.682 3.921) scale(0.8879)"><rect x="4.0" y="20.4" width="4.5" height="49.6" rx="2.2" fill="var(--fg)" /><rect x="10.5" y="20.4" width="9" height="49.6" rx="4.5" fill="var(--fg)" /><rect x="22.0" y="20.4" width="4" height="49.6" rx="2" fill="var(--fg)" /><rect x="3.00" y="6.00" width="24" height="9" rx="4.50" fill="var(--ac)" transform="rotate(35 15.0 10.5)" /></g></svg></span></div>
+        <div class="c"><em>safe zone</em><span class="ico ico-squircle" style="width:72px;height:72px"><svg viewBox="-35.00 -15.03 100 100" width="72" height="72"><rect x="4.0" y="20.4" width="4.5" height="49.6" rx="2.2" fill="var(--fg)" /><rect x="10.5" y="20.4" width="9" height="49.6" rx="4.5" fill="var(--fg)" /><rect x="22.0" y="20.4" width="4" height="49.6" rx="2" fill="var(--fg)" /><rect x="3.00" y="6.00" width="24" height="9" rx="4.50" fill="var(--ac)" transform="rotate(35 15.0 10.5)" /><circle cx="15.00" cy="34.97" r="33.0" fill="none" stroke="#C41E1E" stroke-width="1.1" stroke-dasharray="4 3" opacity="0.85" /></svg></span></div>
+      </div>
+      <p class="m">beam <code>24 × 9</code> at <code>cy 10.5</code>
+         ·
+        bounding radius <code>37.17</code> ·
+        android scale <code>×0.888</code></p>
+    </section>
+    <section class="v">
+      <div class="vhead">
+        <span class="badge">B</span>
+        <div class="vtext">
+          <h2>Beam</h2>
+          <p class="sub">A 52-unit beam through the middle of the bars — the system's sentence, drawn.</p>
+        </div>
+        <span class="ico ico-squircle" style="width:88px;height:88px"><svg viewBox="-35.00 -4.80 100 100" width="88" height="88"><rect x="4.0" y="20.4" width="4.5" height="49.6" rx="2.2" fill="var(--fg)" /><rect x="10.5" y="20.4" width="9" height="49.6" rx="4.5" fill="var(--fg)" /><rect x="22.0" y="20.4" width="4" height="49.6" rx="2" fill="var(--fg)" /><rect x="-11.00" y="39.50" width="52" height="9" rx="4.50" fill="var(--ac)" transform="rotate(35 15.0 44.0)" /></svg></span>
+      </div>
+      <div class="grid">
+        <div class="c"><em>60</em><span class="ico ico-squircle" style="width:60px;height:60px"><svg viewBox="-35.00 -4.80 100 100" width="60" height="60"><rect x="4.0" y="20.4" width="4.5" height="49.6" rx="2.2" fill="var(--fg)" /><rect x="10.5" y="20.4" width="9" height="49.6" rx="4.5" fill="var(--fg)" /><rect x="22.0" y="20.4" width="4" height="49.6" rx="2" fill="var(--fg)" /><rect x="-11.00" y="39.50" width="52" height="9" rx="4.50" fill="var(--ac)" transform="rotate(35 15.0 44.0)" /></svg></span></div>
+        <div class="c"><em>30</em><span class="ico ico-squircle" style="width:30px;height:30px"><svg viewBox="-35.00 -4.80 100 100" width="30" height="30"><rect x="4.0" y="20.4" width="4.5" height="49.6" rx="2.2" fill="var(--fg)" /><rect x="10.5" y="20.4" width="9" height="49.6" rx="4.5" fill="var(--fg)" /><rect x="22.0" y="20.4" width="4" height="49.6" rx="2" fill="var(--fg)" /><rect x="-11.00" y="39.50" width="52" height="9" rx="4.50" fill="var(--ac)" transform="rotate(35 15.0 44.0)" /></svg></span></div>
+        <div class="c"><em>16</em><span class="ico ico-squircle" style="width:16px;height:16px"><svg viewBox="-35.00 -4.80 100 100" width="16" height="16"><rect x="4.0" y="20.4" width="4.5" height="49.6" rx="2.2" fill="var(--fg)" /><rect x="10.5" y="20.4" width="9" height="49.6" rx="4.5" fill="var(--fg)" /><rect x="22.0" y="20.4" width="4" height="49.6" rx="2" fill="var(--fg)" /><rect x="-11.00" y="39.50" width="52" height="9" rx="4.50" fill="var(--ac)" transform="rotate(35 15.0 44.0)" /></svg></span></div>
+        <div class="c"><em>android</em><span class="ico ico-circle" style="width:72px;height:72px"><svg viewBox="-35.00 -4.80 100 100" width="72" height="72"><g transform="translate(0.622 1.874) scale(0.9585)"><rect x="4.0" y="20.4" width="4.5" height="49.6" rx="2.2" fill="var(--fg)" /><rect x="10.5" y="20.4" width="9" height="49.6" rx="4.5" fill="var(--fg)" /><rect x="22.0" y="20.4" width="4" height="49.6" rx="2" fill="var(--fg)" /><rect x="-11.00" y="39.50" width="52" height="9" rx="4.50" fill="var(--ac)" transform="rotate(35 15.0 44.0)" /></g></svg></span></div>
+        <div class="c"><em>themed light</em>
+          <span class="ico ico-circle" style="width:72px;height:72px;background:#DDE3EA;--fg:#2A3138;--ac:#2A3138;--bgfill:#DDE3EA"><svg viewBox="-35.00 -4.80 100 100" width="72" height="72"><g transform="translate(0.622 1.874) scale(0.9585)"><rect x="4.0" y="20.4" width="4.5" height="49.6" rx="2.2" fill="var(--fg)" /><rect x="10.5" y="20.4" width="9" height="49.6" rx="4.5" fill="var(--fg)" /><rect x="22.0" y="20.4" width="4" height="49.6" rx="2" fill="var(--fg)" /><rect x="-11.00" y="39.50" width="52" height="9" rx="4.50" fill="var(--ac)" transform="rotate(35 15.0 44.0)" /></g></svg></span></div>
+        <div class="c"><em>themed dark</em>
+          <span class="ico ico-circle" style="width:72px;height:72px;background:#2A3138;--fg:#DDE3EA;--ac:#DDE3EA;--bgfill:#2A3138"><svg viewBox="-35.00 -4.80 100 100" width="72" height="72"><g transform="translate(0.622 1.874) scale(0.9585)"><rect x="4.0" y="20.4" width="4.5" height="49.6" rx="2.2" fill="var(--fg)" /><rect x="10.5" y="20.4" width="9" height="49.6" rx="4.5" fill="var(--fg)" /><rect x="22.0" y="20.4" width="4" height="49.6" rx="2" fill="var(--fg)" /><rect x="-11.00" y="39.50" width="52" height="9" rx="4.50" fill="var(--ac)" transform="rotate(35 15.0 44.0)" /></g></svg></span></div>
+        <div class="c"><em>safe zone</em><span class="ico ico-squircle" style="width:72px;height:72px"><svg viewBox="-35.00 -4.80 100 100" width="72" height="72"><rect x="4.0" y="20.4" width="4.5" height="49.6" rx="2.2" fill="var(--fg)" /><rect x="10.5" y="20.4" width="9" height="49.6" rx="4.5" fill="var(--fg)" /><rect x="22.0" y="20.4" width="4" height="49.6" rx="2" fill="var(--fg)" /><rect x="-11.00" y="39.50" width="52" height="9" rx="4.50" fill="var(--ac)" transform="rotate(35 15.0 44.0)" /><circle cx="15.00" cy="45.20" r="33.0" fill="none" stroke="#C41E1E" stroke-width="1.1" stroke-dasharray="4 3" opacity="0.85" /></svg></span></div>
+      </div>
+      <p class="m">beam <code>52 × 9</code> at <code>cy 44</code>
+         ·
+        bounding radius <code>34.43</code> ·
+        android scale <code>×0.959</code></p>
+    </section>
+    <section class="v">
+      <div class="vhead">
+        <span class="badge">C</span>
+        <div class="vtext">
+          <h2>Beam, high</h2>
+          <p class="sub">Crosses the bars, but up where an accent belongs. The compromise between A and B.</p>
+        </div>
+        <span class="ico ico-squircle" style="width:88px;height:88px"><svg viewBox="-35.00 -9.30 100 100" width="88" height="88"><rect x="4.0" y="20.4" width="4.5" height="49.6" rx="2.2" fill="var(--fg)" /><rect x="10.5" y="20.4" width="9" height="49.6" rx="4.5" fill="var(--fg)" /><rect x="22.0" y="20.4" width="4" height="49.6" rx="2" fill="var(--fg)" /><rect x="-11.00" y="25.50" width="52" height="9" rx="4.50" fill="var(--ac)" transform="rotate(35 15.0 30.0)" /></svg></span>
+      </div>
+      <div class="grid">
+        <div class="c"><em>60</em><span class="ico ico-squircle" style="width:60px;height:60px"><svg viewBox="-35.00 -9.30 100 100" width="60" height="60"><rect x="4.0" y="20.4" width="4.5" height="49.6" rx="2.2" fill="var(--fg)" /><rect x="10.5" y="20.4" width="9" height="49.6" rx="4.5" fill="var(--fg)" /><rect x="22.0" y="20.4" width="4" height="49.6" rx="2" fill="var(--fg)" /><rect x="-11.00" y="25.50" width="52" height="9" rx="4.50" fill="var(--ac)" transform="rotate(35 15.0 30.0)" /></svg></span></div>
+        <div class="c"><em>30</em><span class="ico ico-squircle" style="width:30px;height:30px"><svg viewBox="-35.00 -9.30 100 100" width="30" height="30"><rect x="4.0" y="20.4" width="4.5" height="49.6" rx="2.2" fill="var(--fg)" /><rect x="10.5" y="20.4" width="9" height="49.6" rx="4.5" fill="var(--fg)" /><rect x="22.0" y="20.4" width="4" height="49.6" rx="2" fill="var(--fg)" /><rect x="-11.00" y="25.50" width="52" height="9" rx="4.50" fill="var(--ac)" transform="rotate(35 15.0 30.0)" /></svg></span></div>
+        <div class="c"><em>16</em><span class="ico ico-squircle" style="width:16px;height:16px"><svg viewBox="-35.00 -9.30 100 100" width="16" height="16"><rect x="4.0" y="20.4" width="4.5" height="49.6" rx="2.2" fill="var(--fg)" /><rect x="10.5" y="20.4" width="9" height="49.6" rx="4.5" fill="var(--fg)" /><rect x="22.0" y="20.4" width="4" height="49.6" rx="2" fill="var(--fg)" /><rect x="-11.00" y="25.50" width="52" height="9" rx="4.50" fill="var(--ac)" transform="rotate(35 15.0 30.0)" /></svg></span></div>
+        <div class="c"><em>android</em><span class="ico ico-circle" style="width:72px;height:72px"><svg viewBox="-35.00 -9.30 100 100" width="72" height="72"><g transform="translate(1.904 5.166) scale(0.8731)"><rect x="4.0" y="20.4" width="4.5" height="49.6" rx="2.2" fill="var(--fg)" /><rect x="10.5" y="20.4" width="9" height="49.6" rx="4.5" fill="var(--fg)" /><rect x="22.0" y="20.4" width="4" height="49.6" rx="2" fill="var(--fg)" /><rect x="-11.00" y="25.50" width="52" height="9" rx="4.50" fill="var(--ac)" transform="rotate(35 15.0 30.0)" /></g></svg></span></div>
+        <div class="c"><em>themed light</em>
+          <span class="ico ico-circle" style="width:72px;height:72px;background:#DDE3EA;--fg:#2A3138;--ac:#2A3138;--bgfill:#DDE3EA"><svg viewBox="-35.00 -9.30 100 100" width="72" height="72"><g transform="translate(1.904 5.166) scale(0.8731)"><rect x="4.0" y="20.4" width="4.5" height="49.6" rx="2.2" fill="var(--fg)" /><rect x="10.5" y="20.4" width="9" height="49.6" rx="4.5" fill="var(--fg)" /><rect x="22.0" y="20.4" width="4" height="49.6" rx="2" fill="var(--fg)" /><rect x="-11.00" y="25.50" width="52" height="9" rx="4.50" fill="var(--ac)" transform="rotate(35 15.0 30.0)" /></g></svg></span></div>
+        <div class="c"><em>themed dark</em>
+          <span class="ico ico-circle" style="width:72px;height:72px;background:#2A3138;--fg:#DDE3EA;--ac:#DDE3EA;--bgfill:#2A3138"><svg viewBox="-35.00 -9.30 100 100" width="72" height="72"><g transform="translate(1.904 5.166) scale(0.8731)"><rect x="4.0" y="20.4" width="4.5" height="49.6" rx="2.2" fill="var(--fg)" /><rect x="10.5" y="20.4" width="9" height="49.6" rx="4.5" fill="var(--fg)" /><rect x="22.0" y="20.4" width="4" height="49.6" rx="2" fill="var(--fg)" /><rect x="-11.00" y="25.50" width="52" height="9" rx="4.50" fill="var(--ac)" transform="rotate(35 15.0 30.0)" /></g></svg></span></div>
+        <div class="c"><em>safe zone</em><span class="ico ico-squircle" style="width:72px;height:72px"><svg viewBox="-35.00 -9.30 100 100" width="72" height="72"><rect x="4.0" y="20.4" width="4.5" height="49.6" rx="2.2" fill="var(--fg)" /><rect x="10.5" y="20.4" width="9" height="49.6" rx="4.5" fill="var(--fg)" /><rect x="22.0" y="20.4" width="4" height="49.6" rx="2" fill="var(--fg)" /><rect x="-11.00" y="25.50" width="52" height="9" rx="4.50" fill="var(--ac)" transform="rotate(35 15.0 30.0)" /><circle cx="15.00" cy="40.70" r="33.0" fill="none" stroke="#C41E1E" stroke-width="1.1" stroke-dasharray="4 3" opacity="0.85" /></svg></span></div>
+      </div>
+      <p class="m">beam <code>52 × 9</code> at <code>cy 30</code>
+         ·
+        bounding radius <code>37.80</code> ·
+        android scale <code>×0.873</code></p>
+    </section>
+    <section class="v">
+      <div class="vhead">
+        <span class="badge">D</span>
+        <div class="vtext">
+          <h2>Bleed</h2>
+          <p class="sub">Runs off both edges. The beam is passing THROUGH, not sitting inside.</p>
+        </div>
+        <span class="ico ico-squircle" style="width:88px;height:88px"><svg viewBox="-35.00 -4.80 100 100" width="88" height="88"><rect x="4.0" y="20.4" width="4.5" height="49.6" rx="2.2" fill="var(--fg)" /><rect x="10.5" y="20.4" width="9" height="49.6" rx="4.5" fill="var(--fg)" /><rect x="22.0" y="20.4" width="4" height="49.6" rx="2" fill="var(--fg)" /><rect x="-49.00" y="39.00" width="128" height="10" rx="5.00" fill="var(--ac)" transform="rotate(35 15.0 44.0)" /></svg></span>
+      </div>
+      <div class="grid">
+        <div class="c"><em>60</em><span class="ico ico-squircle" style="width:60px;height:60px"><svg viewBox="-35.00 -4.80 100 100" width="60" height="60"><rect x="4.0" y="20.4" width="4.5" height="49.6" rx="2.2" fill="var(--fg)" /><rect x="10.5" y="20.4" width="9" height="49.6" rx="4.5" fill="var(--fg)" /><rect x="22.0" y="20.4" width="4" height="49.6" rx="2" fill="var(--fg)" /><rect x="-49.00" y="39.00" width="128" height="10" rx="5.00" fill="var(--ac)" transform="rotate(35 15.0 44.0)" /></svg></span></div>
+        <div class="c"><em>30</em><span class="ico ico-squircle" style="width:30px;height:30px"><svg viewBox="-35.00 -4.80 100 100" width="30" height="30"><rect x="4.0" y="20.4" width="4.5" height="49.6" rx="2.2" fill="var(--fg)" /><rect x="10.5" y="20.4" width="9" height="49.6" rx="4.5" fill="var(--fg)" /><rect x="22.0" y="20.4" width="4" height="49.6" rx="2" fill="var(--fg)" /><rect x="-49.00" y="39.00" width="128" height="10" rx="5.00" fill="var(--ac)" transform="rotate(35 15.0 44.0)" /></svg></span></div>
+        <div class="c"><em>16</em><span class="ico ico-squircle" style="width:16px;height:16px"><svg viewBox="-35.00 -4.80 100 100" width="16" height="16"><rect x="4.0" y="20.4" width="4.5" height="49.6" rx="2.2" fill="var(--fg)" /><rect x="10.5" y="20.4" width="9" height="49.6" rx="4.5" fill="var(--fg)" /><rect x="22.0" y="20.4" width="4" height="49.6" rx="2" fill="var(--fg)" /><rect x="-49.00" y="39.00" width="128" height="10" rx="5.00" fill="var(--ac)" transform="rotate(35 15.0 44.0)" /></svg></span></div>
+        <div class="c"><em>android</em><span class="ico ico-circle" style="width:72px;height:72px"><svg viewBox="-35.00 -4.80 100 100" width="72" height="72"><g transform="translate(0.000 0.000) scale(1.0000)"><rect x="4.0" y="20.4" width="4.5" height="49.6" rx="2.2" fill="var(--fg)" /><rect x="10.5" y="20.4" width="9" height="49.6" rx="4.5" fill="var(--fg)" /><rect x="22.0" y="20.4" width="4" height="49.6" rx="2" fill="var(--fg)" /><rect x="-49.00" y="39.00" width="128" height="10" rx="5.00" fill="var(--ac)" transform="rotate(35 15.0 44.0)" /></g></svg></span></div>
+        <div class="c"><em>themed light</em>
+          <span class="ico ico-circle" style="width:72px;height:72px;background:#DDE3EA;--fg:#2A3138;--ac:#2A3138;--bgfill:#DDE3EA"><svg viewBox="-35.00 -4.80 100 100" width="72" height="72"><g transform="translate(0.000 0.000) scale(1.0000)"><rect x="4.0" y="20.4" width="4.5" height="49.6" rx="2.2" fill="var(--fg)" /><rect x="10.5" y="20.4" width="9" height="49.6" rx="4.5" fill="var(--fg)" /><rect x="22.0" y="20.4" width="4" height="49.6" rx="2" fill="var(--fg)" /><rect x="-49.00" y="39.00" width="128" height="10" rx="5.00" fill="var(--ac)" transform="rotate(35 15.0 44.0)" /></g></svg></span></div>
+        <div class="c"><em>themed dark</em>
+          <span class="ico ico-circle" style="width:72px;height:72px;background:#2A3138;--fg:#DDE3EA;--ac:#DDE3EA;--bgfill:#2A3138"><svg viewBox="-35.00 -4.80 100 100" width="72" height="72"><g transform="translate(0.000 0.000) scale(1.0000)"><rect x="4.0" y="20.4" width="4.5" height="49.6" rx="2.2" fill="var(--fg)" /><rect x="10.5" y="20.4" width="9" height="49.6" rx="4.5" fill="var(--fg)" /><rect x="22.0" y="20.4" width="4" height="49.6" rx="2" fill="var(--fg)" /><rect x="-49.00" y="39.00" width="128" height="10" rx="5.00" fill="var(--ac)" transform="rotate(35 15.0 44.0)" /></g></svg></span></div>
+        <div class="c"><em>safe zone</em><span class="ico ico-squircle" style="width:72px;height:72px"><svg viewBox="-35.00 -4.80 100 100" width="72" height="72"><rect x="4.0" y="20.4" width="4.5" height="49.6" rx="2.2" fill="var(--fg)" /><rect x="10.5" y="20.4" width="9" height="49.6" rx="4.5" fill="var(--fg)" /><rect x="22.0" y="20.4" width="4" height="49.6" rx="2" fill="var(--fg)" /><rect x="-49.00" y="39.00" width="128" height="10" rx="5.00" fill="var(--ac)" transform="rotate(35 15.0 44.0)" /><circle cx="15.00" cy="45.20" r="33.0" fill="none" stroke="#C41E1E" stroke-width="1.1" stroke-dasharray="4 3" opacity="0.85" /></svg></span></div>
+      </div>
+      <p class="m">beam <code>128 × 10</code> at <code>cy 44</code>
+         ·
+        bounding radius <code>27.13</code> ·
+        android scale <code>×1.000</code></p>
+    </section>
+    <section class="v">
+      <div class="vhead">
+        <span class="badge">E</span>
+        <div class="vtext">
+          <h2>Negative</h2>
+          <p class="sub">The beam is a gap cut through the bars. Cannot lose its colour, because it has none.</p>
+        </div>
+        <span class="ico ico-squircle" style="width:88px;height:88px"><svg viewBox="-35.00 -4.80 100 100" width="88" height="88"><rect x="4.0" y="20.4" width="4.5" height="49.6" rx="2.2" fill="var(--fg)" /><rect x="10.5" y="20.4" width="9" height="49.6" rx="4.5" fill="var(--fg)" /><rect x="22.0" y="20.4" width="4" height="49.6" rx="2" fill="var(--fg)" /><rect x="-15.00" y="39.00" width="60" height="10" rx="5.00" fill="var(--bgfill)" transform="rotate(35 15.0 44.0)" /></svg></span>
+      </div>
+      <div class="grid">
+        <div class="c"><em>60</em><span class="ico ico-squircle" style="width:60px;height:60px"><svg viewBox="-35.00 -4.80 100 100" width="60" height="60"><rect x="4.0" y="20.4" width="4.5" height="49.6" rx="2.2" fill="var(--fg)" /><rect x="10.5" y="20.4" width="9" height="49.6" rx="4.5" fill="var(--fg)" /><rect x="22.0" y="20.4" width="4" height="49.6" rx="2" fill="var(--fg)" /><rect x="-15.00" y="39.00" width="60" height="10" rx="5.00" fill="var(--bgfill)" transform="rotate(35 15.0 44.0)" /></svg></span></div>
+        <div class="c"><em>30</em><span class="ico ico-squircle" style="width:30px;height:30px"><svg viewBox="-35.00 -4.80 100 100" width="30" height="30"><rect x="4.0" y="20.4" width="4.5" height="49.6" rx="2.2" fill="var(--fg)" /><rect x="10.5" y="20.4" width="9" height="49.6" rx="4.5" fill="var(--fg)" /><rect x="22.0" y="20.4" width="4" height="49.6" rx="2" fill="var(--fg)" /><rect x="-15.00" y="39.00" width="60" height="10" rx="5.00" fill="var(--bgfill)" transform="rotate(35 15.0 44.0)" /></svg></span></div>
+        <div class="c"><em>16</em><span class="ico ico-squircle" style="width:16px;height:16px"><svg viewBox="-35.00 -4.80 100 100" width="16" height="16"><rect x="4.0" y="20.4" width="4.5" height="49.6" rx="2.2" fill="var(--fg)" /><rect x="10.5" y="20.4" width="9" height="49.6" rx="4.5" fill="var(--fg)" /><rect x="22.0" y="20.4" width="4" height="49.6" rx="2" fill="var(--fg)" /><rect x="-15.00" y="39.00" width="60" height="10" rx="5.00" fill="var(--bgfill)" transform="rotate(35 15.0 44.0)" /></svg></span></div>
+        <div class="c"><em>android</em><span class="ico ico-circle" style="width:72px;height:72px"><svg viewBox="-35.00 -4.80 100 100" width="72" height="72"><g transform="translate(0.000 0.000) scale(1.0000)"><rect x="4.0" y="20.4" width="4.5" height="49.6" rx="2.2" fill="var(--fg)" /><rect x="10.5" y="20.4" width="9" height="49.6" rx="4.5" fill="var(--fg)" /><rect x="22.0" y="20.4" width="4" height="49.6" rx="2" fill="var(--fg)" /><rect x="-15.00" y="39.00" width="60" height="10" rx="5.00" fill="var(--bgfill)" transform="rotate(35 15.0 44.0)" /></g></svg></span></div>
+        <div class="c"><em>themed light</em>
+          <span class="ico ico-circle" style="width:72px;height:72px;background:#DDE3EA;--fg:#2A3138;--ac:#2A3138;--bgfill:#DDE3EA"><svg viewBox="-35.00 -4.80 100 100" width="72" height="72"><g transform="translate(0.000 0.000) scale(1.0000)"><rect x="4.0" y="20.4" width="4.5" height="49.6" rx="2.2" fill="var(--fg)" /><rect x="10.5" y="20.4" width="9" height="49.6" rx="4.5" fill="var(--fg)" /><rect x="22.0" y="20.4" width="4" height="49.6" rx="2" fill="var(--fg)" /><rect x="-15.00" y="39.00" width="60" height="10" rx="5.00" fill="var(--bgfill)" transform="rotate(35 15.0 44.0)" /></g></svg></span></div>
+        <div class="c"><em>themed dark</em>
+          <span class="ico ico-circle" style="width:72px;height:72px;background:#2A3138;--fg:#DDE3EA;--ac:#DDE3EA;--bgfill:#2A3138"><svg viewBox="-35.00 -4.80 100 100" width="72" height="72"><g transform="translate(0.000 0.000) scale(1.0000)"><rect x="4.0" y="20.4" width="4.5" height="49.6" rx="2.2" fill="var(--fg)" /><rect x="10.5" y="20.4" width="9" height="49.6" rx="4.5" fill="var(--fg)" /><rect x="22.0" y="20.4" width="4" height="49.6" rx="2" fill="var(--fg)" /><rect x="-15.00" y="39.00" width="60" height="10" rx="5.00" fill="var(--bgfill)" transform="rotate(35 15.0 44.0)" /></g></svg></span></div>
+        <div class="c"><em>safe zone</em><span class="ico ico-squircle" style="width:72px;height:72px"><svg viewBox="-35.00 -4.80 100 100" width="72" height="72"><rect x="4.0" y="20.4" width="4.5" height="49.6" rx="2.2" fill="var(--fg)" /><rect x="10.5" y="20.4" width="9" height="49.6" rx="4.5" fill="var(--fg)" /><rect x="22.0" y="20.4" width="4" height="49.6" rx="2" fill="var(--fg)" /><rect x="-15.00" y="39.00" width="60" height="10" rx="5.00" fill="var(--bgfill)" transform="rotate(35 15.0 44.0)" /><circle cx="15.00" cy="45.20" r="33.0" fill="none" stroke="#C41E1E" stroke-width="1.1" stroke-dasharray="4 3" opacity="0.85" /></svg></span></div>
+      </div>
+      <p class="m">beam <code>60 × 10</code> at <code>cy 44</code>
+        · fill = icon background ·
+        bounding radius <code>27.13</code> ·
+        android scale <code>×1.000</code></p>
+    </section>
+    <section class="v">
+      <div class="vhead">
+        <span class="badge">F</span>
+        <div class="vtext">
+          <h2>Bold accent</h2>
+          <p class="sub">A's idea sized for a square instead of a word — nothing here to collide with.</p>
+        </div>
+        <span class="ico ico-squircle" style="width:88px;height:88px"><svg viewBox="-35.00 -18.13 100 100" width="88" height="88"><rect x="4.0" y="20.4" width="4.5" height="49.6" rx="2.2" fill="var(--fg)" /><rect x="10.5" y="20.4" width="9" height="49.6" rx="4.5" fill="var(--fg)" /><rect x="22.0" y="20.4" width="4" height="49.6" rx="2" fill="var(--fg)" /><rect x="-2.00" y="2.50" width="34" height="11" rx="5.50" fill="var(--ac)" transform="rotate(35 15.0 8.0)" /></svg></span>
+      </div>
+      <div class="grid">
+        <div class="c"><em>60</em><span class="ico ico-squircle" style="width:60px;height:60px"><svg viewBox="-35.00 -18.13 100 100" width="60" height="60"><rect x="4.0" y="20.4" width="4.5" height="49.6" rx="2.2" fill="var(--fg)" /><rect x="10.5" y="20.4" width="9" height="49.6" rx="4.5" fill="var(--fg)" /><rect x="22.0" y="20.4" width="4" height="49.6" rx="2" fill="var(--fg)" /><rect x="-2.00" y="2.50" width="34" height="11" rx="5.50" fill="var(--ac)" transform="rotate(35 15.0 8.0)" /></svg></span></div>
+        <div class="c"><em>30</em><span class="ico ico-squircle" style="width:30px;height:30px"><svg viewBox="-35.00 -18.13 100 100" width="30" height="30"><rect x="4.0" y="20.4" width="4.5" height="49.6" rx="2.2" fill="var(--fg)" /><rect x="10.5" y="20.4" width="9" height="49.6" rx="4.5" fill="var(--fg)" /><rect x="22.0" y="20.4" width="4" height="49.6" rx="2" fill="var(--fg)" /><rect x="-2.00" y="2.50" width="34" height="11" rx="5.50" fill="var(--ac)" transform="rotate(35 15.0 8.0)" /></svg></span></div>
+        <div class="c"><em>16</em><span class="ico ico-squircle" style="width:16px;height:16px"><svg viewBox="-35.00 -18.13 100 100" width="16" height="16"><rect x="4.0" y="20.4" width="4.5" height="49.6" rx="2.2" fill="var(--fg)" /><rect x="10.5" y="20.4" width="9" height="49.6" rx="4.5" fill="var(--fg)" /><rect x="22.0" y="20.4" width="4" height="49.6" rx="2" fill="var(--fg)" /><rect x="-2.00" y="2.50" width="34" height="11" rx="5.50" fill="var(--ac)" transform="rotate(35 15.0 8.0)" /></svg></span></div>
+        <div class="c"><em>android</em><span class="ico ico-circle" style="width:72px;height:72px"><svg viewBox="-35.00 -18.13 100 100" width="72" height="72"><g transform="translate(3.152 6.697) scale(0.7899)"><rect x="4.0" y="20.4" width="4.5" height="49.6" rx="2.2" fill="var(--fg)" /><rect x="10.5" y="20.4" width="9" height="49.6" rx="4.5" fill="var(--fg)" /><rect x="22.0" y="20.4" width="4" height="49.6" rx="2" fill="var(--fg)" /><rect x="-2.00" y="2.50" width="34" height="11" rx="5.50" fill="var(--ac)" transform="rotate(35 15.0 8.0)" /></g></svg></span></div>
+        <div class="c"><em>themed light</em>
+          <span class="ico ico-circle" style="width:72px;height:72px;background:#DDE3EA;--fg:#2A3138;--ac:#2A3138;--bgfill:#DDE3EA"><svg viewBox="-35.00 -18.13 100 100" width="72" height="72"><g transform="translate(3.152 6.697) scale(0.7899)"><rect x="4.0" y="20.4" width="4.5" height="49.6" rx="2.2" fill="var(--fg)" /><rect x="10.5" y="20.4" width="9" height="49.6" rx="4.5" fill="var(--fg)" /><rect x="22.0" y="20.4" width="4" height="49.6" rx="2" fill="var(--fg)" /><rect x="-2.00" y="2.50" width="34" height="11" rx="5.50" fill="var(--ac)" transform="rotate(35 15.0 8.0)" /></g></svg></span></div>
+        <div class="c"><em>themed dark</em>
+          <span class="ico ico-circle" style="width:72px;height:72px;background:#2A3138;--fg:#DDE3EA;--ac:#DDE3EA;--bgfill:#2A3138"><svg viewBox="-35.00 -18.13 100 100" width="72" height="72"><g transform="translate(3.152 6.697) scale(0.7899)"><rect x="4.0" y="20.4" width="4.5" height="49.6" rx="2.2" fill="var(--fg)" /><rect x="10.5" y="20.4" width="9" height="49.6" rx="4.5" fill="var(--fg)" /><rect x="22.0" y="20.4" width="4" height="49.6" rx="2" fill="var(--fg)" /><rect x="-2.00" y="2.50" width="34" height="11" rx="5.50" fill="var(--ac)" transform="rotate(35 15.0 8.0)" /></g></svg></span></div>
+        <div class="c"><em>safe zone</em><span class="ico ico-squircle" style="width:72px;height:72px"><svg viewBox="-35.00 -18.13 100 100" width="72" height="72"><rect x="4.0" y="20.4" width="4.5" height="49.6" rx="2.2" fill="var(--fg)" /><rect x="10.5" y="20.4" width="9" height="49.6" rx="4.5" fill="var(--fg)" /><rect x="22.0" y="20.4" width="4" height="49.6" rx="2" fill="var(--fg)" /><rect x="-2.00" y="2.50" width="34" height="11" rx="5.50" fill="var(--ac)" transform="rotate(35 15.0 8.0)" /><circle cx="15.00" cy="31.87" r="33.0" fill="none" stroke="#C41E1E" stroke-width="1.1" stroke-dasharray="4 3" opacity="0.85" /></svg></span></div>
+      </div>
+      <p class="m">beam <code>34 × 11</code> at <code>cy 8</code>
+         ·
+        bounding radius <code>41.78</code> ·
+        android scale <code>×0.790</code></p>
+    </section>
+
+    <section class="v" style="border: 0">
+      <h2>All six, 56px, on a home screen</h2>
+      <p class="sub">The only view that asks whether a mark holds its own rather than whether it is pretty.</p>
+      <div class="dock"><span class="dc"><span class="ico ico-squircle" style="width:56px;height:56px;background:#3A6FF0"><svg viewBox="0 0 100 100" width="56" height="56"><circle cx="50" cy="50" r="22" fill="#fff" opacity=".9"/></svg></span><em>&nbsp;</em></span><span class="dc"><span class="ico ico-squircle" style="width:56px;height:56px;background:#2FA84F"><svg viewBox="0 0 100 100" width="56" height="56"><rect x="30" y="30" width="40" height="40" rx="9" fill="#fff" opacity=".9"/></svg></span><em>&nbsp;</em></span><span class="dc"><span class="ico ico-squircle" style="width:56px;height:56px;background:#E1523D"><svg viewBox="0 0 100 100" width="56" height="56"><path d="M50 28 L68 68 H32 Z" fill="#fff" opacity=".9"/></svg></span><em>&nbsp;</em></span><span class="dc"><span class="ico ico-squircle" style="width:56px;height:56px"><svg viewBox="-35.00 -15.03 100 100" width="56" height="56"><rect x="4.0" y="20.4" width="4.5" height="49.6" rx="2.2" fill="var(--fg)" /><rect x="10.5" y="20.4" width="9" height="49.6" rx="4.5" fill="var(--fg)" /><rect x="22.0" y="20.4" width="4" height="49.6" rx="2" fill="var(--fg)" /><rect x="3.00" y="6.00" width="24" height="9" rx="4.50" fill="var(--ac)" transform="rotate(35 15.0 10.5)" /></svg></span><em>A</em></span><span class="dc"><span class="ico ico-squircle" style="width:56px;height:56px"><svg viewBox="-35.00 -4.80 100 100" width="56" height="56"><rect x="4.0" y="20.4" width="4.5" height="49.6" rx="2.2" fill="var(--fg)" /><rect x="10.5" y="20.4" width="9" height="49.6" rx="4.5" fill="var(--fg)" /><rect x="22.0" y="20.4" width="4" height="49.6" rx="2" fill="var(--fg)" /><rect x="-11.00" y="39.50" width="52" height="9" rx="4.50" fill="var(--ac)" transform="rotate(35 15.0 44.0)" /></svg></span><em>B</em></span><span class="dc"><span class="ico ico-squircle" style="width:56px;height:56px"><svg viewBox="-35.00 -9.30 100 100" width="56" height="56"><rect x="4.0" y="20.4" width="4.5" height="49.6" rx="2.2" fill="var(--fg)" /><rect x="10.5" y="20.4" width="9" height="49.6" rx="4.5" fill="var(--fg)" /><rect x="22.0" y="20.4" width="4" height="49.6" rx="2" fill="var(--fg)" /><rect x="-11.00" y="25.50" width="52" height="9" rx="4.50" fill="var(--ac)" transform="rotate(35 15.0 30.0)" /></svg></span><em>C</em></span><span class="dc"><span class="ico ico-squircle" style="width:56px;height:56px"><svg viewBox="-35.00 -4.80 100 100" width="56" height="56"><rect x="4.0" y="20.4" width="4.5" height="49.6" rx="2.2" fill="var(--fg)" /><rect x="10.5" y="20.4" width="9" height="49.6" rx="4.5" fill="var(--fg)" /><rect x="22.0" y="20.4" width="4" height="49.6" rx="2" fill="var(--fg)" /><rect x="-49.00" y="39.00" width="128" height="10" rx="5.00" fill="var(--ac)" transform="rotate(35 15.0 44.0)" /></svg></span><em>D</em></span><span class="dc"><span class="ico ico-squircle" style="width:56px;height:56px"><svg viewBox="-35.00 -4.80 100 100" width="56" height="56"><rect x="4.0" y="20.4" width="4.5" height="49.6" rx="2.2" fill="var(--fg)" /><rect x="10.5" y="20.4" width="9" height="49.6" rx="4.5" fill="var(--fg)" /><rect x="22.0" y="20.4" width="4" height="49.6" rx="2" fill="var(--fg)" /><rect x="-15.00" y="39.00" width="60" height="10" rx="5.00" fill="var(--bgfill)" transform="rotate(35 15.0 44.0)" /></svg></span><em>E</em></span><span class="dc"><span class="ico ico-squircle" style="width:56px;height:56px"><svg viewBox="-35.00 -18.13 100 100" width="56" height="56"><rect x="4.0" y="20.4" width="4.5" height="49.6" rx="2.2" fill="var(--fg)" /><rect x="10.5" y="20.4" width="9" height="49.6" rx="4.5" fill="var(--fg)" /><rect x="22.0" y="20.4" width="4" height="49.6" rx="2" fill="var(--fg)" /><rect x="-2.00" y="2.50" width="34" height="11" rx="5.50" fill="var(--ac)" transform="rotate(35 15.0 8.0)" /></svg></span><em>F</em></span></div>
+    </section>
+
+    <div class="note-box">
+      <h3>What to look at</h3>
+      <p>
+        <strong>The themed cells, first.</strong> Android 13+ redraws the icon in one colour taken
+        from the wallpaper. A and F lose their accent to it — with no hue left, a floating tick is
+        just a speck above three bars. B, C and D survive because the beam is a separable shape.
+        <strong>E cannot fail</strong>: its beam is a gap, and removing colour cannot remove a gap.
+      </p>
+      <p>
+        <strong>Then 16px.</strong> That is where the three-bar stem is the risk, not the accent —
+        watch whether the bars merge into a single block. If they do, the stem is the thing to
+        simplify, not the beam.
+      </p>
+      <p>
+        <strong>D is the one to be suspicious of.</strong> Bleeding off the edge reads powerfully at
+        88px and is the most distinctive square here, but it stops being a letter — there is no ì
+        left, just bars and a stripe. It also behaves differently under every launcher mask, which
+        is a support cost forever.
+      </p>
+    </div>
+  </body>
+</html>
