@@ -418,13 +418,34 @@ Both Android release pipelines build and upload the phone AAB and this Wear APK 
 go to **different Play tracks**: the phone to the mobile track, and this app to Play's dedicated
 Wear OS **form-factor track**, whose id is `wear:` + the mobile track name.
 
-| Pipeline            | Phone track  | Wear track        | Lane                              |
-| ------------------- | ------------ | ----------------- | --------------------------------- |
-| `beta-releases.yml` | `alpha`      | `wear:alpha`      | `fastlane android beta`           |
-| `store-upload.yml`  | `production` | `wear:production` | `fastlane android upload_release` |
+| Pipeline             | Phone track  | Wear track                  | Lane                              |
+| -------------------- | ------------ | --------------------------- | --------------------------------- |
+| `nightly-builds.yml` | `internal`   | `wear:internal` (derived)   | `fastlane android nightly`        |
+| `beta-releases.yml`  | `alpha`      | `wear:alpha` (derived)      | `fastlane android beta`           |
+| `store-upload.yml`   | `production` | `wear:production` (derived) | `fastlane android upload_release` |
 
-> ⚠️ **The dedicated Wear track is mandatory, and it needs a one-time Play Console step.** Play
-> rejects an artifact declaring `uses-feature android.hardware.type.watch` uploaded to a mobile
+> ✅ **This listing's real Wear tracks, read live from the Play Publishing API on 2026-09-07:**
+> `wear:internal`, `wear:alpha`, `wear:beta`, `wear:production` (alongside the phone's `internal`,
+> `alpha`, `beta`, `production`). So `wear:` + the phone's track name derives correctly for **every**
+> lane, and no pipeline sets `WEAR_PLAY_TRACK` today.
+
+> ⛔ **`wear:qa` DOES NOT EXIST here, even though Google's docs say it should — do not "fix" this
+> back.** [developers.google.com/android-publisher/tracks](https://developers.google.com/android-publisher/tracks)
+> states that the internal-testing default track name is `qa` and that a form-factor track id is
+> `"[prefix]:defaultTrackName"`; composing those gives `wear:qa`. **That documentation contradicts
+> the API.** Pinning `WEAR_PLAY_TRACK: wear:qa` on the strength of it killed three consecutive
+> nightlies (2026-09-05/06/07), each one _after_ the phone AAB had already uploaded — three silent
+> phone-only releases. The API is authoritative; the docs are not.
+
+> ⚠️ **The derivation is still a DEFAULT, not a rule, which is why `WEAR_PLAY_TRACK` remains.** A
+> **closed** testing track is created by hand with a custom name, so a Wear closed track called e.g.
+> `qa-eu` pairs with no phone track at all. Before setting an override, get the name from the live
+> list rather than from any document: `ensure_wear_track_exists!` validates the destination against
+> Play's real track list _before anything is built_, and prints that list when it does not match.
+
+> ⚠️ **The dedicated Wear track is mandatory, it needs a one-time Play Console step, and as of
+> 2026-09-01 it is NOT confirmed done for this app.** Play rejects an artifact declaring
+> `uses-feature android.hardware.type.watch` uploaded to a mobile
 > track — _"you must use dedicated Wear OS tracks and create new releases on these tracks"_
 > ([support.google.com](https://support.google.com/googleplay/android-developer/answer/13295490)).
 > The `"[prefix]:defaultTrackName"` id rule is at
@@ -466,15 +487,33 @@ Wear OS store-listing assets, and the Digital Asset Links publication.
 ### versionCode bands
 
 Play allocates `versionCode` **per application ID**, and this Wear APK shares
-`com.iferoporefi.myloyaltycards` with the phone app. It is therefore a **third and fourth consumer of
-one shared counter space**. Story 16.7 exists because two counters already collided there.
+`com.iferoporefi.myloyaltycards` with the phone app. The Wear bands are therefore the **third through sixth
+consumers of one shared counter space**. Story 16.7 exists because two counters already collided there.
 
-| Band        | Consumer                    | Set by                                                                                       |
-| ----------- | --------------------------- | -------------------------------------------------------------------------------------------- |
-| `0`         | phone, alpha/beta           | `beta-releases.yml` — bare `GITHUB_RUN_NUMBER`                                               |
-| `1_000_000` | phone, production           | `store-upload.yml` — `PRODUCTION_VERSION_CODE_OFFSET` in [`app.config.ts`](../app.config.ts) |
-| `2_000_000` | **Wear OS APK, alpha/beta** | [`app/build.gradle.kts`](app/build.gradle.kts) in this project                               |
-| `3_000_000` | **Wear OS APK, production** | the same file — band + `wearProductionVersionCodeOffset`                                     |
+| Band        | Consumer                | Set by                                                                                       |
+| ----------- | ----------------------- | -------------------------------------------------------------------------------------------- |
+| `0`         | phone, alpha/beta       | `beta-releases.yml` — bare `GITHUB_RUN_NUMBER`                                               |
+| `1_000_000` | phone, production       | `store-upload.yml` — `PRODUCTION_VERSION_CODE_OFFSET` in [`app.config.ts`](../app.config.ts) |
+| `2_000_000` | **Wear OS, alpha/beta** | [`app/build.gradle.kts`](app/build.gradle.kts) in this project                               |
+| `3_000_000` | **Wear OS, production** | the same file — band + `wearProductionVersionCodeOffset`                                     |
+| `4_000_000` | phone, nightly          | `nightly-builds.yml` — workflow arithmetic, as `store-upload.yml` does (Story 16.36)         |
+| `5_000_000` | **Wear OS, nightly**    | the same file — band + `wearNightlyVersionCodeOffset` (Story 16.36)                          |
+
+> **Why a fifth and sixth band (Story 16.36).** `GITHUB_RUN_NUMBER` is scoped **per workflow
+> file**, so `nightly-builds.yml` starts an independent counter at 1. Without its own bands,
+> nightly run 40 and RC run 40 would both compute `2_000_040` — the two-counters-one-band
+> collision Story 16.7 documents. `WEAR_RELEASE_TRACK` is therefore three-state:
+> `production` → `3_000_000`, `nightly` → `5_000_000`, anything else (including unset)
+> → `2_000_000`. A **typo lands on the beta band deliberately** — colliding with a _future_
+> production or nightly code is a hard Play rejection you find immediately, while colliding
+> with an already-uploaded RC code is the plausible-looking failure the scheme exists to
+> prevent.
+>
+> **⚠️ The nightly bands sit ABOVE production, and that has a user-visible consequence.** A
+> device on a nightly carries a higher `versionCode` than any production release, so it will
+> **never receive a production build as an update**. That is acceptable for an internal track
+> whose testers opted in, and it is the price of collision-free counters — but leaving the
+> nightly track means reinstalling, not waiting.
 
 The Wear counter comes from the `WEAR_VERSION_CODE` environment variable — a **distinct name** from the
 phone's `ANDROID_VERSION_CODE`, so a Wear build can never silently inherit the phone's counter.

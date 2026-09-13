@@ -14,6 +14,8 @@ import { getCardById } from '@/core/database';
 
 import { showToast } from '@/shared/toast';
 
+import { useCardBrightnessBoost } from '@/features/cards/hooks/useCardBrightnessBoost';
+
 import CardDetailScreen from './CardDetailScreen';
 
 type CardDetailsMockProps = {
@@ -22,12 +24,16 @@ type CardDetailsMockProps = {
   onCopy: () => void;
   onDelete: () => void;
   onScrollPastHero: (past: boolean) => void;
+  /** Story 16.39 — the brightness boost state and its toggle, passed down. */
+  isBrightnessBoosted: boolean;
+  onToggleBrightness: () => void;
 };
 
 type ScreenProps = { options?: { headerLeft?: () => unknown; headerRight?: () => unknown } };
 
 const mockBack = jest.fn();
 const mockToggle = jest.fn();
+const mockToggleBrightness = jest.fn();
 const mockDeleteCard = jest.fn();
 const mockCardDetails = jest.fn((props: CardDetailsMockProps) => {
   void props;
@@ -100,6 +106,10 @@ jest.mock('@/features/cards/hooks/useTrackCardUsage', () => ({
 
 jest.mock('@/features/cards/hooks/useToggleFavorite', () => ({
   useToggleFavorite: () => ({ toggle: mockToggle, isPending: false })
+}));
+
+jest.mock('@/features/cards/hooks/useCardBrightnessBoost', () => ({
+  useCardBrightnessBoost: jest.fn(() => ({ isBoosted: false, toggle: mockToggleBrightness }))
 }));
 
 const mockCard = {
@@ -184,6 +194,43 @@ describe('CardDetailScreen', () => {
 
     // Still rendering the details (re-rendered with condensed header state).
     expect(mockCardDetails).toHaveBeenCalledWith(expect.objectContaining({ card: mockCard }));
+  });
+
+  // Story 16.39. The hook is covered by its own suite; what these pin is the WIRING —
+  // that the screen calls it and hands its state down to the button. A screen that
+  // called the hook but never passed `onToggleBrightness` would render no button at
+  // all, and no hook test could see that.
+  it('runs the brightness boost hook and passes its state to CardDetails (Story 16.39)', async () => {
+    render(<CardDetailScreen />);
+
+    await waitFor(() => expect(mockCardDetails).toHaveBeenCalled());
+    expect(useCardBrightnessBoost).toHaveBeenCalled();
+    expect(detailsProps().isBrightnessBoosted).toBe(false);
+    expect(detailsProps().onToggleBrightness).toBe(mockToggleBrightness);
+  });
+
+  it('reflects the boosted state down to CardDetails when it is on (Story 16.39)', async () => {
+    (useCardBrightnessBoost as jest.Mock).mockReturnValue({
+      isBoosted: true,
+      toggle: mockToggleBrightness
+    });
+
+    render(<CardDetailScreen />);
+
+    await waitFor(() => expect(mockCardDetails).toHaveBeenCalled());
+    expect(detailsProps().isBrightnessBoosted).toBe(true);
+  });
+
+  it('runs the hook even when the card fails to load (Story 16.39)', async () => {
+    // Deliberate: the hook is not gated on the card, so the boost decision is made
+    // with the screen rather than after the database read. Asserted on the error path
+    // because that is where a future `if (card)` guard would show up first.
+    (getCardById as jest.Mock).mockResolvedValue(null);
+
+    render(<CardDetailScreen />);
+
+    await waitFor(() => expect(getCardById).toHaveBeenCalled());
+    expect(useCardBrightnessBoost).toHaveBeenCalled();
   });
 
   it('uses the brand colour and favourite state in the header when present', async () => {

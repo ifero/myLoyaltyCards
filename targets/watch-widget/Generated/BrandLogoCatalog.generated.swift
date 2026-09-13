@@ -4,11 +4,14 @@
 
 import Foundation
 
-/// Brand-logo data for the watch complication, kept in lockstep with the
-/// catalogue and the bundled `BrandLogo-*` imagesets by the generator.
+/// Brand-logo data for the watch surfaces that can render real artwork, kept in
+/// lockstep with the catalogue and the bundled `BrandLogo-*` imagesets by the
+/// generator. Today only the app's card list draws them; the complication ships the
+/// same data and assets but its per-card path is dormant (see
+/// `WatchComplicationWidget.swift`).
 enum BrandLogoCatalogData {
-  /// Brand slugs that ship a `BrandLogo-<slug>` imageset, so the complication
-  /// can render the real logo instead of falling back to initials.
+  /// Brand slugs that ship a `BrandLogo-<slug>` imageset in this target, so the
+  /// view can render the real logo instead of falling back to initials.
   static let knownBrandIds: Set<String> = [
     "acqua-e-sapone",
     "bennet",
@@ -71,7 +74,7 @@ enum BrandLogoCatalogData {
 
   /// Brand logos whose rendered artwork is predominantly white / very light
   /// (mean Rec. 709 luminance > 200 over opaque pixels). On the default
-  /// white chip they would disappear, so the widget gives them a dark backing.
+  /// white chip they would disappear, so those logos get a dark backing instead.
   static let lightLogoBrandIds: Set<String> = [
     "conad",
     "coop",

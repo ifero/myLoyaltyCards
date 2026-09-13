@@ -11,6 +11,8 @@ import { Alert } from 'react-native';
 
 import { LoyaltyCard } from '@/core/schemas';
 
+import { TOUCH_TARGET } from '@/shared/theme/spacing';
+
 import { CardDetails } from './CardDetails';
 
 // Mock expo-router
@@ -175,15 +177,120 @@ describe('CardDetails', () => {
     });
   });
 
-  describe('Rendering — AC7: Brightness Hint', () => {
-    it('renders brightness hint', () => {
-      const { getByTestId } = render(<CardDetails card={mockCustomCard} />);
-      expect(getByTestId('card-details-brightness-hint')).toBeTruthy();
+  // Story 16.39 replaced Story 13.3's AC7 brightness HINT with a working control. The
+  // hint told the user to go and raise their own brightness; the button lets them do it
+  // in one tap — and, if they have opted in via Settings, it is already on when they
+  // arrive. Note the app does NOT brighten by itself unless asked: the setting defaults
+  // to off, which is why the hint had to be REPLACED rather than merely deleted.
+  describe('Rendering — brightness toggle (Story 16.39, replaces 13.3 AC7)', () => {
+    it('does NOT render the old brightness hint row', () => {
+      const { queryByTestId } = render(<CardDetails card={mockCustomCard} />);
+      expect(queryByTestId('card-details-brightness-hint')).toBeNull();
     });
 
-    it('shows brightness hint text', () => {
-      const { getByText } = render(<CardDetails card={mockCustomCard} />);
-      expect(getByText('Increase brightness for scanning')).toBeTruthy();
+    it('does NOT tell the user to raise their brightness by hand', () => {
+      const { queryByText } = render(<CardDetails card={mockCustomCard} />);
+      expect(queryByText('Increase brightness for scanning')).toBeNull();
+    });
+
+    it('renders no toggle when the screen supplies no handler', () => {
+      // Keeps `CardDetails` usable on its own — Storybook, and any future read-only
+      // surface — rather than rendering a control that cannot do anything.
+      const { queryByTestId } = render(<CardDetails card={mockCustomCard} />);
+      expect(queryByTestId('card-details-brightness-toggle')).toBeNull();
+    });
+
+    it('renders the toggle when a handler is supplied, and calls it on press', () => {
+      const onToggleBrightness = jest.fn();
+      const { getByTestId } = render(
+        <CardDetails card={mockCustomCard} onToggleBrightness={onToggleBrightness} />
+      );
+
+      fireEvent.press(getByTestId('card-details-brightness-toggle'));
+
+      expect(onToggleBrightness).toHaveBeenCalledTimes(1);
+    });
+
+    it('is icon-only, and the BULB carries the state (Story 16.39, ifero 2026-09-08)', () => {
+      // Filled bulb = on, outline = off. With the caption gone this is the only visual
+      // signal of which way the control is set, so it is pinned rather than left to a
+      // colour change a colour-blind user might not read.
+      const on = render(
+        <CardDetails card={mockCustomCard} isBrightnessBoosted onToggleBrightness={jest.fn()} />
+      );
+      expect(on.getByTestId('card-details-brightness-toggle')).toBeTruthy();
+      expect(on.queryByTestId('icon-lightbulb')).toBeTruthy();
+      expect(on.queryByTestId('icon-lightbulb-outline')).toBeNull();
+
+      const off = render(<CardDetails card={mockCustomCard} onToggleBrightness={jest.fn()} />);
+      expect(off.queryByTestId('icon-lightbulb-outline')).toBeTruthy();
+      expect(off.queryByTestId('icon-lightbulb')).toBeNull();
+    });
+
+    it('stays a full-size tap target despite carrying only a 24 pt glyph', () => {
+      // The regression that removing a label invites: the pill used to be sized by its
+      // text, so a circle around a 24 pt icon can silently end up half the required
+      // size. Asserted against the token rather than a literal so a change to the
+      // design system moves both together.
+      const { getByTestId } = render(
+        <CardDetails card={mockCustomCard} onToggleBrightness={jest.fn()} />
+      );
+      const styles = getByTestId('card-details-brightness-toggle').props.style;
+      const flattened = Object.assign(
+        {},
+        ...(Array.isArray(styles) ? styles.flat(Infinity) : [styles]).filter(Boolean)
+      );
+
+      expect(flattened.width).toBeGreaterThanOrEqual(TOUCH_TARGET.min);
+      expect(flattened.height).toBeGreaterThanOrEqual(TOUCH_TARGET.min);
+    });
+
+    it('renders no caption — the bulb is the whole control', () => {
+      // Dropping the words was the point of the 2026-09-08 change. Asserted so a future
+      // edit cannot quietly reintroduce a label under the barcode.
+      const { queryByText } = render(
+        <CardDetails card={mockCustomCard} onToggleBrightness={jest.fn()} />
+      );
+
+      expect(queryByText('Full brightness')).toBeNull();
+    });
+
+    it('keeps a spoken label, which is now the ONLY thing a screen reader has', () => {
+      // Load-bearing rather than supplementary: an icon-only control with no
+      // `accessibilityLabel` announces as an unnamed switch.
+      const { getByTestId } = render(
+        <CardDetails card={mockCustomCard} onToggleBrightness={jest.fn()} />
+      );
+      const toggle = getByTestId('card-details-brightness-toggle');
+
+      expect(toggle.props.accessibilityLabel).toBe('Full brightness');
+      expect(toggle.props.accessibilityHint).toBe(
+        'Sets the screen to full brightness so a scanner can read the barcode'
+      );
+    });
+
+    it('announces itself as a switch, with the state VoiceOver needs', () => {
+      // `accessibilityRole="switch"` rather than `"button"`: the control has an on/off
+      // state, and the role is what makes the platform announce it instead of reading
+      // the label alone. A plain button would say "Full brightness" and leave a
+      // VoiceOver user with no idea whether it is currently on.
+      const { getByTestId } = render(
+        <CardDetails card={mockCustomCard} isBrightnessBoosted onToggleBrightness={jest.fn()} />
+      );
+      const toggle = getByTestId('card-details-brightness-toggle');
+
+      expect(toggle.props.accessibilityRole).toBe('switch');
+      expect(toggle.props.accessibilityState).toEqual(expect.objectContaining({ checked: true }));
+    });
+
+    it('reports itself unchecked when the boost is off', () => {
+      const { getByTestId } = render(
+        <CardDetails card={mockCustomCard} onToggleBrightness={jest.fn()} />
+      );
+
+      expect(getByTestId('card-details-brightness-toggle').props.accessibilityState).toEqual(
+        expect.objectContaining({ checked: false })
+      );
     });
   });
 

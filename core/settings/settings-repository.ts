@@ -13,7 +13,8 @@ const KEYS = {
   FIRST_LAUNCH: 'first_launch',
   ONBOARDING_COMPLETED: 'onboarding_completed',
   THEME_PREFERENCE: 'theme_preference',
-  LANGUAGE_PREFERENCE: 'language_preference'
+  LANGUAGE_PREFERENCE: 'language_preference',
+  AUTO_BRIGHTNESS: 'auto_brightness'
 } as const;
 
 export type ThemePreference = 'light' | 'dark' | 'system';
@@ -105,4 +106,27 @@ export const getLanguagePreference = (): LanguagePreference => {
  */
 export const setLanguagePreference = (value: LanguagePreference): void => {
   Storage.setItemSync(KEYS.LANGUAGE_PREFERENCE, value);
+};
+
+/**
+ * Whether the card detail screen should go to full brightness by itself.
+ *
+ * **Defaults to `false`** (Story 16.39, ifero 2026-09-07): only an explicit stored
+ * `'true'` enables it. Anything else — never set, cleared, or a corrupted value —
+ * reads as off, so a fresh install behaves exactly as it did before the setting
+ * existed and nobody has their screen brightness changed without asking.
+ *
+ * Note this is the inverse of `isFirstLaunch`'s convention, where `null` means
+ * "yes". Opting a user into a device-level side effect is not a safe default; being
+ * treated as a first launch is.
+ */
+export const getAutoBrightnessEnabled = (): boolean => {
+  return Storage.getItemSync(KEYS.AUTO_BRIGHTNESS) === 'true';
+};
+
+/**
+ * Persist the auto-brightness preference.
+ */
+export const setAutoBrightnessEnabled = (value: boolean): void => {
+  Storage.setItemSync(KEYS.AUTO_BRIGHTNESS, value ? 'true' : 'false');
 };

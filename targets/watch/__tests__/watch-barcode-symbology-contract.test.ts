@@ -1,10 +1,17 @@
-import { execFileSync } from 'node:child_process';
 import fs from 'node:fs';
-import os from 'node:os';
 import path from 'node:path';
+
+import {
+  describeOnMac,
+  runSwiftProgram,
+  swiftDeclaration,
+  switchBody
+} from './swift-source-helpers';
 
 const repoRoot = path.resolve(__dirname, '../../..');
 const generatorPath = path.join(repoRoot, 'targets', 'watch', 'BarcodeGenerator.swift');
+/** Named in every extraction failure, so it says which file moved under the test. */
+const GENERATOR = 'BarcodeGenerator.swift';
 const cardSchemaPath = path.join(repoRoot, 'core', 'schemas', 'card.ts');
 
 /**
@@ -55,6 +62,21 @@ const REFERENCE_EAN_RIGHT = [
 /** The Code 39 `*` start/stop delimiter, as nine element widths. */
 const REFERENCE_CODE39_DELIMITER = '131131311';
 
+/**
+ * Code 128's three start code words and its STOP, as element widths — BWIPP `code128` `encs`
+ * entries 103-106, the last four in that 107-entry table.
+ *
+ * Keyed by index on purpose: the value alone would not prove the STOP sits at 106, and the
+ * defect Story 16.37 fixed was an entry in the right shape at the right index with the wrong
+ * content, surrounded by three unreachable duplicates that hid it.
+ */
+const REFERENCE_CODE128_DELIMITERS: Record<number, string> = {
+  103: '211412', // Start A
+  104: '211214', // Start B
+  105: '211232', // Start C
+  106: '2331112' // STOP — seven elements, 13 modules
+};
+
 /** All 43 encodable Code 39 characters, as nine element widths each. */
 const REFERENCE_CODE39: Record<string, string> = {
   '0': '111331311',
@@ -102,18 +124,23 @@ const REFERENCE_CODE39: Record<string, string> = {
   '%': '111313131'
 };
 
-/** Published minimum quiet zone per symbology, in modules. */
-const REFERENCE_QUIET_ZONES: Record<string, number> = {
+/**
+ * Published minimum quiet zone per symbology, in modules, per side.
+ *
+ * Asymmetric where the specification is. Story 16.28 set EAN-8 and UPC-A; Story
+ * 16.27 corrected EAN-13, which had been shipping a flat 10 + 10 — 2 modules more
+ * than GS1 asks for, and on a wrist-sized symbol those 2 are paid for by narrowing
+ * every bar.
+ */
+const REFERENCE_QUIET_ZONES: Record<string, { leading: number; trailing: number }> = {
   // GS1 General Specifications.
-  EAN8: 7,
-  UPCA: 9,
-  // ISO/IEC 16388: ten narrow elements.
-  CODE39: 10,
-  // Unchanged from what they already shipped with; revisiting them belongs to the
-  // geometry story, not 16.28.
-  EAN13: 10,
-  CODE128: 10,
-  QR: 10
+  EAN13: { leading: 11, trailing: 7 },
+  EAN8: { leading: 7, trailing: 7 },
+  UPCA: { leading: 9, trailing: 9 },
+  // ISO/IEC 16388 (Code 39) and ISO/IEC 15417 (Code 128): ten narrow elements.
+  CODE39: { leading: 10, trailing: 10 },
+  CODE128: { leading: 10, trailing: 10 },
+  QR: { leading: 10, trailing: 10 }
 };
 
 /**
@@ -245,6 +272,98 @@ const REFERENCE_SYMBOLS: ReadonlyArray<{ format: string; value: string; modules:
     value: '5901234-123457',
     modules:
       '1,1,1,3,1,1,2,1,1,2,3,1,2,2,2,2,1,2,2,1,4,1,1,2,3,1,1,1,1,1,1,1,2,2,2,1,2,1,2,2,1,4,1,1,1,1,3,2,1,2,3,1,1,3,1,2,1,1,1'
+  },
+  // ---- Code 128 ----------------------------------------------------------------------
+  // Absent until Story 16.37, which is why a truncated STOP pattern — `widthsTable[106]`
+  // holding "233111" where Code 128 specifies "2331112" — shipped unnoticed while the three
+  // formats 16.28 introduced were covered. Every row below ends `...,3,3,1,1,1,2`; that final
+  // 2 is the bar the defect dropped.
+  //
+  // ⚠️ CHECK a new value before adding it. Code 128's code-set switches are an OPTIMISATION,
+  // so several encodings of the same text are valid, and this encoder's heuristics are simpler
+  // than BWIPP's. They diverge on `A12345` (9 code words vs BWIPP's 8) and on
+  // `CARD 12345 ABC` (same length, different set choices). Both still DECODE correctly — they
+  // are less compact, not wrong — so they are deliberately excluded rather than treated as
+  // failures. Only values where the two agree exactly belong here.
+  // Start C on a >=4 digit run, then the C->B switch (100) for the odd trailing digit.
+  {
+    format: 'CODE128',
+    value: '5901234123457',
+    modules:
+      '2,1,1,2,3,2,3,3,2,1,1,1,2,2,2,1,2,2,3,1,2,1,3,1,2,3,1,3,1,1,3,1,2,1,3,1,1,1,3,1,2,3,1,1,4,1,3,1,3,1,2,1,3,1,2,2,1,2,3,1,2,3,3,1,1,1,2'
+  },
+  // All digits, even length: Start C and never leaves it.
+  {
+    format: 'CODE128',
+    value: '12345678',
+    modules: '2,1,1,2,3,2,1,1,2,2,3,2,1,3,1,1,2,3,3,3,1,1,2,1,2,4,1,1,1,2,1,3,3,1,2,1,2,3,3,1,1,1,2'
+  },
+  // One digit — odd, so the all-digits Start C heuristic declines and it starts in B.
+  {
+    format: 'CODE128',
+    value: '7',
+    modules: '2,1,1,2,1,4,3,1,2,1,3,1,3,1,1,2,2,2,2,3,3,1,1,1,2'
+  },
+  // Non-digit first character: Start B, and the trailing 3-digit run is under the 4 that would switch to C.
+  {
+    format: 'CODE128',
+    value: 'ABC-123',
+    modules:
+      '2,1,1,2,1,4,1,1,1,3,2,3,1,3,1,1,2,3,1,3,1,3,2,1,1,2,2,1,3,2,1,2,3,2,2,1,2,2,3,2,1,1,2,2,1,1,3,2,1,1,2,4,1,2,2,3,3,1,1,1,2'
+  },
+  // Start B, then the B->C switch (99) once a 4+ digit run appears.
+  {
+    format: 'CODE128',
+    value: 'AB123456',
+    modules:
+      '2,1,1,2,1,4,1,1,1,3,2,3,1,3,1,1,2,3,1,1,3,1,4,1,1,1,2,2,3,2,1,3,1,1,2,3,3,3,1,1,2,1,3,2,1,2,2,1,2,3,3,1,1,1,2'
+  },
+  // The full round trip: Start C, drop to B for the letters, return to C.
+  {
+    format: 'CODE128',
+    value: '1234ABCD5678',
+    modules:
+      '2,1,1,2,3,2,1,1,2,2,3,2,1,3,1,1,2,3,1,1,4,1,3,1,1,1,1,3,2,3,1,3,1,1,2,3,1,3,1,3,2,1,1,1,2,3,1,3,1,1,3,1,4,1,3,3,1,1,2,1,2,4,1,1,1,2,3,2,2,2,1,1,2,3,3,1,1,1,2'
+  },
+  // Shortest B-with-a-digit form; the 1-digit run must not trigger C.
+  {
+    format: 'CODE128',
+    value: 'A1',
+    modules: '2,1,1,2,1,4,1,1,1,3,2,3,1,2,3,2,2,1,1,4,1,2,2,1,2,3,3,1,1,1,2'
+  },
+  // Code B across lower case, space and punctuation.
+  {
+    format: 'CODE128',
+    value: 'Hello World!',
+    modules:
+      '2,1,1,2,1,4,2,3,1,1,1,3,1,1,2,2,1,4,2,2,1,1,1,4,2,2,1,1,1,4,1,3,4,1,1,1,2,1,2,2,2,2,3,1,1,3,2,1,1,3,4,1,1,1,1,2,1,2,4,1,2,2,1,1,1,4,1,4,1,2,2,1,2,2,2,1,2,2,3,1,1,3,2,1,2,3,3,1,1,1,2'
+  },
+  // The ASCII gate boundaries — 32 and 126, the lowest and highest characters it accepts.
+  {
+    format: 'CODE128',
+    value: ' ~',
+    modules: '2,1,1,2,1,4,2,1,2,2,2,2,1,3,1,1,4,1,4,1,1,2,1,2,2,3,3,1,1,1,2'
+  },
+  // A checksum whose data code words are all zero.
+  {
+    format: 'CODE128',
+    value: '0000000000',
+    modules:
+      '2,1,1,2,3,2,2,1,2,2,2,2,2,1,2,2,2,2,2,1,2,2,2,2,2,1,2,2,2,2,2,1,2,2,2,2,2,2,2,2,2,1,2,3,3,1,1,1,2'
+  },
+  // Longest pure Code C case here; 16 digits is 8 pairs.
+  {
+    format: 'CODE128',
+    value: '9999999999999999',
+    modules:
+      '2,1,1,2,3,2,1,1,3,1,4,1,1,1,3,1,4,1,1,1,3,1,4,1,1,1,3,1,4,1,1,1,3,1,4,1,1,1,3,1,4,1,1,1,3,1,4,1,1,1,3,1,4,1,1,1,1,4,2,2,2,3,3,1,1,1,2'
+  },
+  // Leading zeros, which pair-encoding must not normalise away.
+  {
+    format: 'CODE128',
+    value: '000012345678',
+    modules:
+      '2,1,1,2,3,2,2,1,2,2,2,2,2,1,2,2,2,2,1,1,2,2,3,2,1,3,1,1,2,3,3,3,1,1,2,1,2,4,1,1,1,2,4,1,1,3,1,1,2,3,3,1,1,1,2'
   }
 ];
 
@@ -271,74 +390,16 @@ const UNENCODABLE: ReadonlyArray<{ format: string; value: string }> = [
   // as 10 — past the end of the ten-entry pattern tables.
   { format: 'EAN13', value: '\u0663' + '901234123457' },
   { format: 'EAN13', value: '590123412345' + '\u2167' },
-  { format: 'EAN13', value: '\u3248' + '901234123457' }
+  { format: 'EAN13', value: '\u3248' + '901234123457' },
+  // Code 128 accepts ASCII 32..126 and nothing else. That gate is what makes its later
+  // `asciiValue!` uses unreachable (checked in Story 16.34), so it has to keep refusing:
+  // BWIPP would encode 'CAF\u00c9' through a latin-1 path, and matching that would trade a
+  // readable fallback for a symbol the card does not carry.
+  { format: 'CODE128', value: 'CAF\u00c9' },
+  { format: 'CODE128', value: '\u0663' + '5901234' },
+  // Tab is ASCII, but below 32.
+  { format: 'CODE128', value: '5901234\t123' }
 ];
-
-/**
- * Slice a Swift declaration out of `source`, brace/bracket-matched.
- *
- * Anchors on the signature's OWN trailing delimiter: `[String] = [` contains an
- * earlier `[` belonging to the type annotation, not to the array literal.
- */
-const swiftDeclaration = (source: string, signature: string) => {
-  const start = source.indexOf(signature);
-
-  if (start === -1) {
-    throw new Error(`Unable to find "${signature}" in BarcodeGenerator.swift`);
-  }
-
-  const open = signature.trimEnd().endsWith('[') ? '[' : '{';
-  const close = open === '[' ? ']' : '}';
-  let depth = 0;
-  let inString = false;
-
-  for (let i = start + signature.length - 1; i < source.length; i += 1) {
-    const character = source[i];
-
-    if (character === '"' && source[i - 1] !== '\\') {
-      inString = !inString;
-    }
-
-    if (inString) {
-      continue;
-    }
-
-    // Skip comments: a brace or bracket written in prose must not move the depth.
-    if (character === '/' && source[i + 1] === '/') {
-      const newline = source.indexOf('\n', i);
-
-      if (newline === -1) {
-        break;
-      }
-
-      i = newline;
-      continue;
-    }
-
-    if (character === '/' && source[i + 1] === '*') {
-      const commentEnd = source.indexOf('*/', i + 2);
-
-      if (commentEnd === -1) {
-        break;
-      }
-
-      i = commentEnd + 1;
-      continue;
-    }
-
-    if (character === open) {
-      depth += 1;
-    } else if (character === close) {
-      depth -= 1;
-
-      if (depth === 0) {
-        return source.slice(start, i + 1);
-      }
-    }
-  }
-
-  throw new Error(`Unbalanced delimiters while slicing "${signature}"`);
-};
 
 /**
  * Declarations the harness needs; all are pure and free of SwiftUI/UIKit.
@@ -359,8 +420,12 @@ const HARNESS_DECLARATIONS = [
   'private static func encodeUPCA(value: String) -> [Int]? {',
   'private static let code39Patterns: [Character: String] = [',
   'private static func encodeCode39(value: String) -> [Int]? {',
+  // Self-contained: its only helper, `digitRunLength`, is nested inside it, and its
+  // `widthsTable` is a local `let` — so it needs no companion declaration here.
+  'private static func encodeCode128(value: String) -> [Int]? {',
   'private static func compressBitStringToModuleWidths(_ bits: String) -> [Int] {',
-  'private static func quietZone(for format: WatchBarcodeFormat) -> Int {'
+  'private static func quietZone(for format: WatchBarcodeFormat) -> WatchBarcodeQuietZone {',
+  'struct WatchBarcodeQuietZone: Equatable {'
 ];
 
 /**
@@ -377,12 +442,15 @@ const buildHarness = (source: string) => {
     throw new Error('Unable to find code39Delimiter in BarcodeGenerator.swift');
   }
 
-  const members = [delimiter, ...HARNESS_DECLARATIONS.map((s) => swiftDeclaration(source, s))]
+  const members = [
+    delimiter,
+    ...HARNESS_DECLARATIONS.map((declaration) => swiftDeclaration(source, declaration, GENERATOR))
+  ]
     .map((member) => '  ' + member.replace(/^ +/, '').replace(/^private /, ''))
     .join('\n\n');
 
   return [
-    swiftDeclaration(source, 'enum WatchBarcodeFormat: String {'),
+    swiftDeclaration(source, 'enum WatchBarcodeFormat: String {', GENERATOR),
     `enum Encoders {\n${members}\n}`,
     'func render(_ m: [Int]?) -> String {',
     '  m.map { $0.map(String.init).joined(separator: ",") } ?? "nil"',
@@ -397,6 +465,7 @@ const buildHarness = (source: string) => {
     '  case .EAN8: modules = Encoders.encodeEAN8(value: parts[1])',
     '  case .UPCA: modules = Encoders.encodeUPCA(value: parts[1])',
     '  case .CODE39: modules = Encoders.encodeCode39(value: parts[1])',
+    '  case .CODE128: modules = Encoders.encodeCode128(value: parts[1])',
     '  default: modules = nil',
     '  }',
     '  print("\\(parts[0])|\\(parts[1])|\\(render(modules))")',
@@ -406,86 +475,36 @@ const buildHarness = (source: string) => {
 
 /** Run the harness over `cases`, returning "FORMAT|value" -> module string. */
 const runSwiftEncoders = (cases: ReadonlyArray<{ format: string; value: string }>) => {
-  // Assemble BEFORE creating the temp directory. Extraction throws when a pinned
-  // declaration has moved or been renamed, and doing it first means that failure has
-  // nothing to clean up — rather than skipping a `finally` that had not been entered yet.
-  const harnessSource = buildHarness(readGenerator());
-  const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'watch-barcode-'));
-  const harness = path.join(directory, 'EncoderHarness.swift');
+  const stdout = runSwiftProgram({
+    program: buildHarness(readGenerator()),
+    input: cases.map(({ format, value }) => `${format}|${value}`).join('\n'),
+    label: GENERATOR,
+    hint:
+      'A "Fatal error: Unexpectedly found nil" here means an encoder force-unwraps ' +
+      'something that can be nil — a crash on real card data, not a wrong barcode.'
+  });
 
-  try {
-    fs.writeFileSync(harness, harnessSource);
+  return new Map(
+    stdout
+      .split('\n')
+      .filter(Boolean)
+      .map((line) => {
+        const separator = line.lastIndexOf('|');
 
-    let stdout: string;
-
-    try {
-      stdout = execFileSync('xcrun', ['--sdk', 'macosx', 'swift', harness], {
-        input: cases.map(({ format, value }) => `${format}|${value}`).join('\n'),
-        encoding: 'utf8',
-        maxBuffer: 8 * 1024 * 1024
-      });
-    } catch (error) {
-      // Swift prints ~40 lines of LLVM stack dump after a trap, which buries the one
-      // line that says what went wrong. Keep the diagnosis, drop the noise.
-      const output = String(
-        (error as { stderr?: Buffer | string }).stderr ?? (error as Error).message
-      );
-      const diagnosis = output
-        .split('\n')
-        .filter((line) => /Fatal error|error:|warning:/.test(line))
-        .slice(0, 8)
-        .join('\n');
-
-      // Swift's line number refers to the assembled harness, which is deleted below and
-      // does not share BarcodeGenerator.swift's numbering. Quote the line itself, so the
-      // offending code is greppable in the real source.
-      const harnessLine = Number(output.match(/EncoderHarness\.swift:(\d+)/)?.[1]);
-      const culprit = Number.isFinite(harnessLine)
-        ? '\n\nThat line, lifted verbatim from BarcodeGenerator.swift (grep for it there — ' +
-          `the number above is harness-relative):\n    ${harnessSource.split('\n')[harnessLine - 1]?.trim()}`
-        : '';
-
-      throw new Error(
-        'The encoders lifted from BarcodeGenerator.swift failed to run. A "Fatal error: ' +
-          'Unexpectedly found nil" here means an encoder force-unwraps something that can be ' +
-          `nil — a crash on real card data, not a wrong barcode.\n\n${diagnosis || output.slice(0, 600)}${culprit}`
-      );
-    }
-
-    return new Map(
-      stdout
-        .split('\n')
-        .filter(Boolean)
-        .map((line) => {
-          const separator = line.lastIndexOf('|');
-
-          return [line.slice(0, separator), line.slice(separator + 1)] as const;
-        })
-    );
-  } finally {
-    fs.rmSync(directory, { recursive: true, force: true });
-  }
+        return [line.slice(0, separator), line.slice(separator + 1)] as const;
+      })
+  );
 };
 
 const readGenerator = () => fs.readFileSync(generatorPath, 'utf8');
 
-/** Body of a `switch format { ... }` inside the named function. */
-const switchBody = (source: string, funcSignature: string) => {
-  const start = source.indexOf(funcSignature);
-
-  if (start === -1) {
-    throw new Error(`Unable to find ${funcSignature} in BarcodeGenerator.swift`);
-  }
-
-  const open = source.indexOf('switch format {', start);
-  const close = source.indexOf('\n    }', open);
-
-  return source.slice(open, close);
-};
-
 /** `case .EAN13: return encodeEAN13(...)` -> { EAN13: 'encodeEAN13' } */
 const parseEncoderMap = (source: string) => {
-  const body = switchBody(source, 'private static func modules(for format: WatchBarcodeFormat');
+  const body = switchBody(
+    source,
+    'private static func modules(for format: WatchBarcodeFormat',
+    GENERATOR
+  );
   const map: Record<string, string> = {};
 
   for (const match of body.matchAll(/case \.(\w+): return (encode\w+|nil)/g)) {
@@ -499,20 +518,29 @@ const parseEncoderMap = (source: string) => {
   return map;
 };
 
-/** `case .CODE39, .CODE128: return 10` -> { CODE39: 10, CODE128: 10 } */
+/**
+ * `case .CODE39, .CODE128: return WatchBarcodeQuietZone(leading: 10, trailing: 10)`
+ * -> `{ CODE39: { leading: 10, trailing: 10 }, CODE128: { … } }`
+ */
 const parseQuietZones = (source: string) => {
-  const body = switchBody(source, 'private static func quietZone(for format: WatchBarcodeFormat');
-  const map: Record<string, number> = {};
+  const body = switchBody(
+    source,
+    'private static func quietZone(for format: WatchBarcodeFormat',
+    GENERATOR
+  );
+  const map: Record<string, { leading: number; trailing: number }> = {};
+  const pattern =
+    /case ((?:\.\w+(?:, )?)+): return WatchBarcodeQuietZone\(\s*leading: (\d+), trailing: (\d+)\)/g;
 
-  for (const match of body.matchAll(/case ((?:\.\w+(?:, )?)+): return (\d+)/g)) {
-    const [, names, modules] = match;
+  for (const match of body.matchAll(pattern)) {
+    const [, names, leading, trailing] = match;
 
-    if (!names || !modules) {
+    if (!names || !leading || !trailing) {
       continue;
     }
 
     for (const name of names.split(', ')) {
-      map[name.replace('.', '')] = Number(modules);
+      map[name.replace('.', '')] = { leading: Number(leading), trailing: Number(trailing) };
     }
   }
 
@@ -534,6 +562,19 @@ const parseStringArray = (source: string, name: string) => {
 
   return [...body.matchAll(/"([01]+)"/g)].map((match) => match[1]);
 };
+
+/**
+ * The `widthsTable` local to `encodeCode128`, as element-width strings.
+ *
+ * A local `let`, not a static member, so `parseStringArray` cannot reach it — and its widths
+ * run 1-4 rather than the EAN tables' binary. `swiftDeclaration` does the bracket matching.
+ */
+const parseCode128Widths = (source: string) =>
+  [...swiftDeclaration(source, 'let widthsTable: [String] = [', GENERATOR).matchAll(/"(\d+)"/g)]
+    .map((match) => match[1])
+    // A capture group always matches when its pattern does; the filter is here to narrow
+    // `string | undefined` away, so the widths can be measured rather than only compared.
+    .filter((widths) => widths !== undefined);
 
 /** `private static let code39Patterns: [Character: String] = [ "A": "31..." ]` */
 const parseCode39Table = (source: string) => {
@@ -597,7 +638,8 @@ describe('watch barcode symbology contract', () => {
     for (const encoder of ['encodeEAN13', 'encodeEAN8', 'encodeUPCA']) {
       const body = swiftDeclaration(
         source,
-        `private static func ${encoder}(value: String) -> [Int]? {`
+        `private static func ${encoder}(value: String) -> [Int]? {`,
+        GENERATOR
       );
 
       expect(body).toMatch(/asciiDigits\(/);
@@ -626,10 +668,16 @@ describe('watch barcode symbology contract', () => {
     const source = readGenerator();
     const version = source.match(/private static let cacheVersion = "([^"]+)"/)?.[1];
 
-    // An EAN-8 card already has a *Code128* image cached under v2, keyed by the same
-    // value+format+size. Without a bump the device keeps serving the wrong symbol.
+    // The cache key is value+format+size and carries no renderer version of its own, so a
+    // card cached under a superseded version keeps being served the symbol that version drew.
+    // Each entry below is a version whose Code 128 or symbology output is now known wrong:
+    //   v2 — EAN-8, UPC-A and Code39 were drawn as Code128 (Story 16.28).
+    //   v3 — every Code 128 symbol was missing its final 2-module stop bar (Story 16.37).
+    // Append, never replace: dropping an old value lets that bump be quietly reverted.
+    const SUPERSEDED = ['watch-barcode-v2', 'watch-barcode-v3'];
+
     expect(version).toBeDefined();
-    expect(version).not.toBe('watch-barcode-v2');
+    expect(SUPERSEDED).not.toContain(version);
   });
 
   it('keeps the six-format contract in step with the shared card schema', () => {
@@ -679,6 +727,36 @@ describe('watch barcode symbology contract', () => {
     expect(new Set(Object.values(table)).size).toBe(43);
   });
 
+  it('terminates every Code 128 symbol with the full stop pattern', () => {
+    const table = parseCode128Widths(readGenerator());
+
+    // Code words run 0...106 and no further — `encodeCode128` never appends one above 106, so
+    // anything past the end is unreachable. It is not harmless: it pushes the STOP out of the
+    // table's last slot, and a six-character entry stops looking wrong among six-character
+    // neighbours. That is how a truncated "233111" survived three stories of barcode work.
+    expect(table).toHaveLength(107);
+
+    for (const [index, widths] of Object.entries(REFERENCE_CODE128_DELIMITERS)) {
+      expect(table[Number(index)]).toBe(widths);
+    }
+
+    // The STOP is the ONE seven-element code word. Its trailing 2-module BAR is what a decoder
+    // matches to terminate the read; without it the symbol ends on a space and is
+    // indistinguishable from a scan that was cut short.
+    const modules = (widths: string) => [...widths].reduce((sum, w) => sum + Number(w), 0);
+
+    const stop = table[106] ?? '';
+
+    expect(stop).toHaveLength(7);
+    expect(modules(stop)).toBe(13);
+
+    // Every other code word is six elements over 11 modules.
+    for (const widths of table.slice(0, 106)) {
+      expect(widths).toHaveLength(6);
+      expect(modules(widths)).toBe(11);
+    }
+  });
+
   it('uses the published per-symbology quiet zone minima', () => {
     // A flat margin narrows every bar on a wrist-sized symbol for no benefit.
     expect(parseQuietZones(readGenerator())).toEqual(REFERENCE_QUIET_ZONES);
@@ -689,8 +767,6 @@ describe('watch barcode symbology contract', () => {
   // and a change that kept the names and tables intact while breaking the maths —
   // `encodeUPCA` delegating to `encodeCode128`, a flipped check-digit weight, an
   // off-by-one slice — would pass every other gate on a non-OTA native path.
-  const describeOnMac = process.platform === 'darwin' ? describe : describe.skip;
-
   describeOnMac('executed against the real Swift encoders', () => {
     it('reproduces every BWIPP reference symbol, and refuses every unencodable value', () => {
       const results = runSwiftEncoders([...REFERENCE_SYMBOLS, ...UNENCODABLE]);

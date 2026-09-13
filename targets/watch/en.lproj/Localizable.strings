@@ -14,6 +14,9 @@
 "watch.debug.import_sample_cards" = "Import sample cards";
 "watch.barcode.accessibility.image_format" = "Barcode for %@";
 "watch.barcode.accessibility.value_format" = "Barcode value for %@";
+/* Spoken instead of image_format when the geometry forced a 90 degree rotation:
+   a sighted user sees the symbol is sideways, a VoiceOver user has to be told. */
+"watch.barcode.accessibility.image_rotated_format" = "Barcode for %@, sideways — turn your wrist to scan";
 "watch.complication.accessibility.card_format" = "Loyalty card: %@";
 "watch.complication.display_name" = "Loyalty Card";
 "watch.complication.description" = "Shows your most-used loyalty card.";

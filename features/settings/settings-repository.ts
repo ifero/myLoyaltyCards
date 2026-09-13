@@ -9,5 +9,7 @@ export {
   setThemePreference,
   getLanguagePreference,
   setLanguagePreference,
+  getAutoBrightnessEnabled,
+  setAutoBrightnessEnabled,
   type LanguagePreference
 } from '@/core/settings/settings-repository';

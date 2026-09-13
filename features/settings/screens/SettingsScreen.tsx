@@ -27,6 +27,7 @@ import { LanguagePickerSheet } from '../components/LanguagePickerSheet';
 import { PreferencesSection } from '../components/PreferencesSection';
 import { SignOutSheet } from '../components/SignOutSheet';
 import { ThemePickerSheet } from '../components/ThemePickerSheet';
+import { useAutoBrightnessPreference } from '../hooks/useAutoBrightnessPreference';
 import { useExportData } from '../hooks/useExportData';
 import { useImportData } from '../hooks/useImportData';
 import { useLanguagePreference } from '../hooks/useLanguagePreference';
@@ -72,6 +73,10 @@ const SettingsScreen = () => {
     closeLanguagePicker,
     selectLanguage
   } = useLanguagePreference();
+
+  // Story 16.39 — the standing preference behind the card detail screen's brightness
+  // boost. Off by default; the card screen also has an in-the-moment button.
+  const { isAutoBrightnessEnabled, setAutoBrightness } = useAutoBrightnessPreference();
 
   const { cardCount, hasCards, isExporting, exportError, exportCards, refreshCardCount } =
     useExportData();
@@ -257,6 +262,8 @@ const SettingsScreen = () => {
           languageName={languageName}
           onThemePress={openThemePicker}
           onLanguagePress={openLanguagePicker}
+          isAutoBrightnessEnabled={isAutoBrightnessEnabled}
+          onAutoBrightnessChange={setAutoBrightness}
         />
 
         <DataManagementSection

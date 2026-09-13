@@ -1,11 +1,16 @@
 import Foundation
 
-/// Resolves a card's brand id to its widget logo asset and decides whether that
+/// Resolves a card's brand id to its bundled logo asset and decides whether that
 /// logo needs a dark chip to stay legible. The underlying brand-id sets
 /// (`knownBrandIds`, `lightLogoBrandIds`) are generated from the catalogue and
 /// the bundled `BrandLogo-*` imagesets — see `BrandLogoCatalog.generated.swift`
 /// and `watch-ios/Scripts/generate-catalogue.swift` — so they cannot silently
 /// drift from the assets that actually ship.
+///
+/// This file is the single authored copy. The watch app target compiles a
+/// generator-emitted mirror (`targets/watch/Generated/BrandLogoCatalog.swift`)
+/// because the two targets have no shared-source mechanism; edit this file and
+/// run `yarn watch:catalogue:generate`.
 enum BrandLogoCatalog {
   static func assetName(for brandId: String?) -> String? {
     guard let normalizedBrandId = normalized(brandId) else {

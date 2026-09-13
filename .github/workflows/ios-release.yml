@@ -13,6 +13,11 @@ on:
       - 'core/**'
       - 'features/**'
       - 'shared/**'
+      # Local Expo modules. `modules/wear-data-layer` is Android-only NATIVELY, but
+      # `core/wear-connectivity.ts` does `require('@/modules/wear-data-layer')`, so its
+      # TypeScript is bundled for iOS too. Absent until Story 16.36 — a change to it
+      # built nothing on either platform.
+      - 'modules/**'
       # Native projects, plus the watch companion embedded in the iOS binary.
       - 'ios/**'
       - 'targets/**'
@@ -42,6 +47,7 @@ on:
       # ALSO touches real source still matches and still builds.
       - '!**/*.test.ts'
       - '!**/*.test.tsx'
+      - '!**/*.test.rb'
       - '!**/*.stories.tsx'
   workflow_dispatch:
 
@@ -137,7 +143,7 @@ jobs:
         run: yarn check:native-patches
       - name: Prebuild native projects
         run: npx expo prebuild --platform ios
-      - name: Generate watchOS catalogue (Brands.swift)
+      - name: Generate watchOS catalogue (brands + brand-logo assets)
         run: xcrun --sdk macosx swift watch-ios/Scripts/generate-catalogue.swift
       - name: Set up Ruby
         uses: ruby/setup-ruby@v1

@@ -180,7 +180,8 @@ The pre-push hook runs these — plus the rest of the [quality gates](#quality-g
 yarn lint
 yarn format:check   # or: yarn format  (to fix in place)
 yarn typecheck
-yarn test           # or: yarn test:all  (includes watchOS tests)
+yarn test           # or: yarn test:all  (adds watchOS + fastlane helper tests)
+yarn test:fastlane  # fastlane/Fastfile release helpers (needs `bundle install` once)
 ```
 
 **Never use `--no-verify`.** If a gate fails, fix it.
@@ -261,13 +262,15 @@ Quality is enforced at three levels. **All must pass — bypassing them is forbi
 | **pre-commit**          | `git commit`                        | `lint-staged` → ESLint `--fix` + Prettier on staged files                                        |
 | **pre-push**            | `git push`                          | Typecheck, lint, format, drift checks, full test suite                                           |
 | **CI — quality**        | every PR & push to `main`           | Everything `pre-push` runs, plus the repo-layout checks, with coverage                           |
-| **CI — watchOS**        | PR/push touching watch or iOS paths | Watch contract tests, `Brands.swift` catalogue sync, watch-target build                          |
+| **CI — watchOS**        | PR/push touching watch or iOS paths | Watch contract tests, generated-catalogue + brand-logo mirror sync, watch-target build           |
 | **CI — Wear OS**        | PR/push touching `watch-android/**` | JVM unit tests plus `assembleDebug` **and** `assembleRelease` for the standalone Wear OS project |
 | **CI — PR conventions** | every PR                            | Conventional-Commit title, branch naming, and spec-first story link (see note below)             |
 
 ### Exactly what runs, in order
 
-The pre-push hook and the quality-gates workflow run the **same set of checks in a different order** — CI adds the test-layout check and collects coverage. If you add or remove a check, update both the file and this list.
+The pre-push hook and the quality-gates workflow run the **same set of checks in a different order** — CI adds the test-layout check, the fastlane helper tests, and collects coverage. If you add or remove a check, update both the file and this list.
+
+> **Why the fastlane tests are CI-only.** They need Ruby and the bundled fastlane gem, and `.bundle/config` sets `BUNDLE_PATH: ./bundler`, which is **per-checkout and gitignored** — so a fresh git worktree has no gems until someone runs `bundle install`. In pre-push that would fail every push from a new worktree, for a suite that guards one directory. Run it by hand with `yarn test:fastlane` when you touch `fastlane/Fastfile`.
 
 **pre-push** ([`.husky/pre-push`](.husky/pre-push)) — stops at the first failure:
 
@@ -276,11 +279,12 @@ The pre-push hook and the quality-gates workflow run the **same set of checks in
 3. `yarn icons:check`
 4. `yarn frames:check`
 5. `yarn wear:catalogue:check`
-6. `yarn lint`
-7. `yarn check:native-patches`
-8. `yarn check:native-strings`
-9. `yarn format:check`
-10. `yarn test`
+6. `yarn check:build-path-filters`
+7. `yarn lint`
+8. `yarn check:native-patches`
+9. `yarn check:native-strings`
+10. `yarn format:check`
+11. `yarn test`
 
 **CI — quality** ([`ci-quality-gates.yml`](.github/workflows/ci-quality-gates.yml)):
 
@@ -294,12 +298,17 @@ The pre-push hook and the quality-gates workflow run the **same set of checks in
 8. `yarn frames:check`
 9. `yarn wear:catalogue:check`
 10. `yarn check:no-tests-folders`
-11. `yarn check:story-catalogue-sync`
-12. `yarn test:coverage`
+11. `yarn check:build-path-filters`
+12. `yarn check:story-catalogue-sync`
+13. `yarn test:coverage`
 
-**CI — watchOS** ([`watchos-tests.yml`](.github/workflows/watchos-tests.yml)) is a **separate, path-filtered workflow** — it runs only when `targets/watch/**`, `watch-ios/**`, `ios/**`, `app.json`, `fastlane/Fastfile`, or the workflow itself changes, so most PRs never trigger it. It runs the watch catalogue Jest tests, then `expo prebuild`, regenerates `Brands.swift`, verifies it with `yarn check:catalogue-generated`, and builds the watch target via `yarn watch:build:ci`. Locally, `yarn test:all` covers the watch tests.
+Plus a second, parallel job in the same workflow — `fastlane-gates` — which sets up Ruby and runs `bundle exec ruby fastlane/Fastfile.test.rb`. It is a separate job so the Node-only gate above does not pay for a Ruby toolchain on every run. It guards `fastlane/Fastfile`'s release helpers, above all the Wear-track preflight: `available_play_tracks` swallows its own errors and returns `nil`, and `nil` means "cannot verify, carry on" — so anything that breaks that lookup silently disarms the preflight without failing a build. Three nightly builds shipped phone-only releases before it existed.
 
-**CI — Wear OS** ([`wear-os-build.yml`](.github/workflows/wear-os-build.yml)) is likewise path-filtered, to `watch-android/**` — it compiles the standalone Gradle project with `./gradlew assembleDebug` and runs no tests. Note that the Wear brand-catalogue drift check is **not** here: `yarn wear:catalogue:check` runs in the always-on quality-gates job above, because a PR editing only `catalogue/italy.json` would never trigger a `watch-android/**`-filtered job. Locally, `cd watch-android && ./gradlew assembleDebug`.
+**CI — watchOS** ([`watchos-tests.yml`](.github/workflows/watchos-tests.yml)) is a **separate, path-filtered workflow** — it runs only when `targets/watch/**`, `catalogue/**`, `targets/watch-widget/**`, `watch-ios/**`, `ios/**`, `app.json`, `fastlane/Fastfile`, or the workflow itself changes (the two middle entries are the generator's inputs — without them a brand-add PR that forgot to regenerate would skip the drift check), so most PRs never trigger it. It runs the watch catalogue Jest tests, then `yarn check:catalogue-generated` **against the pristine checkout** — before anything regenerates, which is what makes it a real drift gate — then `expo prebuild`, then builds the watch target via `yarn watch:build:ci` (whose own `pre` hook regenerates the catalogue for the build). Locally, `yarn test:all` covers the watch tests.
+
+**CI — Wear OS** ([`wear-os-build.yml`](.github/workflows/wear-os-build.yml)) is likewise path-filtered, to `watch-android/**` — it runs `./gradlew testDebugUnitTest assembleDebug bundleRelease` on the standalone Gradle project — the JVM unit tests, plus BOTH variants, since Story 16.35 made the release bundle the artifact users receive (the bundle built here is unsigned and uploaded nowhere). Note that the Wear brand-catalogue drift check is **not** here: `yarn wear:catalogue:check` runs in the always-on quality-gates job above, because a PR editing only `catalogue/italy.json` would never trigger a `watch-android/**`-filtered job. Locally, `cd watch-android && ./gradlew assembleDebug`.
+
+**Nightly internal builds** ([`nightly-builds.yml`](.github/workflows/nightly-builds.yml)) ship `main` to TestFlight and Play `internal` every night — **but only when something that can reach a binary has changed**. That definition lives in [`.github/build-path-filters.json`](.github/build-path-filters.json) and is the same one `ios-release.yml` and `android-release.yml` duplicate into their `on.push.paths`; `yarn check:build-path-filters` fails when they disagree. **A change outside that set produces no nightly build** — if you add a new source directory, add it to the config in the same PR. Run one by hand from Actions → Nightly Internal Builds (`dry_run: true` builds everything and uploads nothing). See [docs/cicd.md](docs/cicd.md#nightly-internal-builds).
 
 The **PR conventions** check ([`pr-conventions.yml`](.github/workflows/pr-conventions.yml)) fails the PR if the title isn't a Conventional Commit, the branch doesn't use an allowed prefix, or a **code change** references no story. `docs:`/`chore:` titles and catalogue- or `design`-labelled PRs are exempt from the story requirement (the `design` label covers token/visual polish — see [Design / UI Changes](#design--ui-changes)).
 
@@ -373,11 +382,17 @@ Expanding the brand catalogue is the easiest and most-welcomed way to contribute
 
 1. The catalogue source of truth lives in [`catalogue/`](catalogue/) (e.g. `catalogue/italy.json`).
 2. Add or correct a brand entry, matching the existing JSON shape and the schema in `catalogue/types.ts`. Keep all fields present.
+
+   **Where a new brand's logo PNGs go:** add the `BrandLogo-<brand-id>.imageset` to `targets/watch-widget/Assets.xcassets` **only**. The imageset must contain a `Contents.json` declaring every PNG it ships — copy an existing `BrandLogo-*.imageset`'s as a template and swap the filenames. Without it Xcode's asset compiler silently drops the image from the build (only a non-fatal "unassigned child" warning), so the watch would claim the brand has a logo and draw an empty circle; the generator refuses that rather than letting it ship. **Read the generator's warnings, not just its exit code:** it also warns when a PNG rasterized to a uniform rectangle — structurally a perfect imageset with no mark in it, which every gate otherwise passes. That happens when the source SVG is subtly broken (the committed `stroili` asset references an undefined `cls-1` class, so it renders blank), and the row then shows a blank disc, which is worse than the initials it replaces. If you see that warning for your brand, fix the SVG before committing the rasterized PNGs. That catalogue is the source of truth; the generator mirrors it into the watch app target, which is what makes the logo appear in the Apple Watch card list. Never hand-copy imagesets into `targets/watch/Assets.xcassets` — the mirror is byte-exact and `--check` will fail on anything it did not write. A catalogue brand with no imageset is fine: the card list falls back to initials. (The complication ships the same artwork but renders a static open-the-app glyph today — its per-card path is retained but dormant, see `targets/watch-widget/WatchComplicationWidget.swift`.)
+
 3. **Regenerate the watchOS catalogue** so the Apple Watch app stays in sync (needs macOS + Xcode):
+
    ```bash
    yarn watch:catalogue:generate
    ```
-   This also regenerates the watch complication's brand-logo catalog (`targets/watch-widget/Generated/BrandLogoCatalog.generated.swift`) from the bundled logo assets. CI runs `yarn check:catalogue-generated` to ensure the generated watch sources match the source — commit the regenerated output.
+
+   This also regenerates everything derived from the bundled logo assets, for **both** watch targets: the brand-logo catalog (`targets/watch-widget/Generated/BrandLogoCatalog.generated.swift` and `targets/watch/Generated/BrandLogoCatalog.generated.swift`), the watch app's mirror of the resolver (`targets/watch/Generated/BrandLogoCatalog.swift`), and the `BrandLogo-*.imageset` copies in `targets/watch/Assets.xcassets`. CI runs `yarn check:catalogue-generated` to ensure the generated watch sources — imagesets included — match the source, so commit the regenerated output.
+
 4. **Regenerate the Wear OS catalogue** too — it is a separate generated file for a separate app, and forgetting it is the easiest mistake to make here:
    ```bash
    yarn wear:catalogue:generate

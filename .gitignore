@@ -87,9 +87,19 @@ expo-env.d.ts
 # Lock files
 package-lock.json
 
-# WatchOS (targets/watch — source managed by @bacons/apple-targets)
+# WatchOS (targets/watch — source managed by @bacons/apple-targets).
+# The directory is ignored and each generated artifact un-ignored by name, so the
+# generator's .catalogue-inputs.sha256 sidecar (machine state for the incremental
+# skip, not an artifact) stays out while everything the target must COMPILE stays in.
+# A gitignored artifact cannot be drift-checked, and these three are compiled into the
+# watch app: a fresh clone that never runs the generator would not build without them.
+# `yarn check:catalogue-generated` gates all three in CI (watchos-tests.yml, against the
+# pristine checkout). It is NOT in pre-push, unlike the Wear OS equivalent below: it
+# needs `xcrun swift`, so it cannot run on every contributor's machine.
 targets/watch/Generated/*
 !targets/watch/Generated/Brands.swift
+!targets/watch/Generated/BrandLogoCatalog.generated.swift
+!targets/watch/Generated/BrandLogoCatalog.swift
 targets/watch/generated.entitlements
 
 # WatchOS widget (targets/watch-widget — generated brand-logo catalog is tracked)

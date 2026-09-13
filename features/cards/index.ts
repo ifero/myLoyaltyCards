@@ -55,6 +55,7 @@ export type { UseDeleteCardReturn } from './hooks/useDeleteCard';
 export { useBarcodeScanner } from './hooks/useBarcodeScanner';
 export type { ScanResult } from './hooks/useBarcodeScanner';
 export { useBrightness } from './hooks/useBrightness';
+export { useCardBrightnessBoost } from './hooks/useCardBrightnessBoost';
 export type { UseBrightnessReturn } from './hooks/useBrightness';
 export { useBrandLogo } from './hooks/useBrandLogo';
 export { useCardSearch } from './hooks/useCardSearch';

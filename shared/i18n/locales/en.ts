@@ -136,7 +136,8 @@ export const en = {
     },
     preferences: {
       themeLabel: 'Theme',
-      languageLabel: 'Language'
+      languageLabel: 'Language',
+      autoBrightnessLabel: 'Full brightness on card details'
     },
     about: {
       appVersion: 'App Version',
@@ -631,7 +632,8 @@ export const en = {
       viewFullscreenAccessibilityLabel: 'View full screen barcode',
       viewFullscreenHint: 'Opens the barcode in full screen for scanning',
       tapToEnlarge: 'Tap to enlarge',
-      brightnessHint: 'Increase brightness for scanning',
+      brightnessToggleLabel: 'Full brightness',
+      brightnessToggleHint: 'Sets the screen to full brightness so a scanner can read the barcode',
       numberLabel: 'Number',
       copyAccessibilityHint: 'Double tap to copy barcode number',
       colorLabel: 'Color',
