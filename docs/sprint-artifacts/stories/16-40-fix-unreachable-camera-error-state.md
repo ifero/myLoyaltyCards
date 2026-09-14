@@ -4,7 +4,7 @@ baseline_commit: 8c220e6cd2a5e03b4dc222e874c11ccc9d2df725
 
 # Story 16.40: `BarcodeScanner`'s camera-error state is unreachable, so a failed permission request strands the user on a loading string
 
-Status: review
+Status: done
 
 Epic: 16 — Platform & Tech Debt
 
