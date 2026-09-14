@@ -4,7 +4,7 @@ baseline_commit: 0d79e28c45cd7b4c65435a58e106bf09fe3d2e89
 
 # Story 16.24: Clear the `exhaustive-deps` backlog and promote the rule to `error`
 
-Status: review
+Status: done
 
 Epic: 16 — Platform & Tech Debt
 
