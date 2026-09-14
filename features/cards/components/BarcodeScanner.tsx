@@ -90,8 +90,12 @@ export function BarcodeScanner({ onScan, onManualEntry, onError }: BarcodeScanne
     }
   }, [permission, handleRequestPermission]);
 
-  // Show permission request UI
-  if (permission === null) {
+  // Show permission request UI.
+  // `&& !error` matters: when `requestPermission()` REJECTS — the OS never answers,
+  // as opposed to denying — the hook sets `error` but `permission` stays null. Without
+  // this guard that state renders the loading string forever, with no retry and no
+  // manual-entry escape, and the error branch below is unreachable. See the tests.
+  if (permission === null && !error) {
     // Permission status is still loading
     return (
       <SafeAreaView style={[styles.centered, { backgroundColor: theme.background }]}>
@@ -100,7 +104,7 @@ export function BarcodeScanner({ onScan, onManualEntry, onError }: BarcodeScanne
     );
   }
 
-  if (permission.granted === false) {
+  if (permission?.granted === false) {
     // Permission denied - show error state
     return (
       <SafeAreaView style={[styles.centeredPadded, { backgroundColor: theme.background }]}>
