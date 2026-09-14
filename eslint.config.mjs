@@ -66,10 +66,15 @@ export default [
       // (set-state-in-effect, purity, immutability, …) that are a separate,
       // much larger migration.
       'react-hooks/rules-of-hooks': 'error',
-      // Starts at 'warn' on purpose: there is a pre-existing backlog and CI's
-      // `lint` step must stay green while it is worked down. Promote to 'error'
-      // once the count reaches zero.
-      'react-hooks/exhaustive-deps': 'warn',
+      // 'error', not 'warn': ESLint exits 0 when only warnings are present, so
+      // CI's `lint` step passes and a narrowed dep array merges with nothing but
+      // an unread line in the log. The backlog this rule shipped with (three
+      // sites) was cleared in Story 16.24, so the rule now blocks rather than
+      // advises. Two of those three were NOT fixed the way the rule's autofix
+      // suggests — obeying it caused a camera-permission loop in BarcodeScanner
+      // and re-ran database initialisation on every language change in
+      // app/_layout.tsx. Read the finding before trusting `eslint --fix` here.
+      'react-hooks/exhaustive-deps': 'error',
       // Feature boundary enforcement
       'boundaries/element-types': [
         'error',

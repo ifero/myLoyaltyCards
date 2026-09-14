@@ -53,7 +53,7 @@ export function BarcodeScanner({ onScan, onManualEntry, onError }: BarcodeScanne
   /**
    * Handle permission denied - show helpful message with options
    */
-  const handlePermissionDenied = () => {
+  const handlePermissionDenied = useCallback(() => {
     Alert.alert(
       t('addCard.scanner.cameraAccessTitle'),
       t('addCard.scanner.cameraAccessBody'),
@@ -72,7 +72,7 @@ export function BarcodeScanner({ onScan, onManualEntry, onError }: BarcodeScanne
       ],
       { cancelable: true }
     );
-  };
+  }, [t, onManualEntry]);
 
   // Request permission on mount if not granted
   const handleRequestPermission = useCallback(async () => {
@@ -81,7 +81,7 @@ export function BarcodeScanner({ onScan, onManualEntry, onError }: BarcodeScanne
       handlePermissionDenied();
       onError?.(t('addCard.scanner.cameraPermissionDeniedError'));
     }
-  }, [onError, requestCameraPermission, t]);
+  }, [handlePermissionDenied, onError, requestCameraPermission, t]);
 
   // Request permission on mount when permission status is null
   useEffect(() => {

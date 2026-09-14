@@ -121,7 +121,7 @@ const CreateAccountScreen = () => {
 
     setFieldErrors(errors);
     return Object.keys(errors).length === 0;
-  }, [confirmPassword, consent, email, fieldErrors, password, t, validateEmailField]);
+  }, [confirmPassword, consent, email, password, t, validateEmailField]);
 
   const handleRegister = useCallback(async () => {
     setError(null);

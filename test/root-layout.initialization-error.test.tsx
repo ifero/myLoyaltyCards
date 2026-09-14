@@ -109,6 +109,53 @@ describe('RootLayout initialization error localization', () => {
     expect(screen.queryByText('Database exploded')).toBeNull();
   });
 
+  // Story 16.24 (AC5): the boot effect stores a translation KEY and the message is
+  // translated at render, so a language change AFTER a failed initialisation
+  // re-renders it in the new language. Against the pre-16.24 code — which called
+  // `t(...)` inside the effect and stored the resulting STRING — this fails: the
+  // message stays in the language that was active at mount.
+  it('re-translates the boot-failure message when the language changes after the failure', async () => {
+    mockInitializeDatabase.mockRejectedValueOnce(new Error('Database exploded'));
+
+    render(<RootLayout />);
+
+    await waitFor(() => {
+      expect(screen.getByText('Initialization failed')).toBeTruthy();
+    });
+
+    await act(async () => {
+      await changeAppLanguage('it');
+    });
+
+    await waitFor(() => {
+      expect(screen.getByText('Inizializzazione non riuscita')).toBeTruthy();
+    });
+    expect(screen.queryByText('Initialization failed')).toBeNull();
+  });
+
+  // Story 16.24 (AC6): the effect's dep array is honestly `[]`, so a language
+  // change must not re-run database initialisation or churn the watch subscription.
+  it('does not re-run initialisation or resubscribe when the language changes', async () => {
+    mockInitializeDatabase.mockResolvedValue(undefined);
+
+    render(<RootLayout />);
+
+    await waitFor(() => {
+      expect(mockInitializeDatabase).toHaveBeenCalledTimes(1);
+    });
+    const subscriptionsAfterBoot = mockSubscribeToWatchMessages.mock.calls.length;
+
+    await act(async () => {
+      await changeAppLanguage('it');
+    });
+    await act(async () => {
+      await changeAppLanguage('en');
+    });
+
+    expect(mockInitializeDatabase).toHaveBeenCalledTimes(1);
+    expect(mockSubscribeToWatchMessages.mock.calls.length).toBe(subscriptionsAfterBoot);
+  });
+
   it('shows localized Italian fallback copy for non-Error failures', async () => {
     await act(async () => {
       await changeAppLanguage('it');

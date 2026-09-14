@@ -8,7 +8,7 @@
 
 import { useCameraPermissions } from 'expo-camera';
 import * as Haptics from 'expo-haptics';
-import { useState, useEffect, useRef } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { Platform } from 'react-native';
 
 import { BarcodeFormat } from '@/core/schemas';
@@ -157,8 +157,14 @@ export function useBarcodeScanner({
 
   /**
    * Request camera permission
+   *
+   * Memoised (Story 16.24) so that consumers which depend on it — notably
+   * `BarcodeScanner`'s `handleRequestPermission` — keep a stable identity and do
+   * not re-run their mount effect on every render. Safe to memoise because this
+   * closure reads NO reactive value: only `setError` (stable by React's
+   * guarantee), a ref, and module-level constants, so it cannot go stale.
    */
-  const requestCameraPermission = async () => {
+  const requestCameraPermission = useCallback(async () => {
     try {
       setError(null);
       const result = await requestPermission();
@@ -193,7 +199,7 @@ export function useBarcodeScanner({
       setError(message);
       return false;
     }
-  };
+  }, [requestPermission]);
 
   /**
    * Reset scanner state

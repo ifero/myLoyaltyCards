@@ -342,7 +342,13 @@ const RootLayout = () => {
   const { t } = useTranslation();
   // Infra readiness (local, offline-safe): DB init + guest-session bootstrap.
   const [isInitialized, setIsInitialized] = useState(false);
-  const [dbError, setDbError] = useState<string | null>(null);
+  // Holds a translation KEY, not a translated string: translating here would make
+  // the boot effect below close over `t`, whose identity changes on every language
+  // change. That would force `t` into the effect's dep array and re-run database
+  // initialisation and the watch subscription on each language switch. Translating
+  // at render instead keeps the dep array honestly empty AND keeps the message in
+  // the current language rather than the one active at mount. (Story 16.24)
+  const [dbErrorKey, setDbErrorKey] = useState<string | null>(null);
   // Auth readiness resolved offline-safe by useBootAuthGate (a SecureStore
   // session probe + reactive onAuthStateChange + safety timeout) — replaces the
   // blocking getSession() that hung offline on an expired-token refresh.
@@ -407,7 +413,7 @@ const RootLayout = () => {
         // an indexed otaFailureKind tag so a budget timeout can be counted
         // separately from an outright failure (AD-16-14-02) — that split is what
         // makes the budgets above calibratable from Sentry's UI. Neither path may
-        // reach logger.error: that is the fatal dbError channel and would render
+        // reach logger.error: that is the fatal dbErrorKey channel and would render
         // the boot-error screen.
         if (Updates.isEnabled) {
           try {
@@ -470,7 +476,7 @@ const RootLayout = () => {
         setIsInitialized(true);
       } catch (error) {
         logger.error('App initialization failed:', error);
-        setDbError(t('common.errors.initializationFailed'));
+        setDbErrorKey('common.errors.initializationFailed');
       }
     };
 
@@ -516,11 +522,11 @@ const RootLayout = () => {
   // never bounced to /welcome).
   const isReady = isInitialized && isAuthReady;
 
-  if (dbError) {
+  if (dbErrorKey) {
     return (
       <View style={styles.fullscreen}>
         <Text style={styles.errorTitle}>{t('common.errors.databaseErrorTitle')}</Text>
-        <Text style={styles.errorBody}>{dbError}</Text>
+        <Text style={styles.errorBody}>{t(dbErrorKey)}</Text>
       </View>
     );
   }
@@ -575,7 +581,7 @@ const styles = StyleSheet.create((theme) => ({
     flex: 1,
     backgroundColor: theme.colors.background
   },
-  // Now owned by the `dbError` branch only — the `!isReady` branch renders
+  // Now owned by the `dbErrorKey` branch only — the `!isReady` branch renders
   // AppLaunchScreen, which owns its own styles.
   fullscreen: {
     flex: 1,

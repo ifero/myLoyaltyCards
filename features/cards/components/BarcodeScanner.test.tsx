@@ -115,6 +115,48 @@ describe('BarcodeScanner', () => {
     });
   });
 
+  describe('Permission request stability (Story 16.24)', () => {
+    type AlertButton = { text?: string; onPress?: () => void };
+
+    // AC2 — the mount effect must not re-run on every render. It depends on
+    // `handleRequestPermission`, which depends on `requestCameraPermission` from
+    // useBarcodeScanner; while that helper was a bare arrow function it got a new
+    // identity each render, so the effect re-fired and the camera permission was
+    // requested repeatedly. FALSIFIABLE: against the un-memoised hook this
+    // observes 2 requests instead of 1.
+    it('requests camera permission exactly once while the status is unresolved', async () => {
+      mockRequestPermission.mockResolvedValue({ granted: false });
+      mockUseCameraPermissions.mockReturnValue([null, mockRequestPermission]);
+
+      render(<BarcodeScanner onScan={mockOnScan} onManualEntry={mockOnManualEntry} />);
+
+      await waitFor(() => expect(mockRequestPermission).toHaveBeenCalled());
+      // Let any identity churn settle; a re-running effect keeps requesting.
+      await new Promise((resolve) => setTimeout(resolve, 250));
+
+      expect(mockRequestPermission).toHaveBeenCalledTimes(1);
+    });
+
+    // AC3 — regression guard, NOT a reproduction: see the story's Dev Agent
+    // Record. The permission-denied alert must carry the CURRENT onManualEntry.
+    it('permission-denied alert invokes the current onManualEntry', async () => {
+      mockRequestPermission.mockResolvedValue({ granted: false });
+      mockUseCameraPermissions.mockReturnValue([null, mockRequestPermission]);
+
+      render(<BarcodeScanner onScan={mockOnScan} onManualEntry={mockOnManualEntry} />);
+
+      await waitFor(() => expect(Alert.alert).toHaveBeenCalled());
+
+      const alertCalls = (Alert.alert as unknown as jest.Mock).mock.calls;
+      const buttons = alertCalls[alertCalls.length - 1][2] as AlertButton[];
+      const manualEntry = buttons.find((button) => button.text === 'Enter card number manually');
+
+      expect(manualEntry).toBeDefined();
+      manualEntry?.onPress?.();
+      expect(mockOnManualEntry).toHaveBeenCalledTimes(1);
+    });
+  });
+
   describe('Camera View', () => {
     it('renders camera view when permission is granted', () => {
       mockUseCameraPermissions.mockReturnValue([{ granted: true }, mockRequestPermission]);
