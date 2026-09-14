@@ -4,7 +4,7 @@ baseline_commit: 0d79e28c45cd7b4c65435a58e106bf09fe3d2e89
 
 # Story 16.24: Clear the `exhaustive-deps` backlog and promote the rule to `error`
 
-Status: drafted
+Status: review
 
 Epic: 16 — Platform & Tech Debt
 
@@ -139,20 +139,20 @@ Included here only because the rule cannot be promoted to `error` while any warn
 
 ## Tasks / Subtasks
 
-- [ ] (AC1, AC2, AC3) `BarcodeScanner.tsx`: wrap `handlePermissionDenied` in `useCallback` with
+- [x] (AC1, AC2, AC3) `BarcodeScanner.tsx`: wrap `handlePermissionDenied` in `useCallback` with
       deps `[t, onManualEntry]`; add it to `handleRequestPermission`'s dep array at `:84`.
-- [ ] (AC2) Add a test asserting `handleRequestPermission` does not change identity on a re-render
+- [x] (AC2) Add a test asserting `handleRequestPermission` does not change identity on a re-render
       with unchanged props — it must fail if the helper is left un-memoised.
-- [ ] (AC3) Add a test that a changed `onManualEntry` is the one invoked by the alert action.
-- [ ] (AC4, AC5) `app/_layout.tsx`: change `dbError` state to hold a translation key (or a small
+- [x] (AC3) Add a test that a changed `onManualEntry` is the one invoked by the alert action.
+- [x] (AC4, AC5) `app/_layout.tsx`: change `dbError` state to hold a translation key (or a small
       discriminated error code); translate at render; remove `t` from the effect body.
-- [ ] (AC6) Verify the effect's dep array is still `[]` and that DB init + watch
+- [x] (AC6) Verify the effect's dep array is still `[]` and that DB init + watch
       subscribe/unsubscribe run once per mount. Assert a language change does not re-run it.
-- [ ] (AC7) Confirm `validateFields` is not in any effect dep array, then remove `fieldErrors`
+- [x] (AC7) Confirm `validateFields` is not in any effect dep array, then remove `fieldErrors`
       from `:124`.
-- [ ] (AC8) Flip `'react-hooks/exhaustive-deps'` to `'error'` and rewrite the adjacent comment.
-- [ ] (AC9) `yarn lint` → zero `react-hooks/*` findings.
-- [ ] (AC10) Run all six gates; record counts in the Dev Agent Record.
+- [x] (AC8) Flip `'react-hooks/exhaustive-deps'` to `'error'` and rewrite the adjacent comment.
+- [x] (AC9) `yarn lint` → zero `react-hooks/*` findings.
+- [x] (AC10) Run all six gates; record counts in the Dev Agent Record.
 
 ## Dev Notes
 
@@ -222,6 +222,88 @@ a dependency array, and only a manual review plus a hand-written regression test
   checked. If a raw `useFocusEffect(() => {…})` is ever introduced it becomes invisible to the
   rule — worth an `additionalHooks` regex at that point, not now.
 - **A `--max-warnings` ceiling.** Redundant once AC8 lands, since `error` already fails the build.
+
+## Dev Agent Record
+
+Implemented 2026-09-14 on `feature/16-24-clear-exhaustive-deps-warnings`.
+
+### Outcome
+
+All ten ACs met. `yarn lint` exits 0 with **zero** `react-hooks/*` findings (baseline: 3 warnings),
+and the rule is now `'error'`. Full suite: **183 suites / 2295 tests, all passing**. Every gate in
+`.husky/pre-push` passes: typecheck, tokens:check, icons:check, frames:check, wear:catalogue:check,
+check:build-path-filters, lint, check:native-patches, check:native-strings, format:check, test.
+
+### Correction — AC10 named a script that does not exist
+
+AC10 lists `yarn splash:check`. There is no such script in `package.json`; the gate list also
+predates six checks that `.husky/pre-push` now runs. The real hook sequence was run instead, and it
+is a strict superset of AC10's list minus that one phantom entry.
+
+### Finding — warning 1 was masked, and the masking dependency had to be fixed for AC2/AC3 to mean anything
+
+The story frames warning 1 as "the real bug": a stale `onManualEntry` captured by
+`handleRequestPermission`. **Measured, it did not reproduce.** `requestCameraPermission` was a bare
+`async () => {}` in `useBarcodeScanner.ts`, so it got a fresh identity every render; because it sits
+in `handleRequestPermission`'s dependency array, that callback was rebuilt every render too and
+always closed over the current `handlePermissionDenied`. The staleness was masked, and the mount
+effect re-ran on every render — the very churn AC2 asks to prevent.
+
+So AC1's memoisation alone changed no observable behaviour, and tests for AC2 and AC3 passed
+identically against fixed and unfixed code (verified by running them both ways).
+
+**Resolution, approved by ifero:** `requestCameraPermission` is now wrapped in `useCallback` with
+`[requestPermission]`. This is outside the story's "Files to touch" table, and the story's conflict
+watch names Story 16.23 as also editing `useBarcodeScanner.ts` — **that watch is stale, 16.23 is
+`done`**, so there was no conflict. Memoising is safe because the closure reads _no reactive value_:
+only `setError` (stable by React's guarantee), a ref, and module-level constants, so it cannot go
+stale. Evidence it is inert beyond the intended effect: the full 2295-test suite passes.
+
+With that in place the permission request drops from **2 calls to 1** on an unresolved permission —
+AC2's "the effect does not re-run per render" is now literally true, and testable.
+
+### Finding — AC3 has no reachable UI path, so its test is a guard, not a reproduction
+
+For the stale capture to be observable, `handleRequestPermission` must be invoked _without_ the
+mount effect re-running. The only such call site is the Retry button at `BarcodeScanner.tsx:171`,
+which lives in the `if (error && !isReady)` branch. That branch is effectively unreachable:
+`isReady` is `permission?.granted === true && enabled`, so reaching it needs a permission object
+that is neither `null` nor `granted === false` nor `granted === true`. The AC3 test is therefore
+written as a behavioural regression guard (the alert carries the current `onManualEntry`) and is
+documented as such in the test body rather than being dressed up as a reproduction.
+
+**Follow-up worth filing:** that unreachable error branch is dead UI. Out of scope here.
+
+### Falsifiability
+
+The story requires each new test to be shown failing against the unfixed code. Each was:
+
+| Test                                                | Falsified against                                    | Result                                              |
+| --------------------------------------------------- | ---------------------------------------------------- | --------------------------------------------------- |
+| AC2 — permission requested exactly once             | un-memoised `useBarcodeScanner`                      | **fails**: expected 1, received 2                   |
+| AC5 — message re-translates after a language change | pre-fix `app/_layout.tsx`                            | **fails**: message stays in the mount-time language |
+| AC6 — no re-init / resubscribe on language change   | the forbidden autofix (`t` added to the effect deps) | **fails**: expected 1 DB init, received 3           |
+| AC3 — alert carries the current `onManualEntry`     | —                                                    | guard only; see the finding above                   |
+
+AC6 is a _preservation_ assertion, so "fails against the old code" is the wrong bar for it — it is
+falsified against the tempting wrong fix the story explicitly forbids, which is what it guards.
+
+### Files changed
+
+| File                                                | Change                                                                                                                                                           |
+| --------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `features/cards/components/BarcodeScanner.tsx`      | `handlePermissionDenied` wrapped in `useCallback([t, onManualEntry])`; added to `handleRequestPermission`'s deps.                                                |
+| `features/cards/hooks/useBarcodeScanner.ts`         | `requestCameraPermission` wrapped in `useCallback([requestPermission])`. Beyond the story's table — see the finding above.                                       |
+| `app/_layout.tsx`                                   | `dbError` → `dbErrorKey`: state holds a translation key, translated at render, so the boot effect no longer closes over `t` and `[]` is honest.                  |
+| `features/auth/CreateAccountScreen.tsx`             | Dropped the type-only `fieldErrors` dependency. `validate` confirmed absent from every effect dep array (the file's one `useEffect` deps on `[prefilledEmail]`). |
+| `eslint.config.mjs`                                 | `react-hooks/exhaustive-deps` → `'error'`; comment rewritten, including why two of the three autofixes are wrong.                                                |
+| `features/cards/components/BarcodeScanner.test.tsx` | +2 tests (AC2, AC3).                                                                                                                                             |
+| `test/root-layout.initialization-error.test.tsx`    | +2 tests (AC5, AC6).                                                                                                                                             |
+
+### Note on the story's stale banner
+
+The `⛔ DEPENDS ON PR #185` banner at the top is obsolete: #185 merged 2026-07-31 and both rules were
+already live in `eslint.config.mjs`. Left in place as history rather than edited away.
 
 ## References
 
