@@ -12,7 +12,7 @@ project_name: 'myLoyaltyCards'
 user_name: 'Ifero'
 date: '2025-01-03'
 totalEpics: 23
-totalStories: 202 # counted from `### Story` headings on 2026-09-13
+totalStories: 203 # counted from `### Story` headings on 2026-09-14
 aligned_with_tracker: '2026-08-02'
 authoritative_source: 'docs/sprint-artifacts/sprint-status.yaml'
 ---
@@ -3254,6 +3254,27 @@ It is **narrower still** than watchOS was. On a round display it additionally in
 - **AC9 — no new permission and no native change.** Activity-scoped `setBrightnessAsync` only; `setSystemBrightnessAsync` would need `WRITE_SETTINGS` and is banned here.
 
 **Notes:** JS only → **OTA-eligible**, unlike its watchOS sibling Story 16.26 which needed a new binary because watchOS exposes no brightness API at all. First consumer of the shared `ToggleSwitch`, which has been exported with a `label` prop and no caller in the app. ⚠️ **A trap worth reading before touching the hook:** `useFocusEffect` runs its cleanup whenever its callback identity changes, not only on blur, so an implementation that clears the per-visit override in that cleanup makes the button undo itself — the two effects are split for this reason. **Out of scope and flagged:** a pre-existing race inside `useBrightness` where an in-flight `getBrightnessAsync()` can strand `originalBrightnessRef`; `BarcodeFlash.tsx` (`/barcode/[id]`), which still maximises unconditionally on the same argument as AC5 but has never been asked about; and making the boost configurable per card.
+
+### Story 16.40: `BarcodeScanner`'s camera-error state is unreachable, so a failed permission request strands the user
+
+**As a** user whose camera permission request fails outright — the OS never answers, as opposed to denying — **I want** the app to tell me and offer a way forward, **So that** I am not left staring at "Checking camera permission..." with no button to press.
+
+**Found 2026-09-14 while implementing Story 16.24**, where the error branch's Retry button was the only call site that could have exercised a stale-callback path. Recorded there as out of scope and carried here.
+
+**Confirmed by test, not by reading.** `BarcodeScanner` renders four branches in order: `permission === null` (a loading string with **no buttons at all**), `permission.granted === false` (Camera Access Needed + Open Settings), `error && !isReady` (Camera Error + Retry), then the camera. `isReady` is `permission?.granted === true && enabled` with `enabled` hardcoded true, so by the third branch `granted` is not `false`, and if it is `true` then `!isReady` is false. Reaching it requires a permission object whose `granted` is neither `true` nor `false` — a shape `expo-camera` does not produce. Forcing exactly that shape is the only way the branch was made to render.
+
+**The state it serves is real.** `requestCameraPermission` sets `error` both on a denial and in its `catch` when `requestPermission()` **rejects** — a different failure with a different fix, which leaves `permission` at `null`. The loading branch then wins indefinitely. `ScannerOverlay`, the scanner the app actually renders, has no such early return above its error branch and is already correct; this aligns `BarcodeScanner` with it.
+
+**Acceptance Criteria:**
+
+- A permission request that **rejects** renders the camera-error UI, not the loading string.
+- That state offers both escapes: Retry re-requests permission, and manual entry invokes `onManualEntry`.
+- An unresolved permission with **no** error still renders the loading string.
+- A **denied** permission still renders the permission-denied UI rather than the generic error UI, because only that branch offers Open Settings — a denial sets `error` too, so branch order is load-bearing here.
+- No new locale keys: `addCard.scanner.cameraErrorTitle` / `cameraErrorFallback` already exist and are already used by `ScannerOverlay`.
+- Each new test is shown failing against the unfixed code.
+
+**Notes:** ⛔ **Depends on Story 16.24** — without its `requestCameraPermission` memoisation the mount effect re-runs and the `setError(null)` at the top of each call wipes the error, so the screen oscillates with the loading string; two of the four tests fail on an un-memoised hook. Fixed with two guards (`permission === null && !error`, and `permission?.granted === false`) rather than by reordering the JSX, which would regress the denial case. **Out of scope and flagged:** `BarcodeScanner` has **no consumer** — its only reference is the barrel re-export at `features/cards/index.ts:33`, and that barrel has zero importers. Whether to delete the component or wire it up is left to an explicit decision.
 
 ## Epic 17: Apple Wallet Pass Support
 

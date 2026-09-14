@@ -157,6 +157,72 @@ describe('BarcodeScanner', () => {
     });
   });
 
+  describe('Camera error state', () => {
+    // The error branch (`error && !isReady`) used to be unreachable: the branches
+    // above it returned for `permission === null` and `permission.granted === false`,
+    // leaving only a permission object whose `granted` is neither true nor false —
+    // a shape expo-camera does not produce. The state it was written for is a
+    // permission request that REJECTS, where the hook sets `error` but `permission`
+    // stays null.
+    //
+    // These depend on `requestCameraPermission` being memoised (Story 16.24).
+    // Without that the mount effect re-runs, and the `setError(null)` at the top of
+    // each call wipes the error, so the UI oscillates between the loading string and
+    // this screen.
+
+    it('surfaces the camera error UI when the permission request rejects', async () => {
+      mockRequestPermission.mockRejectedValue(new Error('OS never answered'));
+      mockUseCameraPermissions.mockReturnValue([null, mockRequestPermission]);
+
+      render(<BarcodeScanner onScan={mockOnScan} onManualEntry={mockOnManualEntry} />);
+
+      await waitFor(() => {
+        expect(screen.getByText('Camera Error')).toBeTruthy();
+      });
+      // The loading string must no longer shadow the error.
+      expect(screen.queryByText('Checking camera permission...')).toBeNull();
+    });
+
+    it('offers a way out of the error state — retry and manual entry', async () => {
+      mockRequestPermission.mockRejectedValue(new Error('OS never answered'));
+      mockUseCameraPermissions.mockReturnValue([null, mockRequestPermission]);
+
+      render(<BarcodeScanner onScan={mockOnScan} onManualEntry={mockOnManualEntry} />);
+      await waitFor(() => expect(screen.getByText('Camera Error')).toBeTruthy());
+
+      fireEvent.press(screen.getByText('Enter card number manually'));
+      expect(mockOnManualEntry).toHaveBeenCalled();
+
+      const callsBeforeRetry = mockRequestPermission.mock.calls.length;
+      fireEvent.press(screen.getByText('Retry'));
+      await waitFor(() => {
+        expect(mockRequestPermission.mock.calls.length).toBeGreaterThan(callsBeforeRetry);
+      });
+    });
+
+    it('still shows the loading state while the status is unresolved and no error has occurred', () => {
+      mockUseCameraPermissions.mockReturnValue([null, mockRequestPermission]);
+
+      render(<BarcodeScanner onScan={mockOnScan} onManualEntry={mockOnManualEntry} />);
+
+      expect(screen.getByText('Checking camera permission...')).toBeTruthy();
+      expect(screen.queryByText('Camera Error')).toBeNull();
+    });
+
+    it('still shows the permission-denied UI, not the generic error UI, when access is denied', () => {
+      // A denial also sets `error` in the hook, so the denied branch must keep
+      // winning — it offers Open Settings, which the generic error UI does not.
+      mockRequestPermission.mockResolvedValue({ granted: false });
+      mockUseCameraPermissions.mockReturnValue([{ granted: false }, mockRequestPermission]);
+
+      render(<BarcodeScanner onScan={mockOnScan} onManualEntry={mockOnManualEntry} />);
+
+      expect(screen.getByText('Camera Access Needed')).toBeTruthy();
+      expect(screen.getByText('Open Settings')).toBeTruthy();
+      expect(screen.queryByText('Camera Error')).toBeNull();
+    });
+  });
+
   describe('Camera View', () => {
     it('renders camera view when permission is granted', () => {
       mockUseCameraPermissions.mockReturnValue([{ granted: true }, mockRequestPermission]);
