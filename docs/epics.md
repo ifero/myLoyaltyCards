@@ -12,7 +12,7 @@ project_name: 'myLoyaltyCards'
 user_name: 'Ifero'
 date: '2025-01-03'
 totalEpics: 23
-totalStories: 203 # counted from `### Story` headings on 2026-09-14
+totalStories: 204 # counted from `### Story` headings on 2026-09-15
 aligned_with_tracker: '2026-08-02'
 authoritative_source: 'docs/sprint-artifacts/sprint-status.yaml'
 ---
@@ -25,6 +25,15 @@ authoritative_source: 'docs/sprint-artifacts/sprint-status.yaml'
 > key, so `create-story` reads correct content. `bmad-sprint-planning` is safe to run **only**
 > with the `_bmad/custom/bmad-sprint-planning.toml` guard, which preserves the tracker's sprint
 > blocks (vanilla regeneration would strip them).
+>
+> **Epics 21–23 were corrected against the working tree on 2026-09-14**, during the `create-story`
+> pass that refined all nine Sprint 20 stories. Eighteen acceptance criteria were amended across
+> the three epics — three of them had been **unsatisfiable as written** (a store-metadata directory
+> that does not exist, an asset colour that was never set, a file count that included a
+> load-bearing file). Those epics were authored from the design side on 2026-09-13 and described
+> intent; the code had moved underneath them. Nothing gates a catalogue AC against the tree, so the
+> corrections are marked inline with their date, and **each story's own file under
+> `docs/sprint-artifacts/stories/` is the refined brief** — this catalogue is the summary.
 
 ## Overview
 
@@ -3821,14 +3830,51 @@ my home screen matches the brand.
 
 - `expo.name` becomes `Cardì`, and the name renders correctly with its grave accent on both
   platforms' home screens, in the app switcher, and in Settings.
-- `expo.slug` and `expo.scheme` are **deliberately unchanged**. `scheme` is the deep-link
-  namespace (`myloyaltycards://`) referenced by the Supabase redirect allowlist and every OAuth
-  callback; `slug` binds the EAS project. Renaming either is a migration, not a rename, and is
-  explicitly out of scope.
+- `expo.slug` is **deliberately unchanged** — it binds the EAS project, and renaming it is a
+  migration rather than a rename.
+- ✅ **`expo.scheme` DOES change, to `cardi`** (decided by ifero, 2026-09-14 — this reverses the
+  original criterion). ⚠️ The reason given for freezing it was **factually wrong**: it claimed the
+  scheme is _"referenced by the Supabase redirect allowlist and every OAuth callback"_. It is not.
+  `shared/supabase/auth.ts` calls password reset **without a `redirectTo`**, using a `{{ .Token }}`
+  OTP flow, and the repository contains no `makeRedirectUri`, no `createURL` and no deep-link
+  callback of any kind. No user-facing deep link has shipped — Epic 18's share links are still
+  `backlog` — so no public URL carries the scheme yet.
+- **The scheme has FIVE sites and they move in the same commit**, or the watch complication
+  silently stops opening the app: **`targets/watch/Info.plist:14`, the `CFBundleURLSchemes`
+  registration — without it the scheme does not resolve at all**;
+  `WatchComplicationWidget.swift`'s `.widgetURL(URL(string: "myloyaltycards://watch"))` (shipped
+  and live); `CardListView.swift`'s `WatchComplicationDeepLink` scheme constant (its per-card route
+  is dormant, but the parser gates the live one); and **both** assertions in
+  `watch-complication-contract.test.ts` — the `widgetURL` string and the Info.plist string, the
+  second of which goes red exactly when the registration is correctly updated. `Info.plist`'s
+  `CFBundleURLName` is an identifier and stays. The complication is **verified on a device**: a
+  scheme mismatch between the widget extension and the app resolves to nothing and logs nothing.
 - `ios.bundleIdentifier` and `android.package` are unchanged, so the store listing keeps its
   reviews, ratings and install base.
-- Every user-visible occurrence of "myLoyaltyCards" in copy is audited: i18n strings, the Help
-  screen, the privacy policy, legal documents and store metadata.
+- **The copy audit spans four surfaces, not one.** Refinement (2026-09-14) measured **44
+  user-visible sites across 18 files**: the phone (i18n `en`/`it`, `help-data.json` +
+  `help-data.it.json`, `help-fallback.ts`, both privacy policies), **watchOS** (four
+  `Localizable.strings`, `Info.plist`, `expo-target.config.js`, the complication's
+  `configurationDisplayName`), **Wear OS** (`strings.xml` `app_name`) and the **Supabase
+  transactional emails** (two templates plus two `config.toml` subject lines, which reach users
+  only on a Supabase deploy, not in the store build).
+- **The audit grep must be CASE-INSENSITIVE, and cover the spaced variant.** Three casings ship:
+  `myLoyaltyCards`, `MyLoyaltyCards` (nine sites, including all four in `help-data.json`) and the
+  spaced `"My Loyalty Cards"` (the onboarding welcome title and the create-account subtitle, both
+  locales). A case-sensitive search reports `help-data.json` as clean while every one of its sites
+  still reads the old name. Use `grep -rni "loyaltycards\|loyalty cards"`.
+- ⛔ **The prebuild question is answered before anything else is changed.** `expo prebuild` derives
+  the generated Xcode project and scheme name from `expo.name`, and eighteen references to
+  `ios/myLoyaltyCards.xcodeproj` / `scheme: "myLoyaltyCards"` are hardcoded in `fastlane/Fastfile`,
+  `package.json`, `scripts/lib/watch-xcodebuild.sh` and `.github/workflows/watchos-tests.yml`.
+  Expo's sanitisation of the non-ASCII `ì` is **not known** and has never been run. If the name
+  moves, those eighteen move with it in the same story.
+- The iOS permission strings use `$(PRODUCT_NAME)`, which is derived from `expo.name`, so the
+  camera and photo-library prompts change with no edit. Verify rather than assume.
+- **Two identifiers that contain the name destroy user data if renamed** and are out of scope
+  alongside `slug` and `scheme`: `DB_NAME` (`core/database/migrations.ts`) orphans every existing
+  card database, and `'@myLoyaltyCards/sortPreference'` (`features/cards/hooks/useCardSort.ts`)
+  silently resets every user's sort preference.
 - Accent handling is verified on a device with a non-Latin keyboard locale, and in Android's
   launcher label truncation at the narrowest supported density.
 
@@ -3849,11 +3895,78 @@ is not a promise the first screen breaks.
   in dark.
 - Every WCAG contrast assertion in `shared/theme/colors.contrast.test.ts` still passes, and beam
   `#FCCC0C` always carries dark text.
-- No branded card tile is tinted, washed or recoloured by the migration — the ~45 third-party
-  brand colours are content and must survive untouched.
-- The nine known styling items are folded in here rather than left loose: `theme.warning` used
-  across 5 files, `theme.success` being a green that is not in the palette, and the 70 instances
-  of sub-15px body text across 40 files (which needs a policy decision, not a find-and-replace).
+- No branded card tile is tinted, washed or recoloured by the migration. The catalogue holds
+  **57 brands carrying 44 distinct colours** — 45 distinct literal strings, since the file has a case-inconsistent duplicate (`#ffffff` ×5 vs `#FFFFFF` ×4) — corrected 2026-09-14 from "~45 brands"; they are
+  content and must survive untouched. Verified safe by construction — every tile path applies
+  `brand.color` verbatim with no theme token interposed. ⚠️ The one change at `CardDetailScreen.tsx:188` — the
+  **detail header for cards with no brand** falling back to `theme.primary` — is a **DEFECT to fix,
+  not a pass-through to bless** (corrected 2026-09-15). After this migration `theme.primary` is ink,
+  so a custom card gets a near-black header above a hero painted in its own accent, while the
+  card-detail spec requires inset, header and hero to be **one filled region**. It becomes
+  `CARD_COLORS[card.color] ?? <the default>` — **keep the `??` guard**, or an unmapped colour renders
+  transparent. ⛔ This also needs an explicit amendment to the design system, which forbids
+  "card accent colours used as chrome": a card accent is legal as the card's own full-bleed detail
+  field and illegal everywhere else.
+- 📌 **`CARD_COLORS` MOVED to Story 21.2a on 2026-09-15.** The five custom-card accents, the
+  `CardColor` union and its persisted-data migration, the key-producing `mapHexToCardColor`, the
+  runtime fallbacks, both pickers, the colour labels and the phone→watch wire contract are that
+  story's scope. This story still _consumes_ `CARD_COLORS` but changes none of its values.
+
+- ⚠️ **`theme.warning` is also the favourite star** (`CardTile`, `CardDetailScreen`), not only a
+  warning colour. Changing it repaints **every favourited card tile**. The design system has
+  already ruled on this: the badge becomes an ink `#181824` plate carrying a beam `#FCCC0C` star.
+- ⚠️ **`shared/theme/sync-tokens.ts` is a third token family outside `tokens/`** — 13 hand-authored
+  `{light, dark}` pairs from Figma, carrying oranges and greens this system bans by name. It is not
+  reached by the pipeline and needs a recorded decision, not silence.
+- **Four hardcoded literals will not come with the migration** and must be handled explicitly:
+  `luminance.ts`'s `#1F1F24` (the old `textPrimary`, applied as text colour on brand surfaces) and
+  its duplicate in the tile components; and a Material green in the tile's highlight border.
+  `BARCODE_FLASH`'s white/black stays hardcoded **on purpose** — the barcode screen ignores theme.
+- **Keep every token value 6-digit hex.** At least four sites build colours by string-concatenating
+  hex alpha onto a token; an 8-digit or `rgba()` value silently produces an invalid colour.
+
+### Story 21.2a: Migrate the Card Accents and the Colour Keys
+
+**As a** user with custom cards, **I want** my card colours to be the brand's own five accents,
+**So that** a card I coloured myself looks like it belongs to the same app as the rest of the
+redesign.
+
+📌 **Split out of Story 21.2 on 2026-09-15**, on evidence: eight review rounds put roughly half of
+that story's defects in its `CARD_COLORS` clause alone. What had read as one bullet in a token
+migration turned out to span two union definition sites, a function that **produces** the keys, four
+runtime fallbacks, two pickers, two locale files, nine test files, three per-platform watch colour
+maps, and a cross-device wire contract with no test coverage.
+
+**Acceptance Criteria:**
+
+- ⛔ **The central question is a DECISION, taken before any code changes: are the five `CardColor`
+  keys NAMES or a WIRE CONTRACT?** Freezing them changes only hex values — no persisted row is
+  invalidated, no watch map moves, no wire break is possible — at the cost of two permanently
+  misnamed keys (`orange` rendering a beam yellow, `grey` rendering a colour that is not grey).
+  Migrating them means every consumer below moves in this same release, plus a data migration for
+  persisted rows. Everything else branches on the answer, and it ships in the one release with no
+  OTA remedy.
+- `CARD_COLORS` in `tokens/color.json` carries the five Cardì accents
+  (`#E42424` · `#0C3C84` · `#0C84CC` · `#0C843C` · `#FCCC0C`), regenerated and committed;
+  `tokens.generated.test.ts` updated in the same commit. Two shipped keys have **no** equivalent:
+  `orange` is banned from this system entirely, and none of the five is a neutral.
+- `core/utils/mapHexToCardColor.ts`'s RGB-dominance buckets are **re-derived, not renamed** — it
+  runs on every catalogue-brand card creation, and the target palette has two blues, no neutral and
+  a yellow.
+- The four `?? CARD_COLORS.grey` runtime fallbacks resolve to a named default, with the `??` guard
+  kept at every site — an unguarded lookup renders transparent, not recoloured.
+- Both locale files' colour labels are re-worded on **either** branch: a renamed key leaks the raw
+  key into the picker's accessibility label, and a frozen key would announce a beam-yellow swatch
+  as "Orange".
+- Both 5-swatch pickers render the new accents.
+- **The wire contract is honoured and, for the first time, tested.** The keys cross to both watches
+  as `colorHex` and resolve three different ways there. Pin the whole key set in
+  `core/wear-sync-contract.test.ts` — not by growing the canonical fixture, which would trip two
+  hard-coded card counts on a PR that runs no Kotlin at all.
+- **No branded tile is touched.** The 44 distinct catalogue colours across 57 brands are content;
+  this story changes only the custom-card palette.
+- Verified on device in both schemes, with a custom card in each accent — and, if the keys were
+  migrated, a card created **before** the change still rendering after it.
 
 ### Story 21.3: watchOS App and Widget Icons
 
@@ -3864,15 +3977,37 @@ that** one glance at both devices does not show two different brands.
 
 - `targets/watch/AppIcon.png` and `targets/watch/Assets.xcassets/AppIcon.appiconset/` carry the
   Cardì mark, rendered by `scripts/build-brand-icons.mjs` rather than by hand.
-- The watch-widget set is complete: all fifteen `App-Icon-*` sizes,`ItunesArtwork@2x.png`, and
-  the `OpenAppIcon` imageset in `targets/watch-widget/Assets.xcassets/`.
+- The watch-widget set is complete: all fifteen `App-Icon-*` sizes, `ItunesArtwork@2x.png`, and
+  the `OpenAppIcon` imageset in `targets/watch-widget/Assets.xcassets/`. ⚠️ **Every one of those
+  fifteen PNGs is currently a flat `#80FF80` placeholder** (verified 2026-09-14 by decoding the
+  IDAT) — the `@bacons/apple-targets` default, never replaced because
+  `targets/watch-widget/expo-target.config.js` has **no `icon:` key**. Whether that key is even
+  supported for a `watch-widget` target is unverified and needs a spike.
+- ⚠️ **That appiconset declares iPhone, iPad and ios-marketing idioms and NO watchOS idiom.**
+  Either correct it or record, with a source, why an iOS-idiom set is right here.
+- ⚠️ **`OpenAppIcon` is a third stale surface, and the one users actually see** — it is the artwork
+  the complication renders on the watch face, and it still carries the old blue wallet mark. It was
+  absent from this epic until refinement found it (2026-09-14). Note its **76 px** ceiling:
+  `ComplicationImage` downsamples at `maxPoint 38, scale 2`, and exceeding `accessoryCorner`'s
+  ≈81.6 px budget renders the slot as a grey placeholder — `.frame` and `.scaledToFit` do not help.
 - watchOS masks its icon to a **circle**, so the mark is verified against a circular crop, not
   only the squircle the phone uses.
-- `AccentColor.colorset` on both watch targets is updated — it tints watchOS controls and is
-  still the pre-rebrand colour.
+- ⚠️ **`AccentColor.colorset` on both watch targets is ADDED, not updated.** Corrected 2026-09-14:
+  both files are byte-identical **empty Xcode stubs** — `{"colors":[{"idiom":"universal"}],…}` with
+  no `color` key, no components, no colour space — so `Color.accentColor` (used by the watch sort
+  picker) resolves to **system default blue**, not a stale brand colour. There is nothing to change
+  and something to define. The generator's own constants are ink `#181824` and beam `#FCCC0C`.
 - `AppIcon.appiconset/Contents.json` is left to `expo prebuild`, which owns and rewrites it
   (it is `.prettierignore`d for exactly this reason). It is not hand-edited.
 - `yarn icons:check` covers the new artefacts, so the watch icons cannot drift from the phone's.
+  **This is the criterion that fixes the bug**; the rest only fix today's symptom. No CI job
+  validates any watch icon today — `watchos-tests.yml` would fail on a _missing_ icon but never on
+  a stale or placeholder one.
+- **The generator renders from constants, not from an SVG.** There is no source file to point at;
+  adding an output means adding an entry to its artefact arrays. It knows two primitives (rounded
+  rect, rotated rounded rect) and will not silently approximate a third.
+- ⚠️ **Not parallel-safe with Story 21.4** — both extend `scripts/build-brand-icons.mjs`. The
+  collision is additive, so it is a trivial rebase; land 21.3 first.
 
 ### Story 21.4: Wear OS Launcher Icons
 
@@ -3884,11 +4019,24 @@ identity is consistent across every device the app runs on.
 - `ic_launcher_foreground.png` is generated for all four densities under
   `watch-android/app/src/main/res/mipmap-{h,xh,xxh,xxxh}dpi/`.
 - `mipmap-anydpi-v26/ic_launcher.xml` declares the correct foreground and a background matching
-  the phone's `adaptiveIcon.backgroundColor`.
+  the phone's `adaptiveIcon.backgroundColor`. ⚠️ **This is a live drift bug, not just a stale
+  icon:** `watch-android/app/src/main/res/values/colors.xml` declares
+  `ic_launcher_background` as `#FFFFFFFF` under a comment claiming it matches `app.json` — which
+  now reads `#181824`. Fix the value **and** the comment, which is currently a false assurance.
+- ⚠️ **This story does NOT depend on 21.2.** `adaptiveIcon.backgroundColor` is already `#181824`
+  (shipped by 20.4), so the value to match is stable today and does not wait on the colour
+  migration. Only the shared generator sequences it, behind 21.3.
+- **A `<monochrome>` layer is added, or its absence is re-justified.** There is none today, and
+  `lint.xml` deliberately leaves `MonochromeLauncherIcon` unsuppressed so the gap stays visible.
+  ⚠️ `watch-android/README.md` says the blocking asset "does not exist in this repo" — **it does**,
+  as `assets/adaptive-icon-monochrome.png`, generated by Story 20.4. Correct that claim either way.
 - The mark is verified against Wear OS's **circular** launcher mask and at the smallest
   launcher size on a 384px round device.
 - Rendering is verified on both a round and a square AVD, since Wear OS ships both.
-- The generator produces these too, so there is one definition of the mark and not two.
+- The generator produces these too, so there is one definition of the mark and not two, **and
+  `yarn icons:check` covers them** — hand-copying is exactly what let these drift past the rebrand.
+  The README's "faithful downscale of `assets/adaptive-icon.png`" provenance note is corrected with
+  them.
 
 ### Story 21.5: Store Artwork
 
@@ -3902,9 +4050,23 @@ what I install matches what I was shown.
   `assets/images/android-store-banner.svg` is updated with it.
 - `assets/store/google-developer-banner-4096x2304.jpg` is redrawn.
 - iOS App Store artwork and any screenshots showing the old identity are refreshed, including
-  the Wear OS store screenshots added under `docs/design/wear-store-screenshots/`.
-- Listing **text** is updated with the name change from 21.1 — title, subtitle, description and
-  keywords.
+  the Wear OS store screenshots under `docs/design/wear-store-screenshots/`. ⚠️ **Those two are
+  placeholders from a DEBUG build** — their own README says so, and one of them shows debug-seeder
+  fixtures named `Aztec (unsupported)` and `Bad Checksum (invalid)`. They need regenerating from a
+  release build regardless of the rebrand; shipping them ships test data to a store listing.
+- ⛔ **Listing TEXT has no artefact in this repository, and no file change or CI check can prove it
+  was updated.** Corrected 2026-09-14: there is **no `fastlane/metadata/` directory and no
+  `eas.json`** anywhere, and every metadata and image upload path is explicitly disabled in the
+  Fastfile (`skip_metadata`, `skip_screenshots` on iOS; `skip_upload_metadata`, `_changelogs`,
+  `_images`, `_screenshots` on both Android lanes). Title, subtitle, description and keywords are
+  maintained **by hand in App Store Connect and Play Console**. Carry the exact new copy in the PR
+  body, for both stores and both locales, and say plainly that it is a console task. **Do not
+  create a `fastlane/metadata/` tree to satisfy this** — an unuploaded shadow copy of the listing
+  looks authoritative and is never read.
+- **Decide whether `assets/store/` joins `yarn icons:check`.** Nothing generates, references or
+  gates these four files — not a script, not a config, not a workflow — which is why they sat three
+  and a half months stale. If they are generated from the mark (the `-alpha` variant is exactly the
+  RGB/RGBA split the generator already implements), gating them is nearly free.
 
 ### Story 21.6: Bundle and Adopt the Brand Typefaces
 
@@ -3929,9 +4091,17 @@ current tracking is SF Pro's.
   spent its budget making the native→JS launch handoff seamless, and a face that is not ready at
   first paint reflows text exactly where that work was done. The launch surface must show no
   reflow on a cold start.
-- `TypographyToken` gains `fontFamily`, and a decision is made and recorded on whether typography
-  joins the Style Dictionary pipeline — today `tokens/` holds only `color.json` and
-  `spacing.json`, and `shared/theme/typography.ts` is hand-authored.
+- `TypographyToken` gains `fontFamily`, **and its `fontWeight` union widens to admit `'800'`** —
+  today it stops at `'700'`, so the design system's `display-lg` is **not representable** and the
+  scale cannot land without the type change. (`'500'` is already in the union and used by no token;
+  `mono-code` will be its first user.)
+- **`expo-font` is added to `dependencies`.** It is installed at 55.0.6 but **undeclared** — it
+  arrives transitively via `expo`, unowned and unpinned.
+- A decision is made and recorded on whether typography joins the Style Dictionary pipeline —
+  today `tokens/` holds only `color.json` and `spacing.json`, `SOURCE_FILES` is a hardcoded
+  two-element array, `shared/theme/typography.ts` is hand-authored, and
+  `docs/design/CONTRIBUTING-DESIGN.md` explicitly **defers** typography generation to a follow-up.
+  Honour that deferral or overturn it in writing.
 - **The scale is re-derived, not re-labelled.** The app carries Apple's HIG taxonomy and metrics;
   the design system carries its own. Eleven app tokens map onto seven design-system tokens, so
   the mapping is decided explicitly and the losses are named:
@@ -3944,14 +4114,31 @@ current tracking is SF Pro's.
   | label    | 13/18 · w400 · −0.08pt | 13/18 · w600 · +0.02em · Inter         |
 
 - **Tracking units are converted, not copied.** The design system specifies `em`; React Native's
-  `letterSpacing` is in points, so each value is resolved against its own size.
-- All 13 `TYPOGRAPHY` consumers are migrated, and the four hardcoded monospace sites
-  (`Menlo` / `monospace` / `Courier` in the card-number and barcode components) become JetBrains
-  Mono.
+  `letterSpacing` is in points, so each value is resolved against its own size (`em × fontSize`).
+  Copying the numbers across produces tracking roughly 30× too tight. A test asserts at least one
+  conversion so a future copy-paste regression fails loudly.
+- ⚠️ **All consumers are migrated, by BOTH paths — there are 20 distinct production files, not 13.** Corrected 2026-09-15: **10** files import `TYPOGRAPHY` directly, and a further **ten** read
+  `useTheme().typography` and never write the identifier a grep looks for (eight under
+  `features/auth/`, two under `features/onboarding/`). Roughly 16 test files stub a `typography:`
+  object and break if token names change. Note also that spread sites (`...TYPOGRAPHY.x`) inherit a
+  new `fontFamily` automatically while field-picking sites (`fontSize:` / `lineHeight:` only)
+  **silently drop it** — those are the ones that will render in the system face and look almost
+  right.
+- The four hardcoded monospace sites become JetBrains Mono **through one shared token**. They are
+  four different treatments, not one repeated: `Menlo` ×3 and `Courier` ×1, three sizes, three
+  tracking values, and two different platform APIs.
+- **`GuestModeBanner`'s hardcoded fallbacks are corrected or removed** — it optional-chains the
+  scale with `?? 16` against a token whose value is **15**, so it is already drifted and will mask
+  a broken read.
 - The two watch apps are covered or explicitly deferred to Epic 23 — they carry their own type
   stacks and do not inherit this change.
 - Verified on device in both schemes, at the largest and smallest Dynamic Type settings, and the
-  contrast suite still passes.
+  contrast suite still passes. ⚠️ The app sets **no `allowFontScaling` and no
+  `maxFontSizeMultiplier` anywhere**, so text scales freely and uncapped — and a bundled face has
+  different metrics (cap height, x-height, line gap) from the system face. Whether a cap is now
+  needed is a decision this story takes, not one it discovers in the field.
+- **`theme.typography` (the Unistyles path) gets a decision.** It is registered and fully typed but
+  read by **zero** components. Make it canonical or drop it; do not migrate dead plumbing.
 
 ### Story 21.7: The Single Rebrand Release [Enabling]
 
@@ -3960,17 +4147,47 @@ icon, name and colours disagree with each other.
 
 **Acceptance Criteria:**
 
-- Stories 21.1–21.6 ship in **one** store release on both platforms. None is released alone.
+- Stories 21.1, 21.2, **21.2a** and 21.3–21.6 — seven — ship in **one** store release on both
+  platforms. None is released alone. 21.2a joined the gate when it was split out of 21.2; on its
+  migrate branch it edits native watch code that must ship in the same binary.
 - The release is verified on real devices before submission: home-screen icon and label, app
   switcher, launch surface into first screen with no colour discontinuity, watch face and watch
   app icon, and the themed (Material You) icon on Android 13+.
 - The legacy identity is removed in this release: `assets/app-icons/variants/` (aurora, sunset,
-  forest) and the eight orphaned `app-icon-*.svg` files, together with the test fixture in
-  `test/svg-module-resolution.test.tsx` that still points at one of them.
+  forest — 10 files, no code references) and the orphaned `app-icon-*.svg` files. ⚠️ **There are
+  SEVEN such SVGs, not eight, and only SIX are orphaned** (corrected 2026-09-14 — the earlier count
+  made this criterion unsatisfiable as written). The seventh,
+  `assets/images/app-icon-variant-aurora.svg`, is **load-bearing**:
+  `test/svg-module-resolution.test.tsx` imports it **twice**, once aliased and once relative, as a
+  jest `moduleNameMapper` **ordering invariant** — not as a component test. **Repoint that test to
+  a Cardì SVG first** (all three generated ones sit in the same directory, so both import styles
+  still resolve), prove it green, and only then delete the file.
+- ⛔ **`expo.version` is bumped and the release tag is named.** `runtimeVersion.policy` is
+  `appVersion` and `version` is still `1.0.0`, so shipping the rebrand at `1.0.0` leaves it sharing
+  a runtimeVersion with **every pre-rebrand install**. `expo-updates` is a dependency and
+  `eas update --branch` is the documented catalogue-delivery path, so the next OTA would land the
+  new tokens and copy on **old binaries** — creating exactly the icon/name/colour mismatch this
+  gate exists to prevent, through the one channel the gate does not cover. Nothing else bumps it:
+  Fastlane only calls `increment_build_number`, and every existing tag is `v1.0.0-rc.N` while the
+  store-upload workflow triggers on a bare `vX.Y.Z`.
+- **The release commit is pinned, and Story 22.1 is explicitly in or out.** The upload workflow
+  ships whatever is at the tagged commit, and 22.1 can merge before this story publishes. A release
+  also carrying a rewritten card tile, `TOUCH_TARGET` 44→48 and two scanner fixes is a different
+  rollback from the one below.
+- **The two out-of-band deliverables are release steps, not merges**: the Supabase config deploy
+  carrying the renamed email templates and subject lines, and the store listing text. No workflow
+  does either, and no merge can prove them — without both, this "complete" release ships with the
+  old name in every transactional email and in the listing.
 - A rollback position is written down before submission, given that no part of this can be
   undone by an OTA update.
 - `currentColor` rendering in the in-app mark is confirmed **on a device**. The jest SVG mock
-  means a green test suite is no evidence for it.
+  means a green test suite is no evidence for it. (Story 20.4 verified it against
+  react-native-svg's source and left the device check open; its own text mis-routes that gap to
+  "story 21.6" — it is discharged **here**.)
+- **Every unprovable check is recorded as performed or knowingly accepted**, as a filled table. Most
+  of this story's acceptance cannot be proven from the repository, which is the shape the Epic 10
+  retrospective closed on (DEC-E10-RETRO-001): a story merged with two validation tables left blank.
+  "Not performed" is an acceptable answer; a blank is not.
 
 ---
 
@@ -4006,10 +4223,35 @@ forbidden.
   inside it — **never `position: absolute`**, so it does not fight the keyboard. The button is
   always enabled; pressing an incomplete form reveals the field errors.
 - Depth comes from tonal layers and hairline outlines only. No shadows, no gradients.
-- Storybook stories cover each primitive in light and dark.
+- Storybook stories cover each primitive in light and dark. ⚠️ **Storybook and Chromatic see only
+  `shared/components/ui/`** — a primitive placed anywhere else gets no story and no visual
+  coverage. And `shared/components/ui/stories.test.tsx` **hard-asserts exactly seven story
+  modules**, so it fails the moment an eighth primitive gains a `.stories` file. Update that count
+  deliberately rather than meeting it as a mystery red build.
+- ⚠️ **Two of these primitives have no specification at all.** The design system contains **no
+  section-header spec** and **no sheet spec** beyond a 16px radius and a dark fill — nothing on
+  handles, scrim, padding or title size — but ⚠️ **they ARE specced elsewhere, in
+  `docs/design/cardi/stitch-prompts-settings.txt`** (`:120` for the section header, `:183` for the
+  sheet's 36 × 4 `#D6D6CB` grabber), which the main design document never restates. This story
+  **transcribes** them so 22.2–22.10 implement against a decided thing rather than against this
+  story's source code — and note the shared `BottomSheet`'s 40 × 4 grabber is the off-spec one, not
+  `MultiCodePickerSheet`'s 36 × 4.
+- **Extend what already exists rather than duplicating it.** `TextField` and `BottomSheet` are
+  already right in shape (eight settings sheets consume the latter); the one hand-rolled outlier is
+  the multi-code picker. `shared/components/ui/CardShell.tsx` is **not** the home grid tile — it is
+  a separate surface, and conflating them is the obvious mistake here.
+- **Busy is not disabled.** A submitting primary button keeps its ink fill and swaps its label for
+  a spinner. The shipped `Button` greys out on `loading`, which is exactly the refusal read the
+  anchored-footer rule exists to remove.
 - The four filed UI-defect stories (16-30 banner occlusion, 16-31 viewfinder geometry, 16-32
   Button `destructive`, 16-33 touch target 44→48) are resolved here rather than separately,
-  since they all live in components this story rewrites.
+  since they all live in components this story rewrites. ⚠️ **Read their story files first.** They
+  exist on `main` with **no tracker key and no catalogue section**, so `check-story-catalogue-sync`
+  cannot see them and nothing else points at them — they are the detail this story consumes, and
+  they are easy to miss precisely because nothing links to them.
+- ⚠️ **Sequenced after 21.2 AND 21.6, by file overlap rather than preference** — this story
+  _rewrites_ the very components those two edit. Running them in parallel puts three stories in the
+  same files.
 
 ### Story 22.2: Wallet
 
@@ -4157,13 +4399,43 @@ watch apps are implemented against a decided thing rather than improvised per sc
 
 **Acceptance Criteria:**
 
-- The system is extended to cover round and square watch faces, at the real sizes: 384px round
-  Wear OS and the watchOS size classes.
+- ⛔ **The system is AMENDED, not merely extended.** Corrected 2026-09-14: `cardi-design-system.md`
+  says _"Frame: 393 × 852 (iPhone-class portrait). Design nothing else. No desktop, no tablet, no
+  square canvases"_, and its Forbidden list carries _"any frame that is not 393 × 852"_ — so every
+  frame this story must draw is, as the document stands, **prohibited**. An additive watch appendix
+  that leaves those rules standing makes the system contradict itself, which is the exact failure
+  mode Story 20.1's thesis section exists to prevent.
+- ⛔ **There are TWO design systems in this repository, and the watch code implements the other
+  one.** The words _watch_, _wear_, _complication_, _crown_ and _widget_ do not appear in the Cardì
+  document at all; the watch's actual design language is **"Carbon Utility"**
+  (`docs/ux-design-specification.md`), cited by name in the Wear theme's own KDoc. **Reconciling
+  the two is this story's real subject.** State whether Carbon is superseded, retired, or survives.
+- The system is extended to cover round and square watch faces, at the real sizes: **384 × 384**
+  round Wear OS, and the watchOS size classes from **40 mm (162 × 197 pt)** to **49 mm (205 × 251)**
+  — a table that lives only in `targets/watch/__tests__/watch-layout-contract.test.ts`, not in any
+  source file. 40 mm is the floor because the watch target deploys to watchOS 10.
+- **The colour, type and grid divergences are resolved to single values.** watchOS has **no theme
+  layer at all** (its accent colorset is an empty stub, every colour a literal at the call site)
+  while Wear has a small one; the two disagree with each other and with Cardì on surface fill, body
+  text and grey. **`orange` ships as a card-palette key on all three watch surfaces and Cardì bans
+  it by name.** watchOS's 44 pt touch target also contradicts the system's own adjudication to 48.
 - It states what carries over from the phone (ink and beam, the barcode rules, the refusal to
   overlay a scan target) and what does not (the two-column grid, the header, the anchored
   footer).
-- Reference frames are drawn for all six surfaces, on both round and square.
-- Rotary and crown input are designed for, not retrofitted.
+- Reference frames are drawn for the **six app screens** — the three **Wear** screens on both
+  round and square, the three **watchOS** screens against the size classes above, since watchOS has
+  no square variant. The widget is covered by its own four-families criterion.
+- Rotary and crown input are designed for, not retrofitted — and the **current asymmetry is
+  resolved**: the crown dismisses the barcode screen on watchOS, rotary was explicitly **not
+  shipped** on Wear's barcode screen, and Wear's list rotary works only implicitly through the
+  scaffold, with no explicit modifier anywhere in the source.
+- **The complication is designed across all four families it supports**, within the **76 px** image
+  budget — exceeding `accessoryCorner`'s ceiling renders the slot as a grey placeholder, and
+  scaling modifiers do not help.
+- **New frames either ship a generator or are declared hand-maintained.** `yarn frames:check` diffs
+  generator output byte-for-byte; nine of the sixteen existing frames already have no generator and
+  say so. A generator's shared helpers must be named with a leading underscore or the checker
+  reports no output and goes red.
 - The barcode-flash rule is re-derived rather than assumed: a watch screen is small and dim, and
   the constraint that made the phone's surround neutral is stronger here, not weaker.
 
