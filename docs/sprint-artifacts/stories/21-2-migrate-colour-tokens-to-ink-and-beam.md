@@ -4,7 +4,7 @@ baseline_commit: 2ff3e23016a3ee6130e5e0c2b3651de62fa4ac5f
 
 # Story 21.2: Migrate the colour tokens to Ink & Beam — the big bang, and the four literals that will not come with it
 
-Status: review
+Status: done
 
 Epic: 21 — Cardì Rebrand — Native Identity
 
