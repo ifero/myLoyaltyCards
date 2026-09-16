@@ -12,13 +12,13 @@ Ultimo aggiornamento: ${PRIVACY_POLICY_LAST_UPDATED}
 
 1. Introduzione
 
-myLoyaltyCards ("noi") si impegna a proteggere la tua privacy. Questa Informativa sulla privacy spiega quali dati raccogliamo, come li utilizziamo e quali sono i tuoi diritti ai sensi del Regolamento generale sulla protezione dei dati (GDPR) e delle altre leggi applicabili.
+Cardì ("noi") si impegna a proteggere la tua privacy. Questa Informativa sulla privacy spiega quali dati raccogliamo, come li utilizziamo e quali sono i tuoi diritti ai sensi del Regolamento generale sulla protezione dei dati (GDPR) e delle altre leggi applicabili.
 
-Utilizzando myLoyaltyCards accetti la raccolta e l'uso delle informazioni in conformita con questa informativa. Puoi usare l'app in modalita ospite senza fornire alcun dato personale.
+Utilizzando Cardì accetti la raccolta e l'uso delle informazioni in conformita con questa informativa. Puoi usare l'app in modalita ospite senza fornire alcun dato personale.
 
 2. Dati che raccogliamo
 
-Quando utilizzi myLoyaltyCards senza un account (modalita ospite), non raccogliamo ne trasmettiamo alcun dato personale. Tutti i dati delle carte sono memorizzati localmente sul tuo dispositivo.
+Quando utilizzi Cardì senza un account (modalita ospite), non raccogliamo ne trasmettiamo alcun dato personale. Tutti i dati delle carte sono memorizzati localmente sul tuo dispositivo.
 
 Quando crei un account, raccogliamo:
 • Indirizzo email - usato per autenticazione e recupero dell'account.
@@ -72,7 +72,7 @@ Per esercitare questi diritti, usa le opzioni disponibili nelle Impostazioni del
 
 8. Privacy dei minori
 
-myLoyaltyCards non e destinata a minori di 16 anni. Non raccogliamo consapevolmente dati personali di minori. Se ritieni che un minore ci abbia fornito dati personali, contattaci e li elimineremo tempestivamente.
+Cardì non e destinata a minori di 16 anni. Non raccogliamo consapevolmente dati personali di minori. Se ritieni che un minore ci abbia fornito dati personali, contattaci e li elimineremo tempestivamente.
 
 9. Modifiche a questa informativa
 

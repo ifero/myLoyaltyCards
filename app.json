@@ -1,11 +1,11 @@
 {
   "expo": {
-    "name": "myLoyaltyCards",
+    "name": "Cardì",
     "slug": "myloyaltycards",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
-    "scheme": "myloyaltycards",
+    "scheme": "cardi",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
@@ -14,7 +14,8 @@
       "minimumOsVersion": "18.0",
       "appleTeamId": "7KU8K25XK5",
       "infoPlist": {
-        "NSCameraUsageDescription": "Allow $(PRODUCT_NAME) to access your camera to scan loyalty card barcodes",
+        "CFBundleName": "Cardì",
+        "NSCameraUsageDescription": "Allow Cardì to access your camera to scan loyalty card barcodes",
         "ITSAppUsesNonExemptEncryption": false,
         "UIFileSharingEnabled": true,
         "LSSupportsOpeningDocumentsInPlace": true
@@ -34,7 +35,7 @@
       [
         "expo-camera",
         {
-          "cameraPermission": "Allow $(PRODUCT_NAME) to access your camera to scan loyalty card barcodes",
+          "cameraPermission": "Allow Cardì to access your camera to scan loyalty card barcodes",
           "recordAudioAndroid": false
         }
       ],
@@ -44,7 +45,7 @@
       [
         "expo-image-picker",
         {
-          "photosPermission": "Allow $(PRODUCT_NAME) to access your photos to scan loyalty card barcodes from images."
+          "photosPermission": "Allow Cardì to access your photos to scan loyalty card barcodes from images."
         }
       ],
       [

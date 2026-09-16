@@ -228,7 +228,7 @@ otp_expiry = 3600
 
 # Uncomment to customize email template
 [auth.email.template.confirmation]
-subject = "Verify your myLoyaltyCards email / Verifica la tua email myLoyaltyCards"
+subject = "Verify your Cardì email / Verifica la tua email Cardì"
 content_path = "./supabase/templates/confirmation.html"
 
 # Password-recovery OTP template (Story 6.19). Uses {{ .Token }} so recovery
@@ -240,7 +240,7 @@ content_path = "./supabase/templates/confirmation.html"
 # tracked for the confirmation template; local config.toml alone does not change
 # the production project.
 [auth.email.template.recovery]
-subject = "Reset your myLoyaltyCards password / Reimposta la tua password myLoyaltyCards"
+subject = "Reset your Cardì password / Reimposta la tua password Cardì"
 content_path = "./supabase/templates/recovery.html"
 
 # Uncomment to customize notification email template

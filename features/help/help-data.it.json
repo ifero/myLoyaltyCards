@@ -27,7 +27,7 @@
     "answer": "Per scansionare i codici a barre è necessario consentire l'accesso alla fotocamera.",
     "steps": [
       "Apri le Impostazioni del dispositivo",
-      "Vai su myLoyaltyCards > Fotocamera",
+      "Vai su Cardì > Fotocamera",
       "Abilita l'accesso alla fotocamera"
     ],
     "tags": ["fotocamera", "permessi", "risoluzione-problemi"]
@@ -52,7 +52,7 @@
   {
     "id": "6",
     "question": "Come posso importare un file di backup JSON?",
-    "answer": "Apri Impostazioni > Dati > Importa dati e seleziona un file JSON esportato in precedenza da MyLoyaltyCards.",
+    "answer": "Apri Impostazioni > Dati > Importa dati e seleziona un file JSON esportato in precedenza da Cardì.",
     "steps": [
       "Apri Impostazioni",
       "Nella sezione Dati tocca Importa dati",
@@ -64,7 +64,7 @@
   {
     "id": "7",
     "question": "Quale struttura JSON è richiesta per l'importazione?",
-    "answer": "Il file deve essere un payload di esportazione di MyLoyaltyCards con i campi di metadati e un array cards. Ogni carta deve includere gli stessi campi usati dall'app per il ripristino, come id, name, barcode, barcodeFormat, brandId, color, preferiti, contatori di utilizzo e timestamp.",
+    "answer": "Il file deve essere un payload di esportazione di Cardì con i campi di metadati e un array cards. Ogni carta deve includere gli stessi campi usati dall'app per il ripristino, come id, name, barcode, barcodeFormat, brandId, color, preferiti, contatori di utilizzo e timestamp.",
     "steps": [
       "Usa Esporta dati dalle Impostazioni per generare un backup valido",
       "Non rinominare o rimuovere manualmente i campi del payload",
@@ -78,7 +78,7 @@
     "answer": "L'importazione fallisce quando il file è corrotto, malformato o non rispetta più la struttura del payload esportato. L'app verifica l'integrità del JSON prima di scrivere qualsiasi dato nel database.",
     "steps": [
       "Verifica che il file sia un JSON valido",
-      "Conferma che sia stato esportato da MyLoyaltyCards",
+      "Conferma che sia stato esportato da Cardì",
       "Se hai modificato il file manualmente, esporta un nuovo backup e riprova"
     ],
     "tags": ["importa", "json", "risoluzione-problemi", "corrotto"]

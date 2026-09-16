@@ -28,7 +28,7 @@ describe('watch complication contract', () => {
     const infoPlist = fs.readFileSync(watchInfoPath, 'utf8');
 
     expect(infoPlist).toContain('<key>CFBundleURLTypes</key>');
-    expect(infoPlist).toContain('<string>myloyaltycards</string>');
+    expect(infoPlist).toContain('<string>cardi</string>');
     expect(infoPlist).not.toContain('<key>CLKComplicationPrincipalClass</key>');
     expect(infoPlist).not.toContain('<key>CLKComplicationSupportedFamilies</key>');
   });
@@ -114,7 +114,7 @@ describe('watch complication contract', () => {
   it('opens the app when the complication is tapped', () => {
     const source = fs.readFileSync(watchWidgetSwiftPath, 'utf8');
 
-    expect(source).toContain('.widgetURL(URL(string: "myloyaltycards://watch"))');
+    expect(source).toContain('.widgetURL(URL(string: "cardi://watch"))');
   });
 
   it('shows the real watch app icon, downsampled to avoid WidgetKit imageTooLarge', () => {

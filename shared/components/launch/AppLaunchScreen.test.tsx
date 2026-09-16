@@ -183,7 +183,7 @@ describe('AppLaunchScreen', () => {
 
       const root = screen.getByTestId('boot-loading');
       expect(root).toHaveProp('accessible', true);
-      expect(root).toHaveProp('accessibilityLabel', 'myLoyaltyCards, starting up');
+      expect(root).toHaveProp('accessibilityLabel', 'Cardì, starting up');
     });
 
     it('hides the decorative mark from assistive technology on both platforms', () => {
@@ -313,7 +313,7 @@ describe('AppLaunchScreen', () => {
       expect(screen.getByTestId('app-launch-mark-logo', HIDDEN)).toBeTruthy();
       expect(screen.getByTestId('boot-loading')).toHaveProp(
         'accessibilityLabel',
-        'myLoyaltyCards, starting up'
+        'Cardì, starting up'
       );
     });
 

@@ -412,6 +412,17 @@ const SVGS = [
     // dark text, never a stroke on a light surface.
     'assets/images/cardi-mark-inline.svg',
     { size: 1024, field: null, scale: 1, stem: WHITE, accent: BEAM_YELLOW, tight: true }
+  ],
+  [
+    // The same tight mark again, published under `docs/`.
+    //
+    // Not a stray duplicate: GitHub Pages serves the site from `main:/docs` ONLY, so
+    // `../assets/images/` is simply not reachable from a published page. A copy has to
+    // exist inside `docs/` for the site to show the mark at all, and generating it here
+    // is what puts it under `yarn icons:check` — a hand-copied file would drift the
+    // moment the geometry changed, silently and only on the public site.
+    'docs/assets/cardi-mark-inline.svg',
+    { size: 1024, field: null, scale: 1, stem: WHITE, accent: BEAM_YELLOW, tight: true }
   ]
 ];
 

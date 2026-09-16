@@ -2,7 +2,7 @@
 
 ## Project Overview
 
-- **Project Name**: myLoyaltyCards
+- **Project Name**: Cardì (Story 21.1). The repository `ifero/myLoyaltyCards`, the npm package `myloyaltycards` and the BMAD `project_name` keep their pre-rebrand names deliberately and do not follow it
 - **Type**: Expo/React Native mobile application
 - **User**: Ifero
 - **Skill Level**: Expert

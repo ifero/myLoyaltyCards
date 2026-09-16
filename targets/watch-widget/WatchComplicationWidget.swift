@@ -1,7 +1,7 @@
 import SwiftUI
 import WidgetKit
 
-// A simple "open the app" complication: it shows the myLoyaltyCards app icon and
+// A simple "open the app" complication: it shows the Cardì app icon and
 // launches the app when tapped. There is intentionally NO configuration / card
 // selection — it's a static complication so there's nothing to misconfigure.
 //
@@ -55,7 +55,7 @@ struct WatchComplicationEntryView: View {
       }
     }
     .containerBackground(.fill.tertiary, for: .widget)
-    .widgetURL(URL(string: "myloyaltycards://watch"))
+    .widgetURL(URL(string: "cardi://watch"))
   }
 
   /// The watch app icon, downsampled so WidgetKit can archive it (a full-size
@@ -84,7 +84,7 @@ struct MyLoyaltyCardsWatchComplicationWidget: Widget {
     StaticConfiguration(kind: kind, provider: WatchComplicationTimelineProvider()) { entry in
       WatchComplicationEntryView(entry: entry)
     }
-    .configurationDisplayName("myLoyaltyCards")
+    .configurationDisplayName("Cardì")
     .description(Text(verbatim: WatchWidgetL10n.string("watch.widget.complication.entry.open_app.subtitle")))
     .supportedFamilies([
       .accessoryCircular,
