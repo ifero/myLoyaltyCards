@@ -234,8 +234,50 @@ decision, not a constraint. Placeholders, values and error messages stay sentenc
 
 ## Layout & Spacing
 
-- **Frame: 393 × 852 (iPhone-class portrait). Design nothing else.** No desktop, no
-  tablet, no square canvases, no arbitrary heights.
+- **Frames — and this rule governs SCREEN designs only.** A screen design is a drawing of a
+  surface the app renders. **Artwork canvases are not screens** and this rule has never been
+  aimed at them; they are listed at the end of this section so that no reading of it can
+  forbid the icons and banners the app has to ship. Three screen classes exist, and only
+  three:
+
+  | class       | frame                                             | unit    |
+  | ----------- | ------------------------------------------------- | ------- |
+  | **Phone**   | **393 × 852** — iPhone-class portrait             | pt / dp |
+  | **Wear OS** | **192 × 192**, drawn **round _and_ square**       | dp      |
+  | **watchOS** | seven size classes, **162 × 197** → **205 × 251** | pt      |
+
+  No desktop, no tablet, no arbitrary heights. The two watch classes are not licence to
+  invent a third layout language: what may be drawn inside them is
+  [`cardi-watch-grammar.md`](cardi-watch-grammar.md), which is **part of this system**, not
+  an appendix to it.
+
+  **The Wear frame is stated in dp deliberately.** `384 × 384` is the same screen counted in
+  **pixels**, at the ×2 density every current Wear device uses; it circulates because Play's
+  store-screenshot floor happens to be 384 px. Setting that number beside `393 × 852` — which
+  is points — makes a watch look as wide as a phone. It is **less than half**. Google's own
+  guidance is dp and round-first: draw at **192 dp**, the smallest supported round screen,
+  and let 225 dp and above grow into the space.
+
+  **The watchOS classes, measured** — from Xcode's own simulator device profiles. The table
+  lives in `targets/watch/__tests__/watch-layout-contract.test.ts` and in no source file.
+  40 mm is the floor because the watch target deploys to watchOS 10:
+
+  | 40 mm     | 41 mm     | 42 mm     | 44 mm     | 45 mm     | 46 mm     | 49 mm     |
+  | --------- | --------- | --------- | --------- | --------- | --------- | --------- |
+  | 162 × 197 | 176 × 215 | 187 × 223 | 184 × 224 | 198 × 242 | 208 × 248 | 205 × 251 |
+
+  Two traps in that table. The **widest** watch is the **46 mm at 208 pt**, not the 49 mm
+  Ultra — "design for the biggest" picks the wrong device. And the 44 mm is **narrower** than
+  the 42 mm (184 against 187) while being taller, so the classes do not order by one
+  dimension. Draw against **40 mm**, then check the **46 mm** and the **49 mm**.
+
+  **Artwork canvases, which this rule does not govern:** the 1024² app-icon masters — watchOS
+  has its own, while Wear's densities are downscaled from the phone's shared 1024² source, and
+  **both mask to a circle**, not the phone's squircle — the four Android launcher
+  mipmaps at 162² / 216² / 324² / 432², the 512² Play icon and its alpha variant, the
+  1024 × 500 Play banner and the 4096 × 2304 developer banner. Square or landscape by
+  requirement, every one of them.
+
 - Strict **8px grid**; 4px only for micro-adjustment.
 - Screen margin **24px**. Vertical gap between list rows **8px**.
 - Every interactive element is at least **48 × 48pt**.
@@ -269,8 +311,11 @@ decision, not a constraint. Placeholders, values and error messages stay sentenc
 > in `features/cards/utils/gridLayout.ts` is `(390 − 2×16 − 16) / 2`, frozen with tests. Both
 > are on the grid.
 
-- The home screen is a **2-column grid of brand tiles** (see Card tile). This is the shipped
-  layout and it is correct — do not replace it with a single-column list of rows.
+- The **phone** home screen is a **2-column grid of brand tiles** (see Card tile). This is the
+  shipped layout and it is correct — do not replace it with a single-column list of rows. **The
+  watch list is single-column rows and is correct too**, for the opposite reason: a 192 dp screen
+  fits one tile, so there is nothing for a grid to be a grid of. See
+  [`cardi-watch-grammar.md`](cardi-watch-grammar.md) §7.1.
 - Stack-pushed screens (detail, add, edit, settings) are single-column, content-first.
 
 ## Shape
@@ -279,6 +324,9 @@ decision, not a constraint. Placeholders, values and error messages stay sentenc
 - Buttons and inputs: **12px** radius.
 - Virtual-logo tiles and chips: **fully round**.
 - Consistent everywhere; no mixed radii within one screen.
+- **On the watch the card row is 14, not 16** — a radius is a proportion of what it rounds, and 16
+  on a 48 pt row reads as a pill. Excepted, with the reason, in
+  [`cardi-watch-grammar.md`](cardi-watch-grammar.md) §5.5.
 
 ## Elevation
 
@@ -378,10 +426,19 @@ So the same 2px `#FCCC0C` line is forbidden on `barcode/[id]` and mandatory on
 `add-card/scan`. Same mark, opposite verdict, and the deciding question is never "is this
 on-brand?" but "who is doing the scanning?"
 
-Across the whole system beam is drawn in exactly three places, and a fourth is a bug:
-the scan line and the banner links on our own viewfinder, and a filled favourite star. It
-appears nowhere on the flash-at-checkout screen — not as a line, not as a tint, not on the
-insets, not on the dismiss hint.
+**On the two barcode surfaces** beam is drawn in exactly three places, and a fourth is a
+bug: the scan line and the banner links on our own viewfinder, and a filled favourite star
+where a card row shows one. It appears nowhere on the flash-at-checkout screen — not as a
+line, not as a tint, not on the insets, not on the dismiss hint.
+
+**That count is local to this section, and it is not a whole-system inventory.** It has
+been read as one, which is why it needs saying. There is no fixed number of beam sites,
+because beam is a **role** — named under _Three roles_ above — and it is drawn wherever the
+role appears: the ì accent, the logo, the splash and loading states, focus rings, active and
+selected states, the filled favourite star, and **every primary action in dark mode**. That
+last entry alone exceeds three. So the rule to carry away is the role and its two
+constraints — beam is always paired with ink text, never darkened or tinted, and never on a
+barcode — not an arithmetic that was only ever true of the viewfinder.
 
 ### Input fields
 
@@ -393,6 +450,11 @@ minimum height.
 One family, **outline style, 1.5px stroke, 24px** on a 48px target, ink-coloured, square
 corners softened. Icons are chrome — they take ink or beam, never a card accent. No filled
 icons, no duotone, no emoji as iconography.
+
+**On the watch, 14–18 rather than 24** — 24-on-48 is a 50 % fill, which works only when the target
+is otherwise empty, and a watch row is not. The part that carries unchanged is the sentence above
+it: an icon is chrome and never takes a card accent. See
+[`cardi-watch-grammar.md`](cardi-watch-grammar.md) §5.5.
 
 ### Illustrations
 
@@ -421,8 +483,10 @@ dark screen is produced.
 shadows · gradients · glassmorphism · darkened or muddied yellow · card accent colours used
 as chrome · **anything overlaying a barcode, especially a drawn beam or scan-line** ·
 **a saturated surround on the barcode screen** · **tinting, washing or recolouring a
-branded card tile** · **replacing the home grid with a single-column list of rows** ·
+branded card tile** · **replacing the PHONE home grid with a single-column list of rows** (the watch list is
+single-column rows and is correct — see the watch grammar) ·
 **a large yellow chrome surface next to the card grid** · thin font weights · desktop or
-tablet frames · any frame that is not 393 × 852 · per-screen invented illustration styles ·
+tablet frames · **a phone screen at any frame other than 393 × 852** · **a watch screen at
+any frame not in the Frames table** · per-screen invented illustration styles ·
 **a primary action that floats over content or is positioned absolutely** · **a disabled
 button as a form's resting state**.

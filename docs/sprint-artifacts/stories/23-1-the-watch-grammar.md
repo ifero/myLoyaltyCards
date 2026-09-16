@@ -4,7 +4,7 @@ baseline_commit: 2ff3e23016a3ee6130e5e0c2b3651de62fa4ac5f
 
 # Story 23.1: The watch grammar [Enabling] — the design system forbids the frames you need, and the watch code implements a different system entirely
 
-Status: ready-for-dev
+Status: review
 
 Epic: 23 — Cardì on the Watch
 
@@ -186,15 +186,15 @@ shipped** (recorded as Open Decision 3); list rotary works only implicitly via
 
 ## Tasks / Subtasks
 
-- [ ] **Task 1 — Reconcile the two systems (AC2).** Read `docs/ux-design-specification.md` §Carbon.
-- [ ] **Task 2 — Amend the frame rule and `## Forbidden` (AC1).**
-- [ ] **Task 3 — Write the carry-over/does-not-carry table (AC3, AC10, AC11).**
-- [ ] **Task 4 — Resolve colour, type and grid (AC7, AC8, AC9).**
-- [ ] **Task 5 — Re-derive the barcode rule with its two carve-outs (AC6).**
-- [ ] **Task 6 — Design the input model (AC5).**
-- [ ] **Task 7 — Draw the six screens (AC4): Wear round + square, watchOS by size class. Then the
+- [x] **Task 1 — Reconcile the two systems (AC2).** Read `docs/ux-design-specification.md` §Carbon.
+- [x] **Task 2 — Amend the frame rule and `## Forbidden` (AC1).**
+- [x] **Task 3 — Write the carry-over/does-not-carry table (AC3, AC10, AC11).**
+- [x] **Task 4 — Resolve colour, type and grid (AC7, AC8, AC9).**
+- [x] **Task 5 — Re-derive the barcode rule with its two carve-outs (AC6).**
+- [x] **Task 6 — Design the input model (AC5).**
+- [x] **Task 7 — Draw the six screens (AC4): Wear round + square, watchOS by size class. Then the
       complication across four families (AC12).**
-- [ ] **Task 8 — Generator or hand-maintained, declared (AC13).**
+- [x] **Task 8 — Generator or hand-maintained, declared (AC13).**
 
 ## Dev Notes
 
@@ -245,10 +245,149 @@ shipped** (recorded as Open Decision 3); list rotary works only implicitly via
 
 ### Agent Model Used
 
+`claude-opus-5` (implementation). Two read-only `sonnet` inventory agents for the measured
+colour/type/spacing sweeps of `targets/watch/`, `targets/watch-widget/` and `watch-android/`.
+
 ### Debug Log References
+
+Three gates, run after implementation and **re-run after each review round**:
+
+- `yarn frames:check` — 9/9 generators reproduce their frames byte-for-byte; `../frames/` proven
+  untouched by the digest invariant. `_watch_shared.py` correctly skipped as a helper rather than
+  reported `NO-OUTPUT`, which is the behaviour AC13 depends on.
+- `yarn format:check` — clean across the repo.
+- `yarn check:story-catalogue-sync` — 204 catalogue sections ↔ 204 tracker keys, `totalStories` 204. Run because this story edits `sprint-status.yaml`.
+
+Not gates, but run:
+
+- Both frame sheets rendered and inspected in a browser at 1400 px. **Three rendering defects
+  found by looking that no gate would have caught** (see Completion Notes) — the frames are
+  byte-stable whether or not they are legible, so `frames:check` passing proves nothing about
+  whether a frame is right.
+- Every contrast ratio that appears in the prose — **five distinct colour pairs** across six
+  mentions, cream-on-ink being stated twice (loosely as `≈15:1`, precisely as `≈15.3:1`) —
+  independently recomputed from the WCAG relative-luminance formula rather than cited. Seven
+  pairs were computed; the two that did not earn a place in the text (cream-on-black,
+  ink-on-beam) are not quoted anywhere and so are not claims this story makes.
+- Every relative markdown link in the changed and added documents resolved against the filesystem.
 
 ### Completion Notes List
 
+**Verification, not assumption — what measuring changed:**
+
+1. **The `384 × 384` in AC1 and in the epic is PIXELS.** `393 × 852` is points. In the same unit
+   the Wear screen is **192 dp** — less than half the phone's width. Google's guidance is dp and
+   round-first (192 dp is the smallest supported round screen); 384 circulates because Play's
+   store-screenshot floor is 384 px. The amendment states dp and says why.
+2. **`orange` is three colours, not one.** `Color.orange` (system) on watchOS,
+   `#F59E0B` on Wear, `#F59E0B` in the widget — and `#F59E0B` is **bit-identical** to
+   `CarbonTheme.kt`'s `FavoriteStarTint`, so removing orange from the palette does not remove it
+   from the star. AC7 covers both sites.
+3. **watchOS uses SYSTEM colours for card accents; Wear and the widget use hexes.** The same card
+   renders differently in the app and in its own complication. Not in the story's table.
+4. **watchOS's 44 pt is a dead constant, not a violation.** `.frame(minHeight: 44)` is applied
+   after `.padding(.vertical, 9)` around a 30 pt avatar, so the content is already **48** and the
+   44 never binds. Both platforms ship a 48 pt row and already comply. AC9 is resolved by making
+   the declaration honest (23.2, one line, no pixel moves) rather than by changing the layout.
+5. **The six screens are three surfaces built twice** — list, barcode, sort picker.
+   `ContentView.swift` is 12 lines mounting `CardListView`; watchOS's sort picker is a **sheet
+   inside `CardListView.swift`**. AC4's frames are organised as pairs, which is what stops the two
+   apps drifting again.
+6. **AC7b's accent decision collides with AC6.** Apple's documentation states the accent is
+   applied to _"the app's title string in the status bar"_ — and the watchOS barcode screen draws
+   the **card's name** there. A beam accent puts **beam on the barcode screen**. Resolved with an
+   explicit carve-out to **cream** (not ink: that strip is part of the black surround). The first
+   draft said ink and was wrong.
+7. **The UX spec's watch touch target is 32 pt** — a _third_ value alongside 44 and 48, and
+   contradicted by both codebases. Named in the superseded notice.
+8. ⚠️ **And 32 is not only prose — there is a FOURTH site, and it is live.**
+   `TOUCH_TARGET.watch: 32` is authored in `tokens/spacing.json:27`, generated into
+   `shared/theme/tokens.generated.ts:92`, hard-asserted by `tokens.generated.test.ts:122` and
+   exported through `useTheme()`. It is the **only semantically-named "watch touch target"
+   constant in the repository**. My first draft of the grammar said _"nothing has ever been built
+   to 32"_, which was **false**; QA caught it. **Decided: retire the key, do not correct it to
+   48** — it has **zero** consumers (`TOUCH_TARGET.min` has 40) and, being TypeScript, could not
+   be read by either watch app even in principle. ⛔ **This needs an owner, and the nearest story
+   currently decides the opposite**: Story 22.1 edits this exact token group and its notes say
+   _"`TOUCH_TARGET.watch` stays 32"_. Grammar §5.4 states the decision and names 22.1; this story
+   writes no code and cannot make the change itself.
+9. **The `ComplicationImage.swift` comment states the `accessoryCorner` ceiling two ways**
+   (`≈ 46 pt` and `≈ 81.6 px`), which do not reconcile at ×2. Recorded; **76 px is the shipped
+   working value and the design is under both readings**. Flagged for 23.4, not fixed here.
+
+**Deliberately not done:**
+
+- **No Swift, no Kotlin.** `wave_0`'s zero-code-overlap premise holds. Every consequence is
+  written as a decision for 23.2/23.3/23.4 to apply, and each behaviour change says so.
+- **watchOS keeps its reserved barcode strip.** Going white edge-to-edge would reclaim ~95 px of
+  module axis at 40 mm, but the present arrangement is **measured** and the alternative is not —
+  nobody has checked whether the system draws a scrim behind the clock on a white ground. Written
+  into §6 as a five-minute device measurement for 23.2 rather than guessed at.
+- **AC7's palette is recorded by HEX, never by `CardColor` key**, so it survives either branch of
+  Story 21.2a's AC1.
+
+**AC13 — generators, not hand-maintained.** Both sheets are generated, sharing `_watch_shared.py`
+(leading underscore, as the checker requires — verified: it is skipped, not reported `NO-OUTPUT`).
+The shared module resolves a real tension: the _output_ must inline its tokens (a linked
+stylesheet is silently dropped by inlining viewers), but the _source_ never had to duplicate them.
+
+**Rendering defects found by looking, which no gate would have caught:** the `accessoryCorner`
+text arc truncated mid-word (arc shorter than its label — now derived from arc length rather than
+eyeballed); the in-situ inline complication overlapped the clock; and the square-frame "envelope"
+guide was drawing a dashed line **across the barcode**, which is the one thing the system forbids
+absolutely. The barcode frame now carries no envelope, and the generator says why.
+
 ### File List
 
+**Modified**
+
+- `docs/design/cardi/cardi-design-system.md` — **six separate edits**, one per hunk:
+  1. `## Layout & Spacing` — the frame rule amended and scoped to screen designs, with the three
+     screen classes and the artwork canvases it does not govern (AC1)
+  2. `## Layout & Spacing` — the home-grid bullet qualified to the **phone**, and the watch's
+     single column blessed (AC10)
+  3. `## Shape` — the 14-not-16 watch carve-out, cross-linked to the grammar's §5.5 (AC9)
+  4. `### The beam rule, both halves` — the beam inventory restated as a role, not a count (AC7b)
+  5. `### Icons` (nested under `## Components`, not a standalone H2) — the 14–18-not-24 watch
+     carve-out, same cross-link (AC9)
+  6. `## Forbidden` — two entries rewritten so neither the watch frames nor this sprint's artwork
+     canvases are forbidden (AC1, AC10)
+- `docs/ux-design-specification.md` — **two** superseded notices (AC2): the whole
+  `## Design Direction Decision` section, both halves; and the three **watch** entries under
+  `## Component Strategy` (#3 Carbon Watch Card, #5 Watch Sort Control, #6 Watch Favourite Badge),
+  which are actively contradicted rather than merely dated — #5 names Carbon by name and #6
+  specifies the banned amber star on a plate. Each heading is marked inline, and the
+  Implementation Roadmap's Phase 1 entry is struck through. Plus **three residual watch claims**
+  elsewhere in the same file, marked in place after QA found them still live: the 5-colour palette
+  naming orange and grey, the 32 px watch touch target, and the "filled amber star"
+- `docs/design/cardi/README.md` — Files table plus a dated decision entry
+- `docs/design/cardi/tools/README.md` — the two new generators, the helper-module rule in
+  practice, and the frame count (AC13)
+- `docs/sprint-artifacts/sprint-status.yaml` — story `ready-for-dev` → `in-progress` → `review`;
+  `current_sprint.status` `planned` → `in-progress`, per that key's own rule (23-1 is wave_0 and
+  the sprint's first story picked up)
+- `docs/sprint-artifacts/stories/23-1-the-watch-grammar.md` — this record
+
+**Added**
+
+- `docs/design/cardi/cardi-watch-grammar.md` — the watch extension (AC2, AC3, AC5–AC12)
+- `docs/design/cardi/frames/cardi-watch-frames.html` — 15 frames, six screens (AC4)
+- `docs/design/cardi/frames/cardi-complication-frames.html` — four families (AC12)
+- `docs/design/cardi/tools/watch_frames.py` — generator (AC13)
+- `docs/design/cardi/tools/watch_complication_frames.py` — generator (AC13)
+- `docs/design/cardi/tools/_watch_shared.py` — shared helper (AC13)
+
 ### Change Log
+
+| Date       | Change                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
+| ---------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 2026-09-15 | Amended `cardi-design-system.md`: the frame rule is scoped to screen designs and admits the two watch classes; `## Forbidden` no longer forbids the watch frames or the artwork canvases; the beam inventory is restated                                                                                                                                                                                                                                                                                                                                                                                               |
+| 2026-09-15 | Retired "Carbon Utility" and marked `docs/ux-design-specification.md` § Design Direction Decision superseded, both halves                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| 2026-09-15 | Added `cardi-watch-grammar.md` — colour, type, grid, input, barcode, card row and complication, all resolved to single values                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
+| 2026-09-15 | Added two generated frame sheets (15 screen frames + 4 complication families in 5 specimens) and their generators, with a shared `_watch_shared.py` helper                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
+| 2026-09-15 | Code review round 1 — 3 MAJOR, 5 MINOR, 2 NIT all addressed: supersession extended to `## Component Strategy`; §10 flagged as a behaviour change (the shipped widget is open-app-only); `S.BRANDS` actually used by the generator; the arc-truncation path given a specimen that exercises it                                                                                                                                                                                                                                                                                                                          |
+| 2026-09-15 | Code review round 2 — 2 NIT addressed: the `cardi-design-system.md` File List entry now enumerates its six edits by section and AC instead of carrying a hand-maintained hunk count, and the Debug Log records all three gates, their re-runs, and the non-gate checks                                                                                                                                                                                                                                                                                                                                                 |
+| 2026-09-15 | Code review round 3 — 2 NIT + 1 NIT addressed: `### Icons` heading level corrected in the enumeration; the contrast-ratio claim reduced from seven to the five pairs actually quoted; rounds 2 and 3 added to this log                                                                                                                                                                                                                                                                                                                                                                                                 |
+| 2026-09-15 | Code review APPROVED, zero comments, after 4 rounds and **15** findings (10 + 2 + 3, per the three rows above). The reviewer's own round-4 summary said 13; that undercount was copied here and corrected in round 5                                                                                                                                                                                                                                                                                                                                                                                                   |
+| 2026-09-15 | QA review — 2 MAJOR + 6 MINOR + 1 NIT addressed. The MAJOR that mattered: `TOUCH_TARGET.watch: 32` is a live, generated, tested token, so the grammar's "nothing has ever been built to 32" was false; decided to retire the dead key and named Story 22.1 as its owner. Also marked three residual watch claims in the UX spec, and added §3.1 tap feedback, §3.2 empty state, §8.1 sort-picker affordance and a compliance-test section                                                                                                                                                                              |
+| 2026-09-16 | Code review round 5 — a DELTA review, run because round 4 had approved a tree the QA round then changed. 3 MAJOR + 1 MINOR + 1 NIT: a `§8` cross-reference left stale by re-filing the square-Wear section; §3.1/§3.2 physically preceding `## 3.` and so nesting under `## 2.`; the 13-vs-15 findings count; "Carbon List" surviving in a third unflagged place in the UX spec; and a completion note mis-nested under item 8. Every new citation the QA round introduced — the `TOUCH_TARGET` chain, the opacity ladder, the icon sizes, the sort controls, all ten compliance-table literals — was verified correct |

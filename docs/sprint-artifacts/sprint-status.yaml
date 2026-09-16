@@ -1,5 +1,5 @@
 # generated: 2026-01-03
-# last_updated: 2026-09-14
+# last_updated: 2026-09-15
 # project: myLoyaltyCards
 # project_key: NOKEY
 # tracking_system: file-system
@@ -177,7 +177,7 @@ current_sprint:
   number: 20
   name: 'Sprint 20: Cardì Rebrand Release + Redesign Enablement'
   goal: 'Make the app Cardì everywhere the operating system shows it, and leave behind the two enabling pieces that unblock everything after it. Epic 20 drew the identity and wired it only ADDITIVELY — `IDENTITY_COLORS { ink, beam, cream }` ships in `tokens.generated.ts` today while `PRIMARY_COLORS` is still the Google Blue ramp — so the app currently has an identity nothing consumes. This sprint consumes it: the rename, the colour big bang, the watchOS and Wear OS icon sets, the store artwork and the brand typefaces, shipped as ONE store build behind the 21-7 gate because `runtimeVersion.policy` is `appVersion` and no part of a rebrand can go out as an OTA update. Alongside it, 22-1 builds the design-system primitives that eight Epic 22 screen stories consume (absorbing the four filed UI defects 16-30..16-33), and 23-1 writes the watch grammar that gates Epic 23 — a pure design story with no code overlap at all.'
-  status: planned # COMMITTED 2026-09-14 at the Sprint 19 -> 20 roll-over, per ifero ("let's work on the new redesign!"). REFINEMENT GATE CLEARED 2026-09-14, per ifero ("let's do the creation of the stories before opening the new sprint!"): all ten stories refined `backlog` -> `ready-for-dev` in one create-story pass, and epic-21/22/23 moved `backlog` -> `in-progress` per this file's own transition rule. It STAYS `planned` deliberately — ifero asked for the story files BEFORE the sprint opens, so nothing is in flight. Move it to `in-progress` when the first story is picked up. Refinement corrected the epic's scope in NINE places; the per-story keys carry the details, and the summary is in the notes below.
+  status: in-progress # OPENED 2026-09-15 when 23-1 (wave_0) was picked up, per this key's own rule below. COMMITTED 2026-09-14 at the Sprint 19 -> 20 roll-over, per ifero ("let's work on the new redesign!"). REFINEMENT GATE CLEARED 2026-09-14, per ifero ("let's do the creation of the stories before opening the new sprint!"): all ten stories refined `backlog` -> `ready-for-dev` in one create-story pass, and epic-21/22/23 moved `backlog` -> `in-progress` per this file's own transition rule. It STAYS `planned` deliberately — ifero asked for the story files BEFORE the sprint opens, so nothing is in flight. Move it to `in-progress` when the first story is picked up. Refinement corrected the epic's scope in NINE places; the per-story keys carry the details, and the summary is in the notes below.
   planning_date: 2026-09-14
   epics: [21, 22, 23]
   stories:
@@ -779,7 +779,7 @@ development_status:
   # 23-1 is a DESIGN story and gates the rest: a 384px round screen with rotary input
   # and no header is a different grammar, not the phone system scaled down.
   epic-23: in-progress # 2026-09-14: 23-1 refined (the DESIGN gate); 23-2..23-4 stay backlog
-  23-1-the-watch-grammar: ready-for-dev # REFINED 2026-09-14. DESIGN; GATES 23-2..23-4. Refinement found the job is bigger than "extend the system": cardi-design-system.md FORBIDS every frame this story must draw ("Design nothing else" + Forbidden: "any frame that is not 393 x 852"), so it must AMEND the system, not append to it. And there are TWO design systems in the repo — the watch code implements "Carbon Utility" (docs/ux-design-specification.md), cited by name in CarbonTheme.kt; the word "watch" does not appear in the Cardi doc at all. Reconciling them is the story's real subject. Also: watchOS has NO theme layer (empty AccentColor), and `orange` ships on all three watch surfaces while Cardi bans it by name.
+  23-1-the-watch-grammar: review # READY FOR REVIEW 2026-09-15. PICKED UP 2026-09-15 (wave_0, the first story of Sprint 20). REFINED 2026-09-14. DESIGN; GATES 23-2..23-4. Refinement found the job is bigger than "extend the system": cardi-design-system.md FORBIDS every frame this story must draw ("Design nothing else" + Forbidden: "any frame that is not 393 x 852"), so it must AMEND the system, not append to it. And there are TWO design systems in the repo — the watch code implements "Carbon Utility" (docs/ux-design-specification.md), cited by name in CarbonTheme.kt; the word "watch" does not appear in the Cardi doc at all. Reconciling them is the story's real subject. Also: watchOS has NO theme layer (empty AccentColor), and `orange` ships on all three watch surfaces while Cardi bans it by name.
   23-2-watchos-implementation: backlog
   23-3-wear-os-implementation: backlog
   23-4-watch-widget-and-complication: backlog
