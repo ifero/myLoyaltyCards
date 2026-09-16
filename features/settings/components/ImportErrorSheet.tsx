@@ -50,7 +50,11 @@ export const ImportErrorSheet = ({
         style={{
           marginTop: 14,
           borderRadius: 10,
-          backgroundColor: isInvalid ? theme.warning + '1A' : theme.primary + '14',
+          // Each half takes its OWN role's wash. The info branch read
+          // `theme.primary`, which was invisible while primary and info were the
+          // same blue and became a beam-yellow wash behind cream "info" content
+          // the moment Story 21.2's dark theme split them.
+          backgroundColor: isInvalid ? theme.warning + '1A' : theme.info + '14',
           paddingHorizontal: 12,
           paddingVertical: 12,
           flexDirection: 'row',

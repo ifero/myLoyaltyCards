@@ -7,6 +7,7 @@
 
 import { render, fireEvent } from '@testing-library/react-native';
 import React from 'react';
+import { StyleSheet } from 'react-native';
 
 import MigrationBanner from './MigrationBanner';
 
@@ -17,12 +18,18 @@ import MigrationBanner from './MigrationBanner';
 jest.mock('@/shared/theme', () => ({
   useTheme: () => ({
     theme: {
-      primary: '#1A73E8',
-      textPrimary: '#1F2937',
-      textSecondary: '#6B7280',
-      background: '#FAFAFA',
+      primary: '#181824',
+      textPrimary: '#181824',
+      textSecondary: '#55555F',
+      background: '#F0F0E8',
       surface: '#FFFFFF',
-      border: '#E5E7EB'
+      border: '#D6D6CB',
+      // Deliberately the DARK error pair: `onError` there is ink, so a component
+      // that reverted to a hardcoded white could not pass the assertion below.
+      // A mock carrying the light pair would make that test vacuous, since
+      // light `onError` IS white.
+      error: '#FF453A',
+      onError: '#181824'
     }
   })
 }));
@@ -101,6 +108,23 @@ describe('MigrationBanner', () => {
     expect(getByTestId('migration-message').props.children).toContain('retry');
     expect(getByTestId('migration-retry-button')).toBeTruthy();
     expect(getByTestId('migration-dismiss-button')).toBeTruthy();
+  });
+
+  /**
+   * The retry label sits on a `theme.error` fill, against which white fails AA
+   * in dark mode. `onError` follows the fill; this proves the component reads it
+   * rather than the literal white it carried until Story 21.2.
+   */
+  it('paints the retry label with onError, not a literal', () => {
+    const { getByTestId } = render(
+      <MigrationBanner {...defaultProps} status="error" message="Backup failed" />
+    );
+
+    const style = StyleSheet.flatten(getByTestId('migration-retry-label').props.style) as {
+      color?: string;
+    };
+    expect(style.color).toBe('#181824');
+    expect(style.color).not.toBe('#FFFFFF');
   });
 
   it('calls onRetry when retry button is pressed', () => {

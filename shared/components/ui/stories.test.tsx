@@ -101,8 +101,11 @@ describe('shared/components/ui stories', () => {
     });
   });
 
+  // Light is cream `#F0F0E8`, not white, since Story 21.2: white is reserved for
+  // cards sitting ON the cream ground, so a white canvas would render every
+  // surface primitive against the wrong ground. Dark was already `#000000`.
   it('flips the canvas background token with the theme (AC1)', () => {
-    expect(canvasBackground('light')).toBe('#FFFFFF');
+    expect(canvasBackground('light')).toBe('#F0F0E8');
     expect(canvasBackground('dark')).toBe('#000000');
   });
 
@@ -121,7 +124,7 @@ describe('shared/components/ui stories', () => {
         <></>
       </StoryDecorator>
     );
-    expect(readBg(view)).toBe('#FFFFFF');
+    expect(readBg(view)).toBe('#F0F0E8');
 
     view.rerender(
       <StoryDecorator theme="dark">

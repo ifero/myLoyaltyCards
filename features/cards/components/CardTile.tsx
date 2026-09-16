@@ -2,6 +2,7 @@
  * CardTile Component
  * Story 13.2: Restyle Home Screen (AC1, AC7, AC9)
  * Story 16.22: Fix card-grid tile overlap on narrow screens (AC1, AC5, AC9)
+ * Story 21.2: Migrate the colour tokens to Ink & Beam (AC8, AC9)
  *
  * Brand-colored tile for the 2-column grid.
  * Catalogue cards show brand logo on brand hex bg.
@@ -35,7 +36,7 @@ import Animated, {
 import { LoyaltyCard } from '@/core/schemas';
 
 import { useTheme } from '@/shared/theme';
-import { CARD_COLORS } from '@/shared/theme/colors';
+import { CARD_COLORS, IDENTITY_COLORS } from '@/shared/theme/colors';
 import { getLuminance } from '@/shared/theme/luminance';
 import { TYPOGRAPHY } from '@/shared/theme/typography';
 
@@ -69,12 +70,26 @@ export {
   SINGLE_TILE_RADIUS
 };
 
+/**
+ * Beam as `r, g, b`, so the just-added highlight can animate its alpha.
+ *
+ * The ring needs an `rgba()` string because the opacity is driven by a shared
+ * value on the UI thread, and every token in `tokens/*.json` is a 6-digit hex by
+ * contract (several call sites build alpha by concatenating onto one). Splitting
+ * beam here rather than writing `rgba(252, 204, 12, …)` inline keeps the ring
+ * tied to the token: it used to be Material Green 500, a colour in no palette at
+ * all, and a literal is exactly how that survived four design reviews.
+ */
+const HIGHLIGHT_RGB = [1, 3, 5]
+  .map((offset) => parseInt(IDENTITY_COLORS.beam.slice(offset, offset + 2), 16))
+  .join(', ');
+
 interface CardTileProps {
   /** The loyalty card to display */
   card: LoyaltyCard;
   /** Enlarged single-card mode */
   enlarged?: boolean;
-  /** Green border highlight for newly added card (fades after 2s) */
+  /** Beam border highlight for newly added card (fades after 2s) */
   highlighted?: boolean;
   /**
    * Applied tile width (pt), derived from the viewport by the parent.
@@ -94,7 +109,7 @@ interface CardTileProps {
  * - Brand hex background + centered logo / first-letter avatar
  * - Card name below tile (not inside the shell)
  * - Drop shadow: offset 0/2, blur 8, 8% opacity
- * - Dark mode: #40404A 1pt border on black-branded cards
+ * - Dark mode: 1pt `theme.border` (#3A3A48) on black-branded cards
  */
 export const CardTile: React.FC<CardTileProps> = ({
   card,
@@ -109,7 +124,7 @@ export const CardTile: React.FC<CardTileProps> = ({
   const brand = useBrandLogo(card.brandId);
   const [isPressed, setIsPressed] = useState(false);
 
-  // Highlight animation: green border fades out after 2 seconds
+  // Highlight animation: beam border fades out after 2 seconds
   const highlightOpacity = useSharedValue(highlighted ? 1 : 0);
 
   useEffect(() => {
@@ -121,7 +136,7 @@ export const CardTile: React.FC<CardTileProps> = ({
 
   const highlightStyle = useAnimatedStyle(() => ({
     borderWidth: highlightOpacity.value > 0 ? 3 : 0,
-    borderColor: `rgba(76, 175, 80, ${highlightOpacity.value})`
+    borderColor: `rgba(${HIGHLIGHT_RGB}, ${highlightOpacity.value})`
   }));
 
   const handlePress = () => {
@@ -141,8 +156,11 @@ export const CardTile: React.FC<CardTileProps> = ({
   const isBlackBrand = luminance < 0.2;
   const isLightBrand = luminance > 0.85;
 
-  // Determine foreground color for avatar text
-  const foregroundColor = isBlackBrand ? '#FFFFFF' : '#1F1F24';
+  // Determine foreground color for avatar text. The threshold here is 0.2, not
+  // the 0.5 `getContrastForeground` uses, because this decides the colour of a
+  // glyph sitting on 85% of the tile rather than of text on a header — so the
+  // literal stays local, but the value it resolves to is the token.
+  const foregroundColor = isBlackBrand ? '#FFFFFF' : IDENTITY_COLORS.ink;
   const firstLetter = card.name.trim().charAt(0).toUpperCase() || 'C';
 
   const logo = brand ? getBrandLogo(brand.logo) : undefined;
@@ -187,7 +205,7 @@ export const CardTile: React.FC<CardTileProps> = ({
                 ? 'rgba(255,255,255,0.12)'
                 : 'rgba(0,0,0,0.08)'
               : isDark && isBlackBrand
-                ? '#40404A'
+                ? theme.border
                 : 'transparent'
           },
           !isDark && styles.shadow,
@@ -219,11 +237,15 @@ export const CardTile: React.FC<CardTileProps> = ({
           </View>
         )}
 
-        {/* Favourite badge (Story 9.2 — AC2): shown only when pinned. White plate
-            keeps the amber star legible on any tile colour, incl. light/yellow brands. */}
+        {/* Favourite badge (Story 9.2 — AC2, recoloured in Story 21.2 — AC9): shown
+            only when pinned. The plate is INK and the star is BEAM, so the pair
+            survives all 57 brand colours — Esselunga's #FFCC00 included, which a
+            beam star drawn straight on the tile would disappear into. The star
+            never sees the brand colour: the plate is always between them, which
+            is why this can hardcode beam where the card-detail header cannot. */}
         {card.isFavorite && (
           <View style={styles.favouriteBadge} testID="favourite-badge">
-            <MaterialIcons name="star" size={16} color={theme.warning} />
+            <MaterialIcons name="star" size={16} color={IDENTITY_COLORS.beam} />
           </View>
         )}
       </Animated.View>
@@ -254,7 +276,7 @@ const styles = StyleSheet.create({
     width: BADGE_SIZE,
     height: BADGE_SIZE,
     borderRadius: BADGE_SIZE / 2,
-    backgroundColor: 'rgba(255, 255, 255, 0.95)',
+    backgroundColor: IDENTITY_COLORS.ink,
     alignItems: 'center',
     justifyContent: 'center'
   },

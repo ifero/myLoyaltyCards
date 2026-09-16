@@ -82,7 +82,12 @@ const MigrationBanner = ({ status, message, onRetry, onDismiss }: MigrationBanne
           accessibilityRole="button"
           style={[styles.retryButton, { backgroundColor: theme.error }]}
         >
-          <Text style={styles.retryLabel}>{t('common.actions.retry')}</Text>
+          <Text
+            testID="migration-retry-label"
+            style={[styles.retryLabel, { color: theme.onError }]}
+          >
+            {t('common.actions.retry')}
+          </Text>
         </Pressable>
       )}
 
@@ -126,8 +131,9 @@ const styles = StyleSheet.create({
   retryLabel: {
     fontSize: 12,
     lineHeight: 16,
-    fontWeight: '600',
-    color: '#FFFFFF'
+    fontWeight: '600'
+    // Colour supplied at the call site from `theme.onError` — this label sits on
+    // a `theme.error` fill, against which white fails AA in dark mode.
   },
   dismissButton: {
     marginLeft: 16,

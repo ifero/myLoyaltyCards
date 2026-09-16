@@ -69,11 +69,17 @@ export const ThemePickerSheet = ({
                       option.key === 'dark' ? DARK_THEME.surface : LIGHT_THEME.surface
                   }}
                 />
+                {/* The lower band is the GROUND, so it previews what the scheme
+                    actually looks like. It read `surfaceElevated` until Story
+                    21.2, which was a near-white against the white band above it —
+                    tolerable while the light ground WAS white, and actively
+                    misleading now that it is cream #F0F0E8, since this chip is
+                    where someone goes to see the difference. */}
                 <View
                   style={{
                     height: 60,
                     backgroundColor:
-                      option.key === 'light' ? LIGHT_THEME.surfaceElevated : DARK_THEME.background
+                      option.key === 'light' ? LIGHT_THEME.background : DARK_THEME.background
                   }}
                 />
                 {isSelected ? (

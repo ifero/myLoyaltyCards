@@ -130,7 +130,9 @@ export function BarcodeScanner({ onScan, onManualEntry, onError }: BarcodeScanne
               accessibilityRole="button"
               accessibilityLabel={t('common.actions.openSettings')}
             >
-              <Text style={styles.buttonLabelWhite}>{t('common.actions.openSettings')}</Text>
+              <Text style={[styles.buttonLabelWhite, { color: theme.onPrimary }]}>
+                {t('common.actions.openSettings')}
+              </Text>
             </Pressable>
             <Pressable
               onPress={onManualEntry}
@@ -178,7 +180,9 @@ export function BarcodeScanner({ onScan, onManualEntry, onError }: BarcodeScanne
               accessibilityRole="button"
               accessibilityLabel={t('common.actions.retry')}
             >
-              <Text style={styles.buttonLabelWhite}>{t('common.actions.retry')}</Text>
+              <Text style={[styles.buttonLabelWhite, { color: theme.onPrimary }]}>
+                {t('common.actions.retry')}
+              </Text>
             </Pressable>
             <Pressable
               onPress={onManualEntry}

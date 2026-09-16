@@ -276,7 +276,9 @@ export const CardForm = ({
             }
           ]}
         >
-          <Text style={styles.saveLabel}>{isLoading ? t('cards.form.saving') : submitLabel}</Text>
+          <Text style={[styles.saveLabel, { color: theme.onPrimary }]}>
+            {isLoading ? t('cards.form.saving') : submitLabel}
+          </Text>
         </Pressable>
       </ScrollView>
     </KeyboardAvoidingView>
@@ -345,7 +347,9 @@ const styles = StyleSheet.create({
   saveLabel: {
     fontSize: 16,
     lineHeight: 24,
-    fontWeight: '600',
-    color: '#FFFFFF'
+    fontWeight: '600'
+    // No `color`: the label follows the fill via `theme.onPrimary` at the call
+    // site (white on ink in light, ink on beam in dark). A hardcoded white here
+    // would be dead and, worse, would look correct.
   }
 });

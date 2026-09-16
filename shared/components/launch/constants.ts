@@ -31,9 +31,10 @@ import { IDENTITY_COLORS } from '@/shared/theme/colors';
  * mitigating it, and it is the only field that is neither white nor black.
  *
  * Derived from the design token rather than hardcoded, so it tracks
- * `tokens/*.json`. It is `IDENTITY_COLORS.ink` -- the Cardi mark's own field --
- * and NOT `PRIMARY_COLORS[500]`, which is still the pre-rebrand Google Blue
- * because the app-wide colour migration is a separate big-bang change. The same value is duplicated as `backgroundColor` in
+ * `tokens/*.json`. It is `IDENTITY_COLORS.ink` -- the Cardi mark's own field.
+ * Since Story 21.2 the whole UI palette is derived from the same three identity
+ * colours, so the launch field and `LIGHT_THEME.primary` now agree by
+ * construction rather than by coincidence. The same value is duplicated as `backgroundColor` in
  * `app.json`'s `expo-splash-screen` entry — strict JSON cannot hold a comment
  * pointing here, so `constants.test.ts` asserts the two agree.
  */

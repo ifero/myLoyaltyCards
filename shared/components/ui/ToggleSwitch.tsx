@@ -38,13 +38,19 @@ export const ToggleSwitch = ({
     >
       {label ? <Text style={{ color: theme.textPrimary, fontSize: 16 }}>{label}</Text> : null}
       <View
+        testID={`${testID}-track`}
         style={{
           width: 52,
           height: 32,
           borderRadius: 999,
           borderWidth: 2,
           borderColor: value ? theme.primary : theme.borderStrong,
-          backgroundColor: value ? `${theme.primary}33` : theme.surfaceElevated,
+          // 10%, not 20%: over a dark ground a 20% beam wash composites to
+          // `#463C1F` (saturation 56%) — a dark olive, which the system forbids.
+          // At 10% the composite is a warm near-neutral (saturation 28%) and
+          // reads as a tonal layer, which is what the track is. The knob and the
+          // border carry the on-state in beam at its true value.
+          backgroundColor: value ? `${theme.primary}1A` : theme.surfaceElevated,
           justifyContent: 'center',
           paddingHorizontal: 2
         }}
