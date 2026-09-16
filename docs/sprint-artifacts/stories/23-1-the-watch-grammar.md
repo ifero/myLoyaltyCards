@@ -4,7 +4,7 @@ baseline_commit: 2ff3e23016a3ee6130e5e0c2b3651de62fa4ac5f
 
 # Story 23.1: The watch grammar [Enabling] — the design system forbids the frames you need, and the watch code implements a different system entirely
 
-Status: review
+Status: done
 
 Epic: 23 — Cardì on the Watch
 
