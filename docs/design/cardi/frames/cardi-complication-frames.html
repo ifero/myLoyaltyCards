@@ -1,0 +1,596 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Cardì on the watch — the complication, four families</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=JetBrains+Mono:wght@500&family=Space+Grotesk:wght@700&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      /* ==================================================================
+         GENERATED FILE -- do not hand-edit.
+
+           python3 docs/design/cardi/tools/cardì_on_the_watch_—_the_complication,_four_families.py
+           yarn frames:check          # asserts this file still matches
+
+         The token block below is INLINED on purpose and must stay that way:
+         any viewer that inlines the HTML drops a linked stylesheet and renders
+         a broken frame, which reads as "the reference is wrong". The source
+         duplication is removed in tools/_watch_shared.py instead.
+
+         Source of truth for every value here: cardi-design-system.md and
+         cardi-watch-grammar.md. This file is a copy of them.
+         ================================================================== */
+
+      :root {
+        /* The three roles. Values from cardi-design-system.md; this is a copy. */
+        --ink: #181824;
+        --beam: #fccc0c;
+        --cream: #f0f0e8;
+
+        /* The watch ground is true black, permanently. It is never cream. */
+        --black: #000000;
+        --white: #ffffff;
+        --outline: #3a3a48;
+
+        /* Card accents -- by HEX, never by key. Story 21.2a owns the key set. */
+        --card-red: #e42424;
+        --card-blue: #0c3c84;
+        --card-azure: #0c84cc;
+        --card-green: #0c843c;
+        --card-yellow: #fccc0c;
+
+        /* The row is DERIVED, not gridded:
+           rowHeight = max(max(accentHeight, avatarSize) + 2*verticalPadding, tap)
+                     = max(max(28, 30) + 18, 48) = 48
+           -- which lands on the system's own touch target from the other side. */
+        --avatar: 30px;
+        --accent-w: 5px;
+        --accent-h: 28px;
+        --accent-r: 3px;
+        --pad-h: 10px;
+        --pad-v: 9px;
+        --row-h: 48px;
+        --row-radius: 14px;
+        --row-gap: 4px;
+
+        /* Type. 15 is the body floor and it is met. 12 and 10 are the two named
+           exceptions -- a mark and an escape hatch, not body text. */
+        --t-body: 15px;
+        --t-initials: 12px;
+        --t-digits: 10px;
+      }
+
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+
+      body {
+        background: #c9c9c2;
+        font-family: Inter, system-ui, sans-serif;
+        color: #23232b;
+        padding: 40px 28px 64px;
+      }
+
+      h1 {
+        font:
+          700 26px/1.2 'Space Grotesk',
+          Inter,
+          sans-serif;
+        letter-spacing: -0.02em;
+        margin-bottom: 8px;
+      }
+
+      h2 {
+        font:
+          700 15px/1.3 Inter,
+          sans-serif;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: #3d3d46;
+        margin: 44px 0 4px;
+        padding-top: 20px;
+        border-top: 1px solid #a9a9a2;
+      }
+
+      p.note {
+        max-width: 78ch;
+        font-size: 13px;
+        line-height: 1.55;
+        color: #3d3d46;
+        margin-bottom: 18px;
+      }
+
+      p.note b {
+        color: #23232b;
+      }
+
+      .row-of-plates {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 34px;
+        align-items: flex-start;
+        margin-bottom: 8px;
+      }
+
+      .plate {
+        display: flex;
+        flex-direction: column;
+        gap: 9px;
+        align-items: center;
+      }
+
+      .plate figcaption {
+        font:
+          600 11px/1.35 Inter,
+          sans-serif;
+        letter-spacing: 0.07em;
+        text-transform: uppercase;
+        color: #3d3d46;
+        text-align: center;
+        max-width: 22ch;
+      }
+
+      .plate figcaption em {
+        display: block;
+        font:
+          400 10px/1.4 Inter,
+          sans-serif;
+        letter-spacing: 0.02em;
+        text-transform: none;
+        color: #5a5a62;
+      }
+
+      /* ---- the frames themselves --------------------------------------- */
+      /* Every frame is drawn at 1:1 in its OWN unit: dp for Wear, pt for watchOS.
+         Nothing here is scaled, so a measurement taken off the screen is real. */
+      .screen {
+        background: var(--black);
+        color: var(--cream);
+        position: relative;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+      }
+
+      .round {
+        border-radius: 50%;
+      }
+
+      .square {
+        border-radius: 4px;
+      }
+
+      /* Wear square: the corners become usable and the rule is to LEAVE THEM
+         EMPTY. The dotted circle is the round layout's envelope, drawn so the
+         two frames can be checked against each other rather than diverging. */
+      .envelope::after {
+        content: '';
+        position: absolute;
+        inset: 0;
+        border-radius: 50%;
+        border: 1px dashed rgba(240, 240, 232, 0.22);
+        pointer-events: none;
+      }
+
+      .listhead {
+        font:
+          600 13px/1 Inter,
+          sans-serif;
+        color: var(--cream);
+        opacity: 0.75;
+        text-align: center;
+        flex: 0 0 auto;
+      }
+
+      .rows {
+        display: flex;
+        flex-direction: column;
+        gap: var(--row-gap);
+        overflow: hidden;
+      }
+
+      /* THE CARD ROW. Ink fill (not #1C1C1F), cream text (not white),
+         beam star (not #FFCC00, not #F59E0B), and no plate behind it. */
+      .row {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        height: var(--row-h);
+        padding: var(--pad-v) var(--pad-h);
+        border-radius: var(--row-radius);
+        background: var(--ink);
+        flex: 0 0 auto;
+      }
+
+      .row .accent {
+        width: var(--accent-w);
+        height: var(--accent-h);
+        border-radius: var(--accent-r);
+        flex: 0 0 auto;
+      }
+
+      /* The avatar is a circular mask, so artwork fills the INSCRIBED SQUARE --
+         1/sqrt(2) = 70.7% of the diameter. That is not a reduction from the
+         phone's 85%: it is the largest square the mask cannot clip. */
+      .row .avatar {
+        width: var(--avatar);
+        height: var(--avatar);
+        border-radius: 50%;
+        flex: 0 0 auto;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font:
+          700 var(--t-initials) / 1 Inter,
+          sans-serif;
+      }
+
+      .row .name {
+        font:
+          600 var(--t-body) / 1.1 Inter,
+          sans-serif;
+        color: var(--cream);
+        flex: 1 1 auto;
+        overflow: hidden;
+        white-space: nowrap;
+        text-overflow: ellipsis;
+      }
+
+      .row .star {
+        flex: 0 0 auto;
+        line-height: 0;
+      }
+
+      /* THE BARCODE FIELD. White, true-black bars, nothing overlaid, ever. */
+      .flash {
+        background: var(--white);
+        color: #000;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .flash .title {
+        font:
+          600 13px/1.2 Inter,
+          sans-serif;
+        color: #000;
+        text-align: center;
+        max-width: 92%;
+        overflow: hidden;
+        white-space: nowrap;
+        text-overflow: ellipsis;
+      }
+
+      .flash .digits {
+        font:
+          500 var(--t-digits) / 1 'JetBrains Mono',
+          ui-monospace,
+          monospace;
+        color: #000;
+        letter-spacing: 0.06em;
+      }
+
+      /* Bars drawn as a hard-edged repeating gradient: no anti-aliasing between
+         modules, which is the drawn equivalent of .interpolation(.none) /
+         FilterQuality.None. A blurred module edge is the defect Story 16.23
+         spent its whole budget on. */
+      .bars {
+        background:
+          repeating-linear-gradient(
+            90deg,
+            #000 0 2px,
+            #fff 2px 4px,
+            #000 4px 7px,
+            #fff 7px 9px,
+            #000 9px 10px,
+            #fff 10px 13px,
+            #000 13px 17px,
+            #fff 17px 18px,
+            #000 18px 20px,
+            #fff 20px 23px
+          );
+      }
+
+      /* The watchOS reserved strip. The system draws the clock here and there is
+         no API to suppress it, so the screen keeps the strip rather than letting
+         white glyphs fall through the bars. Part of the BLACK surround -- which
+         is why the title is cream and not ink. */
+      .strip {
+        flex: 0 0 auto;
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        padding: 0 6px;
+        font:
+          600 12px/1 Inter,
+          sans-serif;
+        color: var(--cream);
+        background: var(--black);
+      }
+
+      .strip .chev {
+        opacity: 0.8;
+      }
+
+      .strip .clock {
+        margin-left: auto;
+        opacity: 0.9;
+        font-variant-numeric: tabular-nums;
+      }
+
+      .strip .cardname {
+        overflow: hidden;
+        white-space: nowrap;
+        text-overflow: ellipsis;
+      }
+
+      /* Sort picker. The selected row is beam -- shape AND colour, never colour
+         alone: the control and the weight both move with it. */
+      .opt {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        min-height: var(--row-h);
+        padding: 0 10px;
+        border-radius: var(--row-radius);
+        background: var(--ink);
+        font:
+          400 var(--t-body) / 1.15 Inter,
+          sans-serif;
+        color: var(--cream);
+        flex: 0 0 auto;
+      }
+
+      .opt.sel {
+        font-weight: 600;
+        color: var(--beam);
+      }
+
+      .opt .dot {
+        width: 16px;
+        height: 16px;
+        border-radius: 50%;
+        border: 2px solid rgba(240, 240, 232, 0.55);
+        flex: 0 0 auto;
+      }
+
+      .opt.sel .dot {
+        border-color: var(--beam);
+        background:
+          radial-gradient(
+            circle,
+            var(--beam) 0 4px,
+            transparent 4px
+          );
+      }
+
+      .callout {
+        max-width: 78ch;
+        border-left: 3px solid var(--ink);
+        padding: 10px 0 10px 14px;
+        margin: 14px 0 22px;
+        font-size: 13px;
+        line-height: 1.55;
+        color: #3d3d46;
+      }
+
+      .callout b {
+        color: #23232b;
+      }
+
+      .ban {
+        border-left-color: #c41e1e;
+      }
+
+      .face {
+        background: radial-gradient(circle at 50% 38%, #101018 0%, #000 72%);
+        color: var(--cream);
+        position: relative;
+        overflow: hidden;
+        border-radius: 34px;
+      }
+
+      /* The corner family's arc follows the bezel and therefore sits close to the
+         face's own rounded clip. Inset the slot rather than widening the arc --
+         a clipped arc stops mid-word silently, which is the failure this whole
+         family is most prone to. */
+      .face .slot svg {
+        overflow: visible;
+      }
+
+      .face .facetime {
+        position: absolute;
+        top: 8px;
+        right: 12px;
+        font:
+          600 13px/1 Inter,
+          sans-serif;
+        color: var(--cream);
+        opacity: 0.85;
+        font-variant-numeric: tabular-nums;
+      }
+
+      .face .hands {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font:
+          700 54px/1 'Space Grotesk',
+          Inter,
+          sans-serif;
+        color: var(--cream);
+        opacity: 0.9;
+        letter-spacing: -0.03em;
+      }
+
+      .slot {
+        position: absolute;
+      }
+
+      /* The specimens ------------------------------------------------------ */
+      .spec {
+        background: #000;
+        border-radius: 10px;
+        padding: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .circ {
+        border-radius: 50%;
+        background: var(--ink);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .rect {
+        background: var(--ink);
+        border-radius: 10px;
+        padding: 6px 9px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .rect .lines {
+        display: flex;
+        flex-direction: column;
+        gap: 1px;
+        min-width: 0;
+      }
+
+      .l1 {
+        font:
+          600 10px/1.2 Inter,
+          sans-serif;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        color: var(--beam);
+      }
+
+      .l2 {
+        font:
+          600 15px/1.15 Inter,
+          sans-serif;
+        color: var(--cream);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      .l3 {
+        font:
+          400 11px/1.2 Inter,
+          sans-serif;
+        color: var(--cream);
+        opacity: 0.62;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      .inline-c {
+        display: flex;
+        align-items: center;
+        gap: 5px;
+        font:
+          500 14px/1 Inter,
+          sans-serif;
+        color: var(--cream);
+      }
+
+      /* Tinted mode: the system recolours complication content, so nothing may
+         depend on its own hue. Everything below must still read as SHAPE. */
+      .tinted {
+        filter: grayscale(1) brightness(1.25);
+      }
+
+      .budget {
+        font:
+          500 11px/1.4 'JetBrains Mono',
+          ui-monospace,
+          monospace;
+        color: #3d3d46;
+      }
+    </style>
+  </head>
+  <body>
+    <h1><span style="font:700 26px/1 'Space Grotesk',Inter,sans-serif;color:var(--ink);letter-spacing:-0.01em">Card<svg viewBox="0 0 30 100" width="0.30em" height="1em" style="display:inline;vertical-align:-0.30em;overflow:visible" aria-hidden="true"><rect x="9.0" y="20.4" width="12" height="49.6" rx="6.0" fill="currentColor" /><rect x="3.00" y="6.00" width="24" height="9" rx="4.50" fill="var(--beam)" transform="rotate(35 15.0 10.5)" /></svg></span> &mdash; the complication, all four families</h1>
+    <p class="note">
+      Story 23.1, AC12. <code>WatchComplicationWidget.swift:89-94</code> declares
+      <b>all four</b> accessory families, so all four are designed.
+      (<code>ComplicationProvider.swift</code> declares none &mdash; it is App-Group state
+      persistence, not a widget.) The complication has <b>one job</b>: get you into the wallet in
+      one tap. It is not a data readout.
+    </p>
+
+    <h2>The four families</h2>
+    <div class="row-of-plates">
+    <figure class="plate"><span class="spec"><span class="circ" style="width:44px;height:44px"><svg viewBox="-31.0 -11.0 92 92" width="31" height="31" aria-hidden="true" style="display:block;overflow:visible"><rect x="9.0" y="20.4" width="12" height="49.6" rx="6.0" fill="var(--cream)" /><rect x="3.00" y="6.00" width="24" height="9" rx="4.50" fill="var(--beam)" transform="rotate(35 15.0 10.5)" /></svg></span></span><figcaption>accessoryCircular<em>The ì alone. No text — at this size a word is a smudge.</em></figcaption></figure>
+    <figure class="plate"><span class="spec"><span style="position:relative;width:84px;height:84px;display:block"><svg width="84" height="84" viewBox="0 0 84 84" aria-hidden="true" style="position:absolute;inset:0;overflow:visible"><path id="arc84" fill="none" d="M 11.2 56.4 A 34.0 34.0 0 0 1 56.4 11.2" /><text font-family="Inter,sans-serif" font-size="10" font-weight="600" fill="var(--cream)"><textPath href="#arc84" startOffset="50%" text-anchor="middle">Esselunga</textPath></text></svg><span style="position:absolute;left:50%;top:50%;transform:translate(-50%,-50%)"><span class="circ" style="width:39px;height:39px"><svg viewBox="-31.0 -11.0 92 92" width="28" height="28" aria-hidden="true" style="display:block;overflow:visible"><rect x="9.0" y="20.4" width="12" height="49.6" rx="6.0" fill="var(--cream)" /><rect x="3.00" y="6.00" width="24" height="9" rx="4.50" fill="var(--beam)" transform="rotate(35 15.0 10.5)" /></svg></span></span></span></span><figcaption>accessoryCorner<em>Disc + curved arc. The tightest image budget of the four.</em></figcaption></figure>
+    <figure class="plate"><span class="spec"><span style="position:relative;width:84px;height:84px;display:block"><svg width="84" height="84" viewBox="0 0 84 84" aria-hidden="true" style="position:absolute;inset:0;overflow:visible"><path id="arc84" fill="none" d="M 11.2 56.4 A 34.0 34.0 0 0 1 56.4 11.2" /><text font-family="Inter,sans-serif" font-size="10" font-weight="600" fill="var(--cream)"><textPath href="#arc84" startOffset="50%" text-anchor="middle">Metro Supermer…</textPath></text></svg><span style="position:absolute;left:50%;top:50%;transform:translate(-50%,-50%)"><span class="circ" style="width:39px;height:39px"><svg viewBox="-31.0 -11.0 92 92" width="28" height="28" aria-hidden="true" style="display:block;overflow:visible"><rect x="9.0" y="20.4" width="12" height="49.6" rx="6.0" fill="var(--cream)" /><rect x="3.00" y="6.00" width="24" height="9" rx="4.50" fill="var(--beam)" transform="rotate(35 15.0 10.5)" /></svg></span></span></span></span><figcaption>accessoryCorner — long name<em>The arc TRUNCATES rather than stopping mid-word. Sized from arc length, not eyeballed — the failure is silent.</em></figcaption></figure>
+    <figure class="plate"><span class="spec"><span class="rect" style="width:156px"><span class="circ" style="width:30px;height:30px"><svg viewBox="-31.0 -11.0 92 92" width="21" height="21" aria-hidden="true" style="display:block;overflow:visible"><rect x="9.0" y="20.4" width="12" height="49.6" rx="6.0" fill="var(--cream)" /><rect x="3.00" y="6.00" width="24" height="9" rx="4.50" fill="var(--beam)" transform="rotate(35 15.0 10.5)" /></svg></span><span class="lines"><span class="l1">Cardì</span><span class="l2">Esselunga</span><span class="l3">Fidaty &middot; ends 7978</span></span></span></span><figcaption>accessoryRectangular<em>The only family with room for a mark beside text.</em></figcaption></figure>
+    <figure class="plate"><span class="spec"><span class="inline-c"><svg viewBox="-31.0 -11.0 92 92" width="15" height="15" aria-hidden="true" style="display:block;overflow:visible"><rect x="9.0" y="20.4" width="12" height="49.6" rx="6.0" fill="var(--cream)" /><rect x="3.00" y="6.00" width="24" height="9" rx="4.50" fill="var(--beam)" transform="rotate(35 15.0 10.5)" /></svg><span>Esselunga</span></span></span><figcaption>accessoryInline<em>One row of text + one optional image. Apple's own definition is the whole constraint.</em></figcaption></figure>
+    </div>
+
+    <h2>The 76 px budget is a gate, not a guideline</h2>
+    <div class="callout ban">
+      <code class="budget">ComplicationImage.swift</code> downsamples to
+      <b>maxPoint 38 &times; scale 2 = 76 px</b>. WidgetKit measures a raster image's
+      <b>native</b> pixel size and rejects anything over the per-family budget with
+      <code>imageTooLarge</code>, which renders the slot as a <b>grey placeholder</b>.
+      <code>.frame</code> and <code>.scaledToFit</code> change layout, not the archived bitmap
+      &mdash; <b>they do not help</b>.
+      <br /><br />
+      <b>Do not derive a looser budget from the source comment.</b> It states the
+      <code>accessoryCorner</code> ceiling two ways &mdash; <code>&asymp; 46 pt</code> on one line
+      and <code>&asymp; 81.6 px</code> three lines below &mdash; and those do not reconcile at
+      &times;2. <b>76 px is the shipped, working value; design to it.</b> Nothing on this sheet
+      depends on which reading is right, because 76 is under both.
+    </div>
+
+    <h2>In situ</h2>
+    <div class="row-of-plates">
+    <figure class="plate"><span class="face" style="width:198px;height:242px;display:block"><span class="facetime">10:09</span><span class="slot" style="left:9px;top:9px"><span style="position:relative;width:64px;height:64px;display:block"><svg width="64" height="64" viewBox="0 0 64 64" aria-hidden="true" style="position:absolute;inset:0;overflow:visible"><path id="arc64" fill="none" d="M 8.6 37.2 A 24.0 24.0 0 0 1 37.2 8.6" /><text font-family="Inter,sans-serif" font-size="8" font-weight="600" fill="var(--cream)"><textPath href="#arc64" startOffset="50%" text-anchor="middle">Esselunga</textPath></text></svg><span style="position:absolute;left:50%;top:50%;transform:translate(-50%,-50%)"><span class="circ" style="width:29px;height:29px"><svg viewBox="-31.0 -11.0 92 92" width="21" height="21" aria-hidden="true" style="display:block;overflow:visible"><rect x="9.0" y="20.4" width="12" height="49.6" rx="6.0" fill="var(--cream)" /><rect x="3.00" y="6.00" width="24" height="9" rx="4.50" fill="var(--beam)" transform="rotate(35 15.0 10.5)" /></svg></span></span></span></span><span class="slot" style="right:14px;top:30px"><span class="circ" style="width:32px;height:32px"><svg viewBox="-31.0 -11.0 92 92" width="23" height="23" aria-hidden="true" style="display:block;overflow:visible"><rect x="9.0" y="20.4" width="12" height="49.6" rx="6.0" fill="var(--cream)" /><rect x="3.00" y="6.00" width="24" height="9" rx="4.50" fill="var(--beam)" transform="rotate(35 15.0 10.5)" /></svg></span></span><span class="slot" style="left:0;right:0;top:96px;text-align:center;font:700 44px/1 'Space Grotesk',Inter,sans-serif;color:var(--cream);letter-spacing:-0.03em">10:09</span><span class="slot" style="left:50%;top:150px;transform:translateX(-50%)"><span class="inline-c"><svg viewBox="-31.0 -11.0 92 92" width="15" height="15" aria-hidden="true" style="display:block;overflow:visible"><rect x="9.0" y="20.4" width="12" height="49.6" rx="6.0" fill="var(--cream)" /><rect x="3.00" y="6.00" width="24" height="9" rx="4.50" fill="var(--beam)" transform="rotate(35 15.0 10.5)" /></svg><span>Esselunga</span></span></span><span class="slot" style="left:50%;bottom:12px;transform:translateX(-50%)"><span class="rect" style="width:150px"><span class="circ" style="width:26px;height:26px"><svg viewBox="-31.0 -11.0 92 92" width="18" height="18" aria-hidden="true" style="display:block;overflow:visible"><rect x="9.0" y="20.4" width="12" height="49.6" rx="6.0" fill="var(--cream)" /><rect x="3.00" y="6.00" width="24" height="9" rx="4.50" fill="var(--beam)" transform="rotate(35 15.0 10.5)" /></svg></span><span class="lines"><span class="l2" style="font-size:14px">Esselunga</span><span class="l3">Fidaty &middot; ends 7978</span></span></span></span></span><figcaption>In situ &mdash; 45 mm, 198 &times; 242 pt<em>A composite: no real face carries all four at once. Corner top-left, circular top-right, inline centre, rectangular bottom — at true scale.</em></figcaption></figure>
+    </div>
+
+    <h2>The tinted check &mdash; every family must read as SHAPE</h2>
+    <p class="note">
+      Watch faces render complications in a <b>tinted</b> mode where the system recolours the
+      content, so <b>no design may depend on its own hue</b>. Below is the same set with colour
+      removed. The <b>&igrave; mark survives</b> because it is a shape; a design that separated
+      beam from ink by colour alone would collapse into one flat tone here. Draw them in beam on
+      ink, then verify them desaturated.
+    </p>
+    <div class="row-of-plates">
+    <figure class="plate"><span class="spec tinted"><span class="circ" style="width:44px;height:44px"><svg viewBox="-31.0 -11.0 92 92" width="31" height="31" aria-hidden="true" style="display:block;overflow:visible"><rect x="9.0" y="20.4" width="12" height="49.6" rx="6.0" fill="var(--cream)" /><rect x="3.00" y="6.00" width="24" height="9" rx="4.50" fill="var(--beam)" transform="rotate(35 15.0 10.5)" /></svg></span></span><figcaption>Circular, tinted</figcaption></figure>
+    <figure class="plate"><span class="spec tinted"><span style="position:relative;width:84px;height:84px;display:block"><svg width="84" height="84" viewBox="0 0 84 84" aria-hidden="true" style="position:absolute;inset:0;overflow:visible"><path id="arc84" fill="none" d="M 11.2 56.4 A 34.0 34.0 0 0 1 56.4 11.2" /><text font-family="Inter,sans-serif" font-size="10" font-weight="600" fill="var(--cream)"><textPath href="#arc84" startOffset="50%" text-anchor="middle">Esselunga</textPath></text></svg><span style="position:absolute;left:50%;top:50%;transform:translate(-50%,-50%)"><span class="circ" style="width:39px;height:39px"><svg viewBox="-31.0 -11.0 92 92" width="28" height="28" aria-hidden="true" style="display:block;overflow:visible"><rect x="9.0" y="20.4" width="12" height="49.6" rx="6.0" fill="var(--cream)" /><rect x="3.00" y="6.00" width="24" height="9" rx="4.50" fill="var(--beam)" transform="rotate(35 15.0 10.5)" /></svg></span></span></span></span><figcaption>Corner, tinted</figcaption></figure>
+    <figure class="plate"><span class="spec tinted"><span class="rect" style="width:156px"><span class="circ" style="width:30px;height:30px"><svg viewBox="-31.0 -11.0 92 92" width="21" height="21" aria-hidden="true" style="display:block;overflow:visible"><rect x="9.0" y="20.4" width="12" height="49.6" rx="6.0" fill="var(--cream)" /><rect x="3.00" y="6.00" width="24" height="9" rx="4.50" fill="var(--beam)" transform="rotate(35 15.0 10.5)" /></svg></span><span class="lines"><span class="l1">Cardì</span><span class="l2">Esselunga</span><span class="l3">Fidaty &middot; ends 7978</span></span></span></span><figcaption>Rectangular, tinted</figcaption></figure>
+    <figure class="plate"><span class="spec tinted"><span class="inline-c"><svg viewBox="-31.0 -11.0 92 92" width="15" height="15" aria-hidden="true" style="display:block;overflow:visible"><rect x="9.0" y="20.4" width="12" height="49.6" rx="6.0" fill="var(--cream)" /><rect x="3.00" y="6.00" width="24" height="9" rx="4.50" fill="var(--beam)" transform="rotate(35 15.0 10.5)" /></svg><span>Esselunga</span></span></span><figcaption>Inline, tinted</figcaption></figure>
+    </div>
+
+    <div class="callout">
+      <b>The accent, and the one thing it must not reach.</b> The watch accent colour is
+      <b>beam #FCCC0C</b> (both <code>AccentColor.colorset</code> files are empty stubs today, so
+      Story 21.3 <em>adds</em> a definition rather than changing one). Apple applies the accent to
+      <b>the app's title string in the status bar</b> &mdash; which on the watchOS barcode screen
+      is the card's name. <b>The barcode screen therefore overrides the tint to cream</b>, as it
+      already overrides dark mode. The fallback tint <code>#1A73E8</code> at
+      <code>WatchComplicationWidget.swift:75</code> is the pre-Card&igrave; blue and goes with the
+      rest of the palette.
+    </div>
+  </body>
+</html>

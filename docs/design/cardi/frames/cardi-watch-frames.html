@@ -1,0 +1,528 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Cardì on the watch — the six screens</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=JetBrains+Mono:wght@500&family=Space+Grotesk:wght@700&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      /* ==================================================================
+         GENERATED FILE -- do not hand-edit.
+
+           python3 docs/design/cardi/tools/cardì_on_the_watch_—_the_six_screens.py
+           yarn frames:check          # asserts this file still matches
+
+         The token block below is INLINED on purpose and must stay that way:
+         any viewer that inlines the HTML drops a linked stylesheet and renders
+         a broken frame, which reads as "the reference is wrong". The source
+         duplication is removed in tools/_watch_shared.py instead.
+
+         Source of truth for every value here: cardi-design-system.md and
+         cardi-watch-grammar.md. This file is a copy of them.
+         ================================================================== */
+
+      :root {
+        /* The three roles. Values from cardi-design-system.md; this is a copy. */
+        --ink: #181824;
+        --beam: #fccc0c;
+        --cream: #f0f0e8;
+
+        /* The watch ground is true black, permanently. It is never cream. */
+        --black: #000000;
+        --white: #ffffff;
+        --outline: #3a3a48;
+
+        /* Card accents -- by HEX, never by key. Story 21.2a owns the key set. */
+        --card-red: #e42424;
+        --card-blue: #0c3c84;
+        --card-azure: #0c84cc;
+        --card-green: #0c843c;
+        --card-yellow: #fccc0c;
+
+        /* The row is DERIVED, not gridded:
+           rowHeight = max(max(accentHeight, avatarSize) + 2*verticalPadding, tap)
+                     = max(max(28, 30) + 18, 48) = 48
+           -- which lands on the system's own touch target from the other side. */
+        --avatar: 30px;
+        --accent-w: 5px;
+        --accent-h: 28px;
+        --accent-r: 3px;
+        --pad-h: 10px;
+        --pad-v: 9px;
+        --row-h: 48px;
+        --row-radius: 14px;
+        --row-gap: 4px;
+
+        /* Type. 15 is the body floor and it is met. 12 and 10 are the two named
+           exceptions -- a mark and an escape hatch, not body text. */
+        --t-body: 15px;
+        --t-initials: 12px;
+        --t-digits: 10px;
+      }
+
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+
+      body {
+        background: #c9c9c2;
+        font-family: Inter, system-ui, sans-serif;
+        color: #23232b;
+        padding: 40px 28px 64px;
+      }
+
+      h1 {
+        font:
+          700 26px/1.2 'Space Grotesk',
+          Inter,
+          sans-serif;
+        letter-spacing: -0.02em;
+        margin-bottom: 8px;
+      }
+
+      h2 {
+        font:
+          700 15px/1.3 Inter,
+          sans-serif;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: #3d3d46;
+        margin: 44px 0 4px;
+        padding-top: 20px;
+        border-top: 1px solid #a9a9a2;
+      }
+
+      p.note {
+        max-width: 78ch;
+        font-size: 13px;
+        line-height: 1.55;
+        color: #3d3d46;
+        margin-bottom: 18px;
+      }
+
+      p.note b {
+        color: #23232b;
+      }
+
+      .row-of-plates {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 34px;
+        align-items: flex-start;
+        margin-bottom: 8px;
+      }
+
+      .plate {
+        display: flex;
+        flex-direction: column;
+        gap: 9px;
+        align-items: center;
+      }
+
+      .plate figcaption {
+        font:
+          600 11px/1.35 Inter,
+          sans-serif;
+        letter-spacing: 0.07em;
+        text-transform: uppercase;
+        color: #3d3d46;
+        text-align: center;
+        max-width: 22ch;
+      }
+
+      .plate figcaption em {
+        display: block;
+        font:
+          400 10px/1.4 Inter,
+          sans-serif;
+        letter-spacing: 0.02em;
+        text-transform: none;
+        color: #5a5a62;
+      }
+
+      /* ---- the frames themselves --------------------------------------- */
+      /* Every frame is drawn at 1:1 in its OWN unit: dp for Wear, pt for watchOS.
+         Nothing here is scaled, so a measurement taken off the screen is real. */
+      .screen {
+        background: var(--black);
+        color: var(--cream);
+        position: relative;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+      }
+
+      .round {
+        border-radius: 50%;
+      }
+
+      .square {
+        border-radius: 4px;
+      }
+
+      /* Wear square: the corners become usable and the rule is to LEAVE THEM
+         EMPTY. The dotted circle is the round layout's envelope, drawn so the
+         two frames can be checked against each other rather than diverging. */
+      .envelope::after {
+        content: '';
+        position: absolute;
+        inset: 0;
+        border-radius: 50%;
+        border: 1px dashed rgba(240, 240, 232, 0.22);
+        pointer-events: none;
+      }
+
+      .listhead {
+        font:
+          600 13px/1 Inter,
+          sans-serif;
+        color: var(--cream);
+        opacity: 0.75;
+        text-align: center;
+        flex: 0 0 auto;
+      }
+
+      .rows {
+        display: flex;
+        flex-direction: column;
+        gap: var(--row-gap);
+        overflow: hidden;
+      }
+
+      /* THE CARD ROW. Ink fill (not #1C1C1F), cream text (not white),
+         beam star (not #FFCC00, not #F59E0B), and no plate behind it. */
+      .row {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        height: var(--row-h);
+        padding: var(--pad-v) var(--pad-h);
+        border-radius: var(--row-radius);
+        background: var(--ink);
+        flex: 0 0 auto;
+      }
+
+      .row .accent {
+        width: var(--accent-w);
+        height: var(--accent-h);
+        border-radius: var(--accent-r);
+        flex: 0 0 auto;
+      }
+
+      /* The avatar is a circular mask, so artwork fills the INSCRIBED SQUARE --
+         1/sqrt(2) = 70.7% of the diameter. That is not a reduction from the
+         phone's 85%: it is the largest square the mask cannot clip. */
+      .row .avatar {
+        width: var(--avatar);
+        height: var(--avatar);
+        border-radius: 50%;
+        flex: 0 0 auto;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font:
+          700 var(--t-initials) / 1 Inter,
+          sans-serif;
+      }
+
+      .row .name {
+        font:
+          600 var(--t-body) / 1.1 Inter,
+          sans-serif;
+        color: var(--cream);
+        flex: 1 1 auto;
+        overflow: hidden;
+        white-space: nowrap;
+        text-overflow: ellipsis;
+      }
+
+      .row .star {
+        flex: 0 0 auto;
+        line-height: 0;
+      }
+
+      /* THE BARCODE FIELD. White, true-black bars, nothing overlaid, ever. */
+      .flash {
+        background: var(--white);
+        color: #000;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .flash .title {
+        font:
+          600 13px/1.2 Inter,
+          sans-serif;
+        color: #000;
+        text-align: center;
+        max-width: 92%;
+        overflow: hidden;
+        white-space: nowrap;
+        text-overflow: ellipsis;
+      }
+
+      .flash .digits {
+        font:
+          500 var(--t-digits) / 1 'JetBrains Mono',
+          ui-monospace,
+          monospace;
+        color: #000;
+        letter-spacing: 0.06em;
+      }
+
+      /* Bars drawn as a hard-edged repeating gradient: no anti-aliasing between
+         modules, which is the drawn equivalent of .interpolation(.none) /
+         FilterQuality.None. A blurred module edge is the defect Story 16.23
+         spent its whole budget on. */
+      .bars {
+        background:
+          repeating-linear-gradient(
+            90deg,
+            #000 0 2px,
+            #fff 2px 4px,
+            #000 4px 7px,
+            #fff 7px 9px,
+            #000 9px 10px,
+            #fff 10px 13px,
+            #000 13px 17px,
+            #fff 17px 18px,
+            #000 18px 20px,
+            #fff 20px 23px
+          );
+      }
+
+      /* The watchOS reserved strip. The system draws the clock here and there is
+         no API to suppress it, so the screen keeps the strip rather than letting
+         white glyphs fall through the bars. Part of the BLACK surround -- which
+         is why the title is cream and not ink. */
+      .strip {
+        flex: 0 0 auto;
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        padding: 0 6px;
+        font:
+          600 12px/1 Inter,
+          sans-serif;
+        color: var(--cream);
+        background: var(--black);
+      }
+
+      .strip .chev {
+        opacity: 0.8;
+      }
+
+      .strip .clock {
+        margin-left: auto;
+        opacity: 0.9;
+        font-variant-numeric: tabular-nums;
+      }
+
+      .strip .cardname {
+        overflow: hidden;
+        white-space: nowrap;
+        text-overflow: ellipsis;
+      }
+
+      /* Sort picker. The selected row is beam -- shape AND colour, never colour
+         alone: the control and the weight both move with it. */
+      .opt {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        min-height: var(--row-h);
+        padding: 0 10px;
+        border-radius: var(--row-radius);
+        background: var(--ink);
+        font:
+          400 var(--t-body) / 1.15 Inter,
+          sans-serif;
+        color: var(--cream);
+        flex: 0 0 auto;
+      }
+
+      .opt.sel {
+        font-weight: 600;
+        color: var(--beam);
+      }
+
+      .opt .dot {
+        width: 16px;
+        height: 16px;
+        border-radius: 50%;
+        border: 2px solid rgba(240, 240, 232, 0.55);
+        flex: 0 0 auto;
+      }
+
+      .opt.sel .dot {
+        border-color: var(--beam);
+        background:
+          radial-gradient(
+            circle,
+            var(--beam) 0 4px,
+            transparent 4px
+          );
+      }
+
+      .callout {
+        max-width: 78ch;
+        border-left: 3px solid var(--ink);
+        padding: 10px 0 10px 14px;
+        margin: 14px 0 22px;
+        font-size: 13px;
+        line-height: 1.55;
+        color: #3d3d46;
+      }
+
+      .callout b {
+        color: #23232b;
+      }
+
+      .ban {
+        border-left-color: #c41e1e;
+      }
+
+      /* Wear's TransformingLazyColumn morphs items toward the edges rather than
+         letting the round crop guillotine them. Drawn here, because a frame that
+         shows rows sliced by the bezel teaches the wrong layout. */
+      .morph-1 {
+        transform: scale(0.88);
+        opacity: 0.66;
+      }
+
+      .morph-2 {
+        transform: scale(0.78);
+        opacity: 0.4;
+      }
+    </style>
+  </head>
+  <body>
+    <h1><span style="font:700 26px/1 'Space Grotesk',Inter,sans-serif;color:var(--ink);letter-spacing:-0.01em">Card<svg viewBox="0 0 30 100" width="0.30em" height="1em" style="display:inline;vertical-align:-0.30em;overflow:visible" aria-hidden="true"><rect x="9.0" y="20.4" width="12" height="49.6" rx="6.0" fill="currentColor" /><rect x="3.00" y="6.00" width="24" height="9" rx="4.50" fill="var(--beam)" transform="rotate(35 15.0 10.5)" /></svg></span> on the watch &mdash; the six screens</h1>
+    <p class="note">
+      Reference frames for Story 23.1. <b>Three surfaces, built twice</b> &mdash; card list,
+      barcode flash, sort picker &mdash; not six unrelated screens. Every frame is drawn
+      <b>1:1 in its own unit</b>: dp for Wear, pt for watchOS. Nothing is scaled, so a
+      measurement taken off this sheet is the real one. The rules are in
+      <b>cardi-watch-grammar.md</b>; this sheet is a copy of them, never the source.
+    </p>
+
+    <h2>Wear OS &mdash; round, 192 &times; 192 dp</h2>
+    <p class="note">
+      <b>192 dp, not 384.</b> 384 is the same screen counted in pixels at the &times;2 density
+      every current Wear device uses. Google's guidance is dp and round-first: design at the
+      smallest supported round screen, then let 225 dp and larger grow into the space. Outer
+      margins are a <b>percentage</b> of the screen, because a fixed margin meets the curve at a
+      different place on every device.
+    </p>
+    <div class="row-of-plates">
+    <figure class="plate"><div class="screen round" style="width:192px;height:192px"><div class="listhead" style="padding-top:25px">Cards</div><div class="rows" style="padding:0 10px;margin-top:6px"><div class="row morph-1"><span class="accent" style="background:#FFCC00"></span><span class="avatar" style="background:#FFCC00;color:#181824">E</span><span class="name">Esselunga</span><span class="star"><svg width="14" height="14" viewBox="0 0 24 24" aria-hidden="true"><path fill="var(--beam)" d="M12 2.6l2.9 5.9 6.5.95-4.7 4.6 1.1 6.45L12 17.45 6.2 20.5l1.1-6.45-4.7-4.6 6.5-.95z"/></svg></span></div><div class="row"><span class="accent" style="background:#E2231A"></span><span class="avatar" style="background:#E2231A;color:#F0F0E8">C</span><span class="name">Coop</span></div><div class="row"><span class="accent" style="background:#0050AA"></span><span class="avatar" style="background:#0050AA;color:#F0F0E8">L</span><span class="name">Lidl</span></div><div class="row morph-1"><span class="accent" style="background:#0051BA"></span><span class="avatar" style="background:#0051BA;color:#F0F0E8">IK</span><span class="name">IKEA</span></div><div class="row morph-2"><span class="accent" style="background:#0082C3"></span><span class="avatar" style="background:#0082C3;color:#F0F0E8">D</span><span class="name">Decathlon</span></div></div></div><figcaption>Wear round &mdash; card list<em>192 dp. Edge rows morph; they are never sliced by the bezel.</em></figcaption></figure>
+    <figure class="plate"><div class="screen flash round" style="width:192px;height:192px"><div class="title" style="margin-bottom:6px">Esselunga</div><div class="bars" style="width:138px;height:65px"></div><div class="digits" style="margin-top:6px">2095110257978</div></div><figcaption>Wear round &mdash; barcode flash<em>White edge to edge. Clock blanked, nothing overlaid, surround neutral.</em></figcaption></figure>
+    <figure class="plate"><div class="screen round" style="width:192px;height:192px"><div class="listhead" style="padding-top:25px">Sort</div><div class="rows" style="padding:0 10px;margin-top:6px"><div class="opt  morph-1"><span class="dot"></span><span>Frequently used</span></div><div class="opt  "><span class="dot"></span><span>Recently added</span></div><div class="opt sel "><span class="dot"></span><span>A&ndash;Z</span></div></div></div><figcaption>Wear round &mdash; sort picker<em>Selected = beam, and the control moves too. Never colour alone.</em></figcaption></figure>
+    </div>
+
+    <h2>Wear OS &mdash; square, 192 &times; 192 dp</h2>
+    <p class="note">
+      <b>The same layout, not a second one.</b> The round design already lives inside the
+      inscribed square of its own circle, so it fits a square screen with room to spare &mdash;
+      drawing both is how that gets checked. The dashed circle is the round envelope. The corners
+      become usable and the rule is to <b>leave them empty</b>: content in the corners cannot be
+      the same design as the round one, and two designs is the outcome this document exists to
+      prevent.
+    </p>
+    <p class="note">
+      <b>The barcode frame carries no envelope, and that is the rule applied to this sheet.</b>
+      The dashed circle would be a line drawn <b>across the bars</b> &mdash; and
+      <em>nothing may overlay a barcode, ever</em> holds for a reference frame as much as for the
+      product, because a frame that breaks a rule teaches the break. It would also be wrong on its
+      own terms: that screen goes white edge to edge, so a circle is not its footprint.
+    </p>
+    <div class="row-of-plates">
+    <figure class="plate"><div class="screen square envelope" style="width:192px;height:192px"><div class="listhead" style="padding-top:8px">Cards</div><div class="rows" style="padding:0 6px;margin-top:6px"><div class="row"><span class="accent" style="background:#FFCC00"></span><span class="avatar" style="background:#FFCC00;color:#181824">E</span><span class="name">Esselunga</span><span class="star"><svg width="14" height="14" viewBox="0 0 24 24" aria-hidden="true"><path fill="var(--beam)" d="M12 2.6l2.9 5.9 6.5.95-4.7 4.6 1.1 6.45L12 17.45 6.2 20.5l1.1-6.45-4.7-4.6 6.5-.95z"/></svg></span></div><div class="row"><span class="accent" style="background:#E2231A"></span><span class="avatar" style="background:#E2231A;color:#F0F0E8">C</span><span class="name">Coop</span></div><div class="row"><span class="accent" style="background:#0050AA"></span><span class="avatar" style="background:#0050AA;color:#F0F0E8">L</span><span class="name">Lidl</span></div><div class="row"><span class="accent" style="background:#0051BA"></span><span class="avatar" style="background:#0051BA;color:#F0F0E8">IK</span><span class="name">IKEA</span></div><div class="row"><span class="accent" style="background:#0082C3"></span><span class="avatar" style="background:#0082C3;color:#F0F0E8">D</span><span class="name">Decathlon</span></div></div></div><figcaption>Wear square &mdash; card list<em>Same layout. The corners are usable and stay EMPTY.</em></figcaption></figure>
+    <figure class="plate"><div class="screen flash square" style="width:192px;height:192px"><div class="title" style="margin-bottom:6px">Esselunga</div><div class="bars" style="width:138px;height:65px"></div><div class="digits" style="margin-top:6px">2095110257978</div></div><figcaption>Wear square &mdash; barcode flash<em>White edge to edge. Clock blanked, nothing overlaid, surround neutral.</em></figcaption></figure>
+    <figure class="plate"><div class="screen square envelope" style="width:192px;height:192px"><div class="listhead" style="padding-top:8px">Sort</div><div class="rows" style="padding:0 6px;margin-top:6px"><div class="opt  "><span class="dot"></span><span>Frequently used</span></div><div class="opt  "><span class="dot"></span><span>Recently added</span></div><div class="opt sel "><span class="dot"></span><span>A&ndash;Z</span></div></div></div><figcaption>Wear square &mdash; sort picker<em>Identical to round. Two designs is what this document prevents.</em></figcaption></figure>
+    </div>
+
+    <h2>watchOS &mdash; card list, by size class</h2>
+    <p class="note">
+      Drawn at the <b>40 mm floor</b> (the watch target deploys to watchOS 10, whose oldest
+      hardware is the 40 mm), then checked at the <b>46 mm &mdash; which is the WIDEST watch at
+      208 pt, not the 49 mm Ultra</b> &mdash; and the 49 mm, which is the tallest. The row is
+      <b>48 pt</b> on both platforms, derived rather than gridded:
+      <code>max(max(28, 30) + 2&times;9, tap) = 48</code>. watchOS declares a 44 pt minimum that
+      <b>never binds</b>, because the content is already 48.
+    </p>
+    <div class="row-of-plates">
+    <figure class="plate"><div class="screen square" style="width:162px;height:197px"><div class="strip" style="height:26px"><span class="cardname">Cards</span><span class="clock">10:09</span></div><div class="rows" style="padding:0 6px;margin-top:6px"><div class="row"><span class="accent" style="background:#FFCC00"></span><span class="avatar" style="background:#FFCC00;color:#181824">E</span><span class="name">Esselunga</span><span class="star"><svg width="14" height="14" viewBox="0 0 24 24" aria-hidden="true"><path fill="var(--beam)" d="M12 2.6l2.9 5.9 6.5.95-4.7 4.6 1.1 6.45L12 17.45 6.2 20.5l1.1-6.45-4.7-4.6 6.5-.95z"/></svg></span></div><div class="row"><span class="accent" style="background:#E2231A"></span><span class="avatar" style="background:#E2231A;color:#F0F0E8">C</span><span class="name">Coop</span></div><div class="row"><span class="accent" style="background:#0050AA"></span><span class="avatar" style="background:#0050AA;color:#F0F0E8">L</span><span class="name">Lidl</span></div><div class="row"><span class="accent" style="background:#0051BA"></span><span class="avatar" style="background:#0051BA;color:#F0F0E8">IK</span><span class="name">IKEA</span></div><div class="row"><span class="accent" style="background:#0082C3"></span><span class="avatar" style="background:#0082C3;color:#F0F0E8">D</span><span class="name">Decathlon</span></div></div></div><figcaption>watchOS 40 mm &mdash; card list<em>162 &times; 197 pt</em></figcaption></figure>
+    <figure class="plate"><div class="screen square" style="width:208px;height:248px"><div class="strip" style="height:26px"><span class="cardname">Cards</span><span class="clock">10:09</span></div><div class="rows" style="padding:0 6px;margin-top:6px"><div class="row"><span class="accent" style="background:#FFCC00"></span><span class="avatar" style="background:#FFCC00;color:#181824">E</span><span class="name">Esselunga</span><span class="star"><svg width="14" height="14" viewBox="0 0 24 24" aria-hidden="true"><path fill="var(--beam)" d="M12 2.6l2.9 5.9 6.5.95-4.7 4.6 1.1 6.45L12 17.45 6.2 20.5l1.1-6.45-4.7-4.6 6.5-.95z"/></svg></span></div><div class="row"><span class="accent" style="background:#E2231A"></span><span class="avatar" style="background:#E2231A;color:#F0F0E8">C</span><span class="name">Coop</span></div><div class="row"><span class="accent" style="background:#0050AA"></span><span class="avatar" style="background:#0050AA;color:#F0F0E8">L</span><span class="name">Lidl</span></div><div class="row"><span class="accent" style="background:#0051BA"></span><span class="avatar" style="background:#0051BA;color:#F0F0E8">IK</span><span class="name">IKEA</span></div><div class="row"><span class="accent" style="background:#0082C3"></span><span class="avatar" style="background:#0082C3;color:#F0F0E8">D</span><span class="name">Decathlon</span></div></div></div><figcaption>watchOS 46 mm &mdash; card list<em>208 &times; 248 pt</em></figcaption></figure>
+    <figure class="plate"><div class="screen square" style="width:205px;height:251px"><div class="strip" style="height:26px"><span class="cardname">Cards</span><span class="clock">10:09</span></div><div class="rows" style="padding:0 6px;margin-top:6px"><div class="row"><span class="accent" style="background:#FFCC00"></span><span class="avatar" style="background:#FFCC00;color:#181824">E</span><span class="name">Esselunga</span><span class="star"><svg width="14" height="14" viewBox="0 0 24 24" aria-hidden="true"><path fill="var(--beam)" d="M12 2.6l2.9 5.9 6.5.95-4.7 4.6 1.1 6.45L12 17.45 6.2 20.5l1.1-6.45-4.7-4.6 6.5-.95z"/></svg></span></div><div class="row"><span class="accent" style="background:#E2231A"></span><span class="avatar" style="background:#E2231A;color:#F0F0E8">C</span><span class="name">Coop</span></div><div class="row"><span class="accent" style="background:#0050AA"></span><span class="avatar" style="background:#0050AA;color:#F0F0E8">L</span><span class="name">Lidl</span></div><div class="row"><span class="accent" style="background:#0051BA"></span><span class="avatar" style="background:#0051BA;color:#F0F0E8">IK</span><span class="name">IKEA</span></div><div class="row"><span class="accent" style="background:#0082C3"></span><span class="avatar" style="background:#0082C3;color:#F0F0E8">D</span><span class="name">Decathlon</span></div></div></div><figcaption>watchOS 49 mm &mdash; card list<em>205 &times; 251 pt</em></figcaption></figure>
+    </div>
+
+    <h2>Barcode flash &mdash; the hero screen, both platforms</h2>
+    <p class="note">
+      White field, true-black bars, hard module edges, <b>nothing overlaid &mdash; ever</b>. On a
+      watch the constraint is <b>stronger</b> than on the phone, not weaker: modules are 2&ndash;3
+      device pixels wide, and every 1D decoder normalises its digit classification against the
+      narrowest element, so a one-pixel error here is a 30&ndash;50&nbsp;% error.
+    </p>
+    <div class="callout ban">
+      <b>The two platforms differ, and it is one rule meeting two operating systems.</b> Wear
+      blanks the clock outright (<code>ScreenScaffold(timeText = {})</code>) and goes white edge
+      to edge. watchOS <b>cannot</b> suppress its clock &mdash; measured at 46 mm, reclaiming the
+      inset draws white glyphs straight <b>through</b> the black bars &mdash; so it keeps a
+      reserved strip. That strip is part of the <b>black surround</b>, which is why the card name
+      in it is <b>cream</b>: the accent colour, which Apple applies to the app's title string in
+      the status bar, would otherwise paint it <b>beam &mdash; on the barcode screen</b>, and no
+      beam is ever drawn on either.
+    </div>
+    <div class="row-of-plates">
+    <figure class="plate"><div class="screen square" style="width:162px;height:197px"><div class="strip" style="height:26px"><span class="chev">&lsaquo;</span><span class="cardname">Esselunga</span><span class="clock">10:09</span></div><div class="flash" style="flex:1 1 auto;border-radius:8px;margin:0 4px 4px"><div class="bars" style="width:128px;height:79px"></div><div class="digits" style="margin-top:6px">2095110257978</div></div></div><figcaption>watchOS 40 mm &mdash; barcode flash<em>Strip reserved for the unsuppressable clock. Title cream, never beam.</em></figcaption></figure>
+    <figure class="plate"><div class="screen square" style="width:208px;height:248px"><div class="strip" style="height:26px"><span class="chev">&lsaquo;</span><span class="cardname">Esselunga</span><span class="clock">10:09</span></div><div class="flash" style="flex:1 1 auto;border-radius:8px;margin:0 4px 4px"><div class="bars" style="width:167px;height:102px"></div><div class="digits" style="margin-top:6px">2095110257978</div></div></div><figcaption>watchOS 46 mm &mdash; barcode flash<em>Strip reserved for the unsuppressable clock. Title cream, never beam.</em></figcaption></figure>
+    <figure class="plate"><div class="screen square" style="width:205px;height:251px"><div class="strip" style="height:26px"><span class="chev">&lsaquo;</span><span class="cardname">Esselunga</span><span class="clock">10:09</span></div><div class="flash" style="flex:1 1 auto;border-radius:8px;margin:0 4px 4px"><div class="bars" style="width:164px;height:104px"></div><div class="digits" style="margin-top:6px">2095110257978</div></div></div><figcaption>watchOS 49 mm &mdash; barcode flash<em>Strip reserved for the unsuppressable clock. Title cream, never beam.</em></figcaption></figure>
+    </div>
+
+    <h2>Sort picker &mdash; watchOS, by size class</h2>
+    <p class="note">
+      The third surface, and the one most easily forgotten: on watchOS it is a <b>sheet</b> inside
+      <code>CardListView.swift</code> rather than a file of its own, which is why the story's
+      screen count read as three-versus-three when it is really three-and-three.
+    </p>
+    <div class="callout">
+      <b>The dot is schematic &mdash; it is the one thing on this sheet that is NOT 1:1.</b> Every
+      other frame here is drawn at true size and a measurement taken off it is real, so this
+      exception has to be said out loud. <b>Each platform keeps its own native selected control</b>:
+      watchOS a semibold label plus a trailing <code>checkmark</code>, Wear a Material&nbsp;3
+      <code>RadioButton</code>. <b>What changes is the tint &mdash; to beam</b> &mdash; and what must
+      survive is the <b>double encoding</b>: the control's state <em>and</em> the label's weight both
+      move, so selection is never carried by colour alone. Swapping either control for a drawn dot
+      would cost the platform's own accessibility semantics for no gain.
+    </div>
+    <div class="row-of-plates">
+    <figure class="plate"><div class="screen square envelope" style="width:162px;height:197px"><div class="listhead" style="padding-top:8px">Sort</div><div class="rows" style="padding:0 6px;margin-top:6px"><div class="opt  "><span class="dot"></span><span>Frequently used</span></div><div class="opt  "><span class="dot"></span><span>Recently added</span></div><div class="opt sel "><span class="dot"></span><span>A&ndash;Z</span></div></div></div><figcaption>watchOS 40 mm &mdash; sort picker<em>A sheet, pushed from the list's toolbar.</em></figcaption></figure>
+    <figure class="plate"><div class="screen square envelope" style="width:208px;height:248px"><div class="listhead" style="padding-top:8px">Sort</div><div class="rows" style="padding:0 6px;margin-top:6px"><div class="opt  "><span class="dot"></span><span>Frequently used</span></div><div class="opt  "><span class="dot"></span><span>Recently added</span></div><div class="opt sel "><span class="dot"></span><span>A&ndash;Z</span></div></div></div><figcaption>watchOS 46 mm &mdash; sort picker<em>A sheet, pushed from the list's toolbar.</em></figcaption></figure>
+    <figure class="plate"><div class="screen square envelope" style="width:205px;height:251px"><div class="listhead" style="padding-top:8px">Sort</div><div class="rows" style="padding:0 6px;margin-top:6px"><div class="opt  "><span class="dot"></span><span>Frequently used</span></div><div class="opt  "><span class="dot"></span><span>Recently added</span></div><div class="opt sel "><span class="dot"></span><span>A&ndash;Z</span></div></div></div><figcaption>watchOS 49 mm &mdash; sort picker<em>A sheet, pushed from the list's toolbar.</em></figcaption></figure>
+    </div>
+
+    <h2>The one collision this sheet exists to show</h2>
+    <div class="callout">
+      The top row is <b>Esselunga</b>, whose brand colour is <b>#FFCC00</b> &mdash; and the
+      favourite star beside it is beam <b>#FCCC0C</b>. They are effectively the same yellow, which
+      is exactly why the star is drawn on the <b>ink row</b> and never on the brand fill: beam on
+      ink is <b>11.5:1</b>, and the brand colour is confined to a 5 pt accent bar and a 30 pt
+      avatar. This is also why the phone's <b>ink plate</b> behind the star does not carry over
+      &mdash; on the phone the star sits on a brand-filled tile and needs the plate; here it has
+      nothing to defeat. What the shipped code does instead is worse in both apps: watchOS paints
+      the star <b>#FFCC00</b>, which is Esselunga's own colour, and Wear paints it
+      <b>#F59E0B</b>, which is an amber this system bans outright &mdash; and which is
+      bit-identical to its own <code>orange</code> card key.
+    </div>
+  </body>
+</html>

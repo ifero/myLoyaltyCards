@@ -6,30 +6,33 @@ run started 2026-08-11) whose scratchpad lived in `/tmp` and whose API connectio
 
 ## Files
 
-| File                                   | What it is                                                                                                                                                                             |
-| -------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `cardi-design-system.md`               | **The canonical Cardì design system.** Stitch gets a disposable render of this — this repo copy is the source of truth.                                                                |
-| `palette-bench.html`                   | Five-direction palette comparison board (01 Ink & Beam … 05 Night Market). Superseded as a _layout_ study, still valid on chrome.                                                      |
-| `stitch-prompts-form-states.txt`       | **The four state frames** — default / error / filled / saving. Frame 1 is the exemplar the other seven screens derive from.                                                            |
-| `stitch-prompt-01-form-pattern.txt`    | Superseded. The prompt actually sent on 2026-08-11, kept as a record — it describes a screen that does not exist.                                                                      |
-| `stitch-prompts-wallet.txt`            | **The wallet pattern** — populated / empty / single-card / no-results, specced against the real `CardList`. Carries eight findings from reading the code.                              |
-| `stitch-prompts-settings.txt`          | **The settings pattern** — screen (signed-in / guest) plus the four sheet SHAPES the eight sheets reduce to. Specced against the real `SettingsScreen`.                                |
-| `stitch-prompts-document.txt`          | **The document pattern** — prose / searchable FAQ / two-column table. Three screens, three shapes, not the "document (2)" the plan assumed.                                            |
-| `stitch-prompts-barcode.txt`           | **The barcode screen** — EAN-13 / QR / not-found. The hero moment, and the last screen to be specced.                                                                                  |
-| `stitch-prompts-card-detail.txt`       | **The card detail screen** — at rest / blending / condensed / custom card. The barcode's parent, and the only scroll-linked screen in the app.                                         |
-| `frames/cardi-card-detail-frames.html` | **The card detail frames** — four, at 393 × 852. The header follows the brand as a scroll transition: brand → blend → cream.                                                           |
-| `stitch-prompts-capture.txt`           | **The capture pattern** — how a card gets in: choose the brand, then point the camera. The only pattern that is a camera.                                                              |
-| `frames/cardi-capture-frames.html`     | **The capture frames** — five, at 393 × 852. Choose / aim / no camera / many codes / no code. The one screen where beam is mandatory.                                                  |
-| `stitch-prompts-onboarding.txt`        | **The pitch pattern** — the first ninety seconds. The only flow with no user content in it, and the one place the brand speaks in its own voice.                                       |
-| `frames/cardi-onboarding-frames.html`  | **The onboarding frames** — six, at 393 × 852. Welcome / modes / difference / and all three carousel slides. Where Wave B stopped being blocked.                                       |
-| `stitch-prompts-auth.txt`              | **The account pattern** — six frames. One shape with five fillings; the code got there first.                                                                                          |
-| `frames/cardi-auth-frames.html`        | **The auth frames** — six, at 393 × 852. Sign in / create / forgot / code / new password / request failed.                                                                             |
-| `frames/cardi-barcode-frames.html`     | **The barcode frames** — three, at 393 × 852. The only frames on **white**, not cream; the white field is the product feature.                                                         |
-| `frames/cardi-form-frames.html`        | **The reference implementation.** Hand-authored, exactly 393 × 852, all four states. This is what screens derive from — not the PNGs. Open with `?probe` for a measured geometry dump. |
-| `frames/cardi-wallet-frames.html`      | **The wallet frames** — populated / empty / single-card / no-results, hand-authored at 393 × 852. Self-contained; shares its token block with the form file by copy, not by link.      |
-| `frames/cardi-settings-frames.html`    | **The settings frames** — signed-in / guest plus one frame per sheet shape, hand-authored at 393 × 852. Frames C–F share one backdrop string, so it cannot drift.                      |
-| `frames/cardi-document-frames.html`    | **The document frames** — prose / searchable FAQ / two-column table, hand-authored at 393 × 852. No repeated body title; 20px margins.                                                 |
-| `frames/0*.png`                        | Stitch's actual output, kept as evidence. Faithful to what the generator produced, including three defects it cannot avoid — see _The 2026-08-15 audit_.                               |
+| File                                    | What it is                                                                                                                                                                                    |
+| --------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `cardi-design-system.md`                | **The canonical Cardì design system.** Stitch gets a disposable render of this — this repo copy is the source of truth.                                                                       |
+| `cardi-watch-grammar.md`                | **The watch extension of the system** — part of it, not an appendix. Retires "Carbon Utility", resolves every colour/type/grid divergence across the three watch surfaces, and gates Epic 23. |
+| `frames/cardi-watch-frames.html`        | **The six watch screens** — three surfaces built twice (list, barcode, sort), Wear round + square at 192 dp and watchOS at 40/46/49 mm. Generated by `tools/watch_frames.py`.                 |
+| `frames/cardi-complication-frames.html` | **The complication, all four families** — circular, corner, rectangular, inline, plus the tinted check and the 76 px budget. Generated by `tools/watch_complication_frames.py`.               |
+| `palette-bench.html`                    | Five-direction palette comparison board (01 Ink & Beam … 05 Night Market). Superseded as a _layout_ study, still valid on chrome.                                                             |
+| `stitch-prompts-form-states.txt`        | **The four state frames** — default / error / filled / saving. Frame 1 is the exemplar the other seven screens derive from.                                                                   |
+| `stitch-prompt-01-form-pattern.txt`     | Superseded. The prompt actually sent on 2026-08-11, kept as a record — it describes a screen that does not exist.                                                                             |
+| `stitch-prompts-wallet.txt`             | **The wallet pattern** — populated / empty / single-card / no-results, specced against the real `CardList`. Carries eight findings from reading the code.                                     |
+| `stitch-prompts-settings.txt`           | **The settings pattern** — screen (signed-in / guest) plus the four sheet SHAPES the eight sheets reduce to. Specced against the real `SettingsScreen`.                                       |
+| `stitch-prompts-document.txt`           | **The document pattern** — prose / searchable FAQ / two-column table. Three screens, three shapes, not the "document (2)" the plan assumed.                                                   |
+| `stitch-prompts-barcode.txt`            | **The barcode screen** — EAN-13 / QR / not-found. The hero moment, and the last screen to be specced.                                                                                         |
+| `stitch-prompts-card-detail.txt`        | **The card detail screen** — at rest / blending / condensed / custom card. The barcode's parent, and the only scroll-linked screen in the app.                                                |
+| `frames/cardi-card-detail-frames.html`  | **The card detail frames** — four, at 393 × 852. The header follows the brand as a scroll transition: brand → blend → cream.                                                                  |
+| `stitch-prompts-capture.txt`            | **The capture pattern** — how a card gets in: choose the brand, then point the camera. The only pattern that is a camera.                                                                     |
+| `frames/cardi-capture-frames.html`      | **The capture frames** — five, at 393 × 852. Choose / aim / no camera / many codes / no code. The one screen where beam is mandatory.                                                         |
+| `stitch-prompts-onboarding.txt`         | **The pitch pattern** — the first ninety seconds. The only flow with no user content in it, and the one place the brand speaks in its own voice.                                              |
+| `frames/cardi-onboarding-frames.html`   | **The onboarding frames** — six, at 393 × 852. Welcome / modes / difference / and all three carousel slides. Where Wave B stopped being blocked.                                              |
+| `stitch-prompts-auth.txt`               | **The account pattern** — six frames. One shape with five fillings; the code got there first.                                                                                                 |
+| `frames/cardi-auth-frames.html`         | **The auth frames** — six, at 393 × 852. Sign in / create / forgot / code / new password / request failed.                                                                                    |
+| `frames/cardi-barcode-frames.html`      | **The barcode frames** — three, at 393 × 852. The only frames on **white**, not cream; the white field is the product feature.                                                                |
+| `frames/cardi-form-frames.html`         | **The reference implementation.** Hand-authored, exactly 393 × 852, all four states. This is what screens derive from — not the PNGs. Open with `?probe` for a measured geometry dump.        |
+| `frames/cardi-wallet-frames.html`       | **The wallet frames** — populated / empty / single-card / no-results, hand-authored at 393 × 852. Self-contained; shares its token block with the form file by copy, not by link.             |
+| `frames/cardi-settings-frames.html`     | **The settings frames** — signed-in / guest plus one frame per sheet shape, hand-authored at 393 × 852. Frames C–F share one backdrop string, so it cannot drift.                             |
+| `frames/cardi-document-frames.html`     | **The document frames** — prose / searchable FAQ / two-column table, hand-authored at 393 × 852. No repeated body title; 20px margins.                                                        |
+| `frames/0*.png`                         | Stitch's actual output, kept as evidence. Faithful to what the generator produced, including three defects it cannot avoid — see _The 2026-08-15 audit_.                                      |
 
 ## The thesis
 
@@ -1209,6 +1212,78 @@ and keeps `#C41E1E` to two uses — the outline and the sentence. Measured on fr
 - **The password rule is stated three times in three wordings** — the placeholder, the validation
   message and `createAccount.passwordRequirements`. The frames use the first two and drop the
   third.
+
+### 2026-09-15 — the watch grammar, and the second design system nobody had retired
+
+Story 23.1. The job was not "extend the system to the watch" — it was **two reconciliations**,
+and both were larger than they looked.
+
+**The system forbade the frames.** `cardi-design-system.md` said _"Frame: 393 × 852. Design
+nothing else. No desktop, no tablet, no square canvases"_, and its Forbidden list carried _"any
+frame that is not 393 × 852"_. Every watch screen already shipping was, as written, prohibited.
+The amendment scopes the rule to **screen designs** and names the three screen classes, and it
+also **lists the artwork canvases** the rule was never aimed at — the 1024² icon masters, the four
+Android mipmaps, the 512² Play icon, the 1024 × 500 banner, the 4096 × 2304 developer banner.
+Doing only one of those would have left this sprint's own icon and store stories forbidden by the
+document they are built against. This is the only story amending those top-level rules, so an
+omission would have been permanent.
+
+**A unit error was hiding in the epic.** The frame was specified everywhere as **384 × 384**.
+That is **pixels**; `393 × 852` is **points**. In the same unit the Wear screen is **192 dp** —
+less than half the phone's width, not almost equal to it. 384 circulates because Play's
+store-screenshot floor happens to be 384 px. The amended rule states dp and says why.
+
+**There were two design systems, and the watch implemented the other one.** `watch`, `wear`,
+`complication`, `crown` and `widget` appear **zero** times in the Cardì document. The watch code
+cites **"Carbon Utility"** (`docs/ux-design-specification.md`), by name, in `CarbonTheme.kt`.
+It is now **retired** — and the decisive argument was not that Cardì is newer. It is that Carbon
+was **half of a two-halves decision whose other half was already dead**: the same paragraph
+assigns "Soft Sage Grid" to mobile, and Soft Sage Grid was replaced by Cardì. Keeping one half
+alive is what let the watch drift. Carbon was also **already not implemented** — its own
+favourite-badge spec asks for a plate behind the star at the top-trailing corner, and the shipped
+Wear row has no plate and puts the star inline, mid-row.
+
+**What measuring turned up that the story's own table did not have:**
+
+- **`orange` is three different colours**, not one. `Color.orange` (system) on watchOS,
+  `#F59E0B` on Wear, `#F59E0B` in the widget. And `#F59E0B` is **bit-identical** to Wear's
+  `FavoriteStarTint` — so removing orange from the palette does not remove it from the star.
+- **watchOS uses system colours for card accents while Wear and the widget use hexes**, so the
+  same card renders differently in the app and in its own complication. A system colour is not a
+  value.
+- **watchOS's 44 pt touch target is not a violation — it is a dead constant.**
+  `.frame(minHeight: 44)` is applied after `.padding(.vertical, 9)` around a 30 pt avatar, so the
+  content is already **48** and the 44 never binds. Both platforms ship a 48 pt row. The fix is to
+  make the declaration say 48; no pixel moves. "Fixing the 44" by changing the layout would have
+  been the harmful direction.
+- **The six screens are three surfaces built twice** — list, barcode, sort picker.
+  `ContentView.swift` is twelve lines mounting `CardListView`, and watchOS's sort picker is a
+  **sheet inside `CardListView.swift`** rather than a file of its own, which is why the count
+  looked asymmetric.
+
+**The one interlock that would have shipped a defect.** Story 21.3 writes the watch
+`AccentColor`, and this story decides its value: **beam**. Apple's own documentation says the
+accent is applied to _"the app's title string in the status bar"_ — and the watchOS barcode screen
+draws **the card's name** in exactly that strip. A beam accent therefore puts **beam on the
+barcode screen**, which the system forbids outright. The barcode screen now overrides the tint,
+to **cream** — not ink, because that strip is part of the **black surround**, not the white field.
+Checked against Apple's docs rather than reasoned about; the first draft of this document said ink
+and was wrong.
+
+**What was deliberately NOT changed.** watchOS keeps its reserved top strip on the barcode screen.
+Going white edge-to-edge would reclaim it — worth ~95 px of module axis at 40 mm, which is most of
+a module step on the one screen where module width decides whether the scan works — but the
+present arrangement is **measured** and the alternative is not: nobody has checked whether the
+system draws a scrim behind the clock on a white ground. That is a five-minute device measurement
+and it is written into §6 as Story 23.2's, not guessed at here.
+
+**Frames.** Both new sheets are **generated** (`tools/watch_frames.py`,
+`tools/watch_complication_frames.py`, sharing `tools/_watch_shared.py` — the leading underscore is
+load-bearing). Fifteen screen frames and four complication families, every one drawn **1:1 in its
+own unit**. One detail worth keeping: the square Wear frames carry a dashed "envelope" guide
+showing the round layout's footprint, and the **barcode frame deliberately does not** — the guide
+would be a line drawn across the bars, and _nothing may overlay a barcode_ holds for a reference
+frame too.
 
 ### Still open
 

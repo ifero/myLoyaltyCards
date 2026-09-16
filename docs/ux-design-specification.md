@@ -40,7 +40,7 @@ date: '2025-12-22'
 ### Design Opportunities
 
 - **Extreme Minimalism:** An "instant-on" utility feel.
-- **Custom Card Personalization:** Users can name cards (up to 20 characters) and pick from a 5-color palette (Blue, Red, Green, Orange, Grey) to create instant visual recognition on the watch without complex image syncing.
+- **Custom Card Personalization:** Users can name cards (up to 20 characters) and pick from a 5-color palette (Blue, Red, Green, ~~Orange, Grey~~) to create instant visual recognition on the watch without complex image syncing. ⛔ **The five colours are superseded** — orange is banned and there is no grey; the accents are `#E42424` `#0C3C84` `#0C84CC` `#0C843C` `#FCCC0C`. Story 21.2a owns the key set, [`cardi-watch-grammar.md`](design/cardi/cardi-watch-grammar.md) §4.2 the watch values.
 - **Intelligent Sorting:** Using recency and pinning to anticipate user needs.
 
 ## Core User Experience
@@ -198,7 +198,7 @@ Established patterns (Vertical Scrolling, Barcodes) with a novel wearable-first 
 ### Spacing & Layout Foundation
 
 - **Structure:** **8px Base Grid**.
-- **Touch Targets:** Minimum **44x44px** on phone and **32x32px** on watch to accommodate all users, regardless of motor precision.
+- **Touch Targets:** ⛔ **SUPERSEDED — both figures.** The adjudicated minimum is **48** on every surface (`cardi-design-system.md`, Layout & Spacing), and the watch row already measures 48. ~~Minimum **44x44px** on phone and **32x32px** on watch~~ — the 32 never sized any watch UI, and the one live constant still carrying it (`TOUCH_TARGET.watch`) is retired by [`cardi-watch-grammar.md`](design/cardi/cardi-watch-grammar.md) §5.4.
 - **Layout:** Dense but organized. Vertical list on watch; 2-column grid on phone with generous 16px internal padding.
 
 ### Accessibility Considerations
@@ -208,6 +208,27 @@ Established patterns (Vertical Scrolling, Barcodes) with a novel wearable-first 
 - **Dynamic Type:** The app will respect system-level font size increases.
 
 ## Design Direction Decision
+
+> ## ⛔ SUPERSEDED — this whole section, both halves (2026-09-15, Story 23.1)
+>
+> **Both directions chosen below are retired. The app's design system is
+> [`docs/design/cardi/cardi-design-system.md`](design/cardi/cardi-design-system.md), and the
+> watch extension of it is
+> [`docs/design/cardi/cardi-watch-grammar.md`](design/cardi/cardi-watch-grammar.md).**
+>
+> - **"Soft Sage Grid"** (mobile) was replaced by **Cardì** during the rebrand. Sage green is
+>   not in the palette.
+> - **"Carbon Utility"** (wearables) is **retired** by `cardi-watch-grammar.md` §1. It was never
+>   a system — it specified no colour value, type scale, radius or spacing step — and keeping one
+>   half of a two-halves decision alive after the other half died is what let the watch code drift
+>   into a second design language. Its substance (true-black ground, high density, no heavy
+>   chrome) survives, restated as Cardì rules.
+>
+> **Do not implement from this section.** It is kept as the record of a decision that was made and
+> later reversed. The touch-target figure below (**32 px on watch**) is contradicted by both watch
+> codebases and by the design system, which adjudicated **48**.
+>
+> `CarbonTheme.kt` still cites `§Carbon` in its file comment; repointing it is Story 23.3's edit.
 
 ### Design Directions Explored
 
@@ -246,7 +267,7 @@ The primary success moment. The user needs their card _now_.
 **Flow Mechanics:**
 
 1.  **Entry:** User opens the app from their watch (complication support is **Post-MVP**).
-2.  **Display:** App launches directly to the **Carbon List** (OLED-optimized).
+2.  **Display:** App launches directly to the ~~**Carbon List**~~ **card list** (OLED-optimized). ⛔ **"Carbon" is retired** — the name and the design language both. The flow itself is unchanged and still correct; see [`cardi-watch-grammar.md`](design/cardi/cardi-watch-grammar.md) §2 for what that screen now looks like.
 3.  **Selection:** User taps the desired card.
 4.  **Result:** Screen immediately flashes to a white background with a high-contrast barcode.
 5.  **Exit:** User lowers wrist; app returns to standby.
@@ -254,7 +275,7 @@ The primary success moment. The user needs their card _now_.
 ```mermaid
 graph TD
     A[Wrist Raise] --> B[Open Watch App]
-    B --> C[Launch Carbon List]
+    B --> C[Launch card list]
     C -->|Single Tap| D[Display Barcode]
     D -->|Haptic Feedback| E[Wait for Scan]
     E -->|Lower Wrist| F[App Standby]
@@ -296,7 +317,7 @@ Ensuring the 'Top-Card Win' happens every time Marco goes shopping.
 1.  **Recency:** Using a card automatically moves it to the #1 position in the list.
 2.  **Manual Pinning:** Users can long-press a card in the **Soft Sage Grid** (Phone) to 'Pin' it to the top.
 3.  **Visual Feedback:** Pinned cards show a subtle 'Pin' icon + color accent (Double-Encoding).
-4.  **Per-Surface Selectable Sort (Watch + Phone):** Both surfaces expose a user-selectable, persisted sort — **Frequently used / Recently added / A–Z**. The phone defaults to _Frequently used_; the **watch defaults to A–Z** and persists its own choice **independently** (decision 2026-06-09). Favourites surface with a **filled amber star** on both surfaces — see Components §5–§6. _(The legacy 'Pin icon' wording above predates Story 9.2, which shipped a **star** badge on the phone.)_
+4.  **Per-Surface Selectable Sort (Watch + Phone):** Both surfaces expose a user-selectable, persisted sort — **Frequently used / Recently added / A–Z**. The phone defaults to _Frequently used_; the **watch defaults to A–Z** and persists its own choice **independently** (decision 2026-06-09). Favourites surface with a ~~**filled amber star**~~ star on both surfaces — ⛔ **amber is superseded**: the star is beam `#FCCC0C` on the watch ([`cardi-watch-grammar.md`](design/cardi/cardi-watch-grammar.md) §4.4) and an ink plate carrying a beam star on the phone (Story 21.2 AC9). The sort behaviour in this bullet still stands. See Components §5–§6, both superseded. _(The legacy 'Pin icon' wording above predates Story 9.2, which shipped a **star** badge on the phone.)_
 
 ### Journey Patterns & Optimization
 
@@ -328,7 +349,27 @@ Ensuring the 'Top-Card Win' happens every time Marco goes shopping.
 - **Behavior:** Full-screen white background, max brightness, centered barcode.
 - **States:** Default, Error, Swipe/Tap-to-Close.
 
-#### 3. The 'Carbon' Watch Card
+> ### ⛔ SUPERSEDED — the three WATCH components below (2026-09-15, Story 23.1)
+>
+> **#3 The 'Carbon' Watch Card**, **#5 The Watch Sort Control** and **#6 The Watch Favourite
+> Badge** are superseded by
+> [`docs/design/cardi/cardi-watch-grammar.md`](design/cardi/cardi-watch-grammar.md). They are the
+> three watch surfaces that story designs, and the specs below are **actively contradicted** by
+> it &mdash; not merely dated:
+>
+> - **#5** names _"Carbon Utility styling"_ by that name. Carbon is retired (grammar §1).
+> - **#6** specifies an **amber/`theme.warning`** star — that is `#F59E0B`, the exact colour the
+>   design system bans and the grammar removes (§4.3, §4.4) — on a **plate**, at the
+>   **top-trailing corner**. The grammar decides **beam `#FCCC0C`, no plate, trailing and
+>   vertically centred**, and the shipped Wear code never implemented the plate or the corner
+>   anyway.
+> - **#3**'s substance (OLED-black, high contrast, high density) survives, restated as Cardì
+>   rules in grammar §3 and §6.
+>
+> The non-watch components (#1 Virtual Logo, #2 Barcode Flash, #4 Zippy Scanner) are **not**
+> covered by this notice; they belong to the phone and to `cardi-design-system.md`.
+
+#### 3. The 'Carbon' Watch Card [SUPERSEDED — see cardi-watch-grammar.md]
 
 - **Purpose:** High-performance list item for wearables.
 - **Design:** OLED-black optimized, thin borders, high-contrast text.
@@ -338,7 +379,7 @@ Ensuring the 'Top-Card Win' happens every time Marco goes shopping.
 - **Purpose:** Rapid data entry with automatic save.
 - **Design:** Viewfinder + success indicator + auto-save trigger on barcode detection.
 
-#### 5. The Watch Sort Control
+#### 5. The Watch Sort Control [SUPERSEDED — see cardi-watch-grammar.md]
 
 - **Purpose:** Let the user choose how the watch list is ordered — without stealing space from the glanceable card stack.
 - **Entry point:** A single **toolbar button** (top-trailing) on the watch card list — SF Symbol `arrow.up.arrow.down` in the app key/tint color. _(HIG: toolbars surface frequently-used commands; a top glyph keeps the vertical stack uncluttered. The bottom-right "More"/ellipsis is the HIG **overflow** pattern — rejected here: we have exactly one action, so a direct sort glyph reads clearer.)_
@@ -349,7 +390,7 @@ Ensuring the 'Top-Card Win' happens every time Marco goes shopping.
 - **Accessibility:** Button labeled "Sort"; each row announces its selected state to VoiceOver; honors Dynamic Type.
 - **API currency (Story 9.5 AC6):** Current SwiftUI `toolbar` + `sheet` + `List` (watchOS 10+) — verify non-deprecated at implementation (Sprint 14 retro action item).
 
-#### 6. The Watch Favourite Badge
+#### 6. The Watch Favourite Badge [SUPERSEDED — see cardi-watch-grammar.md]
 
 - **Purpose:** Show _why_ a card sits near the top — the favourite tier is invisible on the watch today (device-verified gap, change proposal 2026-06-09).
 - **Symbol & color:** SF Symbol **`star.fill`** in **amber/warning**, matching the phone's filled amber star (`MaterialIcons "star"`, 16pt, `theme.warning`). One favourite language across both surfaces.
@@ -365,7 +406,8 @@ Ensuring the 'Top-Card Win' happens every time Marco goes shopping.
 
 ### Implementation Roadmap
 
-- **Phase 1 (Core):** Barcode Flash, Carbon Watch Card, Scanner Interface.
+- **Phase 1 (Core):** Barcode Flash, ~~Carbon Watch Card~~ (superseded &mdash; see
+  [`cardi-watch-grammar.md`](design/cardi/cardi-watch-grammar.md)), Scanner Interface.
 - **Phase 2 (Supporting):** Catalogue Grid, Virtual Logo Engine.
 - **Phase 3 (Enhancement):** Silent Sync Status, Smart Sort Indicators.
 

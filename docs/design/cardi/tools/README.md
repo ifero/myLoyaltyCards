@@ -34,21 +34,36 @@ Note that the entry above it, `docs/design/cardi/*.html`, does **not** cover thi
 
 ## What is here
 
-| script               | builds                       |
-| -------------------- | ---------------------------- |
-| `icon_decision.py`   | `cardi-icon-decision.html`   |
-| `icon_explore.py`    | `cardi-icon-explore.html`    |
-| `mark_locked.py`     | `cardi-mark-locked.html`     |
-| `mark_sweep35.py`    | `cardi-mark-sweep35.html`    |
-| `mark_candidates.py` | `cardi-mark-candidates.html` |
-| `brand_lockup.py`    | `cardi-brand-lockup.html`    |
-| `grave_vs_acute.py`  | `cardi-grave-vs-acute.html`  |
+| script                         | builds                              |
+| ------------------------------ | ----------------------------------- |
+| `icon_decision.py`             | `cardi-icon-decision.html`          |
+| `icon_explore.py`              | `cardi-icon-explore.html`           |
+| `mark_locked.py`               | `cardi-mark-locked.html`            |
+| `mark_sweep35.py`              | `cardi-mark-sweep35.html`           |
+| `mark_candidates.py`           | `cardi-mark-candidates.html`        |
+| `brand_lockup.py`              | `cardi-brand-lockup.html`           |
+| `grave_vs_acute.py`            | `cardi-grave-vs-acute.html`         |
+| `watch_frames.py`              | `cardi-watch-frames.html`           |
+| `watch_complication_frames.py` | `cardi-complication-frames.html`    |
+| `_watch_shared.py`             | **nothing — it is a helper module** |
+
+`_watch_shared.py` is the first helper module in this folder, and it is the reason the
+leading-underscore rule above exists in practice rather than only in principle: without the
+underscore, `verify.py` would run it as a generator, find it writes no frame, report `NO-OUTPUT`
+and turn the gate red for a file doing its job correctly.
+
+It also resolves a tension the older frames could only settle by hand. A frame's token block must
+be **inlined**, never linked — any viewer that inlines the HTML drops a linked stylesheet and
+renders a broken frame. That rule is about the **output**, and both watch frames satisfy it: each
+carries the full token block and is completely self-contained. What the shared module removes is
+duplication in the **source**, which the rule never asked for. The hand-authored frames had to
+duplicate and keep the copies in step; a generator does not.
 
 `icon_decision.py` is the live one: the wordmark is settled, the square is not. It computes each variant's bounding radius and derives the Android foreground scale from it (`33 / radius`) rather than hardcoding a number, so changing the artwork updates the export scale on its own.
 
 ## What is deliberately NOT here
 
-Nine of the sixteen frames have **no generator in this folder** — auth, barcode, capture, card-detail, document, form, onboarding, settings and wallet. That is a statement of fact rather than an oversight, and the reasons differ:
+Nine of the eighteen frames have **no generator in this folder** — auth, barcode, capture, card-detail, document, form, onboarding, settings and wallet. That is a statement of fact rather than an oversight, and the reasons differ:
 
 - **`cardi-barcode-frames.html`, `cardi-card-detail-frames.html`** — their generators cannot run at all. Both read an intermediate `shared_layer.txt` that no longer exists.
 - **`cardi-auth-frames.html`, `cardi-onboarding-frames.html`** — their generators predate the grave-accent correction and would rewrite the CSS lockup back to an acute. Beyond that the delta is only Prettier's attribute formatting.
