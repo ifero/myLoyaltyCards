@@ -2,7 +2,7 @@
 
 ## Scope
 
-This skill documents **native watchOS** development guidelines for myLoyaltyCards. The watch app is **companion-only** and **read-only**. It relies on phone sync for data and only renders user cards.
+This skill documents **native watchOS** development guidelines for Cardì. The watch app is **companion-only** and **read-only**. It relies on phone sync for data and only renders user cards.
 
 > Note: For any concrete API usage (SwiftUI, SwiftData, WatchConnectivity), consult official docs before implementation.
 

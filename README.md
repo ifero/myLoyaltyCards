@@ -1,4 +1,4 @@
-# myLoyaltyCards
+# Cardì
 
 [![CI — Quality Gates](https://github.com/ifero/myLoyaltyCards/actions/workflows/ci-quality-gates.yml/badge.svg)](https://github.com/ifero/myLoyaltyCards/actions/workflows/ci-quality-gates.yml)
 [![watchOS Tests](https://github.com/ifero/myLoyaltyCards/actions/workflows/watchos-tests.yml/badge.svg)](https://github.com/ifero/myLoyaltyCards/actions/workflows/watchos-tests.yml)
@@ -8,15 +8,19 @@
 
 > Your loyalty cards, on your wrist — instant, offline, and friction-free at the checkout.
 
-**myLoyaltyCards** is an offline-first mobile app for storing and instantly displaying retail loyalty cards. It pairs a React Native (Expo) phone app with a native **Apple Watch** companion so you can raise your wrist, tap once, and show your barcode — **no phone, no network, no waiting** at the moment that matters most.
+**Cardì** is an offline-first mobile app for storing and instantly displaying retail loyalty cards. It pairs a React Native (Expo) phone app with a native **Apple Watch** companion so you can raise your wrist, tap once, and show your barcode — **no phone, no network, no waiting** at the moment that matters most.
 
 It is a community-driven, open-source passion project with **no monetization and no advertising**, built end-to-end with the [BMAD-METHOD](https://github.com/bmad-code-org/BMAD-METHOD) **Spec-Driven Development (SDD)** methodology.
+
+> **On the name.** The app is **Cardì**. The repository, the clone directory and the npm
+> package (`myloyaltycards`) keep the original `myLoyaltyCards` name deliberately, so every
+> existing link, badge and checkout keeps working — expect to see both.
 
 ---
 
 ## Table of Contents
 
-- [Why myLoyaltyCards?](#why-myloyaltycards)
+- [Why Cardì?](#why-cardì)
 - [Key Features](#key-features)
 - [Platforms & Status](#platforms--status)
 - [Tech Stack](#tech-stack)
@@ -33,14 +37,14 @@ It is a community-driven, open-source passion project with **no monetization and
 
 ---
 
-## Why myLoyaltyCards?
+## Why Cardì?
 
 Existing loyalty-card apps fail at the **payment moment** for two reasons:
 
 1. **Network dependency** — they show a loading spinner, or refuse to open at all, exactly when you are standing at the register with items in hand and people waiting behind you.
 2. **No real wearable** — most "watch apps" are thin remotes that need the phone awake nearby, so you still end up fumbling for your phone.
 
-myLoyaltyCards is built around a single goal: **display the right card in ≤3 seconds, every time, even fully offline.** Cards are cached locally on both the phone and the watch, sorted intelligently, and rendered as crisp barcodes optimized for small screens.
+Cardì is built around a single goal: **display the right card in ≤3 seconds, every time, even fully offline.** Cards are cached locally on both the phone and the watch, sorted intelligently, and rendered as crisp barcodes optimized for small screens.
 
 The app targets the **European Union** market, beginning with an Italian brand catalogue, and is designed to grow through community catalogue contributions.
 
