@@ -4,7 +4,7 @@ baseline_commit: 2ff3e23016a3ee6130e5e0c2b3651de62fa4ac5f
 
 # Story 21.1: Rename the app to Cardì — one config field, and a copy audit four times wider than the epic says
 
-Status: review
+Status: done
 
 Epic: 21 — Cardì Rebrand — Native Identity
 
