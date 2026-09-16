@@ -1,6 +1,19 @@
 import type { ConfigContext } from 'expo/config';
+import { IOSConfig } from 'expo/config-plugins';
 
-import appConfig, { PRODUCTION_VERSION_CODE_OFFSET, resolveAndroidVersionCode } from './app.config';
+import appConfig, {
+  PRODUCTION_VERSION_CODE_OFFSET,
+  resolveAndroidVersionCode,
+  resolveAppName
+} from './app.config';
+
+/**
+ * The real sanitiser `expo prebuild` applies to `expo.name` to derive
+ * `ios/<name>.xcodeproj`, its source folder, the shared scheme, the Xcode target
+ * and `PRODUCT_NAME`. Imported rather than re-implemented so these tests cannot
+ * drift from the upstream behaviour they exist to pin.
+ */
+const { sanitizedName } = IOSConfig.XcodeUtils;
 
 /**
  * Asserts that the resolver fell back to the Unix-timestamp path: a positive
@@ -61,7 +74,7 @@ describe('PRODUCTION_VERSION_CODE_OFFSET', () => {
 describe('app.config default export', () => {
   const context = {
     config: {
-      name: 'myLoyaltyCards',
+      name: 'Cardì',
       slug: 'myloyaltycards',
       android: { package: 'com.iferoporefi.myloyaltycards' }
     }
@@ -83,7 +96,43 @@ describe('app.config default export', () => {
 
   it('preserves base identity fields from app.json', () => {
     const result = appConfig(context);
-    expect(result.name).toBe('myLoyaltyCards');
+    // Canonically equal to the name in app.json, so the label a user sees is
+    // unchanged; see resolveAppName for why the stored form is decomposed.
+    expect(result.name.normalize('NFC')).toBe('Cardì');
     expect(result.slug).toBe('myloyaltycards');
+  });
+
+  it('yields an iOS project name of "Cardi", which the build references hardcode', () => {
+    // fastlane/Fastfile, package.json's watch:build:ci and
+    // scripts/lib/watch-xcodebuild.sh all name ios/Cardi.xcodeproj. If this
+    // drifts, they break — and nothing user-visible changes to signal it.
+    expect(sanitizedName(appConfig(context).name)).toBe('Cardi');
+  });
+});
+
+describe('resolveAppName', () => {
+  it('keeps the name canonically equal to the product name', () => {
+    // NFC and NFD are canonically equivalent: the home screen reads `Cardì` either way.
+    expect(resolveAppName('Cardì').normalize('NFC')).toBe('Cardì');
+  });
+
+  it('decomposes the name so Expo folds the accent instead of deleting the letter', () => {
+    expect(sanitizedName(resolveAppName('Cardì'))).toBe('Cardi');
+  });
+
+  it('is not === the precomposed literal, which is the runtime trap to know about', () => {
+    // `Constants.expoConfig?.name` holds exactly this at runtime. Nothing reads it
+    // today, so this is a tripwire rather than a regression guard: a future `===`
+    // against a precomposed 'Cardì', or a `.length`-based truncation, silently
+    // misbehaves. Normalise before comparing.
+    expect(resolveAppName('Cardì')).not.toBe('Cardì');
+    expect(resolveAppName('Cardì')).toHaveLength('Cardì'.length + 1);
+  });
+
+  it('pins the upstream trap it exists to avoid', () => {
+    // Precomposed U+00EC is `\W`, and sanitizedName strips `\W` BEFORE it
+    // normalises to NFD — so the whole character goes, not just the accent.
+    // Passing the raw name through would name the project ios/Card.xcodeproj.
+    expect(sanitizedName('Cardì')).toBe('Card');
   });
 });

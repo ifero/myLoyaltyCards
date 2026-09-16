@@ -12,7 +12,7 @@
 -->
 <resources>
     <!-- Brand name: locale-invariant, so it is deliberately not translated in values-it/. -->
-    <string name="app_name" translatable="false">myLoyaltyCards</string>
+    <string name="app_name" translatable="false">Cardì</string>
 
     <!-- Card list -->
     <string name="cards_title">Cards</string>

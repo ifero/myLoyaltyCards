@@ -6,12 +6,12 @@
 # Callers must run from the repo root; the project path is relative.
 #
 # --- Why -project/-target and not -workspace/-scheme -------------------------
-# No shared `watch` scheme exists (only myLoyaltyCards.xcscheme is in
+# No shared `watch` scheme exists (only Cardi.xcscheme is in
 # xcshareddata), so xcodebuild autocreates one — and autocreation adds the
 # container app. That pulled the whole iOS Pod tree (Sentry, ZXingObjC, libwebp,
 # SDWebImage, RNSVG, RNReanimated, …) into a watch-only build: ~19 minutes on CI
 # to reach targets that compile in seconds. The real target graph runs the other
-# way round (myLoyaltyCards → watch → watchwidget) and the watch targets declare
+# way round (Cardi → watch → watchwidget) and the watch targets declare
 # no pods of their own (there is no targets/*/pods.rb), so going through the
 # workspace buys nothing here.
 #
@@ -30,7 +30,7 @@
 # rather than ~/Library/Developer/Xcode/DerivedData/…. Anything locating
 # watch.app must therefore ask xcodebuild with *these* args — hence this file.
 watch_xcodebuild_args=(
-  -project ios/myLoyaltyCards.xcodeproj
+  -project ios/Cardi.xcodeproj
   -target watch
   -configuration Debug
   -sdk watchsimulator

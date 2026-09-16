@@ -18,7 +18,7 @@ export const fallbackHelpItemsEn: HelpItem[] = [
     id: 'fallback-2',
     question: 'Why is my camera not working?',
     answer: 'Enable Camera permission in Settings to scan barcodes.',
-    steps: ['Open Settings', 'Find MyLoyaltyCards > Camera', 'Enable Camera access'],
+    steps: ['Open Settings', 'Find Cardì > Camera', 'Enable Camera access'],
     tags: ['camera', 'permissions']
   },
   {
@@ -47,11 +47,7 @@ export const fallbackHelpItemsIt: HelpItem[] = [
     id: 'fallback-2-it',
     question: 'Perche la fotocamera non funziona?',
     answer: 'Abilita il permesso Fotocamera nelle Impostazioni per scansionare i codici a barre.',
-    steps: [
-      'Apri Impostazioni',
-      'Vai su myLoyaltyCards > Fotocamera',
-      "Abilita l'accesso alla fotocamera"
-    ],
+    steps: ['Apri Impostazioni', 'Vai su Cardì > Fotocamera', "Abilita l'accesso alla fotocamera"],
     tags: ['fotocamera', 'permessi']
   },
   {

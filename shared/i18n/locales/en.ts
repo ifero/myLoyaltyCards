@@ -32,11 +32,11 @@ export const en = {
       initializationFailed: 'Initialization failed'
     },
     launch: {
-      accessibilityLabel: 'myLoyaltyCards, starting up'
+      accessibilityLabel: 'Cardì, starting up'
     }
   },
   navigation: {
-    home: 'myLoyaltyCards',
+    home: 'Cardì',
     welcome: 'Welcome',
     getStarted: 'Get Started',
     highlights: 'Highlights',
@@ -56,8 +56,8 @@ export const en = {
   },
   onboarding: {
     welcome: {
-      screenLabel: 'Welcome to myLoyaltyCards',
-      title: 'My Loyalty Cards',
+      screenLabel: 'Welcome to Cardì',
+      title: 'Cardì',
       subtitle: 'Your loyalty cards, always with you',
       getStarted: 'Get Started',
       existingAccount: 'I already have an account',
@@ -233,7 +233,7 @@ export const en = {
     dataSummary: {
       title: 'What We Collect',
       description:
-        'This is a summary of the data myLoyaltyCards collects when you have an account. Guest users have no cloud data — everything stays on device.',
+        'This is a summary of the data Cardì collects when you have an account. Guest users have no cloud data — everything stays on device.',
       table: {
         categoryHeader: 'Category',
         dataCollectedHeader: 'Data Collected'
@@ -390,7 +390,7 @@ export const en = {
     },
     createAccount: {
       heading: 'Create Account',
-      subtitle: 'Join My Loyalty Cards',
+      subtitle: 'Join Cardì',
       button: 'Create Account',
       alreadyHaveAccount: 'Already have an account?',
       signInAction: 'Sign in',

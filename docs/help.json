@@ -21,11 +21,7 @@
     "id": "3",
     "question": "Why is my camera not working?",
     "answer": "Camera access is required to scan barcodes.",
-    "steps": [
-      "Open Settings on your device",
-      "Find MyLoyaltyCards > Camera",
-      "Enable Camera access"
-    ],
+    "steps": ["Open Settings on your device", "Find Cardì > Camera", "Enable Camera access"],
     "tags": ["camera", "permissions", "troubleshooting"]
   },
   {
@@ -45,7 +41,7 @@
   {
     "id": "6",
     "question": "How do I import a backup JSON file?",
-    "answer": "Open Settings > Data > Import Data and select a JSON file previously exported by MyLoyaltyCards.",
+    "answer": "Open Settings > Data > Import Data and select a JSON file previously exported by Cardì.",
     "steps": [
       "Open Settings",
       "In Data, tap Import Data",
@@ -57,7 +53,7 @@
   {
     "id": "7",
     "question": "What JSON structure does import expect?",
-    "answer": "The file must be a MyLoyaltyCards export payload with metadata fields and a cards array. Each card should include the same fields used by the app for restore, such as id, name, barcode, barcodeFormat, brandId, color, favorites, usage counters, and timestamps.",
+    "answer": "The file must be a Cardì export payload with metadata fields and a cards array. Each card should include the same fields used by the app for restore, such as id, name, barcode, barcodeFormat, brandId, color, favorites, usage counters, and timestamps.",
     "steps": [
       "Use Export Data from Settings to generate a valid backup",
       "Do not rename or remove payload fields manually",
@@ -71,7 +67,7 @@
     "answer": "Import fails when the file is corrupted, malformed, or no longer matches the exported payload structure. The app checks JSON integrity before writing anything to the database.",
     "steps": [
       "Make sure the file opens as valid JSON",
-      "Confirm it was exported by MyLoyaltyCards",
+      "Confirm it was exported by Cardì",
       "If you edited the file manually, export a fresh backup and try again"
     ],
     "tags": ["import", "json", "troubleshooting", "corrupt"]

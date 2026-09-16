@@ -68,6 +68,17 @@ jobs:
     name: iOS AdHoc Build
     runs-on: macos-latest
     env:
+      # Ruby's `Encoding.default_external` follows the locale, and an unset LANG makes it
+      # US-ASCII. The generated `project.pbxproj` stopped being pure ASCII when the app was
+      # renamed (Story 21.1): `@bacons/apple-targets` writes the watch target's display name
+      # as `INFOPLIST_KEY_CFBundleDisplayName = "Cardì"`. The `xcodeproj` gem then reads it
+      # byte-by-byte as US-ASCII and raises `invalid byte sequence in US-ASCII` — which takes
+      # out BOTH `pod install` (via `expo prebuild`) and every fastlane action that opens the
+      # project (`increment_build_number`, `update_code_signing_settings`). Reproduced locally
+      # with LANG unset; setting it is the documented CocoaPods remedy and is a no-op where the
+      # runner already sets a UTF-8 locale.
+      LANG: en_US.UTF-8
+      LC_ALL: en_US.UTF-8
       MATCH_PASSWORD: ${{ secrets.MATCH_PASSWORD }}
       MATCH_GIT_BASIC_AUTHORIZATION: ${{ secrets.MATCH_GIT_BASIC_AUTHORIZATION }}
       MATCH_USERNAME: ${{ secrets.MATCH_USERNAME }}
@@ -155,6 +166,6 @@ jobs:
       - name: Upload IPA artifact
         uses: actions/upload-artifact@v4
         with:
-          name: myLoyaltyCards-adhoc-${{ github.run_id }}
+          name: Cardi-adhoc-${{ github.run_id }}
           path: output/*.ipa
           if-no-files-found: error

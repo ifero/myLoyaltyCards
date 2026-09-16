@@ -36,13 +36,13 @@ Last updated: ${PRIVACY_POLICY_LAST_UPDATED}
 
 1. Introduction
 
-myLoyaltyCards ("we", "us", "our") is committed to protecting your privacy. This Privacy Policy explains what data we collect, how we use it, and your rights under the General Data Protection Regulation (GDPR) and other applicable laws.
+Cardì ("we", "us", "our") is committed to protecting your privacy. This Privacy Policy explains what data we collect, how we use it, and your rights under the General Data Protection Regulation (GDPR) and other applicable laws.
 
-By using myLoyaltyCards you agree to the collection and use of information in accordance with this policy. You may use the app in guest mode without providing any personal data.
+By using Cardì you agree to the collection and use of information in accordance with this policy. You may use the app in guest mode without providing any personal data.
 
 2. Data We Collect
 
-When you use myLoyaltyCards without an account (guest mode), we do not collect or transmit any personal data. All card data is stored locally on your device.
+When you use Cardì without an account (guest mode), we do not collect or transmit any personal data. All card data is stored locally on your device.
 
 When you create an account, we collect:
 • Email address — used for authentication and account recovery.
@@ -96,7 +96,7 @@ To exercise any of these rights, use the options in the app Settings or contact 
 
 8. Children's Privacy
 
-myLoyaltyCards is not directed at children under 16 years of age. We do not knowingly collect personal data from children. If you believe a child has provided us with personal data, please contact us and we will delete it promptly.
+Cardì is not directed at children under 16 years of age. We do not knowingly collect personal data from children. If you believe a child has provided us with personal data, please contact us and we will delete it promptly.
 
 9. Changes to This Policy
 

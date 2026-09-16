@@ -3,7 +3,7 @@
 <plist version="1.0">
   <dict>
     <key>CFBundleDisplayName</key>
-    <string>myLoyaltyCards</string>
+    <string>Cardì</string>
     <key>CFBundleURLTypes</key>
     <array>
       <dict>
@@ -11,7 +11,7 @@
         <string>com.iferoporefi.myloyaltycards.watch</string>
         <key>CFBundleURLSchemes</key>
         <array>
-          <string>myloyaltycards</string>
+          <string>cardi</string>
         </array>
       </dict>
     </array>

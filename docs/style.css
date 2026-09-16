@@ -18,6 +18,11 @@
   --hero-orbit-start: rgba(26, 115, 232, 0.18);
   --hero-orbit-end: rgba(22, 163, 74, 0.12);
   --color-text-inverse: #ffffff;
+  /* The Cardì mark's own field, and deliberately NOT a palette colour: the beam is
+     legible on ink and nowhere else (measured in scripts/build-brand-icons.mjs — 11.53:1
+     on ink, 1.52:1 on white, 1.33:1 on cream), so it does not follow the theme and is
+     not redefined in the dark block below. */
+  --color-brand-ink: #181824;
   --shadow-floating-color: rgba(26, 115, 232, 0.45);
   --page-width: 72rem;
   --radius-lg: 2rem;
@@ -150,18 +155,38 @@ html[data-active-language='it'] .lang-en {
   gap: 1rem;
 }
 
+/* The gradient and the drop shadow that used to live here went with the `MLC` initials
+   they framed. The Cardì design system is explicit that the visual language is "warm, flat
+   and structural. Paper, not glass. No gradients, no drop shadows" — so the mark sits on a
+   flat ink field instead. The glyph itself is generated, never drawn here: see
+   `docs/assets/cardi-mark-inline.svg` and its entry in scripts/build-brand-icons.mjs. */
 .brand-mark {
+  --badge-size: 3rem;
+  /* The glyph's share of the badge — derived, not tuned. The mark's viewBox is tight to
+     the artwork, so this fraction IS the optical padding, and the fraction it should take
+     is the one the shipped app icon already uses: on `cardi-icon.svg`'s 1024 canvas the
+     artwork measures 489.04 × 600.06, i.e. 0.586 of the height (the width follows from
+     the mark's fixed 0.8150 aspect). Matching it makes this badge and the home-screen
+     icon the same lockup at two sizes rather than two guesses. */
+  --badge-glyph: 0.586;
+
   display: grid;
   place-items: center;
-  width: 3rem;
-  height: 3rem;
+  width: var(--badge-size);
+  height: var(--badge-size);
   border-radius: 1rem;
-  background: linear-gradient(135deg, var(--color-primary), var(--color-accent));
-  color: var(--color-text-inverse);
-  font-size: 0.95rem;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  box-shadow: var(--shadow-floating);
+  background: var(--color-brand-ink);
+}
+
+.brand-mark img {
+  /* Sized off `--badge-size` rather than as a percentage of the grid area, because a
+     percentage height on a grid item in an auto-sized row is INDEFINITE: the browser falls
+     back to intrinsic sizing and resolves the figure against the width instead. Measured —
+     `height: 58.6%` here rendered at 71.9% of the badge, which looks plausible enough to
+     ship unnoticed. calc() off the shared custom property cannot drift that way, and keeps
+     the two dimensions tied so changing `--badge-size` moves both. */
+  height: calc(var(--badge-size) * var(--badge-glyph));
+  width: auto;
 }
 
 .section-kicker,

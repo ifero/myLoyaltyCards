@@ -427,7 +427,7 @@ private struct WatchCardRoute: Hashable {
 }
 
 private enum WatchComplicationDeepLink {
-  static let scheme = "myloyaltycards"
+  static let scheme = "cardi"
   static let cardHost = "watch-card"
   static let cardIdQueryItem = "id"
 

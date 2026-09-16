@@ -33,7 +33,7 @@ export const useExportData = () => {
       const cards = await getAllCards();
       const payload = createExportPayload(cards, Constants.expoConfig?.version ?? '1.0.0');
 
-      const file = new File(Paths.document, `myloyaltycards-export-${Date.now()}.json`);
+      const file = new File(Paths.document, `cardi-export-${Date.now()}.json`);
       file.create({ overwrite: true });
       file.write(JSON.stringify(payload, null, 2));
 
