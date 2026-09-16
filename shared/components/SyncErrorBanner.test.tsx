@@ -8,19 +8,10 @@ let mockIsDark = false;
 jest.mock('@/shared/theme', () => ({
   useTheme: () => ({
     theme: mockIsDark
-      ? { textPrimary: '#F5F5F7', textSecondary: '#D9D9DE' }
-      : { textPrimary: '#1F2937', textSecondary: '#66666B' },
+      ? { textPrimary: '#F0F0E8', textSecondary: '#B5B5AB', onError: '#181824' }
+      : { textPrimary: '#181824', textSecondary: '#55555F', onError: '#FFFFFF' },
     isDark: mockIsDark
-  }),
-  NEUTRAL_COLORS: {
-    white: '#FFFFFF'
-  }
-}));
-
-jest.mock('@/shared/theme/colors', () => ({
-  NEUTRAL_COLORS: {
-    white: '#FFFFFF'
-  }
+  })
 }));
 
 jest.mock('@/shared/theme/spacing', () => ({
@@ -36,6 +27,13 @@ jest.mock('@/shared/theme/sync-tokens', () => ({
 }));
 
 describe('SyncErrorBanner', () => {
+  // In `afterEach`, not inline at the end of a test body: an assertion that
+  // throws would skip an inline reset and leak `mockIsDark = true` into
+  // whichever test ran next. The dark-mode describe below already does this.
+  afterEach(() => {
+    mockIsDark = false;
+  });
+
   it('renders nothing when message is null', () => {
     const { queryByTestId } = render(
       <SyncErrorBanner message={null} onRetry={jest.fn()} onDismiss={jest.fn()} />
@@ -73,6 +71,45 @@ describe('SyncErrorBanner', () => {
     render(<SyncErrorBanner message="Error" onRetry={jest.fn()} onDismiss={jest.fn()} />);
 
     expect(screen.getByTestId('sync-error-banner').props.accessibilityRole).toBe('alert');
+  });
+
+  /**
+   * The retry label sits on an `errorAccent` fill, which IS the error token, and
+   * white stops clearing AA against the dark red (3.41:1). `onError` is the
+   * token that follows the fill; this proves the component reads it rather than
+   * a literal, in BOTH schemes — a revert to a hardcoded white would otherwise
+   * pass the whole suite.
+   */
+  it.each([
+    ['light', false, '#FFFFFF'],
+    ['dark', true, '#181824']
+  ])('paints the retry label with onError in %s', (_scheme, isDark, expected) => {
+    mockIsDark = isDark;
+    render(
+      <SyncErrorBanner message="Cloud sync failed" onRetry={jest.fn()} onDismiss={jest.fn()} />
+    );
+
+    const style = StyleSheet.flatten(screen.getByTestId('sync-error-retry-label').props.style) as {
+      color?: string;
+    };
+    expect(style.color).toBe(expected);
+  });
+
+  /**
+   * The banner's message is body text, and the design system's dark rule is
+   * cream, "never pure white". It read `NEUTRAL_COLORS.white` in dark until
+   * Story 21.2.
+   */
+  it('never paints the message pure white', () => {
+    mockIsDark = true;
+    render(
+      <SyncErrorBanner message="Cloud sync failed" onRetry={jest.fn()} onDismiss={jest.fn()} />
+    );
+
+    const style = StyleSheet.flatten(screen.getByTestId('sync-error-message').props.style) as {
+      color?: string;
+    };
+    expect(style.color).toBe('#F0F0E8');
   });
 
   it('retry button has correct accessibility label and hint', () => {

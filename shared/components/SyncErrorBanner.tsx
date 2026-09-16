@@ -11,7 +11,6 @@ import Animated, { FadeIn, FadeOut } from 'react-native-reanimated';
 import { StyleSheet } from 'react-native-unistyles';
 
 import { useTheme } from '@/shared/theme';
-import { NEUTRAL_COLORS } from '@/shared/theme/colors';
 import { TOUCH_TARGET } from '@/shared/theme/spacing';
 import { SYNC_TOKENS } from '@/shared/theme/sync-tokens';
 
@@ -32,7 +31,9 @@ export const SyncErrorBanner = ({ message, onRetry, onDismiss }: SyncErrorBanner
   const mode = isDark ? 'dark' : 'light';
   const bannerBg = SYNC_TOKENS.errorBg[mode];
   const errorAccent = SYNC_TOKENS.errorAccent[mode];
-  const messageColor = isDark ? NEUTRAL_COLORS.white : theme.textPrimary;
+  // `theme.textPrimary` in both schemes: it is cream in dark, and the design
+  // system's dark-mode rule is body text in cream, "never pure white".
+  const messageColor = theme.textPrimary;
   const dismissColor = SYNC_TOKENS.errorDismiss[mode];
 
   return (
@@ -65,7 +66,12 @@ export const SyncErrorBanner = ({ message, onRetry, onDismiss }: SyncErrorBanner
           style={[styles.retryButton, { backgroundColor: errorAccent }]}
           hitSlop={8}
         >
-          <Text style={styles.retryLabel}>{t('syncUi.errorBanner.retryButton')}</Text>
+          <Text
+            testID="sync-error-retry-label"
+            style={[styles.retryLabel, { color: theme.onError }]}
+          >
+            {t('syncUi.errorBanner.retryButton')}
+          </Text>
         </Pressable>
 
         <Pressable
@@ -111,7 +117,9 @@ const styles = StyleSheet.create({
     minHeight: TOUCH_TARGET.min
   },
   retryLabel: {
-    color: NEUTRAL_COLORS.white,
+    // Colour supplied at the call site from `theme.onError`: this label sits on
+    // an `errorAccent` fill, which IS the error token, and white stops clearing
+    // AA against it in dark mode.
     fontSize: 12,
     fontWeight: '500'
   },

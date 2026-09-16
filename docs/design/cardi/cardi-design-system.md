@@ -23,10 +23,6 @@ colors:
   primary-container: '#2A2A3A'
   on-primary-container: '#FFFFFF'
   inverse-primary: '#FCCC0C'
-  secondary: '#0C3C84'
-  on-secondary: '#FFFFFF'
-  secondary-container: '#D9E4F7'
-  on-secondary-container: '#07275A'
   tertiary: '#FCCC0C'
   on-tertiary: '#181824'
   tertiary-container: '#FCCC0C'
@@ -192,13 +188,62 @@ furniture. Beam stays small, and stays away from the tiles.
   text (`#181824`), never white.
 - **Cream `#F0F0E8`** — the light-mode ground. Cards sit on cream as pure white
   `#FFFFFF`. Cream is where the warmth comes from; do not replace it with grey or white.
-- **Deep blue `#0C3C84`** — secondary structure only (barcode-modal chrome, informational
-  emphasis). Never the primary action colour.
+
+**There is no fourth chrome colour, and `#0C3C84` is not one — RETIRED 2026-09-16 (Story 21.2).**
+Deep blue was listed here as _"secondary structure only (barcode-modal chrome, informational
+emphasis)"_, and the frontmatter carried it as `secondary` / `secondary-container` /
+`on-secondary-container`. That role contradicted this document twice over, so the contradiction is
+resolved by removing the role rather than by softening either rule:
+
+- `#0C3C84` **is one of the five card accents** (see below), and Forbidden carries _"card accent
+  colours used as chrome"_. A colour cannot be both the fallback fill of a user's card and the
+  app's secondary structure — on a card-detail screen for a deep-blue custom card, the chrome and
+  the content would be the same value, which is the one thing the accents exist not to do.
+- The role's only named use — **barcode-modal chrome** — is independently forbidden by
+  _Barcode view_: _"The surround must be neutral — black, ink, cream or white only. Never a
+  saturated field around the scan target."_ `#0C3C84` is saturated.
+
+The two prompts that reason from the retired role (`stitch-prompts-auth.txt:96`,
+`stitch-prompts-onboarding.txt:87-89`) cite it **only to rule it out** before settling on ink, so
+their conclusions stand unchanged and are in fact strengthened: deep blue was the one alternative
+they had to argue against, and it is now simply not available. `theme.link` and `theme.info` take
+**ink** in light and, since a link is an action, **beam** in dark — the same pair as `primary`.
+
+**A card accent is legal as the card's OWN full-bleed detail field, and illegal everywhere else.**
+This is the one exemption to _"card accent colours used as chrome"_, and it is narrow on purpose.
+The card-detail screen's inset, header and hero are a single unbroken region filled with **that
+card's** accent — the spec's _"three separately filled boxes leave visible hairlines where they
+meet"_ — and the 56px header with its back chevron and favourite star is part of that region, not
+chrome laid over it. The test is ownership, not geometry: the field belongs to the card being
+looked at. An accent tinting a button, a link, an icon, a nav bar, a badge, or any surface that
+outlives the card on screen is still forbidden, and a card accent is never the value of a theme
+token. `#0C843C` is bound by exactly the same logic, which is why `theme.success` does not take it.
 
 **Never darken, desaturate or tint the beam.** Olive, mustard, gold, amber and brown are
 forbidden — they are the failure mode of tonal colour generation, not design choices. If a
 darker yellow seems needed, use **ink** instead. `#FCCC0C` appears at exactly that value or
 not at all.
+
+**Beam under alpha is the rule's blind spot, and it has a threshold — ADDED 2026-09-16 (Story
+21.2).** "Never darken the beam" is easy to keep when you are choosing a hex and easy to break when
+you are writing `theme.primary + '33'`, because the token still says `#FCCC0C` and only the
+_rendered_ pixels are a darker yellow. The composite is measurable, and what decides it is how
+light it gets — not how saturated, which over a black ground stays high at every alpha and tells
+you nothing:
+
+| alpha | over black | over ink  | reads as          |
+| ----- | ---------- | --------- | ----------------- |
+| 8 %   | `#141001`  | `#2A2622` | warm near-black ✓ |
+| 10 %  | `#1A1501`  | `#2F2A22` | warm near-black ✓ |
+| 20 %  | `#322902`  | `#463C1F` | **olive** ✗       |
+| 45 %  | `#725C05`  | `#7F6919` | **olive** ✗       |
+| 75 %  | `#BD9909`  | `#C39F12` | **mustard** ✗     |
+
+So: **beam may be washed at 10 % or less**, where it is a tonal layer and reads as warmth rather
+than as a colour, and **not above it**, where it becomes exactly the olive-to-mustard ramp the
+Forbidden list names. A shape that must read _as_ beam is drawn at full `#FCCC0C`; a shape that
+must be a quiet layer takes ink, cream or `surface-container`. This only bites in dark mode,
+because in light `primary` is ink and an ink wash is a grey.
 
 **Coral, salmon, terracotta and orange are banned from this system entirely.**
 
@@ -212,7 +257,9 @@ a 5-colour picker. A card that _has_ a brand uses the brand's hex instead — th
 accents never override it.
 
 They are **never** used for buttons, links, chrome, headers, icons or any interactive
-element, and never as a tint or wash over a branded tile.
+element, and never as a tint or wash over a branded tile — with the single exemption named
+under _Three roles_: an accent may fill **its own card's** full-bleed detail field, header
+included, because there it is the content rather than the chrome.
 
 ## Typography
 
@@ -349,8 +396,16 @@ five card accents with a first-letter avatar.
 Legibility rules that follow from filling with 45 different brand colours: a very light
 brand takes a 1px hairline outline so it doesn't dissolve into cream; a near-black brand
 takes a `#3A3A48` outline in dark mode. Foreground glyphs flip to white or ink by the
-tile's luminance. A favourite shows as a small star on an opaque white plate pinned
-top-right, so it stays legible on any brand colour including yellow.
+tile's luminance. A favourite shows as a **beam `#FCCC0C` star on an opaque ink `#181824`
+plate**, 24px, pinned top-right, so it stays legible on any brand colour including yellow.
+
+**The plate is opaque and it is ink — AMENDED 2026-09-16 (Story 21.2, AC9), replacing "an opaque
+white plate".** White was invisible on a light brand, which is the case the plate exists for, and
+the star it carried was an amber outside this palette. Opacity is load-bearing rather than
+stylistic: Esselunga is `#FFCC00`, three points from beam, so the plate is the only thing between
+the star and the tile people open most. On the **card-detail header** there is no plate and none is
+added — a plate there would break the single filled region above — so the star is drawn straight on
+the brand's colour and falls back from beam to ink on a light field.
 
 ### Buttons
 
@@ -481,11 +536,13 @@ dark screen is produced.
 
 **An accent that rises to the right (`Cardí`)** · Bottom tab bars · floating action buttons · coral, salmon, terracotta or orange · drop
 shadows · gradients · glassmorphism · darkened or muddied yellow · card accent colours used
-as chrome · **anything overlaying a barcode, especially a drawn beam or scan-line** ·
+as chrome (except a card's own detail field — see _Three roles_) · **a card accent as the value
+of a theme token** · **anything overlaying a barcode, especially a drawn beam or scan-line** ·
 **a saturated surround on the barcode screen** · **tinting, washing or recolouring a
 branded card tile** · **replacing the PHONE home grid with a single-column list of rows** (the watch list is
 single-column rows and is correct — see the watch grammar) ·
-**a large yellow chrome surface next to the card grid** · thin font weights · desktop or
+**a large yellow chrome surface next to the card grid** · **beam washed above 10 % alpha over a
+dark ground** · thin font weights · desktop or
 tablet frames · **a phone screen at any frame other than 393 × 852** · **a watch screen at
 any frame not in the Frames table** · per-screen invented illustration styles ·
 **a primary action that floats over content or is positioned absolutely** · **a disabled

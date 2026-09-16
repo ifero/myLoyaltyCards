@@ -8,20 +8,37 @@ jest.mock('@/shared/theme', () => ({
   useTheme: () => mockUseTheme()
 }));
 
+/**
+ * `onPrimary` and `onError` COINCIDE in the real palette — white in light, ink
+ * in dark — so a fixture that copied it could not tell "reads `onError`" from
+ * "reads `onPrimary`" in either scheme. They are deliberately divergent here,
+ * with the `onError` values marked by an `EE` channel, so each test below proves
+ * the variant reaches for its OWN token. The real values are pinned by
+ * `tokens.generated.test.ts`; this fixture's job is wiring, not values.
+ */
 const lightTheme = {
-  primary: '#1A73E8',
-  primaryDark: '#1967D2',
-  border: '#E5E5EB',
-  textTertiary: '#8F8F94',
-  error: '#DC2626'
+  primary: '#181824',
+  primaryDark: '#2A2A3A',
+  onPrimary: '#FFFFFF',
+  border: '#D6D6CB',
+  textTertiary: '#8A8A82',
+  error: '#C41E1E',
+  onError: '#EEEEEE'
 };
 
 const darkTheme = {
-  primary: '#4DA3FF',
-  primaryDark: '#1A73E8',
-  border: '#38383A',
-  textTertiary: '#99999E',
-  error: '#F87171'
+  primary: '#FCCC0C',
+  primaryDark: '#F0F0E8',
+  onPrimary: '#181824',
+  border: '#3A3A48',
+  textTertiary: '#7E7E74',
+  error: '#FF453A',
+  onError: '#EE1824'
+};
+
+const labelColour = (text: string): unknown => {
+  const { style } = screen.getByText(text).props;
+  return (Array.isArray(style) ? Object.assign({}, ...style) : style).color;
 };
 
 describe('Button', () => {
@@ -117,5 +134,50 @@ describe('Button', () => {
     );
 
     expect(screen.getByText('Dark')).toBeTruthy();
+  });
+
+  /**
+   * Story 21.2 — the primary label follows the fill.
+   *
+   * The fill is ink in light and BEAM in dark, and white on beam is 1.52:1. A
+   * hardcoded white label was therefore correct for exactly as long as primary
+   * stayed blue, and became a WCAG failure the moment it did not — the kind that
+   * looks brighter in a screenshot, so a visual review passes it.
+   */
+  it.each([
+    ['light', lightTheme, '#FFFFFF'],
+    ['dark', darkTheme, '#181824']
+  ])('paints the primary label with onPrimary in %s', (_scheme, theme, expected) => {
+    mockUseTheme.mockReturnValue({ theme });
+
+    render(
+      <Button variant="primary" testID="btn">
+        Save
+      </Button>
+    );
+
+    expect(labelColour('Save')).toBe(expected);
+  });
+
+  /**
+   * The destructive fill is `theme.error`, and the same crossover bites it: the
+   * dark red is lifted far enough to read on black that white no longer reads on
+   * IT (3.41:1, against ink's 5.16:1). `colors.contrast.test.ts` proves the token
+   * pair; this proves the component actually reaches for it.
+   */
+  it.each([
+    ['light', lightTheme, '#EEEEEE'],
+    ['dark', darkTheme, '#EE1824']
+  ])('paints the destructive label with onError in %s', (_scheme, theme, expected) => {
+    mockUseTheme.mockReturnValue({ theme });
+
+    render(
+      <Button variant="destructive" testID="btn">
+        Delete
+      </Button>
+    );
+
+    expect(labelColour('Delete')).toBe(expected);
+    expect(labelColour('Delete')).not.toBe(theme.onPrimary);
   });
 });

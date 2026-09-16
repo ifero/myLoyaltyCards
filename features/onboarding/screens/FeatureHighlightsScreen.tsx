@@ -84,6 +84,22 @@ const FeatureHighlightsScreen = () => {
     flatListRef.current?.scrollToIndex({ index: nextIndex, animated: true });
   };
 
+  /**
+   * These slide illustrations follow the design system's illustration rule —
+   * "flat, two-tone (ink line-work on cream) with beam yellow as the single
+   * accent" — which maps onto exactly two tokens:
+   *
+   * - **shapes and tonal discs take `textPrimary`**: ink in light, cream in dark.
+   * - **accents take `primary` at its true value**: the barcode bars, the shield.
+   *
+   * `primary` must NOT carry the shapes, and the reason is arithmetic rather
+   * than taste. In dark it is beam, and beam under alpha over a dark ground
+   * composites to olive and mustard — at the 50 %, 65 % and 70 % these shapes
+   * used, `#7E6606`, `#A48508` and `#B18F08`, which the design system forbids by
+   * name and now bans explicitly above 10 % alpha. In light the two tokens are
+   * both ink, so this distinction is invisible there, which is precisely how it
+   * went unnoticed: a light-mode screenshot shows nothing wrong.
+   */
   const renderIllustration = (id: Slide['id']) => {
     if (id === 'all-cards') {
       return (
@@ -94,7 +110,7 @@ const FeatureHighlightsScreen = () => {
             borderRadius: 80,
             alignItems: 'center',
             justifyContent: 'center',
-            backgroundColor: `${theme.primary}1A`
+            backgroundColor: `${theme.textPrimary}1A`
           }}
         >
           <View style={{ flexDirection: 'row', flexWrap: 'wrap', width: 88, gap: 8 }}>
@@ -105,7 +121,7 @@ const FeatureHighlightsScreen = () => {
                   width: 40,
                   height: 34,
                   borderRadius: 6,
-                  backgroundColor: `${theme.primary}${itemIndex < 2 ? '80' : 'A6'}`
+                  backgroundColor: `${theme.textPrimary}${itemIndex < 2 ? '80' : 'A6'}`
                 }}
               />
             ))}
@@ -123,7 +139,7 @@ const FeatureHighlightsScreen = () => {
             borderRadius: 80,
             alignItems: 'center',
             justifyContent: 'center',
-            backgroundColor: `${theme.primary}1A`
+            backgroundColor: `${theme.textPrimary}1A`
           }}
         >
           <View
@@ -131,7 +147,7 @@ const FeatureHighlightsScreen = () => {
               width: 72,
               height: 50,
               borderRadius: 10,
-              backgroundColor: `${theme.primary}B3`
+              backgroundColor: `${theme.textPrimary}B3`
             }}
           />
           <View style={{ marginTop: 10, flexDirection: 'row', gap: 3 }}>
@@ -159,7 +175,7 @@ const FeatureHighlightsScreen = () => {
           borderRadius: 80,
           alignItems: 'center',
           justifyContent: 'center',
-          backgroundColor: `${theme.primary}1A`
+          backgroundColor: `${theme.textPrimary}1A`
         }}
       >
         <MaterialIcons name="verified-user" size={60} color={theme.primary} />

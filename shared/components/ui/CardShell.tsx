@@ -2,6 +2,7 @@ import React from 'react';
 import { Text, View, type ViewStyle } from 'react-native';
 
 import { useTheme } from '@/shared/theme';
+import { IDENTITY_COLORS } from '@/shared/theme/colors';
 import { LAYOUT } from '@/shared/theme/spacing';
 
 type CardShellProps = {
@@ -30,7 +31,7 @@ export const CardShell = ({ type, brandColor, size, cardName, logo, testID }: Ca
   };
 
   const fallbackText = cardName?.trim().charAt(0).toUpperCase() ?? 'C';
-  const foregroundColor = isBlackBrand ? '#FFFFFF' : '#1F1F24';
+  const foregroundColor = isBlackBrand ? '#FFFFFF' : IDENTITY_COLORS.ink;
 
   return (
     <View testID={testID} style={containerStyle}>

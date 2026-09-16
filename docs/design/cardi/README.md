@@ -41,7 +41,10 @@ run started 2026-08-11) whose scratchpad lived in `/tmp` and whose API connectio
 > compete. Playfulness comes from big, uncropped, correctly-coloured brand marks — a
 > **layout** decision, never a palette one.
 
-Ink `#181824` · Beam `#FCCC0C` · Cream `#F0F0E8` · Deep blue `#0C3C84`.
+Ink `#181824` · Beam `#FCCC0C` · Cream `#F0F0E8`.
+(Deep blue `#0C3C84` was listed here as a fourth role until 2026-09-16; Story 21.2 **retired** it —
+it is one of the five card accents, and Forbidden bans card accents as chrome. See
+[`cardi-design-system.md`](cardi-design-system.md) § _Three roles_.)
 Coral / salmon / terracotta / orange are **banned** (the "new" coral `#FF6B6B` was the old
 terracotta renamed — and it's Monzo's, on a card app).
 

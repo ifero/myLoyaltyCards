@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { useTheme } from '@/shared/theme';
-import { NEUTRAL_COLORS } from '@/shared/theme/colors';
 import { TOUCH_TARGET } from '@/shared/theme/spacing';
 
 type ButtonVariant = 'primary' | 'secondary' | 'tertiary' | 'destructive';
@@ -25,7 +24,13 @@ const getVariantColors = (variant: ButtonVariant, theme: ReturnType<typeof useTh
       backgroundColor: theme.primary,
       pressedColor: theme.primaryDark,
       borderColor: theme.primary,
-      textColor: NEUTRAL_COLORS.white
+      // NOT a hardcoded white. The primary fill is ink in light and BEAM in
+      // dark, and white on beam is 1.52:1 — a straight WCAG failure that reads as
+      // "bright" in a screenshot and is unreadable in daylight. `onPrimary` is the
+      // token that follows the fill (white on ink, ink on beam);
+      // `colors.contrast.test.ts` asserts both pairings and asserts the white one
+      // failing, on purpose.
+      textColor: theme.onPrimary
     };
   }
 
@@ -51,7 +56,10 @@ const getVariantColors = (variant: ButtonVariant, theme: ReturnType<typeof useTh
     backgroundColor: theme.error,
     pressedColor: theme.error,
     borderColor: theme.error,
-    textColor: NEUTRAL_COLORS.white
+    // The same trap as `primary`, one token along: the dark error red is lifted
+    // far enough to clear AA against black, which is exactly what stops white
+    // clearing AA against IT (3.41:1). `onError` follows the fill.
+    textColor: theme.onError
   };
 };
 

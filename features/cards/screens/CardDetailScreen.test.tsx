@@ -1,6 +1,7 @@
 /**
  * Card Details Screen Tests
  * Story 13.3 (screen); relocated + covered under Story 16.9.
+ * Story 21.2: the header's fill and the favourite star — AC7, AC9.
  *
  * Added when the screen moved from app/card/[id].tsx into
  * features/cards/screens/ (Story 16.9). Behaviour is unchanged; app/ is
@@ -29,7 +30,13 @@ type CardDetailsMockProps = {
   onToggleBrightness: () => void;
 };
 
-type ScreenProps = { options?: { headerLeft?: () => unknown; headerRight?: () => unknown } };
+type ScreenProps = {
+  options?: {
+    headerLeft?: () => unknown;
+    headerRight?: () => unknown;
+    headerStyle?: { backgroundColor?: string };
+  };
+};
 
 const mockBack = jest.fn();
 const mockToggle = jest.fn();
@@ -40,14 +47,17 @@ const mockCardDetails = jest.fn((props: CardDetailsMockProps) => {
   return null;
 });
 const mockUseBrandLogo = jest.fn();
+const mockScreenOptions = jest.fn();
 
 // Stack.Screen invokes headerLeft/headerRight so the header ternaries
-// (favorite state, tint colour) are exercised without a real navigator.
+// (favorite state, tint colour) are exercised without a real navigator, and
+// records the options so the header FILL is assertable rather than merely run.
 jest.mock('expo-router', () => {
   const Stack = () => null;
   (Stack as { Screen?: (props: ScreenProps) => null }).Screen = (props: ScreenProps) => {
     props.options?.headerLeft?.();
     props.options?.headerRight?.();
+    mockScreenOptions(props.options);
     return null;
   };
   // Mimic focus-once semantics: run the callback once on mount (a bare
@@ -77,11 +87,13 @@ jest.mock('@/core/utils/logger', () => ({
 jest.mock('@/shared/theme', () => ({
   useTheme: () => ({
     theme: {
-      background: '#FFFFFF',
-      primary: '#1A73E8',
-      textPrimary: '#000',
-      textSecondary: '#666',
-      warning: '#F59E0B'
+      background: '#F0F0E8',
+      // Ink since Story 21.2 — which is exactly why the header may no longer
+      // fall back to it: it would paint a near-black band above a coloured hero.
+      primary: '#181824',
+      textPrimary: '#181824',
+      textSecondary: '#55555F',
+      warning: '#181824'
     }
   })
 }));
@@ -246,5 +258,104 @@ describe('CardDetailScreen', () => {
       )
     );
     expect(mockUseBrandLogo).toHaveBeenCalledWith('brand-1');
+  });
+
+  /**
+   * Story 21.2 — AC7 and AC9.
+   *
+   * The header, the inset above it and the hero below it are meant to read as
+   * ONE filled region in the card's own accent; three separately filled boxes
+   * leave visible hairlines where they meet. `BrandHero` has always painted the
+   * band `CARD_COLORS[card.color]`, while this header fell back to
+   * `theme.primary` for a brandless card — invisible while primary was a blue
+   * close to the old `CARD_COLORS.blue`, and a near-black band the moment
+   * Story 21.2 made primary ink. These pin the fill itself, not the render.
+   */
+  describe('the header fill and the favourite star (Story 21.2)', () => {
+    const headerBackground = (): string | undefined => {
+      const options = mockScreenOptions.mock.calls.at(-1)?.[0] as ScreenProps['options'];
+      return options?.headerStyle?.backgroundColor;
+    };
+
+    const starColour = (): string | undefined => {
+      const options = mockScreenOptions.mock.calls.at(-1)?.[0] as ScreenProps['options'];
+      const pressable = options?.headerRight?.() as {
+        props: { children: { props: { color?: string; name?: string } } };
+      };
+      return pressable.props.children.props.color;
+    };
+
+    const starName = (): string | undefined => {
+      const options = mockScreenOptions.mock.calls.at(-1)?.[0] as ScreenProps['options'];
+      const pressable = options?.headerRight?.() as {
+        props: { children: { props: { color?: string; name?: string } } };
+      };
+      return pressable.props.children.props.name;
+    };
+
+    it('fills the header with the brand hex for a catalogue card (AC7)', async () => {
+      (getCardById as jest.Mock).mockResolvedValue({ ...mockCard, brandId: 'brand-1' });
+      mockUseBrandLogo.mockReturnValue({ color: '#0082C3' });
+
+      render(<CardDetailScreen />);
+
+      await waitFor(() => expect(headerBackground()).toBe('#0082C3'));
+    });
+
+    it("fills it with the card's own accent for a brandless card, never theme.primary (AC7)", async () => {
+      (getCardById as jest.Mock).mockResolvedValue({ ...mockCard, color: 'red' });
+
+      render(<CardDetailScreen />);
+
+      await waitFor(() => expect(headerBackground()).toBe('#E2231A'));
+      expect(headerBackground()).not.toBe('#181824');
+    });
+
+    it('falls back to grey rather than transparent for an unmapped colour (AC7)', async () => {
+      // `mockCard.color` is a raw hex, not one of the five keys, so the `??`
+      // guard is the only thing between this card and an unfilled header.
+      (getCardById as jest.Mock).mockResolvedValue(mockCard);
+
+      render(<CardDetailScreen />);
+
+      await waitFor(() => expect(headerBackground()).toBe('#64748B'));
+    });
+
+    it('draws a filled beam star on a dark field (AC9)', async () => {
+      (getCardById as jest.Mock).mockResolvedValue({
+        ...mockCard,
+        isFavorite: true,
+        brandId: 'brand-1'
+      });
+      mockUseBrandLogo.mockReturnValue({ color: '#004E9F' });
+
+      render(<CardDetailScreen />);
+
+      await waitFor(() => expect(starColour()).toBe('#FCCC0C'));
+      expect(starName()).toBe('star');
+    });
+
+    it('drops the star to ink on a light field, so Esselunga does not swallow it (AC9)', async () => {
+      (getCardById as jest.Mock).mockResolvedValue({
+        ...mockCard,
+        isFavorite: true,
+        brandId: 'esselunga'
+      });
+      mockUseBrandLogo.mockReturnValue({ color: '#FFCC00' });
+
+      render(<CardDetailScreen />);
+
+      await waitFor(() => expect(starColour()).toBe('#181824'));
+    });
+
+    it('keeps the unfavourited star an outline in the header foreground (AC9)', async () => {
+      (getCardById as jest.Mock).mockResolvedValue({ ...mockCard, brandId: 'brand-1' });
+      mockUseBrandLogo.mockReturnValue({ color: '#004E9F' });
+
+      render(<CardDetailScreen />);
+
+      await waitFor(() => expect(starName()).toBe('star-border'));
+      expect(starColour()).toBe('#FFFFFF');
+    });
   });
 });

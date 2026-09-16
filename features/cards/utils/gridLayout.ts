@@ -178,11 +178,17 @@ export const getSingleTileHeight = (tileWidth: number): number =>
  *
  * Deliberately **not** proportional to the tile, and that is a design decision
  * rather than an oversight. The badge is an affordance, not decoration: it wraps a
- * 16 pt star in a near-opaque white plate so the amber glyph stays legible on any
- * brand colour, including the light and yellow ones. Shrinking it with the tile
+ * 16 pt star in an opaque ink `#181824` plate so the beam `#FCCC0C` glyph stays
+ * legible on any brand colour, including the light and yellow ones — Esselunga's
+ * `#FFCC00` is three points from beam, so without the plate the star would
+ * disappear into the one tile people open most. Shrinking it with the tile
  * would attack the legibility it exists to provide, and 24 pt is already at the
  * small end of a comfortable target. So the badge holds its size and the *centred*
  * children give way around it — see `getFallbackChildMetrics`.
+ *
+ * The plate was a near-opaque white carrying an amber star until Story 21.2;
+ * only the two COLOURS moved. The geometry is frozen — `BADGE_INSET` feeds
+ * `BADGE_KEEP_OUT`, which `gridLayout.test.ts` pins.
  */
 export const BADGE_SIZE = 24;
 export const BADGE_INSET = 6;

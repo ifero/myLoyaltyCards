@@ -4,19 +4,6 @@
  * Canonical token values live in tokens/*.json (Story 16.4).
  */
 
-export const PRIMARY_COLORS = {
-  50: '#E8F1FE',
-  100: '#D2E3FC',
-  200: '#AECBFA',
-  300: '#8AB4F8',
-  400: '#669DF6',
-  500: '#1A73E8',
-  600: '#1967D2',
-  700: '#185ABC',
-  800: '#174EA6',
-  900: '#163A7A'
-} as const;
-
 export const IDENTITY_COLORS = { ink: '#181824', beam: '#FCCC0C', cream: '#F0F0E8' } as const;
 
 export const CARD_COLORS = {
@@ -41,41 +28,45 @@ export const NEUTRAL_COLORS = {
 } as const;
 
 export const LIGHT_THEME_COLORS = {
-  primary: '#1A73E8',
-  primaryDark: '#1967D2',
-  background: '#FFFFFF',
-  backgroundSubtle: '#F5F5F5',
+  primary: '#181824',
+  primaryDark: '#2A2A3A',
+  onPrimary: '#FFFFFF',
+  background: '#F0F0E8',
+  backgroundSubtle: '#E8E8DE',
   surface: '#FFFFFF',
-  surfaceElevated: '#F5F5F5',
-  textPrimary: '#1F1F24',
-  textSecondary: '#66666B',
-  textTertiary: '#8F8F94',
-  border: '#E5E5EB',
-  borderStrong: '#8F8F94',
-  success: '#16A34A',
-  warning: '#D97706',
-  error: '#DC2626',
-  info: '#1A73E8',
-  link: '#1A73E8'
+  surfaceElevated: '#F7F7F1',
+  textPrimary: '#181824',
+  textSecondary: '#55555F',
+  textTertiary: '#6B6B63',
+  border: '#D6D6CB',
+  borderStrong: '#9A9A93',
+  success: '#181824',
+  warning: '#181824',
+  error: '#C41E1E',
+  onError: '#FFFFFF',
+  info: '#181824',
+  link: '#181824'
 } as const;
 
 export const DARK_THEME_COLORS = {
-  primary: '#4DA3FF',
-  primaryDark: '#1A73E8',
+  primary: '#FCCC0C',
+  primaryDark: '#F0F0E8',
+  onPrimary: '#181824',
   background: '#000000',
-  backgroundSubtle: '#0A0A0A',
-  surface: '#1C1C1E',
-  surfaceElevated: '#2C2C2E',
-  textPrimary: '#F5F5F7',
-  textSecondary: '#D9D9DE',
-  textTertiary: '#99999E',
-  border: '#38383A',
-  borderStrong: '#636366',
-  success: '#22C55E',
-  warning: '#F59E0B',
-  error: '#F87171',
-  info: '#4DA3FF',
-  link: '#4DA3FF'
+  backgroundSubtle: '#0C0C12',
+  surface: '#181824',
+  surfaceElevated: '#20202E',
+  textPrimary: '#F0F0E8',
+  textSecondary: '#B5B5AB',
+  textTertiary: '#8F8F85',
+  border: '#3A3A48',
+  borderStrong: '#55555F',
+  success: '#F0F0E8',
+  warning: '#FCCC0C',
+  error: '#FF453A',
+  onError: '#181824',
+  info: '#F0F0E8',
+  link: '#FCCC0C'
 } as const;
 
 export const SPACING = { xs: 4, sm: 8, smMd: 12, md: 16, lg: 24, xl: 32, xxl: 48 } as const;

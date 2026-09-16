@@ -1,6 +1,7 @@
 /**
  * Card Details Screen
  * Story 13.3: Restyle Card Detail Screen (AC5)
+ * Story 21.2: Migrate the colour tokens to Ink & Beam (AC7, AC9)
  *
  * Displays full details of a loyalty card with:
  * - Brand-colored navigation header
@@ -20,7 +21,8 @@ import { LoyaltyCard } from '@/core/schemas';
 import { logger } from '@/core/utils/logger';
 
 import { useTheme } from '@/shared/theme';
-import { getContrastForeground } from '@/shared/theme/luminance';
+import { CARD_COLORS } from '@/shared/theme/colors';
+import { getContrastForeground, getFavouriteStarColor } from '@/shared/theme/luminance';
 import { SPACING } from '@/shared/theme/spacing';
 import { showToast } from '@/shared/toast';
 
@@ -184,8 +186,22 @@ const CardDetailsScreen = () => {
     );
   }
 
-  // Resolve header color: brand color for catalogue, primary for custom
-  const headerBg = brand ? brand.color : theme.primary;
+  // Resolve header color: the brand's hex for a catalogue card, the card's own
+  // accent for a custom one.
+  //
+  // This USED to fall back to `theme.primary`, which put a themed header
+  // immediately above a hero that `BrandHero` paints `CARD_COLORS[card.color]`
+  // — two different fills meeting at a seam. The card-detail spec wants the
+  // inset, the header and the hero to read as ONE filled region, because three
+  // separately filled boxes leave visible hairlines where they meet. Story 21.2
+  // makes `theme.primary` ink, which would have turned that seam into a
+  // near-black band above a coloured hero, so the derivation below deliberately
+  // mirrors `BrandHero`'s fallback logic — `?? grey` included, without which a
+  // card carrying an unmapped colour renders TRANSPARENT rather than recoloured.
+  // Not byte-identical: `BrandHero` also guards `brand?.color` itself, which is
+  // unreachable here because the brand descriptor's `color` is non-optional.
+  // Story 21.2a re-points all five sites at its named default.
+  const headerBg = brand ? brand.color : (CARD_COLORS[card.color] ?? CARD_COLORS.grey);
   const headerTextColor = getContrastForeground(headerBg);
 
   // Success state - render card details
@@ -226,10 +242,18 @@ const CardDetailsScreen = () => {
               hitSlop={8}
               testID="favourite-toggle"
             >
+              {/* A filled BEAM star when favourited — "that star is the only
+                  yellow on the screen" — with no plate behind it: a plate here
+                  would break the single unbroken accent field above. The star
+                  sits directly on the brand's own colour, so unlike the wallet
+                  tile it cannot assume beam reads; `getFavouriteStarColor`
+                  falls back to ink on a light field (Esselunga #FFCC00). The
+                  unfavourited state stays an OUTLINE star in the header's own
+                  foreground. */}
               <MaterialIcons
                 name={card.isFavorite ? 'star' : 'star-border'}
                 size={26}
-                color={card.isFavorite ? theme.warning : headerTextColor}
+                color={card.isFavorite ? getFavouriteStarColor(headerBg) : headerTextColor}
               />
             </Pressable>
           )

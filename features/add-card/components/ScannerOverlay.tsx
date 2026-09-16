@@ -34,6 +34,7 @@ import { logger } from '@/core/utils';
 
 import { Button } from '@/shared/components/ui/Button';
 import { useTheme } from '@/shared/theme';
+import { IDENTITY_COLORS } from '@/shared/theme/colors';
 import { SPACING, TOUCH_TARGET } from '@/shared/theme/spacing';
 
 import { useBarcodeScanner, ScanResult } from '@/features/cards/hooks/useBarcodeScanner';
@@ -182,9 +183,8 @@ const ViewfinderCorners: React.FC<{ size: number }> = ({ size }) => {
   );
 };
 
-/** Animated blue scan line */
+/** Animated beam scan line */
 const ScanLine: React.FC<{ viewfinderSize: number }> = ({ viewfinderSize }) => {
-  const { theme } = useTheme();
   const translateY = useSharedValue(0);
 
   useEffect(() => {
@@ -210,7 +210,12 @@ const ScanLine: React.FC<{ viewfinderSize: number }> = ({ viewfinderSize }) => {
           left: 8,
           right: 8,
           height: 2,
-          backgroundColor: theme.primary,
+          // Beam, fixed, not `theme.primary`: this line is drawn on the #000000
+          // camera container, which no theme touches, and light-mode `primary`
+          // is ink. The design system requires it by name — the beam rule's
+          // "read" half: "the same 2px #FCCC0C line is forbidden on barcode/[id]
+          // and mandatory on add-card/scan", because here we are the scanner.
+          backgroundColor: IDENTITY_COLORS.beam,
           borderRadius: 1,
           top: 0
         },

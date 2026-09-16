@@ -48,7 +48,7 @@ export const AccountSection = ({
             justifyContent: 'center'
           }}
         >
-          <Text style={{ color: '#FFFFFF', fontWeight: '700', fontSize: 24 }}>
+          <Text style={{ color: theme.onPrimary, fontWeight: '700', fontSize: 24 }}>
             {email.trim().charAt(0).toUpperCase() || 'U'}
           </Text>
         </View>

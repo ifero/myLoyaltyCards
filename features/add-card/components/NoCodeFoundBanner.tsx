@@ -2,9 +2,19 @@
  * NoCodeFoundBanner
  * Story 2.9: Scan Cards from Image or Screenshot (AC6)
  * Story 16.23: says WHICH failure occurred instead of one message for all of them
+ * Story 21.2: the banner stops reading theme tokens (see below)
  *
  * Inline error banner shown when an image scan does not yield a usable barcode.
  * Auto-dismisses after 5 seconds. Positioned inside the scanner overlay.
+ *
+ * Every colour here is FIXED, not themed, and that is the point. The banner
+ * floats on an rgba(0,0,0,0.80) scrim over a live camera feed, so it never sees
+ * the app's ground: its own surface is dark in both schemes, and a token that
+ * flips with the theme (`theme.primary`, `theme.warning`) resolves to ink in
+ * light and disappears. The design system independently puts beam on exactly
+ * this surface — "the scan line and the banner links on our own viewfinder" —
+ * because on the viewfinder WE are the ones scanning, which is the half of the
+ * beam rule that says yes.
  */
 
 import { MaterialIcons } from '@expo/vector-icons';
@@ -12,7 +22,7 @@ import React, { useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { View, Text, Pressable, StyleSheet } from 'react-native';
 
-import { useTheme } from '@/shared/theme';
+import { IDENTITY_COLORS } from '@/shared/theme/colors';
 import { SPACING, TOUCH_TARGET } from '@/shared/theme/spacing';
 import { TYPOGRAPHY } from '@/shared/theme/typography';
 
@@ -69,7 +79,6 @@ export const NoCodeFoundBanner: React.FC<NoCodeFoundBannerProps> = ({
   onManualEntry,
   testID = 'no-code-found-banner'
 }) => {
-  const { theme } = useTheme();
   const { t } = useTranslation();
   const message = t(MESSAGE_KEY[reason]);
   const retryLabel = t(RETRY_KEY[reason] ?? 'addCard.noCodeFound.retry');
@@ -88,7 +97,7 @@ export const NoCodeFoundBanner: React.FC<NoCodeFoundBannerProps> = ({
     >
       {/* Header row: icon + message + close */}
       <View style={styles.headerRow}>
-        <MaterialIcons name="warning-amber" size={20} color={theme.warning} />
+        <MaterialIcons name="warning-amber" size={20} color={IDENTITY_COLORS.beam} />
         <Text style={styles.message}>{message}</Text>
         <Pressable
           onPress={onDismiss}
@@ -110,7 +119,7 @@ export const NoCodeFoundBanner: React.FC<NoCodeFoundBannerProps> = ({
           testID="banner-retry-image"
           style={styles.actionLink}
         >
-          <Text style={[styles.actionText, { color: theme.primary }]}>{retryLabel}</Text>
+          <Text style={[styles.actionText, { color: IDENTITY_COLORS.beam }]}>{retryLabel}</Text>
         </Pressable>
         <Pressable
           onPress={onManualEntry}
@@ -119,7 +128,7 @@ export const NoCodeFoundBanner: React.FC<NoCodeFoundBannerProps> = ({
           testID="banner-manual-entry"
           style={styles.actionLink}
         >
-          <Text style={[styles.actionText, { color: theme.primary }]}>
+          <Text style={[styles.actionText, { color: IDENTITY_COLORS.beam }]}>
             {t('addCard.noCodeFound.manualEntry')}
           </Text>
         </Pressable>

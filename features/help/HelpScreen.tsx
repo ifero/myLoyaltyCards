@@ -153,7 +153,9 @@ const HelpScreen = ({ itemsOverride }: HelpScreenProps) => {
           }
           style={[styles.actionButton, { backgroundColor: theme.primary }]}
         >
-          <Text style={styles.actionLabelWhite}>{t('help.contactSupport')}</Text>
+          <Text style={[styles.actionLabelOnPrimary, { color: theme.onPrimary }]}>
+            {t('help.contactSupport')}
+          </Text>
         </Pressable>
 
         <Pressable
@@ -231,11 +233,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: 32,
     paddingVertical: 24
   },
-  actionLabelWhite: {
+  actionLabelOnPrimary: {
     fontSize: 14,
     lineHeight: 20,
-    fontWeight: '600',
-    color: '#FFFFFF'
+    fontWeight: '600'
+    // No `color`: supplied at the call site from `theme.onPrimary`, which is
+    // white on the ink fill in light and ink on the beam fill in dark.
   },
   actionLabel: {
     fontSize: 14,

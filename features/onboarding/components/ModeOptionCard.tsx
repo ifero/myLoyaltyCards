@@ -4,7 +4,6 @@ import { useTranslation } from 'react-i18next';
 import { Pressable, Text, View } from 'react-native';
 
 import { useTheme } from '@/shared/theme';
-import { NEUTRAL_COLORS } from '@/shared/theme/colors';
 import { TOUCH_TARGET } from '@/shared/theme/spacing';
 
 type ModeOptionCardProps = {
@@ -90,7 +89,7 @@ export const ModeOptionCard = ({
               backgroundColor: theme.primary
             }}
           >
-            <Text style={{ color: NEUTRAL_COLORS.white, fontSize: 12, fontWeight: '500' }}>
+            <Text style={{ color: theme.onPrimary, fontSize: 12, fontWeight: '500' }}>
               {t('onboarding.modeOption.recommended')}
             </Text>
           </View>

@@ -28,9 +28,6 @@ jest.mock('@/shared/theme', () => ({
       textSecondary: '#666666'
     }
   }),
-  SEMANTIC_COLORS: {
-    success: '#34C759'
-  },
   CARD_COLORS: {
     blue: '#3B82F6',
     red: '#EF4444',

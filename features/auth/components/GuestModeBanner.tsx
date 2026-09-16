@@ -72,7 +72,7 @@ export const GuestModeBanner = ({ isGuestMode }: GuestModeBannerProps) => {
         {
           backgroundColor: theme.surface,
           borderWidth: 1,
-          borderColor: `${theme.primary}33`
+          borderColor: `${theme.primary}1A`
         }
       ]}
     >
@@ -84,7 +84,7 @@ export const GuestModeBanner = ({ isGuestMode }: GuestModeBannerProps) => {
           left: 0,
           right: 0,
           bottom: 0,
-          backgroundColor: `${theme.primary}${isDark ? '1F' : '14'}`
+          backgroundColor: `${theme.primary}${isDark ? '1A' : '14'}`
         }}
       />
 

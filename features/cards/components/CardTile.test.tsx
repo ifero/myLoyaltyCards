@@ -2,11 +2,12 @@
  * CardTile Component Tests
  * Story 13.2: Restyle Home Screen — AC1, AC7, AC9
  * Story 16.22: Fix card-grid tile overlap — AC1, AC5, AC9 (tileWidth/tileHeight props)
+ * Story 21.2: Migrate the colour tokens to Ink & Beam — AC8, AC9
  */
 
 import { render, screen, fireEvent } from '@testing-library/react-native';
 import { useRouter } from 'expo-router';
-import { StyleSheet } from 'react-native';
+import { StyleSheet, type ViewStyle } from 'react-native';
 import Animated from 'react-native-reanimated';
 
 import { LoyaltyCard } from '@/core/schemas';
@@ -42,7 +43,9 @@ jest.mock('@/shared/theme', () => ({
   useTheme: jest.fn()
 }));
 
-// Mock CARD_COLORS
+// Mock CARD_COLORS + IDENTITY_COLORS. The identity triple is read at MODULE
+// scope (`HIGHLIGHT_RGB`), so an incomplete mock fails at import time rather
+// than inside an assertion — hence the real values, not stand-ins.
 jest.mock('@/shared/theme/colors', () => ({
   CARD_COLORS: {
     blue: '#1A73E8',
@@ -50,6 +53,11 @@ jest.mock('@/shared/theme/colors', () => ({
     green: '#16A34A',
     orange: '#F59E0B',
     grey: '#64748B'
+  },
+  IDENTITY_COLORS: {
+    ink: '#181824',
+    beam: '#FCCC0C',
+    cream: '#F0F0E8'
   }
 }));
 
@@ -98,14 +106,14 @@ describe('CardTile', () => {
     (useRouter as jest.Mock).mockReturnValue({ push: mockPush });
     (useTheme as jest.Mock).mockReturnValue({
       theme: {
-        primary: '#1A73E8',
+        primary: '#181824',
         surface: '#FFFFFF',
-        textPrimary: '#1F1F24',
-        textSecondary: '#66666B',
-        border: '#E5E5EB',
-        borderStrong: '#8F8F94',
-        surfaceElevated: '#F5F5F5',
-        warning: '#D97706'
+        textPrimary: '#181824',
+        textSecondary: '#55555F',
+        border: '#D6D6CB',
+        borderStrong: '#9A9A93',
+        surfaceElevated: '#F7F7F1',
+        warning: '#181824'
       },
       isDark: false
     });
@@ -442,14 +450,14 @@ describe('CardTile', () => {
     beforeEach(() => {
       (useTheme as jest.Mock).mockReturnValue({
         theme: {
-          primary: '#4DA3FF',
-          surface: '#1C1C1E',
-          textPrimary: '#F5F5F7',
-          textSecondary: '#D9D9DE',
-          border: '#38383A',
-          borderStrong: '#66666B',
-          surfaceElevated: '#2C2C2E',
-          warning: '#F59E0B'
+          primary: '#FCCC0C',
+          surface: '#181824',
+          textPrimary: '#F0F0E8',
+          textSecondary: '#B5B5AB',
+          border: '#3A3A48',
+          borderStrong: '#55555F',
+          surfaceElevated: '#20202E',
+          warning: '#FCCC0C'
         },
         isDark: true
       });
@@ -467,7 +475,10 @@ describe('CardTile', () => {
 
       const { toJSON } = render(<CardTile card={blackBrandCard} />);
       const json = JSON.stringify(toJSON());
-      expect(json).toContain('#40404A');
+      // `theme.border` since Story 21.2 — the design system names #3A3A48 for
+      // exactly this ("a near-black brand takes a #3A3A48 outline in dark
+      // mode"), where the component carried a one-off #40404A.
+      expect(json).toContain('#3A3A48');
     });
   });
 
@@ -511,7 +522,7 @@ describe('CardTile', () => {
     });
   });
 
-  describe('Favourite badge — Story 9.2 (AC2, AC3)', () => {
+  describe('Favourite badge — Story 9.2 (AC2, AC3), recoloured in Story 21.2 (AC9)', () => {
     it('renders the favourite badge when isFavorite is true (AC2)', () => {
       render(<CardTile card={{ ...mockCard, isFavorite: true }} />);
       expect(screen.getByTestId('favourite-badge')).toBeTruthy();
@@ -520,6 +531,50 @@ describe('CardTile', () => {
     it('does not render the favourite badge when isFavorite is false (AC3)', () => {
       render(<CardTile card={{ ...mockCard, isFavorite: false }} />);
       expect(screen.queryByTestId('favourite-badge')).toBeNull();
+    });
+
+    /**
+     * The plate is opaque INK and the star is BEAM.
+     *
+     * Both halves matter and neither is cosmetic. The plate was a 95%-white
+     * disc, which is invisible on a light brand — and it must stay OPAQUE,
+     * because it is the only thing standing between a beam star and Esselunga's
+     * #FFCC00, three points away. The star was `theme.warning`, an amber the
+     * system does not contain, which also coupled the favourite marker to an
+     * unrelated semantic role: changing one repainted the other.
+     */
+    it('uses an opaque ink plate carrying a beam star (AC9)', () => {
+      render(<CardTile card={{ ...mockCard, isFavorite: true }} />);
+
+      const badge = StyleSheet.flatten(
+        screen.getByTestId('favourite-badge').props.style
+      ) as ViewStyle;
+      expect(badge.backgroundColor).toBe('#181824');
+
+      const json = JSON.stringify(screen.toJSON());
+      expect(json).toContain('#FCCC0C');
+      expect(json).not.toContain('rgba(255, 255, 255, 0.95)');
+    });
+
+    it('keeps the star independent of theme.warning (AC9)', () => {
+      // A theme whose `warning` is a colour nothing else uses: if the star were
+      // still borrowing it, it would show up here.
+      (useTheme as jest.Mock).mockReturnValue({
+        theme: {
+          primary: '#181824',
+          surface: '#FFFFFF',
+          textPrimary: '#181824',
+          textSecondary: '#55555F',
+          border: '#D6D6CB',
+          borderStrong: '#9A9A93',
+          surfaceElevated: '#F7F7F1',
+          warning: '#123456'
+        },
+        isDark: false
+      });
+
+      render(<CardTile card={{ ...mockCard, isFavorite: true }} />);
+      expect(JSON.stringify(screen.toJSON())).not.toContain('#123456');
     });
   });
 
