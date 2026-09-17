@@ -7,7 +7,7 @@ struct WatchCard: Identifiable, Codable {
   let id: String
   let name: String
   let brandId: String?
-  let colorHex: String?  // optional color hex (e.g. "#FF6B6B")
+  let colorHex: String?  // palette KEY ("blue", "red", …) or a "#RRGGBB" hex — resolve via `resolvedCardHex`
   // Optional barcode fields (may be absent for older persisted payloads)
   let barcodeValue: String?
   let barcodeFormat: String?  // values like "CODE128", "EAN13", "QR" etc.
@@ -310,18 +310,50 @@ struct CardRowView: View {
     return WatchBrands.all.first(where: { $0.id == brandId })
   }
 
-  /// Resolved brand color hex string (from catalogue or user-selected).
-  private var resolvedColorHex: String {
+  /// The RAW color value the phone sent for this card. Despite `colorHex`'s name this is a palette
+  /// KEY ("blue", "red", …) for every synced card, catalogue and custom alike —
+  /// `core/watch-connectivity.ts` sets `colorHex: card.color` from a required enum. A catalogue
+  /// card with no value at all falls back to a deterministic hex from its brand id.
+  ///
+  /// ⚠️ Never feed this to a luminance helper; go through `resolvedAccentHex`.
+  private var rawColorValue: String {
     if let brand = resolvedBrand {
-      // Use a deterministic hex from the brand id hash when no explicit color exists
       return card.colorHex ?? "#\(String(format: "%06X", abs(brand.id.hashValue) % 0xFFFFFF))"
     }
     return card.colorHex ?? ""
   }
 
-  /// Accent color derived from the resolved hex.
+  /// The one `"#RRGGBB"` this row actually paints, or `nil` when the value is unusable.
+  ///
+  /// Every color decision below derives from this single resolution — fill, hairline and initials
+  /// — mirroring Wear's `CardPresentation`, which resolves once and hands `CardRow` the answers.
+  /// Deriving any of them from `rawColorValue` instead feeds a palette key to a hex-only luminance
+  /// function, which reports "black" for all five keys (Story 16.41).
+  private var resolvedAccentHex: String? {
+    resolvedCardHex(rawColorValue)
+  }
+
+  /// Accent color, derived from the SAME resolution as the hairline and the initials rather than
+  /// from a second `mapColor(hex: rawColorValue)` call. The two agree today — `mapColor` resolves
+  /// through `resolvedCardHex` too — but two independent call sites of one resolver is the shape
+  /// that produced this story's defect, and Wear's `presentationFor` resolves once for the same
+  /// reason.
   private var accentColor: Color {
-    mapColor(hex: resolvedColorHex) ?? .gray
+    resolvedAccentHex.map(parseHexColor) ?? .gray
+  }
+
+  /// A near-black accent all but vanishes against the row's near-black surface, so the row takes a
+  /// hairline instead. An unresolvable color gets NO hairline: the border remediates a color we
+  /// know is dark, and defaulting the other way is the bug this property replaced.
+  private var needsNearBlackHairline: Bool {
+    resolvedAccentHex.map(isNearBlack(hex:)) ?? false
+  }
+
+  /// Whether the initials are drawn white rather than black, flipped on the SAME hex the circle is
+  /// filled with. Defaults to white for an unresolvable color, matching the complication's
+  /// `WidgetCardPalette.prefersWhiteForeground`.
+  private var prefersWhiteInitials: Bool {
+    resolvedAccentHex.map(shouldUseWhiteText(onBackgroundHex:)) ?? true
   }
 
   var body: some View {
@@ -360,7 +392,7 @@ struct CardRowView: View {
     )
     .overlay(
       RoundedRectangle(cornerRadius: metrics.cornerRadius)
-        .stroke(isNearBlack(hex: resolvedColorHex) ? Color.white.opacity(0.15) : Color.clear, lineWidth: 1)
+        .stroke(needsNearBlackHairline ? Color.white.opacity(0.15) : Color.clear, lineWidth: 1)
     )
     .accessibilityElement(children: .combine)
     .accessibilityLabel(WatchL10n.format(cardRowAccessibilityKey(isFavorite: card.isFavorite), card.name))
@@ -377,11 +409,11 @@ struct CardRowView: View {
         )
       } else {
         // Catalogue brand with no bundled imageset — initials on brand-colored circle
-        initialsAvatar(text: initials(from: brand.name ?? brand.id), backgroundHex: resolvedColorHex)
+        initialsAvatar(text: initials(from: brand.name ?? brand.id))
       }
     } else {
       // Custom card — user-selected color with initials
-      initialsAvatar(text: initials(from: card.name), backgroundHex: card.colorHex ?? "")
+      initialsAvatar(text: initials(from: card.name))
     }
   }
 
@@ -409,15 +441,19 @@ struct CardRowView: View {
   }
 
   /// Initials on the resolved accent color — the fallback for custom cards and for
-  /// catalogue brands with no bundled artwork. `backgroundHex` decides the text
-  /// color and differs per branch, which is why it is passed in rather than derived.
+  /// catalogue brands with no bundled artwork.
+  ///
+  /// The text color is derived from `resolvedAccentHex`, the same value that fills the circle,
+  /// rather than from a passed-in raw string. Both call sites used to pass a palette key, which
+  /// scored luminance 0 and announced white initials on every accent — including the amber one,
+  /// where white lands at 2.15:1 and black at 9.78:1 (Story 16.41).
   @ViewBuilder
-  private func initialsAvatar(text: String, backgroundHex: String) -> some View {
+  private func initialsAvatar(text: String) -> some View {
     ZStack {
       accentColor
       Text(text)
         .font(.system(size: 12, weight: .bold))
-        .foregroundColor(shouldUseWhiteText(onBackgroundHex: backgroundHex) ? .white : .black)
+        .foregroundColor(prefersWhiteInitials ? .white : .black)
     }
   }
 }

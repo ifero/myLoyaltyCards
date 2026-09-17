@@ -129,27 +129,6 @@ function swiftHexMap(source: string, name: string): Record<string, string> {
   return entries;
 }
 
-/** `case "key": return parseHexColor("#RRGGBB")` → `{ key: '#RRGGBB' }`, for `mapColor`. */
-function swiftColorSwitch(source: string, functionName: string): Record<string, string> {
-  const block = new RegExp(`func ${functionName}\\([\\s\\S]*?\\n}`).exec(source);
-  const entries: Record<string, string> = {};
-
-  for (const [, keys, hex] of (block?.[0] ?? '').matchAll(
-    /case\s+((?:"[^"]+"\s*,?\s*)+):\s*return parseHexColor\("(#[0-9A-Fa-f]{6})"\)/g
-  )) {
-    if (!keys || !hex) {
-      continue;
-    }
-    for (const [, key] of keys.matchAll(/"([^"]+)"/g)) {
-      if (key) {
-        entries[key] = hex.toUpperCase();
-      }
-    }
-  }
-
-  return entries;
-}
-
 describe('phone ↔ Wear OS wire contract', () => {
   describe('the three copies of the contract agree', () => {
     test('the phone module and the Wear app share one path prefix', () => {
@@ -227,7 +206,7 @@ describe('phone ↔ Wear OS wire contract', () => {
    * despite the field's name. `core/wear-connectivity.ts` re-uses the same producer,
    * so ONE function feeds TWO transports and three independent resolvers:
    *
-   *   - `targets/watch/ColorHelpers.swift`        `mapColor` — the live watchOS card row
+   *   - `targets/watch/ColorHelpers.swift`        `namedCardHex` — the live watchOS card row
    *   - `targets/watch-widget/WidgetCardPalette.swift`  the complication's palette
    *   - `watch-android/…/presentation/CardVisuals.kt`   the Wear OS avatar
    *
@@ -294,8 +273,12 @@ describe('phone ↔ Wear OS wire contract', () => {
           () => kotlinRgbMap(read(WEAR_CARD_VISUALS), 'NAMED_CARD_COLORS')
         ],
         [
+          // ⚠️ Story 16.41 moved this literal out of `mapColor`'s switch and into a
+          // `namedCardHex` table, so that ONE copy serves both the `Color` path and the
+          // luminance path that decides the row's hairline and initials colour. Same
+          // literal shape as the widget's, so this reuses `swiftHexMap`.
           'watchOS ColorHelpers.swift',
-          () => swiftColorSwitch(read(WATCH_COLOR_HELPERS), 'mapColor')
+          () => swiftHexMap(read(WATCH_COLOR_HELPERS), 'namedCardHex')
         ],
         [
           'watchOS WidgetCardPalette.swift',

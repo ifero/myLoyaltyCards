@@ -17,35 +17,87 @@ func parseHexColor(_ hex: String) -> Color {
     )
 }
 
-/// Resolves either a card palette KEY ("blue", "red", …) or an arbitrary hex
-/// string ("#RRGGBB") into a `Color`. Returns `nil` only when input is nil/empty.
+// MARK: - Card Palette Resolution
+
+/// The five-key card palette, canonical in `tokens/color.json` → `shared/theme/tokens.generated.ts`
+/// (`CARD_COLORS`).
 ///
-/// The phone sends `colorHex: card.color` — the raw key, despite the field's name
-/// (`core/watch-connectivity.ts`) — so this switch is the live resolution path for
-/// every custom card in `CardListView`.
+/// **The phone sends the KEY, not a hex.** `core/watch-connectivity.ts` sets
+/// `colorHex: card.color`, and `card.color` is a required `cardColorSchema` enum
+/// (`core/schemas/card.ts`) — so every value reaching this file is one of these keys, for catalogue
+/// and custom cards alike. The canonical wire fixture shows it: `test-fixtures/sync-message-v1.json`
+/// carries `"colorHex": "green"` on a `conad` card.
 ///
-/// ⚠️ Story 21.2a replaced SwiftUI system colors here with the Cardì card accent
-/// hexes, which is a correctness fix and not a repaint. `Color.orange` rendered a
-/// hue the design system bans outright, and the other three were only approximately
-/// the colour the user had picked on the phone — the same card read as a different
-/// colour on the two devices. The hexes are the phone's canonical `CARD_COLORS`
-/// (tokens/color.json); the five keys are a FROZEN contract, so never add, remove
-/// or rename a case. Two are deliberately misnamed: `orange` is the beam yellow and
-/// `grey` is the azure. `core/wear-sync-contract.test.ts` reads this source and
-/// fails if a key goes missing or a hex drifts from the tokens.
-func mapColor(hex: String?) -> Color? {
-    guard let hex = hex?.trimmingCharacters(in: .whitespacesAndNewlines), !hex.isEmpty else {
+/// ⚠️ Story 21.2a replaced SwiftUI system colors here with the Cardì card accent hexes, which is a
+/// correctness fix and not a repaint. `Color.orange` rendered a hue the design system bans outright,
+/// and the other three were only approximately the colour the user had picked on the phone — the
+/// same card read as a different colour on the two devices. The five keys are a FROZEN contract, so
+/// never add, remove or rename one. Two are deliberately misnamed: `orange` is the beam yellow and
+/// `grey` is the azure.
+///
+/// Story 16.41 moved these from a `switch` inside `mapColor` into this table so that ONE literal
+/// serves both the `Color` path and the luminance path below — a second copy would be a second
+/// thing to drift. `core/wear-sync-contract.test.ts` reads this table and fails if a key goes
+/// missing or a hex drifts from the tokens; `targets/watch-widget/WidgetCardPalette.swift` and
+/// `watch-android/…/CardVisuals.kt` hold the same values for the same no-shared-build reason.
+private let namedCardHex: [String: String] = [
+    "blue": "#0C3C84",
+    "red": "#E42424",
+    "green": "#0C843C",
+    "orange": "#FCCC0C",
+    "gray": "#0C84CC",
+    "grey": "#0C84CC"
+]
+
+/// The normalized `"#RRGGBB"` a raw card color value resolves to — a palette key ("blue", "red", …)
+/// **or** a hex string — or `nil` when the value is absent or unparseable.
+///
+/// ⚠️ **Every luminance decision must go through this.** `relativeLuminance` returns `0.0` for
+/// input it cannot parse, and `0.0` reads as *black*, so handing it a raw palette key answers
+/// "near-black" for all five (Story 16.41). Callers default the *decision*, never the string:
+/// `resolvedCardHex(raw) ?? ""` walks straight back into the same trap.
+///
+/// Mirrors `WidgetCardPalette.hex(for:)` and Wear's `resolveCardColor`, so one card reads as one
+/// color across the app, the complication and Wear OS.
+func resolvedCardHex(_ raw: String?) -> String? {
+    guard
+        let trimmed = raw?.trimmingCharacters(in: .whitespacesAndNewlines),
+        !trimmed.isEmpty
+    else {
         return nil
     }
-    switch hex.lowercased() {
-    case "blue": return parseHexColor("#0C3C84")
-    case "red": return parseHexColor("#E42424")
-    case "green": return parseHexColor("#0C843C")
-    case "orange": return parseHexColor("#FCCC0C")
-    case "gray", "grey": return parseHexColor("#0C84CC")
-    default:
-        return parseHexColor(hex)
+
+    if let named = namedCardHex[trimmed.lowercased()] {
+        return named
     }
+
+    var h = trimmed
+    if h.hasPrefix("#") { h.removeFirst() }
+    guard h.count == 6, UInt64(h, radix: 16) != nil else { return nil }
+    return "#" + h.uppercased()
+}
+
+/// Resolves a named palette key or an arbitrary hex string to a `Color`.
+/// Returns `nil` only when input is nil/empty, and `.gray` when it is present but unparseable.
+///
+/// Named keys resolve through `namedCardHex` — the exact palette hex the user picked on the phone.
+/// They previously mapped to SwiftUI *system* colors, which made the same card render one color in
+/// the list and another in its own complication; Wear's `CardVisuals.kt` had already called that
+/// out as watchOS "approximat[ing] with system colours" (Story 16.41).
+///
+/// ⚠️ **The card row no longer calls this** — it resolves once into `resolvedAccentHex` and maps
+/// that through `parseHexColor`, so fill, hairline and initials share one value. This stays as the
+/// Color-returning convenience and is covered by `watch-ios/Tests/CardRowHelpersTests.swift`; it
+/// cannot drift from the row, because both go through `resolvedCardHex`. Retiring it is a
+/// judgement call left open rather than taken inside a bug fix.
+func mapColor(hex: String?) -> Color? {
+    guard let raw = hex?.trimmingCharacters(in: .whitespacesAndNewlines), !raw.isEmpty else {
+        return nil
+    }
+    guard let resolved = resolvedCardHex(raw) else {
+        return .gray
+    }
+    return parseHexColor(resolved)
 }
 
 // MARK: - Contrast Helpers

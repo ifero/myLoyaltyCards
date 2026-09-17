@@ -12,7 +12,7 @@ project_name: 'myLoyaltyCards'
 user_name: 'Ifero'
 date: '2025-01-03'
 totalEpics: 23
-totalStories: 204 # counted from `### Story` headings on 2026-09-15
+totalStories: 205 # counted from `### Story` headings on 2026-09-17
 aligned_with_tracker: '2026-08-02'
 authoritative_source: 'docs/sprint-artifacts/sprint-status.yaml'
 ---
@@ -3284,6 +3284,28 @@ It is **narrower still** than watchOS was. On a round display it additionally in
 - Each new test is shown failing against the unfixed code.
 
 **Notes:** ⛔ **Depends on Story 16.24** — without its `requestCameraPermission` memoisation the mount effect re-runs and the `setError(null)` at the top of each call wipes the error, so the screen oscillates with the loading string; two of the four tests fail on an un-memoised hook. Fixed with two guards (`permission === null && !error`, and `permission?.granted === false`) rather than by reordering the JSX, which would regress the denial case. **Out of scope and flagged:** `BarcodeScanner` has **no consumer** — its only reference is the barrel re-export at `features/cards/index.ts:33`, and that barrel has zero importers. Whether to delete the component or wire it up is left to an explicit decision.
+
+### Story 16.41: watchOS scores the raw palette key, so every card row draws the near-black hairline and the beam-yellow accent gets unreadable initials
+
+**As a** person with loyalty cards on an Apple Watch, **I want** each row to show the colour I actually picked and to draw the near-black hairline only when the accent really is near-black, **So that** the list is not a wall of identically-bordered rows and my yellow card's initials are legible.
+
+**Found 2026-09-17 while scoping Story 21.2a** (card accents), and deliberately kept out of it — a different mechanism, and it changes visible watch behaviour.
+
+**One bad default, reached by a mislabelled field.** `relativeLuminance(hex:)` guards `h.count == 6` and returns **`0.0`** for anything else — and `0.0` is the luminance of BLACK, so its invalid-input default is the strongest possible claim about the colour rather than a neutral one. `WatchCard.colorHex` is named for a hex and carries a palette KEY: `core/watch-connectivity.ts:252` sends `colorHex: card.color`, and `card.color` is a required `cardColorSchema` enum, so the field is ALWAYS a key. `test-fixtures/sync-message-v1.json:31` shows it — `"colorHex": "green"` on a `conad` card. Two call sites fed that raw key to a hex-only helper: `isNearBlack(hex:)` scored `0.0` and drew the hairline on **every** row, catalogue and custom alike; `shouldUseWhiteText(onBackgroundHex:)` scored `0.0` and painted **white initials on the yellow accent** — **1.52:1** on the Cardì `#FCCC0C`, where black is 13.78:1. Measured by executing the shipped Swift, all five keys returned `hairline=true` and `whiteInitials=true`. (On the pre-21.2a amber `#F59E0B` the same defect was 2.15:1 vs 9.78:1 — the palette migration made this half materially worse, not better.)
+
+**The root cause is that watchOS resolved the key differently from every other surface.** `WidgetCardPalette.swift` and `CardVisuals.kt` both map `blue` → `#1A73E8`; `ColorHelpers.swift` mapped it to SwiftUI's **system** blue — so the same card rendered one colour in the watch app and another in its own complication on the same wrist. `CardVisuals.kt` had already recorded this, calling its own table "more faithful than watchOS, which approximated with system colours."
+
+**Acceptance Criteria:**
+
+- `ColorHelpers.swift` gains ONE resolver, `resolvedCardHex(_:)`, turning a key or a hex into a normalized `"#RRGGBB"` or `nil` — mirroring `WidgetCardPalette.hex(for:)` and Wear's `resolveCardColor`.
+- `mapColor` resolves through it too, so no second key→hex answer can exist in the file. ⚠️ The visible colour change on all five accents comes from the ROW — `accentColor` now paints `resolvedAccentHex` — not from `mapColor`, which ends up with no production callers. This is the wider of two scopes, chosen by ifero on 2026-09-17.
+- The row derives one `resolvedAccentHex` and feeds fill, hairline and initials from it, mirroring Wear's `CardPresentation`. No call site scores a raw wire value.
+- Unresolvable input defaults the DECISION, never the string — `?? ""` is the same trap, since `""` scores `0.0`.
+- The near-black hairline still fires for an accent that genuinely is near-black.
+- The three native palette tables are pinned to the generated tokens in a test that is **not** path-filtered. ⚠️ `watchos-tests.yml` filters to `targets/watch/**`, `targets/watch-widget/**`, `catalogue/**`, `watch-ios/**` and `ios/**`, and two of the gate's inputs (`tokens/color.json`, `CardVisuals.kt`) sit outside all of them. Satisfied after the rebase by Story 21.2a's gate in `core/wear-sync-contract.test.ts` — same invariant, same non-path-filtered job — with its watchOS extractor repointed at this story's table.
+- Behaviour is EXECUTED, not described: the shipped declarations run under `xcrun swift`, and each new test is shown failing against the unfixed code.
+
+**Notes:** ⚠️ **Two claims in the original report were wrong, both making it look smaller.** Catalogue cards are NOT unaffected — `resolvedColorHex` only fell back to the brand-id hash when `colorHex` was nil, which never happens, so the brand-hash fallback is dead code and every row took the hairline. And at the time the defect was found, Story 21.2a had NOT landed, so the palette was still the shipped one and NONE of the five keys was near-black (lowest `grey`, `L=0.171`) — the hairline would have disappeared from every row, not four of five. 21.2a has since merged and moved `blue` to `#0C3C84` (`L=0.049758`, `0.00024` under the threshold — that figure from the report is correct), so the reported picture is now the real one. The cited Android test `deepBlueAccent_sitsJustInsideTheNearBlackThreshold` does not exist on any ref; the real assertions are in `CardVisualsTest.luminanceAndContrastExtremes`. **Sequenced AFTER Story 21.2a (`wave_1c`), decided by ifero on 2026-09-17 on a live collision, and REBASED once it merged** as `f4782ee` (#240) on its freeze branch. 21.2a had independently fixed the same system-colour root cause in a different shape and built its own parity gate, but ⚠️ it does NOT fix this defect — its `CardListView.swift` is untouched, so **the bug is live on `main` today**. The rebase kept this story's `namedCardHex` + `resolvedCardHex(_:)` structure carrying 21.2a's Cardì hexes, deleted this story's own parity gate in favour of 21.2a's, and repointed that gate's watchOS extractor from `mapColor`'s switch to the table (one line, reusing 21.2a's own `swiftHexMap`). ⚠️ The merge also changed what the fix LOOKS like: `blue` `#0C3C84` is genuinely near-black (`L=0.049758`), so blue now KEEPS its hairline and the other four lose theirs — the table the original report predicted — while on `main` all five still draw it for the original wrong reason, which is harder to spot now that one of them looks right. ⛔ The risk is release timing, not merge order: this must merge before the 21.7 gate cuts the rebrand release, because `runtimeVersion.policy` is `appVersion` and no OTA can repair it afterwards.
 
 ## Epic 17: Apple Wallet Pass Support
 
