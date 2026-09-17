@@ -1,6 +1,11 @@
-# Contributing to myLoyaltyCards
+# Contributing to Cardì
 
-Thank you for your interest in contributing! 🎉 myLoyaltyCards is a community-driven, open-source project with no monetization — it grows through code, brand-catalogue additions, bug reports, and ideas from people like you.
+Thank you for your interest in contributing! 🎉 Cardì is a community-driven, open-source project with no monetization — it grows through code, brand-catalogue additions, bug reports, and ideas from people like you.
+
+> **On the name.** The app is **Cardì**. The repository, the clone directory and the npm
+> package (`myloyaltycards`) keep the original `myLoyaltyCards` name deliberately — so the
+> `git clone` below, every badge and every existing link keep working. Expect to see both,
+> and do not "fix" one to match the other.
 
 This project is built **spec-first** using the [BMAD-METHOD](https://github.com/bmad-code-org/BMAD-METHOD) **Spec-Driven Development (SDD)** methodology. Contributing here is a little different from a typical "fork and PR" project: **work follows a spec, and every code change traces back to a documented story.** This guide explains exactly how to do that.
 

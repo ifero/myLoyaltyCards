@@ -8,7 +8,7 @@ body:
       value: |
         Thanks for sharing an idea! 💡
 
-        ℹ️ **How features work here:** myLoyaltyCards is spec-first (BMAD SDD). New capabilities enter through **planning** (PRD / epic) before a story is created and implemented — so this request is the start of a conversation, **not** a direct PR. See the [Contributing Guide](https://github.com/ifero/myLoyaltyCards/blob/main/CONTRIBUTING.md#the-bmad-sdd-methodology).
+        ℹ️ **How features work here:** Cardì is spec-first (BMAD SDD). New capabilities enter through **planning** (PRD / epic) before a story is created and implemented — so this request is the start of a conversation, **not** a direct PR. See the [Contributing Guide](https://github.com/ifero/myLoyaltyCards/blob/main/CONTRIBUTING.md#the-bmad-sdd-methodology).
 
   - type: checkboxes
     id: preflight

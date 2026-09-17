@@ -1,5 +1,5 @@
 <!--
-  Thanks for contributing to myLoyaltyCards! 🎉
+  Thanks for contributing to Cardì! 🎉
   This project is spec-first (BMAD SDD): every code change traces back to a story.
   Please read CONTRIBUTING.md before opening this PR.
 

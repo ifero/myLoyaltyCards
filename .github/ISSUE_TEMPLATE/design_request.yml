@@ -8,7 +8,7 @@ body:
       value: |
         Thanks for helping shape the design! 🎨
 
-        ℹ️ **How design works here:** myLoyaltyCards is **design-in-code** — the repository is the canonical source of truth for design and changes land by PR (no Figma seat needed; Figma is ideation-only). It's also spec-first: **token/visual polish** with no behavior change can take the fast-path, but a **new component, screen, or behavior** needs a `ready-for-dev` story first. See the [Design Contribution Guide](https://github.com/ifero/myLoyaltyCards/blob/main/docs/design/CONTRIBUTING-DESIGN.md).
+        ℹ️ **How design works here:** Cardì is **design-in-code** — the repository is the canonical source of truth for design and changes land by PR (no Figma seat needed; Figma is ideation-only). It's also spec-first: **token/visual polish** with no behavior change can take the fast-path, but a **new component, screen, or behavior** needs a `ready-for-dev` story first. See the [Design Contribution Guide](https://github.com/ifero/myLoyaltyCards/blob/main/docs/design/CONTRIBUTING-DESIGN.md).
 
   - type: checkboxes
     id: preflight
