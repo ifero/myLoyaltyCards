@@ -7,11 +7,11 @@
 export const IDENTITY_COLORS = { ink: '#181824', beam: '#FCCC0C', cream: '#F0F0E8' } as const;
 
 export const CARD_COLORS = {
-  blue: '#1A73E8',
-  red: '#E2231A',
-  green: '#16A34A',
-  orange: '#F59E0B',
-  grey: '#64748B'
+  blue: '#0C3C84',
+  red: '#E42424',
+  green: '#0C843C',
+  orange: '#FCCC0C',
+  grey: '#0C84CC'
 } as const;
 
 export const NEUTRAL_COLORS = {

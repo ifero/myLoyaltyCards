@@ -1,6 +1,9 @@
 import { readFileSync } from 'fs';
 import { join } from 'path';
 
+import { CARD_COLORS } from '@/shared/theme/tokens.generated';
+
+import { CARD_COLOR_KEYS, DEFAULT_CARD_COLOR, cardColorSchema } from './schemas/card';
 import { parseWatchUsageEvent, toBaseWatchCardPayload } from './watch-connectivity';
 import {
   WEAR_MESSAGE_PATH,
@@ -42,6 +45,14 @@ const PHONE_WEAR_XML = join(
 const MANIFEST = join(REPO_ROOT, 'modules/wear-data-layer/android/src/main/AndroidManifest.xml');
 const FIXTURE = join(REPO_ROOT, 'test-fixtures/sync-message-v1.json');
 
+/** The three places a card colour KEY is resolved on a watch (Story 21.2a, AC7). */
+const WEAR_CARD_VISUALS = join(
+  REPO_ROOT,
+  'watch-android/app/src/main/kotlin/com/iferoporefi/myloyaltycards/wear/presentation/CardVisuals.kt'
+);
+const WATCH_COLOR_HELPERS = join(REPO_ROOT, 'targets/watch/ColorHelpers.swift');
+const WIDGET_CARD_PALETTE = join(REPO_ROOT, 'targets/watch-widget/WidgetCardPalette.swift');
+
 const read = (path: string): string => readFileSync(path, 'utf8');
 
 /** Extract `const val NAME = "value"` from Kotlin source. */
@@ -54,6 +65,89 @@ function kotlinStringConst(source: string, name: string): string | null {
 function kotlinIntConst(source: string, name: string): number | null {
   const match = new RegExp(`const val ${name}\\s*=\\s*(-?\\d+)`).exec(source);
   return match ? Number(match[1]) : null;
+}
+
+/**
+ * The text between `open(` and its MATCHING `)`, found by counting parentheses.
+ *
+ * A regex cannot do this: `[\\s\\S]*?\\)` stops at the first inner `Rgb(...)`, and every
+ * cheaper anchor encodes a formatting habit rather than the syntax. Terminating at
+ * `,\n` needs the last entry to carry a trailing comma (so reordering the map breaks
+ * it); terminating at a `)` in column 0 needs the closing delimiter left un-indented.
+ * Both were tried; both moved the fragility rather than removing it. Counting is
+ * indifferent to indentation, line breaks, entry order and trailing commas alike.
+ */
+function balancedParenBody(source: string, open: string): string {
+  const start = source.indexOf(open);
+  if (start === -1) {
+    return '';
+  }
+
+  let depth = 0;
+  for (let i = start + open.length - 1; i < source.length; i += 1) {
+    if (source[i] === '(') {
+      depth += 1;
+    } else if (source[i] === ')') {
+      depth -= 1;
+      if (depth === 0) {
+        return source.slice(start + open.length, i);
+      }
+    }
+  }
+
+  return '';
+}
+
+/** `"key" to Rgb(0x.., 0x.., 0x..)` → `{ key: '#RRGGBB' }`, for the Wear palette map. */
+function kotlinRgbMap(source: string, name: string): Record<string, string> {
+  const declaration = new RegExp(`val ${name}[^=]*=\\s*mapOf\\(`).exec(source);
+  const block = declaration ? balancedParenBody(source.slice(declaration.index), 'mapOf(') : '';
+  const entries: Record<string, string> = {};
+
+  for (const [, key, r, g, b] of block.matchAll(
+    /"([^"]+)"\s*to\s*Rgb\(\s*0x([0-9A-Fa-f]{2})\s*,\s*0x([0-9A-Fa-f]{2})\s*,\s*0x([0-9A-Fa-f]{2})\s*\)/g
+  )) {
+    if (key && r && g && b) {
+      entries[key] = `#${r}${g}${b}`.toUpperCase();
+    }
+  }
+
+  return entries;
+}
+
+/** `"key": "#RRGGBB"` → `{ key: '#RRGGBB' }`, for the Swift widget palette literal. */
+function swiftHexMap(source: string, name: string): Record<string, string> {
+  const block = new RegExp(`let ${name}[^=]*=\\s*\\[([\\s\\S]*?)\\]`).exec(source);
+  const entries: Record<string, string> = {};
+
+  for (const [, key, hex] of (block?.[1] ?? '').matchAll(/"([^"]+)"\s*:\s*"(#[0-9A-Fa-f]{6})"/g)) {
+    if (key && hex) {
+      entries[key] = hex.toUpperCase();
+    }
+  }
+
+  return entries;
+}
+
+/** `case "key": return parseHexColor("#RRGGBB")` → `{ key: '#RRGGBB' }`, for `mapColor`. */
+function swiftColorSwitch(source: string, functionName: string): Record<string, string> {
+  const block = new RegExp(`func ${functionName}\\([\\s\\S]*?\\n}`).exec(source);
+  const entries: Record<string, string> = {};
+
+  for (const [, keys, hex] of (block?.[0] ?? '').matchAll(
+    /case\s+((?:"[^"]+"\s*,?\s*)+):\s*return parseHexColor\("(#[0-9A-Fa-f]{6})"\)/g
+  )) {
+    if (!keys || !hex) {
+      continue;
+    }
+    for (const [, key] of keys.matchAll(/"([^"]+)"/g)) {
+      if (key) {
+        entries[key] = hex.toUpperCase();
+      }
+    }
+  }
+
+  return entries;
 }
 
 describe('phone ↔ Wear OS wire contract', () => {
@@ -122,6 +216,132 @@ describe('phone ↔ Wear OS wire contract', () => {
       expect(manifest).toContain('com.google.android.gms.wearable.MESSAGE_RECEIVED');
       // Required or the system cannot bind the service — see Android's Data Layer guide.
       expect(manifest).toContain('android:exported="true"');
+    });
+  });
+
+  /**
+   * The card colour KEY SET, pinned across the phone and all three watch resolvers
+   * (Story 21.2a, AC7) — the first test this contract has ever had.
+   *
+   * `core/watch-connectivity.ts` sends `colorHex: card.color`: the raw palette key,
+   * despite the field's name. `core/wear-connectivity.ts` re-uses the same producer,
+   * so ONE function feeds TWO transports and three independent resolvers:
+   *
+   *   - `targets/watch/ColorHelpers.swift`        `mapColor` — the live watchOS card row
+   *   - `targets/watch-widget/WidgetCardPalette.swift`  the complication's palette
+   *   - `watch-android/…/presentation/CardVisuals.kt`   the Wear OS avatar
+   *
+   * Nothing linked them. A key added on the phone and missed on a watch renders those
+   * cards with the fallback accent, silently — and the Wear APK is versioned and
+   * released independently of the phone (app/build.gradle.kts § versionCode bands),
+   * so the two can genuinely be out of step. `runtimeVersion.policy` is `appVersion`,
+   * so no OTA update can repair a mistake here.
+   *
+   * ⚠️ Deliberately asserted HERE and not by growing `test-fixtures/sync-message-v1.json`:
+   * `SyncFixtureContractTest.kt` pins the fixture at two cards twice over (`:90`
+   * `result.cards.size`, `:98` the size of the map read back from the DB), and
+   * `wear-os-build.yml` is path-filtered to `watch-android/**` while that fixture sits
+   * at the repo root — so
+   * a PR that grew the fixture would break Kotlin while running no Kotlin. This file runs
+   * in `ci-quality-gates.yml`, which is not path-filtered.
+   */
+  describe('the card colour key set (Story 21.2a, AC7)', () => {
+    const KEYS = [...CARD_COLOR_KEYS];
+
+    test('the frozen key set is exactly these five', () => {
+      // ⛔ If this fails you are renaming a persisted, wire-borne identifier. Read the
+      // freeze rationale on CARD_COLOR_KEYS in core/schemas/card.ts before changing it.
+      expect(KEYS).toEqual(['blue', 'red', 'green', 'orange', 'grey']);
+    });
+
+    test('the schema that validates every read accepts exactly the key set', () => {
+      // `.options` reads back the enum that actually guards `card.color`, rather than a
+      // second copy of the list that could agree with itself while the schema differed.
+      expect([...cardColorSchema.options]).toEqual(KEYS);
+      expect(cardColorSchema.safeParse('purple').success).toBe(false);
+    });
+
+    test('the fallback accent is one of the keys', () => {
+      expect(KEYS).toContain(DEFAULT_CARD_COLOR);
+    });
+
+    test('the theme palette is keyed by exactly the wire keys', () => {
+      expect(Object.keys(CARD_COLORS).sort()).toEqual([...KEYS].sort());
+    });
+
+    test("shared/theme/colors.ts's hand-written duplicate union matches the canonical keys", () => {
+      // That file keeps its own copy of the union to stay free of a zod dependency.
+      const union = /type CardColor = ([^;]+);/.exec(
+        read(join(REPO_ROOT, 'shared/theme/colors.ts'))
+      )?.[1];
+      const members = [...(union ?? '').matchAll(/'([^']+)'/g)].map(([, member]) => member);
+
+      expect(members.sort()).toEqual([...KEYS].sort());
+    });
+
+    test('shared/theme/colors.ts falls back to the same key the schema module names', () => {
+      const key = /const DEFAULT_CARD_COLOR_KEY: CardColor = '([^']+)';/.exec(
+        read(join(REPO_ROOT, 'shared/theme/colors.ts'))
+      )?.[1];
+
+      expect(key).toBe(DEFAULT_CARD_COLOR);
+    });
+
+    describe("every watch resolver covers every key, at the phone's own hexes", () => {
+      test.each([
+        [
+          'Wear OS CardVisuals.kt',
+          () => kotlinRgbMap(read(WEAR_CARD_VISUALS), 'NAMED_CARD_COLORS')
+        ],
+        [
+          'watchOS ColorHelpers.swift',
+          () => swiftColorSwitch(read(WATCH_COLOR_HELPERS), 'mapColor')
+        ],
+        [
+          'watchOS WidgetCardPalette.swift',
+          () => swiftHexMap(read(WIDGET_CARD_PALETTE), 'namedHex')
+        ]
+      ])('%s resolves all five keys to the token hexes', (_label, extract) => {
+        const resolved = extract();
+
+        // A refactor that moved the literal out of the extractor's reach would already
+        // fail the per-key loop below (every lookup would be `undefined`). This asserts
+        // it first so the failure names the real cause — "the extractor found nothing"
+        // — instead of reporting five separate mismatches against `undefined`.
+        expect(Object.keys(resolved).length).toBeGreaterThanOrEqual(KEYS.length);
+
+        for (const key of KEYS) {
+          expect(resolved[key]).toBe(CARD_COLORS[key].toUpperCase());
+        }
+      });
+    });
+
+    test('the Wear fallback constant is the same accent the phone falls back to', () => {
+      const rgb =
+        /val DEFAULT_CARD_ACCENT: Rgb = Rgb\(0x([0-9A-Fa-f]{2}), 0x([0-9A-Fa-f]{2}), 0x([0-9A-Fa-f]{2})\)/.exec(
+          read(WEAR_CARD_VISUALS)
+        );
+
+      expect(rgb).not.toBeNull();
+      expect(`#${rgb![1]}${rgb![2]}${rgb![3]}`.toUpperCase()).toBe(
+        CARD_COLORS[DEFAULT_CARD_COLOR].toUpperCase()
+      );
+    });
+
+    /**
+     * The colour a card carries in the canonical fixture must be a key the schema
+     * accepts, or the fixture would document a message the phone itself rejects.
+     */
+    test('every colour in the canonical fixture is a valid key', () => {
+      const fixture = JSON.parse(read(FIXTURE)) as {
+        cardsSnapshot: { payload: { colorHex?: string }[] };
+      };
+
+      expect(fixture.cardsSnapshot.payload.length).toBeGreaterThan(0);
+
+      for (const card of fixture.cardsSnapshot.payload) {
+        expect(cardColorSchema.safeParse(card.colorHex).success).toBe(true);
+      }
     });
   });
 

@@ -307,18 +307,25 @@ describe('CardDetailScreen', () => {
 
       render(<CardDetailScreen />);
 
-      await waitFor(() => expect(headerBackground()).toBe('#E2231A'));
+      // The Cardì red (Story 21.2a repainted the five accents).
+      await waitFor(() => expect(headerBackground()).toBe('#E42424'));
       expect(headerBackground()).not.toBe('#181824');
     });
 
-    it('falls back to grey rather than transparent for an unmapped colour (AC7)', async () => {
+    it('falls back to the default accent rather than transparent for an unmapped colour (AC7)', async () => {
       // `mockCard.color` is a raw hex, not one of the five keys, so the `??`
       // guard is the only thing between this card and an unfilled header.
+      //
+      // The fallback is no longer grey: Story 21.2a repainted the `grey` KEY to
+      // the azure #0C84CC, because the Cardì accents contain no neutral. The key
+      // is frozen (it is persisted and crosses the wire to both watches), so the
+      // call site names DEFAULT_CARD_COLOR_HEX rather than spelling out a key
+      // that would read as a lie.
       (getCardById as jest.Mock).mockResolvedValue(mockCard);
 
       render(<CardDetailScreen />);
 
-      await waitFor(() => expect(headerBackground()).toBe('#64748B'));
+      await waitFor(() => expect(headerBackground()).toBe('#0C84CC'));
     });
 
     it('draws a filled beam star on a dark field (AC9)', async () => {

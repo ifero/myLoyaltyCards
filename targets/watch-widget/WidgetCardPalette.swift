@@ -7,15 +7,24 @@ import SwiftUI
 /// as the same color as the in-app card rows.
 enum WidgetCardPalette {
   /// Hex for each palette key, matching the app's canonical `CARD_COLORS`
-  /// (shared/theme/colors.ts) so the complication background is exactly the
-  /// same color the user sees on the card inside the app.
+  /// (tokens/color.json -> shared/theme/tokens.generated.ts) so the complication
+  /// background is exactly the same color the user sees on the card inside the app.
+  ///
+  /// The five KEYS are a frozen wire contract, not color names (Story 21.2a): the
+  /// phone sends `colorHex: card.color` — the raw key — so a key that is missing
+  /// here renders the card with a neutral fallback instead of its color. Two are
+  /// deliberately misnamed: `orange` is the beam yellow and `grey` is the azure.
+  /// `gray` is an extra spelling the phone never sends, kept as a tolerant alias.
+  ///
+  /// `core/wear-sync-contract.test.ts` reads this literal and fails if it drifts
+  /// from the tokens or drops a key, and it runs in the un-path-filtered gate.
   private static let namedHex: [String: String] = [
-    "blue": "#1A73E8",
-    "red": "#E2231A",
-    "green": "#16A34A",
-    "orange": "#F59E0B",
-    "gray": "#64748B",
-    "grey": "#64748B",
+    "blue": "#0C3C84",
+    "red": "#E42424",
+    "green": "#0C843C",
+    "orange": "#FCCC0C",
+    "gray": "#0C84CC",
+    "grey": "#0C84CC",
   ]
 
   /// The normalized "#RRGGBB" hex for a raw color value, or nil when unusable.
@@ -42,8 +51,8 @@ enum WidgetCardPalette {
 
   /// True when white content is more legible than black on the resolved color.
   /// Threshold matches the watch app's `shouldUseWhiteText` (ColorHelpers.swift)
-  /// so e.g. orange picks black text on both surfaces. Defaults to white for
-  /// unknown colors (the complication falls back to dark neutrals).
+  /// so e.g. the beam yellow picks black text on both surfaces. Defaults to white
+  /// for unknown colors (the complication falls back to dark neutrals).
   static func prefersWhiteForeground(for raw: String?) -> Bool {
     guard let hex = hex(for: raw) else { return true }
     return relativeLuminance(hex: hex) < 0.4

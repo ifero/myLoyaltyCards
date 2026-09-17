@@ -13,6 +13,7 @@ import Animated from 'react-native-reanimated';
 import { LoyaltyCard } from '@/core/schemas';
 
 import { useTheme } from '@/shared/theme';
+import { CARD_COLORS } from '@/shared/theme/colors';
 
 import {
   CardTile,
@@ -48,12 +49,17 @@ jest.mock('@/shared/theme', () => ({
 // than inside an assertion — hence the real values, not stand-ins.
 jest.mock('@/shared/theme/colors', () => ({
   CARD_COLORS: {
-    blue: '#1A73E8',
-    red: '#E2231A',
-    green: '#16A34A',
-    orange: '#F59E0B',
-    grey: '#64748B'
+    blue: '#0C3C84',
+    red: '#E42424',
+    green: '#0C843C',
+    orange: '#FCCC0C',
+    grey: '#0C84CC'
   },
+  // ⚠️ Must be listed, and must agree with `grey` above. A jest module mock replaces
+  // the module WHOLESALE, so an export left out is `undefined` at the call site — and
+  // for a fallback that means the guarded path CRASHES in getLuminance rather than
+  // falling back. Adding Story 21.2a's fallback tests is what surfaced this.
+  DEFAULT_CARD_COLOR_HEX: '#0C84CC',
   IDENTITY_COLORS: {
     ink: '#181824',
     beam: '#FCCC0C',
@@ -135,6 +141,27 @@ describe('CardTile', () => {
       const { toJSON } = render(<CardTile card={mockCard} />);
       expect(toJSON()).toBeTruthy();
     });
+
+    /**
+     * Story 21.2a, AC4 — the `??` guard on this file's fallback site.
+     *
+     * Every other test here passes the valid key `'blue'`, so the guard was never
+     * exercised. AC4's warning is that losing it renders the tile TRANSPARENT rather
+     * than recoloured, and `card.color` is not guaranteed valid at runtime:
+     * `card-repository.ts` reads `row.color as CardColor` with no validation, so a
+     * legacy or corrupted row reaches this lookup unchecked.
+     */
+    it('paints the default accent for a custom card whose colour is not a palette key (AC4)', () => {
+      const { UNSAFE_getByType } = render(
+        <CardTile card={{ ...mockCard, color: '#DEADBE' as never }} />
+      );
+      const style = StyleSheet.flatten(UNSAFE_getByType(Animated.View).props.style) as {
+        backgroundColor?: string;
+      };
+
+      expect(style.backgroundColor).toBe('#0C84CC');
+      expect(style.backgroundColor).not.toBeUndefined();
+    });
   });
 
   describe('Catalogue card rendering (with brandId)', () => {
@@ -153,6 +180,27 @@ describe('CardTile', () => {
     it('renders SVG logo for catalogue cards with brand logo', () => {
       render(<CardTile card={brandCard} />);
       expect(screen.getByTestId('brand-logo-svg')).toBeTruthy();
+    });
+
+    /**
+     * Story 21.2a, AC8 — the card accents are CUSTOM-CARD ONLY.
+     *
+     * A branded tile takes `brand.color` straight from the catalogue with no token
+     * interposed, so repainting CARD_COLORS must leave all 57 brands untouched. The
+     * card below deliberately carries `color: 'blue'` as well as a brandId: the brand
+     * hex has to win, and the accent must not tint, wash or override it.
+     *
+     * Pinned as a test rather than as a before/after screenshot because it keeps
+     * holding after this story — the next palette change gets the same guarantee.
+     */
+    it('paints the tile with the brand hex and never with a card accent (AC8)', () => {
+      const { UNSAFE_getByType } = render(<CardTile card={{ ...brandCard, color: 'blue' }} />);
+      const style = StyleSheet.flatten(UNSAFE_getByType(Animated.View).props.style) as {
+        backgroundColor?: string;
+      };
+
+      expect(style.backgroundColor).toBe('#DB1F26');
+      expect(Object.values(CARD_COLORS)).not.toContain(style.backgroundColor);
     });
   });
 

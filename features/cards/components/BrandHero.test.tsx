@@ -3,7 +3,7 @@
  * Story 13.3: Restyle Card Detail Screen (AC1)
  */
 
-import { render } from '@testing-library/react-native';
+import { render, screen } from '@testing-library/react-native';
 import React from 'react';
 
 import { LoyaltyCard } from '@/core/schemas';
@@ -17,12 +17,17 @@ jest.mock('@/shared/theme', () => ({
 // Mock theme
 jest.mock('@/shared/theme/colors', () => ({
   CARD_COLORS: {
-    blue: '#1A73E8',
-    red: '#E2231A',
-    green: '#16A34A',
-    orange: '#F59E0B',
-    grey: '#64748B'
-  }
+    blue: '#0C3C84',
+    red: '#E42424',
+    green: '#0C843C',
+    orange: '#FCCC0C',
+    grey: '#0C84CC'
+  },
+  // ⚠️ Must be listed, and must agree with `grey` above. A jest module mock replaces
+  // the module WHOLESALE, so an export left out is `undefined` at the call site — and
+  // for a fallback that means the guarded path CRASHES in getLuminance rather than
+  // falling back. Adding Story 21.2a's fallback tests is what surfaced this.
+  DEFAULT_CARD_COLOR_HEX: '#0C84CC'
 }));
 
 // Mock useBrandLogo
@@ -110,7 +115,51 @@ describe('BrandHero', () => {
       const flatStyle = Array.isArray(container.props.style)
         ? Object.assign({}, ...container.props.style)
         : container.props.style;
-      expect(flatStyle.backgroundColor).toBe('#1A73E8');
+      // The Cardì deep blue (Story 21.2a). The brand-colour assertions below use
+      // `#E2231A` — Coop's catalogue hex, which the retired card red happened to
+      // share. They are brand data and do not move with the palette. (The mock
+      // labels that brand `conad`, which is wrong — Conad is `#DA291C` — but the
+      // mock is self-consistent, so it is left alone here.)
+      expect(flatStyle.backgroundColor).toBe('#0C3C84');
+    });
+  });
+
+  /**
+   * Story 21.2a, AC4 — the `??` guard at both of this file's fallback sites.
+   *
+   * AC4's own warning is that removing the guard renders the field TRANSPARENT rather
+   * than recoloured, and neither site had a test. `card.color` is not guaranteed to be
+   * one of the five keys at runtime: `card-repository.ts` reads `row.color as CardColor`
+   * with no validation, so a legacy or corrupted row arrives here unchecked.
+   */
+  describe('unresolvable colours fall back to the default accent (AC4)', () => {
+    const flatBackground = (testID: string) => {
+      const container = screen.getByTestId(testID);
+      const style = Array.isArray(container.props.style)
+        ? Object.assign({}, ...container.props.style)
+        : container.props.style;
+      return style.backgroundColor as string | undefined;
+    };
+
+    it('paints the default accent for a custom card whose colour is not a palette key', () => {
+      render(<BrandHero card={{ ...mockCustomCard, color: '#DEADBE' as never }} testID="hero" />);
+
+      expect(flatBackground('hero')).toBe('#0C84CC');
+      expect(flatBackground('hero')).not.toBeUndefined();
+    });
+
+    it('paints the default accent for a catalogue card whose brand has no colour', () => {
+      mockUseBrandLogo.mockReturnValue({
+        id: 'conad',
+        name: 'Conad',
+        aliases: [],
+        logo: 'conad',
+        color: undefined as unknown as string
+      });
+
+      render(<BrandHero card={mockCatalogueCard} testID="hero" />);
+
+      expect(flatBackground('hero')).toBe('#0C84CC');
     });
   });
 

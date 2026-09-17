@@ -582,11 +582,20 @@ export const en = {
       az: 'A-Z'
     },
     colors: {
-      blue: 'Blue',
+      // Story 21.2a froze the five CARD_COLOR_KEYS as wire identifiers and
+      // repainted only their values, so two keys no longer name their colour:
+      // `orange` renders the beam yellow #FCCC0C (orange is banned from the
+      // design system) and `grey` renders the azure #0C84CC (there is no
+      // neutral among the five accents). These labels describe what the swatch
+      // actually IS — they are all a screen-reader user gets, and announcing a
+      // yellow swatch as "Orange" would be simply wrong. `blue` is qualified
+      // because the picker now shows two blues side by side and "Blue" alone
+      // would not tell them apart.
+      blue: 'Deep blue',
       red: 'Red',
       green: 'Green',
-      orange: 'Orange',
-      grey: 'Grey',
+      orange: 'Yellow',
+      grey: 'Azure',
       accessibilityLabel: '{{color}} color{{selected}}',
       selectedSuffix: ', selected'
     },

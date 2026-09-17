@@ -8,12 +8,12 @@
   },
   "CARD_COLORS": {
     "$type": "color",
-    "$description": "5-color virtual-logo palette for cards without an official logo. Story 21.2 deliberately left these values untouched: the Cardi accents, the CardColor union, mapHexToCardColor and the phone->watch wire contract move together in Story 21.2a.",
-    "blue": { "$value": "#1A73E8" },
-    "red": { "$value": "#E2231A" },
-    "green": { "$value": "#16A34A" },
-    "orange": { "$value": "#F59E0B" },
-    "grey": { "$value": "#64748B" }
+    "$description": "5-color virtual-logo palette for cards without an official logo -- the Cardi card accents (Story 21.2a). THE FIVE KEYS ARE A FROZEN WIRE AND STORAGE CONTRACT, NOT COLOUR NAMES. `card.color` is persisted in SQLite and Supabase, written into user-held JSON backups that no migration can reach, and sent verbatim to BOTH watches as `colorHex` (core/watch-connectivity.ts). Story 21.2a weighed renaming the keys and chose to freeze them: the Wear APK is an independently versioned artefact (watch-android/app/build.gradle.kts versionCode bands), so a rename greys every card on a watch that has not updated yet, and runtimeVersion.policy is appVersion so no OTA can correct it. TWO KEYS ARE THEREFORE DELIBERATELY MISNAMED: `orange` is the beam yellow #FCCC0C (orange is BANNED from this system) and `grey` is the azure #0C84CC (there is no neutral among the five). `grey` also stays the resolution fallback -- see DEFAULT_CARD_COLOR in core/schemas/card.ts. Change a VALUE here freely; NEVER add, remove or rename a key. core/wear-sync-contract.test.ts pins both the key set and these hexes against all three watch colour maps.",
+    "blue": { "$value": "#0C3C84" },
+    "red": { "$value": "#E42424" },
+    "green": { "$value": "#0C843C" },
+    "orange": { "$value": "#FCCC0C" },
+    "grey": { "$value": "#0C84CC" }
   },
   "NEUTRAL_COLORS": {
     "$type": "color",

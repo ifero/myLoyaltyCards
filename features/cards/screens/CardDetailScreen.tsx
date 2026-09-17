@@ -21,7 +21,7 @@ import { LoyaltyCard } from '@/core/schemas';
 import { logger } from '@/core/utils/logger';
 
 import { useTheme } from '@/shared/theme';
-import { CARD_COLORS } from '@/shared/theme/colors';
+import { CARD_COLORS, DEFAULT_CARD_COLOR_HEX } from '@/shared/theme/colors';
 import { getContrastForeground, getFavouriteStarColor } from '@/shared/theme/luminance';
 import { SPACING } from '@/shared/theme/spacing';
 import { showToast } from '@/shared/toast';
@@ -201,7 +201,7 @@ const CardDetailsScreen = () => {
   // Not byte-identical: `BrandHero` also guards `brand?.color` itself, which is
   // unreachable here because the brand descriptor's `color` is non-optional.
   // Story 21.2a re-points all five sites at its named default.
-  const headerBg = brand ? brand.color : (CARD_COLORS[card.color] ?? CARD_COLORS.grey);
+  const headerBg = brand ? brand.color : (CARD_COLORS[card.color] ?? DEFAULT_CARD_COLOR_HEX);
   const headerTextColor = getContrastForeground(headerBg);
 
   // Success state - render card details

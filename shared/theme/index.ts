@@ -6,6 +6,7 @@
 export { SPACING, LAYOUT, TOUCH_TARGET } from './spacing';
 export {
   CARD_COLORS,
+  DEFAULT_CARD_COLOR_HEX,
   NEUTRAL_COLORS,
   // OURS (Cardi ink/beam/cream). BRAND_COLORS below is the 57 RETAILER brands.
   IDENTITY_COLORS,

@@ -60,11 +60,11 @@ jest.mock('@/shared/theme', () => ({
     isDark: false
   }),
   CARD_COLORS: {
-    blue: '#1A73E8',
-    red: '#E2231A',
-    green: '#16A34A',
-    orange: '#F59E0B',
-    grey: '#64748B'
+    blue: '#0C3C84',
+    red: '#E42424',
+    green: '#0C843C',
+    orange: '#FCCC0C',
+    grey: '#0C84CC'
   }
 }));
 
@@ -508,7 +508,9 @@ describe('CardDetails', () => {
   describe('Color Display — custom cards only', () => {
     it('displays color name for custom cards', () => {
       const { getByText } = render(<CardDetails card={mockCustomCard} />);
-      expect(getByText('Blue')).toBeTruthy();
+      // The label describes the SWATCH, not the frozen `blue` key: the palette now
+      // holds two blues, so "Deep blue" is what tells them apart (Story 21.2a, AC5).
+      expect(getByText('Deep blue')).toBeTruthy();
     });
 
     it('hides color row for catalogue cards', () => {

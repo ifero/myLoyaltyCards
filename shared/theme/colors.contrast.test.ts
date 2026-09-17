@@ -1,6 +1,9 @@
-import { DARK_THEME, IDENTITY_COLORS, LIGHT_THEME, NEUTRAL_COLORS } from './colors';
+import { CARD_COLORS, DARK_THEME, IDENTITY_COLORS, LIGHT_THEME, NEUTRAL_COLORS } from './colors';
+import { getContrastForeground, getFavouriteStarColor } from './luminance';
 
 const AA_TEXT = 4.5;
+/** WCAG 1.4.11 — icons, glyphs and other non-text content. */
+const AA_NON_TEXT = 3;
 
 const hexToRgb = (hexColor: string) => {
   const cleaned = hexColor.replace('#', '');
@@ -113,6 +116,118 @@ describe('Theme contrast compliance', () => {
  * palette edit ever makes white-on-beam pass, beam has been lightened or
  * muddied and that test SHOULD go red.
  */
+/**
+ * The five card accents, measured — Story 21.2a.
+ *
+ * This block exists because it DIDN'T, and that is how two accessibility
+ * regressions reached QA review. Story 21.2a repainted `CARD_COLORS` and checked
+ * that no foreground DECISION flipped (every accent keeps its light/dark class, so
+ * `getContrastForeground` returns the same side it always did). That was true, and
+ * it was not enough: the decision staying put says nothing about whether the new
+ * hex still clears the bar the old one did. Azure did not.
+ *
+ * Every number below was computed from the committed hexes — no device, no
+ * screenshot, no judgement call. It could have been written before the palette
+ * shipped, which is the whole point.
+ */
+describe('Card accent contrast — the five custom-card colours (Story 21.2a)', () => {
+  const ACCENT_FOREGROUND: Record<keyof typeof CARD_COLORS, string> = {
+    blue: NEUTRAL_COLORS.white,
+    red: NEUTRAL_COLORS.white,
+    green: NEUTRAL_COLORS.white,
+    orange: IDENTITY_COLORS.ink,
+    grey: NEUTRAL_COLORS.white
+  };
+
+  it('getContrastForeground picks the side this block measures', () => {
+    // Guards the table above against the helper's threshold moving underneath it.
+    for (const [key, hex] of Object.entries(CARD_COLORS)) {
+      expect(getContrastForeground(hex)).toBe(ACCENT_FOREGROUND[key as keyof typeof CARD_COLORS]);
+    }
+  });
+
+  it('four of the five accents carry AA body text', () => {
+    for (const key of ['blue', 'red', 'green', 'orange'] as const) {
+      expect(contrastRatio(ACCENT_FOREGROUND[key], CARD_COLORS[key])).toBeGreaterThanOrEqual(
+        AA_TEXT
+      );
+    }
+  });
+
+  /**
+   * ⛔ ESCALATED, NOT ACCEPTED. The azure `#0C84CC` is one of the five accents the
+   * design system fixes, and NO foreground clears AA on it — white is 4.05:1 and ink,
+   * the best available, is 4.34:1 against a 4.5:1 floor. It is not a foreground bug
+   * and cannot be fixed by choosing differently; the colour sits in the dead zone
+   * where neither black nor white reaches AA.
+   *
+   * It reaches a user through `CardDetailScreen`'s condensed header, which draws
+   * `card.name` at 17px weight 600 — under both WCAG large-text thresholds (24px
+   * regular / 18.66px bold), so the 4.5:1 floor applies rather than 3:1. And the key
+   * is `grey`, which is also `DEFAULT_CARD_COLOR`, so every card whose colour cannot
+   * be resolved lands here too.
+   *
+   * ⚠️ The retired `#64748B` PASSED at 4.76:1, so this is a regression, and it ships
+   * in a release with no OTA remedy. Pinned as a measurement rather than a passing
+   * assertion so the number is visible in CI and cannot be lost again. Resolving it
+   * needs a design decision — accept the exception, take a darker azure, or restrict
+   * the accent to large text.
+   */
+  it('AZURE carries NO AA-compliant foreground — a design-system constraint, pinned', () => {
+    expect(contrastRatio(NEUTRAL_COLORS.white, CARD_COLORS.grey)).toBeCloseTo(4.05, 2);
+    expect(contrastRatio(IDENTITY_COLORS.ink, CARD_COLORS.grey)).toBeCloseTo(4.34, 2);
+
+    const best = Math.max(
+      contrastRatio(NEUTRAL_COLORS.white, CARD_COLORS.grey),
+      contrastRatio(IDENTITY_COLORS.ink, CARD_COLORS.grey)
+    );
+    expect(best).toBeLessThan(AA_TEXT);
+
+    // The colour it replaced did clear the bar. This is the regression, stated.
+    expect(contrastRatio(NEUTRAL_COLORS.white, '#64748B')).toBeGreaterThanOrEqual(AA_TEXT);
+  });
+
+  it('every accent clears the 3:1 non-text floor, so icons and glyphs on it are legible', () => {
+    for (const [key, hex] of Object.entries(CARD_COLORS)) {
+      expect(
+        contrastRatio(ACCENT_FOREGROUND[key as keyof typeof CARD_COLORS], hex)
+      ).toBeGreaterThanOrEqual(AA_NON_TEXT);
+    }
+  });
+
+  /**
+   * The favourite star, which `getFavouriteStarColor` draws directly on the accent.
+   *
+   * Story 21.2a is a net IMPROVEMENT here and the aggregate is worth stating, because
+   * a per-colour reading makes it look like a pure regression. Measured on the star
+   * the app ACTUALLY draws — `getFavouriteStarColor` returns beam below 0.5
+   * `getLuminance` and ink above, so a light accent never gets a beam star at all:
+   *
+   *   old: blue 2.96 FAIL · red 3.07 · green 2.16 FAIL · orange 8.18 (ink) · grey 3.12
+   *   new: blue 6.91 · red 3.01 · green 3.15 · orange 11.53 (ink) · azure 2.66 FAIL
+   *
+   * Two failures became one. Azure is a genuine regression and is escalated above;
+   * the deep blue and the green, which both failed before, are fixed.
+   */
+  it('the favourite star clears 3:1 on four accents, and fails on azure', () => {
+    for (const key of ['blue', 'red', 'green', 'orange'] as const) {
+      expect(
+        contrastRatio(getFavouriteStarColor(CARD_COLORS[key]), CARD_COLORS[key])
+      ).toBeGreaterThanOrEqual(AA_NON_TEXT);
+    }
+
+    // Same root cause as the AA failure above, same escalation: a beam star on azure
+    // is 2.66:1, where the retired grey gave 3.12:1. Ink would give 4.34:1, but the
+    // "beam star on a dark field" rule is Story 21.2's and covers 44 brand colours
+    // too, so its threshold is not this story's to move.
+    expect(contrastRatio(getFavouriteStarColor(CARD_COLORS.grey), CARD_COLORS.grey)).toBeCloseTo(
+      2.66,
+      2
+    );
+    expect(contrastRatio(IDENTITY_COLORS.beam, '#64748B')).toBeGreaterThanOrEqual(AA_NON_TEXT);
+  });
+});
+
 describe('The beam rule — text on beam is ink, never white', () => {
   it('ink on beam meets AA for body text', () => {
     expect(contrastRatio(IDENTITY_COLORS.ink, IDENTITY_COLORS.beam)).toBeGreaterThanOrEqual(

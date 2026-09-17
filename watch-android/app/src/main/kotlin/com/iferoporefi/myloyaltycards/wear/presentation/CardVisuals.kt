@@ -12,26 +12,42 @@ import kotlin.math.pow
 data class Rgb(val red: Int, val green: Int, val blue: Int)
 
 /**
- * Neutral grey fallback for a missing or unparseable colour (Open Decision 6 — never crash, never
- * render an invisible avatar). This is the palette's `grey` (`CARD_COLORS.grey`, `#64748B`).
+ * The accent a card falls back to when its colour is missing or unparseable (Open Decision 6 —
+ * never crash, never render an invisible avatar). This is the palette's `grey` key, and it mirrors
+ * `DEFAULT_CARD_COLOR` / `DEFAULT_CARD_COLOR_HEX` on the phone so both devices agree on what an
+ * unresolvable colour looks like.
+ *
+ * It was called `NEUTRAL_GREY` and held `#64748B` until Story 21.2a, which repainted the `grey`
+ * key to the azure `#0C84CC` — the Cardì accents contain no neutral at all, so a constant named
+ * "grey" holding an azure would have been exactly the misnaming that story exists to avoid.
  */
-val NEUTRAL_GREY: Rgb = Rgb(0x64, 0x74, 0x8B)
+val DEFAULT_CARD_ACCENT: Rgb = Rgb(0x0C, 0x84, 0xCC)
 
 /**
  * The phone's virtual-logo palette (`CARD_COLORS`), canonical in `tokens/color.json` →
  * `shared/theme/tokens.generated.ts`. Duplicated here because the Wear module shares no build
- * with the phone; keep in sync if the tokens change. A custom card's colour arrives as one of
- * these keys (`core/watch-connectivity.ts` sends `colorHex: card.color`), so resolving them to
- * the exact palette hex is what makes the watch avatar match the colour the user picked on the
- * phone — more faithful than watchOS, which approximated with system colours.
+ * with the phone. A custom card's colour arrives as one of these keys
+ * (`core/watch-connectivity.ts` sends `colorHex: card.color`), so resolving them to the exact
+ * palette hex is what makes the watch avatar match the colour the user picked on the phone.
+ *
+ * ⛔ THE KEYS ARE A FROZEN WIRE CONTRACT, NOT COLOUR NAMES (Story 21.2a). This APK is versioned
+ * and released independently of the phone app (see app/build.gradle.kts § versionCode bands), so a
+ * key the phone renames but this map has not learned yet resolves to nothing and every affected
+ * card falls back to [DEFAULT_CARD_ACCENT] — which is precisely why the phone froze them. Change a
+ * VALUE when the tokens move; never add, remove or rename a key. Two are deliberately misnamed:
+ * `orange` is the beam yellow and `grey` is the azure.
+ *
+ * `core/wear-sync-contract.test.ts` reads this literal and fails if it drops a key or drifts from
+ * the tokens. That test runs under `yarn test`, which — unlike this module's Gradle job — is not
+ * path-filtered, so it fires even on a PR that touches only the phone.
  */
 private val NAMED_CARD_COLORS: Map<String, Rgb> = mapOf(
-    "blue" to Rgb(0x1A, 0x73, 0xE8),
-    "red" to Rgb(0xE2, 0x23, 0x1A),
-    "green" to Rgb(0x16, 0xA3, 0x4A),
-    "orange" to Rgb(0xF5, 0x9E, 0x0B),
-    "grey" to Rgb(0x64, 0x74, 0x8B),
-    "gray" to Rgb(0x64, 0x74, 0x8B),
+    "blue" to Rgb(0x0C, 0x3C, 0x84),
+    "red" to Rgb(0xE4, 0x24, 0x24),
+    "green" to Rgb(0x0C, 0x84, 0x3C),
+    "orange" to Rgb(0xFC, 0xCC, 0x0C),
+    "grey" to Rgb(0x0C, 0x84, 0xCC),
+    "gray" to Rgb(0x0C, 0x84, 0xCC),
 )
 
 /**
@@ -57,7 +73,7 @@ fun parseHexColor(hex: String): Rgb? {
 /**
  * Resolves a card/brand colour string into an [Rgb], accepting either a named palette key
  * (`blue`, `red`, …) or a hex string, mirroring watchOS's `mapColor`. Returns `null` only for a
- * `null`/blank input so callers can apply the [NEUTRAL_GREY] fallback deliberately.
+ * `null`/blank input so callers can apply the [DEFAULT_CARD_ACCENT] fallback deliberately.
  */
 fun resolveCardColor(value: String?): Rgb? {
     val trimmed = value?.trim()

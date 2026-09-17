@@ -13,7 +13,7 @@ import { View, Text, StyleSheet } from 'react-native';
 import type { LoyaltyCard } from '@/core/schemas';
 
 import { useTheme } from '@/shared/theme';
-import { CARD_COLORS } from '@/shared/theme/colors';
+import { CARD_COLORS, DEFAULT_CARD_COLOR_HEX } from '@/shared/theme/colors';
 import { getContrastForeground, getLuminance } from '@/shared/theme/luminance';
 import { LAYOUT } from '@/shared/theme/spacing';
 import { TYPOGRAPHY } from '@/shared/theme/typography';
@@ -48,8 +48,8 @@ export const BrandHero: React.FC<BrandHeroProps> = ({ card, testID }) => {
     useMemo(() => {
       const isCatalogue = card.brandId !== null && brand !== undefined;
       const bgColor = isCatalogue
-        ? (brand?.color ?? CARD_COLORS.grey)
-        : (CARD_COLORS[card.color] ?? CARD_COLORS.grey);
+        ? (brand?.color ?? DEFAULT_CARD_COLOR_HEX)
+        : (CARD_COLORS[card.color] ?? DEFAULT_CARD_COLOR_HEX);
 
       return {
         backgroundColor: bgColor,

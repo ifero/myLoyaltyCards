@@ -31,13 +31,17 @@ describe('generated design tokens — parity with canonical values (Story 16.4)'
     });
   });
 
-  it('CARD_COLORS matches the 5-color virtual-logo palette (Story 21.2a owns these values)', () => {
+  // ⛔ The KEYS are a frozen wire/storage contract — see CARD_COLOR_KEYS in
+  // core/schemas/card.ts. Change a value here when the palette moves; never add,
+  // remove or rename a key. Two are deliberately misnamed: `orange` is the beam
+  // yellow and `grey` is the azure.
+  it('CARD_COLORS matches the five Cardì card accents (Story 21.2a)', () => {
     expect(CARD_COLORS).toEqual({
-      blue: '#1A73E8',
-      red: '#E2231A',
-      green: '#16A34A',
-      orange: '#F59E0B',
-      grey: '#64748B'
+      blue: '#0C3C84',
+      red: '#E42424',
+      green: '#0C843C',
+      orange: '#FCCC0C',
+      grey: '#0C84CC'
     });
   });
 

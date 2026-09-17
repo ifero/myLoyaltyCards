@@ -29,11 +29,11 @@ jest.mock('@/shared/theme', () => ({
     }
   }),
   CARD_COLORS: {
-    blue: '#3B82F6',
-    red: '#EF4444',
-    green: '#22C55E',
-    orange: '#F97316',
-    grey: '#6B7280'
+    blue: '#0C3C84',
+    red: '#E42424',
+    green: '#0C843C',
+    orange: '#FCCC0C',
+    grey: '#0C84CC'
   }
 }));
 

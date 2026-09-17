@@ -47,7 +47,7 @@ object DebugSampleCards {
             id = "sample-market",
             name = "Èsselunga Market", // accented leading char: must sort next to "Esselunga"
             brandId = null,
-            colorHex = "#16A34A",
+            colorHex = "#0C843C",
             barcodeValue = "https://example.com",
             barcodeFormat = "QR",
             usageCount = 0,
