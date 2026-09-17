@@ -4,7 +4,7 @@ baseline_commit: 2ff3e23016a3ee6130e5e0c2b3651de62fa4ac5f
 
 # Story 21.2a: Migrate the card accents — and decide whether the colour keys are a name or a contract
 
-Status: review
+Status: done
 
 Epic: 21 — Cardì Rebrand — Native Identity
 
