@@ -17,20 +17,32 @@ func parseHexColor(_ hex: String) -> Color {
     )
 }
 
-/// Backward-compatible wrapper that supports both named colors ("blue", "red", …)
-/// and arbitrary hex strings ("#RRGGBB"). Returns `nil` only when input is nil/empty.
+/// Resolves either a card palette KEY ("blue", "red", …) or an arbitrary hex
+/// string ("#RRGGBB") into a `Color`. Returns `nil` only when input is nil/empty.
+///
+/// The phone sends `colorHex: card.color` — the raw key, despite the field's name
+/// (`core/watch-connectivity.ts`) — so this switch is the live resolution path for
+/// every custom card in `CardListView`.
+///
+/// ⚠️ Story 21.2a replaced SwiftUI system colors here with the Cardì card accent
+/// hexes, which is a correctness fix and not a repaint. `Color.orange` rendered a
+/// hue the design system bans outright, and the other three were only approximately
+/// the colour the user had picked on the phone — the same card read as a different
+/// colour on the two devices. The hexes are the phone's canonical `CARD_COLORS`
+/// (tokens/color.json); the five keys are a FROZEN contract, so never add, remove
+/// or rename a case. Two are deliberately misnamed: `orange` is the beam yellow and
+/// `grey` is the azure. `core/wear-sync-contract.test.ts` reads this source and
+/// fails if a key goes missing or a hex drifts from the tokens.
 func mapColor(hex: String?) -> Color? {
     guard let hex = hex?.trimmingCharacters(in: .whitespacesAndNewlines), !hex.isEmpty else {
         return nil
     }
-    // Named-color fallbacks (legacy compatibility)
     switch hex.lowercased() {
-    case "blue": return Color.blue
-    case "red": return Color.red
-    case "green": return Color.green
-    case "orange": return Color.orange
-    case "gray", "grey":
-        return Color(red: 156 / 255, green: 163 / 255, blue: 175 / 255)
+    case "blue": return parseHexColor("#0C3C84")
+    case "red": return parseHexColor("#E42424")
+    case "green": return parseHexColor("#0C843C")
+    case "orange": return parseHexColor("#FCCC0C")
+    case "gray", "grey": return parseHexColor("#0C84CC")
     default:
         return parseHexColor(hex)
     }

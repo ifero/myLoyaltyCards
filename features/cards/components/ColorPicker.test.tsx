@@ -78,20 +78,54 @@ describe('ColorPicker', () => {
   });
 
   describe('Accessibility', () => {
+    /**
+     * Story 21.2a — the selection affordance must stay visible on ALL five accents.
+     *
+     * The ring and the checkmark used to be a hard-coded white, which is 1.52:1 on
+     * the beam yellow this story makes pickable. Deriving the foreground is what
+     * keeps "which colour did I pick?" answerable on the brand's own signature hue.
+     */
+    it('draws the selection ring and checkmark in a foreground legible on the swatch', () => {
+      render(<ColorPicker value="orange" onChange={jest.fn()} />);
+
+      const swatch = screen.getByTestId('color-option-orange');
+      const style = Array.isArray(swatch.props.style)
+        ? Object.assign({}, ...swatch.props.style)
+        : swatch.props.style;
+
+      // Beam yellow is a LIGHT field, so the ring is ink — never white.
+      expect(style.borderColor).toBe('#181824');
+      expect(style.borderColor).not.toBe('white');
+    });
+
+    it('keeps a white ring on the four dark accents', () => {
+      render(<ColorPicker value="blue" onChange={jest.fn()} />);
+
+      const swatch = screen.getByTestId('color-option-blue');
+      const style = Array.isArray(swatch.props.style)
+        ? Object.assign({}, ...swatch.props.style)
+        : swatch.props.style;
+
+      expect(style.borderColor).toBe('#FFFFFF');
+    });
+
     it('has accessible labels for each color option', () => {
       render(<ColorPicker value="grey" onChange={mockOnChange} />);
 
-      expect(screen.getByLabelText('Blue color')).toBeTruthy();
+      // The labels describe the SWATCH, not the frozen key behind it (Story
+      // 21.2a): the `orange` key renders beam yellow and the `grey` key renders
+      // azure, so announcing them by key name would mislead a screen-reader user.
+      expect(screen.getByLabelText('Deep blue color')).toBeTruthy();
       expect(screen.getByLabelText('Red color')).toBeTruthy();
       expect(screen.getByLabelText('Green color')).toBeTruthy();
-      expect(screen.getByLabelText('Orange color')).toBeTruthy();
-      expect(screen.getByLabelText(/Grey color/)).toBeTruthy();
+      expect(screen.getByLabelText('Yellow color')).toBeTruthy();
+      expect(screen.getByLabelText(/Azure color/)).toBeTruthy();
     });
 
     it('indicates selected state in accessibility label', () => {
       render(<ColorPicker value="blue" onChange={mockOnChange} />);
 
-      expect(screen.getByLabelText('Blue color, selected')).toBeTruthy();
+      expect(screen.getByLabelText('Deep blue color, selected')).toBeTruthy();
     });
 
     it('has button accessibility role', () => {

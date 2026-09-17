@@ -261,6 +261,55 @@ element, and never as a tint or wash over a branded tile — with the single exe
 under _Three roles_: an accent may fill **its own card's** full-bleed detail field, header
 included, because there it is the content rather than the chrome.
 
+> ## ⛔ OPEN — RAISED 2026-09-17 (Story 21.2a). AZURE CANNOT CARRY AA TEXT.
+>
+> **This document owes an answer before the rebrand release ships.** It is not an
+> implementation question; the code is complete and gated either way.
+>
+> `#0C84CC` sits in the contrast dead zone: **no** foreground reaches WCAG AA 4.5:1 on it.
+> White is 4.05:1 and ink — the better of the two — is 4.34:1. Choosing differently cannot
+> fix it.
+>
+> | accent              | foreground the app picks | contrast   | AA 4.5:1  |
+> | ------------------- | ------------------------ | ---------- | --------- |
+> | `#0C3C84` deep blue | white                    | 10.53:1    | ✅        |
+> | `#E42424` red       | white                    | 4.59:1     | ✅ (thin) |
+> | `#0C843C` green     | white                    | 4.79:1     | ✅        |
+> | `#FCCC0C` yellow    | ink                      | 11.53:1    | ✅        |
+> | **`#0C84CC` azure** | white (best: ink 4.34)   | **4.05:1** | ❌        |
+>
+> Why it matters rather than being academic:
+>
+> - It is **reachable in ordinary use**. The card-detail header draws the card's name at 17px
+>   weight 600 — under both WCAG large-text thresholds (24px regular, 18.66px bold) — directly
+>   on the accent, under the _Three roles_ exemption above.
+> - It is the **default**. Azure is the accent an unresolvable card colour falls back to, so it
+>   is not only what a user picks, it is what they get when nothing was picked.
+> - It is a **regression**. The colour it replaced was `#64748B`, which passed at 4.76:1.
+> - There is **no OTA remedy**. `runtimeVersion.policy` is `appVersion`, so this ships in a
+>   store release that cannot be corrected without another one.
+> - The same colour puts the favourite star at 2.66:1 against a 3:1 non-text floor. In
+>   aggregate the star still improves — the retired palette failed on two accents and this one
+>   fails on one — but azure specifically regressed.
+>
+> Three ways out, all measured:
+>
+> 1. **Accept the exception**, on the grounds that a card's own field is content rather than
+>    chrome. Costs nothing and changes no colour; ships a real AA failure on a default.
+> 2. **Darken the azure to `#0B7CC0`** — about 6% down its own hue, where white clears at
+>    4.51:1 (`#0C7FC4` is still short at 4.33:1). Fixes every surface at once — phone, both
+>    watches, the picker — but amends this palette, so the frames and generators under
+>    `docs/design/cardi/` that cite `#0C84CC` drift until regenerated.
+> 3. **Give the card-detail header large text** (≥18.66px bold), moving that surface's floor to
+>    3:1 so 4.05:1 passes legitimately. Narrowest change, touches no token — but it fixes one
+>    screen and leaves the tile and both watch avatars where they are, and the type scale
+>    belongs to Story 21.6.
+>
+> The numbers are pinned in `shared/theme/colors.contrast.test.ts` (`Card accent contrast`), so
+> they cannot drift while this stays open. ⚠️ **That test PASSES** — it records the measurement
+> rather than failing on it, so nothing mechanical blocks a merge. The only thing holding this
+> open is this note.
+
 ## Typography
 
 **Space Grotesk** for display and large headlines — it carries the personality; its slightly technical, quirky letterforms echo the barcode.

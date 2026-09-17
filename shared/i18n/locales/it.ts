@@ -583,11 +583,14 @@ export const it = {
       az: 'A-Z'
     },
     colors: {
-      blue: 'Blu',
+      // Vedi en.ts: le cinque chiavi CARD_COLOR_KEYS sono identificatori
+      // congelati (Story 21.2a), quindi due non descrivono più il loro colore —
+      // `orange` è il giallo beam #FCCC0C e `grey` è l'azzurro #0C84CC.
+      blue: 'Blu scuro',
       red: 'Rosso',
       green: 'Verde',
-      orange: 'Arancione',
-      grey: 'Grigio',
+      orange: 'Giallo',
+      grey: 'Azzurro',
       accessibilityLabel: 'Colore {{color}}{{selected}}',
       selectedSuffix: ', selezionato'
     },

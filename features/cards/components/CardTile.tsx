@@ -36,7 +36,7 @@ import Animated, {
 import { LoyaltyCard } from '@/core/schemas';
 
 import { useTheme } from '@/shared/theme';
-import { CARD_COLORS, IDENTITY_COLORS } from '@/shared/theme/colors';
+import { CARD_COLORS, DEFAULT_CARD_COLOR_HEX, IDENTITY_COLORS } from '@/shared/theme/colors';
 import { getLuminance } from '@/shared/theme/luminance';
 import { TYPOGRAPHY } from '@/shared/theme/typography';
 
@@ -151,7 +151,7 @@ export const CardTile: React.FC<CardTileProps> = ({
   const tileRadius = enlarged ? SINGLE_TILE_RADIUS : TILE_RADIUS;
 
   // Resolve background color: brand hex for catalogue, card palette color for custom
-  const backgroundColor = brand ? brand.color : (CARD_COLORS[card.color] ?? CARD_COLORS.grey);
+  const backgroundColor = brand ? brand.color : (CARD_COLORS[card.color] ?? DEFAULT_CARD_COLOR_HEX);
   const luminance = getLuminance(backgroundColor);
   const isBlackBrand = luminance < 0.2;
   const isLightBrand = luminance > 0.85;

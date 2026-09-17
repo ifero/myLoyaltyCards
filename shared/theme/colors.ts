@@ -2,6 +2,7 @@
  * Color Constants
  * Story 13.1: Implement Design System Tokens & Components
  * Story 21.2: Migrate the colour tokens to Ink & Beam
+ * Story 21.2a: Migrate the card accents (the five CARD_COLORS keys are frozen)
  *
  * Primitive color records (IDENTITY_COLORS, CARD_COLORS, NEUTRAL_COLORS, and the
  * per-theme color maps) are generated from the DTCG token JSON under `tokens/`
@@ -25,8 +26,13 @@ import catalogueData from '../../catalogue/italy.json';
 export { IDENTITY_COLORS, NEUTRAL_COLORS };
 
 /**
- * Card color type - matches core/schemas/card.ts CardColor
+ * Card color type - matches core/schemas/card.ts CardColor.
  * Duplicated here to keep this token module dependency-free.
+ *
+ * ⛔ These five are FROZEN IDENTIFIERS, not colour names (Story 21.2a, AC1) — the
+ * canonical statement of why, and of which two are deliberately misnamed, lives on
+ * `CARD_COLOR_KEYS` in core/schemas/card.ts. Keep this union in step with that one;
+ * never rename a member on either side.
  */
 type CardColor = 'blue' | 'red' | 'green' | 'orange' | 'grey';
 
@@ -35,6 +41,25 @@ type CardColor = 'blue' | 'red' | 'green' | 'orange' | 'grey';
  * Used when cards don't have official logos
  */
 export const CARD_COLORS: Record<CardColor, string> = CARD_COLORS_TOKENS;
+
+/**
+ * Hex for the accent a card falls back to when its colour cannot be resolved.
+ *
+ * The hex half of `DEFAULT_CARD_COLOR` (core/schemas/card.ts), which holds the key.
+ * Every `?? CARD_COLORS.grey` in the app was replaced by this, because the key stopped
+ * describing its colour when Story 21.2a repainted `grey` to the azure #0C84CC: a
+ * reader of `?? CARD_COLORS.grey` would have had to know the freeze to know that the
+ * fallback is not grey.
+ *
+ * The key is repeated here rather than imported, for the same reason `CardColor` above
+ * is: importing core/schemas/card would pull zod into this token module. The repetition
+ * cannot drift — `core/wear-sync-contract.test.ts` asserts it equals `DEFAULT_CARD_COLOR`
+ * and that this union matches `CARD_COLOR_KEYS`, and the hex is derived from the token
+ * rather than written out.
+ */
+const DEFAULT_CARD_COLOR_KEY: CardColor = 'grey';
+
+export const DEFAULT_CARD_COLOR_HEX: string = CARD_COLORS_TOKENS[DEFAULT_CARD_COLOR_KEY];
 
 export const BRAND_COLORS = Object.freeze(
   catalogueData.brands.reduce<Record<string, string>>((accumulator, brand) => {

@@ -11,7 +11,7 @@ import { View, Text, StyleSheet, ViewStyle } from 'react-native';
 
 import { CardColor } from '@/core/schemas';
 
-import { CARD_COLORS } from '@/shared/theme/colors';
+import { CARD_COLORS, DEFAULT_CARD_COLOR_HEX } from '@/shared/theme/colors';
 
 import { generateInitials } from '../utils/initials';
 
@@ -49,7 +49,7 @@ export const VirtualLogo = React.memo(function VirtualLogo({
     const generatedInitials = generateInitials(name);
     return {
       initials: generatedInitials,
-      backgroundColor: CARD_COLORS[color] || CARD_COLORS.grey,
+      backgroundColor: CARD_COLORS[color] || DEFAULT_CARD_COLOR_HEX,
       fontSize: generatedInitials.length === 1 ? size * 0.4 : size * 0.3,
       borderRadius: size * 0.1
     };

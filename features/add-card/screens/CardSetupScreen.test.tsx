@@ -37,11 +37,11 @@ jest.mock('@/shared/theme', () => ({
     isDark: false
   }),
   CARD_COLORS: {
-    blue: '#1A73E8',
-    red: '#E2231A',
-    green: '#16A34A',
-    orange: '#F59E0B',
-    grey: '#64748B'
+    blue: '#0C3C84',
+    red: '#E42424',
+    green: '#0C843C',
+    orange: '#FCCC0C',
+    grey: '#0C84CC'
   }
 }));
 
@@ -178,6 +178,34 @@ describe('CardSetupScreen', () => {
             brandId: 'esselunga',
             barcodeFormat: 'EAN13'
           })
+        );
+      });
+    });
+
+    /**
+     * Story 21.2a — the brand-less catalogue branch, which this story deliberately
+     * changed and which had no test either before or after.
+     *
+     * It used to map a hard-coded `'#1A73E8'` placeholder (a copy of the retired
+     * CARD_COLORS.blue) and therefore always yielded `'blue'`; it now names
+     * DEFAULT_CARD_COLOR. The path is abnormal — catalogue mode with no resolvable
+     * brand also produces a card with an empty name — but it is reachable, and a
+     * behaviour change with no test is a behaviour change nobody will notice
+     * reverting.
+     */
+    it('falls back to the default accent when catalogue mode has no resolvable brand', async () => {
+      mockUseLocalSearchParams.mockReturnValue({
+        mode: 'catalogue',
+        barcode: '1234567890',
+        barcodeFormat: 'EAN13'
+      });
+
+      render(<CardSetupScreen />);
+      fireEvent.press(screen.getByTestId('done-button'));
+
+      await waitFor(() => {
+        expect(mockAddCard).toHaveBeenCalledWith(
+          expect.objectContaining({ color: 'grey', brandId: undefined })
         );
       });
     });

@@ -41,7 +41,7 @@ data class CardPresentation(
  *
  * - **Colour** — a catalogue card uses its **brand's** colour from `Brands.kt` (recognisable on the
  *   wrist; watchOS could not, its brand record had no colour); a custom card uses the user's picked
- *   colour ([WearCard.colorHex]). Missing/unparseable → [NEUTRAL_GREY] (Open Decision 6).
+ *   colour ([WearCard.colorHex]). Missing/unparseable → [DEFAULT_CARD_ACCENT] (Open Decision 6).
  * - **Initials** — a catalogue card from the **brand name** (falling back to the brand id), a custom
  *   card from the **card name** (AC2).
  * - **Text colour** — flips by background luminance ([shouldUseWhiteText]) (AC2).
@@ -49,7 +49,7 @@ data class CardPresentation(
 fun presentationFor(card: WearCard): CardPresentation {
     val brand = resolveBrand(card.brandId)
     val colorSource = if (brand != null) brand.color else card.colorHex
-    val avatarColor = resolveCardColor(colorSource) ?: NEUTRAL_GREY
+    val avatarColor = resolveCardColor(colorSource) ?: DEFAULT_CARD_ACCENT
     return CardPresentation(
         avatarColor = avatarColor,
         initials = initials(avatarInitialsSource(brand, card.name)),

@@ -14,6 +14,7 @@ import { StyleSheet } from 'react-native-unistyles';
 import { CardColor, CARD_COLOR_KEYS } from '@/core/schemas';
 
 import { CARD_COLORS } from '@/shared/theme';
+import { getContrastForeground } from '@/shared/theme/luminance';
 
 interface ColorPickerProps {
   value: CardColor;
@@ -63,11 +64,20 @@ export function ColorPicker({ value, onChange, testID }: ColorPickerProps) {
                 {
                   backgroundColor: colorHex,
                   borderWidth: isSelected ? 2 : 0,
-                  borderColor: 'white'
+                  // Derived, not hard-coded white (Story 21.2a). The selection ring and
+                  // the checkmark are the ONLY signal for "this is the colour you picked",
+                  // and a fixed white gave 1.52:1 on the beam yellow this story makes
+                  // pickable — the worst contrast anywhere in the app, on the brand's own
+                  // signature hue. It was already failing on the retired orange (2.15:1),
+                  // so this repaint made a live defect worse rather than creating one.
+                  // `getContrastForeground` clears the 3:1 non-text floor on all five.
+                  borderColor: getContrastForeground(colorHex)
                 }
               ]}
             >
-              {isSelected && <MaterialIcons name="check" size={18} color="#FFFFFF" />}
+              {isSelected && (
+                <MaterialIcons name="check" size={18} color={getContrastForeground(colorHex)} />
+              )}
             </Pressable>
           );
         })}

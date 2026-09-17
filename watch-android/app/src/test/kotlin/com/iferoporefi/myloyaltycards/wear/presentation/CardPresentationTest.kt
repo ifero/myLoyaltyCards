@@ -36,14 +36,17 @@ class CardPresentationTest {
     @Test
     fun customCard_usesCardColourAndCardNameInitials() {
         val presentation = presentationFor(card(name = "Local Bakery", brandId = null, colorHex = "blue"))
-        assertEquals(Rgb(0x1A, 0x73, 0xE8), presentation.avatarColor)
+        // The Cardì deep blue (Story 21.2a). Spelled out rather than resolved through
+        // `resolveCardColor`, so this pins the colour a user actually sees instead of
+        // restating the production lookup back to itself.
+        assertEquals(Rgb(0x0C, 0x3C, 0x84), presentation.avatarColor)
         assertEquals("LB", presentation.initials)
     }
 
     @Test
-    fun missingOrUnparseableColour_fallsBackToNeutralGrey() {
-        assertEquals(NEUTRAL_GREY, presentationFor(card(colorHex = null)).avatarColor)
-        assertEquals(NEUTRAL_GREY, presentationFor(card(colorHex = "not-a-colour")).avatarColor)
+    fun missingOrUnparseableColour_fallsBackToDefaultAccent() {
+        assertEquals(DEFAULT_CARD_ACCENT, presentationFor(card(colorHex = null)).avatarColor)
+        assertEquals(DEFAULT_CARD_ACCENT, presentationFor(card(colorHex = "not-a-colour")).avatarColor)
     }
 
     @Test

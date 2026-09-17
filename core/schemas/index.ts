@@ -17,6 +17,7 @@ export {
   barcodeFormatSchema,
   cardColorSchema,
   CARD_COLOR_KEYS,
+  DEFAULT_CARD_COLOR,
   type LoyaltyCard,
   type BarcodeFormat,
   type CardColor,

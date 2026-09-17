@@ -3,6 +3,8 @@ import { useTranslation } from 'react-i18next';
 import { Pressable, View } from 'react-native';
 import { StyleSheet } from 'react-native-unistyles';
 
+import { CARD_COLOR_KEYS } from '@/core/schemas';
+
 import { CARD_COLORS, useTheme } from '@/shared/theme';
 import { TOUCH_TARGET } from '@/shared/theme/spacing';
 
@@ -14,7 +16,14 @@ type ColorPickerProps = {
   testID?: string;
 };
 
-const palette: ColorKey[] = ['blue', 'red', 'green', 'orange', 'grey'];
+/**
+ * Story 21.2a: this was a hand-written third copy of the key list. The five keys
+ * are a frozen contract (see CARD_COLOR_KEYS), so the copy could not drift in
+ * VALUE — but it could silently drift in ORDER or COUNT from the canonical list
+ * and from `features/cards/components/ColorPicker.tsx`, which already iterates
+ * CARD_COLOR_KEYS. One source, two pickers.
+ */
+const palette: ColorKey[] = [...CARD_COLOR_KEYS];
 
 export const ColorPicker = ({ value, onChange, testID }: ColorPickerProps) => {
   const { theme } = useTheme();

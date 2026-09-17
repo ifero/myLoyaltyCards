@@ -26,7 +26,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { CatalogueRepository } from '@/core/catalogue/catalogue-repository';
-import { BarcodeFormat, CardColor } from '@/core/schemas';
+import { BarcodeFormat, CardColor, DEFAULT_CARD_COLOR } from '@/core/schemas';
 import { mapHexToCardColor } from '@/core/utils';
 
 import { Button } from '@/shared/components/ui/Button';
@@ -127,7 +127,19 @@ export const CardSetupScreen: React.FC = () => {
     }
 
     const name = mode === 'catalogue' ? (brand?.name ?? '') : storeName.trim();
-    const cardColor = mode === 'catalogue' ? mapHexToCardColor(brand?.color ?? '#1A73E8') : color;
+    // `#1A73E8` stood here until Story 21.2a: a hard-coded copy of the retired
+    // CARD_COLORS.blue, used only as a placeholder to map when a catalogue card
+    // somehow has no brand. Mapping a placeholder hex to find a key is a detour —
+    // name the fallback key instead, so it cannot go stale with the palette again.
+    //
+    // ⚠️ This is a BEHAVIOUR CHANGE, not only a rename: that branch used to yield
+    // `'blue'` (the placeholder mapped to the single blue bucket) and now yields
+    // DEFAULT_CARD_COLOR. It is reachable but abnormal — catalogue mode with no
+    // resolvable brand, which already produces a card with an empty name — and the
+    // new value is the more honest one: an unresolvable colour is exactly what
+    // DEFAULT_CARD_COLOR means.
+    const catalogueColor = brand ? mapHexToCardColor(brand.color) : DEFAULT_CARD_COLOR;
+    const cardColor = mode === 'catalogue' ? catalogueColor : color;
 
     await addCard({
       name,
