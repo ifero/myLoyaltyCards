@@ -14,6 +14,9 @@
  *                                1024   Android 13+ themed layer: one colour, transparent
  *   assets/favicon.png             48   opaque
  *   assets/splash-icon.png       1024   transparent; the field comes from the splash config
+ *   targets/watch/AppIcon.png    1024   opaque; the watchOS app icon PREBUILD reads (Story 21.3)
+ *   targets/watch-widget/…/OpenAppIcon.imageset/open-app-icon@{1,2,3}x.png
+ *                          64/128/192   opaque; the artwork the COMPLICATION draws (Story 21.3)
  *
  * WHY THERE IS A RASTERISER IN HERE
  *
@@ -393,7 +396,76 @@ const PNGS = [
     { size: 1024, field: null, scale: ANDROID_SCALE, stem: WHITE, accent: WHITE }
   ],
   ['assets/favicon.png', { size: 48, field: INK, ...FULL }],
-  ['assets/splash-icon.png', { size: 1024, field: null, ...FULL }]
+  ['assets/splash-icon.png', { size: 1024, field: null, ...FULL }],
+
+  // ---------------------------------------------------------------------
+  // The watch (Story 21.3). Both surfaces below are masked to a CIRCLE by
+  // watchOS, which is the phone squircle's opposite failure mode: a squircle
+  // trims corners, a circle trims everything outside the inscribed disc.
+  //
+  // They still take the SAME geometry as the phone, and that is a measured
+  // result rather than an assumption. The mark's bounding-box corner radius is
+  // 37.798 canvas units against the inscribed circle's 50 — 24.4 % of the
+  // radius to spare — and its half-extents (23.879 x 29.299) also sit inside
+  // the inscribed SQUARE's 35.355, which is the containment rule the watch
+  // grammar states for circular masks (cardi-watch-grammar.md 7.2). So no
+  // watch-specific scale is needed, and inventing one would break the single
+  // geometry definition this file exists to keep. `watch-icons.test.ts`
+  // decodes the rendered pixels and asserts the containment rather than
+  // trusting this comment.
+  // ---------------------------------------------------------------------
+
+  // Read by `expo prebuild` (targets/watch/expo-target.config.js `icon:`),
+  // which copies it into AppIcon.appiconset as the single 1024 watchOS entry.
+  // Generating the SOURCE rather than the copy is what keeps AC2 true: prebuild
+  // stays the generator of record for the catalogue, and this file stays the
+  // generator of record for the artwork.
+  ['targets/watch/AppIcon.png', { size: 1024, field: INK, ...FULL }],
+
+  // The complication's artwork — what `WatchComplicationWidget.swift` renders on
+  // the WATCH FACE, not an app icon. Opaque, because the widget fills the slot
+  // edge-to-edge and lets the system mask it; a transparent field would show the
+  // watch face through the mark.
+  //
+  // The three scales stay 64/128/192. `ComplicationImage.swift` downsamples to
+  // 38pt x 2 = 76 px because `accessoryCorner` rejects anything larger with
+  // `imageTooLarge` and renders the slot GREY, so these must not grow: watchOS
+  // picks @2x, and 128 px is the buffer that downsampling starts from.
+  [
+    'targets/watch-widget/Assets.xcassets/OpenAppIcon.imageset/open-app-icon@1x.png',
+    { size: 64, field: INK, ...FULL }
+  ],
+  [
+    'targets/watch-widget/Assets.xcassets/OpenAppIcon.imageset/open-app-icon@2x.png',
+    { size: 128, field: INK, ...FULL }
+  ],
+  [
+    'targets/watch-widget/Assets.xcassets/OpenAppIcon.imageset/open-app-icon@3x.png',
+    { size: 192, field: INK, ...FULL }
+  ],
+
+  // The widget extension's app icon.
+  //
+  // ⚠️ IT SHIPS NOWHERE, and that is measured rather than assumed. The
+  // watch-widget target carries no `ASSETCATALOG_COMPILER_APPICON_NAME`, so Xcode
+  // invokes `actool` for that catalogue WITHOUT `--app-icon`; the built
+  // `watchwidget.appex` has no `AppIcon` in its `Assets.car` (only `OpenAppIcon`
+  // and the brand logos) and no icon key of any kind in its `Info.plist`. A
+  // watchOS widget extension is represented by its CONTAINING app's icon.
+  //
+  // It is generated anyway, at the single 1024 watchOS size, for two reasons. The
+  // file was a flat `#80FF80` placeholder inherited from the `@bacons/apple-targets`
+  // scaffold, declaring iPhone/iPad/ios-marketing idioms inside a watchOS
+  // extension — so it was wrong twice over and nothing in the repo would have
+  // caught either. And `icon:` is NOT the fix: `withIosIcon` only emits the
+  // watchOS single-size form for `type: 'watch'`, so setting it on a
+  // `watch-widget` target regenerates exactly the same iOS-idiom set in Cardì
+  // colours. Generating it here puts it under `yarn icons:check` instead, which
+  // is the only thing that keeps it from drifting back.
+  [
+    'targets/watch-widget/Assets.xcassets/AppIcon.appiconset/App-Icon-1024x1024@1x.png',
+    { size: 1024, field: INK, ...FULL }
+  ]
 ];
 
 const SVGS = [

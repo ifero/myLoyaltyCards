@@ -21,6 +21,13 @@ on:
       - 'watch-ios/**'
       - 'ios/**'
       - 'app.json'
+      # The Expo config plugins. This is the only workflow that runs an iOS `expo prebuild`
+      # (+ `xcodebuild`) on a PULL REQUEST, so it is the only PRE-MERGE gate that executes an
+      # iOS mod at all: the release and nightly workflows prebuild for iOS only after merge, and
+      # `phone-wear-module-tests.yml` prebuilds on PRs but `--platform android`.
+      # `plugins/with-watch-accent-color.js` writes a build setting onto both watchOS targets and
+      # throws when it matches none — a prebuild-time failure no Node-only gate can reach.
+      - 'plugins/**'
       - 'fastlane/Fastfile'
       - '.github/workflows/watchos-tests.yml'
   push:
@@ -33,6 +40,8 @@ on:
       - 'watch-ios/**'
       - 'ios/**'
       - 'app.json'
+      # Config plugins too — see the pull_request filter above for why.
+      - 'plugins/**'
       - 'fastlane/Fastfile'
       - '.github/workflows/watchos-tests.yml'
 

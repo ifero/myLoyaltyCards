@@ -259,6 +259,21 @@ export default [
     }
   },
   {
+    // Expo config plugins (Story 21.3). Same situation as `scripts/` above, with one
+    // difference that forces the split rather than widening that block's glob: these run
+    // inside `expo prebuild`, which loads them with `require`, so they are CommonJS and
+    // `sourceType: 'module'` would be wrong for them.
+    files: ['plugins/**/*.js'],
+    languageOptions: {
+      ecmaVersion: 'latest',
+      sourceType: 'commonjs'
+    },
+    rules: {
+      'no-undef': 'off',
+      'no-console': 'off'
+    }
+  },
+  {
     // Story 16.5: Storybook stories + `.storybook` config. Stories intentionally
     // carry literal display copy (they are previews, not shipped UI) and neither
     // stories nor the Storybook config participate in the app's layer graph — so

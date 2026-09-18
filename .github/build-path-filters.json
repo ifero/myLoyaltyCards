@@ -32,7 +32,13 @@
       "complication — because Apple has no standalone watchOS upload (ADR-2026-04-11-002).",
       "catalogue/** is here because watch-ios/Scripts/generate-catalogue.swift reads",
       "catalogue/italy.json during the build, so a brand added to the catalogue alone still",
-      "changes what ships."
+      "changes what ships.",
+      "",
+      "plugins/** is an EXPO CONFIG PLUGIN directory (Story 21.3), so it changes the generated",
+      "Xcode project rather than the JS bundle: with-watch-accent-color.js sets",
+      "ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME on both watchOS targets, and without it",
+      "Color.accentColor silently reverts to grey on the watch. It is DELIBERATELY absent from",
+      "the Android set — the mod is registered for the ios platform only."
     ],
     "paths": [
       "app/**",
@@ -48,6 +54,7 @@
       "tokens/**",
       "app.json",
       "app.config.ts",
+      "plugins/**",
       "package.json",
       "yarn.lock",
       "babel.config.js",
@@ -118,8 +125,18 @@
       "",
       "`*.test.rb` covers fastlane/Fastfile.test.rb. Without it, `fastlane/**` (in BOTH the iOS and",
       "Android sets) would make a test-only edit ship a real nightly — burning a TestFlight build",
-      "number and a Play versionCode, neither of which is reusable."
+      "number and a Play versionCode, neither of which is reusable.",
+      "",
+      "`*.test.js` is the same case, and it became reachable only when plugins/** joined the iOS",
+      "set (Story 21.3): plugins/with-watch-accent-color.test.js is the first `.js` test under any",
+      "watched path. scripts/*.test.js was never exposed, because scripts/ is not watched."
     ],
-    "paths": ["!**/*.test.ts", "!**/*.test.tsx", "!**/*.test.rb", "!**/*.stories.tsx"]
+    "paths": [
+      "!**/*.test.ts",
+      "!**/*.test.tsx",
+      "!**/*.test.js",
+      "!**/*.test.rb",
+      "!**/*.stories.tsx"
+    ]
   }
 }

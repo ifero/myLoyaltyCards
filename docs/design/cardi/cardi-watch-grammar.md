@@ -276,7 +276,7 @@ only thing left."_ A watch runs on black permanently. Beam on black is **13.8:1*
 > ⚠️ **And it has a consequence on the barcode screen that must be handled.** Apple's own
 > documentation states that the accent colour is applied to _"the app's title string in the status
 > bar"_. The watchOS barcode screen draws **the card's name** in exactly that strip
-> (`BarcodeFlashView.swift:125-143`). So a beam accent puts **beam on the barcode screen**, which
+> (`BarcodeFlashView.swift:133-151`). So a beam accent puts **beam on the barcode screen**, which
 > this system forbids outright.
 >
 > **Carve-out: the barcode screen overrides the tint to cream `#F0F0E8`.** This is not a new
@@ -476,7 +476,7 @@ apologies in a source comment.
 **(a) watchOS cannot suppress the system clock, so it keeps a reserved strip.** watchOS draws the
 time in the top strip with no API to remove it. Measured on a 46 mm with the safe area fully
 ignored, it renders **white glyphs straight through the black bars**
-(`BarcodeFlashView.swift:125-143`). The screen therefore keeps that strip rather than reclaiming
+(`BarcodeFlashView.swift:133-151`). The screen therefore keeps that strip rather than reclaiming
 it — and the cost is real and known: at 40 mm it gives up 95 px along the rotated length axis,
 most of a module step. **A wider module bought by corrupting the symbol is not a wider module.**
 Wear has no such constraint — it blanks the clock outright with `ScreenScaffold(timeText = {})`
@@ -549,7 +549,7 @@ that is already at its exception floor, to solve a clipping problem it cannot ha
 | surface       | watchOS                                                                                           | Wear OS                                                             |
 | ------------- | ------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------- |
 | Card list     | no crown handler; inherits the default scroll                                                     | no rotary modifier anywhere; inherits `ScreenScaffold(scrollState)` |
-| Barcode flash | **crown dismisses** — single-shot latch on any movement > 0.01 (`BarcodeFlashView.swift:231-245`) | rotary does nothing (Open Decision 3)                               |
+| Barcode flash | **crown dismisses** — single-shot latch on any movement > 0.01 (`BarcodeFlashView.swift:239-253`) | rotary does nothing (Open Decision 3)                               |
 | Sort picker   | inherits the default scroll                                                                       | inherits the default scroll                                         |
 
 The same physical gesture scrolls on one screen and **irreversibly dismisses** on another, and
