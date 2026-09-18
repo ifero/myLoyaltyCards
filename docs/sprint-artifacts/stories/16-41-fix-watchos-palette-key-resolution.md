@@ -4,7 +4,7 @@ baseline_commit: 7e9c2e24663a4f9cb9335ff50af62af3d0b6731f
 
 # Story 16.41: watchOS scores the raw palette key, so every card row draws the near-black hairline and the amber accent gets unreadable initials
 
-Status: review
+Status: done
 
 Epic: 16 — Platform & Tech Debt
 
