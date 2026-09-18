@@ -25,6 +25,13 @@ import { describeOnMac, runSwiftProgram, swiftDeclaration } from './swift-source
  * Swift XCTests do not auto-run in this repo (there is no test action for `watch-ios/Tests/`), so
  * the enforceable technique is the one Stories 16.26/16.27/16.37 established: lift the shipped
  * declarations and execute them under `xcrun swift`.
+ *
+ * ⚠️ Story 16.42 extended this to the UNRESOLVABLE case, which 16.41 left answering `nil` in three
+ * separately chosen ways — `.gray`, `false`, `true`. The first of those painted a SwiftUI SYSTEM
+ * colour, which the Cardì palette does not contain, while the phone (`DEFAULT_CARD_COLOR`) and
+ * Wear OS (`DEFAULT_CARD_ACCENT`) both painted the azure. The row now resolves ONE non-optional
+ * painted hex and derives all three decisions from it, so the harness below reproduces that shape
+ * rather than the optional one.
  */
 
 const repoRoot = path.resolve(__dirname, '../../..');
@@ -33,6 +40,31 @@ const cardListViewPath = path.join(repoRoot, 'targets', 'watch', 'CardListView.s
 const HELPERS = 'ColorHelpers.swift';
 
 const readSource = (filePath: string) => fs.readFileSync(filePath, 'utf8');
+
+/**
+ * The file-scope fallback accent, lifted from `ColorHelpers.swift` verbatim.
+ *
+ * `swiftDeclaration` walks braces or brackets and a one-line `let` has neither, so this is a line
+ * match. It is anchored to column 0 under the `m` flag, which is what stops a doc comment from
+ * shadowing the real declaration the way Story 16.41's QA review demonstrated: every comment in
+ * that file is `///`-prefixed, so no commented line can begin with `let`.
+ *
+ * ⚠️ The VALUE is deliberately not asserted here. `core/wear-sync-contract.test.ts` pins it to
+ * `CARD_COLORS[DEFAULT_CARD_COLOR]` in the always-on quality-gates job, which is the drift gate
+ * this file cannot be — `watchos-tests.yml` is path-filtered, so a PR that moved only the token
+ * would never run it.
+ */
+const fallbackAccent = (source: string) => {
+  const [line, hex] = /^let defaultCardAccentHex = "(#[0-9A-Fa-f]{6})"$/m.exec(source) ?? [];
+
+  if (!line || !hex) {
+    throw new Error(
+      `Unable to find \`let defaultCardAccentHex = "#RRGGBB"\` at file scope in ${HELPERS}`
+    );
+  }
+
+  return { line, hex: hex.toUpperCase() };
+};
 
 /** A `CardListView` computed property or view function, sliced whole and whitespace-normalised. */
 const rowProperty = (source: string, signature: string) =>
@@ -54,6 +86,7 @@ const buildHarness = () => {
   return [
     'import Foundation',
     swiftDeclaration(source, 'private let namedCardHex: [String: String] = [', HELPERS),
+    fallbackAccent(source).line,
     swiftDeclaration(source, 'func resolvedCardHex(_ raw: String?) -> String? {', HELPERS),
     swiftDeclaration(source, 'func relativeLuminance(hex: String) -> Double {', HELPERS),
     swiftDeclaration(
@@ -62,19 +95,20 @@ const buildHarness = () => {
       HELPERS
     ),
     swiftDeclaration(source, 'func isNearBlack(hex: String) -> Bool {', HELPERS),
-    // The row's two decisions, reproduced from `CardListView`'s `needsNearBlackHairline` and
-    // `prefersWhiteInitials`. They cannot be lifted — they are properties of a view that owns a
-    // `card` — so the `?? false` / `?? true` defaults are pinned separately, in the static test
-    // below, and a flip there fails that test rather than silently passing this harness.
-    'func hairline(_ raw: String?) -> Bool { resolvedCardHex(raw).map(isNearBlack(hex:)) ?? false }',
+    // The row's three decisions, reproduced from `CardListView`'s `paintedAccentHex`,
+    // `needsNearBlackHairline` and `prefersWhiteInitials`. They cannot be lifted — they are
+    // properties of a view that owns a `card` — so the SHAPE is pinned separately, in the static
+    // test below, and a divergence there fails that test rather than silently passing this
+    // harness. There is now one default rather than three: everything downstream reads `painted`.
+    'func painted(_ raw: String?) -> String { resolvedCardHex(raw) ?? defaultCardAccentHex }',
+    'func hairline(_ raw: String?) -> Bool { isNearBlack(hex: painted(raw)) }',
     'func whiteInitials(_ raw: String?) -> Bool {',
-    '    resolvedCardHex(raw).map(shouldUseWhiteText(onBackgroundHex:)) ?? true',
+    '    shouldUseWhiteText(onBackgroundHex: painted(raw))',
     '}',
     [
       'while let line = readLine() {',
       '    let raw = line == "<empty>" ? "" : (line == "<blank>" ? "   " : line)',
-      '    let hex = resolvedCardHex(raw) ?? "nil"',
-      '    print("\\(line)~hex=\\(hex)~hairline=\\(hairline(raw))~white=\\(whiteInitials(raw))")',
+      '    print("\\(line)~hex=\\(painted(raw))~hairline=\\(hairline(raw))~white=\\(whiteInitials(raw))")',
       '}'
     ].join('\n')
   ].join('\n\n');
@@ -113,34 +147,39 @@ const runHarness = (values: readonly string[]) => {
   };
 };
 
-describe('watch card colour contract (Story 16.41)', () => {
+describe('watch card colour contract (Stories 16.41, 16.42)', () => {
   it('never hands a raw wire value to a luminance helper', () => {
     const cardListView = readSource(cardListViewPath);
 
     // The defect in one line: `isNearBlack(hex: resolvedColorHex)` scored a palette key. Both
-    // helpers take a hex and BOTH have a silent wrong answer for anything else, so the row must
-    // reach them only through the resolved optional.
-    expect(cardListView).toContain('resolvedAccentHex.map(isNearBlack(hex:)) ?? false');
-    expect(cardListView).toContain(
-      'resolvedAccentHex.map(shouldUseWhiteText(onBackgroundHex:)) ?? true'
-    );
+    // helpers take a hex and BOTH have a silent wrong answer for anything else, so every luminance
+    // call in the view must be handed `paintedAccentHex` — the one resolved, always-valid hex the
+    // row fills with — and there must be exactly two of them.
+    //
+    // ⚠️ Story 16.42 INVERTED this guard rather than loosening it. While the resolution was an
+    // optional, the correct shape was `.map(isNearBlack(hex:))` and ANY call passing an argument
+    // was a violation, so the assertion was "no such calls exist". Now the correct shape IS a call
+    // passing an argument, so the assertion is on the arguments themselves. Same question, and
+    // still exact: `rawColorValue` here fails, and so does a third call site.
+    const luminanceCalls = [
+      ...cardListView.matchAll(/(?:isNearBlack|shouldUseWhiteText)\([^)]*\)/g)
+    ].map(([call]) => call.replace(/\s+/g, ' '));
+
+    expect(luminanceCalls).toEqual([
+      'isNearBlack(hex: paintedAccentHex)',
+      'shouldUseWhiteText(onBackgroundHex: paintedAccentHex)'
+    ]);
 
     // `?? ""` is the trap dressed as a fix: an empty string is not six characters, so it scores
-    // 0.0 and lands back on "black". The decision is defaulted, never the string.
+    // 0.0 and lands back on "black". The fallback is a VALID hex or it is not a fallback.
     expect(cardListView).not.toMatch(/resolvedCardHex\([^)]*\)\s*\?\?\s*""/);
 
-    // And nothing else in the view may score a value directly. Matches only a call that PASSES an
-    // argument — `[^)\s]` after the label excludes the bare method references `isNearBlack(hex:)`
-    // and `shouldUseWhiteText(onBackgroundHex:)` asserted above, which are the correct shape. The
-    // `\s*` after `(` is deliberate: without it a violation wrapped across lines by a formatter
-    // slips through, which is a guard that reports clean rather than one that reports nothing.
-    const luminanceCalls = [
-      ...cardListView.matchAll(
-        /(?:isNearBlack|shouldUseWhiteText)\(\s*(?:hex|onBackgroundHex):\s*[^)\s]/g
-      )
-    ].map((match) => match[0].replace(/\s+/g, ' '));
-
-    expect(luminanceCalls).toEqual([]);
+    // And no colour decision in this view may fall back to a SwiftUI system colour. `.gray` is not
+    // in the Cardì palette at all, so painting it made the watch the one surface that could put a
+    // colour the design system does not contain on screen (Story 16.42). `parseHexColor`'s own
+    // `.gray` guard is deliberately untouched — it lives in `ColorHelpers.swift`, is the generic
+    // hex parser, and is reachable outside the card path.
+    expect(cardListView).not.toMatch(/\?\?\s*(?:Color)?\.gray/);
   });
 
   it('pins the whole derivation chain, not just the two calls at the end of it', () => {
@@ -159,7 +198,7 @@ describe('watch card colour contract (Story 16.41)', () => {
 
     expect({
       rawColorValue: rowProperty(cardListView, 'private var rawColorValue: String {'),
-      resolvedAccentHex: rowProperty(cardListView, 'private var resolvedAccentHex: String? {'),
+      paintedAccentHex: rowProperty(cardListView, 'private var paintedAccentHex: String {'),
       accentColor: rowProperty(cardListView, 'private var accentColor: Color {'),
       needsNearBlackHairline: rowProperty(
         cardListView,
@@ -170,15 +209,16 @@ describe('watch card colour contract (Story 16.41)', () => {
       // The raw wire value, and the ONLY property allowed to hold one.
       rawColorValue:
         'private var rawColorValue: String { if let brand = resolvedBrand { return card.colorHex ?? "#\\(String(format: "%06X", abs(brand.id.hashValue) % 0xFFFFFF))" } return card.colorHex ?? "" }',
-      // The single resolution. Everything below reads THIS, never `rawColorValue`.
-      resolvedAccentHex:
-        'private var resolvedAccentHex: String? { resolvedCardHex(rawColorValue) }',
-      accentColor:
-        'private var accentColor: Color { resolvedAccentHex.map(parseHexColor) ?? .gray }',
+      // The single resolution, and the single default. Everything below reads THIS, never
+      // `rawColorValue` — and the fallback is NAMED, so `core/wear-sync-contract.test.ts` can bind
+      // to one declaration rather than chasing a literal copied into the view.
+      paintedAccentHex:
+        'private var paintedAccentHex: String { resolvedCardHex(rawColorValue) ?? defaultCardAccentHex }',
+      accentColor: 'private var accentColor: Color { parseHexColor(paintedAccentHex) }',
       needsNearBlackHairline:
-        'private var needsNearBlackHairline: Bool { resolvedAccentHex.map(isNearBlack(hex:)) ?? false }',
+        'private var needsNearBlackHairline: Bool { isNearBlack(hex: paintedAccentHex) }',
       prefersWhiteInitials:
-        'private var prefersWhiteInitials: Bool { resolvedAccentHex.map(shouldUseWhiteText(onBackgroundHex:)) ?? true }'
+        'private var prefersWhiteInitials: Bool { shouldUseWhiteText(onBackgroundHex: paintedAccentHex) }'
     });
   });
 
@@ -277,17 +317,25 @@ describe('watch card colour contract (Story 16.41)', () => {
       ]);
     });
 
-    it('defaults an unusable colour to no hairline and white initials', () => {
-      // Absent or malformed input must not fabricate a border. White initials on the `.gray`
-      // fallback fill matches the complication's `WidgetCardPalette.prefersWhiteForeground`,
-      // which also defaults to white for an unknown colour.
-      const values = ['<empty>', '<blank>', 'not-a-colour', '#badhex', '#FFF'] as const;
+    it('paints the named fallback accent for an unusable colour, not SwiftUI grey', () => {
+      // ⚠️ THE STORY 16.42 DEFECT, stated as data. This row used to paint SwiftUI's system `.gray`
+      // — a colour the Cardì palette does not contain — while the phone (`DEFAULT_CARD_COLOR`) and
+      // Wear OS (`DEFAULT_CARD_ACCENT`) both painted the azure. `<blank>` and `<empty>` are the
+      // absent-colour row of the matrix; `purple` and `#badhex` are the unresolvable one.
+      //
+      // The other two fields are UNCHANGED, and that is what keeps this a bug fix rather than a
+      // refactor: `relativeLuminance("#0C84CC")` is 0.20940, which is above the 0.05 hairline
+      // threshold and below the 0.4 white-text one — exactly the two values 16.41 hand-picked. So
+      // `hairline=false` here is also the proof that the fallback is a hex the helpers can READ:
+      // the `?? ""` trap would score 0.0 and report `hairline=true`.
+      const { hex } = fallbackAccent(readSource(colorHelpersPath));
+      const values = ['<empty>', '<blank>', 'not-a-colour', 'purple', '#badhex', '#FFF'] as const;
       const row = runHarness(values);
 
       for (const value of values) {
         expect({ value, fields: row(value) }).toEqual({
           value,
-          fields: ['hex=nil', 'hairline=false', 'white=true']
+          fields: [`hex=${hex}`, 'hairline=false', 'white=true']
         });
       }
     });

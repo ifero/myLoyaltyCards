@@ -68,13 +68,14 @@ export const cardColorSchema = z.enum(CARD_COLOR_KEYS);
  * (`CardVisuals.kt`) — so the phone and Wear OS agree on what an unresolvable colour
  * looks like.
  *
- * ⚠️ watchOS does NOT yet agree, and this constant does not reach it. `CardListView`
- * resolves `mapColor(hex:) ?? .gray`, so a card whose colour is absent or unreadable
- * gets SwiftUI's system grey rather than the azure. That is a pre-existing gap in the
- * same call site as the `isNearBlack` defect noted in Story 21.2a's record; both belong
- * to the watchOS fallback mechanism rather than to the palette, and neither is reached
- * while the phone emits one of the five keys — which it always does, because they are
- * frozen.
+ * ✅ watchOS agrees as of Story 16.42. It cannot import this constant — no shared build — so it
+ * mirrors the VALUE as `defaultCardAccentHex` in `targets/watch/ColorHelpers.swift`, the way Wear
+ * OS mirrors it as `DEFAULT_CARD_ACCENT`, and `core/wear-sync-contract.test.ts` fails if either
+ * copy drifts from this one. Before that, `CardListView` resolved `?? .gray` and painted SwiftUI's
+ * system grey — a colour the Cardì palette does not contain — for a card whose colour was absent
+ * or unreadable. Not reached while the phone emits one of the five frozen keys, which it always
+ * does; ⚠️ but the watch snapshot is never runtime-validated before send, and a nil that lands
+ * once is permanent, because the row reads `rawPayload` in preference to the normalized column.
  *
  * Azure rather than one of the other four: none of the five accents is neutral, so
  * this is a design choice the story records rather than a substitution. Beam yellow

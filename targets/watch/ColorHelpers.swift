@@ -49,6 +49,22 @@ private let namedCardHex: [String: String] = [
     "grey": "#0C84CC"
 ]
 
+/// The accent a card row paints when its colour cannot be resolved — absent, blank, or a value
+/// neither `namedCardHex` nor the hex parser can read.
+///
+/// **This mirrors the phone and Wear OS rather than inventing a third answer.** It is the same
+/// azure the phone falls back to (`DEFAULT_CARD_COLOR` → `CARD_COLORS.grey` in
+/// `core/schemas/card.ts`) and the same one Wear OS names `DEFAULT_CARD_ACCENT`
+/// (`CardVisuals.kt`). watchOS used to paint SwiftUI's system `.gray` here, which is a colour the
+/// Cardì palette does not contain at all — the one surface that could put a non-design-system
+/// colour on screen (Story 16.42).
+///
+/// ⚠️ `core/wear-sync-contract.test.ts` binds to this declaration by regex and fails if it drifts
+/// from `CARD_COLORS[DEFAULT_CARD_COLOR]`. That job is not path-filtered, so it runs on a PR that
+/// touches only the tokens. Keep it a plain file-scope `let` with a six-digit literal; it must stay
+/// visible to `CardListView.swift`, so it is deliberately not `private`.
+let defaultCardAccentHex = "#0C84CC"
+
 /// The normalized `"#RRGGBB"` a raw card color value resolves to — a palette key ("blue", "red", …)
 /// **or** a hex string — or `nil` when the value is absent or unparseable.
 ///
@@ -78,14 +94,15 @@ func resolvedCardHex(_ raw: String?) -> String? {
 }
 
 /// Resolves a named palette key or an arbitrary hex string to a `Color`.
-/// Returns `nil` only when input is nil/empty, and `.gray` when it is present but unparseable.
+/// Returns `nil` only when input is nil/empty, and `defaultCardAccentHex` when it is present but
+/// unparseable — never a SwiftUI system colour (Story 16.42).
 ///
 /// Named keys resolve through `namedCardHex` — the exact palette hex the user picked on the phone.
 /// They previously mapped to SwiftUI *system* colors, which made the same card render one color in
 /// the list and another in its own complication; Wear's `CardVisuals.kt` had already called that
 /// out as watchOS "approximat[ing] with system colours" (Story 16.41).
 ///
-/// ⚠️ **The card row no longer calls this** — it resolves once into `resolvedAccentHex` and maps
+/// ⚠️ **The card row no longer calls this** — it resolves once into `paintedAccentHex` and maps
 /// that through `parseHexColor`, so fill, hairline and initials share one value. This stays as the
 /// Color-returning convenience and is covered by `watch-ios/Tests/CardRowHelpersTests.swift`; it
 /// cannot drift from the row, because both go through `resolvedCardHex`. Retiring it is a
@@ -95,7 +112,7 @@ func mapColor(hex: String?) -> Color? {
         return nil
     }
     guard let resolved = resolvedCardHex(raw) else {
-        return .gray
+        return parseHexColor(defaultCardAccentHex)
     }
     return parseHexColor(resolved)
 }
