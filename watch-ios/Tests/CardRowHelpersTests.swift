@@ -59,9 +59,22 @@ final class CardRowHelpersTests: XCTestCase {
   }
 
   func test_mapColor_invalidHex_returnsFallback() throws {
-    // Invalid hex should still return a fallback Color (non-nil via parseHexColor → .gray)
-    XCTAssertNotNil(mapColor(hex: "#badhex"))
-    XCTAssertNotNil(mapColor(hex: "xyz"))
+    // Present-but-unparseable input resolves to the NAMED fallback accent — the same azure the
+    // phone (`DEFAULT_CARD_COLOR`) and Wear OS (`DEFAULT_CARD_ACCENT`) fall back to — and NOT to
+    // SwiftUI's system `.gray`, which the Cardì palette does not contain (Story 16.42).
+    //
+    // Asserted as an identity rather than as `XCTAssertNotNil`: non-nil was true before the fix
+    // and after it, so it could not tell a reverted `return .gray` from the shipped behaviour.
+    // ⚠️ These XCTests have no test action in this repo and never auto-run, so this is for the
+    // reader; the enforced version lives in
+    // `targets/watch/__tests__/watch-card-colour-contract.test.ts`.
+    XCTAssertEqual(mapColor(hex: "#badhex"), parseHexColor(defaultCardAccentHex))
+    XCTAssertEqual(mapColor(hex: "xyz"), parseHexColor(defaultCardAccentHex))
+
+    // The negative half, stated without naming SwiftUI's `Color` (this file imports only XCTest
+    // and the watch module): `parseHexColor` of an unparseable string IS the system grey, so this
+    // is "the card fallback is not the parser's fallback".
+    XCTAssertNotEqual(mapColor(hex: "#badhex"), parseHexColor("not-a-hex"))
   }
 
   // MARK: - parseHexColor(_:)

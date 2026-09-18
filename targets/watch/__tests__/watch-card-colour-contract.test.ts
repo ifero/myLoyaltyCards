@@ -42,12 +42,36 @@ const HELPERS = 'ColorHelpers.swift';
 const readSource = (filePath: string) => fs.readFileSync(filePath, 'utf8');
 
 /**
- * The file-scope fallback accent, lifted from `ColorHelpers.swift` verbatim.
+ * The declaration `ColorHelpers.swift` names the fallback accent in.
  *
  * `swiftDeclaration` walks braces or brackets and a one-line `let` has neither, so this is a line
  * match. It is anchored to column 0 under the `m` flag, which is what stops a doc comment from
  * shadowing the real declaration the way Story 16.41's QA review demonstrated: every comment in
  * that file is `///`-prefixed, so no commented line can begin with `let`.
+ *
+ * ⚠️ **Deliberately duplicated in `core/wear-sync-contract.test.ts`, byte for byte.** That file
+ * pins the same declaration in the always-on quality-gates job and the two cannot share code —
+ * `core/` must not import from `targets/watch/__tests__/`, and this suite is path-filtered while
+ * that one is not. Keep the two patterns identical: a change here is a change there.
+ *
+ * It tolerates the edits an ordinary Swift author makes — a `: String` annotation, different
+ * spacing, a trailing `//` comment, CRLF — because reporting those as COLOUR DRIFT would be a
+ * false alarm in the one gate that is supposed to mean the watch and the phone disagree. What it
+ * still requires is the part the gate is about: a plain, file-scope, six-digit hex literal, so a
+ * computed or `private` constant fails here rather than drifting quietly.
+ */
+const DEFAULT_ACCENT_DECLARATION =
+  /^let[ \t]+defaultCardAccentHex[ \t]*(?::[ \t]*String[ \t]*)?=[ \t]*"(#[0-9A-Fa-f]{6})"[ \t]*(?:\/\/.*)?\r?$/m;
+
+/**
+ * The fallback accent, lifted from that declaration and NORMALISED to upper case.
+ *
+ * ⚠️ The case normalisation is the point, not a convenience. `resolvedCardHex` upper-cases the
+ * hexes it parses, but the fallback reaches the row through `?? defaultCardAccentHex` untouched —
+ * so a lower-case literal would make the harness below print `hex=#0c84cc` while
+ * `core/wear-sync-contract.test.ts`, which upper-cases both sides, stayed green. Two gates
+ * disagreeing about the same literal is worse than either failing, so the declaration handed to
+ * the harness is REBUILT from the captured hex rather than echoed verbatim.
  *
  * ⚠️ The VALUE is deliberately not asserted here. `core/wear-sync-contract.test.ts` pins it to
  * `CARD_COLORS[DEFAULT_CARD_COLOR]` in the always-on quality-gates job, which is the drift gate
@@ -55,15 +79,15 @@ const readSource = (filePath: string) => fs.readFileSync(filePath, 'utf8');
  * would never run it.
  */
 const fallbackAccent = (source: string) => {
-  const [line, hex] = /^let defaultCardAccentHex = "(#[0-9A-Fa-f]{6})"$/m.exec(source) ?? [];
+  const hex = DEFAULT_ACCENT_DECLARATION.exec(source)?.[1]?.toUpperCase();
 
-  if (!line || !hex) {
+  if (!hex) {
     throw new Error(
       `Unable to find \`let defaultCardAccentHex = "#RRGGBB"\` at file scope in ${HELPERS}`
     );
   }
 
-  return { line, hex: hex.toUpperCase() };
+  return { line: `let defaultCardAccentHex = "${hex}"`, hex };
 };
 
 /** A `CardListView` computed property or view function, sliced whole and whitespace-normalised. */
@@ -149,7 +173,12 @@ const runHarness = (values: readonly string[]) => {
 
 describe('watch card colour contract (Stories 16.41, 16.42)', () => {
   it('never hands a raw wire value to a luminance helper', () => {
-    const cardListView = readSource(cardListViewPath);
+    // Comments stripped FIRST, and the same way `rowProperty` strips them. This file asks what the
+    // view COMPILES, and a `///` line that quotes `isNearBlack(hex:)` — which the prose around
+    // these properties does — would otherwise be counted as a call site and redden a correct file.
+    // That is not hypothetical here: Story 16.29 already ships a `not.toContain` against
+    // `relativeLuminance(` in this same view that a doc comment trips, and it bit during 16.42.
+    const cardListView = readSource(cardListViewPath).replace(/\/\/.*$/gm, '');
 
     // The defect in one line: `isNearBlack(hex: resolvedColorHex)` scored a palette key. Both
     // helpers take a hex and BOTH have a silent wrong answer for anything else, so every luminance
@@ -161,14 +190,24 @@ describe('watch card colour contract (Stories 16.41, 16.42)', () => {
     // was a violation, so the assertion was "no such calls exist". Now the correct shape IS a call
     // passing an argument, so the assertion is on the arguments themselves. Same question, and
     // still exact: `rawColorValue` here fails, and so does a third call site.
+    //
+    // Both sides are SORTED, because the ORDER of two independent property declarations is a
+    // stylistic choice and not a contract — swapping `needsNearBlackHairline` and
+    // `prefersWhiteInitials` must not redden a colour gate. Sorting weakens nothing this guard
+    // claims: it is still an exact multiset, so a changed argument, a third call and a deleted
+    // call each still fail.
     const luminanceCalls = [
       ...cardListView.matchAll(/(?:isNearBlack|shouldUseWhiteText)\([^)]*\)/g)
-    ].map(([call]) => call.replace(/\s+/g, ' '));
+    ]
+      .map(([call]) => call.replace(/\s+/g, ' '))
+      .sort();
 
-    expect(luminanceCalls).toEqual([
-      'isNearBlack(hex: paintedAccentHex)',
-      'shouldUseWhiteText(onBackgroundHex: paintedAccentHex)'
-    ]);
+    expect(luminanceCalls).toEqual(
+      [
+        'isNearBlack(hex: paintedAccentHex)',
+        'shouldUseWhiteText(onBackgroundHex: paintedAccentHex)'
+      ].sort()
+    );
 
     // `?? ""` is the trap dressed as a fix: an empty string is not six characters, so it scores
     // 0.0 and lands back on "black". The fallback is a VALID hex or it is not a fallback.
@@ -180,6 +219,31 @@ describe('watch card colour contract (Stories 16.41, 16.42)', () => {
     // `.gray` guard is deliberately untouched — it lives in `ColorHelpers.swift`, is the generic
     // hex parser, and is reachable outside the card path.
     expect(cardListView).not.toMatch(/\?\?\s*(?:Color)?\.gray/);
+  });
+
+  it('leaves no SwiftUI system colour in ColorHelpers outside the generic hex parser', () => {
+    // ⚠️ `mapColor`'s fallback has NO executed coverage, and that is not an oversight this test
+    // repairs — it is the reason this test exists. `mapColor` returns a SwiftUI `Color`, so it
+    // cannot join the harness above (which runs under the macOS SDK without SwiftUI), and the only
+    // other thing that touches it is `watch-ios/Tests/CardRowHelpersTests.swift`, which has no test
+    // action and never auto-runs. Reverting `return parseHexColor(defaultCardAccentHex)` to
+    // `return .gray` would therefore typecheck, pass every suite in this repo, and quietly put a
+    // colour the Cardì palette does not contain back on screen (Story 16.42). A source pin is a
+    // weaker instrument than an executed one, and it is the only one available here.
+    //
+    // `parseHexColor`'s OWN `.gray` is the one deliberate exception: it is the generic hex parser,
+    // reachable outside the card path, and Story 16.42 left it alone on purpose. So it is sliced
+    // out — brace-matched, not pattern-matched — rather than carved out of the regex, which keeps
+    // the assertion honest about everything else in the file, including anything added later.
+    const helpers = readSource(colorHelpersPath);
+    const parser = swiftDeclaration(
+      helpers,
+      'func parseHexColor(_ hex: String) -> Color {',
+      HELPERS
+    );
+    const outsideParser = helpers.replace(parser, '').replace(/\/\/.*$/gm, '');
+
+    expect(outsideParser).not.toMatch(/\.gray\b/);
   });
 
   it('pins the whole derivation chain, not just the two calls at the end of it', () => {
@@ -234,7 +298,16 @@ describe('watch card colour contract (Stories 16.41, 16.42)', () => {
     // consumes them (here). ⚠️ Honest limit: these are still TEXT pins. They catch a property that
     // stops being read, which is the realistic regression; they cannot catch a colour masked by
     // some later modifier. Only a rendered-view assertion would, and watchOS has no snapshot
-    // harness in this repo — the simulator pass in the story's AC8 is what covers that today.
+    // harness in this repo.
+    //
+    // ⚠️ What covers that today is a ONE-OFF MANUAL RENDER, not a gate, and not an acceptance
+    // criterion — Story 16.42 has six ACs and none of them is visual. The shipped
+    // `struct CardRowView: View` was lifted whole and rendered on macOS through SwiftUI's
+    // `ImageRenderer`, stubbing only `WatchBrands` and `BrandLogoCatalog`, and the before/after
+    // images were compared for a card whose colour will not resolve (system grey → the azure)
+    // beside an unchanged `orange` card. It is recorded in the story's Completion Notes. Nothing
+    // re-runs it, so a regression in a later modifier would reach a device before it reached a
+    // test.
     const cardListView = readSource(cardListViewPath);
 
     // The accent bar and the hairline, in `body`. Counted, not merely present, so a second

@@ -4,7 +4,7 @@ baseline_commit: 1fff29fe4ec252448ca499907098503d79cbc84f
 
 # Story 16.42: watchOS falls back to SwiftUI's system grey, the one accent the Cardì palette does not contain
 
-Status: in-progress
+Status: review
 
 Epic: 16 — Platform & Tech Debt
 
@@ -74,8 +74,14 @@ opposite of that trap, and is what Wear OS already does.
 
 ## Acceptance Criteria
 
-1. A card whose colour cannot be resolved — absent, blank, or unparseable — paints `#0C84CC`, and no
-   part of the row paints a SwiftUI system colour.
+1. A card whose colour cannot be resolved — absent, blank, or unparseable — paints `#0C84CC` as the
+   row's **accent**: the bar and avatar fill, the near-black hairline decision and the initials'
+   contrast decision all derive from that one hex, and none of them falls back to a SwiftUI system
+   colour. ⚠️ Scoped to the accent deliberately, because the row legitimately draws other system
+   colours and a blanket "no system colour anywhere" would be false on the day it was written: the
+   initials are `.white`/`.black` by design (that IS the contrast decision), the row's text is too,
+   and `Color.accentColor` is used elsewhere in the file by the sort sheet
+   (`CardListView.swift:719,724`), which this story does not touch.
 2. The fallback is **named once** in `targets/watch/ColorHelpers.swift` as a file-scope
    `defaultCardAccentHex`, not spelled at a call site, and `mapColor`'s unparseable branch returns it
    instead of `.gray`.
@@ -137,12 +143,31 @@ opposite of that trap, and is what Wear OS already does.
 Three adjacent defects surfaced while tracing whether the `nil` branch is reachable. All three are
 in the watch fallback/transport mechanism rather than in the palette, and none is fixed here.
 
-- **`rawColorValue`'s brand fallback is not deterministic, despite saying it is.**
+- **`rawColorValue`'s brand fallback is not deterministic, despite saying it is — and it SHADOWS
+  this story's fallback for catalogue cards.**
   `CardListView.swift` builds a colour as `abs(brand.id.hashValue) % 0xFFFFFF` and the comment above
   it calls that "a deterministic hex from its brand id". Swift seeds `String.hashValue` **per
-  process**, so that avatar colour changes on every app launch. ⚠️ Story 16.41 separately found this
-  branch is effectively dead — it needs `card.colorHex` to be `nil`, which the phone never sends —
-  so the two findings should be resolved together: delete the branch, or give it a stable hash.
+  process**, so that avatar colour changes on every app launch.
+  ⚠️ **It is reachable, not dead.** It needs `card.colorHex` to be `nil`, which is exactly the
+  condition _Reachability_ above argues for at length — the snapshot is never runtime-validated
+  before send, `encode` uses `encodeIfPresent`, and `syncCardToWatch(id, cardData: any)` takes
+  arbitrary data. An earlier draft of this section claimed the opposite ("effectively dead — the
+  phone never sends `nil`"), which contradicted that section; the two cannot both be true, and this
+  one is the true one.
+  ⚠️ **And on that path the new fallback never fires.** For a CATALOGUE card (the brand resolves)
+  with `colorHex == nil`, `rawColorValue` returns `"#%06X"` of the brand-id hash — six valid hex
+  digits — so `resolvedCardHex` SUCCEEDS and `?? defaultCardAccentHex` is never reached. The row
+  paints a colour that changes on every app launch instead of the azure. AC1 therefore holds for
+  custom cards and for present-but-unparseable values; a catalogue card with no colour at all takes
+  this branch first and never reaches the fallback.
+  ⚠️ **It is also a latent crash.** `abs(brand.id.hashValue)` traps on `Int.min` — Swift's `abs`
+  has no representable result there — so a brand id whose per-process hash lands on that one value
+  aborts the row rather than mis-colouring it.
+  **Kept out of scope and unfixed on purpose:** deleting the hash branch changes the accent every
+  catalogue card without a colour paints, which is a visual decision for the design system and not
+  something a fallback fix gets to take. Stabilising it (a seeded hash, `Int.min`-safe magnitude, or
+  routing it to `defaultCardAccentHex`) is its own story, and all three findings here —
+  nondeterminism, the shadowed fallback, the trap — should be resolved together.
 - **The `?? "grey"` normalizations are dead for display, so an unresolvable colour is permanent.**
   `WatchSessionManager.swift:274` (insert path, `?? "grey"`), `WatchSessionManager.swift:260` (update
   path, `?? entity.color`) and `CardListView.swift:253` (`migrateUserDefaults`, `?? "grey"`) all
@@ -193,13 +218,25 @@ claude-opus-5
   doc comment stated "⚠️ watchOS does NOT yet agree, and this constant does not reach it", naming
   this exact defect. Leaving it would have left the codebase documenting a bug it no longer has. The
   paragraph now records the mirror and points at the gate; no code changed.
+- **The one visual check that happened, stated exactly.** There is no snapshot harness for watchOS
+  in this repo and no visual AC in this story, so this was a **one-off manual render, not a gate**:
+  the shipped `struct CardRowView: View` was lifted whole and rendered on macOS through SwiftUI's
+  `ImageRenderer`, stubbing only `WatchBrands` and `BrandLogoCatalog`, and the before/after images
+  were compared for a card whose colour will not resolve — system grey became the azure — beside an
+  unchanged `orange` card, which confirmed the palette path did not move. ⚠️ Nothing re-runs it.
+  `watch-card-colour-contract.test.ts` pins the text of the derivation chain and of the four places
+  the view reads it, which catches a property that stops being read but not a colour masked by a
+  later modifier.
 - **The two derived decisions were checked, not assumed.** All five palette keys, the near-black
   cases and the arbitrary-hex cases produce identical output to Story 16.41 — the only row of the
   matrix that moves is the unresolvable one.
 
 ## References
 
-- `docs/sprint-artifacts/spec-16-42-watchos-grey-fallback.md` — the approved spec this implements.
+- The approved spec for this story is a local planning artifact and is deliberately **not**
+  committed — no `spec-*.md` has ever been tracked in this repo — so it is not linked here. Its
+  intent, boundaries and I/O matrix are carried by this story's _Context_, _Acceptance Criteria_ and
+  _Dev Notes_.
 - `docs/sprint-artifacts/stories/16-41-fix-watchos-palette-key-resolution.md` — the parent story
   (PR #241); it built `resolvedCardHex` and the executed Swift suite this extends.
 - [Source: docs/epics.md#Story 16.42]

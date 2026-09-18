@@ -325,10 +325,21 @@ describe('phone ↔ Wear OS wire contract', () => {
       //
       // The pattern is anchored to column 0 so a `///` doc comment quoting the declaration cannot
       // shadow it, and it requires a plain six-digit literal — a computed or `private` constant
-      // would fail here rather than drift silently.
-      const hex = /^let defaultCardAccentHex = "(#[0-9A-Fa-f]{6})"$/m
-        .exec(read(WATCH_COLOR_HELPERS))?.[1]
-        ?.toUpperCase();
+      // would fail here rather than drift silently. Everything else an ordinary Swift author might
+      // write is tolerated — a `: String` annotation, different spacing, a trailing `//` comment,
+      // CRLF — because this gate's failure message says the watch and the phone disagree about a
+      // COLOUR, and a formatting edit reported that way is a false alarm that costs more than it
+      // catches.
+      //
+      // ⚠️ Byte-for-byte identical to `DEFAULT_ACCENT_DECLARATION` in
+      // `targets/watch/__tests__/watch-card-colour-contract.test.ts`, which lifts the same
+      // declaration into its Swift harness. The duplication is deliberate: `core/` must not import
+      // from a watch test suite, and that suite is path-filtered while this job is not. Change one
+      // and change the other.
+      const hex =
+        /^let[ \t]+defaultCardAccentHex[ \t]*(?::[ \t]*String[ \t]*)?=[ \t]*"(#[0-9A-Fa-f]{6})"[ \t]*(?:\/\/.*)?\r?$/m
+          .exec(read(WATCH_COLOR_HELPERS))?.[1]
+          ?.toUpperCase();
 
       // Asserted separately so "the extractor found nothing" reads as itself rather than as a
       // colour mismatch against `undefined`, matching the per-key loop above.
