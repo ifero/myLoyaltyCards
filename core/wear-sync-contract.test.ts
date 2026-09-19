@@ -311,6 +311,42 @@ describe('phone ↔ Wear OS wire contract', () => {
       );
     });
 
+    test('the watchOS fallback constant is the same accent the phone falls back to', () => {
+      // ⚠️ Story 16.42, and the third surface of the same invariant the Wear test above pins.
+      // watchOS answered an unresolvable colour with SwiftUI's system `.gray` — a colour the Cardì
+      // palette does not contain at all — while the phone and Wear OS both painted the azure, so
+      // the watch was the one surface that could put a non-design-system colour on screen.
+      //
+      // This check belongs HERE rather than in `targets/watch/__tests__/` for the reason the three
+      // palette tables above are pinned here: `watchos-tests.yml` is path-filtered to
+      // `targets/watch/**` and friends, so a PR that moved only `tokens/color.json` would never run
+      // it. Naming the constant in `ColorHelpers.swift` without this test just relocates an
+      // untested literal.
+      //
+      // The pattern is anchored to column 0 so a `///` doc comment quoting the declaration cannot
+      // shadow it, and it requires a plain six-digit literal — a computed or `private` constant
+      // would fail here rather than drift silently. Everything else an ordinary Swift author might
+      // write is tolerated — a `: String` annotation, different spacing, a trailing `//` comment,
+      // CRLF — because this gate's failure message says the watch and the phone disagree about a
+      // COLOUR, and a formatting edit reported that way is a false alarm that costs more than it
+      // catches.
+      //
+      // ⚠️ Byte-for-byte identical to `DEFAULT_ACCENT_DECLARATION` in
+      // `targets/watch/__tests__/watch-card-colour-contract.test.ts`, which lifts the same
+      // declaration into its Swift harness. The duplication is deliberate: `core/` must not import
+      // from a watch test suite, and that suite is path-filtered while this job is not. Change one
+      // and change the other.
+      const hex =
+        /^let[ \t]+defaultCardAccentHex[ \t]*(?::[ \t]*String[ \t]*)?=[ \t]*"(#[0-9A-Fa-f]{6})"[ \t]*(?:\/\/.*)?\r?$/m
+          .exec(read(WATCH_COLOR_HELPERS))?.[1]
+          ?.toUpperCase();
+
+      // Asserted separately so "the extractor found nothing" reads as itself rather than as a
+      // colour mismatch against `undefined`, matching the per-key loop above.
+      expect(hex).toBeDefined();
+      expect(hex).toBe(CARD_COLORS[DEFAULT_CARD_COLOR].toUpperCase());
+    });
+
     /**
      * The colour a card carries in the canonical fixture must be a key the schema
      * accepts, or the fixture would document a message the phone itself rejects.

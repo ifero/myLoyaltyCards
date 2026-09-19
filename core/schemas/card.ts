@@ -68,13 +68,22 @@ export const cardColorSchema = z.enum(CARD_COLOR_KEYS);
  * (`CardVisuals.kt`) — so the phone and Wear OS agree on what an unresolvable colour
  * looks like.
  *
- * ⚠️ watchOS does NOT yet agree, and this constant does not reach it. `CardListView`
- * resolves `mapColor(hex:) ?? .gray`, so a card whose colour is absent or unreadable
- * gets SwiftUI's system grey rather than the azure. That is a pre-existing gap in the
- * same call site as the `isNearBlack` defect noted in Story 21.2a's record; both belong
- * to the watchOS fallback mechanism rather than to the palette, and neither is reached
- * while the phone emits one of the five keys — which it always does, because they are
- * frozen.
+ * ✅ The watchOS APP agrees as of Story 16.42 — the card list, and only it. It cannot import this
+ * constant — no shared build — so `targets/watch/ColorHelpers.swift` mirrors the VALUE as
+ * `defaultCardAccentHex`, the way Wear OS mirrors it as `DEFAULT_CARD_ACCENT`, and
+ * `core/wear-sync-contract.test.ts` fails if either copy drifts from this one. Before that,
+ * `CardListView` resolved `?? .gray` and painted SwiftUI's system grey — a colour the Cardì
+ * palette does not contain — for a card whose colour was absent or unreadable. Not reached while
+ * the phone emits one of the five frozen keys, which it always does; ⚠️ but the watch snapshot is
+ * never runtime-validated before send, and a nil that lands once is permanent, because the row
+ * reads `rawPayload` in preference to the normalized column.
+ *
+ * ⚠️ The watch COMPLICATION does not agree, and was not changed. `targets/watch-widget/
+ * WidgetCardPalette.swift` is a SECOND watchOS copy of the palette with no fallback constant at
+ * all: `color(for:)` returns `nil` for an unresolvable value and leaves the answer to its caller.
+ * That is latent rather than a live divergence — the per-card complication is "retained but
+ * dormant" (`WatchComplicationWidget.swift:9`) and has no live callers, so nothing paints that
+ * `nil` today. Reviving it means giving that file this same constant.
  *
  * Azure rather than one of the other four: none of the five accents is neutral, so
  * this is a design choice the story records rather than a substitution. Beam yellow

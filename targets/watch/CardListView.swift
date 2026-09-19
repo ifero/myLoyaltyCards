@@ -315,7 +315,7 @@ struct CardRowView: View {
   /// `core/watch-connectivity.ts` sets `colorHex: card.color` from a required enum. A catalogue
   /// card with no value at all falls back to a deterministic hex from its brand id.
   ///
-  /// ⚠️ Never feed this to a luminance helper; go through `resolvedAccentHex`.
+  /// ⚠️ Never feed this to a luminance helper; go through `paintedAccentHex`.
   private var rawColorValue: String {
     if let brand = resolvedBrand {
       return card.colorHex ?? "#\(String(format: "%06X", abs(brand.id.hashValue) % 0xFFFFFF))"
@@ -323,14 +323,27 @@ struct CardRowView: View {
     return card.colorHex ?? ""
   }
 
-  /// The one `"#RRGGBB"` this row actually paints, or `nil` when the value is unusable.
+  /// The one `"#RRGGBB"` this row actually paints — always a real hex, never `nil`.
   ///
   /// Every color decision below derives from this single resolution — fill, hairline and initials
   /// — mirroring Wear's `CardPresentation`, which resolves once and hands `CardRow` the answers.
   /// Deriving any of them from `rawColorValue` instead feeds a palette key to a hex-only luminance
   /// function, which reports "black" for all five keys (Story 16.41).
-  private var resolvedAccentHex: String? {
-    resolvedCardHex(rawColorValue)
+  ///
+  /// ⚠️ Story 16.42 collapsed this from `String?` to `String`. An unresolvable colour used to leave
+  /// three separate properties to answer `nil` in three separately chosen ways — `.gray`, `false`
+  /// and `true` — and the first of those painted a SwiftUI SYSTEM colour, which the Cardì palette
+  /// does not contain. Naming the fallback once and resolving it here turns the other two into
+  /// derivations: the azure's relative luminance is 0.20940, so the hairline is off (threshold
+  /// 0.05) and the initials are white (threshold 0.4) — the same two answers, now computed rather
+  /// than hand-picked. (Spelling that helper's name here would trip Story 16.29's guard against
+  /// this view re-deriving luminance, which is why the number is quoted instead of the call.)
+  ///
+  /// This does NOT reintroduce Story 16.41's `?? ""` trap: that defaulted to a string the luminance
+  /// helpers cannot read, so it scored 0.0 and reported "black". `defaultCardAccentHex` is a valid
+  /// six-digit hex, which is what Wear already does with `DEFAULT_CARD_ACCENT`.
+  private var paintedAccentHex: String {
+    resolvedCardHex(rawColorValue) ?? defaultCardAccentHex
   }
 
   /// Accent color, derived from the SAME resolution as the hairline and the initials rather than
@@ -339,21 +352,21 @@ struct CardRowView: View {
   /// that produced this story's defect, and Wear's `presentationFor` resolves once for the same
   /// reason.
   private var accentColor: Color {
-    resolvedAccentHex.map(parseHexColor) ?? .gray
+    parseHexColor(paintedAccentHex)
   }
 
   /// A near-black accent all but vanishes against the row's near-black surface, so the row takes a
-  /// hairline instead. An unresolvable color gets NO hairline: the border remediates a color we
-  /// know is dark, and defaulting the other way is the bug this property replaced.
+  /// hairline instead. Scored on the hex the row actually paints, so an unresolvable colour is
+  /// judged as the azure fallback it renders as — no hairline — rather than by a separate default.
   private var needsNearBlackHairline: Bool {
-    resolvedAccentHex.map(isNearBlack(hex:)) ?? false
+    isNearBlack(hex: paintedAccentHex)
   }
 
   /// Whether the initials are drawn white rather than black, flipped on the SAME hex the circle is
-  /// filled with. Defaults to white for an unresolvable color, matching the complication's
-  /// `WidgetCardPalette.prefersWhiteForeground`.
+  /// filled with — including for an unresolvable colour, which lands on white anyway and so still
+  /// matches the complication's `WidgetCardPalette.prefersWhiteForeground`.
   private var prefersWhiteInitials: Bool {
-    resolvedAccentHex.map(shouldUseWhiteText(onBackgroundHex:)) ?? true
+    shouldUseWhiteText(onBackgroundHex: paintedAccentHex)
   }
 
   var body: some View {
@@ -443,10 +456,12 @@ struct CardRowView: View {
   /// Initials on the resolved accent color — the fallback for custom cards and for
   /// catalogue brands with no bundled artwork.
   ///
-  /// The text color is derived from `resolvedAccentHex`, the same value that fills the circle,
+  /// The text color is derived from `paintedAccentHex`, the same value that fills the circle,
   /// rather than from a passed-in raw string. Both call sites used to pass a palette key, which
-  /// scored luminance 0 and announced white initials on every accent — including the amber one,
-  /// where white lands at 2.15:1 and black at 9.78:1 (Story 16.41).
+  /// scored luminance 0 and announced white initials on every accent — including the beam yellow,
+  /// where white lands at 1.52:1 and black at 13.78:1. (Those figures were written against the
+  /// retired amber `#F59E0B`, 2.15:1 and 9.78:1; Story 21.2a had already repainted the key to
+  /// `#FCCC0C` by the time the defect shipped. Corrected in Story 16.42.)
   @ViewBuilder
   private func initialsAvatar(text: String) -> some View {
     ZStack {
