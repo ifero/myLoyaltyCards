@@ -15,6 +15,14 @@ import WatchKit
     subsystem: "com.iferoporefi.myloyaltycards.watch", category: "BarcodeGeometry")
 #endif
 
+/// Cream `#F0F0E8` — the tint this screen substitutes for the app's beam accent.
+///
+/// Kept as a named constant rather than inlined so that `test/watch-accent.test.ts` can
+/// assert BOTH halves of the carve-out: that the cream literal is present here, and that
+/// beam `#FCCC0C` is absent. See the `toolbarForegroundStyle` call site below for why the
+/// substitution exists at all, and why cream rather than ink.
+private let barcodeTitleTint = parseHexColor("#F0F0E8")
+
 // Full-screen barcode flash view — restyled to match Figma Apple Watch barcode design
 struct BarcodeFlashView: View {
   let card: WatchCard
@@ -249,6 +257,32 @@ struct BarcodeFlashView: View {
     // stripes, and the top inset they live in is the same inset that keeps the system
     // clock off the symbol — see the `.ignoresSafeArea` above for what that costs.
     .navigationTitle(titleText)
+    // THE BARCODE-SCREEN TINT CARVE-OUT (Story 21.3, specified by
+    // `docs/design/cardi/cardi-watch-grammar.md` §4.5).
+    //
+    // Story 21.3 names `AccentColor` as the watchOS global accent, and that colour
+    // is beam `#FCCC0C`. watchOS applies the accent to the app's title string in the
+    // navigation bar — and on THIS screen that string is the card's NAME. Verified on
+    // a 46 mm simulator: without this line the name renders beam, directly over the
+    // barcode surface, which the design system forbids outright ("anything overlaying
+    // a barcode, especially a drawn beam"; "beam … never on a barcode").
+    //
+    // ⚠️ CREAM, NOT INK, and ink is the instinctive wrong answer. On watchOS the
+    // reserved title strip is part of the BLACK surround, not part of the white
+    // barcode field — the field starts below it. Ink on black is invisible.
+    //
+    // This is not a new exception. The system already says the barcode modal ignores
+    // dark mode and stays white; it ignores the accent for the same reason and in the
+    // same breath.
+    //
+    // ⚠️ `.tint()` DOES NOT WORK HERE, and it fails silently. It was the first attempt
+    // and it changed nothing on a 46 mm simulator: this view is a `navigationDestination`
+    // of the list's `NavigationStack`, and the bar is drawn by the STACK, so a tint set
+    // inside the destination's own body never reaches it. `toolbarForegroundStyle` is the
+    // modifier for bars SwiftUI manages — and it is watchOS-only (watchOS 9.0+,
+    // explicitly unavailable on iOS, macOS and tvOS), which is the clue that it exists
+    // precisely for this strip.
+    .toolbarForegroundStyle(barcodeTitleTint, for: .navigationBar)
     .accessibilityIdentifier("barcode-view")
     .task(id: card.id) {
       // focus the view for crown events and play haptic

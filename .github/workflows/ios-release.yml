@@ -32,6 +32,10 @@ on:
       # native patches this workflow verifies below, and the Fastlane lanes.
       - 'app.json'
       - 'app.config.ts'
+      # Expo config plugins: they change the GENERATED Xcode project rather than the JS
+      # bundle. with-watch-accent-color.js names the watch AccentColor colorset as the
+      # global accent, and without it Color.accentColor silently reverts to grey.
+      - 'plugins/**'
       - 'package.json'
       - 'yarn.lock'
       - 'babel.config.js'
@@ -47,6 +51,7 @@ on:
       # ALSO touches real source still matches and still builds.
       - '!**/*.test.ts'
       - '!**/*.test.tsx'
+      - '!**/*.test.js'
       - '!**/*.test.rb'
       - '!**/*.stories.tsx'
   workflow_dispatch:

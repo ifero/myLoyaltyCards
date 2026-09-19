@@ -99,6 +99,11 @@ regenerate would match nothing and skip the drift check entirely (Story 16.29):
 - `watch-ios/**`
 - `ios/**`
 - `app.json`
+- `plugins/**` — the only workflow that runs an **iOS** `expo prebuild` on a PULL REQUEST, and
+  therefore the only pre-merge gate that executes an iOS config plugin at all (Story 21.3). The
+  release and nightly workflows prebuild for iOS too, but only after merge;
+  `phone-wear-module-tests.yml` prebuilds on PRs but `--platform android`, where an iOS mod never
+  runs.
 - `fastlane/Fastfile`
 
 What it runs:
@@ -123,12 +128,12 @@ File: `.github/workflows/ios-release.yml`
 Triggers:
 
 - `push` to `main` when any path that can change the shipped binary changes:
-  - JS bundle source — `app/**`, `core/**`, `features/**`, `shared/**`
+  - JS bundle source — `app/**`, `core/**`, `features/**`, `shared/**`, `modules/**`
   - native + watch companion — `ios/**`, `targets/**`, `watch-ios/**`
   - compiled-in data and assets — `catalogue/**`, `assets/**`, `tokens/**`
-  - build inputs — `app.json`, `app.config.ts`, `package.json`, `yarn.lock`, `babel.config.js`, `metro.config.js`, `patches/**`, `fastlane/**`
+  - build inputs — `app.json`, `app.config.ts`, `plugins/**`, `package.json`, `yarn.lock`, `babel.config.js`, `metro.config.js`, `patches/**`, `fastlane/**`
   - this workflow itself — `.github/workflows/ios-release.yml`
-- …but **not** for files that cannot reach the binary, excluded with negative patterns: `!**/*.test.ts`, `!**/*.test.tsx`, `!**/*.stories.tsx`. Tests are co-located beside their subject and stories are Storybook-only, so a test- or story-only change no longer costs a native build. A commit that _also_ touches real source still builds.
+- …but **not** for files that cannot reach the binary, excluded with negative patterns: `!**/*.test.ts`, `!**/*.test.tsx`, `!**/*.test.js`, `!**/*.stories.tsx`. Tests are co-located beside their subject and stories are Storybook-only, so a test- or story-only change no longer costs a native build. A commit that _also_ touches real source still builds.
 - `workflow_dispatch` for manual runs on any branch
 
 Note: `catalogue/italy.json` is in the trigger list because `watch-ios/Scripts/generate-catalogue.swift` reads it during this build — a brand added to the catalogue alone still changes what ships.
@@ -151,12 +156,12 @@ File: `.github/workflows/android-release.yml`
 Triggers:
 
 - `push` to `main` when any path that can change the shipped binary changes:
-  - JS bundle source — `app/**`, `core/**`, `features/**`, `shared/**`
+  - JS bundle source — `app/**`, `core/**`, `features/**`, `shared/**`, `modules/**`
   - native — `android/**` (the watch companion is iOS-only, so `targets/**` and `watch-ios/**` are deliberately absent)
   - compiled-in data and assets — `catalogue/**`, `assets/**`, `tokens/**`
   - build inputs — `app.json`, `app.config.ts`, `package.json`, `yarn.lock`, `babel.config.js`, `metro.config.js`, `patches/**`, `fastlane/**`
   - this workflow itself — `.github/workflows/android-release.yml`
-- …but **not** `!**/*.test.ts`, `!**/*.test.tsx`, `!**/*.stories.tsx` — see the iOS section above for the rationale.
+- …but **not** `!**/*.test.ts`, `!**/*.test.tsx`, `!**/*.test.js`, `!**/*.stories.tsx` — see the iOS section above for the rationale. (`plugins/**` is deliberately absent from the Android set — the only config plugin there is registers an iOS mod — but the excludes are shared, so `!**/*.test.js` appears here too.)
 - `workflow_dispatch` for manual runs on any branch
 
 What it runs:
