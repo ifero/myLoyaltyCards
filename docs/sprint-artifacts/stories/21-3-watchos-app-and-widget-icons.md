@@ -4,7 +4,7 @@ baseline_commit: 2ff3e23016a3ee6130e5e0c2b3651de62fa4ac5f
 
 # Story 21.3: watchOS app and widget icons — three stale surfaces, one of them bright green
 
-Status: review
+Status: done
 
 Epic: 21 — Cardì Rebrand — Native Identity
 
