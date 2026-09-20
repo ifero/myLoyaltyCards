@@ -3,12 +3,36 @@
   Adaptive launcher icon. minSdk is 30, so this v26-qualified resource always
   matches and no legacy square fallback is needed.
 
-  The foreground and background are a faithful copy of the phone app's declared
-  Android icon (app.json -> expo.android.adaptiveIcon), not new artwork: the
-  companion app should look like the app it companions. Nothing keeps the two in
-  sync automatically — see README.md § Known gaps.
+  The foreground and monochrome layers are GENERATED, by
+  scripts/build-brand-icons.mjs, from the same geometry definition that renders
+  the phone's icon — so the companion app looks like the app it companions by
+  construction rather than by someone remembering to re-copy it. That is the
+  change Story 21.4 made: they used to be a hand-made downscale of
+  assets/adaptive-icon.png, which is how they came to be a whole rebrand out of
+  date and still drawing the pre-rebrand blue wallet. `yarn icons:check` now re-renders
+  all four densities of both layers and compares bytes, on pre-push and in
+  ci-quality-gates.yml.
+
+  The <monochrome> layer is what Android 13+ tints for a themed icon. It is a
+  separate asset rather than a second reference to @mipmap/ic_launcher_foreground
+  because AdaptiveIconDrawable.getMonochrome() only promises that callers CAN
+  tint it — and a launcher that draws it untinted would put the beam's yellow
+  on a themed field, which is two colours and therefore not a monochrome icon.
+  Below API 33 the element is inert: Android 11's AdaptiveIconDrawable tests the
+  child tag against "background" and "foreground" and continues past anything
+  else, so it costs the Wear OS 3 devices minSdk 30 admits exactly nothing.
+
+  It appears unread ABOVE API 33 too, on Wear specifically, and that is measured
+  rather than assumed: the Wear OS 5 stock launcher (ClockworkSysUiGoogle.apk,
+  API 34) references getForeground, getBackground and AdaptiveIconDrawable but
+  has no reference to getMonochrome at all, and framework method names are the
+  one thing R8 cannot rename. The limits of that scan are written down in
+  docs/design/wear-launcher-verification/. So this layer is kept for the lint
+  check it satisfies, for parity with what the phone declares, and because it
+  costs ~7 KB across four densities — NOT on a belief that Wear tints it.
 -->
 <adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android">
     <background android:drawable="@color/ic_launcher_background" />
     <foreground android:drawable="@mipmap/ic_launcher_foreground" />
+    <monochrome android:drawable="@mipmap/ic_launcher_monochrome" />
 </adaptive-icon>

@@ -17,6 +17,10 @@
  *   targets/watch/AppIcon.png    1024   opaque; the watchOS app icon PREBUILD reads (Story 21.3)
  *   targets/watch-widget/…/OpenAppIcon.imageset/open-app-icon@{1,2,3}x.png
  *                          64/128/192   opaque; the artwork the COMPLICATION draws (Story 21.3)
+ *   watch-android/…/mipmap-{h,x,xx,xxx}dpi/ic_launcher_foreground.png
+ *                  162/216/324/432   Wear OS adaptive foreground, transparent (Story 21.4)
+ *   watch-android/…/mipmap-{h,x,xx,xxx}dpi/ic_launcher_monochrome.png
+ *                  162/216/324/432   Wear OS themed layer, one colour (Story 21.4)
  *
  * WHY THERE IS A RASTERISER IN HERE
  *
@@ -386,15 +390,48 @@ const buildSvg = ({ size, scale, field, stem, accent, tight = false }) => {
 const FULL = { scale: 1, stem: WHITE, accent: BEAM_YELLOW };
 const ANDROID = { scale: ANDROID_SCALE, stem: WHITE, accent: BEAM_YELLOW };
 
+/**
+ * The Android themed layer, on both form factors. One colour and no hue to lean
+ * on, so the beam has to survive as a SHAPE. It does, because it crosses the bars
+ * and extends past them on both sides.
+ *
+ * It is a SEPARATE asset rather than a second reference to the colour foreground,
+ * and the difference shows only when a launcher declines to tint. `getMonochrome()`
+ * promises nothing stronger than "callers CAN use a tinted version of this
+ * drawable", so an untinted draw is within contract — and untinted, the colour
+ * foreground puts a YELLOW beam on a themed field, which is two colours and
+ * therefore not a monochrome icon. It costs nothing under a launcher that does
+ * tint: the two assets' alpha channels are byte-identical and only their RGB
+ * differs, so a SRC_IN tint collapses them to the same image.
+ *
+ * ⚠️ NO WEAR LAUNCHER APPEARS TO CONSUME IT, measured rather than assumed. The
+ * Wear OS 5 stock launcher (`ClockworkSysUiGoogle.apk`, API 34) references
+ * `getForeground`, `getBackground`, `loadIcon` and `AdaptiveIconDrawable` and
+ * contains NO reference to `getMonochrome` — and framework method names are the
+ * one thing R8 cannot rename, so the absence is evidence rather than an artefact
+ * of minification. Not a closed proof, and `docs/design/wear-launcher-verification/`
+ * states the limits. It is generated anyway because it satisfies Android lint's
+ * `MonochromeLauncherIcon`, matches what the phone declares, and costs ~7 KB
+ * across four densities. It is NOT here on a belief that Wear tints it.
+ */
+const MONOCHROME = { scale: ANDROID_SCALE, stem: WHITE, accent: WHITE };
+
+/**
+ * An adaptive-icon layer is 108dp square, so a density bucket's pixel size is
+ * 108 x its multiplier: 162 / 216 / 324 / 432. Derived rather than written out,
+ * because a transposed pair is invisible — each file is still a valid PNG at a
+ * size some other bucket wanted, and only the launcher ever notices.
+ */
+const ADAPTIVE_ICON_DP = 108;
+const HDPI = ADAPTIVE_ICON_DP * 1.5;
+const XHDPI = ADAPTIVE_ICON_DP * 2;
+const XXHDPI = ADAPTIVE_ICON_DP * 3;
+const XXXHDPI = ADAPTIVE_ICON_DP * 4;
+
 const PNGS = [
   ['assets/icon.png', { size: 1024, field: INK, ...FULL }],
   ['assets/adaptive-icon.png', { size: 1024, field: null, ...ANDROID }],
-  [
-    'assets/adaptive-icon-monochrome.png',
-    // One colour, no hue to lean on: the beam has to survive as a SHAPE. It does,
-    // because it crosses the bars and extends past them on both sides.
-    { size: 1024, field: null, scale: ANDROID_SCALE, stem: WHITE, accent: WHITE }
-  ],
+  ['assets/adaptive-icon-monochrome.png', { size: 1024, field: null, ...MONOCHROME }],
   ['assets/favicon.png', { size: 48, field: INK, ...FULL }],
   ['assets/splash-icon.png', { size: 1024, field: null, ...FULL }],
 
@@ -465,6 +502,71 @@ const PNGS = [
   [
     'targets/watch-widget/Assets.xcassets/AppIcon.appiconset/App-Icon-1024x1024@1x.png',
     { size: 1024, field: INK, ...FULL }
+  ],
+
+  // ---------------------------------------------------------------------
+  // Wear OS (Story 21.4).
+  //
+  // `watch-android` is a STANDALONE Gradle project and its README calls that
+  // self-containment deliberate: it "cannot reach into the JS app's assets
+  // without giving up being self-contained". So these four densities were
+  // HAND-COPIED, and hand-copying is exactly how they drifted — the phone
+  // icon changed on 2026-09-13 and these did not, leaving the companion app
+  // wearing the old blue wallet ever since. Generating them WRITES INTO
+  // `watch-android/`; the Gradle project still reads nothing but its own
+  // `res/`, so the self-containment survives and the drift does not.
+  //
+  // The Wear launcher masks to a CIRCLE, and the phone's own `ANDROID_SCALE`
+  // already clears it — measured rather than assumed. The scaled mark's inked
+  // bounding circle is 64.55dp at its WORST density (hdpi, where one pixel of
+  // analytic antialiasing is worth the most dp), against the 66dp maximum logo
+  // size and the 72dp masked viewport of a 108dp adaptive layer. No Wear scale
+  // is needed, and inventing one would break the single geometry definition
+  // this file exists to keep. `test/wear-icons.test.ts` decodes the rendered
+  // pixels and asserts the containment rather than trusting this comment.
+  //
+  // There is no `mdpi` bucket and that is not an omission: `minSdk` is 30 and
+  // no Wear OS device ships below hdpi, so the bucket would be dead weight in
+  // every APK. Android downsamples from hdpi if one ever appeared.
+  // ---------------------------------------------------------------------
+  [
+    'watch-android/app/src/main/res/mipmap-hdpi/ic_launcher_foreground.png',
+    { size: HDPI, field: null, ...ANDROID }
+  ],
+  [
+    'watch-android/app/src/main/res/mipmap-xhdpi/ic_launcher_foreground.png',
+    { size: XHDPI, field: null, ...ANDROID }
+  ],
+  [
+    'watch-android/app/src/main/res/mipmap-xxhdpi/ic_launcher_foreground.png',
+    { size: XXHDPI, field: null, ...ANDROID }
+  ],
+  [
+    'watch-android/app/src/main/res/mipmap-xxxhdpi/ic_launcher_foreground.png',
+    { size: XXXHDPI, field: null, ...ANDROID }
+  ],
+
+  // The themed layer the `<monochrome>` element points at. Inert below API 33
+  // — `AdaptiveIconDrawable` on Android 11 matches the child tag against
+  // "background" and "foreground" and `continue`s past anything else — so it is
+  // free on the Wear OS 3 devices `minSdk` 30 admits. It appears to be unread on
+  // Wear OS 4 and 5 as well, for a different reason: see the `MONOCHROME`
+  // comment above, which is the one place that argument lives.
+  [
+    'watch-android/app/src/main/res/mipmap-hdpi/ic_launcher_monochrome.png',
+    { size: HDPI, field: null, ...MONOCHROME }
+  ],
+  [
+    'watch-android/app/src/main/res/mipmap-xhdpi/ic_launcher_monochrome.png',
+    { size: XHDPI, field: null, ...MONOCHROME }
+  ],
+  [
+    'watch-android/app/src/main/res/mipmap-xxhdpi/ic_launcher_monochrome.png',
+    { size: XXHDPI, field: null, ...MONOCHROME }
+  ],
+  [
+    'watch-android/app/src/main/res/mipmap-xxxhdpi/ic_launcher_monochrome.png',
+    { size: XXXHDPI, field: null, ...MONOCHROME }
   ]
 ];
 

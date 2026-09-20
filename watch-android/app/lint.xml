@@ -45,9 +45,12 @@
     <issue id="DataExtractionRules" severity="ignore" />
 
     <!--
-      MonochromeLauncherIcon is deliberately NOT suppressed. The adaptive icon
-      has no <monochrome> layer, which means no themed icon on Android 13+, and
-      that is a real (small) gap: it needs a flat silhouette asset that does not
-      exist yet in this repo. See README.md § Known gaps.
+      MonochromeLauncherIcon is deliberately NOT suppressed, and it no longer
+      fires: Story 21.4 added the <monochrome> layer, so the check is SATISFIED
+      rather than silenced. Leaving it live is the point — it is the only thing
+      that would notice the layer being dropped again.
+
+      The asset it used to want is generated now, at all four densities, by
+      scripts/build-brand-icons.mjs. See README.md § Launcher icon.
     -->
 </lint>
