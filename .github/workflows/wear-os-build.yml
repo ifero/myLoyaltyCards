@@ -12,7 +12,10 @@ name: CI — Wear OS build
 # and resource shrinking actually process (added by Story 16.35, which made the
 # release variant the one users receive) — and the JVM unit tests pass (Story 10.3
 # added the first ones — sort comparators, colour maths, the read-only invariant and
-# the sort-preference round-trip). It runs no standalone lint and nothing on a
+# the sort-preference round-trip). Since Story 16.43 it also runs a standalone
+# `lintDebug`, where exactly ONE issue — `MonochromeLauncherIcon`, promoted to fatal in
+# app/lint.xml — can fail the job; everything else lint reports is a warning and cannot.
+# It still runs nothing on a
 # device; the install-and-launch and round/square layout checks are done by hand on
 # Wear OS emulators. The release bundle produced here is UNSIGNED and is not uploaded
 # anywhere — the release pipelines build their own and inject the keystore. See
@@ -58,6 +61,12 @@ jobs:
     # debug-only job it replaced. 20m is deliberate headroom for a cold CI cache
     # plus SDK downloads on the first run, and still short enough to catch a
     # genuine hang. Re-measure with workflow_dispatch before tightening it.
+    #
+    # Story 16.43 added `lintDebug` and re-measured: +14s locally (71s -> 85s, both
+    # with `--rerun-tasks`, which is a different method from the cold-cache figure
+    # above and not directly comparable to it). The real job ran 2m58s on PR #244
+    # before lint, so expect a little over three minutes. Nowhere near the 20m
+    # ceiling, so the timeout is unchanged.
     timeout-minutes: 20
 
     steps:
@@ -100,6 +109,43 @@ jobs:
       # The bundle produced here is UNSIGNED and is uploaded nowhere; the release pipelines
       # build their own and inject the keystore. Note an unsigned bundle carries the SAME
       # filename as a signed one, so nothing in this job can or should assert on signing.
-      - name: Run unit tests and build Wear OS debug APK + release bundle
+      # `lintDebug` is here because Story 16.43 found that Android lint ran in CI only
+      # by accident: `lintVitalRelease` is in `bundleRelease`'s task graph, so FATAL-severity
+      # issues were already caught, and nothing below fatal was. `MonochromeLauncherIcon` —
+      # which `app/lint.xml` leaves unsuppressed ON PURPOSE so the themed-icon gap stays
+      # visible — sits below fatal, so Story 21.4 satisfied it once, locally, and nothing
+      # would have noticed it regressing.
+      #
+      # ⚠️ AND THE PROMOTION IS `fatal`, NOT `error`, which is what makes it reach the
+      # RELEASE pipelines too. `fastlane`'s `build_wear_bundle!` calls `bundleRelease`
+      # directly and runs no lint task, so an `error` would have gated only this job.
+      # `fatal` is additionally enforced by `lintVitalRelease`, which AGP already wires
+      # into `bundleRelease` — same single named issue, strictly wider coverage.
+      #
+      # ⚠️ ADDING THE TASK IS NOT WHAT MAKES IT A GATE. This module configures no `lint {}`
+      # block, so defaults apply: `abortOnError` fails on ERRORS, and lint's default
+      # severity for these checks is WARNING. `lintDebug` exits 0 with warnings present.
+      # What gates is `app/lint.xml` promoting that one issue to `severity="fatal"`;
+      # measured, removing the <monochrome> layer takes this job from exit 0 to exit 1.
+      #
+      # ⛔ The three surviving warnings are deliberately NOT suppressed, and
+      # `AndroidGradlePluginVersion` in particular consults the NETWORK for the newest
+      # published version. That is harmless while the promotion is targeted — a warning
+      # cannot fail this job — and would become a red build on a day nobody touched the
+      # repository the moment anyone reaches for `warningsAsErrors`. `app/lint.xml` says so
+      # next to the check itself.
+      #
+      # `lintDebug` rather than `lint`, and NOT because `lint` aggregates variants — AGP 7.0
+      # stopped that and this module pins 9.3.1, so plain `lint` maps to the default variant
+      # anyway. The reason that actually holds: these checks read resources and the manifest,
+      # which do not differ by variant, so pinning lint to the SAME variant the rest of this
+      # step already builds keeps one story rather than two. Measured at ~15s warm.
+      #
+      # ⚠️ Listing `lintDebug` first does NOT guarantee it runs first. Gradle's own docs are
+      # explicit that "a task having no dependencies may execute earlier than it is listed on
+      # the command-line", and these four tasks are siblings with no dependency edges between
+      # them. The job still fails if lint fails, wherever it lands in the schedule — but do
+      # not read the ordering as a promise that lint short-circuits the build.
+      - name: Lint, run unit tests and build Wear OS debug APK + release bundle
         working-directory: watch-android
-        run: ./gradlew testDebugUnitTest assembleDebug bundleRelease --no-daemon
+        run: ./gradlew lintDebug testDebugUnitTest assembleDebug bundleRelease --no-daemon

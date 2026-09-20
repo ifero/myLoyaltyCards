@@ -47,10 +47,56 @@
     <!--
       MonochromeLauncherIcon is deliberately NOT suppressed, and it no longer
       fires: Story 21.4 added the <monochrome> layer, so the check is SATISFIED
-      rather than silenced. Leaving it live is the point — it is the only thing
-      that would notice the layer being dropped again.
+      rather than silenced. The asset it used to want is generated now, at all
+      four densities, by scripts/build-brand-icons.mjs — see README.md
+      § Launcher icon.
 
-      The asset it used to want is generated now, at all four densities, by
-      scripts/build-brand-icons.mjs. See README.md § Launcher icon.
+      It is promoted to FATAL by Story 16.43, and that promotion is what turns
+      it into a gate. Lint's default severity here is WARNING, `abortOnError`
+      fails the build on ERRORS only, and this module configures no `lint {}`
+      block — so as a warning it exits 0 and gates nothing. Satisfying it once
+      and regressing later would have been invisible.
+
+      FATAL rather than ERROR, and the difference is not cosmetic. `error` gates
+      only the job that explicitly runs a lint task, which is `wear-os-build.yml`
+      alone. `fatal` ALSO gates `lintVitalRelease`, which AGP already wires into
+      `bundleRelease` — and `bundleRelease` is what `fastlane`'s
+      `build_wear_bundle!` invokes for every release pipeline. Those pipelines run
+      no lint task of their own, so under `error` a regression could still ship.
+      Measured, with the <monochrome> layer removed:
+
+        lintVitalRelease, severity=error  ->  exit 0   (release path MISSES it)
+        lintVitalRelease, severity=fatal  ->  exit 1   (release path CATCHES it)
+        lintDebug,        severity=fatal  ->  exit 1
+        both tasks, layer present, fatal  ->  exit 0
+
+      Equally narrow — still one named issue — and strictly wider coverage.
+
+      ⚠️ RESIDUAL RISK this mechanism cannot close: nothing protects this line
+      itself. A later `lint { abortOnError = false }`, a `baseline` file, a
+      `checkOnly` list, or simply editing `severity` back to `warning` would
+      defeat the gate while `wear-os-build.yml` still runs and still shows green.
+      There is no `lint {}` block and no baseline in this module today (verified),
+      and `.gradle.kts`/`lint.xml` are invisible to eslint, jest and prettier — so
+      a human reviewer is the only thing that would notice.
+    -->
+    <issue id="MonochromeLauncherIcon" severity="fatal" />
+
+    <!--
+      AndroidGradlePluginVersion is the THIRD member of the non-reproducible
+      family above, and it is deliberately NOT suppressed — which is the
+      opposite of what you would expect from that comment, so here is why.
+
+      Suppression is only needed for a check that can FAIL a build. This one is
+      a warning, warnings do not fail, and the promotion above is targeted at a
+      single issue rather than a blanket `warningsAsErrors`. So it costs nothing
+      but a line in the report, and an `ignore` for it would be dead config of
+      exactly the kind the DataExtractionRules note above argues against.
+
+      ⛔ IT MUST BE SUPPRESSED FIRST if anyone ever reaches for
+      `warningsAsErrors` or `lint { abortOnError }` over the whole ruleset.
+      Then it can fail a build, and it consults the NETWORK for the newest
+      published Gradle/AGP version — so the job would go red on a day nobody
+      touched the repository.
     -->
 </lint>

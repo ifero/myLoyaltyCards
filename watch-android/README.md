@@ -113,8 +113,10 @@ is **not** required to install a debug build, but the app has nothing to show wi
 ```
 
 Rules that are deliberately suppressed, each with its reasoning, live in [`app/lint.xml`](app/lint.xml).
-`MonochromeLauncherIcon` is deliberately **not** among them: it is satisfied rather than silenced —
-see [Launcher icon](#launcher-icon-story-214).
+`MonochromeLauncherIcon` is deliberately **not** among them: it is satisfied rather than silenced (see
+[Launcher icon](#launcher-icon-story-214)) and promoted to **fatal**, which is what makes it the one
+lint issue that can fail CI — see [§ CI](#ci). This task also runs in CI, so a local run is a
+convenience rather than the only line of defence.
 
 ## Architecture
 
@@ -534,7 +536,7 @@ signing failure cannot strand a phone-only release. Four things are load-bearing
    independently-green jobs. That is why the release job carries both the Node/Expo toolchain and
    JDK 17 + Android SDK 36.
 
-Before uploading, `scripts/check-android-signing-parity.mjs` asserts the Wear APK and the phone AAB
+Before uploading, `scripts/check-android-signing-parity.mjs` asserts the Wear and phone artifacts
 carry the **same** signing certificate and fails the job if not — the Wearable Data Layer refuses to
 connect two artifacts signed differently, and that failure is otherwise completely silent. It prints
 the certificate SHA-256, which is also the value the Digital Asset Links entry needs.
@@ -655,19 +657,21 @@ Two toolchain facts that are easy to get wrong:
 ## CI
 
 [`.github/workflows/wear-os-build.yml`](../.github/workflows/wear-os-build.yml) runs
-`./gradlew testDebugUnitTest assembleDebug assembleRelease`, path-filtered to `watch-android/**` so it
-stays off the phone app's critical path — the same shape as `chromatic.yml`'s filtering and `watchos-tests.yml`'s
+`./gradlew lintDebug testDebugUnitTest assembleDebug bundleRelease`, path-filtered to `watch-android/**`
+so it stays off the phone app's critical path — the same shape as `chromatic.yml`'s filtering and `watchos-tests.yml`'s
 scoping.
 
 **Be precise about what that does and does not prove**, because an absent job is easily mistaken for
 coverage:
 
 - ✅ **Compiles — both variants.** The module cannot rot silently; a broken build fails the PR that
-  broke it. **`assembleRelease` was added by Story 16.35**, which made the release variant the one
-  users actually receive. Until then R8 full mode had never run against this app at all, and
+  broke it. **The release variant was added by Story 16.35**, which made it the one users actually
+  receive — as `assembleRelease` at the time, changed to `bundleRelease` in `d83586b` once Play
+  turned out to refuse raw APKs for this listing. Until then R8 full mode had never run against this app at all, and
   [`app/proguard-rules.pro`](app/proguard-rules.pro) says so in its own header — its ZXing keep rules
-  were written blind against a variant CI did not build. The APK the job produces is unsigned (no
-  `signingConfig` by design), so this proves the variant compiles and survives R8, nothing more.
+  were written blind against a variant CI did not build. The **bundle** the job produces is unsigned
+  (no `signingConfig` by design), so this proves the variant compiles and survives R8, nothing more.
+  An AAB, not an APK — the same correction as the sentence above, one line further on.
 - ✅ **Kotlin unit tests run — genuinely, in CI.** Story 10-3 added the first ones (`app/src/test/…`):
   the sort comparators, the colour/initials/contrast maths, the AC2 avatar rules, the read-only
   invariant (card data does not survive a reload), and the sort-preference round-trip through a
@@ -681,12 +685,23 @@ coverage:
   emulator**. The mapper tests are pure JVM. The first CI run downloads Robolectric's `android-all`
   runtime (well within the job's 20m headroom).
 - ✅ **Release signing is checked at release time, not here.** `scripts/check-android-signing-parity.mjs`
-  asserts the Wear APK and the phone AAB share one signing certificate before either reaches Play
-  (Story 16.35). It cannot run in this job — there is no keystore in the repo — but its _parsing_ is
-  unit-tested in `scripts/lib/signing-fingerprints.test.js`, which does run in `ci-quality-gates.yml`.
-- ❌ **No lint in CI.** `./gradlew lintDebug` passes locally and is worth wiring up as a gate later; it
-  is not one today. (`lintVitalRelease` now runs as part of `assembleRelease`, which is a narrower
-  check — fatal-severity issues only.)
+  asserts the Wear and phone artifacts share one signing certificate before either reaches Play
+  (Story 16.35). **Both are AABs today** — that script's own header says so, and Play refuses raw
+  APKs for this application, so the older "Wear APK" phrasing was stale. It cannot run in this job —
+  there is no keystore in the repo — but its _parsing_ is unit-tested in
+  `scripts/lib/signing-fingerprints.test.js`, which does run in `ci-quality-gates.yml`.
+- ✅ **Android lint runs, and ONE issue actually gates (Story 16.43).** Before it, lint reached CI
+  only by accident: `lintVitalRelease` is in `bundleRelease`'s task graph, so **fatal**-severity
+  issues were already caught and nothing below fatal was. ⚠️ **Adding `lintDebug` is not what makes
+  it a gate.** This module configures no `lint {}` block, so `abortOnError` fails on **errors** and
+  lint's default severity for these checks is **warning** — `lintDebug` exits 0 with warnings
+  present. What gates is [`app/lint.xml`](app/lint.xml) promoting `MonochromeLauncherIcon` to
+  `severity="fatal"` — fatal rather than error so that `lintVitalRelease`, which every release pipeline
+  already runs via `bundleRelease`, enforces it too. Measured: removing the `<monochrome>` layer takes the job from exit 0 to exit 1
+  with _"Lint found 1 error and 3 warnings"_. The other warnings — including the network-consulting
+  `AndroidGradlePluginVersion` — are deliberately left unsuppressed, because a warning cannot fail
+  this job; that stops being true the moment anyone reaches for `warningsAsErrors`, and `lint.xml`
+  says so next to the check.
 - ❌ **No instrumented or on-device test.** Install-and-launch and the round/square layout check (AC8)
   are done by hand on Wear OS emulators, not by CI. With effectively no Android telemetry, that manual
   two-shape check is the only real gate against a round-screen layout defect.

@@ -12,7 +12,7 @@ project_name: 'myLoyaltyCards'
 user_name: 'Ifero'
 date: '2025-01-03'
 totalEpics: 23
-totalStories: 205 # counted from `### Story` headings on 2026-09-17
+totalStories: 206 # counted from `### Story` headings on 2026-09-20
 aligned_with_tracker: '2026-08-02'
 authoritative_source: 'docs/sprint-artifacts/sprint-status.yaml'
 ---
@@ -3306,6 +3306,27 @@ It is **narrower still** than watchOS was. On a round display it additionally in
 - Behaviour is EXECUTED, not described: the shipped declarations run under `xcrun swift`, and each new test is shown failing against the unfixed code.
 
 **Notes:** ⚠️ **Two claims in the original report were wrong, both making it look smaller.** Catalogue cards are NOT unaffected — `resolvedColorHex` only fell back to the brand-id hash when `colorHex` was nil, which never happens, so the brand-hash fallback is dead code and every row took the hairline. And at the time the defect was found, Story 21.2a had NOT landed, so the palette was still the shipped one and NONE of the five keys was near-black (lowest `grey`, `L=0.171`) — the hairline would have disappeared from every row, not four of five. 21.2a has since merged and moved `blue` to `#0C3C84` (`L=0.049758`, `0.00024` under the threshold — that figure from the report is correct), so the reported picture is now the real one. The cited Android test `deepBlueAccent_sitsJustInsideTheNearBlackThreshold` does not exist on any ref; the real assertions are in `CardVisualsTest.luminanceAndContrastExtremes`. **Sequenced AFTER Story 21.2a (`wave_1c`), decided by ifero on 2026-09-17 on a live collision, and REBASED once it merged** as `f4782ee` (#240) on its freeze branch. 21.2a had independently fixed the same system-colour root cause in a different shape and built its own parity gate, but ⚠️ it does NOT fix this defect — its `CardListView.swift` is untouched, so **the bug is live on `main` today**. The rebase kept this story's `namedCardHex` + `resolvedCardHex(_:)` structure carrying 21.2a's Cardì hexes, deleted this story's own parity gate in favour of 21.2a's, and repointed that gate's watchOS extractor from `mapColor`'s switch to the table (one line, reusing 21.2a's own `swiftHexMap`). ⚠️ The merge also changed what the fix LOOKS like: `blue` `#0C3C84` is genuinely near-black (`L=0.049758`), so blue now KEEPS its hairline and the other four lose theirs — the table the original report predicted — while on `main` all five still draw it for the original wrong reason, which is harder to spot now that one of them looks right. ⛔ The risk is release timing, not merge order: this must merge before the 21.7 gate cuts the rebrand release, because `runtimeVersion.policy` is `appVersion` and no OTA can repair it afterwards.
+
+### Story 16.43: Android lint never runs in CI, so the one check `lint.xml` deliberately left visible is only ever cleared by hand
+
+**As a** maintainer of the Wear OS app, **I want** Android lint to run as a real gate in CI, **So that** a check the repository deliberately left unsuppressed cannot be satisfied once and then silently regress.
+
+**Found 2026-09-20 during the QA review of Story 21.4.** That story added a `<monochrome>` layer specifically to satisfy `MonochromeLauncherIcon` — a check `watch-android/app/lint.xml` leaves **unsuppressed on purpose** so the gap stays visible. It was cleared once, locally, and nothing re-verifies it. Drop the layer and every gate stays green.
+
+**⚠️ THE OBVIOUS FIX GATES NOTHING, and that is measured rather than argued.** `wear-os-build.yml` runs no `lint*` task, so "add `lintDebug`" looks like the whole story. It is not: `watch-android/app/build.gradle.kts` has **no `lint {}` block**, so all defaults apply, and `./gradlew -p watch-android lintDebug` exits **0** with findings present — `abortOnError` fails on _errors_, and every finding here is a _warning_. `MonochromeLauncherIcon` is a warning. So adding the task alone buys ~15s of CI time and changes no outcome, which is exactly the trap `watch-android/README.md` § CI warns about in its own words: _"an absent job is easily mistaken for coverage."_ A non-gating gate is worse, because it also looks like coverage.
+
+**⚠️ AND THE GAP IS NARROWER THAN "NO LINT IN CI".** `lintVitalRelease` is already in `bundleRelease`'s task graph — confirmed with `--dry-run` — and the workflow runs `bundleRelease`. So **fatal-severity** lint does run in CI today. What does not run is everything below fatal, which is where `MonochromeLauncherIcon` lives.
+
+**Acceptance Criteria:**
+
+- `MonochromeLauncherIcon` is promoted to `severity="fatal"` in `watch-android/app/lint.xml`, so it can actually fail a build. Its existing comment explains why it is unsuppressed; it now explains why it is an error.
+- `lintDebug` runs in `.github/workflows/wear-os-build.yml`, and the workflow comment states what it does and does not gate.
+- **`AndroidGradlePluginVersion` is NOT suppressed**, and the story says why not. It consults the network, so it is non-reproducible in the way `GradleDependency` and `NewerVersionAvailable` are — but under a targeted promotion it stays a _warning_, never fails a build, and suppressing it would be dead config. ⛔ It MUST be suppressed first if anyone later reaches for `warningsAsErrors`, which is the broader alternative this story deliberately does not take.
+- The promotion is proven to bite: `lintDebug` is shown FAILING with the `<monochrome>` layer removed and passing with it present.
+- `watch-android/README.md` § CI is corrected. It currently claims the workflow runs `assembleRelease`; it runs `bundleRelease`. Its "❌ No lint in CI" bullet becomes accurate for whatever this story lands.
+- The added CI duration is measured and the workflow's own timing comment updated if it moves materially. Measured locally at ~15s warm.
+
+**Notes:** ⛔ **Sequenced AFTER Story 21.4**, and that is a hard dependency rather than a preference: `main` has no `<monochrome>` layer today, so promoting the check to `fatal` turns the Wear job red on `main` until 21.4 merges. Measured by removing the layer and re-running lint — it reports `MonochromeLauncherIcon` plus, if the generated PNGs are present without the reference, `UnusedResources`, which is a second free guard on the same coupling. ⚠️ **The follow-up note that spawned this story overstated the problem** — it claimed adding `lintDebug` as-is would hand CI a gate that "can go red on a day nobody touched the repo". It cannot; warnings never fail. The nondeterminism only bites under `warningsAsErrors`. The correction is recorded here so the next reader does not suppress a check for a reason that does not apply. Note also that `.github/build-path-filters.json` governs which changes reach a RELEASE build and deliberately excludes `watch-android/**` from both platform sets; this story does not touch it.
 
 ## Epic 17: Apple Wallet Pass Support
 
