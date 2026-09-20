@@ -4,7 +4,7 @@ baseline_commit: 635cb949d257133ba552c3c06bdab0bdf21ab3bc
 
 # Story 16.43: Android lint never runs in CI, so the one check `lint.xml` deliberately left visible is only ever cleared by hand
 
-Status: review
+Status: done
 
 Epic: 16 — Platform & Tech Debt
 
