@@ -113,8 +113,8 @@ is **not** required to install a debug build, but the app has nothing to show wi
 ```
 
 Rules that are deliberately suppressed, each with its reasoning, live in [`app/lint.xml`](app/lint.xml).
-One warning is left **unsuppressed on purpose** (the missing monochrome icon) — see
-[Known gaps](#known-gaps).
+`MonochromeLauncherIcon` is deliberately **not** among them: it is satisfied rather than silenced —
+see [Launcher icon](#launcher-icon-story-214).
 
 ## Architecture
 
@@ -203,6 +203,64 @@ would never trigger it — precisely the case the gate exists for.
   The directory ignore rule covers it; do not commit it.
 - **No brand artwork is involved.** The card list draws initials on a brand-coloured circle, so `name`
   and `color` are all Story 10-3 needs. `logo` is generated for field parity and has no consumer yet.
+
+## Launcher icon (Story 21.4)
+
+The adaptive launcher icon's two bitmap layers are **generated**, at all four density buckets, by
+[`scripts/build-brand-icons.mjs`](../scripts/build-brand-icons.mjs) — the same script, from the same
+geometry constants, that renders the phone's icon and the watchOS one:
+
+| resource                                        | size            | role                          |
+| ----------------------------------------------- | --------------- | ----------------------------- |
+| `mipmap-{h,x,xx,xxx}dpi/ic_launcher_foreground` | 162/216/324/432 | the Cardì mark, transparent   |
+| `mipmap-{h,x,xx,xxx}dpi/ic_launcher_monochrome` | 162/216/324/432 | the Android 13+ themed layer  |
+| `values/colors.xml` `ic_launcher_background`    | —               | opaque Cardì ink, `#FF181824` |
+
+```bash
+yarn icons:build   # rewrite every brand asset, phone + watchOS + Wear OS
+yarn icons:check   # fail if any has drifted from the mark (pre-push + CI)
+```
+
+**Never edit the mipmaps by hand.** That is how they broke: they used to be a hand-made downscale of
+`assets/adaptive-icon.png`, so when the Cardì rebrand changed the phone icon they silently stayed on
+the old blue wallet, under a `colors.xml` comment that claimed they matched. `yarn icons:check` runs
+in `ci-quality-gates.yml`, which — unlike `wear-os-build.yml` — is **not** path-filtered, so a change
+that touches only the generator is still gated.
+
+This does **not** breach the self-containment rule at the top of this file. The generator _writes
+into_ `watch-android/`; the Gradle build still reads nothing but its own `res/`, and `assembleDebug`
+runs no Node step. It is the `Brands.kt` arrangement applied to artwork.
+
+`test/wear-icons.test.ts` (in the repo root's `test/`, for the same path-filter reason) decodes the
+rendered pixels and checks what bytes alone cannot: that the mark clears Wear OS's **circular**
+launcher mask at every density, that the background matches `app.json` and the identity token, and
+that all three layers are declared.
+
+### The monochrome layer
+
+`<monochrome>` is a separate asset rather than a second reference to `ic_launcher_foreground`.
+`AdaptiveIconDrawable.getMonochrome()` promises only that callers _can_ use a tinted version, so a
+launcher that draws it untinted is within contract — and untinted, the colour foreground puts the
+beam's yellow on a themed field, which is two colours and therefore not a monochrome icon. Under a
+launcher that does tint, the choice is free: the two files' alpha channels are byte-identical.
+
+The element is **inert below API 33**. Android 11's `AdaptiveIconDrawable` matches each child tag
+against `background` and `foreground` and `continue`s past anything else, so it costs the Wear OS 3
+devices `minSdk` 30 admits exactly nothing.
+
+⚠️ **No themed-icon support was found on Wear OS 5 either, and no API level explains that one.**
+The stock launcher — `ClockworkSysUiGoogle.apk`, confirmed by `dumpsys window` to be the package
+drawing the app grid — references `getForeground`, `getBackground`, `loadIcon` and
+`AdaptiveIconDrawable`, and contains **no** reference to `getMonochrome`. Framework method names
+survive R8 minification, so that absence is evidence rather than an artefact. The device also
+exposes no themed-icon affordance at all. It is not a closed proof: a dex scan cannot rule out
+theming applied platform-side and handed back through `loadIcon()`, and it covers one build
+(`5.0.1.627519173`, the system image's own copy) rather than third-party launchers or Wear OS 6/7.
+See [`docs/design/wear-launcher-verification/`](../docs/design/wear-launcher-verification/) for the
+full working. The layer is kept for three reasons that do not depend on Wear reading it — it
+satisfies lint's `MonochromeLauncherIcon`, it matches what `app.json` declares for the phone, and it
+costs about 7 KB across four densities. Do not take its presence as a claim that a Wear launcher
+tints it.
 
 ## Card list and sort (Story 10.3)
 
@@ -642,14 +700,6 @@ output here).
 
 Flagged rather than silently carried:
 
-- **No monochrome launcher icon**, so no themed icon on Android 13+. Adding one needs a flat silhouette
-  asset that does not exist in this repo — a design task, not a code one. Lint's
-  `MonochromeLauncherIcon` warning is left **unsuppressed** so it stays visible.
-- **The launcher icon is a copy, not a reference.** `app/src/main/res/mipmap-*/ic_launcher_foreground.png`
-  is a faithful downscale of `assets/adaptive-icon.png` and the background colour matches
-  `expo.android.adaptiveIcon.backgroundColor`, but **nothing keeps them in sync**. A standalone Gradle
-  project cannot reach into the JS app's assets without giving up being self-contained. If the phone
-  icon changes, this one must be regenerated by hand.
 - **No production telemetry.** Sentry has effectively no Android coverage (~10 events / 90 days, ~100 %
   iOS), so nothing about this app will be observable in production at launch. "No crash in Sentry"
   proves nothing here.

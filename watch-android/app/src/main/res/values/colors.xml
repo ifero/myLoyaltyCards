@@ -1,5 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- Matches app.json -> expo.android.adaptiveIcon.backgroundColor. -->
-    <color name="ic_launcher_background">#FFFFFFFF</color>
+    <!--
+      The launcher icon's background layer: opaque Cardì ink.
+
+      This used to carry a comment asserting that it matched app.json ->
+      expo.android.adaptiveIcon.backgroundColor, and nothing checked the
+      assertion. It stopped being true the moment the rebrand changed that value
+      (f293c7f) and the icon sat on an opaque WHITE field afterwards, with a
+      comment underneath it saying otherwise — a comment is not a gate.
+
+      The claim is now made somewhere that can fail: test/wear-icons.test.ts
+      reads this file, app.json and the generated IDENTITY_COLORS token and
+      fails if the three disagree. So this comment only has to say what the
+      value IS, which is the one thing a comment can be trusted with.
+    -->
+    <color name="ic_launcher_background">#FF181824</color>
 </resources>

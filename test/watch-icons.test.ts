@@ -1,8 +1,8 @@
 import { createHash } from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
-import { inflateSync } from 'node:zlib';
 
+import { COLOR_TYPE_RGB, decodeScanlines, readHeader, type Header } from './png-scanlines';
 import { IDENTITY_COLORS } from '../shared/theme/tokens.generated';
 
 /**
@@ -33,9 +33,6 @@ const WATCH_APPICONSET = 'targets/watch/Assets.xcassets/AppIcon.appiconset';
 const WIDGET_APPICONSET = 'targets/watch-widget/Assets.xcassets/AppIcon.appiconset';
 const OPEN_APP_ICON = 'targets/watch-widget/Assets.xcassets/OpenAppIcon.imageset';
 
-/** PNG colour type 2 — RGB with NO alpha channel. */
-const COLOR_TYPE_RGB = 2;
-
 /** Every artefact this story added, with the size it must be. */
 const GENERATED: ReadonlyArray<readonly [string, number]> = [
   [WATCH_APP_ICON, 1024],
@@ -45,17 +42,7 @@ const GENERATED: ReadonlyArray<readonly [string, number]> = [
   [`${OPEN_APP_ICON}/open-app-icon@3x.png`, 192]
 ];
 
-type Header = { width: number; height: number; depth: number; colorType: number };
-
-const header = (relative: string): Header => {
-  const png = read(relative);
-  return {
-    width: png.readUInt32BE(16),
-    height: png.readUInt32BE(20),
-    depth: png.readUInt8(24),
-    colorType: png.readUInt8(25)
-  };
-};
+const header = (relative: string): Header => readHeader(read(relative));
 
 /**
  * Indexed read with strict mode's `undefined` narrowed away.
@@ -67,42 +54,20 @@ const header = (relative: string): Header => {
 const at = (bytes: Uint8Array, index: number): number => bytes[index] ?? 0;
 
 /**
- * Decode one of OUR PNGs to RGB triples.
+ * The RGB view these artefacts need.
  *
- * `build-brand-icons.mjs` writes every scanline with filter type 0 (None) because it
- * allocates a zeroed buffer and never sets a filter byte, so this needs no filter
- * reconstruction — and asserting that is itself useful: a future encoder change that
- * introduced adaptive filtering would fail here loudly instead of silently changing
- * what this suite measures.
+ * They are OPAQUE marks on a flat ink field, so the question this suite asks is "which pixels
+ * are not the field" and any alpha a source carried is not part of it. `decodeScanlines` does
+ * the PNG work — including the filter-type-0 invariant, which is the encoder's guarantee rather
+ * than this suite's.
  */
 const decode = (relative: string): { size: number; rgb: Uint8Array } => {
-  const png = read(relative);
-  const size = png.readUInt32BE(16);
-  const channels = png.readUInt8(25) === COLOR_TYPE_RGB ? 3 : 4;
-  const parts: Buffer[] = [];
-  let offset = 8;
-  while (offset < png.length) {
-    const length = png.readUInt32BE(offset);
-    if (png.toString('ascii', offset + 4, offset + 8) === 'IDAT') {
-      parts.push(png.subarray(offset + 8, offset + 8 + length));
-    }
-    offset += 12 + length;
-  }
-  const raw = inflateSync(Buffer.concat(parts));
-  const stride = size * channels;
+  const { size, channels, pixels } = decodeScanlines(read(relative), relative);
   const rgb = new Uint8Array(size * size * 3);
-  for (let y = 0; y < size; y += 1) {
-    const filter = raw[y * (stride + 1)];
-    if (filter !== 0) {
-      throw new Error(`${relative}: scanline ${y} uses PNG filter ${filter}, expected 0 (None)`);
-    }
-    for (let x = 0; x < size; x += 1) {
-      const source = y * (stride + 1) + 1 + x * channels;
-      const target = (y * size + x) * 3;
-      rgb[target] = at(raw, source);
-      rgb[target + 1] = at(raw, source + 1);
-      rgb[target + 2] = at(raw, source + 2);
-    }
+  for (let i = 0; i < size * size; i += 1) {
+    rgb[i * 3] = at(pixels, i * channels);
+    rgb[i * 3 + 1] = at(pixels, i * channels + 1);
+    rgb[i * 3 + 2] = at(pixels, i * channels + 2);
   }
   return { size, rgb };
 };

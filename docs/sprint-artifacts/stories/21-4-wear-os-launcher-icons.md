@@ -1,10 +1,10 @@
 ---
-baseline_commit: 2ff3e23016a3ee6130e5e0c2b3651de62fa4ac5f
+baseline_commit: bda7ce71eec95d9d3b9746837c5c6f59cd3b7072
 ---
 
 # Story 21.4: Wear OS launcher icons — and the background colour that silently stopped matching
 
-Status: ready-for-dev
+Status: review
 
 Epic: 21 — Cardì Rebrand — Native Identity
 
@@ -92,15 +92,19 @@ missing themed icon stays visible. `build.gradle.kts` contains no icon reference
 
 ## Tasks / Subtasks
 
-- [ ] **Task 1 — Extend the generator (AC1).** Four densities into `PNGS`. Note the existing
+- [x] **Task 1 — Extend the generator (AC1).** Four densities into `PNGS`. Note the existing
       `ANDROID_SCALE` is derived (`min(1, (0.66 × 100) / 2 / radius)` ≈ ×0.873) and clamped at 1 so
       it can only shrink — reuse it rather than inventing a Wear scale.
-- [ ] **Task 2 — `colors.xml` + comment (AC2).**
-- [ ] **Task 3 — `ic_launcher.xml` (AC3), and the monochrome decision (AC4).**
-- [ ] **Task 4 — `icons:check` coverage (AC7).**
-- [ ] **Task 5 — README corrections (AC8).**
-- [ ] **Task 6 — AVD verification (AC5, AC6).** Round `wearos30_arm64` (384²) and a created square
-      `wearos_square` from the android-30 android-wear image. Headless boot, `screencap`.
+      Reused unchanged; the sizes are derived from the 108dp layer rather than written out.
+- [x] **Task 2 — `colors.xml` + comment (AC2).** `#FF181824`, and the comment now points at the
+      gate that checks it instead of asserting the match itself.
+- [x] **Task 3 — `ic_launcher.xml` (AC3), and the monochrome decision (AC4).** Monochrome ADDED,
+      as a separate generated asset — see the decision note below.
+- [x] **Task 4 — `icons:check` coverage (AC7).** 14 → 22 artefacts.
+- [x] **Task 5 — README corrections (AC8).** Both claims corrected, plus a THIRD copy of the same
+      falsehood in `app/lint.xml` that the story does not list.
+- [x] **Task 6 — AVD verification (AC5, AC6).** Round `wearos30_arm64` (384²) and the existing
+      square `wear_square_30` (360²). Headless boot, `screencap`.
 
 ## Dev Notes
 
@@ -131,10 +135,225 @@ AC5 and AC6 are emulator work.
 
 ### Agent Model Used
 
+claude-opus-5 (Claude Code, `bmad-dev-story`)
+
 ### Debug Log References
+
+- `yarn icons:build` / `yarn icons:check` — 14 -> 22 artefacts.
+- `ANDROID_HOME=... watch-android/gradlew -p watch-android lintDebug :app:testDebugUnitTest assembleDebug`
+  — failed first (see the `--` finding), then BUILD SUCCESSFUL in 46s.
+- `aapt2 dump resources app-debug.apk` — the compiled value of `color/ic_launcher_background`.
+- `emulator -avd {wearos30_arm64,wear_square_30} -no-window`, `uiautomator dump` to locate the
+  launcher's 48px icon slot by bounds, `adb exec-out screencap -p`, then decoding the captured
+  pixels rather than eyeballing them.
+- `AdaptiveIconDrawable.java` on `android11-release` (the branch `minSdk` 30 actually runs) and on
+  `master` — read for the `<monochrome>` inflation behaviour and `getMonochrome()`'s contract.
+- Wear OS 5: `sdkmanager --install "system-images;android-34;android-wear;arm64-v8a"` +
+  `avdmanager create avd -n wearos5_round_34 … -d wearos_small_round`; `adb shell dumpsys window |
+grep mCurrentFocus` to confirm which package draws the grid before scanning it; `adb shell pm
+path` + `adb pull` + `unzip '*.dex'` + `strings -a | grep` for the method-reference scan (plain
+  Unix, no `apktool`/`dexdump` — dex string tables are MUTF-8), always with the positive controls in
+  the same pass; `aapt2 dump xmltree --file AndroidManifest.xml` for the `uses-library` set; and
+  `adb shell settings get secure theme_customization_overlay_packages`. The full recipe is in
+  `docs/design/wear-launcher-verification/README.md`.
 
 ### Completion Notes List
 
+Eight artefacts now come out of the one geometry definition, `yarn icons:check` goes 14 -> 22, and
+the launcher background is checked instead of asserted. Findings the refinement did not have:
+
+#### ⛔ AC4 DECIDED: monochrome ADDED, and as a SEPARATE asset — so it is EIGHT artefacts, not four
+
+AC7 says "the four new artefacts". There are eight, because the `<monochrome>` layer is generated
+rather than pointed at `@mipmap/ic_launcher_foreground`, and the reason is in the SDK contract
+rather than in taste. `AdaptiveIconDrawable.getMonochrome()`'s javadoc promises only that _"callers
+can use a tinted version of this drawable"_ — the framework never tints; it hands the drawable to
+the launcher. So an untinted draw is within contract, and untinted the colour foreground puts the
+beam's **yellow** on a themed field: two colours, which is not a monochrome icon. Measured, the
+choice is free under any launcher that does tint — the two files' alpha channels are **byte-identical**
+and only their RGB differs (109,536 of 3,145,728 bytes at 1024). AC7's intent — everything under
+`icons:check` — is satisfied; only its count changed, and `test/wear-icons.test.ts` pins both halves
+of the argument so nobody "simplifies" it back.
+
+#### ⚠️ THE STALE CLAIM IS IN THREE PLACES, NOT TWO
+
+AC8 names two README claims. The same falsehood — "a flat silhouette asset that does not exist in
+this repo" — is also in `watch-android/app/lint.xml`, in the comment explaining why
+`MonochromeLauncherIcon` is left unsuppressed. Correcting only the README would have left the
+repository arguing with itself. The check is now **satisfied rather than suppressed**: the lint
+SARIF for `lintDebug` has two results, both `AndroidGradlePluginVersion` version notices, and
+`MonochromeLauncherIcon` is gone.
+
+Both README gaps are now CLOSED rather than reworded, so they leave "Known gaps" for a new
+`§ Launcher icon (Story 21.4)` section shaped like the existing `§ Brand catalogue`.
+
+#### ⚠️ `--` IS ILLEGAL INSIDE AN XML COMMENT, and only `aapt2` says so
+
+The first `ic_launcher.xml` draft used `--` as an em-dash substitute. `mergeDebugResources` failed
+with `The string "--" is not permitted within comments`. No linter, formatter or test in this repo
+reads `res/*.xml` — prettier has no parser for it — so **the Gradle build is the only gate that
+catches this**, and it is not on the phone app's critical path. The file now uses real em dashes;
+the resource tree already carries non-ASCII (`values/strings.xml`, `values-it/strings.xml`).
+
+#### ✅ NO WEAR-SPECIFIC SCALE IS NEEDED, and that is measured
+
+An adaptive layer is 108dp square, of which the inner 72dp is the masked viewport and the logo is
+asked to stay within the inner 66dp. The phone's existing `ANDROID_SCALE` (x0.873) puts the mark's
+**inked** bounding circle at 63.60dp at xxxhdpi and **64.55dp at hdpi** — the worst case, where one
+pixel of analytic antialiasing buys the most dp. Inside both limits at every density, so the single
+geometry definition holds. The bounding-BOX figure the generator prints (37.80 of 100 units) is an
+upper bound the rotated artwork never reaches, which is why the two numbers differ.
+
+#### ⚠️ THE MASK IS CIRCULAR ON THE SQUARE DEVICE TOO
+
+AC6 asks for both shapes "since Wear OS ships both", which reads as though the square device gives a
+square mask. It does not. On `wear_square_30` (360x360) the launcher masks the icon to a **circle**,
+identically to the round device — the mask is a launcher property, not a screen-shape property. The
+AC is still worth having; what it verifies is layout and density selection, not a second mask.
+
+#### AC5 / AC6 — verified on both AVDs, Wear OS 3 (API 30), density 320 (xhdpi -> `mipmap-xhdpi`)
+
+The AVDs, stated so the claim can be re-checked rather than taken on the name: round
+`wearos30_arm64`, measured `wm size` 384x384; square `wear_square_30`, built on the `wearos_square`
+device profile from `system-images;android-30;android-wear;arm64-v8a`, measured `wm size` 360x360.
+Both report `wm density` 320, which is what selects `mipmap-xhdpi` of the four buckets.
+
+| surface                                      | round `wearos30_arm64` (384²) | square `wear_square_30` (360²) |
+| -------------------------------------------- | ----------------------------- | ------------------------------ |
+| Launcher "Recents" chip                      | ✅ Cardì mark, ink field      | ✅ identical                   |
+| "All apps" list, 48x48px slot (AC5 smallest) | ✅ contained, clear margin    | ✅ identical                   |
+| Circular mask clipping                       | ✅ none                       | ✅ none                        |
+| Grave direction (descends left -> right)     | ✅                            | ✅                             |
+| Label                                        | ✅ "Cardì"                    | ✅ "Cardì"                     |
+
+AC6 says "Screenshots attached", so they are **committed**, at
+`docs/design/wear-launcher-verification/` with a README that says how to reproduce them. This
+DEPARTS from Story 21.3, which described its captures instead — deliberately, because a story whose
+whole thesis is that an uncheckable claim is worth nothing should not settle its own visual
+acceptance with the words "✅ verified".
+
+#### ⛔ NO THEMED-ICON SUPPORT FOUND IN THE WEAR LAUNCHER — measured on Wear OS 5, at ifero's direction
+
+The first pass could only say "unverified": `<monochrome>` needs API 33+ and only the android-30
+image was installed. ifero chose to close the gap rather than document it, so
+`system-images;android-34;android-wear;arm64-v8a` was pulled and `wearos5_round_34` created. The
+answer is stronger than "it looks fine", and it is not the answer the AC anticipated:
+
+**No themed-icon support was found in the Wear OS 5 stock launcher.**
+`ClockworkSysUiGoogle.apk`'s dex references `getForeground`, `getBackground`, `loadIcon`,
+`getApplicationIcon`, `setImageDrawable` and `AdaptiveIconDrawable` — and contains **zero**
+references to `getMonochrome`. Framework method names are the one thing R8 cannot rename, and the
+positive controls prove the scan finds what is there. The APK is the right one, confirmed rather
+than inferred: with the grid on screen `dumpsys window` reports
+`mCurrentFocus=…wearable.sysui/…globallauncher.AllAppsLauncherActivity`, every `uiautomator` node
+reports that package, and `pm path` resolves it to that APK. It is not delegating either — no
+Launcher3 icon stack bundled, and none of its six `uses-library` entries is an icon loader — and the
+Wear Settings app exposes no themed-icon affordance either, checked the same way rather than by eye:
+`ClockworkSettings.apk` has no themed-icon wording in its string table and no `themed_icon` /
+`getMonochrome` / `THEMED` in its dex, against controls that prove the search works. The terms and
+counts live in ONE place — the loop in `docs/design/wear-launcher-verification/README.md` — because
+three separate review rounds caught a prose list and the loop meant to reproduce it drifting apart. It does reference `theme_customization` 11 times, so Wear has some
+overlay-based theming — just nothing icon-specific.
+
+⚠️ **It is not a closed proof, and the write-up says so rather than rounding up.** A dex scan cannot
+rule out theming applied platform-side and handed back through `loadIcon()`; Android 13's themed
+icons are architected launcher-side, which makes that unlikely, but it is not eliminated here. The
+scan also covers ONE build — `versionName 5.0.1.627519173`, the system image's `/system/priv-app`
+copy with no Play update applied — and says nothing about third-party Wear launchers or Wear OS 6/7.
+The full working and its limits live in `docs/design/wear-launcher-verification/README.md`.
+
+So the layer appears inert on Wear OS 5 too, for a different reason than on Wear OS 3 — not API
+level, but launcher behaviour.
+
+That does not make it wrong to ship, and the reasons no longer depend on Wear reading it: it
+satisfies lint's `MonochromeLauncherIcon` (a real in-repo gate that was firing before this story),
+it matches what `app.json` declares for the phone, and it costs ~7 KB across four densities.
+Dropping it remains available and would be defensible — AC4 explicitly allows either branch — but it
+would reopen the lint gap this story closed. **What is now written down everywhere it is declared is
+that its presence is NOT a claim that Wear tints it.**
+
+The same pass also verified the mark itself on Wear OS 5's **grid** launcher (a different UI from
+the API 30 list launcher), at a larger 96x96px slot: measured from the capture, the foreground
+reaches 41.5px from centre against the masked circle's 47.9px — contained, 13 % to spare.
+
+#### ⚠️ Accepted risks, named rather than left implicit (from QA review)
+
+- **No CI job runs Android lint for `watch-android`.** `wear-os-build.yml` runs
+  `testDebugUnitTest`/`assembleDebug`/`bundleRelease` and no `lint*` task, and the repo's only other
+  `lint` step is ESLint. So `MonochromeLauncherIcon` — the in-repo gate AC4's evidence leans on —
+  was cleared once, locally, and is never re-checked. **Deliberately not fixed here, because the
+  obvious one-line fix is wrong:** `lintDebug` currently reports two `AndroidGradlePluginVersion`
+  findings, which consult the network for the newest published version, so adding the task as-is
+  would give CI a gate whose result changes without the source changing. `app/lint.xml` already
+  suppresses `GradleDependency` and `NewerVersionAvailable` for exactly that reason and simply
+  missed the third of the family. Closing this properly means suppressing
+  `AndroidGradlePluginVersion` first and then adding the task — a CI change with its own decision
+  attached, which is a follow-up rather than part of an icon story.
+- **`colors.xml` has ONE gate where the PNGs have two.** Every generated artefact is hashed by
+  `icons:check` _and_ measured by `test/wear-icons.test.ts`; `colors.xml` is hand-authored, because
+  the generator writes no XML, so that suite is the only thing standing between it and a recurrence
+  of this story's original bug. The suite now says so at the top.
+- **All device evidence is AOSP stock launchers on emulators.** No OEM Wear launcher (Samsung's One
+  UI Watch is a large share of real hardware) and no physical watch was exercised. This is within
+  the letter of AC5 and AC6, which ask for a round and a square AVD, and every claim is scoped to
+  the build it was measured on — but it is the largest remaining unknown in a story that ships
+  inside the 21.7 gate, and it is accepted consciously rather than overlooked.
+- **Precision, for future readers of the 21.7 gate:** the "no OTA remedy" framing that governs Epic
+  21 is true of this change but not for the usual reason. `runtimeVersion.policy: appVersion`
+  governs the PHONE app's JS bundle; `watch-android` is a standalone native Gradle project with no
+  Expo runtime and no JS bundle, so it was never OTA-eligible under any policy. Same conclusion —
+  a defect here needs a new binary and a store review — different mechanism.
+
+#### Flagged, not fixed
+
+`app/lint.xml` suppresses `GradleDependency` and `NewerVersionAvailable` as non-reproducible
+(they consult the network), but `AndroidGradlePluginVersion` — the same class of check — is
+unsuppressed and is the only thing `lintDebug` now reports. Pre-existing and unrelated to icons.
+
 ### File List
 
+- `scripts/build-brand-icons.mjs` — modified
+- `test/wear-icons.test.ts` — added
+- `test/png-scanlines.ts` — added (shared PNG reader; extracted from the two icon suites)
+- `test/png-scanlines.test.ts` — added (pins the filter-type guard the icon suites cannot reach)
+- `docs/design/wear-launcher-verification/wear-os-5-round-384-96px-slot.png` — regenerated at the exact slot bounds
+- `test/watch-icons.test.ts` — modified (rewired onto the shared reader; no assertion changed)
+- `docs/design/wear-launcher-verification/README.md` — added
+- `docs/design/wear-launcher-verification/wear-os-3-round-384-launcher.png` — added
+- `docs/design/wear-launcher-verification/wear-os-3-round-384-48px-slot.png` — added
+- `docs/design/wear-launcher-verification/wear-os-3-square-360-launcher.png` — added
+- `docs/design/wear-launcher-verification/wear-os-3-square-360-48px-slot.png` — added
+- `docs/design/wear-launcher-verification/wear-os-5-round-384-grid-launcher.png` — added
+- `docs/design/wear-launcher-verification/wear-os-5-round-384-96px-slot.png` — added
+- `watch-android/README.md` — modified
+- `watch-android/app/lint.xml` — modified
+- `watch-android/app/src/main/res/values/colors.xml` — modified
+- `watch-android/app/src/main/res/mipmap-anydpi-v26/ic_launcher.xml` — modified
+- `watch-android/app/src/main/res/mipmap-hdpi/ic_launcher_foreground.png` — modified
+- `watch-android/app/src/main/res/mipmap-xhdpi/ic_launcher_foreground.png` — modified
+- `watch-android/app/src/main/res/mipmap-xxhdpi/ic_launcher_foreground.png` — modified
+- `watch-android/app/src/main/res/mipmap-xxxhdpi/ic_launcher_foreground.png` — modified
+- `watch-android/app/src/main/res/mipmap-hdpi/ic_launcher_monochrome.png` — added
+- `watch-android/app/src/main/res/mipmap-xhdpi/ic_launcher_monochrome.png` — added
+- `watch-android/app/src/main/res/mipmap-xxhdpi/ic_launcher_monochrome.png` — added
+- `watch-android/app/src/main/res/mipmap-xxxhdpi/ic_launcher_monochrome.png` — added
+- `docs/sprint-artifacts/sprint-status.yaml` — modified
+- `docs/sprint-artifacts/stories/21-4-wear-os-launcher-icons.md` — modified
+
 ### Change Log
+
+| Date       | Change                                                                                                                                                                                                                                                                                                                                              |
+| ---------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 2026-09-19 | Generated the Wear OS launcher foreground at all four densities from the one geometry definition, replacing the hand-copied pre-rebrand artwork (AC1).                                                                                                                                                                                              |
+| 2026-09-19 | `ic_launcher_background` -> `#FF181824`; its comment now points at a gate instead of asserting the match (AC2, AC3).                                                                                                                                                                                                                                |
+| 2026-09-19 | Added a `<monochrome>` layer backed by a generated single-colour asset at all four densities; `MonochromeLauncherIcon` is satisfied rather than suppressed (AC4).                                                                                                                                                                                   |
+| 2026-09-19 | Added `test/wear-icons.test.ts` — 50 assertions pinning circular-mask containment, the colour chain, the layer declarations and generator membership (AC5, AC7).                                                                                                                                                                                    |
+| 2026-09-19 | Corrected both stale `README.md` claims plus a third copy in `lint.xml`; the closed gaps moved into a new `§ Launcher icon` section (AC8).                                                                                                                                                                                                          |
+| 2026-09-19 | Verified on round (384²) and square (360²) Wear OS 3 AVDs at the 48px launcher slot (AC5, AC6).                                                                                                                                                                                                                                                     |
+| 2026-09-20 | Committed the AC6 captures under `docs/design/wear-launcher-verification/` instead of describing them, and extracted `test/png-scanlines.ts` so the two icon suites share one PNG reader (code review).                                                                                                                                             |
+| 2026-09-20 | Verified on Wear OS 5 (API 34) at ifero’s direction: the mark is contained at the 96px grid slot, and no themed-icon support was found in the stock launcher.                                                                                                                                                                                       |
+| 2026-09-20 | Round 3 of code review: scoped every themed-icon claim to the evidence (one canonical write-up, pointers elsewhere), confirmed by `dumpsys` that the scanned APK is the one drawing the grid, regenerated the 96px capture at the exact `uiautomator` bounds so its caption reconciles with its bytes, and added `test/png-scanlines.test.ts`.      |
+| 2026-09-20 | Round 4 of code review: wrote down how to re-run the Wear OS 5 themed-icon scan, so the most-hedged claim in this story is reproducible rather than only recorded.                                                                                                                                                                                  |
+| 2026-09-20 | Rounds 5-6 of code review: completed the dex-scan control loop, then re-ran the Settings half of the corroborating evidence properly — the original command had produced empty output with no positive control, which proves nothing. Re-checked against `ClockworkSettings.apk` with controls, which narrowed the claim rather than confirming it. |
+| 2026-09-20 | Round 7 of code review: stopped restating the scan’s term list in prose and made the reproduction loop its only copy, after a third round found the two drifting apart.                                                                                                                                                                             |
+| 2026-09-20 | QA review: guarded the density buckets against stray files and a reintroduced `mdpi`, stopped a commented-out `<monochrome>` layer satisfying the declaration check (it did), corrected `baseline_commit` to the branch’s real base, and recorded four accepted risks.                                                                              |
