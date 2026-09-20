@@ -231,8 +231,15 @@ now names the supersession instead of being silently rewritten.
 
 #### AC6 — measured, and the timeout deliberately left alone
 
-`lintDebug` adds **+14s** locally (71s → 85s, both `--rerun-tasks`). The real job ran 2m58s on PR
-#244 before lint, so expect a little over three minutes against a 20m ceiling. The workflow's
+`lintDebug` adds **+14s** locally (71s → 85s, both `--rerun-tasks`).
+
+⚠️ **The CI extrapolation from that was wrong, and is corrected rather than left standing.** The job
+ran 2m58s on PR #244 before lint, so this story predicted "a little over three minutes". The first
+run **with** lint — PR #245, which is this story's own PR and therefore the first execution of the
+gate it adds — came in at **1m27s**, _faster_ than the pre-lint baseline. Run-to-run variance on
+this job plainly exceeds what lint costs, so the local `--rerun-tasks` delta is the only figure here
+worth trusting and the CI point-estimates are noise. The conclusion is unchanged and better
+supported: nowhere near the 20m ceiling. The workflow's
 existing cold-cache figure was measured a different way and is not directly comparable, so the new
 measurement was recorded alongside it rather than overwriting it.
 
@@ -313,6 +320,23 @@ re-verified; the three surviving `error` mentions are the historical narrative (
 shipped first, the comparison table, and the superseded Change Log row, which now carries a pointer
 so it cannot be read alone).
 
+#### ✅ The gate is live in CI, verified on this story's own PR
+
+PR #245 is the first execution of the gate it adds, so its CI log is the proof rather than an
+inference. From the Wear job's log:
+
+```
+Run ./gradlew lintDebug testDebugUnitTest assembleDebug bundleRelease --no-daemon
+> Task :app:lintAnalyzeDebug
+> Task :app:lintVitalAnalyzeRelease
+> Task :app:lintVitalReportRelease
+> Task :app:lintVitalRelease
+```
+
+`lintDebug` ran, and `lintVitalRelease` ran too — which confirms in real CI what the `--dry-run`
+evidence showed about `bundleRelease`'s task graph, and therefore that the `fatal` promotion reaches
+the release path rather than only this job. 4/4 checks green.
+
 #### Flagged, not fixed — more "Wear APK" drift outside this story's mechanism
 
 Review's AC5 sweep turned up the same APK/AAB staleness in the RELEASE-pipeline prose, which this
@@ -363,3 +387,4 @@ rather than in prose.
 | 2026-09-20 | QA review: promoted `error` → `fatal` after QA found the release pipelines build via fastlane’s `bundleRelease` and run no lint task, so `error` gated one job only. Also recorded the residual risk that nothing protects the gate’s own config, and what the narrow choice gives up.                                |
 | 2026-09-20 | QA round 2: swept the `error` → `fatal` change through the six other places that still claimed `error`, one of them nine lines from the paragraph explaining the change.                                                                                                                                              |
 | 2026-09-20 | QA round 3: a seventh site survived that sweep — the tracker note paraphrased the superseded claim ("this adds the tier below") without ever using the word `error`, so no token grep could reach it. Fixed, and the Guardrails rule sharpened to search for a fact’s MEANING rather than for the token that changed. |
+| 2026-09-20 | Post-merge: rebased onto `main` with `--onto` after #244 squash-merged, corrected the CI timing extrapolation (predicted ~3m, actual 1m27s — variance exceeds what lint costs), and recorded the CI log proving `lintDebug` and `lintVitalRelease` both ran.                                                          |

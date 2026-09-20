@@ -64,9 +64,13 @@ jobs:
     #
     # Story 16.43 added `lintDebug` and re-measured: +14s locally (71s -> 85s, both
     # with `--rerun-tasks`, which is a different method from the cold-cache figure
-    # above and not directly comparable to it). The real job ran 2m58s on PR #244
-    # before lint, so expect a little over three minutes. Nowhere near the 20m
-    # ceiling, so the timeout is unchanged.
+    # above and not directly comparable to it). ⚠️ THE CI EXTRAPOLATION WAS WRONG, and
+    # is corrected here rather than left standing: the job ran 2m58s on PR #244 before
+    # lint, from which this comment predicted "a little over three minutes" — the first
+    # run WITH lint (PR #245) came in at 1m27s, FASTER than the pre-lint baseline. So
+    # run-to-run variance on this job exceeds what lint costs, and the local +14s is the
+    # only figure here worth trusting. Either way it is nowhere near the 20m ceiling, so
+    # the timeout is unchanged.
     timeout-minutes: 20
 
     steps:
