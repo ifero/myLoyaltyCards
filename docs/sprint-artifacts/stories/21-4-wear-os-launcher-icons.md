@@ -4,7 +4,7 @@ baseline_commit: bda7ce71eec95d9d3b9746837c5c6f59cd3b7072
 
 # Story 21.4: Wear OS launcher icons — and the background colour that silently stopped matching
 
-Status: review
+Status: done
 
 Epic: 21 — Cardì Rebrand — Native Identity
 
