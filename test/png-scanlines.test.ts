@@ -44,30 +44,34 @@ const chunk = (type: string, data: Buffer): Buffer => {
 };
 
 /**
- * Build a square PNG.
+ * Build a PNG, square unless `height` says otherwise.
  *
  * @param filters one filter byte per scanline, so a test can put a bad one on a chosen row
  *   rather than only on the first — the error names the row, and an off-by-one there would be
  *   invisible if every fixture failed on row 0.
  * @param idatParts split the compressed stream across this many IDAT chunks. Real screenshots
  *   are chunked; the generator writes one. Both must decode.
+ * @param height defaults to `width`. Every icon is square; the store banners (Story 21.5) are
+ *   1024 x 500 and 4096 x 2304, and a decoder that assumed square would read them skewed rather
+ *   than fail — which is the case the non-square fixture below exists to rule out.
  */
 const buildPng = (
-  size: number,
+  width: number,
   channels: number,
   pixelRows: number[][],
   filters: number[],
-  idatParts = 1
+  idatParts = 1,
+  height = width
 ): Buffer => {
-  const stride = size * channels;
-  const raw = Buffer.alloc(size * (stride + 1));
-  for (let y = 0; y < size; y += 1) {
+  const stride = width * channels;
+  const raw = Buffer.alloc(height * (stride + 1));
+  for (let y = 0; y < height; y += 1) {
     raw[y * (stride + 1)] = filters[y] ?? 0;
     Buffer.from(pixelRows[y] ?? []).copy(raw, y * (stride + 1) + 1);
   }
   const ihdr = Buffer.alloc(13);
-  ihdr.writeUInt32BE(size, 0);
-  ihdr.writeUInt32BE(size, 4);
+  ihdr.writeUInt32BE(width, 0);
+  ihdr.writeUInt32BE(height, 4);
   ihdr.writeUInt8(8, 8);
   ihdr.writeUInt8(channels === 4 ? COLOR_TYPE_RGBA : COLOR_TYPE_RGB, 9);
   const compressed = deflateSync(raw, { level: 9 });
@@ -110,16 +114,41 @@ describe('png-scanlines', () => {
   });
 
   describe('decodeScanlines', () => {
-    it('strips the filter byte and leaves pixels indexable by (y * size + x) * channels', () => {
-      // The contract the two icon suites index against. If the filter byte were left in, every
+    it('strips the filter byte and leaves pixels indexable by (y * width + x) * channels', () => {
+      // The contract the icon suites index against. If the filter byte were left in, every
       // pixel after the first would be off by one channel and every colour assertion downstream
       // would be reading its neighbour.
-      const { size, channels, pixels } = decodeScanlines(
+      const { width, height, channels, pixels } = decodeScanlines(
         buildPng(2, 3, RGB_ROWS, [0, 0]),
         'fixture'
       );
-      expect({ size, channels }).toEqual({ size: 2, channels: 3 });
+      expect({ width, height, channels }).toEqual({ width: 2, height: 2, channels: 3 });
       expect([...pixels]).toEqual([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]);
+    });
+
+    it('reads a NON-SQUARE image without skewing it', () => {
+      // The store banners are 1024 x 500 and 4096 x 2304. A decoder that took one dimension for
+      // both would still return plausible bytes — just shifted a row at a time — so this fixture
+      // is 3 wide and 2 tall, where transposing gives a different answer rather than a shorter
+      // one, and the last pixel of each row is distinguishable from the first of the next.
+      const { width, height, pixels } = decodeScanlines(
+        buildPng(
+          3,
+          3,
+          [
+            [1, 1, 1, 2, 2, 2, 3, 3, 3],
+            [4, 4, 4, 5, 5, 5, 6, 6, 6]
+          ],
+          [0, 0],
+          1,
+          2
+        ),
+        'fixture'
+      );
+      expect({ width, height }).toEqual({ width: 3, height: 2 });
+      expect([...pixels]).toEqual([1, 1, 1, 2, 2, 2, 3, 3, 3, 4, 4, 4, 5, 5, 5, 6, 6, 6]);
+      // Pixel (0, 1) is the start of the second row, which only a width-aware stride finds.
+      expect(pixels[(1 * width + 0) * 3]).toBe(4);
     });
 
     it('reports 4 channels for an RGBA source and keeps the alpha byte', () => {
