@@ -98,7 +98,7 @@ spacing:
   lg: 24px
   xl: 32px
   touch-target: 48px
-  screen-margin: 20px
+  screen-margin: 24px
 ---
 
 ## Brand & Style
@@ -406,6 +406,20 @@ decision, not a constraint. Placeholders, values and error messages stay sentenc
 > **The two margins that remain are 24 and 16**, and 16 is not a style choice: `TILE_WIDTH` 171
 > in `features/cards/utils/gridLayout.ts` is `(390 − 2×16 − 16) / 2`, frozen with tests. Both
 > are on the grid.
+>
+> **⚠️ APPLIED 2026-09-24 (Story 21.5) — the ruling above had never been applied to the block it
+> ruled on.** This document's own frontmatter still said `screen-margin: 20px` a month after
+> adjudicating that margin is 24, so the file contradicted itself on the one value the
+> adjudication was written to settle. It now reads 24, matching both the prose here and
+> `LAYOUT.screenHorizontalMargin` in `tokens/spacing.json`. Nothing parses this frontmatter — the
+> generators and frame tools cite this file in comments only — so the correction changes no
+> generated output; it removes a contradiction a reader would otherwise have to adjudicate again.
+>
+> **⛔ The touch-target half is still OPEN, and deliberately not fixed here.** This document and
+> its frontmatter both say 48; `TOUCH_TARGET.min` in `tokens/spacing.json` is still **44**, and
+> `TOUCH_TARGET.watch` is **32** against the same adjudicated 48. Moving them is a behavioural
+> change across every touch target in three apps, and the token is owned by **Story 22.1** — see
+> the tracker. A store-artwork story is the wrong place for it.
 
 - The **phone** home screen is a **2-column grid of brand tiles** (see Card tile). This is the
   shipped layout and it is correct — do not replace it with a single-column list of rows. **The

@@ -288,6 +288,13 @@ with one that looks finished. **21.5 should not be counted as closing AC5.**
   not migrate its palette, and no story owns doing so. The public GitHub Pages site therefore still
   renders blue chrome during a rebrand release.
 - **Story 23.3 now also owns the Wear store screenshots**, per AC5 above.
+- ⛔ **`TOUCH_TARGET` still contradicts the adjudication, and is NOT fixed here.** This document
+  and its frontmatter both say **48**; `tokens/spacing.json` still carries `TOUCH_TARGET.min` at
+  **44** and `TOUCH_TARGET.watch` at **32**. The design system adjudicated 48 on 2026-08-21 on two
+  grounds — `app.json` declares both platforms, so a minimum binding on both is the MAX of their
+  minimums (Apple 44, Material 48), and 44 is off the 8px grid. Moving the token is a behavioural
+  change to every touch target in three apps and it belongs to **Story 22.1**, which owns that
+  file. A store-artwork story is the wrong place for it.
 - ⛔ **The app's own "no analytics" claim is not true, and the privacy policy does not disclose
   Sentry.** Found while writing AC7's copy, and it changed that copy.
   `core/observability/sentry.ts:95-101` initialises Sentry with `enabled: !__DEV__` and
@@ -319,6 +326,24 @@ and `fastlane/Fastfile` sets `skip_metadata` + `skip_screenshots` on iOS (L221-2
 (L573-576, L714-717). **No file change and no CI check can prove the listing text was updated.**
 None was invented. Every field was measured against its real limit and every string is NFC, which
 matters here: `Cardì` in NFD is a different byte sequence and the consoles will take it silently.
+
+### Post-PR additions (2026-09-24, at ifero's request)
+
+Two contradictions found while shipping this story, fixed in the same PR:
+
+- **`.gitignore` now ignores `.claude/launch.json`.** The Claude Code browser-preview pane writes
+  that file, `.gitignore` covered `settings.local.json` and `worktrees/` but not this one, and
+  prettier reads `.gitignore` — so `format:check` in `.husky/pre-push` **failed on an untracked
+  file nobody had edited**, which is a confusing way to be blocked and invites the forbidden
+  `--no-verify`. Observed on this story's own first push attempt.
+- **`cardi-design-system.md`'s frontmatter said `screen-margin: 20px`** while its own prose
+  adjudicated _"Margin is 24, not 20"_ on 2026-08-21 and `LAYOUT.screenHorizontalMargin` in
+  `tokens/spacing.json` has been 24 all along. The ruling had never been applied to the block it
+  ruled on, and line 101 was the last place in the repo still saying 20. Nothing parses that
+  frontmatter — every reference to this file across `scripts/` and `docs/design/cardi/tools/` is a
+  prose citation in a comment, verified — so the correction changes no generated output.
+
+The touch-target half of the same adjudication is deliberately left alone; see _Follow-ups_.
 
 ### File List
 
@@ -355,6 +380,9 @@ Documentation
 - `docs/assets/screenshots/README.md` — MODIFIED: the palette note and the `style.css` finding
 - `docs/sprint-artifacts/stories/21-5-store-artwork.md` — this file
 - `docs/sprint-artifacts/sprint-status.yaml` — status
+- `.gitignore` — MODIFIED: ignore `.claude/launch.json` (post-PR)
+- `docs/design/cardi/cardi-design-system.md` — MODIFIED: frontmatter `screen-margin` 20px → 24px,
+  matching its own adjudication and the live token (post-PR)
 
 ### Change Log
 
