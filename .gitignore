@@ -140,6 +140,14 @@ fastlane/.env.default
 # Claude Code local (personal) settings
 .claude/settings.local.json
 
+# Claude Code browser-preview dev-server config, written by the preview pane when it opens.
+# Machine-local like settings.local.json above, and ignored for a second reason: prettier reads
+# .gitignore, so while this file was visible it was walked by `prettier --check .` — and the pane
+# writes it with one array element per line, which prettier collapses. That failed `format:check`
+# in .husky/pre-push on an untracked file nobody had edited, which is a confusing way to be
+# blocked and invites the forbidden `--no-verify`.
+.claude/launch.json
+
 # Claude Code git worktrees — full nested checkouts of this repo, one per in-flight branch
 # (hundreds of thousands of duplicate files). Ignored here rather than only in .git/info/exclude,
 # which is local to one clone and never committed: tools that read .gitignore but cannot see

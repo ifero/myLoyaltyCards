@@ -3,13 +3,15 @@ import { inflateSync } from 'node:zlib';
 /**
  * Unpack one of OUR PNGs to flat pixel bytes.
  *
- * Shared by `watch-icons.test.ts` and `wear-icons.test.ts`, which ask different questions of
- * the same encoder: the watchOS artefacts are opaque, so that suite reads RGB and asks "which
- * pixels are not the ink field"; the Wear OS layers are transparent marks on a field the system
- * paints, so that suite reads RGBA and asks "which pixels have any alpha at all". Those two
- * views are genuinely different and each suite still builds its own. **Everything below the
- * view is not** — walking IDAT chunks, inflating, and stripping the per-scanline filter byte is
- * the same work whatever you then do with the bytes, so it lives here once.
+ * Shared by `watch-icons.test.ts`, `wear-icons.test.ts` and `store-artwork.test.ts`, which ask
+ * different questions of the same encoder: the watchOS artefacts are opaque, so that suite reads
+ * RGB and asks "which pixels are not the ink field"; the Wear OS layers are transparent marks on
+ * a field the system paints, so that suite reads RGBA and asks "which pixels have any alpha at
+ * all"; the store banners are neither square nor an icon, and that suite asks whether the
+ * committed raster still matches the SVG it was generated from. Those views are genuinely
+ * different and each suite still builds its own. **Everything below the view is not** — walking
+ * IDAT chunks, inflating, and stripping the per-scanline filter byte is the same work whatever
+ * you then do with the bytes, so it lives here once.
  *
  * ⚠️ **This is not a general PNG decoder** and must not become one. It reconstructs no filters,
  * because `scripts/build-brand-icons.mjs` allocates a zeroed buffer and never sets a filter
@@ -25,11 +27,15 @@ export const COLOR_TYPE_RGB = 2;
 export const COLOR_TYPE_RGBA = 6;
 
 export type Decoded = {
-  /** These artefacts are always square; this is the edge, in pixels. */
-  size: number;
+  /**
+   * Pixel dimensions. The icons are all square and read `width` twice; the store banners
+   * (Story 21.5) are 1024 x 500 and 4096 x 2304, which is why these are two fields.
+   */
+  width: number;
+  height: number;
   /** 3 for {@link COLOR_TYPE_RGB}, 4 for {@link COLOR_TYPE_RGBA}. */
   channels: number;
-  /** `size × size × channels` bytes, filter bytes removed: pixel (x, y) starts at `(y * size + x) * channels`. */
+  /** `width × height × channels` bytes, filter bytes removed: pixel (x, y) starts at `(y * width + x) * channels`. */
   pixels: Buffer;
 };
 
@@ -48,7 +54,7 @@ export const readHeader = (png: Buffer): Header => ({
  *   learns *which* artefact broke the encoder's invariant.
  */
 export const decodeScanlines = (png: Buffer, label: string): Decoded => {
-  const { width: size, colorType } = readHeader(png);
+  const { width, height, colorType } = readHeader(png);
   const channels = colorType === COLOR_TYPE_RGBA ? 4 : 3;
   const parts: Buffer[] = [];
   let offset = 8;
@@ -60,14 +66,14 @@ export const decodeScanlines = (png: Buffer, label: string): Decoded => {
     offset += 12 + length;
   }
   const raw = inflateSync(Buffer.concat(parts));
-  const stride = size * channels;
-  const pixels = Buffer.alloc(size * stride);
-  for (let y = 0; y < size; y += 1) {
+  const stride = width * channels;
+  const pixels = Buffer.alloc(height * stride);
+  for (let y = 0; y < height; y += 1) {
     const filter = raw[y * (stride + 1)];
     if (filter !== 0) {
       throw new Error(`${label}: scanline ${y} uses PNG filter ${filter}, expected 0 (None)`);
     }
     raw.copy(pixels, y * stride, y * (stride + 1) + 1, (y + 1) * (stride + 1));
   }
-  return { size, channels, pixels };
+  return { width, height, channels, pixels };
 };

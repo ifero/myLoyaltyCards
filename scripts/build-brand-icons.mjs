@@ -51,10 +51,12 @@
  * of detecting it: there is no second copy of the numbers to drift.
  */
 import { createHash } from 'node:crypto';
-import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { deflateSync } from 'node:zlib';
+import { layoutWordmark } from './lib/brand-wordmark.mjs';
+import { flattenPath, rasterizeContours } from './lib/path-raster.mjs';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 
@@ -286,27 +288,30 @@ const chunk = (type, data) => {
  * somebody "fixing" a missing splash with `cp assets/icon.png
  * assets/splash-icon.png`, since an opaque full-bleed square on the launch
  * field reads as a broken placeholder.
+ *
+ * `width`/`height` are separate because the store banners are not square. Every
+ * icon still passes the same value twice; nothing else changed.
  */
-const encodePng = (pixels, size, opaque) => {
+const encodePng = (pixels, width, height, opaque) => {
   const channels = opaque ? 3 : 4;
-  const stride = size * channels;
-  const raw = Buffer.alloc(size * (stride + 1));
-  for (let y = 0; y < size; y += 1) {
+  const stride = width * channels;
+  const raw = Buffer.alloc(height * (stride + 1));
+  for (let y = 0; y < height; y += 1) {
     const rowStart = y * (stride + 1) + 1;
     if (opaque) {
-      for (let x = 0; x < size; x += 1) {
-        const src = (y * size + x) * 4;
+      for (let x = 0; x < width; x += 1) {
+        const src = (y * width + x) * 4;
         raw[rowStart + x * 3] = pixels[src];
         raw[rowStart + x * 3 + 1] = pixels[src + 1];
         raw[rowStart + x * 3 + 2] = pixels[src + 2];
       }
     } else {
-      pixels.copy(raw, rowStart, y * size * 4, (y + 1) * size * 4);
+      pixels.copy(raw, rowStart, y * width * 4, (y + 1) * width * 4);
     }
   }
   const ihdr = Buffer.alloc(13);
-  ihdr.writeUInt32BE(size, 0);
-  ihdr.writeUInt32BE(size, 4);
+  ihdr.writeUInt32BE(width, 0);
+  ihdr.writeUInt32BE(height, 4);
   ihdr.writeUInt8(8, 8);
   ihdr.writeUInt8(opaque ? 2 : 6, 9); // 2 = RGB, 6 = RGBA
   return Buffer.concat([
@@ -332,6 +337,28 @@ const hex = (colour) =>
     : `#${colour.map((v) => v.toString(16).padStart(2, '0')).join('')}`.toUpperCase();
 
 const n = (value) => Number(value.toFixed(3)).toString();
+
+/**
+ * Round to the precision {@link n} prints at.
+ *
+ * The banner layout quantises with this BEFORE rendering, so the raster draws
+ * exactly the geometry the committed SVG states. Left unrounded, the two agree
+ * only to three decimals of a scale factor that then multiplies 234 em units —
+ * about a twentieth of a pixel at the wordmark's far end. Invisible, and still a
+ * disagreement between a source and the raster that is supposed to BE that
+ * source, which is the one thing generating both from one definition exists to
+ * rule out.
+ */
+const quantise = (value) => Number(value.toFixed(3));
+
+/** {@link quantise} applied to a device-pixel rounded rect. */
+const quantiseRect = (rect) => ({
+  x: quantise(rect.x),
+  y: quantise(rect.y),
+  w: quantise(rect.w),
+  h: quantise(rect.h),
+  r: quantise(rect.r)
+});
 
 /**
  * `tight` crops the viewBox to the artwork instead of the icon canvas.
@@ -434,6 +461,36 @@ const PNGS = [
   ['assets/adaptive-icon-monochrome.png', { size: 1024, field: null, ...MONOCHROME }],
   ['assets/favicon.png', { size: 48, field: INK, ...FULL }],
   ['assets/splash-icon.png', { size: 1024, field: null, ...FULL }],
+
+  // ---------------------------------------------------------------------
+  // The Play Store listing icon (Story 21.5).
+  //
+  // Not an icon the APP ships — it is uploaded to Play Console by hand and shown
+  // beside the listing. Nothing in this repo referenced these two files, which is
+  // exactly why they sat three and a half months stale wearing the old blue
+  // wallet: generating them is what puts them under `yarn icons:check`.
+  //
+  // BOTH ARE OPAQUE, FULL-BLEED INK, and that is Google's own instruction rather
+  // than a preference. The Play icon specification says "Shape: Full square —
+  // Google Play dynamically handles masking… Shadow: None — Google Play
+  // dynamically handles shadows", and, on transparency, "pick a background colour
+  // for your asset that's appropriate for your brand and doesn't include any
+  // transparency. Transparent assets will display the background colour of Google
+  // Play UI." The mark's stem is WHITE, so a transparent upload would put white
+  // bars on Play's white surface and erase the icon — the previous `-alpha` file,
+  // which dropped the field entirely, would have done precisely that.
+  //
+  // The two differ ONLY in colour type, which is the whole reason the pair
+  // exists. Google specifies "Format: 32-bit PNG", so `-alpha` is the file to
+  // upload: RGBA with every alpha byte at 255. The unsuffixed one is 24-bit RGB,
+  // the universally-safe raster for anything that rejects an alpha channel.
+  // `keepAlpha` is what separates "has an alpha channel" from "is transparent";
+  // everywhere else in this file those two still coincide.
+  ['assets/store/android-app-icon-512x512.png', { size: 512, field: INK, ...FULL }],
+  [
+    'assets/store/android-app-icon-512x512-alpha.png',
+    { size: 512, field: INK, keepAlpha: true, ...FULL }
+  ],
 
   // ---------------------------------------------------------------------
   // The watch (Story 21.3). Both surfaces below are masked to a CIRCLE by
@@ -600,13 +657,379 @@ const SVGS = [
   ]
 ];
 
+// ---------------------------------------------------------------------------
+// The store banners (Story 21.5)
+//
+// Two rasters and the SVG they come from, all three from the geometry below —
+// the same argument the mark makes: generating the vector and the bitmap from
+// one set of numbers removes the drift instead of detecting it. The file this
+// replaces had drifted badly. Its 1024x500 raster showed the wordmark CLIPPED by
+// the artwork beside it, letterboxed inside transparent bands, on a blue gradient
+// with a drop shadow — three things the Cardì system forbids outright — and its
+// source asked for `font-family="Avenir Next, SF Pro Display, Arial"`, so the
+// typeface was whatever the renderer happened to own.
+// ---------------------------------------------------------------------------
+
+/**
+ * `Cardì`, baseline-relative, in this file's own em space.
+ *
+ * The four letters are Space Grotesk Bold outlines; the `ì` is the wordmark's
+ * single stem and CONTAINED accent, which is a different artefact from the
+ * barcode-and-beam mark above. `brand-wordmark.mjs` explains why, and takes
+ * `BASELINE`, `XHEIGHT`, the advance and `ANGLE` from here so there is no second
+ * copy of them to drift.
+ */
+const WORDMARK = layoutWordmark({
+  baseline: 0,
+  xHeight: XHEIGHT,
+  markAdvance: CX * 2,
+  angle: ANGLE
+});
+
+/**
+ * The card accents, back to front, as the design system lists them.
+ *
+ * Drawn as CARDS, which is the one place an accent is allowed outside a theme:
+ * "a card accent is legal as the card's OWN full-bleed detail field", because
+ * there it is the content rather than the chrome. A card filled with that card's
+ * colour is exactly that case, and it is the system's own thesis — the content is
+ * the colour — stated as plainly as it can be.
+ *
+ * `angle` fans them. ⚠️ These tilts are UNRELATED to the accent's sign rule: that
+ * rule governs the ì's beam alone, where a negative angle spells a different word.
+ * A card leaning either way is just a card.
+ */
+const WALLET_CARDS = [
+  { colour: [0x0c, 0x84, 0x3c], dx: 0.1, dy: -0.155, angle: 10 }, // green
+  { colour: [0x0c, 0x3c, 0x84], dx: 0.035, dy: -0.075, angle: 5 }, // deep blue
+  { colour: [0xe4, 0x24, 0x24], dx: -0.03, dy: -0.01, angle: -5 } // red
+];
+
+/** Card width as a fraction of the banner's width, and height as a fraction of that. */
+const CARD_ASPECT = 0.63;
+/** Corner radius as a fraction of a card's width — the system's 16px on a 171px tile. */
+const CARD_RADIUS = 0.094;
+
+/**
+ * The barcode on the front card: bar widths in module units, and the quiet zone.
+ *
+ * A fixed, deliberately NON-ENCODING pattern. It has to read as a barcode at a
+ * glance and it must not be a scannable number — a store graphic that resolves to
+ * a real EAN is an invitation to point a scanner at it. The rhythm is a plausible
+ * mix of 1-, 2- and 3-module bars with the guard pairs a real symbol would carry.
+ */
+const BARCODE_MODULES = [
+  1, 1, 1, 2, 1, 3, 1, 1, 2, 2, 1, 1, 3, 1, 1, 2, 1, 1, 1, 3, 2, 1, 1, 1, 2, 3, 1, 1, 1, 2, 1, 2, 1,
+  1, 3, 1, 2, 1, 1, 1
+];
+/** Fraction of the card's width left white on each side of the bars. */
+const BARCODE_QUIET = 0.11;
+/** Bar height as a fraction of the card's height. */
+const BARCODE_HEIGHT = 0.52;
+
+const bannerLayout = ({
+  width,
+  height,
+  wordmarkWidth,
+  wordmarkCentreX,
+  wordmarkCentreY,
+  wallet
+}) => {
+  const ink = WORDMARK.ink;
+  const scale = quantise((width * wordmarkWidth) / (ink.x1 - ink.x0));
+  // Device position of em point (ex, ey) is (originX + ex*scale, baselineY + ey*scale).
+  const originX = quantise(width * wordmarkCentreX - ((ink.x0 + ink.x1) / 2) * scale);
+  const baselineY = quantise(height * wordmarkCentreY - ((ink.y0 + ink.y1) / 2) * scale);
+  const toDevice = (rect) =>
+    quantiseRect({
+      x: originX + rect.x * scale,
+      y: baselineY + rect.y * scale,
+      w: rect.width * scale,
+      h: rect.height * scale,
+      r: rect.radius * scale
+    });
+
+  // The wallet: accent cards fanned behind one white card carrying a barcode.
+  // Drawn back to front, so the front card is composited last and nothing lands
+  // on top of the bars.
+  const cardWidth = width * wallet.cardWidth;
+  const cardHeight = cardWidth * CARD_ASPECT;
+  const centreX = width * wallet.centreX;
+  const centreY = height * wallet.centreY;
+  const card = (dx, dy, angle, colour) => {
+    const rect = quantiseRect({
+      x: centreX - cardWidth / 2 + cardWidth * dx,
+      y: centreY - cardHeight / 2 + cardHeight * dy,
+      w: cardWidth,
+      h: cardHeight,
+      r: cardWidth * CARD_RADIUS
+    });
+    return { colour, rect, angle, pivot: { x: rect.x + rect.w / 2, y: rect.y + rect.h / 2 } };
+  };
+  const cards = WALLET_CARDS.map((c) => card(c.dx, c.dy, c.angle, c.colour));
+
+  // The front card stays at angle 0. Two reasons, both deliberate: axis-aligned
+  // bars read as a barcode at any size, and rotating it would mean rotating every
+  // bar about the same pivot for no gain.
+  const front = card(0, 0.075, 0, WHITE);
+  const quiet = front.rect.w * BARCODE_QUIET;
+  // The array ALREADY alternates bar, gap, bar, gap — even indices are the bars —
+  // so the pattern spans its own module total. Sizing the unit as though bars and
+  // gaps were two separate lists halves the barcode and leaves it marooned in the
+  // middle of the card, which is exactly what the first draft did.
+  const unit = (front.rect.w - 2 * quiet) / BARCODE_MODULES.reduce((total, m) => total + m, 0);
+  const barHeight = front.rect.h * BARCODE_HEIGHT;
+  const bars = [];
+  let penX = front.rect.x + quiet;
+  BARCODE_MODULES.forEach((m, index) => {
+    if (index % 2 === 0) {
+      bars.push(
+        quantiseRect({
+          x: penX,
+          y: front.rect.y + (front.rect.h - barHeight) / 2,
+          w: m * unit,
+          h: barHeight,
+          r: 0
+        })
+      );
+    }
+    penX += m * unit;
+  });
+
+  return {
+    width,
+    height,
+    letters: WORDMARK.letters.map((letter) => ({
+      path: letter.path,
+      x: quantise(originX + letter.dx * scale),
+      y: baselineY,
+      scale
+    })),
+    stem: toDevice(WORDMARK.stem),
+    beam: toDevice(WORDMARK.beam),
+    pivot: {
+      x: quantise(originX + WORDMARK.beam.pivotX * scale),
+      y: quantise(baselineY + WORDMARK.beam.pivotY * scale),
+      angle: WORDMARK.beam.angle
+    },
+    cards,
+    front,
+    bars
+  };
+};
+
+/**
+ * Composite one rounded rect, optionally rotated, onto RGBA pixels.
+ *
+ * Only the shape's own bounding box is walked. At 4096 x 2304 the difference is
+ * not cosmetic: the banner routes 26 shapes through here — three wallet cards, the
+ * white card, twenty barcode bars, the stem and the beam — and walking the full
+ * frame for each would be 245 million distance evaluations for artwork that covers
+ * a fraction of it. Most of those 26 are barcode bars a few pixels wide.
+ *
+ * `margin` is the rect's own half-diagonal, which is the furthest any of its points
+ * can be from its centre; rotation about that centre preserves the distance at any
+ * angle, so the bound holds for the negative tilt on one wallet card as well as for
+ * the beam.
+ */
+const overRoundedRect = (px, width, height, rect, colour, rotation) => {
+  const margin = rotation ? Math.hypot(rect.w, rect.h) / 2 + 2 : 2;
+  const x0 = Math.max(0, Math.floor(rect.x - margin));
+  const x1 = Math.min(width, Math.ceil(rect.x + rect.w + margin));
+  const y0 = Math.max(0, Math.floor(rect.y - margin));
+  const y1 = Math.min(height, Math.ceil(rect.y + rect.h + margin));
+  for (let y = y0; y < y1; y += 1) {
+    for (let x = x0; x < x1; x += 1) {
+      const sx = x + 0.5;
+      const sy = y + 0.5;
+      const distance = rotation
+        ? rotatedRoundedRectSdf(sx, sy, rect, rotation.angle, rotation.pivot)
+        : roundedRectSdf(sx, sy, rect);
+      const cov = coverage(distance);
+      if (cov <= 0) continue;
+      const i = (y * width + x) * 4;
+      px[i] = Math.round(colour[0] * cov + px[i] * (1 - cov));
+      px[i + 1] = Math.round(colour[1] * cov + px[i + 1] * (1 - cov));
+      px[i + 2] = Math.round(colour[2] * cov + px[i + 2] * (1 - cov));
+    }
+  }
+};
+
+/** Composite a coverage tile, produced by the path rasteriser, at an offset. */
+const overCoverage = (px, width, coverageMap, box, colour) => {
+  for (let y = 0; y < box.h; y += 1) {
+    for (let x = 0; x < box.w; x += 1) {
+      const cov = coverageMap[y * box.w + x];
+      if (cov <= 0) continue;
+      const i = ((box.y + y) * width + box.x + x) * 4;
+      px[i] = Math.round(colour[0] * cov + px[i] * (1 - cov));
+      px[i + 1] = Math.round(colour[1] * cov + px[i + 1] * (1 - cov));
+      px[i + 2] = Math.round(colour[2] * cov + px[i + 2] * (1 - cov));
+    }
+  }
+};
+
+/** Render one banner to opaque RGBA pixels. */
+const renderBanner = (options) => {
+  const { width, height, letters, stem, beam, pivot, cards, front, bars } = bannerLayout(options);
+  const px = Buffer.alloc(width * height * 4);
+  for (let i = 0; i < width * height; i += 1) {
+    px[i * 4] = INK[0];
+    px[i * 4 + 1] = INK[1];
+    px[i * 4 + 2] = INK[2];
+    px[i * 4 + 3] = 255;
+  }
+
+  // Back to front: the fanned accent cards, then the white card, then its bars.
+  for (const c of cards) {
+    overRoundedRect(px, width, height, c.rect, c.colour, { angle: c.angle, pivot: c.pivot });
+  }
+  overRoundedRect(px, width, height, front.rect, WHITE);
+  for (const bar of bars) overRoundedRect(px, width, height, bar, INK);
+
+  // The letters go through the path rasteriser into a tile the size of their own
+  // bounding box rather than the whole frame — at 4096 x 2304 a full-frame
+  // coverage map would be 37 MB of floats to hold a few per cent ink.
+  const ink = WORDMARK.ink;
+  const { scale, y: baselineY } = letters[0];
+  const box = {
+    x: Math.max(0, Math.floor(letters[0].x + ink.x0 * scale) - 2),
+    y: Math.max(0, Math.floor(baselineY + ink.y0 * scale) - 2)
+  };
+  box.w = Math.min(width, Math.ceil(letters[0].x + ink.x1 * scale) + 2) - box.x;
+  box.h = Math.min(height, Math.ceil(baselineY + ink.y1 * scale) + 2) - box.y;
+  const contours = letters.flatMap((letter) =>
+    flattenPath(letter.path, { scale, dx: letter.x - box.x, dy: letter.y - box.y })
+  );
+  overCoverage(px, width, rasterizeContours(contours, box.w, box.h), box, WHITE);
+
+  // Stem first, then the accent over it — the order `mark_locked.py` draws them.
+  overRoundedRect(px, width, height, stem, WHITE);
+  overRoundedRect(px, width, height, beam, BEAM_YELLOW, { angle: pivot.angle, pivot });
+  return px;
+};
+
+/** The same composition as SVG, from the same layout, for the committed source. */
+const buildBannerSvg = (options) => {
+  const { width, height, letters, stem, beam, pivot, cards, front, bars } = bannerLayout(options);
+  const rect = (r, colour) =>
+    `  <rect x="${n(r.x)}" y="${n(r.y)}" width="${n(r.w)}" height="${n(r.h)}" ` +
+    `rx="${n(r.r)}" fill="${hex(colour)}" />`;
+  return [
+    `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${n(width)} ${n(height)}" ` +
+      `width="${n(width)}" height="${n(height)}" role="img" ` +
+      `aria-label="Cardì — Google Play feature graphic">`,
+    `  <rect width="${n(width)}" height="${n(height)}" fill="${hex(INK)}" />`,
+    ...cards.map(
+      (c) =>
+        `  <g transform="rotate(${n(c.angle)} ${n(c.pivot.x)} ${n(c.pivot.y)})">\n  ` +
+        `${rect(c.rect, c.colour)}\n  </g>`
+    ),
+    rect(front.rect, WHITE),
+    ...bars.map((bar) => rect(bar, INK)),
+    ...letters.map(
+      (letter) =>
+        `  <path transform="translate(${n(letter.x)} ${n(letter.y)}) scale(${n(letter.scale)})" ` +
+        `d="${letter.path}" fill="${hex(WHITE)}" />`
+    ),
+    rect(stem, WHITE),
+    `  <g transform="rotate(${pivot.angle} ${n(pivot.x)} ${n(pivot.y)})">`,
+    `  ${rect(beam, BEAM_YELLOW)}`,
+    '  </g>',
+    '</svg>',
+    ''
+  ].join('\n');
+};
+
+/**
+ * The feature graphic: 1024 x 500, the image at the top of the Play listing.
+ *
+ * Play renders it at many sizes and crops it, and tells you so — "keep prominent
+ * visuals and the focal point towards the centre". Hence the two halves straddle
+ * the centre rather than either one owning it: the wordmark sits left of it and
+ * the wallet right of it, so a centre crop keeps part of both and no element is
+ * near enough to an edge to be the first thing lost.
+ *
+ * ⚠️ The composition SHOWS THE PRODUCT, which the first draft did not. That draft
+ * was a centred wordmark over a row of five flat accent tiles: on brand, and a
+ * picture of a logo rather than of what the app is for. A feature graphic has one
+ * job, and Google's own guidance warns against "prominent branding duplicating
+ * your app icon" — which is exactly what a wordmark alone is.
+ *
+ * NO TAGLINE, deliberately. Play does not localise one graphic across locales, so
+ * English words here would appear on the Italian listing; ifero settled the same
+ * question the same way for the launch surface in Story 16.17 ("mark only, no
+ * text"). The listing's own title and short description carry the words.
+ */
+const FEATURE_GRAPHIC = {
+  width: 1024,
+  height: 500,
+  wordmarkWidth: 0.34,
+  wordmarkCentreX: 0.265,
+  wordmarkCentreY: 0.5,
+  wallet: { cardWidth: 0.35, centreX: 0.685, centreY: 0.5 }
+};
+
+/**
+ * The developer-page header: 4096 x 2304.
+ *
+ * The same composition in a 16:9 frame, which is much taller for its width than
+ * the feature graphic's 2.048:1 — so the wordmark and the wallet each take a
+ * smaller fraction of the width, and the extra room becomes quiet ink above and
+ * below rather than larger artwork. That is the right way round for this slot:
+ * Google crops the header on a phone and draws the developer's name over it.
+ *
+ * Both banners centre their content vertically (`wordmarkCentreY: 0.5`). They did
+ * not always: the tile-row draft ran its cards off the bottom edge, so each frame
+ * needed its own vertical offset to keep the crop sensible. The wallet is a
+ * self-contained cluster, so one value serves both.
+ */
+const DEVELOPER_HEADER = {
+  width: 4096,
+  height: 2304,
+  wordmarkWidth: 0.3,
+  wordmarkCentreX: 0.27,
+  wordmarkCentreY: 0.5,
+  wallet: { cardWidth: 0.3, centreX: 0.69, centreY: 0.5 }
+};
+
+const BANNERS = [
+  ['assets/store/android-store-banner-1024x500.png', FEATURE_GRAPHIC],
+  // ⚠️ A PNG, where this file used to be a JPEG, and the extension changed with
+  // it. Play accepts "JPEG or 24-bit PNG (no alpha)" for both banner slots, and
+  // on flat colour a PNG is smaller AND better: no chroma subsampling to ring the
+  // wordmark's edges. It also keeps every committed raster on the one encoder
+  // this file already owns, rather than adding a baseline JPEG encoder to write a
+  // worse image. Nothing in the repo referenced the old filename.
+  ['assets/store/google-developer-banner-4096x2304.png', DEVELOPER_HEADER]
+];
+
 const sha = (buffer) => createHash('sha256').update(buffer).digest('hex');
 
 const artefacts = [
   ...SVGS.map(([path, opts]) => [path, Buffer.from(buildSvg(opts), 'utf8')]),
-  // `field` decides the colour type: an opaque field means an opaque PNG.
-  ...PNGS.map(([path, opts]) => [path, encodePng(render(opts), opts.size, opts.field !== null)])
+  ['assets/images/android-store-banner.svg', Buffer.from(buildBannerSvg(FEATURE_GRAPHIC), 'utf8')],
+  // `field` decides the colour type: an opaque field means an opaque PNG. The one
+  // exception is the Play listing icon, which Google specifies as 32-bit AND
+  // fully opaque, so it asks for the alpha channel back with `keepAlpha`.
+  ...PNGS.map(([path, opts]) => [
+    path,
+    encodePng(render(opts), opts.size, opts.size, opts.field !== null && !opts.keepAlpha)
+  ]),
+  ...BANNERS.map(([path, opts]) => [
+    path,
+    encodePng(renderBanner(opts), opts.width, opts.height, true)
+  ])
 ];
+
+/**
+ * Paths this script REPLACED, deleted on a build and reported on a check.
+ *
+ * Without this, `yarn icons:build` would leave the superseded file sitting beside
+ * its replacement, and nothing would ever notice — which is how `assets/store/`
+ * got into the state Story 21.5 found it in.
+ */
+const SUPERSEDED = ['assets/store/google-developer-banner-4096x2304.jpg'];
 
 const check = process.argv.includes('--check');
 let failed = 0;
@@ -630,6 +1053,21 @@ for (const [relative, buffer] of artefacts) {
     mkdirSync(dirname(target), { recursive: true });
     writeFileSync(target, buffer);
     console.log(`✓ ${relative} (${buffer.length} bytes)`);
+  }
+}
+
+for (const relative of SUPERSEDED) {
+  const target = join(ROOT, relative);
+  // `existsSync` rather than a swallowed `readFileSync`: reading a 365 KB file to
+  // discard it is wasteful, and catching the read would also treat a permission
+  // error as "already gone" and pass the check on a file that is still there.
+  if (!existsSync(target)) continue;
+  if (check) {
+    console.error(`✗ ${relative} was superseded and should be gone — run \`yarn icons:build\``);
+    failed += 1;
+  } else {
+    rmSync(target);
+    console.log(`✗ ${relative} (superseded, removed)`);
   }
 }
 

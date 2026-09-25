@@ -94,7 +94,7 @@ const at = (bytes: Uint8Array, index: number): number => bytes[index] ?? 0;
  * assertions before it reaches this.
  */
 const decode = (relative: string): { size: number; rgba: Uint8Array } => {
-  const { size, channels, pixels } = decodeScanlines(read(relative), relative);
+  const { width: size, channels, pixels } = decodeScanlines(read(relative), relative);
   const rgba = new Uint8Array(size * size * 4);
   for (let i = 0; i < size * size; i += 1) {
     rgba[i * 4] = at(pixels, i * channels);
