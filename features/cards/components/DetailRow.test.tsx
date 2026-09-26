@@ -70,6 +70,19 @@ describe('DetailRow', () => {
         fireEvent.press(getByText('Format'));
       }).not.toThrow();
     });
+
+    it('dims while pressed and restores on release, from explicit press state', () => {
+      const { getByRole } = render(
+        <DetailRow label="Number" value="1234567890" onPress={jest.fn()} />
+      );
+      const button = getByRole('button');
+
+      expect(button).not.toHaveStyle({ opacity: 0.7 });
+      fireEvent(button, 'pressIn');
+      expect(getByRole('button')).toHaveStyle({ opacity: 0.7 });
+      fireEvent(button, 'pressOut');
+      expect(getByRole('button')).not.toHaveStyle({ opacity: 0.7 });
+    });
   });
 
   describe('Accessibility', () => {

@@ -22,6 +22,7 @@ import { logger } from '@/core/utils/logger';
 
 import { useTheme } from '@/shared/theme';
 import { SPACING } from '@/shared/theme/spacing';
+import { TYPOGRAPHY } from '@/shared/theme/typography';
 
 import { CardForm, CardFormInput } from '@/features/cards/components/CardForm';
 import { useEditCard } from '@/features/cards/hooks/useEditCard';
@@ -160,8 +161,7 @@ const EditCardScreen = () => {
         >
           <Text
             style={{
-              fontSize: 18,
-              fontWeight: '600',
+              ...TYPOGRAPHY.bodyLgStrong,
               color: theme.textPrimary,
               marginBottom: SPACING.sm
             }}
@@ -170,7 +170,7 @@ const EditCardScreen = () => {
           </Text>
           <Text
             style={{
-              fontSize: 14,
+              ...TYPOGRAPHY.bodyMd,
               color: theme.textSecondary,
               textAlign: 'center'
             }}

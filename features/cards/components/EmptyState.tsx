@@ -126,15 +126,12 @@ const styles = StyleSheet.create({
     marginBottom: 24
   },
   title: {
-    fontSize: TYPOGRAPHY.title2.fontSize,
-    lineHeight: TYPOGRAPHY.title2.lineHeight,
-    fontWeight: TYPOGRAPHY.title2.fontWeight,
+    ...TYPOGRAPHY.headlineMd,
     textAlign: 'center',
     marginBottom: 8
   },
   subtitle: {
-    fontSize: TYPOGRAPHY.subheadline.fontSize,
-    lineHeight: 22,
+    ...TYPOGRAPHY.bodyMd,
     textAlign: 'center',
     marginBottom: 32
   },

@@ -8,9 +8,6 @@ jest.mock('@/shared/theme', () => ({
     theme: {
       error: '#FF3B30'
     },
-    typography: {
-      footnote: { fontSize: 13, lineHeight: 18 }
-    },
     spacing: { sm: 8, md: 16 }
   })
 }));

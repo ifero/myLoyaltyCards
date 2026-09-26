@@ -13,6 +13,7 @@ import { StyleSheet } from 'react-native-unistyles';
 import { useTheme } from '@/shared/theme';
 import { TOUCH_TARGET } from '@/shared/theme/spacing';
 import { SYNC_TOKENS } from '@/shared/theme/sync-tokens';
+import { TYPOGRAPHY } from '@/shared/theme/typography';
 
 type SyncErrorBannerProps = {
   message: string | null;
@@ -49,10 +50,13 @@ export const SyncErrorBanner = ({ message, onRetry, onDismiss }: SyncErrorBanner
           size={18}
           color={errorAccent}
         />
+        {/* Four lines, not two (Story 21.6): at the 15pt body floor this column holds ~14
+            characters a line beside Retry and dismiss, so two lines cut real messages off
+            mid-sentence. Still bounded, in case a long raw error string arrives. */}
         <Text
           testID="sync-error-message"
           style={[styles.message, { color: messageColor }]}
-          numberOfLines={2}
+          numberOfLines={4}
         >
           {message}
         </Text>
@@ -102,10 +106,9 @@ const styles = StyleSheet.create({
     paddingVertical: 24
   },
   message: {
+    ...TYPOGRAPHY.bodyMd,
     marginLeft: 16,
-    flex: 1,
-    fontSize: 12,
-    lineHeight: 16
+    flex: 1
   },
   retryButton: {
     marginLeft: 16,
@@ -120,8 +123,7 @@ const styles = StyleSheet.create({
     // Colour supplied at the call site from `theme.onError`: this label sits on
     // an `errorAccent` fill, which IS the error token, and white stops clearing
     // AA against it in dark mode.
-    fontSize: 12,
-    fontWeight: '500'
+    ...TYPOGRAPHY.labelBold
   },
   dismissButton: {
     marginLeft: 16,

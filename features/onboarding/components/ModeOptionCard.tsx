@@ -5,6 +5,7 @@ import { Pressable, Text, View } from 'react-native';
 
 import { useTheme } from '@/shared/theme';
 import { TOUCH_TARGET } from '@/shared/theme/spacing';
+import { TYPOGRAPHY } from '@/shared/theme/typography';
 
 type ModeOptionCardProps = {
   icon: React.ComponentProps<typeof MaterialIcons>['name'];
@@ -67,12 +68,12 @@ export const ModeOptionCard = ({
         </View>
 
         <View style={{ flex: 1, minWidth: 0 }}>
-          <Text style={{ color: theme.textPrimary, fontSize: 17, fontWeight: '600' }}>{title}</Text>
-          <Text style={{ marginTop: 4, color: theme.textSecondary, fontSize: 14, lineHeight: 20 }}>
+          <Text style={{ ...TYPOGRAPHY.bodyLgStrong, color: theme.textPrimary }}>{title}</Text>
+          <Text style={{ ...TYPOGRAPHY.bodyMd, marginTop: 4, color: theme.textSecondary }}>
             {subtitle}
           </Text>
           {eyebrow ? (
-            <Text style={{ marginTop: 8, color: theme.primary, fontSize: 12, fontWeight: '500' }}>
+            <Text style={{ ...TYPOGRAPHY.labelBold, marginTop: 8, color: theme.primary }}>
               {eyebrow}
             </Text>
           ) : null}
@@ -89,7 +90,7 @@ export const ModeOptionCard = ({
               backgroundColor: theme.primary
             }}
           >
-            <Text style={{ color: theme.onPrimary, fontSize: 12, fontWeight: '500' }}>
+            <Text style={{ ...TYPOGRAPHY.labelBold, color: theme.onPrimary }}>
               {t('onboarding.modeOption.recommended')}
             </Text>
           </View>

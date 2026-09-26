@@ -2,6 +2,7 @@ import React from 'react';
 import { Text, View } from 'react-native';
 
 import { useTheme } from '@/shared/theme';
+import { TYPOGRAPHY } from '@/shared/theme/typography';
 
 type SettingsSectionProps = {
   title: string;
@@ -16,10 +17,8 @@ export const SettingsSection = ({ title, children }: SettingsSectionProps) => {
       <Text
         accessibilityRole="header"
         style={{
+          ...TYPOGRAPHY.overline,
           color: theme.textTertiary,
-          fontWeight: '600',
-          fontSize: 12,
-          letterSpacing: 0.5,
           textTransform: 'uppercase'
         }}
       >

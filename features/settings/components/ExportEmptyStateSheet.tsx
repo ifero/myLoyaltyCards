@@ -5,6 +5,7 @@ import { Text, View } from 'react-native';
 
 import { BottomSheet, Button } from '@/shared/components/ui';
 import { useTheme } from '@/shared/theme';
+import { TYPOGRAPHY } from '@/shared/theme/typography';
 
 type ExportEmptyStateSheetProps = {
   visible: boolean;
@@ -19,16 +20,15 @@ export const ExportEmptyStateSheet = ({ visible, onClose }: ExportEmptyStateShee
     <BottomSheet visible={visible} onClose={onClose} testID="export-empty-sheet">
       <View style={{ alignItems: 'center' }}>
         <MaterialIcons name="file-download" size={40} color={theme.primary} />
-        <Text style={{ marginTop: 12, color: theme.textPrimary, fontSize: 30, fontWeight: '600' }}>
+        <Text style={{ ...TYPOGRAPHY.sheetTitle, marginTop: 12, color: theme.textPrimary }}>
           {t('settings.export.emptyTitle')}
         </Text>
         <Text
           style={{
+            ...TYPOGRAPHY.bodyMd,
             marginTop: 8,
             color: theme.textSecondary,
-            fontSize: 14,
-            textAlign: 'center',
-            lineHeight: 20
+            textAlign: 'center'
           }}
         >
           {t('settings.export.emptyBody')}

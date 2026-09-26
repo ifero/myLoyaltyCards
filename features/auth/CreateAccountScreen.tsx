@@ -11,6 +11,7 @@ import ConsentCheckbox from '@/shared/components/ConsentCheckbox';
 import { Button, TextField } from '@/shared/components/ui';
 import { signUp } from '@/shared/supabase/auth';
 import { useTheme } from '@/shared/theme';
+import { TYPOGRAPHY } from '@/shared/theme/typography';
 
 import {
   AuthLink,
@@ -21,7 +22,7 @@ import {
 } from './components';
 
 const CreateAccountScreen = () => {
-  const { theme, spacing, typography } = useTheme();
+  const { theme, spacing } = useTheme();
   const { t } = useTranslation();
   const router = useRouter();
   const params = useLocalSearchParams<{ email?: string | string[] }>();
@@ -233,9 +234,8 @@ const CreateAccountScreen = () => {
         <Text
           testID="password-requirements"
           style={{
+            ...TYPOGRAPHY.captionMd,
             color: theme.textSecondary,
-            fontSize: typography.caption1.fontSize,
-            lineHeight: typography.caption1.lineHeight,
             marginTop: -spacing.sm
           }}
         >
@@ -248,9 +248,8 @@ const CreateAccountScreen = () => {
             <Text
               testID="consent-error"
               style={{
+                ...TYPOGRAPHY.captionMd,
                 color: theme.error,
-                fontSize: typography.caption1.fontSize,
-                lineHeight: typography.caption1.lineHeight,
                 marginTop: spacing.xs
               }}
             >

@@ -17,6 +17,7 @@ import { completeFirstLaunch, isFirstLaunch } from '@/core/settings/settings-rep
 
 import { Button } from '@/shared/components/ui';
 import { useTheme } from '@/shared/theme';
+import { TYPOGRAPHY } from '@/shared/theme/typography';
 
 import { HighlightSlide } from '../components/HighlightSlide';
 import { PaginationDots } from '../components/PaginationDots';
@@ -210,7 +211,7 @@ const FeatureHighlightsScreen = () => {
           onPress={finishOnboarding}
           style={{ minHeight: 44, minWidth: 44, justifyContent: 'center', paddingHorizontal: 2 }}
         >
-          <Text style={{ color: theme.link, fontSize: 14, fontWeight: '500' }}>
+          <Text style={{ ...TYPOGRAPHY.bodyMdStrong, color: theme.link }}>
             {t('onboarding.highlights.skip')}
           </Text>
         </Pressable>

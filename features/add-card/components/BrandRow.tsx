@@ -11,6 +11,7 @@ import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 
 import { ActionRow } from '@/shared/components/ui';
+import { MONOGRAM_TEXT_PROPS, monogram } from '@/shared/theme/typography';
 
 import { CatalogueBrand } from '@/catalogue/types';
 
@@ -33,7 +34,9 @@ export const BrandRow: React.FC<BrandRowProps> = ({
 
   const leading = (
     <View style={[styles.circle, { backgroundColor: brand.color }]}>
-      <Text style={styles.circleText}>{firstLetter}</Text>
+      <Text {...MONOGRAM_TEXT_PROPS} style={styles.circleText}>
+        {firstLetter}
+      </Text>
     </View>
   );
 
@@ -60,8 +63,7 @@ const styles = StyleSheet.create({
     marginRight: 12
   },
   circleText: {
-    color: '#FFFFFF',
-    fontSize: 22,
-    fontWeight: '700'
+    ...monogram(22),
+    color: '#FFFFFF'
   }
 });

@@ -109,11 +109,8 @@ export const SortFilterRow: React.FC<SortFilterRowProps> = ({
               >
                 <Text
                   style={[
-                    styles.menuItemText,
-                    {
-                      color: option === sortOption ? theme.primary : theme.textPrimary,
-                      fontWeight: option === sortOption ? '600' : '400'
-                    }
+                    option === sortOption ? TYPOGRAPHY.bodyLgStrong : TYPOGRAPHY.bodyLg,
+                    { color: option === sortOption ? theme.primary : theme.textPrimary }
                   ]}
                 >
                   {sortLabels[option]}
@@ -138,9 +135,7 @@ const styles = StyleSheet.create({
     paddingVertical: 8
   },
   countText: {
-    fontSize: TYPOGRAPHY.body.fontSize,
-    lineHeight: TYPOGRAPHY.body.lineHeight,
-    fontWeight: TYPOGRAPHY.body.fontWeight
+    ...TYPOGRAPHY.labelBold
   },
   sortButton: {
     flexDirection: 'row',
@@ -148,8 +143,7 @@ const styles = StyleSheet.create({
     minHeight: TOUCH_TARGET.min
   },
   sortText: {
-    fontSize: TYPOGRAPHY.body.fontSize,
-    fontWeight: '600'
+    ...TYPOGRAPHY.labelBold
   },
   backdrop: {
     flex: 1,
@@ -173,8 +167,5 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 12,
     minHeight: TOUCH_TARGET.min
-  },
-  menuItemText: {
-    fontSize: TYPOGRAPHY.body.fontSize
   }
 });

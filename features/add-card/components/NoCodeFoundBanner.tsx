@@ -152,7 +152,7 @@ const styles = StyleSheet.create({
   message: {
     flex: 1,
     color: '#FFFFFF',
-    ...TYPOGRAPHY.subheadline
+    ...TYPOGRAPHY.bodyMd
   },
   actionsRow: {
     flexDirection: 'row',
@@ -164,6 +164,6 @@ const styles = StyleSheet.create({
     paddingVertical: 4
   },
   actionText: {
-    ...TYPOGRAPHY.footnote
+    ...TYPOGRAPHY.captionMd
   }
 });

@@ -24,6 +24,7 @@ import { useTheme } from '@/shared/theme';
 import { CARD_COLORS, DEFAULT_CARD_COLOR_HEX } from '@/shared/theme/colors';
 import { getContrastForeground, getFavouriteStarColor } from '@/shared/theme/luminance';
 import { SPACING } from '@/shared/theme/spacing';
+import { NAVIGATION_TITLE_FONT, TYPOGRAPHY } from '@/shared/theme/typography';
 import { showToast } from '@/shared/toast';
 
 import { CardDetails } from '@/features/cards/components/CardDetails';
@@ -164,8 +165,7 @@ const CardDetailsScreen = () => {
         >
           <Text
             style={{
-              fontSize: 18,
-              fontWeight: '600',
+              ...TYPOGRAPHY.bodyLgStrong,
               color: theme.textPrimary,
               marginBottom: SPACING.sm
             }}
@@ -174,7 +174,7 @@ const CardDetailsScreen = () => {
           </Text>
           <Text
             style={{
-              fontSize: 14,
+              ...TYPOGRAPHY.bodyMd,
               color: theme.textSecondary,
               textAlign: 'center'
             }}
@@ -212,11 +212,9 @@ const CardDetailsScreen = () => {
           title: isHeaderCondensed ? card.name : '',
           headerStyle: { backgroundColor: headerBg },
           headerTintColor: headerTextColor,
-          headerTitleStyle: {
-            color: headerTextColor,
-            fontWeight: '600',
-            fontSize: isHeaderCondensed ? 17 : 0
-          },
+          // The title string is already '' until the header condenses, so the size is left to
+          // the platform as on every other screen; this style only carries the face.
+          headerTitleStyle: { ...NAVIGATION_TITLE_FONT, color: headerTextColor },
           headerShadowVisible: isHeaderCondensed,
           headerLeft: () => (
             <Pressable

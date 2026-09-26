@@ -5,6 +5,7 @@ import { Text, View } from 'react-native';
 
 import { Button } from '@/shared/components/ui';
 import { useTheme } from '@/shared/theme';
+import { TYPOGRAPHY } from '@/shared/theme/typography';
 
 type AccountSectionGuestProps = {
   onCreateAccount: () => void;
@@ -27,11 +28,11 @@ export const AccountSectionGuest = ({ onCreateAccount, onSignIn }: AccountSectio
     >
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
         <MaterialIcons name="verified-user" size={36} color={theme.primary} />
-        <Text style={{ color: theme.textPrimary, fontSize: 16, fontWeight: '500', flex: 1 }}>
+        <Text style={{ ...TYPOGRAPHY.sheetTitle, color: theme.textPrimary, flex: 1 }}>
           {t('settings.account.guestTitle')}
         </Text>
       </View>
-      <Text style={{ color: theme.textSecondary, fontSize: 14, marginTop: 10, lineHeight: 20 }}>
+      <Text style={{ ...TYPOGRAPHY.bodyMd, color: theme.textSecondary, marginTop: 10 }}>
         {t('settings.account.guestBody')}
       </Text>
       <View style={{ marginTop: 12, flexDirection: 'row', gap: 8 }}>

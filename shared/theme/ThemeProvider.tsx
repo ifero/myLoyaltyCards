@@ -10,7 +10,6 @@ import {
 
 import { LIGHT_THEME, DARK_THEME, type Theme } from './colors';
 import { SPACING, LAYOUT, TOUCH_TARGET } from './spacing';
-import { TYPOGRAPHY } from './typography';
 
 /**
  * Theme context type
@@ -21,7 +20,8 @@ interface ThemeContextType {
   colorScheme: 'light' | 'dark';
   themePreference: ThemePreference;
   setThemePreference: (value: ThemePreference) => void;
-  typography: typeof TYPOGRAPHY;
+  // No `typography` (Story 21.6): the scale is a static constant, identical in both schemes, so
+  // it is imported from `@/shared/theme/typography` rather than read through this context.
   spacing: typeof SPACING;
   layout: typeof LAYOUT;
   touchTarget: typeof TOUCH_TARGET;
@@ -78,7 +78,6 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
       colorScheme: resolvedScheme,
       themePreference,
       setThemePreference,
-      typography: TYPOGRAPHY,
       spacing: SPACING,
       layout: LAYOUT,
       touchTarget: TOUCH_TARGET

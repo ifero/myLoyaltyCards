@@ -14,6 +14,7 @@ import { ActivityIndicator, Pressable, Text, View } from 'react-native';
 import { StyleSheet } from 'react-native-unistyles';
 
 import { useTheme } from '@/shared/theme';
+import { TYPOGRAPHY } from '@/shared/theme/typography';
 
 import { MigrationStatus } from './useGuestMigration';
 
@@ -66,10 +67,12 @@ const MigrationBanner = ({ status, message, onRetry, onDismiss }: MigrationBanne
         />
       )}
 
+      {/* Four lines, not two (Story 21.6): at the 15pt body floor the error message wraps to
+          four beside Retry and dismiss, and two lines cut it off mid-sentence. */}
       <Text
         testID="migration-message"
         style={[styles.message, { color: textColor }]}
-        numberOfLines={2}
+        numberOfLines={4}
       >
         {message}
       </Text>
@@ -118,9 +121,8 @@ const styles = StyleSheet.create({
     paddingVertical: 24
   },
   message: {
-    flex: 1,
-    fontSize: 14,
-    lineHeight: 20
+    ...TYPOGRAPHY.bodyMd,
+    flex: 1
   },
   retryButton: {
     marginLeft: 16,
@@ -129,9 +131,7 @@ const styles = StyleSheet.create({
     paddingVertical: 8
   },
   retryLabel: {
-    fontSize: 12,
-    lineHeight: 16,
-    fontWeight: '600'
+    ...TYPOGRAPHY.labelBold
     // Colour supplied at the call site from `theme.onError` — this label sits on
     // a `theme.error` fill, against which white fails AA in dark mode.
   },

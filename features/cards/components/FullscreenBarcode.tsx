@@ -30,6 +30,7 @@ import type { LoyaltyCard } from '@/core/schemas';
 import { logger } from '@/core/utils/logger';
 
 import { TOUCH_TARGET } from '@/shared/theme/spacing';
+import { TYPOGRAPHY } from '@/shared/theme/typography';
 
 import { BarcodeRenderer } from './BarcodeRenderer';
 import { useBrightness } from '../hooks/useBrightness';
@@ -157,8 +158,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24
   },
   cardName: {
-    fontSize: 20,
-    fontWeight: '700',
+    ...TYPOGRAPHY.headlineSm,
     color: '#1F2937',
     textAlign: 'center',
     marginBottom: 32,
@@ -176,11 +176,9 @@ const styles = StyleSheet.create({
     alignItems: 'center'
   },
   barcodeNumber: {
-    fontSize: 18,
-    fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace',
+    ...TYPOGRAPHY.monoCode,
     color: '#1F2937',
     textAlign: 'center',
-    marginTop: 20,
-    letterSpacing: 2
+    marginTop: 20
   }
 });

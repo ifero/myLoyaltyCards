@@ -13,6 +13,7 @@ import { ScrollView, Text, View } from 'react-native';
 import { StyleSheet } from 'react-native-unistyles';
 
 import { useTheme } from '@/shared/theme';
+import { TYPOGRAPHY } from '@/shared/theme/typography';
 
 import {
   PRIVACY_POLICY_CONTENT,
@@ -121,22 +122,18 @@ const styles = StyleSheet.create({
     height: 24
   },
   sectionHeader: {
+    ...TYPOGRAPHY.bodyLgStrong,
     marginBottom: 8,
-    marginTop: 32,
-    fontSize: 16,
-    lineHeight: 24,
-    fontWeight: '700'
+    marginTop: 32
   },
   bullet: {
+    ...TYPOGRAPHY.bodyMd,
     marginBottom: 8,
-    paddingLeft: 32,
-    fontSize: 14,
-    lineHeight: 20
+    paddingLeft: 32
   },
   body: {
-    marginBottom: 8,
-    fontSize: 14,
-    lineHeight: 20
+    ...TYPOGRAPHY.bodyMd,
+    marginBottom: 8
   },
   scroll: {
     flex: 1,
@@ -145,15 +142,12 @@ const styles = StyleSheet.create({
     paddingTop: 48
   },
   title: {
-    marginBottom: 8,
-    fontSize: 24,
-    lineHeight: 32,
-    fontWeight: '700'
+    ...TYPOGRAPHY.headlineMd,
+    marginBottom: 8
   },
   meta: {
-    marginBottom: 48,
-    fontSize: 12,
-    lineHeight: 16
+    ...TYPOGRAPHY.captionSm,
+    marginBottom: 48
   }
 });
 

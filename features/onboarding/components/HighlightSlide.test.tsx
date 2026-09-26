@@ -12,9 +12,6 @@ jest.mock('@/shared/theme', () => ({
       primary: '#1A73E8',
       primaryDark: '#1967D2',
       border: '#E5E5EB'
-    },
-    typography: {
-      title2: { fontSize: 22, lineHeight: 28, fontWeight: '700' }
     }
   })
 }));

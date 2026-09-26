@@ -12,6 +12,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { StyleSheet } from 'react-native-unistyles';
 
 import { useTheme } from '@/shared/theme';
+import { TYPOGRAPHY } from '@/shared/theme/typography';
 
 import { AppIconHeader } from './AppIconHeader';
 
@@ -40,7 +41,7 @@ export const AuthScreenLayout = ({
   testID,
   contentStyle
 }: AuthScreenLayoutProps) => {
-  const { theme, layout, spacing, typography } = useTheme();
+  const { theme, layout, spacing } = useTheme();
   const insets = useSafeAreaInsets();
 
   return (
@@ -76,10 +77,8 @@ export const AuthScreenLayout = ({
               testID={headingTestID}
               accessibilityRole="header"
               style={{
+                ...TYPOGRAPHY.headlineMd,
                 color: theme.textPrimary,
-                fontSize: typography.title1.fontSize,
-                lineHeight: typography.title1.lineHeight,
-                fontWeight: typography.title1.fontWeight,
                 textAlign: 'center'
               }}
             >
@@ -91,10 +90,8 @@ export const AuthScreenLayout = ({
             <Text
               testID={subtitleTestID}
               style={{
+                ...TYPOGRAPHY.bodyMd,
                 color: theme.textSecondary,
-                fontSize: typography.subheadline.fontSize,
-                lineHeight: typography.subheadline.lineHeight,
-                fontWeight: typography.subheadline.fontWeight,
                 textAlign: 'center',
                 marginTop: spacing.sm,
                 marginBottom: spacing.xl

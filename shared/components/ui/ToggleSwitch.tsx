@@ -3,6 +3,7 @@ import { Pressable, Text, View } from 'react-native';
 
 import { useTheme } from '@/shared/theme';
 import { TOUCH_TARGET } from '@/shared/theme/spacing';
+import { TYPOGRAPHY } from '@/shared/theme/typography';
 
 type ToggleSwitchProps = {
   value: boolean;
@@ -36,7 +37,9 @@ export const ToggleSwitch = ({
         opacity: disabled ? 0.6 : 1
       }}
     >
-      {label ? <Text style={{ color: theme.textPrimary, fontSize: 16 }}>{label}</Text> : null}
+      {label ? (
+        <Text style={{ ...TYPOGRAPHY.bodyLg, color: theme.textPrimary }}>{label}</Text>
+      ) : null}
       <View
         testID={`${testID}-track`}
         style={{

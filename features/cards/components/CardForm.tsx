@@ -28,6 +28,7 @@ import { barcodeFormatSchema, cardColorSchema } from '@/core/schemas';
 import { inferBarcodeFormat } from '@/core/utils';
 
 import { useTheme } from '@/shared/theme';
+import { TYPOGRAPHY, inputFont } from '@/shared/theme/typography';
 
 import { ColorPicker } from './ColorPicker';
 
@@ -183,6 +184,7 @@ export const CardForm = ({
                 accessibilityLabel={t('cards.form.nameAccessibilityLabel')}
                 style={[
                   styles.input,
+                  styles.inputText,
                   {
                     borderColor: errors.name ? '#EF4444' : theme.border,
                     color: theme.textPrimary,
@@ -217,6 +219,7 @@ export const CardForm = ({
                 accessibilityLabel={t('cards.form.barcodeAccessibilityLabel')}
                 style={[
                   styles.input,
+                  styles.inputText,
                   {
                     borderColor: errors.barcode ? '#EF4444' : theme.border,
                     color: theme.textPrimary,
@@ -245,7 +248,9 @@ export const CardForm = ({
               }
             ]}
           >
-            <Text style={{ color: theme.textPrimary }}>{barcodeFormatLabels[barcodeFormat]}</Text>
+            <Text style={[styles.formatValue, { color: theme.textPrimary }]}>
+              {barcodeFormatLabels[barcodeFormat]}
+            </Text>
           </View>
         </View>
 
@@ -310,19 +315,16 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between'
   },
   labelText: {
-    fontSize: 12,
-    lineHeight: 16,
+    ...TYPOGRAPHY.labelBold,
     color: '#6B7280'
   },
   counterText: {
-    fontSize: 12,
-    lineHeight: 16,
+    ...TYPOGRAPHY.captionMd,
     color: '#9CA3AF'
   },
   fieldLabel: {
+    ...TYPOGRAPHY.labelBold,
     marginBottom: 8,
-    fontSize: 12,
-    lineHeight: 16,
     color: '#6B7280'
   },
   input: {
@@ -331,10 +333,17 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
     paddingVertical: 24
   },
+  // Kept apart from `input` because the read-only format display reuses that box on a View.
+  inputText: {
+    ...inputFont(TYPOGRAPHY.bodyLg)
+  },
+  // The format display is a Text, not a field, so it keeps the token's line height.
+  formatValue: {
+    ...TYPOGRAPHY.bodyLg
+  },
   errorText: {
+    ...TYPOGRAPHY.captionMd,
     marginTop: 8,
-    fontSize: 12,
-    lineHeight: 16,
     color: '#EF4444'
   },
   saveButton: {
@@ -345,9 +354,7 @@ const styles = StyleSheet.create({
     borderRadius: 8
   },
   saveLabel: {
-    fontSize: 16,
-    lineHeight: 24,
-    fontWeight: '600'
+    ...TYPOGRAPHY.bodyLgStrong
     // No `color`: the label follows the fill via `theme.onPrimary` at the call
     // site (white on ink in light, ink on beam in dark). A hardcoded white here
     // would be dead and, worse, would look correct.

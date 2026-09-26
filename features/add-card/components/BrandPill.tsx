@@ -10,6 +10,7 @@ import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 
 import { getContrastForeground } from '@/shared/theme/luminance';
+import { TYPOGRAPHY } from '@/shared/theme/typography';
 
 import { BrandLogo } from '@/features/cards/components/BrandLogo';
 import { getBrandLogo } from '@/features/cards/utils/brandLogos';
@@ -58,7 +59,6 @@ const styles = StyleSheet.create({
     height: LOGO_SIZE
   },
   text: {
-    fontSize: 14,
-    fontWeight: '600'
+    ...TYPOGRAPHY.bodyMdStrong
   }
 });

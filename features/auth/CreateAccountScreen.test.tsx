@@ -27,12 +27,6 @@ jest.mock('@/shared/theme', () => ({
     },
     spacing: { xs: 4, sm: 8, md: 16, lg: 24, xl: 32 },
     layout: { safeAreaTopInsetMin: 16, screenHorizontalMargin: 24 },
-    typography: {
-      title1: { fontSize: 28, lineHeight: 34, fontWeight: '700' },
-      subheadline: { fontSize: 15, lineHeight: 20, fontWeight: '400' },
-      footnote: { fontSize: 13, lineHeight: 18 },
-      caption1: { fontSize: 12, lineHeight: 16 }
-    },
     touchTarget: { min: 44 },
     isDark: false,
     colorScheme: 'light'

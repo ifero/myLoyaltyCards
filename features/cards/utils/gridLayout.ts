@@ -249,9 +249,10 @@ export const FALLBACK_TEXT_SIZE = 18;
 const FALLBACK_TEXT_FIT_RATIO = 1.45;
 
 /**
- * Floor for the glyph — `TYPOGRAPHY.caption2`, the smallest size the design system
- * ships. Taken from the scale rather than invented, though not imported: this module
- * is deliberately dependency-free pure arithmetic. It outranks the fit ratio, so a
+ * Floor for the glyph — 12 pt, the smallest size the type scale ships (`captionSm` and
+ * `overline`; Story 21.6 retired `caption2`'s 11). Taken from the scale rather than
+ * invented, though not imported: this module is deliberately dependency-free pure
+ * arithmetic, so `gridLayout.test.ts` is what holds the two together. It outranks the fit ratio, so a
  * degenerately small plate gets unreadably-but-honestly clipped type rather than type
  * scaled below the point of being type.
  *
@@ -265,7 +266,7 @@ const FALLBACK_TEXT_FIT_RATIO = 1.45;
  * keeping plates from getting absurdly small in the first place is the job of
  * whoever chooses the column count (a minimum *tile* width), not of this function.
  */
-const MIN_FALLBACK_TEXT_SIZE = 11;
+const MIN_FALLBACK_TEXT_SIZE = 12;
 
 /** Applied size of one centred fallback child, plus the glyph size that fits it. */
 export interface FallbackChildMetrics {

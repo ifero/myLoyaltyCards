@@ -15,6 +15,7 @@ import { CardColor, CARD_COLOR_KEYS } from '@/core/schemas';
 
 import { CARD_COLORS } from '@/shared/theme';
 import { getContrastForeground } from '@/shared/theme/luminance';
+import { TYPOGRAPHY } from '@/shared/theme/typography';
 
 interface ColorPickerProps {
   value: CardColor;
@@ -88,9 +89,8 @@ export function ColorPicker({ value, onChange, testID }: ColorPickerProps) {
 
 const styles = StyleSheet.create({
   label: {
+    ...TYPOGRAPHY.labelBold,
     marginBottom: 16,
-    fontSize: 12,
-    lineHeight: 16,
     color: '#6B7280'
   },
   row: {

@@ -149,7 +149,7 @@ export const CardList: React.FC<{ highlightCardId?: string | null }> = ({ highli
   if (error) {
     return (
       <View style={[styles.centered, { backgroundColor: theme.background }]}>
-        <Text style={{ color: theme.textSecondary }}>{error}</Text>
+        <Text style={{ ...TYPOGRAPHY.bodyMd, color: theme.textSecondary }}>{error}</Text>
       </View>
     );
   }
@@ -255,8 +255,7 @@ const styles = StyleSheet.create({
     paddingTop: 32
   },
   singleCardTip: {
-    fontSize: TYPOGRAPHY.subheadline.fontSize,
-    lineHeight: TYPOGRAPHY.subheadline.lineHeight,
+    ...TYPOGRAPHY.bodyMd,
     marginTop: 16,
     textAlign: 'center'
   },
@@ -267,7 +266,7 @@ const styles = StyleSheet.create({
     paddingVertical: 48
   },
   noResultsText: {
-    fontSize: TYPOGRAPHY.body.fontSize,
+    ...TYPOGRAPHY.bodyMd,
     textAlign: 'center'
   }
 });

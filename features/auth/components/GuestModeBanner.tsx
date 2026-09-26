@@ -8,6 +8,7 @@ import { StyleSheet } from 'react-native-unistyles';
 
 import { Button } from '@/shared/components/ui';
 import { useTheme } from '@/shared/theme';
+import { TYPOGRAPHY } from '@/shared/theme/typography';
 
 const GUEST_BANNER_DISMISSED_KEY = 'guest_banner_dismissed';
 
@@ -16,16 +17,12 @@ type GuestModeBannerProps = {
 };
 
 export const GuestModeBanner = ({ isGuestMode }: GuestModeBannerProps) => {
-  const { theme, typography, spacing, touchTarget, isDark } = useTheme();
+  const { theme, spacing, touchTarget, isDark } = useTheme();
   const { t } = useTranslation();
   const spacingXs = spacing?.xs ?? 4;
   const spacingSm = spacing?.sm ?? 8;
   const spacingMd = spacing?.md ?? 16;
   const minTouchTarget = touchTarget?.min ?? 44;
-  const subheadlineFontSize = typography?.subheadline?.fontSize ?? 16;
-  const subheadlineLineHeight = typography?.subheadline?.lineHeight ?? 20;
-  const footnoteFontSize = typography?.footnote?.fontSize ?? 13;
-  const footnoteLineHeight = typography?.footnote?.lineHeight ?? 18;
   const router = useRouter();
   const [isDismissed, setIsDismissed] = useState<boolean | null>(null);
 
@@ -116,20 +113,17 @@ export const GuestModeBanner = ({ isGuestMode }: GuestModeBannerProps) => {
           <View style={styles.bodyText}>
             <Text
               style={{
-                color: theme.textPrimary,
-                fontSize: subheadlineFontSize,
-                lineHeight: subheadlineLineHeight,
-                fontWeight: '600'
+                ...TYPOGRAPHY.bodyMdStrong,
+                color: theme.textPrimary
               }}
             >
               {t('auth.guestBanner.title')}
             </Text>
             <Text
               style={{
+                ...TYPOGRAPHY.bodyMd,
                 color: theme.textSecondary,
-                marginTop: spacingXs,
-                fontSize: footnoteFontSize,
-                lineHeight: footnoteLineHeight
+                marginTop: spacingXs
               }}
             >
               {t('auth.guestBanner.body')}

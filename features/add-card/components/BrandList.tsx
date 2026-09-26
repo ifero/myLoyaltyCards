@@ -12,6 +12,7 @@ import { useTranslation } from 'react-i18next';
 import { View, Text, SectionList, StyleSheet } from 'react-native';
 
 import { useTheme } from '@/shared/theme';
+import { TYPOGRAPHY } from '@/shared/theme/typography';
 
 import { CatalogueBrand } from '@/catalogue/types';
 
@@ -162,9 +163,7 @@ const styles = StyleSheet.create({
     paddingBottom: 8
   },
   sectionTitle: {
-    fontSize: 12,
-    fontWeight: '600',
-    letterSpacing: 0.5,
+    ...TYPOGRAPHY.overline,
     textTransform: 'uppercase'
   },
   emptyContainer: {
@@ -173,13 +172,13 @@ const styles = StyleSheet.create({
     alignItems: 'center'
   },
   emptyText: {
-    fontSize: 16
+    ...TYPOGRAPHY.bodyMd
   },
   footerContainer: {
     paddingHorizontal: 24,
     paddingTop: 24
   },
   footerText: {
-    fontSize: 14
+    ...TYPOGRAPHY.bodyMd
   }
 });

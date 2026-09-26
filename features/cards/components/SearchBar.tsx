@@ -19,6 +19,7 @@ import {
 
 import { useTheme } from '@/shared/theme';
 import { TOUCH_TARGET } from '@/shared/theme/spacing';
+import { TYPOGRAPHY, inputFont } from '@/shared/theme/typography';
 
 interface SearchBarProps {
   /** Current search text */
@@ -106,8 +107,8 @@ const styles = StyleSheet.create({
     marginRight: 8
   },
   input: {
+    ...inputFont(TYPOGRAPHY.bodyLg),
     flex: 1,
-    fontSize: 16,
     paddingVertical: 0
   },
   clearButton: {

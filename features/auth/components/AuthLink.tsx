@@ -2,6 +2,7 @@ import React from 'react';
 import { Pressable, Text } from 'react-native';
 
 import { useTheme } from '@/shared/theme';
+import { TYPOGRAPHY } from '@/shared/theme/typography';
 
 type AuthLinkProps = {
   prefixText?: string;
@@ -20,7 +21,7 @@ export const AuthLink = ({
   accessibilityLabel,
   accessibilityHint
 }: AuthLinkProps) => {
-  const { theme, typography, touchTarget } = useTheme();
+  const { theme, touchTarget } = useTheme();
 
   return (
     <Pressable
@@ -33,13 +34,12 @@ export const AuthLink = ({
     >
       <Text
         style={{
-          color: theme.textSecondary,
-          fontSize: typography.footnote.fontSize,
-          lineHeight: typography.footnote.lineHeight
+          ...TYPOGRAPHY.bodyMd,
+          color: theme.textSecondary
         }}
       >
         {prefixText ? `${prefixText} ` : ''}
-        <Text style={{ color: theme.link, fontWeight: '700' }}>{actionText}</Text>
+        <Text style={{ ...TYPOGRAPHY.bodyMdStrong, color: theme.link }}>{actionText}</Text>
       </Text>
     </Pressable>
   );

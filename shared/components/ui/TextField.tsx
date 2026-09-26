@@ -10,6 +10,8 @@ import {
 } from 'react-native';
 import { StyleSheet, useUnistyles } from 'react-native-unistyles';
 
+import { TYPOGRAPHY, inputFont } from '@/shared/theme/typography';
+
 type TextFieldProps = {
   label: string;
   value: string;
@@ -133,9 +135,8 @@ const styles = StyleSheet.create((theme) => ({
     width: '100%'
   },
   label: {
+    ...TYPOGRAPHY.labelBold,
     color: theme.colors.textPrimary,
-    fontSize: 13,
-    fontWeight: '600',
     marginBottom: 6
   },
   inputWrapper: {
@@ -148,7 +149,7 @@ const styles = StyleSheet.create((theme) => ({
     borderWidth: 1,
     color: theme.colors.textPrimary,
     paddingHorizontal: 12,
-    fontSize: 16
+    ...inputFont(TYPOGRAPHY.bodyLg)
   },
   adornment: {
     position: 'absolute',
@@ -156,8 +157,8 @@ const styles = StyleSheet.create((theme) => ({
     alignSelf: 'center'
   },
   error: {
+    ...TYPOGRAPHY.captionMd,
     color: theme.colors.error,
-    fontSize: 12,
     marginTop: 4
   }
 }));

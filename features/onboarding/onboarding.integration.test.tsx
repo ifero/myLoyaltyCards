@@ -29,12 +29,6 @@ jest.mock('@/shared/theme', () => ({
       border: '#E5E5EB',
       borderStrong: '#8F8F94',
       link: '#1A73E8'
-    },
-    typography: {
-      title1: { fontSize: 28, lineHeight: 34, fontWeight: '700' },
-      title2: { fontSize: 22, lineHeight: 28, fontWeight: '700' },
-      headline: { fontSize: 17, lineHeight: 22, fontWeight: '600' },
-      footnote: { fontSize: 13, lineHeight: 18 }
     }
   })
 }));

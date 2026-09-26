@@ -13,6 +13,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { StyleSheet } from 'react-native-unistyles';
 
 import { useTheme } from '@/shared/theme';
+import { TYPOGRAPHY } from '@/shared/theme/typography';
 
 type BottomSheetProps = {
   visible: boolean;
@@ -102,18 +103,15 @@ export const BottomSheet = ({
           {title ? (
             <Text
               style={{
-                color: theme.textPrimary,
-                fontSize: 28,
-                fontWeight: '600'
+                ...TYPOGRAPHY.sheetTitle,
+                color: theme.textPrimary
               }}
             >
               {title}
             </Text>
           ) : null}
           {description ? (
-            <Text
-              style={{ color: theme.textSecondary, marginTop: 6, fontSize: 14, lineHeight: 20 }}
-            >
+            <Text style={{ ...TYPOGRAPHY.bodyMd, color: theme.textSecondary, marginTop: 6 }}>
               {description}
             </Text>
           ) : null}

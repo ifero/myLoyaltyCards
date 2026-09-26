@@ -16,6 +16,6 @@ export {
   DARK_THEME,
   BARCODE_FLASH
 } from './colors';
-export { TYPOGRAPHY } from './typography';
+export { TYPOGRAPHY, monogram } from './typography';
 export type { Theme } from './colors';
 export { ThemeProvider, useTheme } from './ThemeProvider';

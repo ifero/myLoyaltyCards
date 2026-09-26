@@ -17,6 +17,7 @@ import { StyleSheet } from 'react-native-unistyles';
 
 import { useAuthState } from '@/shared/supabase/useAuthState';
 import { useTheme } from '@/shared/theme';
+import { TYPOGRAPHY } from '@/shared/theme/typography';
 
 // ---------------------------------------------------------------------------
 // Data table
@@ -191,15 +192,12 @@ const styles = StyleSheet.create({
     paddingTop: 48
   },
   title: {
-    marginBottom: 16,
-    fontSize: 24,
-    lineHeight: 32,
-    fontWeight: '700'
+    ...TYPOGRAPHY.headlineMd,
+    marginBottom: 16
   },
   description: {
-    marginBottom: 48,
-    fontSize: 14,
-    lineHeight: 20
+    ...TYPOGRAPHY.bodyMd,
+    marginBottom: 48
   },
   table: {
     marginBottom: 48,
@@ -214,17 +212,16 @@ const styles = StyleSheet.create({
   borderBottom: {
     borderBottomWidth: 1
   },
+  // Table heads are an overline: uppercase, which its positive tracking is the idiom for.
   headerCategory: {
+    ...TYPOGRAPHY.overline,
     flex: 1,
-    fontSize: 14,
-    lineHeight: 20,
-    fontWeight: '600'
+    textTransform: 'uppercase'
   },
   headerData: {
+    ...TYPOGRAPHY.overline,
     flex: 2,
-    fontSize: 14,
-    lineHeight: 20,
-    fontWeight: '600'
+    textTransform: 'uppercase'
   },
   dataRow: {
     flexDirection: 'row',
@@ -232,14 +229,12 @@ const styles = StyleSheet.create({
     paddingVertical: 24
   },
   cellCategory: {
-    flex: 1,
-    fontSize: 14,
-    lineHeight: 20
+    ...TYPOGRAPHY.bodyMdStrong,
+    flex: 1
   },
   cellData: {
-    flex: 2,
-    fontSize: 14,
-    lineHeight: 20
+    ...TYPOGRAPHY.bodyMd,
+    flex: 2
   },
   downloadButton: {
     marginBottom: 32,
@@ -250,14 +245,11 @@ const styles = StyleSheet.create({
     opacity: 0.5
   },
   downloadLabel: {
-    fontSize: 14,
-    lineHeight: 20,
-    fontWeight: '600'
+    ...TYPOGRAPHY.bodyLgStrong
   },
   footer: {
-    textAlign: 'center',
-    fontSize: 12,
-    lineHeight: 16
+    ...TYPOGRAPHY.captionSm,
+    textAlign: 'center'
   }
 });
 

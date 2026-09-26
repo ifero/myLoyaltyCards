@@ -5,6 +5,7 @@ import { Pressable, Text, View } from 'react-native';
 
 import { BottomSheet } from '@/shared/components/ui';
 import { useTheme } from '@/shared/theme';
+import { TYPOGRAPHY } from '@/shared/theme/typography';
 
 import type { LanguageOption } from '../types';
 
@@ -61,7 +62,9 @@ export const LanguagePickerSheet = ({
                   justifyContent: 'space-between'
                 }}
               >
-                <Text style={{ color: theme.textPrimary, fontSize: 16 }}>{option.name}</Text>
+                <Text style={{ ...TYPOGRAPHY.bodyLg, color: theme.textPrimary }}>
+                  {option.name}
+                </Text>
                 {isSelected ? <MaterialIcons name="check" size={24} color={theme.primary} /> : null}
               </View>
             </Pressable>

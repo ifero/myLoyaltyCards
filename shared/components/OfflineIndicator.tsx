@@ -17,6 +17,7 @@ import { StyleSheet } from 'react-native-unistyles';
 
 import { useTheme } from '@/shared/theme';
 import { SYNC_TOKENS } from '@/shared/theme/sync-tokens';
+import { TYPOGRAPHY } from '@/shared/theme/typography';
 
 type OfflineIndicatorProps = {
   isOffline: boolean;
@@ -65,9 +66,7 @@ const styles = StyleSheet.create({
     paddingVertical: 16
   },
   message: {
-    marginLeft: 16,
-    fontSize: 12,
-    fontWeight: '500',
-    lineHeight: 16
+    ...TYPOGRAPHY.labelBold,
+    marginLeft: 16
   }
 });

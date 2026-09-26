@@ -23,11 +23,6 @@ jest.mock('@/shared/theme', () => ({
       link: '#1A73E8'
     },
     spacing: { xs: 4, sm: 8, md: 16, lg: 24, xl: 32 },
-    typography: {
-      headline: { fontSize: 17, lineHeight: 22, fontWeight: '600' },
-      subheadline: { fontSize: 16, lineHeight: 20, fontWeight: '400' },
-      footnote: { fontSize: 13, lineHeight: 18 }
-    },
     touchTarget: { min: 44 },
     isDark: false,
     colorScheme: 'light'

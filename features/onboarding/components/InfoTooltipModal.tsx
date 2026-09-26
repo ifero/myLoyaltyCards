@@ -5,6 +5,7 @@ import { AccessibilityInfo, findNodeHandle, Modal, Pressable, Text, View } from 
 
 import { Button } from '@/shared/components/ui/Button';
 import { useTheme } from '@/shared/theme';
+import { TYPOGRAPHY } from '@/shared/theme/typography';
 
 type InfoTooltipModalProps = {
   visible: boolean;
@@ -124,14 +125,13 @@ export const InfoTooltipModal = ({
               marginTop: 12,
               textAlign: 'center',
               color: theme.textPrimary,
-              fontSize: 22,
-              fontWeight: '600'
+              ...TYPOGRAPHY.sheetTitle
             }}
           >
             {t('onboarding.infoTooltip.heading')}
           </Text>
 
-          <Text style={{ marginTop: 10, color: theme.textSecondary, fontSize: 14, lineHeight: 20 }}>
+          <Text style={{ ...TYPOGRAPHY.bodyMd, marginTop: 10, color: theme.textSecondary }}>
             {t('onboarding.infoTooltip.body')}
           </Text>
 

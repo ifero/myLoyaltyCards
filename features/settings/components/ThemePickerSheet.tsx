@@ -6,6 +6,7 @@ import { Pressable, Text, View } from 'react-native';
 import { BottomSheet } from '@/shared/components/ui';
 import { useTheme } from '@/shared/theme';
 import { DARK_THEME, LIGHT_THEME } from '@/shared/theme/colors';
+import { TYPOGRAPHY } from '@/shared/theme/typography';
 
 import type { ThemePreference } from '../types';
 
@@ -93,11 +94,10 @@ export const ThemePickerSheet = ({
               </View>
               <Text
                 style={{
+                  ...(isSelected ? TYPOGRAPHY.labelBold : TYPOGRAPHY.captionMd),
                   marginTop: 8,
                   textAlign: 'center',
-                  fontSize: 14,
-                  color: isSelected ? theme.primary : theme.textPrimary,
-                  fontWeight: isSelected ? '600' : '400'
+                  color: isSelected ? theme.primary : theme.textPrimary
                 }}
               >
                 {option.label}
@@ -106,7 +106,7 @@ export const ThemePickerSheet = ({
           );
         })}
       </View>
-      <Text style={{ marginTop: 10, color: theme.textSecondary, fontSize: 13 }}>
+      <Text style={{ ...TYPOGRAPHY.captionMd, marginTop: 10, color: theme.textSecondary }}>
         {t('settings.theme.systemDescription')}
       </Text>
     </BottomSheet>

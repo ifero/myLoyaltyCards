@@ -17,6 +17,7 @@ import { Pressable, Text, View } from 'react-native';
 import { StyleSheet } from 'react-native-unistyles';
 
 import { useTheme } from '../theme';
+import { TYPOGRAPHY } from '../theme/typography';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -106,9 +107,8 @@ const styles = StyleSheet.create({
     borderWidth: 2
   },
   label: {
-    flex: 1,
-    fontSize: 14,
-    lineHeight: 20
+    ...TYPOGRAPHY.bodyMd,
+    flex: 1
   }
 });
 

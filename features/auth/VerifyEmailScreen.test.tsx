@@ -27,12 +27,6 @@ jest.mock('@/shared/theme', () => ({
     },
     spacing: { xs: 4, sm: 8, md: 16, lg: 24, xl: 32 },
     layout: { safeAreaTopInsetMin: 16, screenHorizontalMargin: 24 },
-    typography: {
-      title1: { fontSize: 28, lineHeight: 34, fontWeight: '700' },
-      subheadline: { fontSize: 15, lineHeight: 20, fontWeight: '400' },
-      footnote: { fontSize: 13, lineHeight: 18 },
-      caption1: { fontSize: 12, lineHeight: 16 }
-    },
     touchTarget: { min: 44 },
     isDark: false,
     colorScheme: 'light'
@@ -277,6 +271,35 @@ describe('VerifyEmailScreen', () => {
     expect(screen.getByText('Resend in 1:00')).toBeTruthy();
 
     jest.useRealTimers();
+  });
+
+  // Story 21.6: counting down, the row is text rather than a control — the auth prompt's
+  // "Inter 15px muted" — and once it can be pressed it takes the frames' link weight. Real
+  // timers on purpose: `sentAt` alone decides which state the row mounts in, and a fake-timer
+  // test that runs first in this file stalls every later test that awaits a resolved promise.
+  it('sets the resend row as regular body text while the cooldown runs', () => {
+    // beforeEach seeds a fresh sentAt, so the 60s cooldown is running on mount.
+    render(<VerifyEmailScreen />);
+
+    expect(screen.getByText(/Resend in/)).toHaveStyle({
+      fontFamily: 'Inter',
+      fontSize: 15,
+      fontWeight: '400',
+      color: '#66666B'
+    });
+  });
+
+  it('sets the resend row at the link weight once it can be pressed', () => {
+    mockParams.sentAt = String(Date.now() - 60_000);
+
+    render(<VerifyEmailScreen />);
+
+    expect(screen.getByText('Resend code')).toHaveStyle({
+      fontFamily: 'Inter',
+      fontSize: 15,
+      fontWeight: '600',
+      color: '#1A73E8'
+    });
   });
 
   it('redirects to create-account when email param is missing', async () => {

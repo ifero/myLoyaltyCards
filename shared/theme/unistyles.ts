@@ -23,7 +23,6 @@ import { getThemePreference } from '@/core/settings/settings-repository';
 import { LIGHT_THEME, DARK_THEME, CARD_COLORS, BARCODE_FLASH } from './colors';
 import { SPACING, LAYOUT, TOUCH_TARGET } from './spacing';
 import { SYNC_TOKENS } from './sync-tokens';
-import { TYPOGRAPHY } from './typography';
 
 /**
  * Sync tokens are authored as `{ light, dark }` pairs (with a couple of
@@ -47,12 +46,18 @@ export const flattenSyncTokens = (scheme: SyncScheme): FlatSyncTokens => {
   return Object.fromEntries(entries) as FlatSyncTokens;
 };
 
-/** Tokens shared across both schemes (spacing, typography, etc.). */
+/**
+ * Tokens shared across both schemes.
+ *
+ * Typography is deliberately NOT registered here (Story 21.6 AC12). It was, fully typed, and
+ * read by zero components — and it has no reason to be: the scale is identical in both schemes,
+ * so a per-scheme theme object adds a lookup and nothing else. Every style imports `TYPOGRAPHY`
+ * from `./typography` directly, which also works before `ThemeProvider` mounts.
+ */
 const sharedTokens = {
   spacing: SPACING,
   layout: LAYOUT,
   touchTarget: TOUCH_TARGET,
-  typography: TYPOGRAPHY,
   cardColors: CARD_COLORS,
   barcodeFlash: BARCODE_FLASH
 } as const;

@@ -14,6 +14,7 @@ import { TextInput, View, Pressable, StyleSheet } from 'react-native';
 
 import { useTheme } from '@/shared/theme';
 import { TOUCH_TARGET } from '@/shared/theme/spacing';
+import { TYPOGRAPHY, inputFont } from '@/shared/theme/typography';
 
 interface BrandSearchBarProps {
   value: string;
@@ -85,8 +86,8 @@ const styles = StyleSheet.create({
     marginRight: 8
   },
   input: {
+    ...inputFont(TYPOGRAPHY.bodyMd),
     flex: 1,
-    fontSize: 16,
     height: '100%',
     paddingVertical: 0
   },

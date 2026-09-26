@@ -23,7 +23,6 @@ import {
   Pressable,
   StyleSheet,
   Alert,
-  Platform,
   LayoutChangeEvent,
   NativeScrollEvent,
   NativeSyntheticEvent,
@@ -417,14 +416,12 @@ const styles = StyleSheet.create({
     width: '100%'
   },
   barcodeNumber: {
-    fontSize: 16,
-    fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace',
+    ...TYPOGRAPHY.monoCode,
     textAlign: 'center',
-    marginTop: SPACING.sm,
-    letterSpacing: 2
+    marginTop: SPACING.sm
   },
   barcodeHint: {
-    ...TYPOGRAPHY.caption1,
+    ...TYPOGRAPHY.captionMd,
     marginTop: SPACING.xs
   },
   brightnessToggle: {
@@ -462,10 +459,8 @@ const styles = StyleSheet.create({
     gap: SPACING.sm
   },
   sectionHeader: {
-    ...TYPOGRAPHY.footnote,
-    fontWeight: '600',
+    ...TYPOGRAPHY.overline,
     textTransform: 'uppercase',
-    letterSpacing: 0.5,
     marginBottom: SPACING.xs
   },
   separator: {
@@ -486,7 +481,6 @@ const styles = StyleSheet.create({
     gap: 12
   },
   deleteText: {
-    fontSize: 16,
-    fontWeight: '500'
+    ...TYPOGRAPHY.bodyLg
   }
 });
