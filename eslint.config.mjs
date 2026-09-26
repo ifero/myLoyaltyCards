@@ -6,6 +6,104 @@ import boundariesPlugin from 'eslint-plugin-boundaries';
 import i18nextPlugin from 'eslint-plugin-i18next';
 import reactHooksPlugin from 'eslint-plugin-react-hooks';
 
+// Story 21.6: `local/no-literal-font`, enabled for app code further down. It reads the value
+// written into a font property and reports every literal that value can come out as. A rule
+// rather than `no-restricted-syntax` selectors because a literal can hide behind any number of
+// nodes that pass a value on unchanged, and a selector can only spell out a fixed path to it.
+// Whatever computes a value — a call other than `Platform.select`, a getter, arithmetic on a
+// name — is not read into, and a name is not followed to its value. Nor is a binding's default
+// a style: `({ fontSize = 18 })` may size a monogram, and `monogram(size)` takes a number by
+// design.
+const FONT_PROPERTIES = new Set(['fontSize', 'fontWeight', 'fontFamily']);
+
+// `Platform.select`'s own keys (`PlatformOSType` plus `default`). The call is known by them
+// rather than by the name `Platform`, which an import can rename.
+const PLATFORM_KEYS = new Set(['ios', 'android', 'macos', 'windows', 'web', 'native', 'default']);
+
+const staticKeyName = ({ key, computed }) => {
+  if (key.type === 'Literal') return String(key.value);
+  return !computed && key.type === 'Identifier' ? key.name : undefined;
+};
+
+// An object literal's entries, with those it spreads in from other literals.
+const objectEntries = (object) =>
+  object.properties.flatMap((entry) =>
+    entry.type === 'Property'
+      ? [entry]
+      : possibleValues(entry.argument).flatMap((value) =>
+          value.type === 'ObjectExpression' ? objectEntries(value) : []
+        )
+  );
+
+// The entries of a `select` call keyed by platform, or undefined for any other call.
+const platformSelectEntries = ({ callee, arguments: [platforms] }) => {
+  const isSelect =
+    callee.type === 'MemberExpression' &&
+    !callee.computed &&
+    callee.property.type === 'Identifier' &&
+    callee.property.name === 'select';
+  if (!isSelect || platforms?.type !== 'ObjectExpression') return undefined;
+  const entries = objectEntries(platforms);
+  return entries.some((entry) => PLATFORM_KEYS.has(staticKeyName(entry))) ? entries : undefined;
+};
+
+// Every expression a value can come out as, seen through the nodes that hand one on unchanged:
+// both branches of a conditional, both sides of `??`, `||` and `&&`, TypeScript's type-only
+// wrappers (`as const`, `satisfies`, `!`, `<Type>`) and each platform's entry in a
+// `Platform.select`.
+const possibleValues = (node) => {
+  switch (node.type) {
+    case 'ConditionalExpression':
+      return [...possibleValues(node.consequent), ...possibleValues(node.alternate)];
+    case 'LogicalExpression':
+      return [...possibleValues(node.left), ...possibleValues(node.right)];
+    case 'TSAsExpression':
+    case 'TSSatisfiesExpression':
+    case 'TSNonNullExpression':
+    case 'TSTypeAssertion':
+      return possibleValues(node.expression);
+    case 'CallExpression': {
+      const entries = platformSelectEntries(node);
+      return entries ? entries.flatMap((entry) => possibleValues(entry.value)) : [node];
+    }
+    default:
+      return [node];
+  }
+};
+
+// A value written into the source: a string or a number, a template with no substitutions, or
+// arithmetic on nothing else.
+const isLiteralValue = (node) =>
+  (node.type === 'Literal' && ['string', 'number'].includes(typeof node.value)) ||
+  (node.type === 'TemplateLiteral' && node.expressions.length === 0) ||
+  (node.type === 'BinaryExpression' && isLiteralValue(node.left) && isLiteralValue(node.right));
+
+const localPlugin = {
+  rules: {
+    'no-literal-font': {
+      meta: {
+        type: 'problem',
+        docs: { description: 'Require font size, weight and family to come from the type scale' },
+        schema: [],
+        messages: {
+          literal:
+            'Take font size, weight and family from a TYPOGRAPHY token (shared/theme/typography.ts), or monogram(size) for container-sized initials. A literal renders in the system face or at an unbundled weight.'
+        }
+      },
+      create: (context) => {
+        const check = (node) => {
+          if (!node.value || !FONT_PROPERTIES.has(staticKeyName(node))) return;
+          for (const value of possibleValues(node.value)) {
+            if (isLiteralValue(value)) context.report({ node: value, messageId: 'literal' });
+          }
+        };
+        // A class field is a property with a value too (`class Theme { fontSize = 16 }`).
+        return { Property: check, PropertyDefinition: check };
+      }
+    }
+  }
+};
+
 export default [
   eslint.configs.recommended,
   {
@@ -23,7 +121,10 @@ export default [
       import: importPlugin,
       boundaries: boundariesPlugin,
       i18next: i18nextPlugin,
-      'react-hooks': reactHooksPlugin
+      'react-hooks': reactHooksPlugin,
+      // Registered for every TypeScript file, enabled only where the block below says, so an
+      // `eslint-disable` naming one of its rules resolves anywhere.
+      local: localPlugin
     },
     settings: {
       'import/resolver': {
@@ -193,6 +294,32 @@ export default [
           }
         }
       ]
+    }
+  },
+  {
+    // Story 21.6: every text style takes its face, size and weight from the type scale in
+    // shared/theme/typography.ts. React Native has no font inheritance, so a style that
+    // spells its own `fontSize` or `fontFamily` renders in the SYSTEM face (SF Pro / Roboto)
+    // beside the brand faces — and looks almost right, which is why nothing else catches it.
+    // `fontWeight` is here for a sharper reason: only the weights the scale uses are bundled,
+    // and any other weight is synthesised or snapped to a neighbour, differently per platform.
+    //
+    // A literal is the failure mode: typed into a style, however it is wrapped — a
+    // conditional's branch, a `??` fallback, `as const`, a `Platform.select` entry, literal
+    // arithmetic. Computed sizes stay legal (`fallback.fontSize`, `size * 0.4`): they derive
+    // from geometry, not from a second scale. A name is not followed to its value; that is a
+    // decision someone made in the open, where review sees it.
+    // test/typography-lint-guard.test.ts holds the rule and this wiring to their cases.
+    files: ['app/**/*.{ts,tsx}', 'features/**/*.{ts,tsx}', 'shared/**/*.{ts,tsx}'],
+    ignores: [
+      'shared/theme/typography.ts',
+      '**/*.test.{ts,tsx}',
+      '**/*.spec.{ts,tsx}',
+      '**/__tests__/**',
+      '**/*.stories.{ts,tsx}'
+    ],
+    rules: {
+      'local/no-literal-font': 'error'
     }
   },
   {
