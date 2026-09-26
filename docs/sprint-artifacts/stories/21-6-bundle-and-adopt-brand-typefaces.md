@@ -4,7 +4,7 @@ baseline_commit: 2ff3e23016a3ee6130e5e0c2b3651de62fa4ac5f
 
 # Story 21.6: Bundle and adopt the brand typefaces — and the ten consumers that never say `TYPOGRAPHY`
 
-Status: review
+Status: done
 
 Epic: 21 — Cardì Rebrand — Native Identity
 
