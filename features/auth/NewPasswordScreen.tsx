@@ -9,6 +9,7 @@ import { isValidPassword } from '@/core/auth/validation';
 import { Button } from '@/shared/components/ui';
 import { updatePassword } from '@/shared/supabase/auth';
 import { useTheme } from '@/shared/theme';
+import { TYPOGRAPHY } from '@/shared/theme/typography';
 import { showToast } from '@/shared/toast';
 
 import {
@@ -34,7 +35,7 @@ import { getSingleParam } from './routeParams';
  * and returns to the preserved `/settings` screen via `dismissTo`.
  */
 const NewPasswordScreen = () => {
-  const { theme, typography, spacing } = useTheme();
+  const { theme, spacing } = useTheme();
   const { t } = useTranslation();
   const router = useRouter();
   const params = useLocalSearchParams<{ origin?: string | string[] }>();
@@ -169,9 +170,8 @@ const NewPasswordScreen = () => {
         <Text
           testID="password-requirements"
           style={{
-            color: theme.textSecondary,
-            fontSize: typography.caption1.fontSize,
-            lineHeight: typography.caption1.lineHeight
+            ...TYPOGRAPHY.captionMd,
+            color: theme.textSecondary
           }}
         >
           {t('auth.createAccount.passwordRequirements')}

@@ -1,4 +1,5 @@
-import { fireEvent, render } from '@testing-library/react-native';
+import { fireEvent, render, within } from '@testing-library/react-native';
+import { ScrollView } from 'react-native';
 
 import ModeSelectionScreen from './ModeSelectionScreen';
 
@@ -27,9 +28,6 @@ jest.mock('@/shared/theme', () => ({
       primary: '#1A73E8',
       border: '#E5E5EB',
       link: '#1A73E8'
-    },
-    typography: {
-      footnote: { fontSize: 13, lineHeight: 18 }
     }
   })
 }));
@@ -45,6 +43,15 @@ describe('ModeSelectionScreen', () => {
     expect(getByTestId('mode-option-local')).toBeTruthy();
     expect(getByTestId('mode-option-cloud')).toBeTruthy();
     expect(getByText('Recommended')).toBeTruthy();
+  });
+
+  it('scrolls its body without bouncing, so both options stay reachable at the largest text sizes', () => {
+    const { UNSAFE_getByType } = render(<ModeSelectionScreen />);
+    const scroll = UNSAFE_getByType(ScrollView);
+
+    expect(scroll.props.alwaysBounceVertical).toBe(false);
+    expect(within(scroll).getByTestId('mode-option-local')).toBeTruthy();
+    expect(within(scroll).getByTestId('mode-option-cloud')).toBeTruthy();
   });
 
   it('tapping local card triggers local mode setup', () => {

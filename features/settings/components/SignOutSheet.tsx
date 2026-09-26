@@ -5,6 +5,7 @@ import { Text, View } from 'react-native';
 
 import { BottomSheet, Button } from '@/shared/components/ui';
 import { useTheme } from '@/shared/theme';
+import { TYPOGRAPHY } from '@/shared/theme/typography';
 
 type SignOutSheetProps = {
   visible: boolean;
@@ -28,16 +29,15 @@ export const SignOutSheet = ({
     <BottomSheet visible={visible} onClose={onClose} testID="signout-sheet">
       <View style={{ alignItems: 'center' }}>
         <MaterialIcons name="logout" size={40} color={theme.primary} />
-        <Text style={{ marginTop: 12, color: theme.textPrimary, fontSize: 30, fontWeight: '600' }}>
+        <Text style={{ ...TYPOGRAPHY.sheetTitle, marginTop: 12, color: theme.textPrimary }}>
           {t('settings.signOutSheet.title')}
         </Text>
         <Text
           style={{
+            ...TYPOGRAPHY.bodyMd,
             marginTop: 8,
             color: theme.textSecondary,
-            fontSize: 14,
-            textAlign: 'center',
-            lineHeight: 20
+            textAlign: 'center'
           }}
         >
           {t('settings.signOutSheet.body')}
@@ -58,7 +58,7 @@ export const SignOutSheet = ({
         {error ? (
           <Text
             testID="signout-error"
-            style={{ color: theme.error, textAlign: 'center', fontSize: 13 }}
+            style={{ ...TYPOGRAPHY.captionMd, color: theme.error, textAlign: 'center' }}
           >
             {error}
           </Text>

@@ -2,6 +2,7 @@ import React from 'react';
 import { Text, View } from 'react-native';
 
 import { useTheme } from '@/shared/theme';
+import { TYPOGRAPHY } from '@/shared/theme/typography';
 
 type HighlightSlideProps = {
   title: string;
@@ -27,9 +28,7 @@ export const HighlightSlide = ({
           marginTop: 60,
           color: theme.textPrimary,
           textAlign: 'center',
-          fontSize: 24,
-          lineHeight: 31,
-          fontWeight: '700'
+          ...TYPOGRAPHY.headlineMd
         }}
       >
         {title}
@@ -40,8 +39,7 @@ export const HighlightSlide = ({
           marginTop: 14,
           color: theme.textSecondary,
           textAlign: 'center',
-          fontSize: 16,
-          lineHeight: 23,
+          ...TYPOGRAPHY.bodyMd,
           marginHorizontal: 16
         }}
       >

@@ -17,6 +17,7 @@ import {
   verifyPasswordResetOtp
 } from '@/shared/supabase/auth';
 import { useTheme } from '@/shared/theme';
+import { TYPOGRAPHY, inputFont } from '@/shared/theme/typography';
 
 import { AuthLink, AuthScreenLayout, ErrorBanner } from './components';
 import { getSingleParam } from './routeParams';
@@ -176,7 +177,7 @@ type StatusNoticeProps = {
 };
 
 const StatusNotice = ({ message, tone, boxed = false }: StatusNoticeProps) => {
-  const { theme, spacing, typography } = useTheme();
+  const { theme, spacing } = useTheme();
   const color = tone === 'error' ? theme.error : theme.success;
   const iconName = tone === 'error' ? 'error-outline' : 'check-circle';
 
@@ -197,12 +198,13 @@ const StatusNotice = ({ message, tone, boxed = false }: StatusNoticeProps) => {
       <MaterialIcons name={iconName} size={18} color={color} />
       <Text
         style={{
+          // Plain, it annotates the code field above it (chrome); boxed, it is a banner
+          // sentence (body) — Story 21.2's function rule, applied per mode.
+          ...(boxed ? TYPOGRAPHY.bodyMd : TYPOGRAPHY.captionMd),
           color,
           marginLeft: spacing.sm,
           flexShrink: 1,
-          textAlign: boxed ? 'left' : 'center',
-          fontSize: typography.footnote.fontSize,
-          lineHeight: typography.footnote.lineHeight
+          textAlign: boxed ? 'left' : 'center'
         }}
       >
         {message}
@@ -212,7 +214,7 @@ const StatusNotice = ({ message, tone, boxed = false }: StatusNoticeProps) => {
 };
 
 const VerifyEmailScreen = ({ purpose = 'signup' }: { purpose?: VerifyOtpPurpose }) => {
-  const { theme, spacing, typography, touchTarget } = useTheme();
+  const { theme, spacing, touchTarget } = useTheme();
   const { t } = useTranslation();
   const router = useRouter();
   const params = useLocalSearchParams<{
@@ -459,12 +461,11 @@ const VerifyEmailScreen = ({ purpose = 'signup' }: { purpose?: VerifyOtpPurpose 
             borderWidth: otpFieldBorderWidth,
             borderColor: otpFieldBorderColor,
             backgroundColor: otpFieldBackgroundColor,
+            ...inputFont(TYPOGRAPHY.monoCodeLg),
+            // Tracked only once there are digits, so the placeholder still reads as a phrase.
+            letterSpacing: otpValue ? TYPOGRAPHY.monoCodeLg.letterSpacing : 0,
             color: theme.textPrimary,
             textAlign: 'center',
-            fontSize: 24,
-            lineHeight: 32,
-            fontWeight: '600',
-            letterSpacing: 1.5,
             paddingHorizontal: spacing.md,
             paddingVertical: 0
           }}
@@ -503,10 +504,8 @@ const VerifyEmailScreen = ({ purpose = 'signup' }: { purpose?: VerifyOtpPurpose 
         >
           <Text
             style={{
-              color: resendDisabled ? theme.textSecondary : theme.link,
-              fontSize: typography.footnote.fontSize,
-              lineHeight: typography.footnote.lineHeight,
-              fontWeight: '600'
+              ...(resendDisabled ? TYPOGRAPHY.bodyMd : TYPOGRAPHY.bodyMdStrong),
+              color: resendDisabled ? theme.textSecondary : theme.link
             }}
           >
             {resendDisabled

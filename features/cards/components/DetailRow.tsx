@@ -6,11 +6,12 @@
  * Used in the Card Details screen to show card information.
  */
 
-import React from 'react';
+import React, { useState } from 'react';
 import { View, Text, Pressable, StyleSheet, ViewStyle } from 'react-native';
 
 import { useTheme } from '@/shared/theme';
 import { SPACING } from '@/shared/theme/spacing';
+import { TYPOGRAPHY } from '@/shared/theme/typography';
 
 interface DetailRowProps {
   /** Label text shown on the left */
@@ -33,8 +34,8 @@ interface DetailRowProps {
  * DetailRow Component
  *
  * Displays a labeled value in a horizontal row:
- * - Label: 14px, secondary text color, left-aligned
- * - Value: 16px, primary text color, right-aligned
+ * - Label: `TYPOGRAPHY.bodyMd`, secondary text color, left-aligned
+ * - Value: `TYPOGRAPHY.bodyMd`, primary text color, right-aligned
  * - 12px vertical padding
  * - Subtle divider line at bottom
  */
@@ -48,6 +49,8 @@ export const DetailRow: React.FC<DetailRowProps> = ({
   testID
 }) => {
   const { theme } = useTheme();
+  // Explicit pressed state rather than a `style={({ pressed }) => …}` callback (AGENTS.md).
+  const [isPressed, setIsPressed] = useState(false);
 
   const content = (
     <View style={[styles.container, { borderBottomColor: theme.border }, style]} testID={testID}>
@@ -69,7 +72,9 @@ export const DetailRow: React.FC<DetailRowProps> = ({
     return (
       <Pressable
         onPress={onPress}
-        style={({ pressed }) => pressed && styles.pressed}
+        onPressIn={() => setIsPressed(true)}
+        onPressOut={() => setIsPressed(false)}
+        style={isPressed ? styles.pressed : undefined}
         accessibilityRole="button"
         accessibilityLabel={`${label}: ${value}`}
         accessibilityHint={accessibilityHint}
@@ -94,7 +99,7 @@ const styles = StyleSheet.create({
     opacity: 0.7
   },
   label: {
-    fontSize: 14,
+    ...TYPOGRAPHY.bodyMd,
     flex: 1
   },
   valueContainer: {
@@ -105,7 +110,7 @@ const styles = StyleSheet.create({
     gap: SPACING.xs
   },
   value: {
-    fontSize: 16,
+    ...TYPOGRAPHY.bodyMd,
     textAlign: 'right',
     flexShrink: 1
   }

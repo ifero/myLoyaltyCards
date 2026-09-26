@@ -3,6 +3,7 @@ import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-nati
 
 import { useTheme } from '@/shared/theme';
 import { TOUCH_TARGET } from '@/shared/theme/spacing';
+import { TYPOGRAPHY } from '@/shared/theme/typography';
 
 type ButtonVariant = 'primary' | 'secondary' | 'tertiary' | 'destructive';
 
@@ -114,9 +115,8 @@ export const Button = ({
         ) : (
           <Text
             style={{
-              color: isDisabled ? theme.textTertiary : colors.textColor,
-              fontSize: 16,
-              fontWeight: '600'
+              ...TYPOGRAPHY.bodyLgStrong,
+              color: isDisabled ? theme.textTertiary : colors.textColor
             }}
           >
             {children}

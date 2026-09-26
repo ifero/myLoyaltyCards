@@ -31,6 +31,7 @@ import { EXIT_FADE_MS, SPLASH_HIDE_FALLBACK_MS } from '@/shared/components/launc
 import { getSupabaseClient } from '@/shared/supabase/client';
 import { useBootAuthGate } from '@/shared/supabase/useBootAuthGate';
 import { ThemeProvider, useTheme } from '@/shared/theme';
+import { NAVIGATION_TITLE_FONT, TYPOGRAPHY } from '@/shared/theme/typography';
 
 import { completeFirstLaunch, isFirstLaunch } from '@/features/settings';
 
@@ -166,6 +167,9 @@ const RootLayoutContent = ({ isAuthenticated }: { isAuthenticated: boolean }) =>
             backgroundColor: theme.surface
           },
           headerTintColor: theme.textPrimary,
+          // Face only — no colour key, so the title keeps `headerTintColor`, and no size, so
+          // each platform keeps its native header title size (Story 21.6).
+          headerTitleStyle: NAVIGATION_TITLE_FONT,
           contentStyle: {
             backgroundColor: theme.background
           },
@@ -590,11 +594,11 @@ const styles = StyleSheet.create((theme) => ({
     backgroundColor: theme.colors.background
   },
   errorTitle: {
-    fontSize: 18,
-    lineHeight: 28,
+    ...TYPOGRAPHY.bodyLgStrong,
     color: theme.colors.error
   },
   errorBody: {
+    ...TYPOGRAPHY.bodyMd,
     marginTop: 16,
     color: theme.colors.textSecondary
   }

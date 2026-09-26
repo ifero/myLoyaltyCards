@@ -11,9 +11,6 @@ jest.mock('@/shared/theme', () => ({
       warning: '#D97706',
       success: '#16A34A'
     },
-    typography: {
-      caption1: { fontSize: 12, lineHeight: 16 }
-    },
     spacing: { sm: 8, md: 16 }
   })
 }));

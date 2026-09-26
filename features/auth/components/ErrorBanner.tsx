@@ -4,6 +4,7 @@ import { Text, View } from 'react-native';
 import { StyleSheet } from 'react-native-unistyles';
 
 import { useTheme } from '@/shared/theme';
+import { TYPOGRAPHY } from '@/shared/theme/typography';
 
 type ErrorBannerProps = {
   message: string | null;
@@ -11,7 +12,7 @@ type ErrorBannerProps = {
 };
 
 export const ErrorBanner = ({ message, testID = 'auth-error-banner' }: ErrorBannerProps) => {
-  const { theme, typography, spacing } = useTheme();
+  const { theme, spacing } = useTheme();
 
   if (!message) {
     return null;
@@ -35,11 +36,10 @@ export const ErrorBanner = ({ message, testID = 'auth-error-banner' }: ErrorBann
       <MaterialIcons name="error-outline" size={18} color={theme.error} />
       <Text
         style={{
+          ...TYPOGRAPHY.bodyMd,
           color: theme.error,
           marginLeft: spacing.sm,
-          flex: 1,
-          fontSize: typography.footnote.fontSize,
-          lineHeight: typography.footnote.lineHeight
+          flex: 1
         }}
       >
         {message}

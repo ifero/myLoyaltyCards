@@ -45,8 +45,35 @@ determines where you edit and whether you need a story (see the
 > and generated into `shared/theme/tokens.generated.ts` via Style Dictionary
 > (`yarn tokens:build`; a `tokens:check` CI guard blocks drift). Non-token values stay
 > hand-authored in `shared/theme/*.ts`: the catalogue-runtime `BRAND_COLORS`/`getBrandColor`,
-> the `statusBar` literal, `SEMANTIC_COLORS`, `BARCODE_FLASH`, and typography (`TYPOGRAPHY` and
-> `sync-tokens` generation are deferred to a follow-up).
+> the `statusBar` literal, `SEMANTIC_COLORS`, `BARCODE_FLASH` and `sync-tokens` (whose generation
+> is deferred to a follow-up) — and typography, which is hand-authored by **decision** rather than
+> deferral: see [Typography is not a DTCG token](#typography-is-not-a-dtcg-token).
+
+### Typography is not a DTCG token
+
+Decided in Story 21.6, which honours the deferral Story 16.4 recorded rather than overturning it —
+and turns "not yet" into "not until". The scale lives in
+[`shared/theme/typography.ts`](../../shared/theme/typography.ts), hand-authored, for three reasons:
+
+1. **Its values are derived, not declared.** The design system specifies tracking in `em`, and
+   React Native's `letterSpacing` is in points, so every tracked token is computed against its own
+   size (`emToPoints`). Style Dictionary would need a custom transform to reproduce one line of
+   TypeScript, and the generated output would hide the conversion a test pins.
+2. **A token is bound to files and native config.** A family and weight only render if a face is
+   bundled at exactly that weight and registered in `app.json`'s `expo-font` entry.
+   [`test/brand-fonts.test.ts`](../../test/brand-fonts.test.ts) holds the tokens, that entry, the
+   Storybook `@font-face` rules and the committed files' own name tables to each other; a JSON
+   source would add a fifth place without removing any.
+3. **There is no second consumer.** DTCG JSON earns its keep by feeding more than one platform, and
+   neither watch app consumes the phone's type —
+   [`cardi-watch-grammar.md`](cardi/cardi-watch-grammar.md) §5.2 keeps both on their system faces by
+   design.
+
+**Revisit when** a second consumer appears: a watch, a web surface beyond Storybook, or design
+tooling that reads `tokens/`. Until then, change type by editing `typography.ts`. A new face or
+weight also needs its file (and licence) under [`assets/fonts/`](../../assets/fonts/), a
+registration for both platforms in `app.json`, and a rule in `.storybook/brand-fonts.css` — the
+brand-fonts test fails until all of them agree.
 
 ---
 

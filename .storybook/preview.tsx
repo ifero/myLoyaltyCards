@@ -6,6 +6,8 @@ import type { Preview } from '@storybook/react-native-web-vite';
 // story crashes on web with "no theme has been selected yet".
 import '@/shared/theme/unistyles';
 
+// The brand faces: embedded natively in the app, so the web surface registers them itself.
+import './brand-fonts.css';
 import { StoryDecorator } from './StoryDecorator';
 
 const preview: Preview = {

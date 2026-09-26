@@ -2,19 +2,20 @@ import { MaterialIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import React from 'react';
 import { useTranslation } from 'react-i18next';
-import { AccessibilityInfo, Pressable, Text, View } from 'react-native';
+import { AccessibilityInfo, Pressable, ScrollView, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { isFirstLaunch } from '@/core/settings/settings-repository';
 
 import { useTheme } from '@/shared/theme';
+import { TYPOGRAPHY } from '@/shared/theme/typography';
 
 import { InfoTooltipModal } from '../components/InfoTooltipModal';
 import { ModeOptionCard } from '../components/ModeOptionCard';
 import { useModeSelection } from '../hooks/useModeSelection';
 
 const ModeSelectionScreen = () => {
-  const { theme, typography } = useTheme();
+  const { theme } = useTheme();
   const { t } = useTranslation();
   const insets = useSafeAreaInsets();
   const router = useRouter();
@@ -60,23 +61,30 @@ const ModeSelectionScreen = () => {
             marginRight: 44,
             textAlign: 'center',
             color: theme.textPrimary,
-            fontSize: 17,
-            fontWeight: '600'
+            ...TYPOGRAPHY.bodyLgStrong
           }}
         >
           {t('onboarding.modeSelection.title')}
         </Text>
       </View>
 
-      <View style={{ flex: 1, paddingHorizontal: 24, paddingTop: 30 }}>
+      {/* The body scrolls (the header stays put) only when its content outgrows the screen — at
+          the largest Dynamic Type sizes, where it would otherwise clip the options (Story 21.6). */}
+      <ScrollView
+        style={{ flex: 1 }}
+        contentContainerStyle={{
+          paddingHorizontal: 24,
+          paddingTop: 30,
+          paddingBottom: insets.bottom + 24
+        }}
+        alwaysBounceVertical={false}
+      >
         <Text
           accessibilityRole="header"
           style={{
             color: theme.textPrimary,
             textAlign: 'center',
-            fontSize: 42 - 16,
-            lineHeight: 34,
-            fontWeight: '700'
+            ...TYPOGRAPHY.headlineMd
           }}
         >
           {t('onboarding.modeSelection.heading')}
@@ -87,8 +95,7 @@ const ModeSelectionScreen = () => {
             marginTop: 8,
             textAlign: 'center',
             color: theme.textSecondary,
-            fontSize: typography.footnote.fontSize,
-            lineHeight: typography.footnote.lineHeight
+            ...TYPOGRAPHY.bodyMd
           }}
         >
           {t('onboarding.modeSelection.subtitle')}
@@ -120,8 +127,7 @@ const ModeSelectionScreen = () => {
             marginTop: 34,
             color: theme.textSecondary,
             textAlign: 'center',
-            fontSize: 13,
-            lineHeight: 18
+            ...TYPOGRAPHY.bodyMd
           }}
         >
           {t('onboarding.modeSelection.footer')}
@@ -139,14 +145,13 @@ const ModeSelectionScreen = () => {
             style={{
               color: theme.link,
               textDecorationLine: 'underline',
-              fontSize: 14,
-              fontWeight: '500'
+              ...TYPOGRAPHY.bodyMdStrong
             }}
           >
             {t('onboarding.modeSelection.whatsDifference')}
           </Text>
         </Pressable>
-      </View>
+      </ScrollView>
 
       <InfoTooltipModal
         visible={modalVisible}

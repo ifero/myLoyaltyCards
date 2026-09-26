@@ -1,5 +1,6 @@
-import { fireEvent, render } from '@testing-library/react-native';
+import { fireEvent, render, within } from '@testing-library/react-native';
 import { useRouter } from 'expo-router';
+import { ScrollView } from 'react-native';
 
 import { isFirstLaunch } from '@/core/settings/settings-repository';
 
@@ -21,10 +22,6 @@ jest.mock('@/shared/theme', () => ({
       primaryDark: '#1967D2',
       border: '#E5E5EB',
       link: '#1A73E8'
-    },
-    typography: {
-      title1: { fontSize: 28, lineHeight: 34, fontWeight: '700' },
-      headline: { fontSize: 17, lineHeight: 22, fontWeight: '600' }
     }
   })
 }));
@@ -44,6 +41,15 @@ describe('WelcomeScreen', () => {
     expect(UNSAFE_getByProps({ testID: 'welcome-branded-icon' })).toBeTruthy();
     expect(UNSAFE_getByProps({ testID: 'welcome-fanned-illustration' })).toBeTruthy();
     expect(getByText('Your loyalty cards, always with you')).toBeTruthy();
+  });
+
+  it('scrolls without bouncing, so Get Started stays reachable at the largest text sizes', () => {
+    const { UNSAFE_getByType } = render(<WelcomeScreen />);
+    const scroll = UNSAFE_getByType(ScrollView);
+
+    expect(scroll.props.testID).toBe('welcome-screen');
+    expect(scroll.props.alwaysBounceVertical).toBe(false);
+    expect(within(scroll).getByTestId('welcome-get-started')).toBeTruthy();
   });
 
   it('Get Started navigates to Mode Selection', () => {

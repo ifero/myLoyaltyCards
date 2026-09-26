@@ -38,7 +38,7 @@ import { LoyaltyCard } from '@/core/schemas';
 import { useTheme } from '@/shared/theme';
 import { CARD_COLORS, DEFAULT_CARD_COLOR_HEX, IDENTITY_COLORS } from '@/shared/theme/colors';
 import { getLuminance } from '@/shared/theme/luminance';
-import { TYPOGRAPHY } from '@/shared/theme/typography';
+import { MONOGRAM_TEXT_PROPS, TYPOGRAPHY, monogram } from '@/shared/theme/typography';
 
 import { BrandLogo } from './BrandLogo';
 import { useBrandLogo } from '../hooks/useBrandLogo';
@@ -218,10 +218,8 @@ export const CardTile: React.FC<CardTileProps> = ({
           /* Catalogue card without SVG: brand name abbreviation fallback */
           <View style={[styles.logoSlot, { width: fallback.size, height: fallback.size }]}>
             <Text
-              style={[
-                styles.brandAbbreviation,
-                { color: foregroundColor, fontSize: fallback.fontSize }
-              ]}
+              {...MONOGRAM_TEXT_PROPS}
+              style={{ ...monogram(fallback.fontSize), color: foregroundColor }}
             >
               {brand.name.substring(0, 2).toUpperCase()}
             </Text>
@@ -230,7 +228,8 @@ export const CardTile: React.FC<CardTileProps> = ({
           /* Custom card: first-letter circular avatar */
           <View style={[styles.avatarCircle, { width: fallback.size, height: fallback.size }]}>
             <Text
-              style={[styles.avatarText, { color: foregroundColor, fontSize: fallback.fontSize }]}
+              {...MONOGRAM_TEXT_PROPS}
+              style={{ ...monogram(fallback.fontSize), color: foregroundColor }}
             >
               {firstLetter}
             </Text>
@@ -298,9 +297,10 @@ const styles = StyleSheet.create({
       }
     })
   },
-  // `width`/`height` and `fontSize` for both fallback plates are applied inline from
-  // getFallbackChildMetrics(), because they depend on the tile. The reference values
-  // (64 / 48 / 18 pt at a 171 pt tile) live in gridLayout.ts as the ratio source.
+  // `width`/`height` for both fallback plates, and the monogram size inside them, are
+  // applied inline from getFallbackChildMetrics(), because they depend on the tile. The
+  // reference values (64 / 48 / 18 pt at a 171 pt tile) live in gridLayout.ts as the
+  // ratio source.
   logoSlot: {
     // Fixed, like TILE_RADIUS — it degrades to a circle if the plate ever gets small
     // enough for that to bite, which is a graceful failure rather than a broken one.
@@ -309,21 +309,14 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center'
   },
-  brandAbbreviation: {
-    fontWeight: '700'
-  },
   avatarCircle: {
     borderRadius: 999,
     backgroundColor: 'rgba(255,255,255,0.28)',
     alignItems: 'center',
     justifyContent: 'center'
   },
-  avatarText: {
-    fontWeight: '700'
-  },
   cardName: {
-    fontSize: TYPOGRAPHY.footnote.fontSize,
-    fontWeight: '600',
+    ...TYPOGRAPHY.labelBold,
     textAlign: 'center',
     marginTop: 6,
     paddingHorizontal: 2

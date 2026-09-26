@@ -5,6 +5,7 @@ import { Text, View } from 'react-native';
 
 import { BottomSheet, Button } from '@/shared/components/ui';
 import { useTheme } from '@/shared/theme';
+import { TYPOGRAPHY } from '@/shared/theme/typography';
 
 type ExportConfirmationSheetProps = {
   visible: boolean;
@@ -30,16 +31,15 @@ export const ExportConfirmationSheet = ({
     <BottomSheet visible={visible} onClose={onClose} testID="export-confirmation-sheet">
       <View style={{ alignItems: 'center' }}>
         <MaterialIcons name="file-download" size={40} color={theme.primary} />
-        <Text style={{ marginTop: 12, color: theme.textPrimary, fontSize: 30, fontWeight: '600' }}>
+        <Text style={{ ...TYPOGRAPHY.sheetTitle, marginTop: 12, color: theme.textPrimary }}>
           {t('settings.export.confirmTitle')}
         </Text>
         <Text
           style={{
+            ...TYPOGRAPHY.bodyMd,
             marginTop: 8,
             color: theme.textSecondary,
-            fontSize: 14,
-            textAlign: 'center',
-            lineHeight: 20
+            textAlign: 'center'
           }}
         >
           {t('settings.export.confirmBody', { count: cardCount })}
@@ -60,7 +60,7 @@ export const ExportConfirmationSheet = ({
         {exportError ? (
           <Text
             testID="export-error-text"
-            style={{ color: theme.error, textAlign: 'center', fontSize: 13 }}
+            style={{ ...TYPOGRAPHY.captionMd, color: theme.error, textAlign: 'center' }}
           >
             {exportError}
           </Text>

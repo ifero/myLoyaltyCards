@@ -11,6 +11,8 @@
  * invariant, so the guard has to be the relationship, swept across widths.
  */
 
+import { TYPOGRAPHY } from '@/shared/theme/typography';
+
 import {
   AVATAR_SIZE,
   BADGE_CLEARANCE,
@@ -34,6 +36,9 @@ import {
   getSingleTileHeight,
   getSingleTileWidth
 } from './gridLayout';
+
+/** The smallest size the type scale ships — the glyph floor gridLayout.ts mirrors by value. */
+const SMALLEST_SCALE_SIZE = Math.min(...Object.values(TYPOGRAPHY).map((token) => token.fontSize));
 
 /**
  * Width FlashList hands a single grid cell, transcribed independently from
@@ -570,16 +575,17 @@ describe('intra-tile fallback geometry vs the favourite badge', () => {
       );
     });
 
-    it('floors at the smallest size the type scale ships (TYPOGRAPHY.caption2)', () => {
+    it('floors at the smallest size the type scale ships (12 pt since Story 21.6)', () => {
       // Reachable, unlike a plate floor: a 15 pt plate would want 10 pt type, and the
-      // floor outranks the fit ratio so it gets 11 pt and is allowed to overhang. Only
+      // floor outranks the fit ratio so it gets 12 pt and is allowed to overhang. Only
       // degenerate tiles get here, but it keeps type from scaling to nothing.
       const sizes = widthRange(1, 1024).map(
         (t) => getFallbackChildMetrics(t, LOGO_SLOT_SIZE).fontSize
       );
-      expect(Math.min(...sizes)).toBe(11);
+      expect(SMALLEST_SCALE_SIZE).toBe(12);
+      expect(Math.min(...sizes)).toBe(SMALLEST_SCALE_SIZE);
       expect(getFallbackChildMetrics(83, LOGO_SLOT_SIZE).size).toBe(15);
-      expect(getFallbackChildMetrics(83, LOGO_SLOT_SIZE).fontSize).toBe(11);
+      expect(getFallbackChildMetrics(83, LOGO_SLOT_SIZE).fontSize).toBe(SMALLEST_SCALE_SIZE);
     });
   });
 

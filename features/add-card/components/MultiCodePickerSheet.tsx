@@ -239,12 +239,12 @@ const styles = StyleSheet.create({
   },
   sheetTitle: {
     paddingHorizontal: SPACING.md,
-    ...TYPOGRAPHY.headline
+    ...TYPOGRAPHY.sheetTitle
   },
   sheetSubtitle: {
     paddingHorizontal: SPACING.md,
     marginTop: SPACING.xs,
-    ...TYPOGRAPHY.footnote
+    ...TYPOGRAPHY.bodyMd
   },
   codeList: {
     marginTop: SPACING.md
@@ -263,10 +263,11 @@ const styles = StyleSheet.create({
     flex: 1
   },
   codeFormat: {
-    ...TYPOGRAPHY.footnote
+    ...TYPOGRAPHY.captionMd
   },
+  // The decoded value is a card number, so it takes the one mono token (Story 21.6 AC8).
   codeValue: {
-    ...TYPOGRAPHY.subheadline
+    ...TYPOGRAPHY.monoCode
   },
   cancelButton: {
     alignItems: 'center',
@@ -274,6 +275,6 @@ const styles = StyleSheet.create({
     minHeight: TOUCH_TARGET.min
   },
   cancelText: {
-    ...TYPOGRAPHY.callout
+    ...TYPOGRAPHY.bodyLg
   }
 });

@@ -5,6 +5,7 @@ import { Text, View } from 'react-native';
 
 import { BottomSheet, Button } from '@/shared/components/ui';
 import { useTheme } from '@/shared/theme';
+import { TYPOGRAPHY } from '@/shared/theme/typography';
 
 type ImportPreviewSheetProps = {
   visible: boolean;
@@ -38,10 +39,9 @@ export const ImportPreviewSheet = ({
         <MaterialIcons name="file-upload" size={40} color={theme.primary} />
         <Text
           style={{
+            ...TYPOGRAPHY.sheetTitle,
             marginTop: 12,
             color: theme.textPrimary,
-            fontSize: 20,
-            fontWeight: '600',
             textAlign: 'center'
           }}
         >
@@ -62,24 +62,22 @@ export const ImportPreviewSheet = ({
       >
         <MaterialIcons name="description" size={24} color={theme.textSecondary} />
         <View style={{ marginLeft: 12, flex: 1 }}>
-          <Text style={{ color: theme.textPrimary, fontSize: 15, fontWeight: '500' }}>
-            {fileName}
-          </Text>
-          <Text style={{ color: theme.textSecondary, fontSize: 13, marginTop: 2 }}>
+          <Text style={{ ...TYPOGRAPHY.bodyMdStrong, color: theme.textPrimary }}>{fileName}</Text>
+          <Text style={{ ...TYPOGRAPHY.captionMd, color: theme.textSecondary, marginTop: 2 }}>
             {t('settings.import.totalCardsFound', { count: totalCards })}
           </Text>
         </View>
       </View>
 
       <View style={{ marginTop: 16, gap: 2 }}>
-        <Text style={{ color: theme.textSecondary, fontSize: 14, textAlign: 'center' }}>
+        <Text style={{ ...TYPOGRAPHY.bodyMd, color: theme.textSecondary, textAlign: 'center' }}>
           {t('settings.import.newCardsAdded', { count: newCardsCount })}
         </Text>
-        <Text style={{ color: theme.textSecondary, fontSize: 14, textAlign: 'center' }}>
+        <Text style={{ ...TYPOGRAPHY.bodyMd, color: theme.textSecondary, textAlign: 'center' }}>
           {t('settings.import.duplicatesSkipped', { count: duplicateCount })}
         </Text>
         {invalidCount > 0 ? (
-          <Text style={{ color: theme.textSecondary, fontSize: 14, textAlign: 'center' }}>
+          <Text style={{ ...TYPOGRAPHY.bodyMd, color: theme.textSecondary, textAlign: 'center' }}>
             {t('settings.import.invalidEntriesSkipped', { count: invalidCount })}
           </Text>
         ) : null}

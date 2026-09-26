@@ -4,6 +4,7 @@ import { Text, View, type ViewStyle } from 'react-native';
 import { useTheme } from '@/shared/theme';
 import { IDENTITY_COLORS } from '@/shared/theme/colors';
 import { LAYOUT } from '@/shared/theme/spacing';
+import { MONOGRAM_TEXT_PROPS, monogram } from '@/shared/theme/typography';
 
 type CardShellProps = {
   type: 'catalogue' | 'custom';
@@ -62,10 +63,10 @@ export const CardShell = ({ type, brandColor, size, cardName, logo, testID }: Ca
           }}
         >
           <Text
+            {...MONOGRAM_TEXT_PROPS}
             style={{
-              color: foregroundColor,
-              fontSize: size === 'grid' ? 18 : 26,
-              fontWeight: '700'
+              ...monogram(size === 'grid' ? 18 : 26),
+              color: foregroundColor
             }}
           >
             {fallbackText}

@@ -14,6 +14,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { StyleSheet } from 'react-native-unistyles';
 
 import { useTheme } from '@/shared/theme';
+import { TYPOGRAPHY } from '@/shared/theme/typography';
 
 import { useBarcodeScanner, ScanResult } from '../hooks/useBarcodeScanner';
 
@@ -99,7 +100,9 @@ export function BarcodeScanner({ onScan, onManualEntry, onError }: BarcodeScanne
     // Permission status is still loading
     return (
       <SafeAreaView style={[styles.centered, { backgroundColor: theme.background }]}>
-        <Text style={{ color: theme.textPrimary }}>{t('addCard.scanner.checkingPermission')}</Text>
+        <Text style={{ ...TYPOGRAPHY.bodyMd, color: theme.textPrimary }}>
+          {t('addCard.scanner.checkingPermission')}
+        </Text>
       </SafeAreaView>
     );
   }
@@ -266,17 +269,14 @@ const styles = StyleSheet.create({
     alignItems: 'center'
   },
   title: {
+    ...TYPOGRAPHY.headlineSm,
     marginBottom: 8,
-    textAlign: 'center',
-    fontSize: 20,
-    lineHeight: 28,
-    fontWeight: '600'
+    textAlign: 'center'
   },
   subtitle: {
+    ...TYPOGRAPHY.bodyMd,
     marginBottom: 48,
-    textAlign: 'center',
-    fontSize: 14,
-    lineHeight: 20
+    textAlign: 'center'
   },
   buttonGroup: {
     width: '100%',
@@ -296,15 +296,11 @@ const styles = StyleSheet.create({
     borderWidth: 1
   },
   buttonLabelWhite: {
-    fontSize: 16,
-    lineHeight: 24,
-    fontWeight: '600',
+    ...TYPOGRAPHY.bodyLgStrong,
     color: '#FFFFFF'
   },
   buttonLabel: {
-    fontSize: 16,
-    lineHeight: 24,
-    fontWeight: '600'
+    ...TYPOGRAPHY.bodyLgStrong
   },
   dimOverlay: {
     position: 'absolute',
@@ -334,10 +330,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: 48
   },
   instructionText: {
+    ...TYPOGRAPHY.bodyMdStrong,
     textAlign: 'center',
-    fontSize: 16,
-    lineHeight: 24,
-    fontWeight: '500',
     color: '#fff',
     textShadowColor: 'rgba(0, 0, 0, 0.75)',
     textShadowOffset: { width: 0, height: 1 },

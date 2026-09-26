@@ -5,6 +5,7 @@ import { Text, View } from 'react-native';
 
 import { ActionRow } from '@/shared/components/ui';
 import { useTheme } from '@/shared/theme';
+import { MONOGRAM_TEXT_PROPS, TYPOGRAPHY, monogram } from '@/shared/theme/typography';
 
 type AccountSectionProps = {
   email: string;
@@ -48,23 +49,20 @@ export const AccountSection = ({
             justifyContent: 'center'
           }}
         >
-          <Text style={{ color: theme.onPrimary, fontWeight: '700', fontSize: 24 }}>
+          <Text {...MONOGRAM_TEXT_PROPS} style={{ ...monogram(24), color: theme.onPrimary }}>
             {email.trim().charAt(0).toUpperCase() || 'U'}
           </Text>
         </View>
         <View style={{ flex: 1 }}>
-          <Text
-            numberOfLines={1}
-            style={{ color: theme.textPrimary, fontSize: 16, fontWeight: '500' }}
-          >
+          <Text numberOfLines={1} style={{ ...TYPOGRAPHY.bodyLg, color: theme.textPrimary }}>
             {email}
           </Text>
           <View style={{ marginTop: 2, flexDirection: 'row', alignItems: 'center', gap: 5 }}>
-            <Text style={{ color: theme.textSecondary, fontSize: 13 }}>
+            <Text style={{ ...TYPOGRAPHY.captionMd, color: theme.textSecondary }}>
               {t('settings.account.signedIn')}
             </Text>
             <MaterialIcons name="circle" size={8} color={theme.success} />
-            <Text style={{ color: theme.success, fontSize: 13 }}>
+            <Text style={{ ...TYPOGRAPHY.captionMd, color: theme.success }}>
               {t('settings.account.synced')}
             </Text>
           </View>

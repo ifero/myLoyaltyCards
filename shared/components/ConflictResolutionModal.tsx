@@ -16,6 +16,7 @@ import { Button } from '@/shared/components/ui/Button';
 import { useTheme } from '@/shared/theme';
 import { TOUCH_TARGET } from '@/shared/theme/spacing';
 import { SYNC_TOKENS } from '@/shared/theme/sync-tokens';
+import { TYPOGRAPHY } from '@/shared/theme/typography';
 import type { ConflictCardData } from '@/shared/types/sync-ui';
 
 import { ConflictComparisonCard } from './ConflictComparisonCard';
@@ -50,7 +51,7 @@ const KeepBothButton = ({
         accessibilityHint={accessibilityHint}
         style={[styles.keepBothPressable, { opacity: pressed ? 0.7 : 1 }]}
       >
-        <Text style={{ color: tintColor, fontWeight: '600', fontSize: 16 }}>{label}</Text>
+        <Text style={{ ...TYPOGRAPHY.bodyLgStrong, color: tintColor }}>{label}</Text>
       </Pressable>
     </View>
   );
@@ -111,9 +112,8 @@ export const ConflictResolutionModal = ({
             <Text
               testID="conflict-modal-title"
               style={{
+                ...TYPOGRAPHY.sheetTitle,
                 color: titleColor,
-                fontSize: 20,
-                fontWeight: '700',
                 marginBottom: 4,
                 textAlign: 'center'
               }}
@@ -125,11 +125,10 @@ export const ConflictResolutionModal = ({
             <Text
               testID="conflict-modal-subtitle"
               style={{
+                ...TYPOGRAPHY.bodyMd,
                 color: subtitleColor,
-                fontSize: 13,
                 textAlign: 'center',
-                marginBottom: 20,
-                lineHeight: 18
+                marginBottom: 20
               }}
             >
               {t('syncUi.conflict.modal.subtitle')}
@@ -197,9 +196,8 @@ export const ConflictResolutionModal = ({
               <Text
                 testID="conflict-decide-later-text"
                 style={{
-                  color: decideLaterColor,
-                  fontSize: 14,
-                  fontWeight: '500'
+                  ...TYPOGRAPHY.bodyMdStrong,
+                  color: decideLaterColor
                 }}
               >
                 {t('syncUi.conflict.modal.decideLater')}

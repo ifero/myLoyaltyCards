@@ -4,6 +4,7 @@ import { Text, View } from 'react-native';
 import { StyleSheet } from 'react-native-unistyles';
 
 import { useTheme } from '@/shared/theme';
+import { TYPOGRAPHY } from '@/shared/theme/typography';
 
 export type PasswordStrength = 'weak' | 'fair' | 'strong';
 
@@ -41,7 +42,7 @@ export const PasswordStrengthIndicator = ({
   // violation but silently remounted useTranslation's language subscription on
   // every empty<->non-empty transition, and any hook added above the return
   // would have turned it into a hard crash.
-  const { theme, typography, spacing } = useTheme();
+  const { theme, spacing } = useTheme();
   const { t } = useTranslation();
 
   if (!password.trim()) {
@@ -84,11 +85,9 @@ export const PasswordStrengthIndicator = ({
       <Text
         testID={`${testID}-label`}
         style={{
+          ...TYPOGRAPHY.labelBold,
           marginLeft: spacing.sm,
-          color,
-          fontSize: typography.caption1.fontSize,
-          lineHeight: typography.caption1.lineHeight,
-          fontWeight: '600'
+          color
         }}
       >
         {label}

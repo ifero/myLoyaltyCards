@@ -24,6 +24,7 @@ import { StyleSheet } from 'react-native-unistyles';
 
 import { useTheme } from '@/shared/theme';
 import { SYNC_TOKENS } from '@/shared/theme/sync-tokens';
+import { TYPOGRAPHY } from '@/shared/theme/typography';
 import type { SyncState } from '@/shared/types/sync-ui';
 
 type SyncIndicatorProps = {
@@ -131,9 +132,7 @@ const styles = StyleSheet.create({
     paddingVertical: 16
   },
   label: {
-    marginLeft: 16,
-    fontSize: 12,
-    fontWeight: '500',
-    lineHeight: 16
+    ...TYPOGRAPHY.labelBold,
+    marginLeft: 16
   }
 });

@@ -4,6 +4,7 @@ import { Alert, Linking, Pressable, ScrollView, Text, TextInput, View } from 're
 import { StyleSheet } from 'react-native-unistyles';
 
 import { useTheme } from '@/shared/theme';
+import { TYPOGRAPHY, inputFont } from '@/shared/theme/typography';
 
 import docHelpItemsIt from './help-data.it.json';
 import docHelpItemsEn from './help-data.json';
@@ -187,23 +188,19 @@ const styles = StyleSheet.create({
     paddingTop: 80
   },
   title: {
-    marginBottom: 32,
-    fontSize: 24,
-    lineHeight: 32,
-    fontWeight: '700'
+    ...TYPOGRAPHY.headlineMd,
+    marginBottom: 32
   },
   subtitle: {
-    marginBottom: 48,
-    fontSize: 16,
-    lineHeight: 24
+    ...TYPOGRAPHY.bodyMd,
+    marginBottom: 48
   },
   search: {
+    ...inputFont(TYPOGRAPHY.bodyLg),
     marginBottom: 48,
     borderRadius: 12,
     paddingHorizontal: 32,
-    paddingVertical: 24,
-    fontSize: 16,
-    lineHeight: 24
+    paddingVertical: 24
   },
   card: {
     marginBottom: 32,
@@ -211,16 +208,13 @@ const styles = StyleSheet.create({
     padding: 32
   },
   question: {
-    fontSize: 16,
-    lineHeight: 24,
-    fontWeight: '600'
+    ...TYPOGRAPHY.bodyLgStrong
   },
   answerWrap: {
     marginTop: 16
   },
   answer: {
-    fontSize: 14,
-    lineHeight: 20
+    ...TYPOGRAPHY.bodyMd
   },
   actions: {
     marginTop: 32,
@@ -234,16 +228,12 @@ const styles = StyleSheet.create({
     paddingVertical: 24
   },
   actionLabelOnPrimary: {
-    fontSize: 14,
-    lineHeight: 20,
-    fontWeight: '600'
+    ...TYPOGRAPHY.bodyLgStrong
     // No `color`: supplied at the call site from `theme.onPrimary`, which is
     // white on the ink fill in light and ink on the beam fill in dark.
   },
   actionLabel: {
-    fontSize: 14,
-    lineHeight: 20,
-    fontWeight: '600'
+    ...TYPOGRAPHY.bodyLgStrong
   }
 });
 

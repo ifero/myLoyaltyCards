@@ -12,6 +12,7 @@ import { View, Text, StyleSheet, ViewStyle } from 'react-native';
 import { CardColor } from '@/core/schemas';
 
 import { CARD_COLORS, DEFAULT_CARD_COLOR_HEX } from '@/shared/theme/colors';
+import { MONOGRAM_TEXT_PROPS, monogram } from '@/shared/theme/typography';
 
 import { generateInitials } from '../utils/initials';
 
@@ -70,14 +71,7 @@ export const VirtualLogo = React.memo(function VirtualLogo({
       accessibilityLabel={`${name} card logo`}
       testID={testID}
     >
-      <Text
-        style={[
-          styles.initials,
-          {
-            fontSize
-          }
-        ]}
-      >
+      <Text {...MONOGRAM_TEXT_PROPS} style={[styles.initials, monogram(fontSize)]}>
         {initials}
       </Text>
     </View>
@@ -91,7 +85,6 @@ const styles = StyleSheet.create({
   },
   initials: {
     color: '#FFFFFF',
-    fontWeight: '700',
     letterSpacing: 1
   }
 });

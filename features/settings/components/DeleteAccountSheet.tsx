@@ -5,6 +5,7 @@ import { Text, TextInput, View } from 'react-native';
 
 import { BottomSheet, Button } from '@/shared/components/ui';
 import { useTheme } from '@/shared/theme';
+import { TYPOGRAPHY, inputFont } from '@/shared/theme/typography';
 
 type DeleteAccountSheetProps = {
   visible: boolean;
@@ -42,18 +43,15 @@ export const DeleteAccountSheet = ({
         <View>
           <View style={{ alignItems: 'center' }}>
             <MaterialIcons name="warning-amber" size={40} color={theme.error} />
-            <Text
-              style={{ marginTop: 12, color: theme.textPrimary, fontSize: 30, fontWeight: '600' }}
-            >
+            <Text style={{ ...TYPOGRAPHY.sheetTitle, marginTop: 12, color: theme.textPrimary }}>
               {t('settings.deleteAccountSheet.step1Title')}
             </Text>
             <Text
               style={{
+                ...TYPOGRAPHY.bodyMd,
                 marginTop: 8,
                 color: theme.textSecondary,
-                fontSize: 14,
-                textAlign: 'center',
-                lineHeight: 20
+                textAlign: 'center'
               }}
             >
               {t('settings.deleteAccountSheet.step1Body')}
@@ -70,10 +68,10 @@ export const DeleteAccountSheet = ({
         </View>
       ) : (
         <View>
-          <Text style={{ color: theme.textPrimary, fontSize: 28, fontWeight: '600' }}>
+          <Text style={{ ...TYPOGRAPHY.sheetTitle, color: theme.textPrimary }}>
             {t('settings.deleteAccountSheet.step2Title')}
           </Text>
-          <Text style={{ marginTop: 8, color: theme.textSecondary, fontSize: 14, lineHeight: 20 }}>
+          <Text style={{ ...TYPOGRAPHY.bodyMd, marginTop: 8, color: theme.textSecondary }}>
             {t('settings.deleteAccountSheet.step2Body')}
           </Text>
           <TextInput
@@ -85,6 +83,7 @@ export const DeleteAccountSheet = ({
             accessibilityHint={t('settings.deleteAccountSheet.confirmInputHint')}
             editable={!isLoading}
             style={{
+              ...inputFont(TYPOGRAPHY.bodyLg),
               marginTop: 12,
               minHeight: 48,
               borderRadius: 12,
@@ -112,7 +111,7 @@ export const DeleteAccountSheet = ({
             {error ? (
               <Text
                 testID="delete-error"
-                style={{ color: theme.error, textAlign: 'center', fontSize: 13 }}
+                style={{ ...TYPOGRAPHY.captionMd, color: theme.error, textAlign: 'center' }}
               >
                 {error}
               </Text>

@@ -12,6 +12,8 @@ import { StyleSheet } from 'react-native-unistyles';
 
 import { BarcodeFormat, barcodeFormatSchema } from '@/core/schemas';
 
+import { TYPOGRAPHY } from '@/shared/theme/typography';
+
 interface FormatPickerProps {
   value: BarcodeFormat;
   onChange: (format: BarcodeFormat) => void;
@@ -62,9 +64,8 @@ export const FormatPicker = ({ value, onChange, testID }: FormatPickerProps) => 
 
 const styles = StyleSheet.create({
   label: {
+    ...TYPOGRAPHY.labelBold,
     marginBottom: 8,
-    fontSize: 12,
-    lineHeight: 16,
     color: '#6B7280'
   },
   pickerWrapper: {

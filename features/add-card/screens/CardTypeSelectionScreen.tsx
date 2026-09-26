@@ -16,6 +16,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { useTheme } from '@/shared/theme';
 import { SPACING, LAYOUT, TOUCH_TARGET } from '@/shared/theme/spacing';
+import { TYPOGRAPHY } from '@/shared/theme/typography';
 
 import { CatalogueBrand } from '@/catalogue/types';
 
@@ -117,10 +118,9 @@ const styles = StyleSheet.create({
     alignItems: 'center'
   },
   headerTitle: {
+    ...TYPOGRAPHY.bodyLgStrong,
     flex: 1,
-    textAlign: 'center',
-    fontSize: 17,
-    fontWeight: '600'
+    textAlign: 'center'
   },
   headerSpacer: {
     width: TOUCH_TARGET.min

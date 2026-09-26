@@ -28,6 +28,8 @@ import Animated, {
 import type { LoyaltyCard } from '@/core/schemas';
 import { logger } from '@/core/utils/logger';
 
+import { TYPOGRAPHY } from '@/shared/theme/typography';
+
 import { BarcodeRenderer } from './BarcodeRenderer';
 import { useBrightness } from '../hooks/useBrightness';
 
@@ -205,8 +207,7 @@ const styles = StyleSheet.create({
     maxWidth: '100%'
   },
   cardName: {
-    fontSize: 20,
-    fontWeight: '700',
+    ...TYPOGRAPHY.headlineSm,
     color: '#1F2937',
     textAlign: 'center',
     marginBottom: 24,
@@ -224,15 +225,13 @@ const styles = StyleSheet.create({
     elevation: 2
   },
   barcodeNumber: {
-    fontSize: 16,
-    fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace',
+    ...TYPOGRAPHY.monoCode,
     color: '#1F2937',
     textAlign: 'center',
-    marginTop: 16,
-    letterSpacing: 1
+    marginTop: 16
   },
   hintText: {
-    fontSize: 14,
+    ...TYPOGRAPHY.captionLg,
     color: '#9CA3AF',
     textAlign: 'center',
     marginTop: 40

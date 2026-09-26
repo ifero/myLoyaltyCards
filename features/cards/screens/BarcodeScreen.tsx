@@ -21,6 +21,8 @@ import { getCardById } from '@/core/database';
 import type { LoyaltyCard } from '@/core/schemas';
 import { logger } from '@/core/utils/logger';
 
+import { TYPOGRAPHY } from '@/shared/theme/typography';
+
 import { BarcodeFlash } from '@/features/cards/components/BarcodeFlash';
 
 /**
@@ -109,17 +111,14 @@ const styles = StyleSheet.create({
     padding: 32
   },
   errorText: {
+    ...TYPOGRAPHY.bodyLgStrong,
     textAlign: 'center',
-    fontSize: 18,
-    lineHeight: 28,
-    fontWeight: '600',
     color: '#EF4444'
   },
   dismissText: {
+    ...TYPOGRAPHY.bodyLg,
     marginTop: 32,
     textAlign: 'center',
-    fontSize: 16,
-    lineHeight: 24,
     color: '#4B5563'
   }
 });

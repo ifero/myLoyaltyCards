@@ -11,7 +11,6 @@ import { setThemePreference } from '@/core/settings/settings-repository';
 import { DARK_THEME, LIGHT_THEME } from './colors';
 import { SPACING, LAYOUT, TOUCH_TARGET } from './spacing';
 import { SYNC_TOKENS } from './sync-tokens';
-import { TYPOGRAPHY } from './typography';
 import { flattenSyncTokens, resolveInitialTheme, lightTheme, darkTheme } from './unistyles';
 
 describe('flattenSyncTokens', () => {
@@ -42,7 +41,11 @@ describe('derived themes (AC2: single source of truth)', () => {
     expect(lightTheme.spacing).toBe(SPACING);
     expect(lightTheme.layout).toBe(LAYOUT);
     expect(lightTheme.touchTarget).toBe(TOUCH_TARGET);
-    expect(lightTheme.typography).toBe(TYPOGRAPHY);
+  });
+
+  it('registers no typography: the scale is scheme-independent and read from TYPOGRAPHY directly (Story 21.6 AC12)', () => {
+    expect(lightTheme).not.toHaveProperty('typography');
+    expect(darkTheme).not.toHaveProperty('typography');
   });
 
   it('attaches per-scheme flattened sync tokens', () => {

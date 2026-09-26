@@ -3,16 +3,20 @@
  * Story 13.8: Restyle Sync & Status Indicators (AC5, AC7)
  *
  * Displays a single side of the conflict comparison (local vs cloud).
- * Changed fields are visually highlighted with accent color.
+ * Changed fields are highlighted with the accent colour AND a weight step — regular → semibold —
+ * so a change is never signalled by colour alone (WCAG 1.4.1). One rule for the name and every
+ * value. The barcode tail is the exception, colour-only: it is set in the one mono token (Story
+ * 21.6 AC8), and JetBrains Mono ships a single weight.
  * Uses CardShell-like container styling with semantic tokens.
  */
 import { MaterialIcons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
-import { Platform, Text, View } from 'react-native';
+import { Text, View } from 'react-native';
 import { StyleSheet } from 'react-native-unistyles';
 
 import { useTheme } from '@/shared/theme';
 import { SYNC_TOKENS } from '@/shared/theme/sync-tokens';
+import { TYPOGRAPHY } from '@/shared/theme/typography';
 import type { ConflictCardData } from '@/shared/types/sync-ui';
 
 type ConflictComparisonCardProps = {
@@ -70,9 +74,8 @@ export const ConflictComparisonCard = ({
       <Text
         testID={`${testID}-name`}
         style={{
+          ...(isChangedField('name') ? TYPOGRAPHY.bodyMdStrong : TYPOGRAPHY.bodyMd),
           color: isChangedField('name') ? accentColor : valueColor,
-          fontSize: 14,
-          fontWeight: isChangedField('name') ? '700' : '600',
           marginBottom: 4
         }}
         numberOfLines={1}
@@ -83,15 +86,17 @@ export const ConflictComparisonCard = ({
       {/* Points/Balance */}
       {data.points != null && (
         <View style={styles.fieldRow}>
-          <Text testID={`${testID}-points-label`} style={{ color: labelColor, fontSize: 11 }}>
+          <Text
+            testID={`${testID}-points-label`}
+            style={{ ...TYPOGRAPHY.captionMd, color: labelColor }}
+          >
             {`${t('syncUi.conflict.comparisonCard.pointsLabel')} `}
           </Text>
           <Text
             testID={`${testID}-points`}
             style={{
-              color: isChangedField('points') ? accentColor : valueColor,
-              fontSize: 12,
-              fontWeight: isChangedField('points') ? '700' : '500'
+              ...(isChangedField('points') ? TYPOGRAPHY.labelBold : TYPOGRAPHY.captionMd),
+              color: isChangedField('points') ? accentColor : valueColor
             }}
           >
             {data.points}
@@ -101,16 +106,17 @@ export const ConflictComparisonCard = ({
 
       {/* Barcode tail */}
       <View style={styles.fieldRow}>
-        <Text testID={`${testID}-barcode-label`} style={{ color: labelColor, fontSize: 11 }}>
+        <Text
+          testID={`${testID}-barcode-label`}
+          style={{ ...TYPOGRAPHY.captionMd, color: labelColor }}
+        >
           {`${t('syncUi.conflict.comparisonCard.barcodeLabel')} `}
         </Text>
         <Text
           testID={`${testID}-barcode`}
           style={{
-            color: isChangedField('barcodeTail') ? accentColor : valueColor,
-            fontSize: 12,
-            fontWeight: isChangedField('barcodeTail') ? '700' : '500',
-            fontFamily: Platform.select({ ios: 'Courier', default: 'monospace' })
+            ...TYPOGRAPHY.monoCode,
+            color: isChangedField('barcodeTail') ? accentColor : valueColor
           }}
         >
           •••{data.barcodeTail}
@@ -121,8 +127,8 @@ export const ConflictComparisonCard = ({
       <Text
         testID={`${testID}-updated`}
         style={{
+          ...TYPOGRAPHY.captionSm,
           color: labelColor,
-          fontSize: 10,
           marginTop: 4
         }}
       >
@@ -144,15 +150,17 @@ const styles = StyleSheet.create({
     alignItems: 'center'
   },
   headerLabel: {
+    ...TYPOGRAPHY.overline,
     marginLeft: 12,
-    fontSize: 11,
-    fontWeight: '600',
-    textTransform: 'uppercase',
-    letterSpacing: 0.5
+    textTransform: 'uppercase'
   },
+  // Wraps rather than overflowing: each card's content box is ~71pt wide in the side-by-side
+  // modal, which holds the 16pt mono tail (7 glyphs × 9.6pt) on its own line but not beside
+  // its label.
   fieldRow: {
     marginBottom: 8,
     flexDirection: 'row',
+    flexWrap: 'wrap',
     alignItems: 'center'
   }
 });

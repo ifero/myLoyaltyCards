@@ -9,6 +9,7 @@ import { isValidEmail } from '@/core/auth/validation';
 import { Button, TextField } from '@/shared/components/ui';
 import { signInWithEmail } from '@/shared/supabase/auth';
 import { useTheme } from '@/shared/theme';
+import { TYPOGRAPHY } from '@/shared/theme/typography';
 
 import { AuthLink, AuthScreenLayout, ErrorBanner, PasswordInput } from './components';
 
@@ -165,7 +166,7 @@ const SignInScreen = () => {
             minWidth: touchTarget.min
           }}
         >
-          <Text style={{ color: theme.link, fontWeight: '600' }}>
+          <Text style={{ ...TYPOGRAPHY.bodyMdStrong, color: theme.link }}>
             {t('auth.signIn.forgotPassword')}
           </Text>
         </Pressable>

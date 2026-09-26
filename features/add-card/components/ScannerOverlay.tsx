@@ -36,6 +36,7 @@ import { Button } from '@/shared/components/ui/Button';
 import { useTheme } from '@/shared/theme';
 import { IDENTITY_COLORS } from '@/shared/theme/colors';
 import { SPACING, TOUCH_TARGET } from '@/shared/theme/spacing';
+import { TYPOGRAPHY } from '@/shared/theme/typography';
 
 import { useBarcodeScanner, ScanResult } from '@/features/cards/hooks/useBarcodeScanner';
 
@@ -493,10 +494,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 16
   },
+  // Text over the live feed takes the Strong tokens: the capture frame sets it at Inter 500,
+  // which is not bundled, and semibold keeps the extra weight it gave text over the camera.
   instructionText: {
+    ...TYPOGRAPHY.bodyMdStrong,
     color: '#FFFFFF',
-    fontSize: 15,
-    fontWeight: '500',
     textShadowColor: 'rgba(0, 0, 0, 0.75)',
     textShadowOffset: { width: 0, height: 1 },
     textShadowRadius: 3,
@@ -516,10 +518,9 @@ const styles = StyleSheet.create({
     gap: 12
   },
   manualEntryText: {
+    ...TYPOGRAPHY.bodyLgStrong,
     flex: 1,
-    color: '#FFFFFF',
-    fontSize: 16,
-    fontWeight: '500'
+    color: '#FFFFFF'
   },
   rowDivider: {
     height: StyleSheet.hairlineWidth,
@@ -540,9 +541,8 @@ const styles = StyleSheet.create({
     zIndex: 20
   },
   processingText: {
-    color: '#FFFFFF',
-    fontSize: 15,
-    fontWeight: '500'
+    ...TYPOGRAPHY.bodyMdStrong,
+    color: '#FFFFFF'
   },
   centeredContent: {
     flex: 1,
@@ -552,15 +552,13 @@ const styles = StyleSheet.create({
     gap: 8
   },
   permissionTitle: {
-    fontSize: 20,
-    fontWeight: '600',
+    ...TYPOGRAPHY.headlineSm,
     textAlign: 'center',
     marginTop: 16
   },
   permissionBody: {
-    fontSize: 15,
+    ...TYPOGRAPHY.bodyMd,
     textAlign: 'center',
-    lineHeight: 22,
     marginBottom: 16
   },
   permissionActions: {

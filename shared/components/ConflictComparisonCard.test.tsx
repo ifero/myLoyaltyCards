@@ -48,14 +48,28 @@ describe('ConflictComparisonCard', () => {
     expect(screen.getByTestId('card-updated')).toBeTruthy();
   });
 
-  it('highlights changed fields with bold font weight', () => {
+  it('highlights changed fields with a heavier weight than an unchanged value', () => {
     render(
       <ConflictComparisonCard testID="card" label="This device" icon="smartphone" data={baseCard} />
     );
 
-    // Points is a changed field — should have bold weight
+    // Points is a changed field — semibold, where an unchanged value is regular. 600 rather
+    // than 700: only the weights the type scale uses are bundled (Story 21.6).
     const pointsText = screen.getByTestId('card-points');
-    expect(pointsText.props.style.fontWeight).toBe('700');
+    expect(pointsText.props.style.fontWeight).toBe('600');
+  });
+
+  it('keeps an unchanged value at the regular weight', () => {
+    render(
+      <ConflictComparisonCard
+        testID="card"
+        label="This device"
+        icon="smartphone"
+        data={{ ...baseCard, changedFields: [] }}
+      />
+    );
+
+    expect(screen.getByTestId('card-points').props.style.fontWeight).toBe('400');
   });
 
   it('does not highlight unchanged fields', () => {
@@ -63,9 +77,26 @@ describe('ConflictComparisonCard', () => {
       <ConflictComparisonCard testID="card" label="This device" icon="smartphone" data={baseCard} />
     );
 
-    // Name is not a changed field — should have normal weight
+    // Name is not a changed field — the regular weight every unchanged field shares
+    const nameText = screen.getByTestId('card-name');
+    expect(nameText.props.style.fontWeight).toBe('400');
+  });
+
+  it('highlights a changed name with the weight step as well as the accent colour', () => {
+    render(
+      <ConflictComparisonCard
+        testID="card"
+        label="This device"
+        icon="smartphone"
+        data={{ ...baseCard, changedFields: ['name'] }}
+      />
+    );
+
     const nameText = screen.getByTestId('card-name');
     expect(nameText.props.style.fontWeight).toBe('600');
+    expect(nameText.props.style.color).not.toBe(
+      screen.getByTestId('card-points').props.style.color
+    );
   });
 
   it('omits points row when points is undefined', () => {

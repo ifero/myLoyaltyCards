@@ -6,6 +6,7 @@ import { StyleSheet } from 'react-native-unistyles';
 
 import { useTheme } from '@/shared/theme';
 import { TOUCH_TARGET } from '@/shared/theme/spacing';
+import { TYPOGRAPHY } from '@/shared/theme/typography';
 
 type ActionRowProps = {
   prefix?: React.ReactNode;
@@ -93,13 +94,16 @@ export const ActionRow = ({
             style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}
           >
             <View style={{ flex: 1, minWidth: 0 }}>
-              <Text numberOfLines={1} style={{ color: rowTextColor, fontSize: 16, flexShrink: 1 }}>
+              <Text
+                numberOfLines={1}
+                style={{ ...TYPOGRAPHY.bodyLg, color: rowTextColor, flexShrink: 1 }}
+              >
                 {label}
               </Text>
               {hasSubtitle ? (
                 <Text
                   numberOfLines={1}
-                  style={{ color: theme.textSecondary, fontSize: 14, marginTop: 1 }}
+                  style={{ ...TYPOGRAPHY.captionMd, color: theme.textSecondary, marginTop: 1 }}
                 >
                   {subtitle}
                 </Text>
@@ -108,7 +112,10 @@ export const ActionRow = ({
 
             <View style={styles.trailing}>
               {value ? (
-                <Text numberOfLines={1} style={{ color: theme.textSecondary, fontSize: 14 }}>
+                <Text
+                  numberOfLines={1}
+                  style={{ ...TYPOGRAPHY.bodyLg, color: theme.textSecondary }}
+                >
                   {value}
                 </Text>
               ) : null}

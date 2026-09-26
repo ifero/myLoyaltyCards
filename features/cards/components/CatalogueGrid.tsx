@@ -14,6 +14,7 @@ import { StyleSheet } from 'react-native-unistyles';
 
 import { useTheme } from '@/shared/theme';
 import { SPACING } from '@/shared/theme/spacing';
+import { MONOGRAM_TEXT_PROPS, TYPOGRAPHY, monogram } from '@/shared/theme/typography';
 
 import { CatalogueBrand } from '@/catalogue/types';
 
@@ -68,7 +69,7 @@ const BrandCard: React.FC<{
           }}
           testID={`brand-logo-${brand.id}`}
         >
-          <Text style={{ color: brand.color, fontWeight: 'bold', fontSize: 12 }}>
+          <Text {...MONOGRAM_TEXT_PROPS} style={{ ...monogram(12), color: brand.color }}>
             {brand.name.substring(0, 2).toUpperCase()}
           </Text>
         </View>
@@ -159,9 +160,7 @@ const styles = StyleSheet.create({
     padding: 32
   },
   brandName: {
-    textAlign: 'center',
-    fontSize: 14,
-    lineHeight: 20,
-    fontWeight: '500'
+    ...TYPOGRAPHY.labelBold,
+    textAlign: 'center'
   }
 });

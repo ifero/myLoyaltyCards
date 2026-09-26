@@ -5,6 +5,7 @@ import { Text, View } from 'react-native';
 
 import { BottomSheet, Button } from '@/shared/components/ui';
 import { useTheme } from '@/shared/theme';
+import { TYPOGRAPHY } from '@/shared/theme/typography';
 
 type ImportErrorSheetProps = {
   visible: boolean;
@@ -35,10 +36,9 @@ export const ImportErrorSheet = ({
         />
         <Text
           style={{
+            ...TYPOGRAPHY.sheetTitle,
             marginTop: 12,
             color: theme.textPrimary,
-            fontSize: 20,
-            fontWeight: '600',
             textAlign: 'center'
           }}
         >
@@ -71,8 +71,7 @@ export const ImportErrorSheet = ({
             marginLeft: 12,
             flex: 1,
             color: isInvalid ? theme.warning : theme.info,
-            fontSize: 13,
-            fontWeight: '500'
+            ...TYPOGRAPHY.bodyMd
           }}
         >
           {message}

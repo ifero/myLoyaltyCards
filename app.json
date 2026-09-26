@@ -40,6 +40,47 @@
         }
       ],
       "expo-sqlite",
+      [
+        "expo-font",
+        {
+          "android": {
+            "fonts": [
+              {
+                "fontFamily": "Inter",
+                "fontDefinitions": [
+                  { "path": "./assets/fonts/inter/Inter-Regular.ttf", "weight": 400 },
+                  { "path": "./assets/fonts/inter/Inter-SemiBold.ttf", "weight": 600 },
+                  { "path": "./assets/fonts/inter/Inter-Bold.ttf", "weight": 700 }
+                ]
+              },
+              {
+                "fontFamily": "Space Grotesk",
+                "fontDefinitions": [
+                  { "path": "./assets/fonts/space-grotesk/SpaceGrotesk-Bold.ttf", "weight": 700 }
+                ]
+              },
+              {
+                "fontFamily": "JetBrains Mono",
+                "fontDefinitions": [
+                  {
+                    "path": "./assets/fonts/jetbrains-mono/JetBrainsMono-Medium.ttf",
+                    "weight": 500
+                  }
+                ]
+              }
+            ]
+          },
+          "ios": {
+            "fonts": [
+              "./assets/fonts/inter/Inter-Regular.ttf",
+              "./assets/fonts/inter/Inter-SemiBold.ttf",
+              "./assets/fonts/inter/Inter-Bold.ttf",
+              "./assets/fonts/space-grotesk/SpaceGrotesk-Bold.ttf",
+              "./assets/fonts/jetbrains-mono/JetBrainsMono-Medium.ttf"
+            ]
+          }
+        }
+      ],
       "./plugins/with-watch-accent-color",
       "@bacons/apple-targets",
       "expo-sharing",

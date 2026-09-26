@@ -35,6 +35,7 @@ import { TextField } from '@/shared/components/ui/TextField';
 import { useTheme } from '@/shared/theme';
 import { getContrastForeground } from '@/shared/theme/luminance';
 import { SPACING, LAYOUT, TOUCH_TARGET } from '@/shared/theme/spacing';
+import { MONOGRAM_TEXT_PROPS, TYPOGRAPHY, monogram } from '@/shared/theme/typography';
 
 import { BrandLogo } from '@/features/cards/components/BrandLogo';
 import { useAddCard } from '@/features/cards/hooks/useAddCard';
@@ -65,7 +66,7 @@ const BrandHeader: React.FC<{ brand: CatalogueBrand }> = ({ brand }) => {
         {logo ? (
           <BrandLogo source={logo} width={32} height={32} color={fgColor} />
         ) : (
-          <Text style={[styles.brandFallbackLetter, { color: fgColor }]}>
+          <Text {...MONOGRAM_TEXT_PROPS} style={[styles.brandFallbackLetter, { color: fgColor }]}>
             {brand.name.charAt(0).toUpperCase()}
           </Text>
         )}
@@ -293,10 +294,9 @@ const styles = StyleSheet.create({
     alignItems: 'center'
   },
   headerTitle: {
+    ...TYPOGRAPHY.bodyLgStrong,
     flex: 1,
-    textAlign: 'center',
-    fontSize: 17,
-    fontWeight: '600'
+    textAlign: 'center'
   },
   headerSpacer: {
     width: TOUCH_TARGET.min
@@ -321,12 +321,10 @@ const styles = StyleSheet.create({
     alignItems: 'center'
   },
   brandFallbackLetter: {
-    fontSize: 28,
-    fontWeight: '700'
+    ...monogram(28)
   },
   brandName: {
-    fontSize: 20,
-    fontWeight: '600'
+    ...TYPOGRAPHY.headlineSm
   },
   formSection: {
     gap: SPACING.lg,
@@ -347,8 +345,7 @@ const styles = StyleSheet.create({
     gap: SPACING.sm
   },
   colorLabel: {
-    fontSize: 13,
-    fontWeight: '600'
+    ...TYPOGRAPHY.labelBold
   },
   bottomAction: {
     paddingHorizontal: LAYOUT.screenHorizontalMargin,

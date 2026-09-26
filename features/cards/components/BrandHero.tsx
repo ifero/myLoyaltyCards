@@ -16,7 +16,7 @@ import { useTheme } from '@/shared/theme';
 import { CARD_COLORS, DEFAULT_CARD_COLOR_HEX } from '@/shared/theme/colors';
 import { getContrastForeground, getLuminance } from '@/shared/theme/luminance';
 import { LAYOUT } from '@/shared/theme/spacing';
-import { TYPOGRAPHY } from '@/shared/theme/typography';
+import { MONOGRAM_TEXT_PROPS, TYPOGRAPHY, monogram } from '@/shared/theme/typography';
 
 import { BrandLogo } from './BrandLogo';
 import { useBrandLogo } from '../hooks/useBrandLogo';
@@ -77,7 +77,10 @@ export const BrandHero: React.FC<BrandHeroProps> = ({ card, testID }) => {
           {logo ? (
             <BrandLogo source={logo} width={LOGO_SIZE} height={LOGO_SIZE} color={foregroundColor} />
           ) : (
-            <Text style={[styles.brandAbbreviation, { color: foregroundColor }]}>
+            <Text
+              {...MONOGRAM_TEXT_PROPS}
+              style={[styles.brandAbbreviation, { color: foregroundColor }]}
+            >
               {brand.name.substring(0, 2).toUpperCase()}
             </Text>
           )}
@@ -85,7 +88,9 @@ export const BrandHero: React.FC<BrandHeroProps> = ({ card, testID }) => {
       ) : (
         // Custom card: circular avatar
         <View testID={`${testID}-avatar`} style={styles.avatar}>
-          <Text style={[styles.avatarText, { color: foregroundColor }]}>{firstLetter}</Text>
+          <Text {...MONOGRAM_TEXT_PROPS} style={[styles.avatarText, { color: foregroundColor }]}>
+            {firstLetter}
+          </Text>
         </View>
       )}
 
@@ -124,8 +129,7 @@ const styles = StyleSheet.create({
     marginBottom: 12
   },
   brandAbbreviation: {
-    fontSize: 28,
-    fontWeight: '700',
+    ...monogram(28),
     letterSpacing: 1
   },
   avatar: {
@@ -138,11 +142,11 @@ const styles = StyleSheet.create({
     marginBottom: 12
   },
   avatarText: {
-    fontSize: 26,
-    fontWeight: '700'
+    ...monogram(26)
   },
+  // Two 32pt lines still fit the 200pt hero: 16 + 80 (logo) + 12 + 64 + 20 = 192.
   name: {
-    ...TYPOGRAPHY.title2,
+    ...TYPOGRAPHY.headlineMd,
     textAlign: 'center'
   }
 });
