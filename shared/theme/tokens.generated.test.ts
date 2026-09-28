@@ -151,7 +151,10 @@ describe('generated design tokens — parity with canonical values (Story 16.4)'
     expect(LAYOUT.cardAspectRatio).toBe(4 / 3);
   });
 
-  it('TOUCH_TARGET matches the accessibility minimums', () => {
-    expect(TOUCH_TARGET).toEqual({ min: 44, watch: 32 });
+  // Story 22.1 (absorbing 16.33): 48, the max of Apple's 44pt and Material's 48dp and on the 8pt
+  // grid. The `watch` key (32) is RETIRED, not corrected: it had zero readers, and neither watch
+  // app — Swift and Kotlin — can read a TypeScript token (`cardi-watch-grammar.md` §5.4).
+  it('TOUCH_TARGET is the adjudicated 48, with no watch key', () => {
+    expect(TOUCH_TARGET).toEqual({ min: 48 });
   });
 });

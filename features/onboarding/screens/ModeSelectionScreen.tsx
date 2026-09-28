@@ -8,6 +8,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { isFirstLaunch } from '@/core/settings/settings-repository';
 
 import { useTheme } from '@/shared/theme';
+import { TOUCH_TARGET } from '@/shared/theme/spacing';
 import { TYPOGRAPHY } from '@/shared/theme/typography';
 
 import { InfoTooltipModal } from '../components/InfoTooltipModal';
@@ -51,14 +52,20 @@ const ModeSelectionScreen = () => {
           onPress={() => router.back()}
           accessibilityRole="button"
           accessibilityLabel={t('onboarding.modeSelection.backAccessibilityLabel')}
-          style={{ width: 44, height: 44, alignItems: 'center', justifyContent: 'center' }}
+          style={{
+            width: TOUCH_TARGET.min,
+            height: TOUCH_TARGET.min,
+            alignItems: 'center',
+            justifyContent: 'center'
+          }}
         >
           <MaterialIcons name="chevron-left" size={28} color={theme.primary} />
         </Pressable>
         <Text
           style={{
             flex: 1,
-            marginRight: 44,
+            // Mirrors the back button, so the title stays centred on the screen.
+            marginRight: TOUCH_TARGET.min,
             textAlign: 'center',
             color: theme.textPrimary,
             ...TYPOGRAPHY.bodyLgStrong
@@ -139,7 +146,12 @@ const ModeSelectionScreen = () => {
           onPress={() => setModalVisible(true)}
           accessibilityRole="button"
           accessibilityLabel={t('onboarding.modeSelection.whatsDifferenceAccessibilityLabel')}
-          style={{ marginTop: 4, minHeight: 44, alignItems: 'center', justifyContent: 'center' }}
+          style={{
+            marginTop: 4,
+            minHeight: TOUCH_TARGET.min,
+            alignItems: 'center',
+            justifyContent: 'center'
+          }}
         >
           <Text
             style={{

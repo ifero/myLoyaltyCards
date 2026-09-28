@@ -5,6 +5,7 @@ import { AccessibilityInfo, findNodeHandle, Modal, Pressable, Text, View } from 
 
 import { Button } from '@/shared/components/ui/Button';
 import { useTheme } from '@/shared/theme';
+import { TOUCH_TARGET } from '@/shared/theme/spacing';
 import { TYPOGRAPHY } from '@/shared/theme/typography';
 
 type InfoTooltipModalProps = {
@@ -99,7 +100,12 @@ export const InfoTooltipModal = ({
               onPress={handleClose}
               accessibilityRole="button"
               accessibilityLabel={t('onboarding.infoTooltip.closeAccessibilityLabel')}
-              style={{ width: 44, height: 44, alignItems: 'center', justifyContent: 'center' }}
+              style={{
+                width: TOUCH_TARGET.min,
+                height: TOUCH_TARGET.min,
+                alignItems: 'center',
+                justifyContent: 'center'
+              }}
             >
               <MaterialIcons name="close" size={20} color={theme.textSecondary} />
             </Pressable>

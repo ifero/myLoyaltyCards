@@ -80,4 +80,4 @@ export const LAYOUT = {
   safeAreaBottomInsetMin: 16
 } as const;
 
-export const TOUCH_TARGET = { min: 44, watch: 32 } as const;
+export const TOUCH_TARGET = { min: 48 } as const;
