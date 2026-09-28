@@ -37,9 +37,10 @@ export const FONT_FAMILY = {
 export type FontFamily = (typeof FONT_FAMILY)[keyof typeof FONT_FAMILY];
 
 /**
- * `'800'` is the design system's weight for `display-lg`, so it stays representable (AC4) — but
- * Space Grotesk's heaviest master is 700 (its `wght` axis runs 300–700), so no token uses it and
- * `test/brand-fonts.test.ts` fails if one does without a face to back it.
+ * `'800'` stays representable because the design system specified it for `display-lg` (AC4); it
+ * now says 700 (Story 22.1), since Space Grotesk's heaviest master is 700 (its `wght` axis runs
+ * 300–700). No token uses it, and `test/brand-fonts.test.ts` fails if one does without a face to
+ * back it.
  */
 export type FontWeight = '400' | '500' | '600' | '700' | '800';
 
@@ -79,7 +80,7 @@ const token = (
 
 export const TYPOGRAPHY = {
   // Space Grotesk — carries the personality.
-  /** `display-lg` — the onboarding hero title. 700, not the design system's 800 (see FontWeight). */
+  /** `display-lg` — the onboarding hero title, at the face's heaviest weight (see FontWeight). */
   displayLg: token(FONT_FAMILY.display, 34, 40, '700', -0.03),
   /** `headline-md` — screen and card titles. */
   headlineMd: token(FONT_FAMILY.display, 24, 32, '700', -0.01),

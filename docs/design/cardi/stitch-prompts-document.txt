@@ -44,9 +44,11 @@ WHAT READING THE CODE TURNED UP
        16px  card grid  — derived; TILE_WIDTH 171 depends on it, with tests
        24px  everything else — the system default
 
-   `CardForm`'s 32, `SettingsScreen`'s 24 and these screens' 48 are all drift, and all three
-   should become 20. **This supersedes the earlier claim in this file that the margin is "a
-   function of content" — it is one number with one derived exception.**
+   `CardForm`'s 32 and these screens' 48 are drift, and both should become 24. (`SettingsScreen`
+   was never drifting: it has been 24 all along. This said "all three should become 20" until
+   Story 22.1 — 20 is off the 8px grid, and the design system adjudicated 24 on 2026-08-21.)
+   **This supersedes the earlier claim in this file that the margin is "a function of content" —
+   it is one number with one derived exception.**
 
 2. ALL THREE SCREENS SET BODY TEXT AT 14px. The design system says the minimum body size is
    15px, and says it because these are the screens people actually read. This is a systematic

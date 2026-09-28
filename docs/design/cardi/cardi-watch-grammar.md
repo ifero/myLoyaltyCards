@@ -417,6 +417,10 @@ before this document existed and with nothing pointing it here. **Retiring the k
 same commit**: same file, same regeneration, same test assertion. This story writes no code and
 cannot make the change itself.
 
+✅ **APPLIED 2026-09-27 (Story 22.1), on ifero's ruling for this document over the story's older
+note.** `tokens/spacing.json` no longer has a `watch` key, so `TOUCH_TARGET` is `{ min: 48 }`,
+and `tokens.generated.test.ts` asserts exactly that shape.
+
 ### 5.5 Shape and icons — two phone rules that do not survive unchanged
 
 Neither of these was in the story's divergence table, and both still bind the watch as the phone

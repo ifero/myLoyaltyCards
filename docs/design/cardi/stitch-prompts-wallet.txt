@@ -100,7 +100,8 @@ THE GRID — this is the point of the screen
 A TWO-COLUMN grid of brand tiles. 16px screen margins, 16px gutter between columns and rows.
 Each tile is 171 wide x 140 tall with a 16px radius, and is FILLED EDGE TO EDGE with that
 brand's own colour. Centred inside each tile is that brand's logo or wordmark in white, sized
-to about 60% of the tile width. Beneath each tile, outside it, the card name in Inter 13px
+to about 85% of the tile — the design system's figure, which the shipped tile implements (this
+said 60% until Story 22.1 ruled it). Beneath each tile, outside it, the card name in Inter 13px
 semibold ink #181824, one line, centred.
 
 Use exactly these eight brands, in this order, with these exact fills:
@@ -209,7 +210,7 @@ BODY
 A single ENLARGED tile, horizontally centred, sitting 32px below the header. It is 220 wide x
 180 tall with a 20px radius — deliberately larger and rounder than a grid tile. It is filled
 edge to edge with Esselunga's #FFCC00, carrying the Esselunga wordmark centred in ink #181824
-at about 60% of the tile width. Flat: no shadow, no border, no gloss.
+at about 85% of the tile. Flat: no shadow, no border, no gloss.
 
 Beneath the tile, centred, the card name "Esselunga" in Inter 13px semibold, ink #181824.
 
