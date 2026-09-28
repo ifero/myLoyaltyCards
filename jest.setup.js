@@ -318,8 +318,9 @@ jest.mock('react-native-reanimated', () => {
     SlideOutUp: createAnimationMock(),
     useSharedValue: (initial) => ({ value: initial }),
     useAnimatedStyle: () => ({}),
+    // Completes at once, reporting `finished: true` as the real callback does (false = cancelled).
     withTiming: (value, _config, callback) => {
-      if (callback) callback();
+      if (callback) callback(true);
       return value;
     },
     withDelay: (_delay, value) => value,
@@ -330,11 +331,24 @@ jest.mock('react-native-reanimated', () => {
     runOnJS: (fn) => fn,
     Easing: {
       inOut: (fn) => fn,
+      // The shared BottomSheet slides on `Easing.out(Easing.ease)` (Story 22.1).
+      out: (fn) => fn,
       ease: 'ease',
       linear: (v) => v
     }
   };
 });
+
+// Mock react-native-worklets: app code uses only `scheduleOnRN`, which runs a JS-thread function
+// from an animation callback (the shared BottomSheet's slide-out). It runs at once, as the
+// Reanimated mock above completes its animations at once. The package's own `src/mock` is not
+// used: it is TypeScript that `transformIgnorePatterns` leaves untransformed, and it replaces
+// `globalThis.requestAnimationFrame` in every suite that loads it.
+jest.mock('react-native-worklets', () => ({
+  scheduleOnRN: (fn, ...args) => {
+    fn(...args);
+  }
+}));
 
 // Mock react-native-gesture-handler
 jest.mock('react-native-gesture-handler', () => {

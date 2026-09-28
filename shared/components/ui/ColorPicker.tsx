@@ -78,9 +78,11 @@ export const ColorPicker = ({ value, onChange, testID }: ColorPickerProps) => {
 };
 
 const styles = StyleSheet.create({
+  // Spread across the content width, as the form frame draws them, rather than a fixed gap: five
+  // 48pt targets with a 24pt gap need 336pt, more than a 375pt screen leaves inside 24pt margins.
   row: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 24
+    justifyContent: 'space-between'
   }
 });

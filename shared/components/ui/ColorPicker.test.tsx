@@ -1,4 +1,7 @@
 import { fireEvent, render, screen } from '@testing-library/react-native';
+import { StyleSheet } from 'react-native';
+
+import { TOUCH_TARGET } from '@/shared/theme/spacing';
 
 import { ColorPicker } from './ColorPicker';
 
@@ -55,5 +58,19 @@ describe('ColorPicker', () => {
 
     const unselected = screen.getByTestId('picker-red');
     expect(unselected.props.style.borderColor).toBe(darkTheme.border);
+  });
+
+  // Story 22.1 (16.33 AC2): at the 48pt target, five swatches with a FIXED 24pt gap need 336pt —
+  // more than `CardSetupScreen` has on a 375pt iPhone (327) or a 360dp Android (312). The form
+  // frame spreads them across the content width instead, which fits down to a 288pt screen.
+  it('sizes every swatch to the touch target and spreads them across the width', () => {
+    render(<ColorPicker value="blue" onChange={jest.fn()} testID="picker" />);
+
+    const swatch = StyleSheet.flatten(screen.getByTestId('picker-red').props.style);
+    expect(swatch).toMatchObject({ width: TOUCH_TARGET.min, height: TOUCH_TARGET.min });
+
+    const row = StyleSheet.flatten(screen.getByTestId('picker').props.style);
+    expect(row.justifyContent).toBe('space-between');
+    expect(row.gap).toBeUndefined();
   });
 });

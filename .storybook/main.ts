@@ -42,7 +42,11 @@ const config: StorybookConfig = {
             [
               'react-native-unistyles/plugin',
               { root: 'app', autoProcessImports: ['react-native-unistyles'] }
-            ]
+            ],
+            // …and the app's Reanimated transform, LAST as there. Without it `useAnimatedStyle`
+            // cannot see the shared values its updater reads, so on web a style is computed once
+            // and never moves: the shared sheet stayed parked below the frame (Story 22.1).
+            'react-native-reanimated/plugin'
           ]
         }
       }
