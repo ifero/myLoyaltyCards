@@ -14,6 +14,7 @@ import { useTranslation } from 'react-i18next';
 import { Text, View } from 'react-native';
 import { StyleSheet } from 'react-native-unistyles';
 
+import { SectionHeader } from '@/shared/components/ui/SectionHeader';
 import { useTheme } from '@/shared/theme';
 import { SYNC_TOKENS } from '@/shared/theme/sync-tokens';
 import { TYPOGRAPHY } from '@/shared/theme/typography';
@@ -57,17 +58,7 @@ export const ConflictComparisonCard = ({
       {/* Header: icon + label */}
       <View style={styles.header}>
         <MaterialIcons testID={`${testID}-icon`} name={icon} size={16} color={theme.primary} />
-        <Text
-          testID={`${testID}-label`}
-          style={[
-            styles.headerLabel,
-            {
-              color: labelColor
-            }
-          ]}
-        >
-          {label}
-        </Text>
+        <SectionHeader title={label} testID={`${testID}-label`} />
       </View>
 
       {/* Card name */}
@@ -147,12 +138,8 @@ const styles = StyleSheet.create({
   header: {
     marginBottom: 16,
     flexDirection: 'row',
-    alignItems: 'center'
-  },
-  headerLabel: {
-    ...TYPOGRAPHY.overline,
-    marginLeft: 12,
-    textTransform: 'uppercase'
+    alignItems: 'center',
+    gap: 12
   },
   // Wraps rather than overflowing: each card's content box is ~71pt wide in the side-by-side
   // modal, which holds the 16pt mono tail (7 glyphs × 9.6pt) on its own line but not beside

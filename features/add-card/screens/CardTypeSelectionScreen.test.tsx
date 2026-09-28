@@ -5,7 +5,7 @@
 
 import { render, screen, fireEvent } from '@testing-library/react-native';
 import { router } from 'expo-router';
-import { AccessibilityInfo } from 'react-native';
+import { AccessibilityInfo, StyleSheet } from 'react-native';
 
 import { CardTypeSelectionScreen } from './CardTypeSelectionScreen';
 
@@ -131,9 +131,14 @@ describe('CardTypeSelectionScreen', () => {
       expect(screen.getByText('Other card')).toBeTruthy();
     });
 
-    it('renders POPULAR CARDS section header', () => {
+    // Story 22.1: the header is the shared `SectionHeader`, so the capitals come from the style
+    // and the string stays sentence case — a screen reader reads "Popular cards", not letters.
+    it('renders the Popular cards section header, uppercased by style', () => {
       render(<CardTypeSelectionScreen />);
-      expect(screen.getByText('POPULAR CARDS')).toBeTruthy();
+      const header = screen.getByText('Popular cards');
+      expect(header.props.accessibilityRole).toBe('header');
+      expect(StyleSheet.flatten(header.props.style).textTransform).toBe('uppercase');
+      expect(screen.queryByText('POPULAR CARDS')).toBeNull();
     });
 
     it('renders brand names from catalogue', () => {
@@ -180,9 +185,9 @@ describe('CardTypeSelectionScreen', () => {
       const input = screen.getByTestId('brand-search-bar-input');
       fireEvent.changeText(input, 'ess');
 
-      // Should show RESULTS section instead of POPULAR CARDS
-      expect(screen.getByText('RESULTS')).toBeTruthy();
-      expect(screen.queryByText('POPULAR CARDS')).toBeNull();
+      // Should show the Results section instead of Popular cards
+      expect(screen.getByText('Results')).toBeTruthy();
+      expect(screen.queryByText('Popular cards')).toBeNull();
     });
   });
 });

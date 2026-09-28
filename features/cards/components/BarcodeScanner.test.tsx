@@ -4,7 +4,7 @@
  */
 
 import { render, screen, fireEvent, waitFor } from '@testing-library/react-native';
-import { Alert, Linking } from 'react-native';
+import { Alert, Linking, StyleSheet } from 'react-native';
 
 import { BarcodeScanner } from './BarcodeScanner';
 
@@ -251,6 +251,22 @@ describe('BarcodeScanner', () => {
       fireEvent.press(manualEntryButton);
 
       expect(mockOnManualEntry).toHaveBeenCalled();
+    });
+
+    // Story 22.1, AC9: the manual-entry bar was one of the two `position: absolute` footers the
+    // design system forbids. It is now the container's one in-flow child, anchored by flex-end.
+    it('lays the manual-entry bar out in flow at the bottom, never absolutely (AC9)', () => {
+      mockUseCameraPermissions.mockReturnValue([{ granted: true }, mockRequestPermission]);
+
+      render(<BarcodeScanner onScan={mockOnScan} onManualEntry={mockOnManualEntry} />);
+
+      const bar = screen.getByTestId('barcode-scanner-bottom-bar');
+      expect(StyleSheet.flatten(bar.props.style).position).not.toBe('absolute');
+
+      // The bar's real parent: skip the composite `View` that is still the bar itself.
+      let parent = bar.parent;
+      while (parent && parent.props.testID === 'barcode-scanner-bottom-bar') parent = parent.parent;
+      expect(StyleSheet.flatten(parent?.props.style).justifyContent).toBe('flex-end');
     });
   });
 

@@ -209,7 +209,7 @@ export function BarcodeScanner({ onScan, onManualEntry, onError }: BarcodeScanne
   // Camera is ready - show viewfinder
   return (
     <SafeAreaView style={[styles.flex1, { backgroundColor: '#000' }]} edges={['top', 'bottom']}>
-      <View style={styles.flex1}>
+      <View style={styles.cameraRoot}>
         {/* Camera View - AC3 */}
         <CameraView
           style={StyleSheet.absoluteFill}
@@ -220,8 +220,8 @@ export function BarcodeScanner({ onScan, onManualEntry, onError }: BarcodeScanne
           onBarcodeScanned={hasScanned ? undefined : handleBarcodeScanned}
         />
 
-        {/* Viewfinder Overlay - AC3 */}
-        <View style={styles.centered}>
+        {/* Viewfinder Overlay - AC3: a full-screen layer, so the cutout stays centred on it */}
+        <View style={[StyleSheet.absoluteFill, styles.viewfinderLayer]}>
           {/* Semi-transparent overlay around viewfinder */}
           <View style={styles.dimOverlay}>
             {/* Viewfinder cutout - 70% screen width, centered */}
@@ -234,8 +234,9 @@ export function BarcodeScanner({ onScan, onManualEntry, onError }: BarcodeScanne
           </View>
         </View>
 
-        {/* Manual Entry Button - AC1, AC7 */}
-        <View style={styles.bottomBar}>
+        {/* Manual Entry Button - AC1, AC7. The root's one in-flow child, anchored by its
+            `justifyContent: 'flex-end'` — never `position: absolute` (Story 22.1, AC9). */}
+        <View testID="barcode-scanner-bottom-bar" style={styles.bottomBar}>
           <Pressable
             onPress={onManualEntry}
             style={styles.manualEntryButton}
@@ -253,6 +254,14 @@ export function BarcodeScanner({ onScan, onManualEntry, onError }: BarcodeScanne
 const styles = StyleSheet.create({
   flex1: {
     flex: 1
+  },
+  cameraRoot: {
+    flex: 1,
+    justifyContent: 'flex-end'
+  },
+  viewfinderLayer: {
+    alignItems: 'center',
+    justifyContent: 'center'
   },
   centered: {
     flex: 1,
@@ -338,10 +347,6 @@ const styles = StyleSheet.create({
     textShadowRadius: 3
   },
   bottomBar: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
     paddingHorizontal: 48,
     paddingBottom: 48
   },

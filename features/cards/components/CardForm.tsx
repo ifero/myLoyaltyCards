@@ -1,6 +1,7 @@
 /**
  * Card Form Component
  * Story 2.2: Add Card Manually
+ * Story 22.1: Draws its fields with the shared TextField and saves with the shared Button (AC2, AC6)
  *
  * Shared form component for Add Card and Edit Card (Story 2.7).
  * Uses react-hook-form with zod validation.
@@ -9,26 +10,19 @@
  */
 
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useEffect, useMemo, useRef } from 'react';
+import { useEffect, useMemo } from 'react';
 import { useForm, Controller } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
-import {
-  View,
-  Text,
-  TextInput,
-  Pressable,
-  KeyboardAvoidingView,
-  Platform,
-  ScrollView
-} from 'react-native';
+import { View, Text, KeyboardAvoidingView, Platform, ScrollView } from 'react-native';
 import { StyleSheet } from 'react-native-unistyles';
 import * as z from 'zod';
 
 import { barcodeFormatSchema, cardColorSchema } from '@/core/schemas';
 import { inferBarcodeFormat } from '@/core/utils';
 
-import { useTheme } from '@/shared/theme';
-import { TYPOGRAPHY, inputFont } from '@/shared/theme/typography';
+import { Button } from '@/shared/components/ui/Button';
+import { FieldLabel, TextField } from '@/shared/components/ui/TextField';
+import { TYPOGRAPHY } from '@/shared/theme/typography';
 
 import { ColorPicker } from './ColorPicker';
 
@@ -68,7 +62,8 @@ interface CardFormProps {
  * - AC4: Numeric keypad for barcode input
  * - AC5: Format auto-detected from barcode value (user doesn't select)
  * - AC6: Color picker with 5 options, Grey default
- * - Save button disabled when form invalid
+ * - Save is ALWAYS enabled: pressing it on an incomplete form reveals the field
+ *   errors and focuses the first one (Story 22.1, AC2 — it used to sit disabled)
  */
 export const CardForm = ({
   defaultValues,
@@ -79,9 +74,7 @@ export const CardForm = ({
   testID,
   focusNameOnMount = true
 }: CardFormProps) => {
-  const { theme } = useTheme();
   const { t } = useTranslation();
-  const nameInputRef = useRef<TextInput>(null);
   const cardFormSchema = useMemo(() => createCardFormSchema(t), [t]);
   const barcodeFormatLabels = useMemo(
     () => ({
@@ -100,7 +93,8 @@ export const CardForm = ({
     handleSubmit,
     watch,
     setValue,
-    formState: { errors, isValid, isDirty }
+    setFocus,
+    formState: { errors, isDirty }
   } = useForm<CardFormInput>({
     resolver: zodResolver(cardFormSchema),
     defaultValues: {
@@ -113,8 +107,6 @@ export const CardForm = ({
     mode: 'onChange'
   });
 
-  const nameValue = watch('name');
-  const nameLength = nameValue?.length || 0;
   const barcodeValue = watch('barcode');
   const barcodeFormat = watch('barcodeFormat');
 
@@ -136,16 +128,18 @@ export const CardForm = ({
     onDirtyChange?.(isDirty);
   }, [isDirty, onDirtyChange]);
 
-  // Auto-focus card name field per AC2 (or when returning from scanner with scanned barcode)
+  // Auto-focus card name field per AC2 (or when returning from scanner with scanned barcode).
+  // Through the form's own field ref — the same one `handleSubmit` uses to focus the first
+  // invalid field — rather than a second ref to the same input.
   useEffect(() => {
     if (focusNameOnMount) {
       const timeout = setTimeout(() => {
-        nameInputRef.current?.focus();
+        setFocus('name');
       }, 100);
       return () => clearTimeout(timeout);
     }
     return undefined;
-  }, [focusNameOnMount]);
+  }, [focusNameOnMount, setFocus]);
 
   const handleFormSubmit = handleSubmit(async (data) => {
     await onSubmit(data);
@@ -164,94 +158,55 @@ export const CardForm = ({
       >
         {/* Card Name Field - AC2, AC3 */}
         <View style={styles.firstField}>
-          <View style={styles.labelRow}>
-            <Text style={styles.labelText}>{t('cards.form.nameLabel')}</Text>
-            <Text style={styles.counterText}>{nameLength}/50</Text>
-          </View>
           <Controller
             control={control}
             name="name"
-            render={({ field: { onChange, onBlur, value } }) => (
-              <TextInput
-                ref={nameInputRef}
+            render={({ field: { onChange, onBlur, value, ref } }) => (
+              <TextField
+                ref={ref}
+                label={t('cards.form.nameLabel')}
                 value={value}
                 onChangeText={onChange}
                 onBlur={onBlur}
                 placeholder={t('cards.form.namePlaceholder')}
-                placeholderTextColor={theme.textSecondary}
                 maxLength={50}
+                showCharacterCount
+                error={errors.name?.message}
                 testID="card-name-input"
                 accessibilityLabel={t('cards.form.nameAccessibilityLabel')}
-                style={[
-                  styles.input,
-                  styles.inputText,
-                  {
-                    borderColor: errors.name ? '#EF4444' : theme.border,
-                    color: theme.textPrimary,
-                    backgroundColor: theme.surface
-                  }
-                ]}
               />
             )}
           />
-          {errors.name && (
-            <Text style={styles.errorText} testID="name-error">
-              {errors.name.message}
-            </Text>
-          )}
         </View>
 
         {/* Barcode Number Field - AC4 */}
         <View style={styles.field}>
-          <Text style={styles.fieldLabel}>{t('cards.form.barcodeLabel')}</Text>
           <Controller
             control={control}
             name="barcode"
-            render={({ field: { onChange, onBlur, value } }) => (
-              <TextInput
+            render={({ field: { onChange, onBlur, value, ref } }) => (
+              <TextField
+                ref={ref}
+                label={t('cards.form.barcodeLabel')}
                 value={value}
                 onChangeText={onChange}
                 onBlur={onBlur}
                 placeholder={t('cards.form.barcodePlaceholder')}
-                placeholderTextColor={theme.textSecondary}
                 keyboardType="number-pad"
+                mono
+                error={errors.barcode?.message}
                 testID="barcode-input"
                 accessibilityLabel={t('cards.form.barcodeAccessibilityLabel')}
-                style={[
-                  styles.input,
-                  styles.inputText,
-                  {
-                    borderColor: errors.barcode ? '#EF4444' : theme.border,
-                    color: theme.textPrimary,
-                    backgroundColor: theme.surface
-                  }
-                ]}
               />
             )}
           />
-          {errors.barcode && (
-            <Text style={styles.errorText} testID="barcode-error">
-              {errors.barcode.message}
-            </Text>
-          )}
         </View>
 
-        {/* Barcode Format Display - AC5 (Auto-detected) */}
+        {/* Barcode Format Display - AC5 (Auto-detected). Information, not a control: the
+            uppercase label over a plain value is what keeps it from reading as an input. */}
         <View style={styles.field} testID="format-display">
-          <Text style={styles.fieldLabel}>{t('cards.form.barcodeFormatLabel')}</Text>
-          <View
-            style={[
-              styles.input,
-              {
-                borderColor: theme.border,
-                backgroundColor: theme.surface
-              }
-            ]}
-          >
-            <Text style={[styles.formatValue, { color: theme.textPrimary }]}>
-              {barcodeFormatLabels[barcodeFormat]}
-            </Text>
-          </View>
+          <FieldLabel>{t('cards.form.barcodeFormatLabel')}</FieldLabel>
+          <Text style={styles.formatValue}>{barcodeFormatLabels[barcodeFormat]}</Text>
         </View>
 
         {/* Color Picker - AC6 */}
@@ -265,32 +220,25 @@ export const CardForm = ({
           />
         </View>
 
-        {/* Save Button - AC7 */}
-        <Pressable
+        {/* Save Button - AC7. Always enabled (Story 22.1, AC2): an incomplete form answers the
+            press with its errors. Busy keeps the fill and shows a spinner, and is announced by
+            the "Saving..." name rather than as a disabled control. */}
+        <Button
+          variant="primary"
+          size="large"
           onPress={handleFormSubmit}
-          disabled={!isValid || isLoading}
+          loading={isLoading}
           testID="save-button"
-          accessibilityRole="button"
-          accessibilityLabel={submitLabel}
-          accessibilityState={{ disabled: !isValid || isLoading }}
-          style={[
-            styles.saveButton,
-            {
-              backgroundColor: theme.primary,
-              opacity: !isValid || isLoading ? 0.5 : 1
-            }
-          ]}
+          accessibilityLabel={isLoading ? t('cards.form.saving') : submitLabel}
         >
-          <Text style={[styles.saveLabel, { color: theme.onPrimary }]}>
-            {isLoading ? t('cards.form.saving') : submitLabel}
-          </Text>
-        </Pressable>
+          {submitLabel}
+        </Button>
       </ScrollView>
     </KeyboardAvoidingView>
   );
 };
 
-const styles = StyleSheet.create({
+const styles = StyleSheet.create((theme) => ({
   flex1: {
     flex: 1
   },
@@ -308,55 +256,10 @@ const styles = StyleSheet.create({
   lastField: {
     marginBottom: 48
   },
-  labelRow: {
-    marginBottom: 8,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between'
-  },
-  labelText: {
-    ...TYPOGRAPHY.labelBold,
-    color: '#6B7280'
-  },
-  counterText: {
-    ...TYPOGRAPHY.captionMd,
-    color: '#9CA3AF'
-  },
-  fieldLabel: {
-    ...TYPOGRAPHY.labelBold,
-    marginBottom: 8,
-    color: '#6B7280'
-  },
-  input: {
-    borderRadius: 8,
-    borderWidth: 1,
-    paddingHorizontal: 24,
-    paddingVertical: 24
-  },
-  // Kept apart from `input` because the read-only format display reuses that box on a View.
-  inputText: {
-    ...inputFont(TYPOGRAPHY.bodyLg)
-  },
-  // The format display is a Text, not a field, so it keeps the token's line height.
+  // The format is a Text, not a field, so it keeps the token's line height.
   formatValue: {
-    ...TYPOGRAPHY.bodyLg
-  },
-  errorText: {
-    ...TYPOGRAPHY.captionMd,
-    marginTop: 8,
-    color: '#EF4444'
-  },
-  saveButton: {
-    height: 48,
-    width: '100%',
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderRadius: 8
-  },
-  saveLabel: {
-    ...TYPOGRAPHY.bodyLgStrong
-    // No `color`: the label follows the fill via `theme.onPrimary` at the call
-    // site (white on ink in light, ink on beam in dark). A hardcoded white here
-    // would be dead and, worse, would look correct.
+    ...TYPOGRAPHY.bodyLg,
+    color: theme.colors.textPrimary,
+    marginTop: 6
   }
-});
+}));

@@ -3,8 +3,9 @@
  * Story 2.9: Scan Cards from Image or Screenshot (AC5)
  */
 
-import { render, fireEvent } from '@testing-library/react-native';
+import { act, render, fireEvent } from '@testing-library/react-native';
 import React from 'react';
+import { Modal, StyleSheet } from 'react-native';
 
 import { MultiCodePickerSheet } from './MultiCodePickerSheet';
 import { DetectedCode } from '../hooks/useImageScan';
@@ -47,7 +48,8 @@ jest.mock('react-native-reanimated', () => {
     default: { View: AnimatedView, Text: mockRN.Text },
     useSharedValue: (initial: number) => ({ value: initial }),
     useAnimatedStyle: () => ({}),
-    withTiming: (value: number) => value,
+    // Holds every slide: a test finishes one by calling the callback it was handed.
+    withTiming: jest.fn((value: number) => value),
     withRepeat: (value: number) => value,
     withSpring: (value: number) => value,
     Easing: {
@@ -74,11 +76,52 @@ describe('MultiCodePickerSheet', () => {
     jest.clearAllMocks();
   });
 
-  it('returns null when visible is false and codes is empty', () => {
-    const { toJSON } = render(
+  it('presents nothing before the first multi-code scan', () => {
+    const { UNSAFE_getByType, queryByTestId } = render(
       <MultiCodePickerSheet visible={false} codes={[]} onSelect={jest.fn()} onDismiss={jest.fn()} />
     );
-    expect(toJSON()).toBeNull();
+    expect(UNSAFE_getByType(Modal).props.visible).toBe(false);
+    expect(
+      queryByTestId('multi-code-picker-sheet-content', { includeHiddenElements: true })
+    ).toBeNull();
+  });
+
+  // Story 22.1, AC8 — BrandScannerScreen derives BOTH props from one list, and every way out
+  // (Cancel, the scrim, a row, Android back) empties it. The picker used to return null on that
+  // render, which unmounted the shared sheet before its slide-out could run.
+  describe('closing', () => {
+    const finishSlideOut = () => {
+      const { withTiming } = jest.requireMock<{ withTiming: jest.Mock }>('react-native-reanimated');
+      const slideOut = withTiming.mock.calls.at(-1)?.[2] as
+        | ((finished: boolean) => void)
+        | undefined;
+      act(() => slideOut?.(true));
+    };
+
+    it('slides out with the rows it showed, though the caller empties them as it closes', () => {
+      const { rerender, getByTestId, queryByTestId } = render(
+        <MultiCodePickerSheet {...defaultProps} />
+      );
+      rerender(<MultiCodePickerSheet {...defaultProps} visible={false} codes={[]} />);
+      expect(getByTestId('code-row-1', { includeHiddenElements: true })).toBeTruthy();
+
+      finishSlideOut();
+      expect(queryByTestId('code-row-0', { includeHiddenElements: true })).toBeNull();
+    });
+
+    it('shows the next scan its own codes', () => {
+      const { rerender, getByText } = render(<MultiCodePickerSheet {...defaultProps} />);
+      rerender(<MultiCodePickerSheet {...defaultProps} visible={false} codes={[]} />);
+      finishSlideOut();
+
+      rerender(
+        <MultiCodePickerSheet
+          {...defaultProps}
+          codes={[{ value: '9780201379624', format: 'EAN13' }]}
+        />
+      );
+      expect(getByText('9780201379624')).toBeTruthy();
+    });
   });
 
   it('renders code rows when visible', () => {
@@ -94,10 +137,31 @@ describe('MultiCodePickerSheet', () => {
     expect(queryByTestId('code-row-2')).toBeNull();
   });
 
-  it('renders drag handle and cancel button', () => {
+  // Story 22.1, AC8 — the picker was the one hand-rolled sheet left: its own Modal, scrim, slide
+  // and handle. It is now the shared BottomSheet, whose grabber is the spec's 36 × 4 (the size
+  // this picker already drew; the shared sheet was the off-spec one).
+  it('is drawn by the shared sheet, grabber included (AC8)', () => {
     const { getByTestId } = render(<MultiCodePickerSheet {...defaultProps} />);
-    expect(getByTestId('multi-code-drag-handle')).toBeTruthy();
+    expect(getByTestId('multi-code-picker-sheet-content')).toBeTruthy();
+    expect(
+      StyleSheet.flatten(getByTestId('multi-code-picker-sheet-grabber').props.style)
+    ).toMatchObject({ width: 36, height: 4 });
     expect(getByTestId('multi-code-cancel')).toBeTruthy();
+  });
+
+  it('announces its title as the sheet heading', () => {
+    const { getByText } = render(<MultiCodePickerSheet {...defaultProps} />);
+    expect(getByText('Multiple barcodes found').props.accessibilityRole).toBe('header');
+  });
+
+  // The rows run edge to edge — their rules span the sheet — with their content on the sheet's
+  // 24pt margin, in line with the title above them.
+  it('runs its rows edge to edge, aligned with the title', () => {
+    const { getByTestId } = render(<MultiCodePickerSheet {...defaultProps} />);
+    expect(StyleSheet.flatten(getByTestId('code-row-0').props.style)).toMatchObject({
+      marginHorizontal: -24,
+      paddingHorizontal: 24
+    });
   });
 
   it('renders the title and subtitle', () => {
@@ -141,9 +205,9 @@ describe('MultiCodePickerSheet', () => {
       <MultiCodePickerSheet {...defaultProps} onDismiss={onDismiss} />
     );
 
-    // Scrim is a sibling of the accessibilityViewIsModal sheet, so RNTL 13 hides it
-    // by default; include hidden elements to locate and press it.
-    fireEvent.press(getByTestId('multi-code-scrim', { includeHiddenElements: true }));
+    // The shared sheet hides its scrim from assistive technology, so RNTL 13 skips it by
+    // default; include hidden elements to locate and press it, as a finger would.
+    fireEvent.press(getByTestId('multi-code-picker-sheet-scrim', { includeHiddenElements: true }));
 
     expect(onDismiss).toHaveBeenCalledTimes(1);
   });

@@ -511,9 +511,6 @@ export const en = {
       floatingBackAccessibilityLabel: 'Go back'
     },
     multiCode: {
-      dismissAccessibilityLabel: 'Dismiss barcode picker',
-      dragDismissAccessibilityLabel: 'Drag down to dismiss',
-      dragDismissHint: 'Swipe down to close',
       title: 'Multiple barcodes found',
       subtitle: 'Tap the one that matches your loyalty card',
       cancelAccessibilityLabel: 'Cancel, dismiss barcode picker',
