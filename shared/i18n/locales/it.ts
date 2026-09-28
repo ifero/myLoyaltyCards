@@ -514,9 +514,6 @@ export const it = {
       floatingBackAccessibilityLabel: 'Torna indietro'
     },
     multiCode: {
-      dismissAccessibilityLabel: 'Chiudi il selettore di codici a barre',
-      dragDismissAccessibilityLabel: 'Trascina verso il basso per chiudere',
-      dragDismissHint: 'Scorri verso il basso per chiudere',
       title: 'Trovati più codici a barre',
       subtitle: 'Tocca quello che corrisponde alla tua carta fedeltà',
       cancelAccessibilityLabel: 'Annulla e chiudi il selettore di codici a barre',

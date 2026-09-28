@@ -8,6 +8,7 @@ import { StyleSheet } from 'react-native-unistyles';
 
 import { Button } from '@/shared/components/ui';
 import { useTheme } from '@/shared/theme';
+import { TOUCH_TARGET } from '@/shared/theme/spacing';
 import { TYPOGRAPHY } from '@/shared/theme/typography';
 
 const GUEST_BANNER_DISMISSED_KEY = 'guest_banner_dismissed';
@@ -22,7 +23,7 @@ export const GuestModeBanner = ({ isGuestMode }: GuestModeBannerProps) => {
   const spacingXs = spacing?.xs ?? 4;
   const spacingSm = spacing?.sm ?? 8;
   const spacingMd = spacing?.md ?? 16;
-  const minTouchTarget = touchTarget?.min ?? 44;
+  const minTouchTarget = touchTarget?.min ?? TOUCH_TARGET.min;
   const router = useRouter();
   const [isDismissed, setIsDismissed] = useState<boolean | null>(null);
 

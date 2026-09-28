@@ -28,3 +28,12 @@ export const Disabled: Story = { args: { value: 'Locked field', disabled: true }
 export const Password: Story = {
   args: { label: 'Password', value: 'sup3rsecret', secureTextEntry: true }
 };
+
+/** Card numbers are set in JetBrains Mono so the digits align (Story 21.6's hand-off). */
+export const CardNumber: Story = {
+  args: { label: 'Card number', value: '2000012345678', mono: true, keyboardType: 'number-pad' }
+};
+
+export const WithCharacterCount: Story = {
+  args: { label: 'Card name', value: 'Esselunga', maxLength: 50, showCharacterCount: true }
+};

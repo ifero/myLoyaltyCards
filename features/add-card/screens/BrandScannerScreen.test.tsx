@@ -197,6 +197,24 @@ describe('BrandScannerScreen', () => {
   });
 
   describe('image scan integration', () => {
+    /**
+     * The scan banner derives its offset from the action stack's MEASURED height (Story 16.30,
+     * via 22.1), so it appears once the stack has laid out — which always happens before an image
+     * scan can fail. That layout re-renders the screen, so the error state must hold for more than
+     * one render: a persistent implementation, restored after each test.
+     */
+    const showImageError = (overrides: Record<string, unknown>) => {
+      (useImageScan as jest.Mock).mockImplementation(() => ({ ...mockUseImageScan, ...overrides }));
+      render(<BrandScannerScreen />);
+      fireEvent(screen.getByTestId('scanner-bottom-actions'), 'layout', {
+        nativeEvent: { layout: { x: 0, y: 0, width: 393, height: 154 } }
+      });
+    };
+
+    afterEach(() => {
+      (useImageScan as jest.Mock).mockImplementation(() => mockUseImageScan);
+    });
+
     beforeEach(() => {
       (useLocalSearchParams as jest.Mock).mockReturnValue({
         brandId: 'esselunga',
@@ -227,11 +245,7 @@ describe('BrandScannerScreen', () => {
     });
 
     it('shows no-code-found banner when showError is true', () => {
-      (useImageScan as jest.Mock).mockReturnValueOnce({
-        ...mockUseImageScan,
-        showError: true
-      });
-      render(<BrandScannerScreen />);
+      showImageError({ showError: true });
       expect(screen.getByTestId('no-code-found-banner')).toBeTruthy();
     });
 
@@ -242,33 +256,19 @@ describe('BrandScannerScreen', () => {
     // the app silently reverted to one message for both failures. That is the
     // defect this story exists to remove, so it gets an assertion of its own.
     it('renders the scanFailed copy when the hook reports errorReason scanFailed', () => {
-      (useImageScan as jest.Mock).mockReturnValueOnce({
-        ...mockUseImageScan,
-        showError: true,
-        errorReason: 'scanFailed'
-      });
-      render(<BrandScannerScreen />);
+      showImageError({ showError: true, errorReason: 'scanFailed' });
       expect(screen.getByText('Something went wrong reading that image')).toBeTruthy();
     });
 
     it('renders the notFound copy when the hook reports errorReason notFound', () => {
-      (useImageScan as jest.Mock).mockReturnValueOnce({
-        ...mockUseImageScan,
-        showError: true,
-        errorReason: 'notFound'
-      });
-      render(<BrandScannerScreen />);
+      showImageError({ showError: true, errorReason: 'notFound' });
       expect(
         screen.getByText("We couldn't read a barcode in this image — try scanning the card itself")
       ).toBeTruthy();
     });
 
     it('calls dismissError when banner close is pressed', () => {
-      (useImageScan as jest.Mock).mockReturnValueOnce({
-        ...mockUseImageScan,
-        showError: true
-      });
-      render(<BrandScannerScreen />);
+      showImageError({ showError: true });
       fireEvent.press(screen.getByTestId('banner-close'));
       expect(mockDismissError).toHaveBeenCalledTimes(1);
     });

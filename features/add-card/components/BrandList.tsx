@@ -11,6 +11,7 @@ import React, { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { View, Text, SectionList, StyleSheet } from 'react-native';
 
+import { SectionHeader } from '@/shared/components/ui/SectionHeader';
 import { useTheme } from '@/shared/theme';
 import { TYPOGRAPHY } from '@/shared/theme/typography';
 
@@ -106,9 +107,7 @@ export const BrandList: React.FC<BrandListProps> = ({
     if (!section.title) return null;
     return (
       <View style={[styles.sectionHeader, { backgroundColor: theme.background }]}>
-        <Text style={[styles.sectionTitle, { color: theme.textSecondary }]}>
-          {section.title.toUpperCase()}
-        </Text>
+        <SectionHeader title={section.title} />
       </View>
     );
   };
@@ -161,10 +160,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
     paddingTop: 14,
     paddingBottom: 8
-  },
-  sectionTitle: {
-    ...TYPOGRAPHY.overline,
-    textTransform: 'uppercase'
   },
   emptyContainer: {
     paddingHorizontal: 24,

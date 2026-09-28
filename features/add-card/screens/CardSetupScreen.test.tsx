@@ -5,7 +5,7 @@
 
 import { render, screen, fireEvent, waitFor } from '@testing-library/react-native';
 import { router } from 'expo-router';
-import { AccessibilityInfo } from 'react-native';
+import { AccessibilityInfo, StyleSheet } from 'react-native';
 
 import { CardSetupScreen } from './CardSetupScreen';
 
@@ -241,6 +241,23 @@ describe('CardSetupScreen', () => {
     it('renders color picker', () => {
       render(<CardSetupScreen />);
       expect(screen.getByTestId('color-picker')).toBeTruthy();
+    });
+
+    // Story 22.1 (AC7): TextField's labels went uppercase, so the one field label this screen
+    // draws itself takes the same shared idiom — or the form would mix two casings.
+    it('labels the colour picker in the shared uppercase form-label idiom', () => {
+      render(<CardSetupScreen />);
+      expect(StyleSheet.flatten(screen.getByText('Card Color').props.style).textTransform).toBe(
+        'uppercase'
+      );
+    });
+
+    // Story 21.6's hand-off, taken in 22.1: card numbers are set in the mono face in both flows.
+    it('sets the card number in the mono-code face', () => {
+      render(<CardSetupScreen />);
+      expect(
+        StyleSheet.flatten(screen.getByTestId('card-number-field').props.style).fontFamily
+      ).toBe('JetBrains Mono');
     });
 
     it('renders inline scan button', () => {

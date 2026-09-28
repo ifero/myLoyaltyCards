@@ -34,6 +34,7 @@ import { LoyaltyCard } from '@/core/schemas';
 import { logger } from '@/core/utils/logger';
 
 import { ActionRow } from '@/shared/components/ui/ActionRow';
+import { SectionHeader } from '@/shared/components/ui/SectionHeader';
 import { useTheme, CARD_COLORS } from '@/shared/theme';
 import { SPACING, LAYOUT, TOUCH_TARGET } from '@/shared/theme/spacing';
 import { TYPOGRAPHY } from '@/shared/theme/typography';
@@ -328,9 +329,7 @@ export const CardDetails: React.FC<CardDetailsProps> = ({
 
         {/* Manage Actions Section (AC4) */}
         <View style={styles.manageSection} testID="card-details-manage-section">
-          <Text style={[styles.sectionHeader, { color: theme.textSecondary }]}>
-            {t('cards.details.manageSection')}
-          </Text>
+          <SectionHeader title={t('cards.details.manageSection')} />
 
           {/* Edit Card Row */}
           <ActionRow
@@ -457,11 +456,6 @@ const styles = StyleSheet.create({
   manageSection: {
     paddingHorizontal: LAYOUT.screenHorizontalMargin,
     gap: SPACING.sm
-  },
-  sectionHeader: {
-    ...TYPOGRAPHY.overline,
-    textTransform: 'uppercase',
-    marginBottom: SPACING.xs
   },
   separator: {
     height: StyleSheet.hairlineWidth,

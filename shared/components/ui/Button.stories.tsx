@@ -31,3 +31,12 @@ export const Disabled: Story = {
 };
 
 export const Large: Story = { args: { variant: 'primary', size: 'large', children: 'Continue' } };
+
+/** The ONE sanctioned disabled control: the type-to-confirm delete gate, its red label at 40 %. */
+export const DestructiveGated: Story = {
+  args: { variant: 'destructive', disabled: true, children: 'Delete account' }
+};
+
+export const DestructiveBusy: Story = {
+  args: { variant: 'destructive', loading: true, children: 'Signing out' }
+};

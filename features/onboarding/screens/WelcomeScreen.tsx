@@ -8,6 +8,7 @@ import { isFirstLaunch } from '@/core/settings/settings-repository';
 
 import { Button } from '@/shared/components/ui/Button';
 import { useTheme } from '@/shared/theme';
+import { TOUCH_TARGET } from '@/shared/theme/spacing';
 import { TYPOGRAPHY } from '@/shared/theme/typography';
 
 import { BrandedIcon } from '../components/BrandedIcon';
@@ -92,7 +93,7 @@ const WelcomeScreen = () => {
           accessibilityHint={t('onboarding.welcome.existingAccountHint')}
           style={{
             marginTop: 18,
-            minHeight: 44,
+            minHeight: TOUCH_TARGET.min,
             alignItems: 'center',
             justifyContent: 'center'
           }}

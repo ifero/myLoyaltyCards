@@ -172,13 +172,13 @@ When `onImageScan` is provided, the `bottomActions` zone renders two rows separa
 
 **Updated `bottomActions` layout:**
 
-| Element              | Style                                                                                                                            |
-| -------------------- | -------------------------------------------------------------------------------------------------------------------------------- |
-| Image entry row      | Same as `manualEntryRow`: `flexDirection: 'row'`, `height: TOUCH_TARGET.min (44)`, white text, icon left + label + chevron right |
-| Divider between rows | `height: StyleSheet.hairlineWidth`, `backgroundColor: 'rgba(255,255,255,0.2)'`                                                   |
-| Manual entry row     | Unchanged                                                                                                                        |
+| Element              | Style                                                                                                                                             |
+| -------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Image entry row      | Same as `manualEntryRow`: `flexDirection: 'row'`, `height: TOUCH_TARGET.min` (48 since Story 22.1), white text, icon left + label + chevron right |
+| Divider between rows | `height: StyleSheet.hairlineWidth`, `backgroundColor: 'rgba(255,255,255,0.2)'`                                                                    |
+| Manual entry row     | Unchanged                                                                                                                                         |
 
-**No vertical spacing change** — the two rows stack flush with the hairline divider. Total height increase to the `bottomActions` zone: `44 + hairline` ≈ 45px.
+**No vertical spacing change** — the two rows stack flush with the hairline divider. Total height increase to the `bottomActions` zone: `TOUCH_TARGET.min + hairline` — ≈ 45px when written, ≈ 49px since Story 22.1 raised the token to 48.
 
 ---
 
@@ -193,7 +193,7 @@ Follows the same `manualEntryRow` visual pattern exactly.
 | Trailing icon        | `MaterialIcons "chevron-right"` size 24, color `#FFFFFF` |
 | Typography           | `TYPOGRAPHY.subheadline` (15/20, weight 400)             |
 | Color                | `#FFFFFF`                                                |
-| Touch target         | `height: TOUCH_TARGET.min` (44px)                        |
+| Touch target         | `height: TOUCH_TARGET.min` (48px since Story 22.1)       |
 | `testID`             | `"scan-from-image-row"`                                  |
 | `accessibilityLabel` | `"Scan a barcode from a photo or screenshot"`            |
 | `accessibilityRole`  | `"button"`                                               |
@@ -330,19 +330,19 @@ flowchart TD
 
 ## 6. Accessibility Spec
 
-| Element                    | `testID`                     | `accessibilityLabel`                          | `accessibilityRole` | Notes                                      |
-| -------------------------- | ---------------------------- | --------------------------------------------- | ------------------- | ------------------------------------------ |
-| Scan from image row        | `scan-from-image-row`        | `"Scan a barcode from a photo or screenshot"` | `button`            | In `ScannerOverlay` bottom zone            |
-| Processing indicator       | `image-processing-indicator` | `"Scanning image for barcode"`                | `progressbar`       | Shown during decode                        |
-| MultiCodePickerSheet scrim | `multi-code-scrim`           | `"Dismiss barcode picker"`                    | `button`            | Invisible full-screen tap area             |
-| Drag handle                | `multi-code-drag-handle`     | `"Drag down to dismiss"`                      | `adjustable`        | `accessibilityHint: "Swipe down to close"` |
-| Sheet title                | —                            | _(not interactive)_                           | `header`            | Announces sheet context to screen readers  |
-| Code row 0–5               | `code-row-{n}`               | `"{format}, code {full value}"`               | `button`            | Full untruncated code in label             |
-| Cancel (sheet)             | `multi-code-cancel`          | `"Cancel, dismiss barcode picker"`            | `button`            | —                                          |
-| No-code banner container   | `no-code-found-banner`       | `"No barcode found in this image"`            | _(View)_            | `accessibilityLiveRegion="polite"`         |
-| Banner close icon          | `banner-close`               | `"Dismiss error message"`                     | `button`            | —                                          |
-| "Try another image" link   | `banner-retry-image`         | `"Try scanning a different image"`            | `button`            | —                                          |
-| "Enter manually" link      | `banner-manual-entry`        | `"Enter the card number manually"`            | `button`            | —                                          |
+| Element                    | `testID`                          | `accessibilityLabel`                          | `accessibilityRole` | Notes                                                                                                                 |
+| -------------------------- | --------------------------------- | --------------------------------------------- | ------------------- | --------------------------------------------------------------------------------------------------------------------- |
+| Scan from image row        | `scan-from-image-row`             | `"Scan a barcode from a photo or screenshot"` | `button`            | In `ScannerOverlay` bottom zone                                                                                       |
+| Processing indicator       | `image-processing-indicator`      | `"Scanning image for barcode"`                | `progressbar`       | Shown during decode                                                                                                   |
+| MultiCodePickerSheet scrim | `multi-code-picker-sheet-scrim`   | _(hidden from assistive tech)_                | —                   | Story 22.1: the shared sheet's scrim is touch-only; dismissal is Cancel, Android back or the VoiceOver escape gesture |
+| Grabber                    | `multi-code-picker-sheet-grabber` | _(decorative)_                                | —                   | Story 22.1 removed the `adjustable` handle: it announced a drag gesture that did not exist                            |
+| Sheet title                | —                                 | _(not interactive)_                           | `header`            | Announces sheet context to screen readers                                                                             |
+| Code row 0–5               | `code-row-{n}`                    | `"{format}, code {full value}"`               | `button`            | Full untruncated code in label                                                                                        |
+| Cancel (sheet)             | `multi-code-cancel`               | `"Cancel, dismiss barcode picker"`            | `button`            | —                                                                                                                     |
+| No-code banner container   | `no-code-found-banner`            | `"No barcode found in this image"`            | _(View)_            | `accessibilityLiveRegion="polite"`                                                                                    |
+| Banner close icon          | `banner-close`                    | `"Dismiss error message"`                     | `button`            | —                                                                                                                     |
+| "Try another image" link   | `banner-retry-image`              | `"Try scanning a different image"`            | `button`            | —                                                                                                                     |
+| "Enter manually" link      | `banner-manual-entry`             | `"Enter the card number manually"`            | `button`            | —                                                                                                                     |
 
 ---
 

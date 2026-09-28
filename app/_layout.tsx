@@ -75,7 +75,7 @@ try {
 
 /**
  * Header Right component with Settings button
- * Story 13.2: MI "settings" icon (26pt), primary color, 44pt touch target
+ * Story 13.2: MI "settings" icon (26pt), primary color, touch-target-sized (48pt, Story 22.1)
  */
 const HeaderRight = () => {
   const router = useRouter();
@@ -96,7 +96,7 @@ const HeaderRight = () => {
 
 /**
  * Header Left component with Add Card button
- * Story 13.2: MI "add" icon (28pt), primary color, 44pt touch target
+ * Story 13.2: MI "add" icon (28pt), primary color, touch-target-sized (48pt, Story 22.1)
  */
 const HeaderLeft = () => {
   const router = useRouter();
@@ -568,8 +568,8 @@ const RootLayout = () => {
 // left behind when Story 13.10 corrected the spinner's colour.
 const styles = StyleSheet.create((theme) => ({
   headerButton: {
-    height: 44,
-    width: 44,
+    height: theme.touchTarget.min,
+    width: theme.touchTarget.min,
     alignItems: 'center',
     justifyContent: 'center'
   },

@@ -4,10 +4,14 @@
  */
 
 import { act, render, screen, fireEvent } from '@testing-library/react-native';
+import { Dimensions, StyleSheet } from 'react-native';
 
+import { BarcodeFormat } from '@/core/schemas';
 import { logger } from '@/core/utils';
 
-import { ScannerOverlay } from './ScannerOverlay';
+import { TOUCH_TARGET } from '@/shared/theme/spacing';
+
+import { ScannerOverlay, getViewfinderSize } from './ScannerOverlay';
 
 jest.mock('@/core/utils', () => {
   const actual = jest.requireActual('@/core/utils');
@@ -65,7 +69,9 @@ jest.mock('react-native-reanimated', () => {
     default: { View: AnimatedView, Text: mockRN.Text },
     useSharedValue: (initial: number) => ({ value: initial }),
     useAnimatedStyle: () => ({}),
-    withTiming: (value: number) => value,
+    // A spy, so the scan line's sweep target can be read (Story 16.31, via 22.1). Created HERE,
+    // because this factory runs when ScannerOverlay is imported — before any module-level const.
+    withTiming: jest.fn((value: number) => value),
     withRepeat: (value: number) => value,
     withSpring: (value: number) => value,
     Easing: {
@@ -81,6 +87,15 @@ jest.mock('@/features/cards/hooks/useBarcodeScanner', () => ({
   useBarcodeScanner: (opts: unknown) => mockUseBarcodeScanner(opts),
   ScanResult: {}
 }));
+
+/**
+ * The action stack lays out long before an image scan can fail, and the banner derives its offset
+ * from that height (Story 16.30) — so a test showing the banner lets the stack measure first.
+ */
+const measureActionStack = (height = 154) =>
+  fireEvent(screen.getByTestId('scanner-bottom-actions'), 'layout', {
+    nativeEvent: { layout: { x: 0, y: 0, width: 393, height } }
+  });
 
 describe('ScannerOverlay', () => {
   const defaultProps = {
@@ -329,6 +344,7 @@ describe('ScannerOverlay', () => {
 
       it('renders NoCodeFoundBanner when imageError is true and onImageErrorDismiss provided', () => {
         render(<ScannerOverlay {...defaultProps} imageError onImageErrorDismiss={jest.fn()} />);
+        measureActionStack();
         expect(screen.getByTestId('no-code-found-banner')).toBeTruthy();
       });
 
@@ -337,6 +353,7 @@ describe('ScannerOverlay', () => {
         render(
           <ScannerOverlay {...defaultProps} imageError onImageErrorDismiss={onImageErrorDismiss} />
         );
+        measureActionStack();
         fireEvent.press(screen.getByTestId('banner-close'));
         expect(onImageErrorDismiss).toHaveBeenCalledTimes(1);
       });
@@ -351,6 +368,7 @@ describe('ScannerOverlay', () => {
             onImageErrorRetry={onImageErrorRetry}
           />
         );
+        measureActionStack();
         fireEvent.press(screen.getByTestId('banner-retry-image'));
         expect(onImageErrorRetry).toHaveBeenCalledTimes(1);
       });
@@ -365,6 +383,7 @@ describe('ScannerOverlay', () => {
             onImageErrorManualEntry={onImageErrorManualEntry}
           />
         );
+        measureActionStack();
         fireEvent.press(screen.getByTestId('banner-manual-entry'));
         expect(onImageErrorManualEntry).toHaveBeenCalledTimes(1);
       });
@@ -381,17 +400,173 @@ describe('ScannerOverlay', () => {
             onImageErrorDismiss={jest.fn()}
           />
         );
+        measureActionStack();
         expect(screen.getByText('Something went wrong reading that image')).toBeTruthy();
       });
 
       it("falls back to the banner's notFound copy when no reason is given", () => {
         render(<ScannerOverlay {...defaultProps} imageError onImageErrorDismiss={jest.fn()} />);
+        measureActionStack();
         expect(
           screen.getByText(
             "We couldn't read a barcode in this image — try scanning the card itself"
           )
         ).toBeTruthy();
       });
+    });
+  });
+
+  // Story 16.31, absorbed by 22.1 — the viewfinder is shaped to the code it expects. One scalar
+  // drove both sides, so the brackets were always a ~275pt square: right for QR, wrong for the
+  // linear symbologies that are most of the catalogue.
+  describe('viewfinder geometry (16.31)', () => {
+    const LINEAR: BarcodeFormat[] = ['EAN13', 'EAN8', 'CODE128', 'CODE39', 'UPCA'];
+
+    it.each(LINEAR)('is a wide rectangle for %s, at the frame proportions', (format) => {
+      const { width, height } = getViewfinderSize(393, format);
+      expect(width).toBeGreaterThan(height);
+      // The capture frame draws it 300 x 120 at 393pt; the code derives it from the width.
+      expect({ width, height }).toEqual({ width: 300, height: 120 });
+    });
+
+    it('is a square for QR', () => {
+      const { width, height } = getViewfinderSize(393, 'QR');
+      expect(width).toBe(height);
+    });
+
+    // The custom-card path enters with no brand, so no format: a real case, not a defensive one.
+    it('falls back to the wide rectangle when no format is expected', () => {
+      const { width, height } = getViewfinderSize(393, undefined);
+      expect(width).toBeGreaterThan(height);
+    });
+
+    it('scales with the screen rather than copying the frame constant', () => {
+      expect(getViewfinderSize(360, 'EAN13').width).toBeLessThan(300);
+      expect(getViewfinderSize(430, 'EAN13').width).toBeGreaterThan(300);
+    });
+
+    describe('in the overlay', () => {
+      beforeEach(() => {
+        mockUseBarcodeScanner.mockReturnValue({
+          permission: { granted: true },
+          hasScanned: false,
+          error: null,
+          handleBarcodeScanned: jest.fn(),
+          requestCameraPermission: jest.fn(),
+          reset: jest.fn(),
+          isReady: true
+        });
+      });
+
+      const { width: windowWidth } = Dimensions.get('window');
+      const box = () => StyleSheet.flatten(screen.getByTestId('viewfinder').props.style);
+
+      it('draws the brackets around the rectangle the expected format needs', () => {
+        render(<ScannerOverlay {...defaultProps} expectedFormat="EAN13" />);
+        expect(box()).toMatchObject(getViewfinderSize(windowWidth, 'EAN13'));
+      });
+
+      it('draws a square for an expected QR code', () => {
+        render(<ScannerOverlay {...defaultProps} expectedFormat="QR" />);
+        const { width, height } = box();
+        expect(width).toBe(height);
+      });
+
+      it('sweeps the scan line over the frame HEIGHT, not a stale square side', () => {
+        const { withTiming: mockWithTiming } = jest.requireMock('react-native-reanimated');
+        render(<ScannerOverlay {...defaultProps} expectedFormat="EAN13" />);
+        const { height } = getViewfinderSize(windowWidth, 'EAN13');
+        expect(mockWithTiming).toHaveBeenCalledWith(height - 4, expect.anything());
+      });
+
+      it('keeps the brackets at 32 / 4 / 12 — the rectangle changes, not the mark', () => {
+        render(<ScannerOverlay {...defaultProps} expectedFormat="EAN13" />);
+        expect(
+          StyleSheet.flatten(screen.getByTestId('viewfinder-corner-tl').props.style)
+        ).toMatchObject({
+          width: 32,
+          height: 32,
+          borderTopWidth: 4,
+          borderLeftWidth: 4,
+          borderTopLeftRadius: 12
+        });
+      });
+    });
+  });
+
+  // Story 16.30 + AC9, absorbed by 22.1. The banner sat at a hardcoded `bottom: 96` while the
+  // action stack below it was ~146pt tall and painted over it, burying both recovery links. The
+  // stack is now in flow, and the banner's offset is DERIVED from the stack's measured height.
+  describe('bottom actions and the scan banner (16.30, AC9)', () => {
+    beforeEach(() => {
+      mockUseBarcodeScanner.mockReturnValue({
+        permission: { granted: true },
+        hasScanned: false,
+        error: null,
+        handleBarcodeScanned: jest.fn(),
+        requestCameraPermission: jest.fn(),
+        reset: jest.fn(),
+        isReady: true
+      });
+    });
+
+    const withBanner = () =>
+      render(
+        <ScannerOverlay
+          {...defaultProps}
+          onImageScan={jest.fn()}
+          imageError
+          onImageErrorDismiss={jest.fn()}
+        />
+      );
+
+    it('lays the action stack out in flow, anchored to the bottom — never absolutely (AC9)', () => {
+      render(<ScannerOverlay {...defaultProps} />);
+      expect(
+        StyleSheet.flatten(screen.getByTestId('scanner-bottom-actions').props.style).position
+      ).not.toBe('absolute');
+      expect(
+        StyleSheet.flatten(screen.getByTestId('scanner-overlay').props.style).justifyContent
+      ).toBe('flex-end');
+    });
+
+    it('sits the banner 16pt above the measured stack, so nothing overlaps its links (16.30)', () => {
+      withBanner();
+      measureActionStack(154);
+
+      const anchor = StyleSheet.flatten(
+        screen.getByTestId('no-code-found-banner-anchor').props.style
+      );
+      expect(anchor.bottom).toBe(154 + 16);
+      // Its lower edge clears the top of the stack: no overlap, whatever the stack measures.
+      expect(anchor.bottom as number).toBeGreaterThan(154);
+    });
+
+    it('follows the stack when it grows (e.g. Dynamic Type), instead of a fixed offset', () => {
+      withBanner();
+      measureActionStack(154);
+      measureActionStack(210);
+      expect(
+        StyleSheet.flatten(screen.getByTestId('no-code-found-banner-anchor').props.style).bottom
+      ).toBe(210 + 16);
+    });
+
+    // Before the first layout there is no height to derive from; showing the banner then would
+    // put it at the bottom edge, under the rows it must clear.
+    it('waits for the stack to be measured before showing the banner', () => {
+      withBanner();
+      expect(screen.queryByTestId('no-code-found-banner')).toBeNull();
+      measureActionStack(154);
+      expect(screen.getByTestId('no-code-found-banner')).toBeTruthy();
+    });
+
+    it('keeps each action row at the touch-target height (16.33)', () => {
+      render(<ScannerOverlay {...defaultProps} onImageScan={jest.fn()} />);
+      for (const row of ['scan-from-image-row', 'manual-entry-row']) {
+        expect(StyleSheet.flatten(screen.getByTestId(row).props.style).height).toBe(
+          TOUCH_TARGET.min
+        );
+      }
     });
   });
 

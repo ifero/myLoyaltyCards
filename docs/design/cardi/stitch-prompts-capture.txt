@@ -116,9 +116,11 @@ WHAT READING THE CODE TURNED UP
     48px target — so a 48px glyph is an illustration placeholder, the same note the wallet
     `EmptyState` was pulled up for. Left as a plain icon here; illustrations are Wave B.
 
-13. MARGINS DRIFT, THIRD SIGHTING. `bottomActions` and `centeredContent` are both
-    `paddingHorizontal: 24`. Joins `CardForm` 32 and settings 24. The resolved rule is 16 for
-    the derived grid, 20 for everything else.
+13. MARGINS — NOT DRIFT. `bottomActions` and `centeredContent` are both 24, which IS the
+    rule: 24 for everything, 16 only for the derived card grid (the design system's Layout &
+    Spacing, adjudicated 2026-08-21 — 20 is off the 8px grid). Settings is 24 too; `CardForm`'s
+    32 is the one genuine one-off. (This said "20 for everything else" until Story 22.1, against
+    this file's own "24px left and right for everything".)
 
 14. THE BRAND PILL IS POSITIONED OFF THE BACK BUTTON, NOT THE GRID.
     `insets.top + SPACING.sm + TOUCH_TARGET.min + SPACING.md` — four values added at the call
@@ -448,9 +450,12 @@ MARGINS: 24px left and right.
 4. THE INSTRUCTION "Point camera at barcode" centred 16px below the viewfinder, in Inter 15px
    medium cream #F0F0E8 with a soft dark text shadow.
 
-5. THE BANNER, sitting 96px above the bottom edge of the frame, full width between the 24px
-   margins: a plate filled rgba(0, 0, 0, 0.80) with a 12px radius, no outline and no shadow,
-   padded 16px all round. Inside it:
+5. THE BANNER, sitting 16px above the TOP of the bottom actions (point 6) — placed by the
+   height of that action stack, never at a fixed distance from the frame's bottom edge. (This
+   said "96px above the bottom edge" until Story 22.1: the stack below is taller than 96px, so
+   the banner started inside it and the rows painted over both of its links — Story 16.30.)
+   Full width between the 24px margins: a plate filled rgba(0, 0, 0, 0.80) with a 12px
+   radius, no outline and no shadow, padded 16px all round. Inside it:
        "We couldn't read a barcode in this image — try scanning the card itself" in Inter 15px
        cream #F0F0E8, filling the width and wrapping onto two lines, with a 18px close ✕ in
        rgba(255,255,255,0.6) at the top right of the plate;

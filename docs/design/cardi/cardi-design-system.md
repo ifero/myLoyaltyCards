@@ -48,7 +48,7 @@ typography:
   display-lg:
     fontFamily: Space Grotesk
     fontSize: 34px
-    fontWeight: '800'
+    fontWeight: '700'
     lineHeight: 40px
     letterSpacing: -0.03em
   headline-md:
@@ -319,6 +319,11 @@ numbers, so digits align and don't jitter while someone reads them aloud.
 Thin weights are prohibited. Minimum body size is 15px. Headlines use tight tracking;
 small labels use slightly open tracking.
 
+**`display-lg` is weight 700, not 800 — AMENDED 2026-09-27 (Story 22.1, from Story 21.6's
+hand-off).** The frontmatter said 800, but Space Grotesk's heaviest master is 700 (its weight axis
+runs 300–700), so the app has never been able to draw 800 — a generator reading that value would
+synthesise a weight the product does not render.
+
 **Form field labels are UPPERCASE** — `label-bold` (Inter 13px, weight 600, +0.02em
 tracking), ink, sitting above the field. This ratifies deliberately what the generator
 originally chose by accident, on two grounds: that positive tracking already in the token is
@@ -415,11 +420,14 @@ decision, not a constraint. Placeholders, values and error messages stay sentenc
 > generators and frame tools cite this file in comments only — so the correction changes no
 > generated output; it removes a contradiction a reader would otherwise have to adjudicate again.
 >
-> **⛔ The touch-target half is still OPEN, and deliberately not fixed here.** This document and
-> its frontmatter both say 48; `TOUCH_TARGET.min` in `tokens/spacing.json` is still **44**, and
-> `TOUCH_TARGET.watch` is **32** against the same adjudicated 48. Moving them is a behavioural
-> change across every touch target in three apps, and the token is owned by **Story 22.1** — see
-> the tracker. A store-artwork story is the wrong place for it.
+> **✅ The touch-target half — APPLIED 2026-09-27 (Story 22.1, absorbing 16.33).**
+> `TOUCH_TARGET.min` in `tokens/spacing.json` is now **48**, and every layout that wrote a literal
+> 44 beside it now reads the token. `TOUCH_TARGET.watch` (32) is **retired rather than corrected**,
+> as [`cardi-watch-grammar.md`](cardi-watch-grammar.md) §5.4 decided: it had no reader, and neither
+> watch app — Swift and Kotlin — can read a TypeScript token, so a corrected 48 would have been an
+> unreachable constant that looks authoritative. Two layouts had to change shape, not just size:
+> five 48pt colour swatches no longer fit a fixed gap on a 375pt screen, so both pickers now spread
+> them across the width, as the form frame always drew them.
 
 - The **phone** home screen is a **2-column grid of brand tiles** (see Card tile). This is the
   shipped layout and it is correct — do not replace it with a single-column list of rows. **The
@@ -446,6 +454,21 @@ shadow bloom.
 
 ## Components
 
+**Every component below exists as a primitive in `shared/components/ui/` — BUILT 2026-09-27
+(Story 22.1).** That directory is the only one Storybook and Chromatic see, so a primitive placed
+anywhere else gets no story and no visual coverage. Screens compose these; they do not re-draw
+them.
+
+| component                     | primitive                                  |
+| ----------------------------- | ------------------------------------------ |
+| Card tile                     | `Tile` (+ `FavouriteBadge`)                |
+| Buttons                       | `Button`                                   |
+| The primary-action footer     | `PrimaryActionFooter`                      |
+| Input fields                  | `TextField` (+ `FieldLabel`, `FieldError`) |
+| Section header                | `SectionHeader`                            |
+| The hairline-outlined surface | `Surface`                                  |
+| Sheets                        | `BottomSheet`                              |
+
 ### Card tile (the core component)
 
 A **2-column grid** of tiles at a **171 : 140** ratio, 16px radius, width derived from the
@@ -456,11 +479,23 @@ generously — roughly 85% of the tile. A card belonging to a catalogue brand sh
 brand's hex and mark, not ours. Only a **custom** card (no brand) falls back to one of the
 five card accents with a first-letter avatar.
 
+**The mark is 85 % of the tile, not 60 % — RULED 2026-09-27 (Story 22.1, AC11).**
+`stitch-prompts-wallet.txt` said _"about 60% of the tile width"_, twice, against this document's
+85 %. The shipped tile implements 85 % — a box 85 % of the tile's width **and** height — and
+building against the prompt would have shrunk every brand mark by about 30 % on the screen this
+system calls the point of the product. This document wins; both prompt sites now say 85 %.
+
 Legibility rules that follow from filling with 45 different brand colours: a very light
 brand takes a 1px hairline outline so it doesn't dissolve into cream; a near-black brand
 takes a `#3A3A48` outline in dark mode. Foreground glyphs flip to white or ink by the
 tile's luminance. A favourite shows as a **beam `#FCCC0C` star on an opaque ink `#181824`
 plate**, 24px, pinned top-right, so it stays legible on any brand colour including yellow.
+
+**The light-brand hairline is the system hairline, `#D6D6CB` light / `#3A3A48` dark — AMENDED
+2026-09-27 (Story 22.1, AC3).** It was an 8 % black wash, and the tile also carried a light-mode
+drop shadow, which this document forbids. With the shadow removed the hairline is the ONLY thing
+between a white brand and the cream ground, so it takes the same value as every other outline.
+Tap feedback is the 0.98× scale from _Elevation_, not the 70 % dim the tile used to do.
 
 **The plate is opaque and it is ink — AMENDED 2026-09-16 (Story 21.2, AC9), replacing "an opaque
 white plate".** White was invisible on a light brand, which is the case the plate exists for, and
@@ -475,8 +510,28 @@ the brand's colour and falls back from beam to ink on a light field.
 - **Primary:** ink fill, white text, 12px radius, 52px tall, full width, anchored in the
   footer (see below).
 - **Secondary:** transparent with a 1px ink outline.
-- **Destructive:** borderless, `#C41E1E` text, trailing icon.
+- **Destructive:** borderless, `#C41E1E` text, **no icon**.
 - **No FAB. Ever.**
+
+**The destructive button carries no icon — AMENDED 2026-09-27 (Story 22.1, AC11).** This line
+said _"trailing icon"_ while every card-detail and settings prompt says _"no red fill, no border,
+no outline, no trash icon"_. The frames are the later and more specific answer, so this document
+follows them. It is text only, in `#C41E1E` — `#FF453A` in dark, because the light red fails AA
+there (3.55:1 on black, 2.97:1 on an ink sheet, against 5.16:1 for `#FF453A` on ink) — and it
+acknowledges a press like every other transparent button, with an 8 % wash of its own label colour. Until Story 22.1 it was a solid red slab with a white label and a border, whose
+pressed colour equalled its fill.
+
+**Every button is 12px, unconditionally.** The shared button was 14; it is corrected, not
+justified. Heights split by role: the primary action in a footer is **52px**, every other button
+takes the **48px** touch target.
+
+**One control in the whole system is drawn disabled — the type-to-confirm delete gate — RECORDED
+2026-09-27 (Story 22.1, AC11).** `stitch-prompts-settings.txt` specs the delete-account sheet's
+button as _"the ONE place in this system where a control is drawn disabled, because the gate is
+the whole point"_: the borderless destructive label at **40 %**, inert until the word is typed.
+That is a deliberate carve-out from _"the primary action is always enabled"_ and from Forbidden's
+_"a disabled button as a form's resting state"_, and it is the only one: a gate that EXISTS to
+refuse is not a form refusing to say which field is wrong. Nothing else takes this rendering.
 
 ### The primary-action footer
 
@@ -563,6 +618,93 @@ barcode — not an arithmetic that was only ever true of the viewfinder.
 1px outline, 12px radius, label **always visible above** the field (never floating), 48px
 minimum height.
 
+- **The label is the form label from _Typography_** — `label-bold`, uppercase, ink — and every
+  field in a form wears it, including the ones that are not text inputs: the colour picker and a
+  read-only value. A read-only value is that label over **plain text, with no box**; a box is
+  what makes a value read as a control.
+- **A card number is set in `mono-code`** (JetBrains Mono 16, weight 500), in the input as on the
+  barcode, so the digits align while someone reads them aloud. Both the add and the edit flow do
+  it — ADDED 2026-09-27 (Story 22.1, taking Story 21.6's hand-off).
+- **The error idiom:** `captionMd` (Inter 13) in the error colour, 4px below the field, whose
+  outline turns the same colour. It is a polite live region, which Android announces as it
+  appears; iOS has no equivalent, and reads it with the field. Field validation lives here; a
+  failed request is a different idiom and is not drawn under a field.
+- The height is the touch-target token, never a literal, so it moves with the token.
+
+### Section header
+
+The uppercase label above a group of rows — TRANSCRIBED 2026-09-27 (Story 22.1, AC11) from
+`stitch-prompts-settings.txt`, which carried it while this document did not:
+
+- **`overline`: Inter 12px, weight 600, uppercase, +0.05em tracking** (0.6pt in React Native,
+  where `letterSpacing` is in points), **muted `#55555F`** (`textSecondary`; `#B5B5AB` in dark),
+  sitting **8px above its rows**. The 8px is the parent's gap, not the header's margin.
+- **It is chrome, and it is below the 15px body floor on purpose.** Story 21.6 (AC8b) carved it
+  out by name as part of the chrome tier — a label for the rows beneath it, never a sentence.
+- **The colour belongs to the component, not the call site.** The four copies it replaced split
+  1-vs-3 — `textTertiary` in Settings, `textSecondary` in the brand list, card detail and conflict
+  card, each injected inline — and there is one colour, so the component takes no override.
+- **The capitals are a style, never the string.** Uppercasing the string makes a screen reader
+  spell out letters; the brand list did both.
+
+**Two uppercase labels exist, and the rule is the TIER, not the component** (Story 22.1, AC11):
+
+| label                     | treatment                 | for                                                         |
+| ------------------------- | ------------------------- | ----------------------------------------------------------- |
+| `overline` 12 / +0.05em   | a label for a **group**   | section heads, table heads, the account block's "Signed in" |
+| `label-bold` 13 / +0.02em | a label for **one field** | every input, the colour picker, a read-only value           |
+
+So the type-to-confirm label inside the delete-account sheet is `label-bold`, because it labels
+one input — the settings frame drew it at 12 / +0.05em, which would have built that sheet twice.
+The frame and its prompt are corrected to match.
+
+### The hairline-outlined surface
+
+A container that sits on the ground as a **tonal layer** — **white `#FFFFFF` on cream, ink
+`#181824` on black** — bounded by a **1px hairline** (`#D6D6CB` / `#3A3A48`) at the **16px card
+radius**, never by a shadow. It has no padding of its own, because what it holds pads itself
+(settings rows are 12 / 16, the account block 12 / 16, the guest block 24), and it clips to its
+radius. Rows inside it are separated by **full-width 1px hairline rules**, not by gaps. This is
+the settings list, the account block and the card-detail MANAGE block.
+
+### Sheets
+
+TRANSCRIBED 2026-09-27 (Story 22.1, AC11) from `stitch-prompts-settings.txt` and the settings
+frames, which carried the whole spec while this document gave a sheet only a radius:
+
+- **Anchored to the bottom edge, full width**, white `#FFFFFF` — **ink `#181824` in dark** —
+  with a **16px radius on the TOP two corners only**; the bottom corners are square. The home
+  indicator sits ON the sheet: it pads 8px above the bottom safe-area inset.
+- **The scrim is ink `#181824` at 40 %** across the whole frame, never a flat black. The status bar
+  stays legible above it — it is the system's layer, not the app's.
+- **The grabber: 36 × 4, fully rounded, solid `#D6D6CB`** (`#3A3A48` in dark), **8px from the
+  top.** It is decoration — there is no drag gesture behind it — so it is not an accessibility
+  element. ⚠️ The shared sheet drew 40 × 4 at 40 % opacity until Story 22.1; the one hand-rolled
+  sheet (the multi-code picker) had the spec size all along.
+- **24px margins.** The title is **`sheetTitle` — Space Grotesk 20 / 28, bold** — the eighth token
+  Story 21.6 (AC5b) derived for sheet, dialog and panel titles; `headline-sm` stays Inter, because
+  the same 20px sets the barcode store name, which does not wear the display face. A description
+  follows **8px** below in Inter 15, muted; content **16px** below that — **24px** when the
+  content is a stack of actions, as the confirm, acknowledge and type-to-confirm frames draw it.
+- **Rows are 48px minimum**, divided by hairline rules. An option list runs **edge to edge**, its
+  rules spanning the sheet and its content on the 24px margin, in line with the title.
+- **Actions are full-width 52px buttons, 8px apart.** A destructive action is the borderless text
+  button (_Buttons_) and sits **above** Cancel, which carries the visible outline — the bordered
+  control is the safe one. ⚠️ The two confirm sheets that ship today, sign-out and delete-account,
+  are **not** the reference: they stack Cancel above the destructive action — Story 13.6's
+  deliberate "inverted CTA order", which these frames reverse — at the default 48px, 10px apart.
+  Story 22.7 rebuilds them.
+- **It never grows past 80 % of the window**; a long list inside it scrolls.
+- **Motion: the scrim fades and only the sheet slides**, 220 ms, ease-out, on the UI thread, and
+  under Reduce Motion it simply appears — SETTLED 2026-09-27 (Story 22.1, AC8). **The sheet stays
+  opaque and travels exactly its own height**, in and out. Neither earlier motion did: the shared
+  sheet used the native `slide` modal, which carried the dark scrim up the screen with it, and the
+  multi-code picker faded its whole modal, so the rows behind a rising sheet showed through it, and
+  travelled a full window height, so a short sheet spent most of the 220 ms off the screen.
+- **The scrim is touch-only.** It is hidden from assistive technology, which dismisses through the
+  platform instead — Android back, the VoiceOver escape gesture — and the sheet is a modal
+  **container**, never a single accessibility element, so every control in it stays reachable.
+
 ### Icons
 
 One family, **outline style, 1.5px stroke, 24px** on a 48px target, ink-coloured, square
@@ -609,4 +751,5 @@ dark ground** · thin font weights · desktop or
 tablet frames · **a phone screen at any frame other than 393 × 852** · **a watch screen at
 any frame not in the Frames table** · per-screen invented illustration styles ·
 **a primary action that floats over content or is positioned absolutely** · **a disabled
-button as a form's resting state**.
+button as a form's resting state** (the type-to-confirm delete gate is the one sanctioned
+disabled control — see _Buttons_).

@@ -8,14 +8,15 @@
 
 import { MaterialIcons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
-import { Pressable, View, Text } from 'react-native';
+import { Pressable, View } from 'react-native';
 import { StyleSheet } from 'react-native-unistyles';
 
 import { CardColor, CARD_COLOR_KEYS } from '@/core/schemas';
 
+import { FieldLabel } from '@/shared/components/ui/TextField';
 import { CARD_COLORS } from '@/shared/theme';
 import { getContrastForeground } from '@/shared/theme/luminance';
-import { TYPOGRAPHY } from '@/shared/theme/typography';
+import { TOUCH_TARGET } from '@/shared/theme/spacing';
 
 interface ColorPickerProps {
   value: CardColor;
@@ -29,7 +30,7 @@ interface ColorPickerProps {
  * Per AC6:
  * - 5 color options displayed as circles: Blue, Red, Green, Orange, Grey (default)
  * - Selected color shows checkmark overlay
- * - Touch target: 44px diameter
+ * - Touch target: the 48pt token (Story 22.1; it was a literal 44)
  */
 export function ColorPicker({ value, onChange, testID }: ColorPickerProps) {
   const { t } = useTranslation();
@@ -42,8 +43,8 @@ export function ColorPicker({ value, onChange, testID }: ColorPickerProps) {
   };
 
   return (
-    <View testID={testID}>
-      <Text style={styles.label}>{t('addCard.setup.colorLabel')}</Text>
+    <View testID={testID} style={styles.container}>
+      <FieldLabel>{t('addCard.setup.colorLabel')}</FieldLabel>
       <View style={styles.row}>
         {CARD_COLOR_KEYS.map((color) => {
           const isSelected = value === color;
@@ -88,18 +89,18 @@ export function ColorPicker({ value, onChange, testID }: ColorPickerProps) {
 }
 
 const styles = StyleSheet.create({
-  label: {
-    ...TYPOGRAPHY.labelBold,
-    marginBottom: 16,
-    color: '#6B7280'
-  },
-  row: {
-    flexDirection: 'row',
+  container: {
     gap: 16
   },
+  // Spread across the width rather than a fixed gap: at the 48pt target, five swatches and 16pt
+  // gaps need 304pt, more than the edit form's 32pt margins leave on a 360dp Android.
+  row: {
+    flexDirection: 'row',
+    justifyContent: 'space-between'
+  },
   swatch: {
-    height: 44,
-    width: 44,
+    height: TOUCH_TARGET.min,
+    width: TOUCH_TARGET.min,
     alignItems: 'center',
     justifyContent: 'center',
     borderRadius: 9999

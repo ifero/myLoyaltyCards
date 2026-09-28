@@ -23,7 +23,9 @@
   "TOUCH_TARGET": {
     "$type": "number",
     "$description": "Minimum touch target sizes for accessibility (unitless density-independent pixels).",
-    "min": { "$value": 44, "$description": "44x44 minimum (WCAG / HIG)" },
-    "watch": { "$value": 32, "$description": "Smaller minimum for watch screens" }
+    "min": {
+      "$value": 48,
+      "$description": "48x48 minimum: the max of Apple HIG 44pt and Material 48dp, and on the 8pt grid (cardi-design-system.md, Layout & Spacing). There is no watch key: both watch apps are Swift and Kotlin and cannot read this token (cardi-watch-grammar.md §5.4)."
+    }
   }
 }

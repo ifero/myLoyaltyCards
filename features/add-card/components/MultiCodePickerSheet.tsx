@@ -1,31 +1,28 @@
 /**
  * MultiCodePickerSheet
  * Story 2.9: Scan Cards from Image or Screenshot (AC5)
+ * Story 22.1: Drawn by the shared BottomSheet (AC8)
  *
  * Bottom sheet shown when multiple barcodes are detected in a single image.
  * Displays up to 6 CodeRow items. One tap resolves and routes to setup.
- * Swipe/cancel dismisses without action.
+ * Cancel, the scrim or the platform dismiss closes it without action.
+ *
+ * It used to be the one hand-rolled sheet in the app — its own Modal, scrim, 220 ms slide and
+ * handle. The shared sheet now does all four, and took this sheet's slide as its own (the scrim
+ * fades, the sheet slides) along with its 36 × 4 handle, which was the spec size all along.
  */
 
 import { MaterialIcons } from '@expo/vector-icons';
-import React, { useEffect } from 'react';
+import React from 'react';
 import { useTranslation } from 'react-i18next';
-import { View, Text, Pressable, FlatList, StyleSheet, Modal } from 'react-native';
-import Animated, {
-  useSharedValue,
-  useAnimatedStyle,
-  withTiming,
-  Easing
-} from 'react-native-reanimated';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { View, Text, Pressable, FlatList, StyleSheet } from 'react-native';
 
+import { BottomSheet } from '@/shared/components/ui/BottomSheet';
 import { useTheme } from '@/shared/theme';
-import { SPACING, TOUCH_TARGET } from '@/shared/theme/spacing';
+import { LAYOUT, SPACING, TOUCH_TARGET } from '@/shared/theme/spacing';
 import { TYPOGRAPHY } from '@/shared/theme/typography';
 
 import { DetectedCode } from '../hooks/useImageScan';
-
-const SHEET_ANIM_MS = 220;
 
 interface MultiCodePickerSheetProps {
   visible: boolean;
@@ -104,7 +101,6 @@ export const MultiCodePickerSheet: React.FC<MultiCodePickerSheetProps> = ({
 }) => {
   const { theme } = useTheme();
   const { t } = useTranslation();
-  const insets = useSafeAreaInsets();
   const formatDisplayNames: Record<string, string> = {
     CODE128: t('addCard.multiCode.formats.CODE128'),
     EAN13: t('addCard.multiCode.formats.EAN13'),
@@ -118,142 +114,68 @@ export const MultiCodePickerSheet: React.FC<MultiCodePickerSheetProps> = ({
     // records why the symbology set deliberately stays at six.
   };
 
-  const translateY = useSharedValue(400);
-
-  useEffect(() => {
-    translateY.value = withTiming(visible ? 0 : 400, {
-      duration: SHEET_ANIM_MS,
-      easing: Easing.out(Easing.ease)
-    });
-  }, [visible, translateY]);
-
-  const sheetStyle = useAnimatedStyle(() => ({
-    transform: [{ translateY: translateY.value }]
-  }));
-
-  if (!visible && codes.length === 0) return null;
+  // The caller empties `codes` in the same render that closes the sheet, so the sheet keeps the
+  // last list it showed: it slides out with its rows, rather than vanishing or collapsing first.
+  const [shownCodes, setShownCodes] = React.useState(codes);
+  if (codes.length > 0 && codes !== shownCodes) {
+    setShownCodes(codes);
+  }
 
   return (
-    <Modal
+    <BottomSheet
       visible={visible}
-      transparent
-      animationType="fade"
-      onRequestClose={onDismiss}
+      onClose={onDismiss}
+      title={t('addCard.multiCode.title')}
+      description={t('addCard.multiCode.subtitle')}
       testID={testID}
     >
-      {/* Scrim */}
-      <Pressable
-        onPress={onDismiss}
-        testID="multi-code-scrim"
-        accessibilityLabel={t('addCard.multiCode.dismissAccessibilityLabel')}
-        style={styles.scrim}
+      {/* Code list — scrolls past four rows, inside the sheet's height cap */}
+      <FlatList
+        data={shownCodes}
+        keyExtractor={(_, i) => String(i)}
+        scrollEnabled={shownCodes.length > 4}
+        renderItem={({ item, index }) => (
+          <CodeRow
+            code={item}
+            index={index}
+            onPress={() => onSelect(item)}
+            accessibilityLabel={`${formatDisplayNames[item.format] ?? 'Barcode'}, code ${item.value}`}
+            displayFormat={formatDisplayNames[item.format] ?? 'Barcode'}
+            borderColor={theme.border}
+            textPrimary={theme.textPrimary}
+            textSecondary={theme.textSecondary}
+            themePrimary={theme.primary}
+            textTertiary={theme.textTertiary}
+            backgroundSubtle={theme.backgroundSubtle}
+          />
+        )}
       />
 
-      {/* Sheet */}
-      <Animated.View
-        style={[styles.sheet, { backgroundColor: theme.surface }, sheetStyle]}
-        accessibilityViewIsModal
+      {/* Cancel */}
+      <Pressable
+        onPress={onDismiss}
+        accessibilityRole="button"
+        accessibilityLabel={t('addCard.multiCode.cancelAccessibilityLabel')}
+        testID="multi-code-cancel"
+        style={styles.cancelButton}
       >
-        {/* Drag handle */}
-        <View style={styles.dragHandleContainer}>
-          <View
-            testID="multi-code-drag-handle"
-            accessibilityRole="adjustable"
-            accessibilityLabel={t('addCard.multiCode.dragDismissAccessibilityLabel')}
-            accessibilityHint={t('addCard.multiCode.dragDismissHint')}
-            style={[styles.dragHandle, { backgroundColor: theme.border }]}
-          />
-        </View>
-
-        {/* Title + subtitle */}
-        <Text accessibilityRole="header" style={[styles.sheetTitle, { color: theme.textPrimary }]}>
-          {t('addCard.multiCode.title')}
+        <Text style={[styles.cancelText, { color: theme.error }]}>
+          {t('common.actions.cancel')}
         </Text>
-        <Text style={[styles.sheetSubtitle, { color: theme.textSecondary }]}>
-          {t('addCard.multiCode.subtitle')}
-        </Text>
-
-        {/* Code list */}
-        <FlatList
-          data={codes}
-          keyExtractor={(_, i) => String(i)}
-          scrollEnabled={codes.length > 4}
-          renderItem={({ item, index }) => (
-            <CodeRow
-              code={item}
-              index={index}
-              onPress={() => onSelect(item)}
-              accessibilityLabel={`${formatDisplayNames[item.format] ?? 'Barcode'}, code ${item.value}`}
-              displayFormat={formatDisplayNames[item.format] ?? 'Barcode'}
-              borderColor={theme.border}
-              textPrimary={theme.textPrimary}
-              textSecondary={theme.textSecondary}
-              themePrimary={theme.primary}
-              textTertiary={theme.textTertiary}
-              backgroundSubtle={theme.backgroundSubtle}
-            />
-          )}
-          style={styles.codeList}
-        />
-
-        {/* Cancel */}
-        <Pressable
-          onPress={onDismiss}
-          accessibilityRole="button"
-          accessibilityLabel={t('addCard.multiCode.cancelAccessibilityLabel')}
-          testID="multi-code-cancel"
-          style={[styles.cancelButton, { paddingBottom: Math.max(insets.bottom, SPACING.md) }]}
-        >
-          <Text style={[styles.cancelText, { color: theme.error }]}>
-            {t('common.actions.cancel')}
-          </Text>
-        </Pressable>
-      </Animated.View>
-    </Modal>
+      </Pressable>
+    </BottomSheet>
   );
 };
 
 const styles = StyleSheet.create({
-  scrim: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(0,0,0,0.5)'
-  },
-  sheet: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-    maxHeight: '80%'
-  },
-  dragHandleContainer: {
-    alignItems: 'center',
-    paddingTop: SPACING.sm,
-    paddingBottom: SPACING.md
-  },
-  dragHandle: {
-    width: 36,
-    height: 4,
-    borderRadius: 2
-  },
-  sheetTitle: {
-    paddingHorizontal: SPACING.md,
-    ...TYPOGRAPHY.sheetTitle
-  },
-  sheetSubtitle: {
-    paddingHorizontal: SPACING.md,
-    marginTop: SPACING.xs,
-    ...TYPOGRAPHY.bodyMd
-  },
-  codeList: {
-    marginTop: SPACING.md
-  },
+  // Edge to edge: the rules span the sheet, and the content sits on the sheet's own margin,
+  // in line with the title.
   codeRow: {
     flexDirection: 'row',
     alignItems: 'center',
     height: 56,
-    paddingHorizontal: SPACING.md,
+    marginHorizontal: -LAYOUT.screenHorizontalMargin,
+    paddingHorizontal: LAYOUT.screenHorizontalMargin,
     borderBottomWidth: StyleSheet.hairlineWidth
   },
   codeRowIcon: {

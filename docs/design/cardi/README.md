@@ -31,7 +31,7 @@ run started 2026-08-11) whose scratchpad lived in `/tmp` and whose API connectio
 | `frames/cardi-form-frames.html`         | **The reference implementation.** Hand-authored, exactly 393 × 852, all four states. This is what screens derive from — not the PNGs. Open with `?probe` for a measured geometry dump.        |
 | `frames/cardi-wallet-frames.html`       | **The wallet frames** — populated / empty / single-card / no-results, hand-authored at 393 × 852. Self-contained; shares its token block with the form file by copy, not by link.             |
 | `frames/cardi-settings-frames.html`     | **The settings frames** — signed-in / guest plus one frame per sheet shape, hand-authored at 393 × 852. Frames C–F share one backdrop string, so it cannot drift.                             |
-| `frames/cardi-document-frames.html`     | **The document frames** — prose / searchable FAQ / two-column table, hand-authored at 393 × 852. No repeated body title; 20px margins.                                                        |
+| `frames/cardi-document-frames.html`     | **The document frames** — prose / searchable FAQ / two-column table, hand-authored at 393 × 852. No repeated body title; 24px margins.                                                        |
 | `frames/0*.png`                         | Stitch's actual output, kept as evidence. Faithful to what the generator produced, including three defects it cannot avoid — see _The 2026-08-15 audit_.                                      |
 
 ## The thesis
@@ -220,7 +220,9 @@ Two code findings that fed the decision, neither fixed here:
   is the actual implementation story.
 - **Three answers to the screen margin:** `CardForm` hardcodes `paddingHorizontal: 32`,
   `AuthScreenLayout` uses the `layout.screenHorizontalMargin` token, and the DS specifies
-  20px. Worth a separate pass.
+  20px. Worth a separate pass. → **Resolved 2026-08-21:** the design system adjudicated
+  **24** against its own 20 (20 is off the 8px grid), so the token was right and `CardForm`'s
+  32 is the one genuine one-off. See `cardi-design-system.md` § _Layout & Spacing_.
 
 ### Resolved 2026-08-14 — the four state frames, and the label case
 
@@ -536,7 +538,8 @@ just the frames:
   `TILE_WIDTH = 171` is `(390 − 2×16 − 16) / 2`, frozen in `gridLayout.ts` with a documented
   derivation and tests; at 20px the tile stops being 171. **The system needs amending:**
   20px is the single-column (form / settings / document) margin, the grid is 16. This is the
-  _fourth_ answer to the margin question in this repo.
+  _fourth_ answer to the margin question in this repo. → **Amended 2026-08-21:** the
+  single-column margin is **24**, not 20 (20 is off the 8px grid); the grid stays 16.
 - **The shipped empty state violates the system four times** — a per-screen invented
   illustration, accent dots in `#FFCC00` (Esselunga's exact yellow) and `#E2231A` (Coop's
   exact red) used as decoration, a coloured **glow shadow** under the CTA, and a 240 × 50
@@ -719,10 +722,11 @@ field, an accordion and two buttons.
 | value    | where           | why                                                  |
 | -------- | --------------- | ---------------------------------------------------- |
 | **16px** | card grid       | derived — `TILE_WIDTH` 171 depends on it, with tests |
-| **20px** | everything else | the system default                                   |
+| **24px** | everything else | the system default                                   |
 
-`CardForm`'s 32, `SettingsScreen`'s 24 and these three screens' 48 are all drift, and all of
-them should become 20.
+`CardForm`'s 32 and these three screens' 48 are drift, and both should become 24;
+`SettingsScreen` was never drifting. (This table said 20 until Story 22.1 — the design system
+adjudicated 24 on 2026-08-21, because 20 is off the 8px grid.)
 
 > **Corrected 2026-08-15, after seeing it drawn.** This section first claimed the margin was
 > "a function of content" and defended the document screens' 48px as a _reading measure_.
@@ -1308,9 +1312,11 @@ frame too.
    failure, and neither file was ever the source of truth for those values:
    `cardi-design-system.md` is.
 
-3. **Amend the design system on the screen margin.** 20px is the single-column margin; the
+3. ~~**Amend the design system on the screen margin.** 20px is the single-column margin; the
    grid is 16pt, and the 171px tile arithmetic depends on it. Right now the system states a
-   single figure that the wallet cannot honour.
+   single figure that the wallet cannot honour.~~ — **done 2026-08-21**, in the other
+   direction: the single-column margin is **24** (20 is off the 8px grid) and the derived grid
+   is 16. The frontmatter caught up on 2026-09-24 (Story 21.5).
 4. Re-verify the Stitch design system hasn't been clobbered again since 2026-08-12.
 5. ~~The Stitch canvas is ten screens and needs a clear-out~~ — **done 2026-08-15.** The
    superseded decoy (`b1a1e6e6…` "Add Card Form" — barcode format row, "Save card", an
@@ -1325,6 +1331,9 @@ frame too.
    default; that really is UI-only, and the canvas is inert to synthetic clicks.
 
 6. Decide the `orange` / `grey` → Cardì card-colour migration before the tokens PR.
-7. Three answers to the screen margin (`CardForm` 32px hardcoded, `AuthScreenLayout` token,
+7. ~~Three answers to the screen margin (`CardForm` 32px hardcoded, `AuthScreenLayout` token,
    DS 20px) and the busy-button divergence — the shared `Button` greys its fill when
-   `loading`, where the DS now says busy keeps the ink.
+   `loading`, where the DS now says busy keeps the ink.~~ — **both resolved.** The margin is
+   24 (adjudicated 2026-08-21; `CardForm`'s 32 is the one-off Story 22.6 owns), and since
+   Story 22.1 a busy `Button` keeps its fill, swaps its label for a spinner and is announced as
+   busy rather than disabled.

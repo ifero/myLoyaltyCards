@@ -6,7 +6,11 @@ import * as BottomSheetStories from './BottomSheet.stories';
 import * as ButtonStories from './Button.stories';
 import * as CardShellStories from './CardShell.stories';
 import * as ColorPickerStories from './ColorPicker.stories';
+import * as PrimaryActionFooterStories from './PrimaryActionFooter.stories';
+import * as SectionHeaderStories from './SectionHeader.stories';
+import * as SurfaceStories from './Surface.stories';
 import * as TextFieldStories from './TextField.stories';
+import * as TileStories from './Tile.stories';
 import * as ToggleSwitchStories from './ToggleSwitch.stories';
 import { StoryDecorator } from '../../../.storybook/StoryDecorator';
 
@@ -18,7 +22,8 @@ import { StoryDecorator } from '../../../.storybook/StoryDecorator';
  * babel, so no Storybook runtime is pulled into jest) and, for every story,
  * render it through the SAME decorator stack the Storybook preview uses, in both
  * light and dark. This validates AC1 (light/dark via ThemeProvider decorator)
- * and AC2 (a story module exists for each of the 7 primitives) inside the
+ * and AC2 (a story module exists for each primitive — 7 at Story 16.5, 11 since Story 22.1
+ * added the footer, section header, surface and tile) inside the
  * existing test:coverage merge gate. The web-visual pipeline (build-storybook +
  * Chromatic) validates pixel-level rendering.
  */
@@ -42,7 +47,12 @@ const modules: Record<string, CsfModule> = {
   CardShell: CardShellStories as unknown as CsfModule,
   ActionRow: ActionRowStories as unknown as CsfModule,
   ColorPicker: ColorPickerStories as unknown as CsfModule,
-  BottomSheet: BottomSheetStories as unknown as CsfModule
+  BottomSheet: BottomSheetStories as unknown as CsfModule,
+  // Story 22.1 — the design-system primitives the Epic 22 screens consume.
+  PrimaryActionFooter: PrimaryActionFooterStories as unknown as CsfModule,
+  SectionHeader: SectionHeaderStories as unknown as CsfModule,
+  Surface: SurfaceStories as unknown as CsfModule,
+  Tile: TileStories as unknown as CsfModule
 };
 
 const getStories = (mod: CsfModule): [string, StoryObject][] =>
@@ -72,8 +82,10 @@ const canvasBackground = (theme: 'light' | 'dark'): unknown => {
 };
 
 describe('shared/components/ui stories', () => {
-  it('defines a story module for each of the 7 primitives (AC2)', () => {
-    expect(Object.keys(modules)).toHaveLength(7);
+  // Deliberate, not incidental: Story 22.1 took this from 7 to 11. Adding a primitive means
+  // adding its story module here AND raising this count in the same change.
+  it('defines a story module for each of the 11 primitives (AC2)', () => {
+    expect(Object.keys(modules)).toHaveLength(11);
   });
 
   Object.entries(modules).forEach(([name, mod]) => {

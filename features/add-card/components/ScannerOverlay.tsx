@@ -1,8 +1,10 @@
 /**
  * ScannerOverlay Component
  * Story 13.4: Restyle Add Card Flow (AC3)
+ * Story 22.1: Viewfinder shaped to the expected format (16.31); banner clear of the actions
+ *             (16.30); the action stack in flow, never absolute (AC9)
  *
- * Full-bleed camera viewfinder with white corner brackets and blue scan line.
+ * Full-bleed camera viewfinder with white corner brackets and a beam scan line.
  * Renders a CameraView with the barcode scanner hook and visual decorations.
  */
 
@@ -18,7 +20,8 @@ import {
   Platform,
   StyleSheet,
   useWindowDimensions,
-  ActivityIndicator
+  ActivityIndicator,
+  type LayoutChangeEvent
 } from 'react-native';
 import Animated, {
   useSharedValue,
@@ -35,7 +38,7 @@ import { logger } from '@/core/utils';
 import { Button } from '@/shared/components/ui/Button';
 import { useTheme } from '@/shared/theme';
 import { IDENTITY_COLORS } from '@/shared/theme/colors';
-import { SPACING, TOUCH_TARGET } from '@/shared/theme/spacing';
+import { LAYOUT, SPACING, TOUCH_TARGET } from '@/shared/theme/spacing';
 import { TYPOGRAPHY } from '@/shared/theme/typography';
 
 import { useBarcodeScanner, ScanResult } from '@/features/cards/hooks/useBarcodeScanner';
@@ -103,13 +106,61 @@ const classifyMountError = (
   return 'other';
 };
 
-const VIEWFINDER_WIDTH_RATIO = 0.7;
+/**
+ * Which rectangle each symbology needs (Story 16.31, via 22.1). A `Record` over the whole union,
+ * so a new format is a compile error here until someone decides its shape.
+ */
+const VIEWFINDER_SHAPE: Record<BarcodeFormat, 'wide' | 'square'> = {
+  EAN13: 'wide',
+  EAN8: 'wide',
+  CODE128: 'wide',
+  CODE39: 'wide',
+  UPCA: 'wide',
+  QR: 'square'
+};
+
+/**
+ * The wide frame: 300 × 120 at the capture frame's 393pt — an EAN-13 is ~4.75 : 1, and a
+ * viewfinder teaches people to fill it, so a square one sends them backing away from a linear
+ * code until it is small. Derived from the width rather than copied, so it scales.
+ */
+const WIDE_WIDTH_RATIO = 300 / 393;
+const WIDE_ASPECT = 300 / 120;
+
+/** The square frame, for QR: the 70 % of the width every format used to get. */
+const SQUARE_WIDTH_RATIO = 0.7;
+
+export type ViewfinderSize = { width: number; height: number };
+
+/**
+ * The viewfinder's rectangle for the code about to be scanned. With no expected format — the
+ * custom-card path enters with no brand — it is the WIDE one, because linear formats are the
+ * large majority of the catalogue.
+ */
+export const getViewfinderSize = (
+  screenWidth: number,
+  expectedFormat: BarcodeFormat | undefined
+): ViewfinderSize => {
+  const shape = expectedFormat ? VIEWFINDER_SHAPE[expectedFormat] : 'wide';
+
+  if (shape === 'square') {
+    const side = Math.round(screenWidth * SQUARE_WIDTH_RATIO);
+    return { width: side, height: side };
+  }
+
+  const width = Math.round(screenWidth * WIDE_WIDTH_RATIO);
+  return { width, height: Math.round(width / WIDE_ASPECT) };
+};
+
 const CORNER_SIZE = 32;
 const CORNER_THICKNESS = 4;
 const CORNER_RADIUS = 12;
 
-/** White corner brackets for the viewfinder */
-const ViewfinderCorners: React.FC<{ size: number }> = ({ size }) => {
+/** The gap between the scan banner and the top of the action stack (capture frame E). */
+const BANNER_GAP = SPACING.md;
+
+/** White corner brackets for the viewfinder — corners only, whatever the rectangle. */
+const ViewfinderCorners: React.FC<ViewfinderSize> = ({ width, height }) => {
   const cornerStyle = {
     position: 'absolute' as const,
     width: CORNER_SIZE,
@@ -119,13 +170,14 @@ const ViewfinderCorners: React.FC<{ size: number }> = ({ size }) => {
   return (
     <View
       style={{
-        width: size,
-        height: size,
+        width,
+        height,
         alignSelf: 'center'
       }}
     >
       {/* Top-left */}
       <View
+        testID="viewfinder-corner-tl"
         style={[
           cornerStyle,
           {
@@ -184,20 +236,20 @@ const ViewfinderCorners: React.FC<{ size: number }> = ({ size }) => {
   );
 };
 
-/** Animated beam scan line */
-const ScanLine: React.FC<{ viewfinderSize: number }> = ({ viewfinderSize }) => {
+/** Animated beam scan line, sweeping the viewfinder's HEIGHT. */
+const ScanLine: React.FC<{ viewfinderHeight: number }> = ({ viewfinderHeight }) => {
   const translateY = useSharedValue(0);
 
   useEffect(() => {
     translateY.value = withRepeat(
-      withTiming(viewfinderSize - 4, {
+      withTiming(viewfinderHeight - 4, {
         duration: 2000,
         easing: Easing.inOut(Easing.ease)
       }),
       -1,
       true
     );
-  }, [viewfinderSize, translateY]);
+  }, [viewfinderHeight, translateY]);
 
   const animatedStyle = useAnimatedStyle(() => ({
     transform: [{ translateY: translateY.value }]
@@ -245,8 +297,11 @@ export const ScannerOverlay: React.FC<ScannerOverlayProps> = ({
   const { t } = useTranslation();
   const insets = useSafeAreaInsets();
   const { width: screenWidth } = useWindowDimensions();
-  const viewfinderSize = screenWidth * VIEWFINDER_WIDTH_RATIO;
+  const viewfinder = getViewfinderSize(screenWidth, expectedFormat);
   const [cameraMountError, setCameraMountError] = useState<string | null>(null);
+  // The action stack's measured height, which the scan banner sits above. Null until the stack
+  // has laid out: there is nothing to derive the banner's offset from before that.
+  const [actionStackHeight, setActionStackHeight] = useState<number | null>(null);
   const hasReportedMountErrorRef = useRef(false);
 
   const { permission, hasScanned, error, handleBarcodeScanned, requestCameraPermission, reset } =
@@ -281,6 +336,10 @@ export const ScannerOverlay: React.FC<ScannerOverlayProps> = ({
     },
     [t]
   );
+
+  const handleActionStackLayout = useCallback((event: LayoutChangeEvent) => {
+    setActionStackHeight(event.nativeEvent.layout.height);
+  }, []);
 
   // Request permission on mount
   useEffect(() => {
@@ -410,11 +469,11 @@ export const ScannerOverlay: React.FC<ScannerOverlayProps> = ({
         </View>
       )}
 
-      {/* Viewfinder area */}
-      <View style={styles.viewfinderContainer}>
-        <View style={{ width: viewfinderSize, height: viewfinderSize }}>
-          <ViewfinderCorners size={viewfinderSize} />
-          <ScanLine viewfinderSize={viewfinderSize} />
+      {/* Viewfinder: a layer centred on the whole screen, as the capture frame draws it */}
+      <View style={[StyleSheet.absoluteFill, styles.viewfinderContainer]}>
+        <View testID="viewfinder" style={viewfinder}>
+          <ViewfinderCorners {...viewfinder} />
+          <ScanLine viewfinderHeight={viewfinder.height} />
         </View>
         <Text style={styles.instructionText}>{t('addCard.scanner.instruction')}</Text>
       </View>
@@ -427,9 +486,14 @@ export const ScannerOverlay: React.FC<ScannerOverlayProps> = ({
         </View>
       )}
 
-      {/* No-code-found banner (between viewfinder and bottom actions) */}
-      {imageError && onImageErrorDismiss && (
-        <View style={styles.bannerContainer}>
+      {/* No-code-found banner: above the action stack by its MEASURED height plus the frame's
+          16pt gap (Story 16.30) — it was a hardcoded `bottom: 96`, under a ~146pt stack that
+          painted over both recovery links. Still over the live feed, so the camera never stops. */}
+      {imageError && onImageErrorDismiss && actionStackHeight !== null && (
+        <View
+          testID="no-code-found-banner-anchor"
+          style={[styles.bannerContainer, { bottom: actionStackHeight + BANNER_GAP }]}
+        >
           <NoCodeFoundBanner
             reason={imageErrorReason}
             onDismiss={onImageErrorDismiss}
@@ -439,8 +503,13 @@ export const ScannerOverlay: React.FC<ScannerOverlayProps> = ({
         </View>
       )}
 
-      {/* Bottom actions: scan from image (optional) + manual entry */}
-      <View style={[styles.bottomActions, { paddingBottom: insets.bottom + SPACING.md }]}>
+      {/* Bottom actions: scan from image (optional) + manual entry. The container's ONE in-flow
+          child, anchored by its `justifyContent: 'flex-end'` — never `position: absolute` (AC9). */}
+      <View
+        testID="scanner-bottom-actions"
+        onLayout={handleActionStackLayout}
+        style={[styles.bottomActions, { paddingBottom: insets.bottom + SPACING.md }]}
+      >
         {onImageScan && (
           <>
             <Pressable
@@ -476,7 +545,8 @@ export const ScannerOverlay: React.FC<ScannerOverlayProps> = ({
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#000000'
+    backgroundColor: '#000000',
+    justifyContent: 'flex-end'
   },
   overlay: {
     backgroundColor: 'rgba(0, 0, 0, 0.4)'
@@ -489,7 +559,6 @@ const styles = StyleSheet.create({
     zIndex: 10
   },
   viewfinderContainer: {
-    flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
     gap: 16
@@ -505,11 +574,7 @@ const styles = StyleSheet.create({
     marginTop: 16
   },
   bottomActions: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    paddingHorizontal: 24
+    paddingHorizontal: LAYOUT.screenHorizontalMargin
   },
   manualEntryRow: {
     flexDirection: 'row',
@@ -527,9 +592,9 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255,255,255,0.25)',
     marginVertical: SPACING.xs
   },
+  // `bottom` is applied inline from the measured action stack.
   bannerContainer: {
     position: 'absolute',
-    bottom: 96,
     left: 0,
     right: 0
   },
@@ -548,7 +613,7 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    paddingHorizontal: 24,
+    paddingHorizontal: LAYOUT.screenHorizontalMargin,
     gap: 8
   },
   permissionTitle: {

@@ -26,6 +26,13 @@ import catalogueData from '../../catalogue/italy.json';
 export { IDENTITY_COLORS, NEUTRAL_COLORS };
 
 /**
+ * A token as `r, g, b`, for an `rgba()` whose alpha the caller sets: the sheet's scrim, the tile's
+ * fading highlight ring. Every colour token is a `#RRGGBB` hex by contract, which this relies on.
+ */
+export const toRgbChannels = (hex: string): string =>
+  [1, 3, 5].map((offset) => parseInt(hex.slice(offset, offset + 2), 16)).join(', ');
+
+/**
  * Card color type - matches core/schemas/card.ts CardColor.
  * Duplicated here to keep this token module dependency-free.
  *

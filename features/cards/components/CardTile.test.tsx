@@ -28,6 +28,8 @@ import { useBrandLogo } from '../hooks/useBrandLogo';
 import {
   AVATAR_SIZE,
   BADGE_CLEARANCE,
+  BADGE_INSET,
+  BADGE_SIZE,
   LOGO_SLOT_SIZE,
   getFallbackChildMetrics,
   getGridTileHeight
@@ -64,7 +66,10 @@ jest.mock('@/shared/theme/colors', () => ({
     ink: '#181824',
     beam: '#FCCC0C',
     cream: '#F0F0E8'
-  }
+  },
+  // Listed for the same reason: `Tile` splits the beam into its highlight ring's channels with it
+  // as it loads, so leaving it out fails the whole suite before a test runs.
+  toRgbChannels: jest.requireActual('@/shared/theme/colors').toRgbChannels
 }));
 
 // Mock useBrandLogo
@@ -527,6 +532,71 @@ describe('CardTile', () => {
       // exactly this ("a near-black brand takes a #3A3A48 outline in dark
       // mode"), where the component carried a one-off #40404A.
       expect(json).toContain('#3A3A48');
+    });
+  });
+
+  /**
+   * Story 22.1, AC3 — depth is tonal layers and hairline outlines only.
+   *
+   * The tile used to carry an iOS shadow plus Android `elevation: 3` in light mode, and dimmed to
+   * 70 % opacity on press. The design system allows neither: "No drop shadows anywhere" and "Tap
+   * feedback is a 0.98× scale, never a shadow bloom". With the shadow gone, the hairline is the only
+   * thing separating a light brand from the cream ground, so it takes the system's hairline colour.
+   */
+  describe('Flat depth — Story 22.1 (AC3)', () => {
+    const shell = () =>
+      StyleSheet.flatten(screen.UNSAFE_getByType(Animated.View).props.style) as Record<
+        string,
+        unknown
+      >;
+
+    it('draws no shadow and no elevation', () => {
+      render(<CardTile card={mockCard} />);
+      const style = shell();
+      for (const key of [
+        'shadowColor',
+        'shadowOffset',
+        'shadowOpacity',
+        'shadowRadius',
+        'elevation'
+      ]) {
+        expect(style[key]).toBeUndefined();
+      }
+    });
+
+    it('scales the tile to 0.98 on press instead of dimming it', () => {
+      render(<CardTile card={mockCard} />);
+      const pressable = screen.getByLabelText('Test Store');
+
+      fireEvent(pressable, 'pressIn');
+      expect(shell().transform).toEqual([{ scale: 0.98 }]);
+      expect(StyleSheet.flatten(pressable.props.style)?.opacity).toBeUndefined();
+
+      fireEvent(pressable, 'pressOut');
+      expect(shell().transform).toEqual([{ scale: 1 }]);
+    });
+
+    it("outlines a light brand with the design system's hairline, not an alpha wash", () => {
+      (useBrandLogo as jest.Mock).mockReturnValue({
+        id: 'white-brand',
+        name: 'White Brand',
+        color: '#FFFFFF',
+        logo: 'white-brand',
+        aliases: []
+      });
+      render(<CardTile card={{ ...mockCard, brandId: 'white-brand' }} />);
+      expect(shell()).toMatchObject({ borderWidth: 1, borderColor: '#D6D6CB' });
+    });
+
+    it('sizes and pins the favourite badge from gridLayout, the source the keep-out reads', () => {
+      render(<CardTile card={{ ...mockCard, isFavorite: true }} />);
+      const badge = StyleSheet.flatten(screen.getByTestId('favourite-badge').props.style);
+      expect(badge).toMatchObject({
+        width: BADGE_SIZE,
+        height: BADGE_SIZE,
+        top: BADGE_INSET,
+        right: BADGE_INSET
+      });
     });
   });
 

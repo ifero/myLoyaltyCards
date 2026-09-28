@@ -17,6 +17,7 @@ import { completeFirstLaunch, isFirstLaunch } from '@/core/settings/settings-rep
 
 import { Button } from '@/shared/components/ui';
 import { useTheme } from '@/shared/theme';
+import { TOUCH_TARGET } from '@/shared/theme/spacing';
 import { TYPOGRAPHY } from '@/shared/theme/typography';
 
 import { HighlightSlide } from '../components/HighlightSlide';
@@ -209,7 +210,12 @@ const FeatureHighlightsScreen = () => {
           accessibilityRole="button"
           accessibilityLabel={t('onboarding.highlights.skipAccessibilityLabel')}
           onPress={finishOnboarding}
-          style={{ minHeight: 44, minWidth: 44, justifyContent: 'center', paddingHorizontal: 2 }}
+          style={{
+            minHeight: TOUCH_TARGET.min,
+            minWidth: TOUCH_TARGET.min,
+            justifyContent: 'center',
+            paddingHorizontal: 2
+          }}
         >
           <Text style={{ ...TYPOGRAPHY.bodyMdStrong, color: theme.link }}>
             {t('onboarding.highlights.skip')}

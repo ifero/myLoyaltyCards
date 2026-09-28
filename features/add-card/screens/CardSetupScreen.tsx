@@ -31,7 +31,7 @@ import { mapHexToCardColor } from '@/core/utils';
 
 import { Button } from '@/shared/components/ui/Button';
 import { ColorPicker } from '@/shared/components/ui/ColorPicker';
-import { TextField } from '@/shared/components/ui/TextField';
+import { FieldLabel, TextField } from '@/shared/components/ui/TextField';
 import { useTheme } from '@/shared/theme';
 import { getContrastForeground } from '@/shared/theme/luminance';
 import { SPACING, LAYOUT, TOUCH_TARGET } from '@/shared/theme/spacing';
@@ -235,6 +235,7 @@ export const CardSetupScreen: React.FC = () => {
                   value={cardNumber}
                   onChangeText={setCardNumber}
                   placeholder={t('addCard.setup.cardNumberPlaceholder')}
+                  mono
                   testID="card-number-field"
                 />
               </View>
@@ -248,9 +249,7 @@ export const CardSetupScreen: React.FC = () => {
             {/* Custom mode: Color picker */}
             {mode === 'custom' && (
               <View style={styles.colorSection}>
-                <Text style={[styles.colorLabel, { color: theme.textPrimary }]}>
-                  {t('addCard.setup.colorLabel')}
-                </Text>
+                <FieldLabel>{t('addCard.setup.colorLabel')}</FieldLabel>
                 <ColorPicker value={color} onChange={setColor} testID="color-picker" />
               </View>
             )}
@@ -343,9 +342,6 @@ const styles = StyleSheet.create({
   },
   colorSection: {
     gap: SPACING.sm
-  },
-  colorLabel: {
-    ...TYPOGRAPHY.labelBold
   },
   bottomAction: {
     paddingHorizontal: LAYOUT.screenHorizontalMargin,

@@ -43,10 +43,12 @@ WHAT READING THE CODE TURNED UP
    invent a row.
 
 3. A FIFTH ANSWER TO THE SCREEN MARGIN. `SettingsScreen` uses `paddingHorizontal: 24`. The
-   running tally is `CardForm` 32 · `AuthScreenLayout` token · design system 20 · card grid
-   16 · settings 24. **These frames use 20**, and the code should move 24 -> 20. That is the
-   opposite call from the grid, for a stated reason: 16 is DERIVED (the 171px tile depends on
-   it, with tests), whereas 24 has no derivation behind it and no test pinning it.
+   running tally was `CardForm` 32 · `AuthScreenLayout` token · design system 20 · card grid
+   16 · settings 24. **These frames use 24, and settings was never drifting**: on 2026-08-21
+   the design system adjudicated 24 against its own 20, because 20 is 2.5 x 8 and off the 8px
+   grid while 24 is 3 x 8 (Layout & Spacing). 16 stays the one DERIVED exception — the 171px
+   tile depends on it, with tests. (This finding said "the code should move 24 -> 20" until
+   Story 22.1 corrected it; that direction was the drift.)
 
 4. THE DESTRUCTIVE BUTTON DOES NOT MATCH THE SYSTEM. The system says destructive is
    borderless, `#C41E1E` text, trailing icon. `Button.tsx` renders it as a FILLED
@@ -55,6 +57,9 @@ WHAT READING THE CODE TURNED UP
    the variant is implemented as an unguarded fall-through — `primary`, `secondary` and
    `tertiary` each get an `if`, and everything else returns error-red — so any variant added
    to that union in future silently becomes destructive.
+   ✅ FIXED in Story 22.1: the variant is now the borderless `#C41E1E` label with a press state,
+   the switch is exhaustive, and the system itself now says NO icon (these frames' "no trash
+   icon" won over its old "trailing icon").
 
 5. THE ACCOUNT SECTION HAS NO SECTION TITLE. `settings.sections` holds exactly three strings —
    Preferences, About, Data. The account block sits at the top with no uppercase header above
@@ -251,8 +256,9 @@ Same sheet chrome as Frame C.
 Inside:
 - the title "Confirm Account Deletion" in Space Grotesk 20px bold, ink #181824;
 - the body "Type DELETE to confirm permanent account deletion." in Inter 15px, muted #55555F;
-- the label "TYPE DELETE TO CONFIRM" in Inter 12px semibold uppercase, letter-spacing 0.05em,
-  ink #181824, sitting ABOVE its input;
+- the label "TYPE DELETE TO CONFIRM" in Inter 13px semibold uppercase, letter-spacing 0.02em,
+  ink #181824, sitting ABOVE its input — a FIELD label, so the form label (label-bold), not the
+  12px section-header treatment (ruled in Story 22.1: the uppercase label follows the tier);
 - a text input: white #FFFFFF fill, 1px #D6D6CB outline, 12px radius, 48px minimum height,
   EMPTY, with no placeholder text inside it;
 - 24px of space, then two full-width buttons stacked with 8px between them:

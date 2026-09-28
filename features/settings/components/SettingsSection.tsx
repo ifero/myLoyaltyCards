@@ -1,30 +1,17 @@
 import React from 'react';
-import { Text, View } from 'react-native';
+import { View } from 'react-native';
 
-import { useTheme } from '@/shared/theme';
-import { TYPOGRAPHY } from '@/shared/theme/typography';
+import { SectionHeader } from '@/shared/components/ui/SectionHeader';
 
 type SettingsSectionProps = {
   title: string;
   children: React.ReactNode;
 };
 
-export const SettingsSection = ({ title, children }: SettingsSectionProps) => {
-  const { theme } = useTheme();
-
-  return (
-    <View style={{ gap: 8 }}>
-      <Text
-        accessibilityRole="header"
-        style={{
-          ...TYPOGRAPHY.overline,
-          color: theme.textTertiary,
-          textTransform: 'uppercase'
-        }}
-      >
-        {title}
-      </Text>
-      {children}
-    </View>
-  );
-};
+// The 8pt gap is the design system's "sitting 8px above its rows" (Story 22.1).
+export const SettingsSection = ({ title, children }: SettingsSectionProps) => (
+  <View style={{ gap: 8 }}>
+    <SectionHeader title={title} />
+    {children}
+  </View>
+);
