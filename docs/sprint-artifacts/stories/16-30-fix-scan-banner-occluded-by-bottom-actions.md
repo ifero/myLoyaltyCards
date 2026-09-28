@@ -4,7 +4,11 @@ baseline_commit: 652f3c61442ab02841180e7bc837556721576165
 
 # Story 16.30: The image-scan failure banner is painted underneath the scanner's bottom action rows
 
-Status: ready-for-dev
+Status: absorbed
+
+> **ABSORBED 2026-09-28 into Story 22.1** (`22-1-design-system-components.md`), which rewrote the
+> component this defect lives in and delivers these acceptance criteria. Its Dev Agent Record says
+> what shipped, and which checks still need a device.
 
 Epic: 16 — Platform & Tech Debt
 

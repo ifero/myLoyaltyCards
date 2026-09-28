@@ -4,7 +4,7 @@ baseline_commit: 2ff3e23016a3ee6130e5e0c2b3651de62fa4ac5f
 
 # Story 22.1: Design-system components [Enabling] — six primitives, four absorbed defects, and a test that fails the moment you add the eighth
 
-Status: ready-for-dev
+Status: review
 
 Epic: 22 — Cardì Redesign — Screen Implementation
 
@@ -238,16 +238,16 @@ device table — Story 16.33's AC4 says explicitly not to reach into it.
 
 ## Tasks / Subtasks
 
-- [ ] **Task 1 — Read the four defect stories (AC5).** They are the brief for half this work.
-- [ ] **Task 2 — Footer primitive (AC2).** `CardSetupScreen` is the reference implementation.
-- [ ] **Task 3 — Tile, section header, hairline surface (AC1, AC3, AC11, AC12).**
-- [ ] **Task 4 — Form field + error idiom (AC1, AC6, AC7).**
-- [ ] **Task 5 — Sheet (AC1, AC8, AC11).**
-- [ ] **Task 6 — Button (AC5/16-32, AC2's busy rule, AC10).**
-- [ ] **Task 7 — Touch target (AC5/16-33).** `tokens/spacing.json` + `yarn tokens:build`, then
+- [x] **Task 1 — Read the four defect stories (AC5).** They are the brief for half this work.
+- [x] **Task 2 — Footer primitive (AC2).** `CardSetupScreen` is the reference implementation.
+- [x] **Task 3 — Tile, section header, hairline surface (AC1, AC3, AC11, AC12).**
+- [x] **Task 4 — Form field + error idiom (AC1, AC6, AC7).**
+- [x] **Task 5 — Sheet (AC1, AC8, AC11).**
+- [x] **Task 6 — Button (AC5/16-32, AC2's busy rule, AC10).**
+- [x] **Task 7 — Touch target (AC5/16-33).** `tokens/spacing.json` + `yarn tokens:build`, then
       `tokens.generated.test.ts:122`, then the literal-44 sweep.
-- [ ] **Task 8 — Scanner fixes (AC5/16-30, 16-31, AC9).**
-- [ ] **Task 9 — Stories + the count (AC4).**
+- [x] **Task 8 — Scanner fixes (AC5/16-30, 16-31, AC9).**
+- [x] **Task 9 — Stories + the count (AC4).**
 
 ## Dev Notes
 
@@ -282,10 +282,356 @@ snapshots rather than loosening assertions (Story 16.33's AC5).
 
 ### Agent Model Used
 
+Claude Opus 5.5 (`claude-opus-5-5`), Claude Code, `bmad-dev-story`; code and QA reviews by fresh Sonnet
+subagents.
+
+### Decisions taken by ifero before implementation (2026-09-27)
+
+Four places where the story and a later canonical document disagreed, or where the story left a
+genuine choice open, were put to ifero before any code was written:
+
+1. **`TOUCH_TARGET.watch` is RETIRED, not kept at 32.** `cardi-watch-grammar.md` §5.4 (Story 23.1)
+   decided retirement and assigned it to this commit; this story's AC5 still said "stays 32" because
+   it was written before the grammar existed. The grammar wins: the key had zero readers and neither
+   watch app (Swift, Kotlin) can read a TypeScript token.
+2. **Sheet motion (AC8's "genuine difference to settle"):** the scrim fades and only the sheet slides
+   (220 ms, Reanimated), for all nine sheets. The shared sheet used the native `slide` Modal, which
+   carried the dark scrim up with it. The picker's motion, which the question offered as the model,
+   turned out not to deliver the decision either; see AC8.
+3. **The footer is a primitive only.** Story 22.6's ACs own adopting it in `add-card/setup` and
+   `card/[id]/edit`. `CardForm`'s save still becomes the shared always-enabled Button (AC2/AC6).
+4. **`TextField` gains a `mono` option**, and both card-number inputs use it. This takes Story 21.6's
+   hand-off, and add and edit now agree.
+
 ### Debug Log References
+
+- Baseline before the first edit: **197 suites / 2636 tests green, 0 snapshots**. After: **202 / 2788**,
+  coverage 94.15 % statements · 87.94 % branches · 89.24 % functions · 94.76 % lines (gate 80 %).
+- `yarn lint`, `typecheck`, `format:check`, `tokens:check`, `icons:check`, `frames:check`,
+  `wear:catalogue:check`, `check:no-tests-folders`, `check:build-path-filters`,
+  `check:story-catalogue-sync`, `check:native-patches`, `check:native-strings`: all green.
+- **RNTL's `fireEvent.press` walks UP the element tree looking for `onPress`.** When the Button withheld
+  its `Pressable` handler while busy, the test found and called the `Button`'s own `onPress` _prop_.
+  That was a test artefact, not app behaviour. The fix guards inside real handlers, which is robust in
+  both.
+- **RN 0.83 `Pressable` (`Pressable.js:235-236`) overwrites `accessibilityState.disabled` whenever
+  `disabled` is non-null.** A busy button therefore cannot use `disabled` to refuse presses, or it is
+  announced as "dimmed". It guards its handlers instead.
+- **`yarn storybook` (dev mode) cannot load any story, on untouched `origin/main` too** (verified in a
+  throwaway worktree). `expo-modules-core/src/LegacyEventEmitter.ts` does `import invariant from
+'invariant'`, and `.storybook/main.ts` excludes `expo-modules-core` from pre-bundling. The production
+  `build-storybook`, which is the path Chromatic uses, builds and renders every story.
+- **Storybook never animated the sheet.** Its Babel config reproduced the app's Unistyles plugin but
+  not its Reanimated one. Without that plugin, `useAnimatedStyle` cannot see the shared values its
+  updater reads, so on web a style is computed once and never moves. Measured on cold loads in
+  headless Chromium, the sheet stories showed no sheet on 6 of 6: 5 never moved, and 1 froze at 7.75 %.
+  A build of the pre-fix sheet failed the same way, 5 of 5, so the earlier Storybook check had been a
+  lucky warm load. With the plugin added, 12 of 12 cold loads across the three sheet stories settle.
+- **Chromatic cannot pause a JavaScript animation**, so the sheet stories set
+  `chromatic.prefersReducedMotion: 'reduce'`. With reduced motion emulated, the sheet appears
+  settled on the first frame (3 of 3). That also verifies the Reduce Motion rule on web.
+- **`CI=1 npx expo start` (the local `metro` config) does not watch files.** It serves them as they
+  were at startup, so every in-app check after an edit needs a Metro restart. A "fixed" recording of
+  stale code once looked identical to the defect.
+- **In-app motion was checked frame by frame**: `simctl io recordVideo`, then ffmpeg at 60 fps and a
+  per-frame diff. Only the frames showed that both native Modal animations move the whole modal.
+- **`react-native-worklets` 0.7.4 deprecates `runOnJS` for `scheduleOnRN`**, which the sheet uses. Jest
+  stubs `scheduleOnRN` by hand in `jest.setup.js`. The package's own `src/mock` is TypeScript under a
+  path `transformIgnorePatterns` leaves untransformed, and it replaces `globalThis.requestAnimationFrame`
+  in every suite that loads it.
 
 ### Completion Notes List
 
+- **AC1 — the six primitives, in `shared/components/ui/`.**
+  - New:
+    - `PrimaryActionFooter`: a 1pt full-width hairline rule, 24pt padding (or 16 on the grid), and the
+      bottom inset unless the screen already pads it.
+    - `Tile`, plus `FavouriteBadge`, `getTileAppearance` and `getHighlightBorder`.
+    - `SectionHeader`.
+    - `Surface`: tonal fill, 1pt hairline, 16 radius, with optional full-width row rules.
+  - Extended `TextField`:
+    - New `FieldLabel` and `FieldError` exports.
+    - `ref` as a React 19 prop.
+    - `maxLength` and `showCharacterCount`.
+    - `mono`.
+  - Corrected `BottomSheet`:
+    - The grabber is 36 × 4, fully rounded, solid `theme.border`, 8 from the top.
+    - Radius 16 on the top corners only.
+    - Ink scrim at 40 %; the description sits 8 below the title.
+    - Height capped at 80 %, so a long list scrolls inside the sheet.
+  - `CardShell` stays the separate hero surface it is.
+- **AC2 — the footer and the busy rule.**
+  - The footer is in flow, `flexShrink: 0`, never absolute.
+  - `CardForm`'s save is always enabled. Pressing it on an incomplete form shows both field errors,
+    and React Hook Form focuses the first invalid field through `field.ref` (`shouldFocusError`). A
+    test pins the focus; it was mutation-checked, going red with `shouldFocusError: false`.
+  - A busy `Button` keeps its fill, shows a spinner, ignores presses and is announced
+    `{ busy: true, disabled: false }`.
+  - **Busy wins over disabled**, because `CardSetupScreen` passes both.
+  - The one sanctioned disabled control, the destructive gate, is its label at 40 %.
+- **AC3 — flat depth.**
+  - `CardTile` loses its iOS shadow and Android `elevation: 3`.
+  - Press feedback is a 0.98× scale, not a 70 % dim.
+  - A light brand's hairline is now `theme.border` instead of an 8 % black wash, because the hairline
+    took over the shadow's job. Measured in the same binary, a white brand (CRAI) held its edge on cream
+    only with the new hairline.
+  - A latent defect fixed on the way: `highlightCardId` is never cleared, so a just-added tile stays
+    `highlighted` all session. After the ring faded, the old worklet set `borderWidth` to 0, erasing a
+    light brand's outline. `getHighlightBorder` now hands back the resting outline; it is a worklet
+    unit-tested on its own, because the Reanimated mock returns `{}` for animated styles.
+  - The tile's column is now bound to the tile width, so the name truncates at the tile. Before, a
+    centring parent (the single-card state) let a long name run wider than its tile.
+- **AC4 — stories and the count.**
+  - Four new story modules, plus new stories:
+    - `Button`: `DestructiveGated`, `DestructiveBusy`.
+    - `TextField`: `CardNumber`, `WithCharacterCount`.
+    - `BottomSheet`: `ConfirmDestructive`.
+  - `stories.test.tsx` goes from 7 to **11** modules, and every story renders in light and dark (76
+    tests).
+  - `build-storybook` succeeds.
+- **AC4b — the height follows the token.**
+  - `Button` and `TextField` read the token.
+  - `Button.test` and `TextField.test` both feed a deliberately odd token (47), so a hardcoded 48
+    fails either. `TextField` now reads `TOUCH_TARGET.min` directly, as `Button` does, rather than
+    through the theme, which the Unistyles jest mock fixes when the tests set up.
+  - Default buttons grow from 44 to 48 everywhere; `large` stays 52. Measured on the wallet, the grid
+    starts about 8pt lower: 4 from the guest banner's buttons, 4 from the sort row.
+- **AC5 / 16-30 — the scan banner clears the actions.**
+  - The action stack is the overlay's one in-flow child (`justifyContent: 'flex-end'`).
+  - The banner's `bottom` is the stack's **measured** height (`onLayout`) plus the frame's 16pt gap. It
+    stays hidden until the stack has laid out.
+  - Rejected: anchoring the banner at `bottom: '100%'` inside the stack. Its links would then sit outside
+    their parent's bounds, where hit-testing is not guaranteed on every platform — the exact defect this
+    fixes.
+- **AC5 / 16-31 — the viewfinder follows the format.**
+  - `getViewfinderSize` gives the wide frame, 300 × 120 at 393pt, derived from the width.
+  - QR gets the square (70 % of the width). An undefined format gets the wide frame.
+  - The format-to-shape table is an exhaustive `Record` over `BarcodeFormat`, so a new format fails to
+    compile until someone picks its shape.
+  - `ScanLine` sweeps `height − 4`, and the brackets stay 32 / 4 / 12.
+  - The viewfinder layer stays centred on the whole screen, as frame B draws it.
+- **AC5 / 16-32 — `destructive`.**
+  - An exhaustive `switch` with a `never` default, plus a `@ts-expect-error` fixture that fails
+    `typecheck` if it ever stops being needed.
+  - Borderless `theme.error` text, and a pressed wash of 8 % of its own label colour.
+  - `grep variant="destructive"` finds `SignOutSheet.tsx:52` and `DeleteAccountSheet.tsx:64` and `:104`.
+    **All three change visibly** from red slabs to red text; see the verification table.
+- **AC5 / 16-33 — the touch target.**
+  - `TOUCH_TARGET` is `{ min: 48 }` in `tokens/spacing.json`, regenerated, and
+    `tokens.generated.test.ts` asserts that shape.
+  - Sweep: `grep -rnw 44 features shared app`.
+    - **Converted:**
+      - `GuestModeBanner` `?? 44` fallback.
+      - The feature `ColorPicker` swatches.
+      - `ModeSelectionScreen`: back button, the title's balancing margin, and "What's the difference?".
+      - `InfoTooltipModal` close.
+      - `FeatureHighlightsScreen` Skip.
+      - `WelcomeScreen` sign-in link.
+      - `app/_layout.tsx` header buttons (+, gear, back).
+    - **Not touch targets, left alone:**
+      - `ModeOptionCard`'s icon plate (the card is the target).
+      - `WelcomeScreen` `marginTop: 44` (spacing).
+      - `EmptyState` SVG `cy={44}`.
+      - `luminance.ts` prose.
+      - 11 test fixtures that mock the theme with 44 (mocks, not layouts; follow-up 9).
+  - **Two layouts changed shape.** Five 48pt swatches overflow a fixed gap on a 375pt iPhone (the shared
+    picker needs 336 of 327) or a 360dp Android (the edit form's picker needs 304 of 296), so both
+    pickers now use `space-between`, as the form frame draws them.
+  - `gridLayout.ts` is untouched.
+- **AC6 — `CardForm` on the shared field.**
+  - It uses `TextField`, `FieldLabel` and the shared `Button`.
+  - The hardcoded `#6B7280`, `#EF4444` and `#9CA3AF` are gone, and so is radius 8.
+  - Error testIDs follow the `TextField` convention: `card-name-input-error` and `barcode-input-error`.
+    The only consumer, `CardForm.test`, is updated.
+  - The format row is an uppercase label over a plain value, with no box.
+  - The "Saving..." string is now the busy button's accessible name.
+- **AC7 — uppercase labels.**
+  - Labels are uppercased by `textTransform`, so the string stays sentence case for screen readers.
+  - Tracking comes from the `labelBold` token: 0.26pt, verified.
+  - The colour pickers' labels, in the feature picker and `CardSetupScreen`, use the same
+    `FieldLabel`, so neither form mixes two casings.
+- **AC8 — the picker adopts the shared sheet.**
+  - `MultiCodePickerSheet` now renders through `BottomSheet`.
+  - Its rows run edge to edge, aligned with the title on the 24pt margin.
+  - Removed:
+    - Its "adjustable" drag handle, which announced a gesture that did not exist.
+    - An unreachable scrim label.
+    - Their three locale keys, from both locales.
+  - Found while adopting: the shared sheet's content was a `Pressable`, which is accessible by default,
+    so **on iOS VoiceOver saw every sheet as ONE element** and could not reach its buttons. The failing
+    test proved it (`accessible === true` on the old code). Now the scrim and sheet are siblings: the
+    scrim is hidden from assistive tech, the sheet is a modal container, and the VoiceOver escape gesture
+    dismisses it.
+  - **The motion, as delivered and checked frame by frame in the app.** A native Modal animation moves
+    the WHOLE modal: `slide` carried the scrim up like a curtain, and the picker's `fade` made the
+    sheet see-through while it rose. So the Modal presents with no animation of its own. Reanimated
+    fades the scrim and slides the sheet together over 220 ms, and the sheet travels `100%` of its own
+    height (a React Native 0.75+ percentage translate) rather than a window height. With the window
+    height, a short sheet was off the screen for most of the slide and vanished in about 40 ms on
+    close. Measured after: about 217 ms in and out, with the sheet opaque throughout.
+  - **The Modal outlives `visible` by the slide-out**, so a closing sheet leaves on screen:
+    - It opens in the same render as `visible` (a guarded state update during render).
+    - It takes no touches while it leaves.
+    - Only a FINISHED slide-out takes it down, through `scheduleOnRN`. A cut-short one can report in
+      after a re-open and a second close.
+    - On Android, React Native's Modal unmounted its children the moment `visible` went false, so no
+      slide-out ever played there. Now one does, though that is unverified on a device (this host has
+      no Android AVD).
+  - **The picker used to return `null` in the render that closed it.** `BrandScannerScreen` derives
+    both of its props from one list, and every way out empties that list, so the guard unmounted the
+    sheet before its slide-out could start. The picker now always renders its sheet and keeps the
+    last list it showed, so it slides out with its rows.
+- **AC9 — the two absolute footers are converted.**
+  - `ScannerOverlay`, as above.
+  - `BarcodeScanner` gets the same treatment. It has no production consumer; see follow-up 6.
+- **AC10 — radius and heights.** `Button` radius goes from 14 to **12**; default height is the touch
+  target, `large` is 52, inputs 48.
+- **AC11 — `cardi-design-system.md` and its sources.**
+  - Added:
+    - A primitives table.
+    - The **section-header** transcription, with the tier table (`overline` for a group, `labelBold` for
+      one field), the colour ruling, and "capitals are a style".
+    - The **sheet** transcription, citing 21.6 AC5b's `sheetTitle`, with the 16/24 content spacing, the
+      motion and the a11y rules.
+    - The hairline surface.
+    - Input fields: mono, the error idiom, the height from the token.
+  - Rulings and amendments:
+    - The tile mark is **85 %**, not 60 %, and both wallet-prompt sites are corrected.
+    - The light-brand hairline.
+    - Destructive has **no icon**.
+    - The 12px button radius.
+    - The type-to-confirm **disabled carve-out**, cross-referenced from Forbidden.
+    - `display-lg` weight is **700**, not 800 (21.6's hand-off).
+    - The touch-target note is marked applied.
+  - Already done by 21.2, verified and not re-applied: the favourite plate (AC9) and the card-accent
+    detail-field exemption (AC7). Already done by 21.5: the frontmatter `screen-margin: 24px`.
+  - Margins:
+    - The three live prompts are corrected from 20 to 24.
+    - The README's cited items (the "three answers" finding, open items 3 and 7) and three more
+      same-class claims (`:34`, the grid-margin note, the document table) are corrected.
+    - `stitch-prompt-01-form-pattern.txt` is **left alone**: it is marked SUPERSEDED, a record of what
+      was sent.
+  - The capture prompt's banner is restated as sitting above the stack, not "96px".
+  - The settings frame F `.field-label` and its prompt now use `label-bold`.
+  - The watch grammar §5.4 is marked applied.
+- **AC12.** Tile geometry is unchanged, and the three frozen copies are untouched and green.
+
+#### Verification
+
+| check                                                           | result                                                                                                                                                                                                                                                                                                                                                         |
+| --------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Storybook, production build, light and dark                     | **Performed.** Tile (favourite, light brand, near-black), surface (divided), mono field and busy footer render to spec. The sheet stories did **not**, until `.storybook/main.ts` gained the Reanimated plugin (see Debug Log). Since then 12 of 12 cold loads settle, light and dark.                                                                         |
+| iOS 26.5 simulator, fresh Debug build, wallet light and dark    | **Performed.** Branch and `main` JS were served into the same binary. The header buttons are 48pt in the native bar, their glass capsules ~4pt wider, the bar height unchanged, nothing clipped. Tiles are flat, and CRAI's hairline holds on cream.                                                                                                           |
+| 16-33 AC6, dense-list before/after (settings or the brand list) | **Performed on iOS.** Settings, branch against `main` in the same binary, light and dark: the `ActionRow`s, whose `minHeight` is the token, grow from 44 to 48, a list shifting about 4pt per row. Reached through the JS debugger (`router.push`), because the simulator panel's taps were unavailable. Not performed on Android: this host has no phone AVD. |
+| 16-32 AC6, sign-out and delete-account sheets in-app            | **Not performed in-app.** Both need a signed-in session, and this build has no Supabase configuration. The same shape is shown in Storybook (`ConfirmDestructive`, `DestructiveGated`).                                                                                                                                                                        |
+| The nine sheets on the reworked `BottomSheet`                   | **Performed for 2 of the 8 settings sheets** (theme picker, export confirmation), branch against `main`, light and dark: grabber, radius, ink scrim. The motion was checked frame by frame on the theme sheet, in and out (AC8). The other six settings sheets and the picker share the primitive but were not opened.                                         |
+| Cascades to screens outside the File List                       | **Performed.** `TextField`'s uppercase label reaches the four auth screens that render it, through `TextField` and `PasswordInput`. Sign In was checked, branch against `main`, light and dark. Settings' section headers move from `textTertiary` to `textSecondary` with `SectionHeader`, checked the same way.                                              |
+| 16-30 AC5, a real image-scan failure                            | **Not performed.** The simulator has no camera. Covered by a measured-layout test; needs ifero's device.                                                                                                                                                                                                                                                       |
+| 16-31 AC6, EAN-13 and QR framing, time-to-first-scan            | **Not performed.** Needs a camera. Geometry is unit-tested; the UX claim stays unmeasured, as 16-31 itself allows.                                                                                                                                                                                                                                             |
+| Chromatic                                                       | Runs on the PR (path-filtered to `shared/components/ui/**`). Not run locally.                                                                                                                                                                                                                                                                                  |
+
+#### Found, not fixed
+
+Filed for triage as #251 with the device checks still owed, numbered as below.
+
+1. **TextField versus the form frames** — the label gap is 6 (frames 8), the input's horizontal padding
+   12 (16), and the fill `surfaceElevated` (frames white). This is Story 22.6's, which implements the
+   form states.
+2. **Sheet bodies.** Six of the eight settings sheets (all but the two pickers) still draw a 40pt icon
+   above the title. The sheets use 10 / 12 / 14pt gaps, and their action stacks sit 14 to 18 below the
+   body rather than 24. The two confirm sheets also stack Cancel **above** the destructive action, at
+   the default 48pt: Story 13.6's deliberate "inverted CTA order", which the Cardì frames reverse.
+   `cardi-design-system.md` _Sheets_ flags them so they are not read as the reference. This is Story
+   22.7's.
+3. **`NoCodeFoundBanner`** keeps a `warning-amber` icon (capture prompt E says no icon) and 16pt margins
+   (the prompt says 24). This is Story 22.5's.
+4. **`MultiCodePickerSheet`** has 56pt rows (prompt D says 64), a Cancel drawn in error red, and
+   hardcoded English in each row's accessibility label (`'Barcode'`, `code`). This is Story 22.5's.
+5. **`ActionRow`'s outlined variant is radius 14**, which is neither 12 nor 16.
+6. **`BarcodeScanner` has no production consumer.** It is only re-exported from
+   `features/cards/index.ts`, and is a deletion candidate.
+7. **A favourite is not announced to screen readers.** The tile's label is the card name alone.
+8. **`Button` no longer reads `theme.onError`**, now that the destructive button has no fill. The
+   token itself is still live: `SyncErrorBanner.tsx:75` and `MigrationBanner.tsx:90` colour their
+   Retry labels with it. Recorded so nobody mistakes it for an orphan.
+9. **Stale test fixtures** mock the theme with `touchTarget: { min: 44 }`: 6 auth screens, `PasswordInput`
+   and `GuestModeBanner`. Three shared tests mock `TOUCH_TARGET: { min: 44, recommended: 48 }`, a key
+   that does not exist.
+10. **`yarn storybook` dev mode is broken on `main`** (see Debug Log).
+11. **`CardSetupScreen` passes `disabled={isLoading}` alongside `loading`.** It is harmless now that busy
+    wins, and is Story 22.6's to drop.
+12. **On a 667pt-tall screen the scan banner covers the viewfinder's instruction line** for its five
+    seconds. It is an overlay on the feed, as designed, and never overlaps the actions.
+13. **`BarcodeFlash.tsx` still calls `runOnJS`** (`:81`, `:88`, `:113`), which `react-native-worklets`
+    0.7.4 deprecates in favour of the `scheduleOnRN` the sheet now uses.
+14. **Storybook's story canvas is only as tall as its content**: 32pt in the sheet stories. A sheet's
+    scrim therefore lies over the bare iframe page, so a dark snapshot shows a light scrim.
+    `.storybook/StoryDecorator.tsx` is unchanged from `main`.
+15. **`highlightCardId` is never cleared.** It is set at `features/cards/screens/HomeScreen.tsx:85`
+    and never reset, so a just-added card stays `highlighted` all session. Any tile that mounts with
+    it still set replays the beam ring. This predates the story (`main`'s tile has the same effect),
+    and the wallet is Story 22.2's.
+
 ### File List
 
+New:
+
+- `shared/components/ui/PrimaryActionFooter.tsx`, `.test.tsx`, `.stories.tsx`
+- `shared/components/ui/SectionHeader.tsx`, `.test.tsx`, `.stories.tsx`
+- `shared/components/ui/Surface.tsx`, `.test.tsx`, `.stories.tsx`
+- `shared/components/ui/Tile.tsx`, `.test.tsx`, `.stories.tsx`
+- `shared/theme/colors.test.ts`
+
+Modified — primitives and theme:
+
+- `shared/components/ui/BottomSheet.tsx`, `.test.tsx`, `.stories.tsx`
+- `shared/components/ui/Button.tsx`, `.test.tsx`, `.stories.tsx`
+- `shared/components/ui/ColorPicker.tsx`, `.test.tsx`
+- `shared/components/ui/TextField.tsx`, `.test.tsx`, `.stories.tsx`
+- `shared/components/ui/index.ts`, `shared/components/ui/stories.test.tsx`
+- `shared/components/ConflictComparisonCard.tsx`
+- `shared/theme/tokens.generated.ts` (regenerated), `shared/theme/tokens.generated.test.ts`,
+  `shared/theme/typography.ts`, `shared/theme/colors.ts`, `tokens/spacing.json`
+- `shared/i18n/locales/en.ts`, `shared/i18n/locales/it.ts`
+- `jest.setup.js`, `.storybook/main.ts`
+
+Modified — consumers:
+
+- `app/_layout.tsx`
+- `features/add-card/components/BrandList.tsx`
+- `features/add-card/components/MultiCodePickerSheet.tsx`, `.test.tsx`
+- `features/add-card/components/ScannerOverlay.tsx`, `.test.tsx`
+- `features/add-card/screens/BrandScannerScreen.test.tsx`
+- `features/add-card/screens/CardSetupScreen.tsx`, `.test.tsx`
+- `features/add-card/screens/CardTypeSelectionScreen.test.tsx`
+- `features/auth/components/GuestModeBanner.tsx`
+- `features/cards/components/BarcodeScanner.tsx`, `.test.tsx`
+- `features/cards/components/CardDetails.tsx`
+- `features/cards/components/CardForm.tsx`, `.test.tsx`
+- `features/cards/components/CardTile.tsx`, `.test.tsx`
+- `features/cards/components/ColorPicker.tsx`, `.test.tsx`
+- `features/onboarding/components/InfoTooltipModal.tsx`
+- `features/onboarding/screens/FeatureHighlightsScreen.tsx`, `ModeSelectionScreen.tsx`, `WelcomeScreen.tsx`
+- `features/settings/components/SettingsSection.tsx`
+
+Modified — design docs and tracking:
+
+- `docs/design/cardi/cardi-design-system.md`, `cardi-watch-grammar.md`, `README.md`
+- `docs/design/cardi/stitch-prompts-capture.txt`, `-document.txt`, `-settings.txt`, `-wallet.txt`
+- `docs/design/cardi/frames/cardi-settings-frames.html`
+- `docs/ux-designs/2-9-scan-from-image.md` (the picker's accessibility contract and the touch-target figures)
+- `docs/sprint-artifacts/sprint-status.yaml`, `docs/sprint-artifacts/stories/22-1-design-system-components.md`
+- `docs/sprint-artifacts/stories/16-30-…`, `16-31-…`, `16-32-…`, `16-33-…` (`Status: absorbed`, pointing here)
+
 ### Change Log
+
+- 2026-09-27 — Implemented Story 22.1:
+  - Six primitives.
+  - The four absorbed defects (16-30 to 16-33).
+  - `TOUCH_TARGET` becomes `{ min: 48 }`, with the watch key retired.
+  - The AC11 design-system transcription and authority sweep.
+  - After code review and in-app verification: the sheet motion reworked (an opaque sheet that slides
+    its own height, in a Modal that outlives the slide-out), and Storybook given the app's Reanimated
+    transform.
+  - Status set to `review`.
+- 2026-09-28 — The four absorbed defect stories set to `absorbed`, and the follow-ups filed as #251.

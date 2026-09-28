@@ -1,5 +1,5 @@
 # generated: 2026-01-03
-# last_updated: 2026-09-26
+# last_updated: 2026-09-27
 # project: myLoyaltyCards
 # project_key: NOKEY
 # tracking_system: file-system
@@ -47,7 +47,7 @@
 # - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
 
 generated: 2026-01-03
-last_updated: 2026-09-26
+last_updated: 2026-09-27
 project: myLoyaltyCards
 project_key: NOKEY
 tracking_system: file-system
@@ -770,7 +770,7 @@ development_status:
   # 22-10 is Wave B and is BLOCKED on a commissioned illustration set that does not
   # exist; inventing a per-screen illustration style is forbidden by the system.
   epic-22: in-progress # 2026-09-14: 22-1 refined (the Epic 22 enabler); 22-2..22-10 stay backlog
-  22-1-design-system-components: ready-for-dev # REFINED 2026-09-14. BLOCKS 22-2..22-10; absorbs 16-30..16-33. ⚠️ shared/components/ui/stories.test.tsx:76-77 HARD-ASSERTS exactly 7 story modules and fails the moment an 8th primitive gains a .stories file — update the count deliberately. It TRANSCRIBES the section-header and sheet specs into cardi-design-system.md (AC11) — CORRECTED 2026-09-15: those specs DO exist, at docs/design/cardi/stitch-prompts-settings.txt :120 and :183; the main design document simply never restates them. It does not invent them, and the shared BottomSheet's 40x4 grabber is the OFF-SPEC one, not MultiCodePickerSheet's 36x4. Sequenced after BOTH 21-2 and 21-6: it rewrites the very components those two edit (CardTile, the sheets, NoCodeFoundBanner, the form fields).
+  22-1-design-system-components: review # READY FOR REVIEW 2026-09-27. PICKED UP 2026-09-26 (wave_5). REFINED 2026-09-14. BLOCKS 22-2..22-10; absorbs 16-30..16-33. ⚠️ shared/components/ui/stories.test.tsx:76-77 HARD-ASSERTS exactly 7 story modules and fails the moment an 8th primitive gains a .stories file — update the count deliberately. It TRANSCRIBES the section-header and sheet specs into cardi-design-system.md (AC11) — CORRECTED 2026-09-15: those specs DO exist, at docs/design/cardi/stitch-prompts-settings.txt :120 and :183; the main design document simply never restates them. It does not invent them, and the shared BottomSheet's 40x4 grabber is the OFF-SPEC one, not MultiCodePickerSheet's 36x4. Sequenced after BOTH 21-2 and 21-6: it rewrites the very components those two edit (CardTile, the sheets, NoCodeFoundBanner, the form fields).
   22-2-wallet: backlog
   22-3-card-detail: backlog
   22-4-barcode-flash: backlog
