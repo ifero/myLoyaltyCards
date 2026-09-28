@@ -4,7 +4,7 @@ baseline_commit: 2ff3e23016a3ee6130e5e0c2b3651de62fa4ac5f
 
 # Story 22.1: Design-system components [Enabling] — six primitives, four absorbed defects, and a test that fails the moment you add the eighth
 
-Status: review
+Status: done
 
 Epic: 22 — Cardì Redesign — Screen Implementation
 
