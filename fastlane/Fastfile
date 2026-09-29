@@ -115,22 +115,57 @@ platform :ios do
     )
   end
 
-  # Build the app-store IPA and (unless told not to) send it to TestFlight.
+  # The build number for an App Store Connect upload: one past the latest upload, of ANY version.
   #
-  # ONE BODY, TWO LANES: `beta` (RC) and `nightly` (Story 16.36) ship the same binary to the
-  # same place by the same rules. They are separate lanes only so the intent is visible in the
-  # workflow that calls them; a second copy of this body would be a place for them to drift.
+  # "Latest" means most recently UPLOADED, not highest: with no `version:`, the lookup takes the
+  # newest upload by date (`sort: "-uploadedDate"` in fastlane's app_store_build_number.rb). The
+  # two agree only while every upload is numbered by this one rule, which is why every iOS upload
+  # lane goes through `ship_ios!` and no other lane that uploads numbers a build.
+  #
+  # ⛔ Do not narrow the lookup with `version:` or `live:`. Apple's TN2420 (2017, archived) scopes
+  # the build-number check to one release train — one marketing version — on iOS, where a new
+  # build must be higher than the train's latest, and to the whole app on macOS, where build
+  # numbers must rise across versions; developer.apple.com/forums/thread/759988 is a Mac Catalyst
+  # app hitting the macOS rule. A `version:` lookup would satisfy iOS, but one app-wide sequence
+  # satisfies both rules and keeps every lane on one counter. `live:` reads the build on sale,
+  # which every later upload has passed.
+  #
+  # A plain `def` with keyword collaborators, like the Android helpers: a `def` cannot see the
+  # `app_identifier` local the lane blocks close over. `FastFile#method_missing` dispatches the
+  # action call, so a lane runs the real lookup and `Fastfile.test.rb` runs a stub.
+  def next_ios_build_number(app_identifier:, api_key:)
+    latest_testflight_build_number(app_identifier: app_identifier, api_key: api_key).to_i + 1
+  end
+
+  # Build the app-store IPA and (unless told not to) upload it to App Store Connect.
+  #
+  # ONE BODY, THREE LANES: `beta` (RC) and `nightly` (Story 16.36) send the build to TestFlight,
+  # `upload_release` to the App Store. They are separate lanes only so the intent is visible in
+  # the workflow that calls them; what differs between them is the destination and, for `nightly`,
+  # whether to upload, so those are the two values they pass. `upload_release` used to be a second
+  # copy of this body, and it drifted: it numbered builds from `store-upload.yml`'s own
+  # GITHUB_RUN_NUMBER, five runs old when TestFlight had reached build 40 (2026-09-29), so the first
+  # production upload would have been refused (Story 21.7).
   #
   # THE APPLE WATCH RIDES ALONG, and needs nothing here. `apply_distribution_signing` wires all
   # three targets — phone, watch app, WidgetKit complication — and Apple provides no standalone
-  # watchOS upload at all (ADR-2026-04-11-002), so one TestFlight upload delivers all three.
+  # watchOS upload at all (ADR-2026-04-11-002), so one upload delivers all three.
   #
-  # THE BUILD NUMBER COMES FROM REMOTE STATE, not from GITHUB_RUN_NUMBER, and that is why iOS
-  # needs no versionCode-style band scheme the way Android does: asking App Store Connect for
-  # the highest build number is inherently workflow-independent, so the RC and nightly
-  # pipelines cannot collide however many times either runs.
+  # THE BUILD NUMBER COMES FROM REMOTE STATE, not from GITHUB_RUN_NUMBER — see
+  # `next_ios_build_number`. That is why iOS needs no versionCode-style band scheme the way Android
+  # does: App Store Connect is one counter every workflow reads, so the RC, nightly and release
+  # pipelines cannot collide when they run one after another. ⚠️ Two runs that OVERLAP — one
+  # looking up before the other's upload is done, roughly 8 to 22 minutes after that one's own
+  # lookup — number their builds alike, and App Store Connect refuses the second upload. Nothing
+  # serialises the three workflows, so never let a release overlap a nightly or RC run, in either
+  # order (docs/cicd.md § Release to Production, step 2).
   private_lane :ship_ios! do |options|
     upload = options.fetch(:upload)
+    destination = options.fetch(:destination)
+    # Rejected here rather than at the upload it selects, which is ~20 minutes of build later.
+    unless %i[testflight app_store].include?(destination)
+      UI.user_error!("Unknown iOS upload destination #{destination.inspect}.")
+    end
 
     api_key = app_store_connect_api_key(
       key_id: ENV['APP_STORE_CONNECT_API_KEY_KEY_ID'],
@@ -141,14 +176,9 @@ platform :ios do
 
     profile_mapping = apply_distribution_signing(match_type: "appstore")
 
-    # Retrieve last build number from TestFlight and increment
-    last_build = latest_testflight_build_number(
-      app_identifier: app_identifier,
-      api_key: api_key
-    )
     increment_build_number(
       xcodeproj: "ios/Cardi.xcodeproj",
-      build_number: (last_build.to_i + 1).to_s
+      build_number: next_ios_build_number(app_identifier: app_identifier, api_key: api_key).to_s
     )
     build_app(
       scheme: "Cardi",
@@ -166,18 +196,29 @@ platform :ios do
       # that can fail has already run; what is skipped is the one irreversible step. A
       # TestFlight build number is consumed by an UPLOAD, not by asking for the last one, so a
       # dry run costs nothing but minutes and leaves the IPA as a workflow artifact.
-      UI.important("DRY RUN — built the app-store IPA, skipping the TestFlight upload.")
+      UI.important("DRY RUN — built the app-store IPA, skipping the upload.")
       next
     end
 
-    upload_to_testflight(
-      api_key: api_key
-    )
+    if destination == :app_store
+      # Uploads the binary and prepares the version, but does NOT submit it for review
+      # (`submit_for_review` defaults to false): shipping stays a human step in App Store Connect.
+      upload_to_app_store(
+        api_key: api_key,
+        skip_metadata: true,
+        skip_screenshots: true,
+        precheck_include_in_app_purchases: false
+      )
+    else
+      upload_to_testflight(
+        api_key: api_key
+      )
+    end
   end
 
   desc "Build and upload to TestFlight"
   lane :beta do
-    ship_ios!(upload: true)
+    ship_ios!(upload: true, destination: :testflight)
   end
 
   # Nightly internal build (Story 16.36). Identical to `beta` by design — see `ship_ios!`.
@@ -187,41 +228,14 @@ platform :ios do
   # track" means on iOS. Adding a group would change who gets RC builds too.
   desc "Nightly internal build → TestFlight (Story 16.36)"
   lane :nightly do |options|
-    ship_ios!(upload: !options[:dry_run])
+    ship_ios!(upload: !options[:dry_run], destination: :testflight)
   end
 
+  # The production upload (`store-upload.yml`). The same body as the RC and the nightly, so the
+  # same build numbering — see `ship_ios!` for why that is the point.
   desc "Build and upload to App Store Connect (release)"
   lane :upload_release do
-    api_key = app_store_connect_api_key(
-      key_id: ENV['APP_STORE_CONNECT_API_KEY_KEY_ID'],
-      issuer_id: ENV['APP_STORE_CONNECT_API_KEY_ISSUER_ID'],
-      key_content: ENV['APP_STORE_CONNECT_API_KEY_KEY'],
-      in_house: false
-    )
-
-    profile_mapping = apply_distribution_signing(match_type: "appstore")
-
-    build_number = ENV['GITHUB_RUN_NUMBER'] || Time.now.to_i.to_s
-    increment_build_number(
-      xcodeproj: "ios/Cardi.xcodeproj",
-      build_number: build_number
-    )
-    build_app(
-      scheme: "Cardi",
-      workspace: "ios/Cardi.xcworkspace",
-      export_method: "app-store",
-      output_directory: "output",
-      export_options: {
-        provisioningProfiles: profile_mapping
-      },
-      xcargs: "DEVELOPMENT_TEAM='#{ENV['FASTLANE_TEAM_ID']}'"
-    )
-    upload_to_app_store(
-      api_key: api_key,
-      skip_metadata: true,
-      skip_screenshots: true,
-      precheck_include_in_app_purchases: false
-    )
+    ship_ios!(upload: true, destination: :app_store)
   end
 end
 
