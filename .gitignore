@@ -164,6 +164,19 @@ _bmad/config.user.toml
 # _bmad/custom/config.toml, so nothing durable should ever land here.
 _bmad-output/
 
+# Scratch that `bmad-build` writes into implementation_artifacts (docs/sprint-artifacts/). None of it
+# is a project record: the committed spec is the story file under stories/, the epic context is a
+# cache keyed on file mtimes (meaningless in a fresh clone), deferrals are copied into the story's
+# "Found, not fixed" list, and stories.yaml is the one-entry transport file that the bmad-build
+# override writes so step 1 takes its spec-folder route for a new story. It is ignored for a second
+# reason too: `prettier --check .` reads untracked files, so a prettier-dirty scratch file here fails
+# `yarn format:check` and blocks .husky/pre-push on a file nobody meant to commit. Tracked
+# epic-N-retro-*.md files are unaffected.
+docs/sprint-artifacts/spec-*.md
+docs/sprint-artifacts/epic-*-context.md
+docs/sprint-artifacts/deferred-work.md
+docs/sprint-artifacts/stories.yaml
+
 # Playwright MCP server scratch output — console/network captures written into the
 # working directory while the server drives a browser. Per-session tool noise, never
 # a project record, and it lands in whichever directory the session happens to run in.
