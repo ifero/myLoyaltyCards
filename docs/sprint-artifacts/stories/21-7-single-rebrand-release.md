@@ -4,7 +4,7 @@ baseline_commit: 2ff3e23016a3ee6130e5e0c2b3651de62fa4ac5f
 
 # Story 21.7: The single rebrand release [Enabling] — and the "eight orphaned SVGs" that are seven, one of them load-bearing
 
-Status: in-progress
+Status: done
 
 Epic: 21 — Cardì Rebrand — Native Identity
 
@@ -684,3 +684,4 @@ These are out of this story's mechanism, and are filed as one follow-up issue,
 | 2026-09-29 | Code review round 9, two nits, both fixed. The `ship_ios!` header now says the lanes pass two values, the destination and, for `nightly`, whether to upload. AC8 row 21 now separates the surfaces that claim no analytics (both policies and `docs/index.html`) from the store forms, which must declare Sentry; round 10 removed an unverified claim that they were unfiled.                                                                                                                                                                         |
 | 2026-09-29 | Code review round 10, one nit, fixed. Row 21 no longer asserts that the store forms are unfiled. No record shows either form filled, and Play requires the Data safety form on closed-testing tracks, which the RC lane uses. So the row now says to check both consoles and declare Sentry, or correct an existing filing.                                                                                                                                                                                                                            |
 | 2026-09-29 | Code review round 11 approved with zero findings. ifero then directed the PR, so the QA review loop was not run. The follow-ups are filed as #253.                                                                                                                                                                                                                                                                                                                                                                                                     |
+| 2026-09-30 | Closed as done by ifero's decision on 2026-09-30, so that Sprint 20 can close. AC8's rows keep the state they had on 2026-09-29, all "not yet performed"; this change records no result for any device or store check, and they are still owed on the first nightly.                                                                                                                                                                                                                                                                                   |
