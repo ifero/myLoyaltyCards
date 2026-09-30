@@ -24,12 +24,12 @@
 import { render, screen } from '@testing-library/react-native';
 import React from 'react';
 
-import AliasedMark from '@/assets/images/app-icon-variant-aurora.svg';
 import AliasedPng from '@/assets/images/brands/coin.png';
+import AliasedMark from '@/assets/images/cardi-mark.svg';
 
 import { getBrandLogo } from '@/features/cards/utils/brandLogos';
 
-import RelativeMark from '../assets/images/app-icon-variant-aurora.svg';
+import RelativeMark from '../assets/images/cardi-mark.svg';
 
 describe('SVG module resolution', () => {
   it('resolves an @/-aliased .svg to a renderable component, not an asset object', () => {

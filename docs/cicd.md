@@ -244,7 +244,7 @@ Notes:
 - **The Wear track is `wear:internal`, and it is derived — the workflow sets no override.** `wear:internal` is what this listing actually has (Play Publishing API, 2026-09-07). ⛔ **This previously read "the track is `wear:qa` and it is set explicitly", which was wrong and cost three nights.** [Google's docs](https://developers.google.com/android-publisher/tracks) do say the internal-testing track is named `qa`; the API disagrees, and the API wins. Each failed run uploaded the phone AAB _first_ and then died on `Track not found: wear:qa` — a silent phone-only release with unrecoverable version codes, three times. The protection now is `ensure_wear_track_exists!`, which asks Play for the real track list in `ship_android!` **before either artifact is built**, so a wrong destination costs seconds instead of a partial ship. An unreachable API is deliberately not a failure.
 - **Nightly uploads are `release_status: "completed"`, not the RC lane's `draft`.** The RC lane uses a draft so promoting to testers stays a human action; a nightly whose whole purpose is unattended delivery cannot require a nightly human click. Do not "restore consistency" — it would turn the nightly into a queue of undelivered drafts that looks green from CI.
 - **Two new versionCode bands.** `GITHUB_RUN_NUMBER` is scoped per workflow file, so this file starts a fifth independent counter. The phone uses `4_000_000 + run` (arithmetic in the workflow, as `store-upload.yml` does); Wear uses `5_000_000 + run` (applied in `watch-android/app/build.gradle.kts`, selected from the upload track so the band cannot disagree with the destination). ⚠️ Nightly codes are **higher than production codes**, so a device on a nightly never receives a production build as an update — leaving the nightly track means reinstalling.
-- **iOS needs no band.** `fastlane ios nightly` derives its build number from `latest_testflight_build_number + 1`, the only build number in this repo read from remote state, so it is inherently workflow-independent.
+- **iOS needs no band.** `fastlane ios nightly` derives its build number from `latest_testflight_build_number + 1`, the only build number in this repo read from remote state, so runs of different workflows number past each other as long as they do not overlap (see [Build number conflict](#build-number-conflict)).
 - **Baselines are the moving tags `nightly/ios` and `nightly/android`**, force-pushed with the default `GITHUB_TOKEN` after a successful upload. They match no existing tag trigger (`v*.*.*-rc.*`, `v*.*.*`), and pushes made with `GITHUB_TOKEN` do not trigger workflow runs — two independent guards against a nightly tag firing a store upload. Each tag moves only if **its** platform succeeded, so a failed platform retries tomorrow rather than swallowing the change. **A `workflow_dispatch` never moves a tag**, whatever its inputs.
 - **A skip is a green run**, never a red X and never a warning: the common case must not train everyone to ignore the signal. It explains itself in the job summary — baseline SHA, head SHA, file counts and the triggering files.
 - Every job sets `timeout-minutes`. The older release workflows do not, which is worth fixing separately.
@@ -279,7 +279,7 @@ Android lanes summary:
 - `android beta` — Builds the phone AAB and the Wear OS AAB; uploads them to the `alpha` track and `wear:alpha` respectively
 - `android upload_release` — the same pair, to `production` and `wear:production`
 - `android nightly` — the same pair, to `internal` and `wear:internal`, with `release_status: "completed"`; accepts `dry_run:true`
-- `ship_ios!` / `ship_android!` (private) — the shared lane bodies. `beta`, `upload_release` and `nightly` differ only in track, release status and whether they upload
+- `ship_ios!` / `ship_android!` (private) — the shared lane bodies. `beta`, `upload_release` and `nightly` differ only in whether they upload and where to: on Android the track and release status, on iOS the destination (TestFlight or the App Store)
 - `build_wear_bundle!` (private) — builds and signing-parity-checks the Wear AAB; runs **before** either upload so a build failure cannot strand a phone-only release
 - `upload_wear_bundle!` (private) — uploads that AAB to the `wear:` form-factor track, and translates Play's `Track not found` into the Console steps that fix it
 
@@ -312,16 +312,18 @@ gh release create v1.0.0-rc.1 --prerelease --generate-notes --target main
 
 ### Release to Production
 
-1. Validate the RC/TestFlight build.
-2. Create and publish the final release (**no** `--prerelease`, and a bare `vX.Y.Z` tag — the workflow checks both):
+1. Validate the RC/TestFlight build, and note the commit it was built from: for an RC, the commit its tag points at; for a nightly, the `head` row of that run's job summary, the commit both platform jobs check out. That row shows 12 characters and `--target` in step 3 needs the full SHA, so expand it (`git fetch origin && git rev-parse <those 12>`); the run's Decide step logs it in full too. Do **not** read a local `nightly/*` tag. The workflow force-moves them, a plain `git fetch --tags` will not update a tag that already exists, and only scheduled runs move them at all; `git ls-remote --tags origin 'nightly/*'` shows the remote's. If the iOS and Android builds you validated came from different runs, pin the newer only if the job summary shows the older platform was skipped there, not failed. A commit from before Story 21.7 merged still carries the old `upload_release`, whose iOS upload App Store Connect refuses.
+2. Publish only when no `Beta Releases (RC)` or `Nightly Internal Builds` run of any trigger is in progress and that day's scheduled nightly has finished, and start none until the release's iOS job has finished uploading. A release that overlaps either one, in either order, gives its iOS build the same number, and App Store Connect refuses the second upload (see `ship_ios!` in `fastlane/Fastfile`). Check Actions, not the clock: 25 scheduled nightlies from 2026-09-05 to 09-29 started between 06:58 and 08:45 UTC, not at the 02:17 cron time, and a release takes about 45 minutes. Check Play Console → Publishing overview for managed publishing and, if it is offered, turn it on before publishing: the Android lane uploads `completed` to both production tracks with no staged `rollout`, so without it Play's approval means live, at 100%. Google does not offer it for an app's first publication ("You can't use it when publishing an app for the first time"), and recommends a closed-testing release first.
+3. Create and publish the final release (**no** `--prerelease`, and a bare `vX.Y.Z` tag — the workflow checks both), targeting the commit from step 1 rather than `main`, which may have moved since:
 
 ```bash
-gh release create v1.0.0 --generate-notes --target main
+gh release create v1.0.0 --generate-notes --target "$(git rev-parse <commit-from-step-1>)"
 ```
 
-3. Monitor `.github/workflows/store-upload.yml` in GitHub Actions. `Beta Releases (RC)` will appear with all jobs `skipped`.
-4. Verify **both** Play Console production tracks: the mobile track (phone, version code `<run> + 1000000`) and `wear:production` (Wear OS AAB, version code `3000000 + <run>`). Shipping the phone without the Wear half would silently downgrade every tester who already has the watch app.
-5. After upload completes, submit the build for App Store / Play Store review.
+4. Monitor `.github/workflows/store-upload.yml` in GitHub Actions. `Beta Releases (RC)` will appear with all jobs `skipped`.
+5. Verify **both** Play Console production tracks: the mobile track (phone, version code `<run> + 1000000`) and `wear:production` (Wear OS AAB, version code `3000000 + <run>`). Shipping the phone without the Wear half would silently downgrade every tester who already has the watch app.
+6. Submit the iOS build for review in App Store Connect: `upload_release` uploads it without submitting. Choose _Manually release this version_, so the iOS release can be timed with Android's. On Android, open Play Console → Publishing overview and confirm both production tracks are in review; send them if not. A green lane does not prove it: when Play answers the commit with "Please set the query parameter changesNotSentForReview to true", supply's `rescue_changes_not_sent_for_review` (default `true`) re-commits the edit unsent and says nothing. With managed publishing on, publish both once approved.
+7. Once Apple approves the version, bump `expo.version` before the next nightly. Once a version is released, App Store Connect closes its train ("The train version … is closed for new build submissions") and refuses every later upload at that version, nightly and RC included, until the version moves. The forum explanations tie closure to release, Apple documents no trigger, and whether approval alone closes it is not established; bumping at approval is safe either way.
 
 ### Run a nightly by hand
 
@@ -342,7 +344,7 @@ Check in this order:
 
 1. **Did the run happen?** Actions → Nightly Internal Builds. GitHub disables scheduled workflows in repositories with no activity for 60 days; re-enable from the Actions tab.
 2. **Was it a deliberate skip?** Open the run summary. A skip is green and states the baseline SHA, the head SHA and how many changed files were binary-affecting. `0 of N` means the gate worked.
-3. **Is the baseline stale or wrong?** `git fetch --tags && git log nightly/ios..main --oneline` shows exactly what the next nightly considers pending. Deleting the tag makes the next run fail open and build.
+3. **Is the baseline stale or wrong?** `git fetch --force --tags origin && git log nightly/ios..origin/main --oneline` shows exactly what the next nightly considers pending. The `--force` is load-bearing: the workflow force-moves these tags, and a plain `git fetch --tags` refuses to update one that already exists, so the `&&` never runs. Deleting the tag makes the next run fail open and build.
 4. **Did the path definition drift?** `yarn check:build-path-filters`. If a new source directory is missing from `.github/build-path-filters.json`, changes inside it will never trigger a nightly.
 5. **Did the Wear half fail alone?** Look for `Track not found` — the lane prints the tracks this app actually has. Note the phone AAB is uploaded before the Wear AAB, so this state means Play `internal` has a phone build with no matching watch build.
 
@@ -466,8 +468,9 @@ CI keychain setup:
 
 ### Build number conflict
 
-- iOS `beta` lane uses the last TestFlight build number and increments it.
-- `adhoc` and `upload_release` use `GITHUB_RUN_NUMBER` on CI or a timestamp locally.
+- Every iOS upload lane — `beta`, `nightly` and `upload_release`, all through `ship_ios!` — numbers its build one past the latest TestFlight upload of **any** version (`next_ios_build_number`). `upload_release` used to take `GITHUB_RUN_NUMBER` instead — five runs old when TestFlight had reached build 40 (2026-09-29) — so the first production upload would have been refused (Story 21.7).
+- **Two overlapping runs collide.** A release and a nightly or RC that overlap, from one's lookup until the other's upload is done, number their iOS builds alike, and App Store Connect refuses the second as a duplicate. Re-run the refused run: a fresh lookup numbers past the upload that won. [Release to Production](#release-to-production) step 2 is the prevention.
+- `adhoc` uses `GITHUB_RUN_NUMBER` on CI or a timestamp locally. AdHoc builds never reach App Store Connect, so that number cannot collide.
 - Android `beta`/`upload_release` versionCode is set by `app.config.ts` at `expo prebuild` time from `ANDROID_VERSION_CODE` (`GITHUB_RUN_NUMBER`, with a `+1,000,000` production offset band so the two release workflows never collide in Play's shared versionCode space), falling back to a Unix timestamp for local builds.
 
 ### `expo prebuild` changes signing settings
