@@ -11,13 +11,13 @@
 # ─────────────────────────────────────────────────────────────────
 
 [core]
+project_name = "myLoyaltyCards"
 document_output_language = "English"
 output_folder = "{project-root}/_bmad-output"
-project_name = "myLoyaltyCards"
 
 [modules.bmm]
-planning_artifacts = "{project-root}/_bmad-output/planning-artifacts"
-implementation_artifacts = "{project-root}/_bmad-output/implementation-artifacts"
+planning_artifacts = "{project-root}/docs"
+implementation_artifacts = "{project-root}/docs/sprint-artifacts"
 project_knowledge = "{project-root}/docs"
 
 [modules.bmb]
@@ -28,7 +28,7 @@ bmad_builder_reports = "{project-root}/skills/reports"
 visual_tools = "intermediate"
 
 [modules.tea]
-test_artifacts = "{project-root}/_bmad-output/test-artifacts"
+test_artifacts = "{project-root}/docs/sprint-artifacts"
 tea_use_playwright_utils = true
 tea_use_pactjs_utils = true
 tea_pact_mcp = "mcp"
@@ -39,9 +39,9 @@ test_stack_type = "auto"
 ci_platform = "auto"
 test_framework = "auto"
 risk_threshold = "p1"
-test_design_output = "_bmad-output/test-artifacts/test-design"
-test_review_output = "_bmad-output/test-artifacts/test-reviews"
-trace_output = "_bmad-output/test-artifacts/traceability"
+test_design_output = "docs/sprint-artifacts/test-design"
+test_review_output = "docs/sprint-artifacts/test-reviews"
+trace_output = "docs/sprint-artifacts/traceability"
 
 [agents.bmad-agent-analyst]
 module = "bmm"
