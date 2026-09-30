@@ -67,7 +67,7 @@ for (const { code, message } of problems) {
 }
 console.error(
   `\nThe catalogue and the tracker must agree in both directions: ${TRACKER} is the\n` +
-    `source of truth for status, and ${EPICS} is where \`create-story\` reads a story's\n` +
+    `source of truth for status, and ${EPICS} is where \`bmad-build\` reads a story's\n` +
     'goal and acceptance criteria. A tracker key with no section is a story that can be\n' +
     'picked up with no content behind it.'
 );

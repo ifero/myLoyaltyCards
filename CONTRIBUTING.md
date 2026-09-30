@@ -69,7 +69,7 @@ still apply — the design guide defers to them rather than repeating them.
 
 ## The BMAD SDD Methodology
 
-BMAD is installed under [`_bmad/`](_bmad/) (v6.0.4: modules `core`, `bmm`, `bmb`, `cis`, `tea`). It drives the project through **four phases**, each owned by a specialized agent and producing a tangible artifact:
+BMAD is installed under [`_bmad/`](_bmad/) (6.12.0: modules `core`, `bmm`, `bmb`, `cis`, `tea`). It drives the project through **four phases**, each owned by a specialized agent and producing a tangible artifact:
 
 ```
 Phase 0 — Discovery        (optional)
@@ -86,10 +86,10 @@ Phase 2 — Solutioning
   Architect:   Implementation Readiness gate → docs/implementation-readiness-report-*.md
 
 Phase 3 — Implementation        (this is where most contributions happen)
-  Scrum Master: Sprint planning  → docs/sprint-artifacts/sprint-status.yaml
-  Scrum Master: Create story      → docs/sprint-artifacts/stories/<id>.md
-  Dev:          Implement story   (code + tests)
-  Dev/QA:       Code review
+  Planning:     Sprint tracker    → docs/sprint-artifacts/sprint-status.yaml
+  bmad-build:   Draft story       → docs/sprint-artifacts/stories/<id>.md
+  bmad-build:   Implement story   (code + tests, then its built-in review)
+  Dev/QA:       Walkthrough / code review
   Maintainer:   Merge PR
   Team:         Retrospective     → docs/sprint-artifacts/epic-*-retro-*.md
 ```
@@ -146,16 +146,17 @@ Follow these steps for any **code or docs** contribution. Steps 1–2 are the SD
 
 ### 2. Make sure a story exists (spec-first gate)
 
-Every implementation needs a story file in `docs/sprint-artifacts/stories/<epic>-<n>-<slug>.md` containing, at minimum:
+Every implementation needs a story file in `docs/sprint-artifacts/stories/<epic>-<n>-<slug>.md`. It is the story's **spec** — one file per story, and the one every merge gate reads — and it must contain, at minimum:
 
-- **Status** (`drafted` → `ready-for-dev` before dev starts)
-- **Story** (the user-facing goal)
-- **Context** (links to PRD/epic/architecture sections)
-- **Acceptance Criteria** (testable ACs — `AC1`, `AC2`, …)
-- **Tasks / Subtasks** (mapped to ACs)
-- **Tech Notes** and a **Definition of Ready** checklist
+- **Status** — `status` in the frontmatter (`draft` → `ready-for-dev` before dev starts)
+- **Intent** and **Boundaries & Constraints** (the user-facing goal, what is always true, what is out of scope)
+- **Acceptance Criteria** (testable, Given/When/Then), plus an **I/O & Edge-Case Matrix** where there are meaningful scenarios
+- **Tasks** (one per file: path — action — rationale) and **Verification** commands
+- **Code Map** (the files that matter, found while planning)
 
-Create it with the Scrum Master agent (`create-story`) or by copying the structure of a recent story. A story must be **`ready-for-dev`** (acceptance criteria approved) before implementation begins.
+Stories written before `bmad-build` use the classic layout (Story, Context, Acceptance Criteria, Tasks / Subtasks, Dev Notes) with a `Status:` line in the body. The merge automation reads both shapes, but `bmad-build` only resumes specs: pointed at a classic story file it stops and asks, and that story has to be converted or re-planned first.
+
+Create it with `bmad-build <story-key>` (for example `bmad-build 22-2-wallet`). It writes the spec to that path, investigates the code, puts anything only you can decide to you as an **Open Question**, and stops at an approval checkpoint; choose _Approve and stop_ to leave the story `ready-for-dev` for a later session. You can also copy the structure of a recent story. A story must be **`ready-for-dev`** (acceptance criteria approved) before implementation begins.
 
 ### 3. Create a branch
 
@@ -193,7 +194,7 @@ yarn test:fastlane  # fastlane/Fastfile release helpers (needs `bundle install` 
 
 ### 7. Update sprint status
 
-Update [`sprint-status.yaml`](docs/sprint-artifacts/sprint-status.yaml) to move the story to `review`, and reflect progress in the story file.
+Move the story to `review` in [`sprint-status.yaml`](docs/sprint-artifacts/sprint-status.yaml) — `bmad-build` does this when its run ends. Its spec stays at `in-review` until the PR merges: in this repository `done` means merged, and the merge automation sets it.
 
 ### 8. Request a code review
 
@@ -375,7 +376,7 @@ Run `yarn lint` and `yarn typecheck` to catch most violations automatically.
 ### Merging
 
 - **Do not merge your own PR.** A maintainer reviews and merges to `main`.
-- **Status update is automated.** When a PR is **merged**, the [`mark-story-done`](.github/workflows/mark-story-done.yml) workflow reads the story referenced in the PR and commits its status → `done` (in both `sprint-status.yaml` and the story file) directly to the default branch. The commit is tagged `[skip ci]` so it doesn't re-run any pipelines. This works for fork PRs too. _(Maintainers can also apply it by hand: `node scripts/mark-story-done.mjs <story-id>`.)_
+- **Status update is automated.** When a PR is **merged**, the [`mark-story-done`](.github/workflows/mark-story-done.yml) workflow reads the story referenced in the PR and commits its status → `done` (in both `sprint-status.yaml` and the story file) directly to the default branch, but only for a story that is waiting for the merge (`Status: review` in the body, `status: in-review` in a `bmad-build` spec's frontmatter, or a spec already at `done` while the tracker still says `review`); anything else is left alone. The commit is tagged `[skip ci]` so it doesn't re-run any pipelines. This works for fork PRs too. _(Maintainers can also apply it by hand: `node scripts/mark-story-done.mjs <story-id>`.)_
   - **Consequence for releases:** because that commit is usually `main`'s tip, a bare `git tag && git push --tags` will silently create no workflow run — GitHub applies the skip marker to tag pushes too. Cut releases with `gh release create` instead; see [Why releases are published, not just tagged](docs/cicd.md#why-releases-are-published-not-just-tagged).
 - When an epic completes, run a **retrospective** and capture lessons in `docs/sprint-artifacts/`.
 
@@ -423,21 +424,21 @@ Expanding the brand catalogue is the easiest and most-welcomed way to contribute
 
 ## Using the BMAD Agents
 
-You don't have to drive the methodology by hand. BMAD ships agents and workflows you can invoke from your AI IDE (Claude Code, Cursor, or GitHub Copilot — all preconfigured under [`_bmad/_config/ides/`](_bmad/_config/)). The workflows most relevant to contributors:
+You don't have to drive the methodology by hand. BMAD ships agents and skills you can invoke from your AI IDE (Claude Code, Cursor, or GitHub Copilot — all preconfigured under [`_bmad/_config/ides/`](_bmad/_config/)). The skills most relevant to contributors:
 
-| You want to…                        | Agent / workflow                               |
-| ----------------------------------- | ---------------------------------------------- |
-| Draft the next story                | Scrum Master — `create-story`                  |
-| Implement a `ready-for-dev` story   | Dev — `dev-story`                              |
-| Review code against the checklist   | Dev/QA — `code-review`                         |
-| Plan a sprint from the epics        | Scrum Master — `sprint-planning`               |
-| Add/refine requirements (new scope) | PM — `create-prd` / `create-epics-and-stories` |
-| Make a system design decision       | Architect — `create-architecture`              |
-| Handle a mid-sprint scope change    | `correct-course`                               |
-| Check we're ready to implement      | Architect — `check-implementation-readiness`   |
-| Close out an epic                   | `retrospective`                                |
+| You want to…                          | Skill                                                                                                                                         |
+| ------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
+| Draft and refine the next story       | `bmad-build <story-key>` — stop at the approval checkpoint                                                                                    |
+| Implement a `ready-for-dev` story     | `bmad-build <story-key>` — resumes at implementation (a classic-layout story file is not a spec; it has to be converted first)                |
+| Review code against the checklist     | built into `bmad-build` (its review step); ad hoc: `bmad-code-review`                                                                         |
+| Review a change yourself, guided      | `bmad-walkthrough`                                                                                                                            |
+| Check the tracker or sprint readiness | `bmad-sprint-planning` — readiness gate, `status` and `validate` only ([why](docs/sprint-artifacts/README.md#running-the-bmad-skills-safely)) |
+| Add/refine requirements (new scope)   | `bmad-prd` / `bmad-create-epics-and-stories`                                                                                                  |
+| Make a system design decision         | `bmad-architecture`                                                                                                                           |
+| Handle a mid-sprint scope change      | `bmad-correct-course`                                                                                                                         |
+| Close out an epic                     | `bmad-retrospective`                                                                                                                          |
 
-For very small, well-scoped changes, the **Quick Flow** (`quick-spec` → `quick-dev`) provides a lighter spec path — still spec-first, just leaner.
+`bmad-build` also has a **one-shot** shortcut for very small changes with no open questions: intent and implementation notes only, no approval checkpoint, one reviewer, and a commit of its own that this repository disables. It is for `chore:` and `docs:` work that has no story; every story takes the full route, so its acceptance criteria are approved before any code. How a story moves from `draft` to `done`, and what sets each status, is tabulated in [`docs/sprint-artifacts/README.md`](docs/sprint-artifacts/README.md#the-story-lifecycle-bmad-build).
 
 ---
 
@@ -446,7 +447,7 @@ For very small, well-scoped changes, the **Quick Flow** (`quick-spec` → `quick
 **Story lifecycle:**
 
 ```
-backlog → drafted → ready-for-dev → in-progress → review → done
+backlog → ready-for-dev → in-progress → review → done
 ```
 
 **The loop, in one line:**
