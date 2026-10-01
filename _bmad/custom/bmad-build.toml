@@ -1,0 +1,160 @@
+# Team override for the bmad-build skill.
+# Merges over .claude/skills/bmad-build/customize.toml per BMad structural rules
+# (strings replace; arrays append; arrays of tables merge by `id`).
+#
+# WHY THIS EXISTS
+# ---------------
+# bmad-build is this project's story engine. It replaced bmad-create-story and bmad-dev-story when
+# the install moved to BMAD 6.12 without the v6 compatibility shims. Out of the box it differs from
+# what the repository's automation and rules expect in these ways, and each entry below closes one:
+#
+#   1. It writes a flat docs/sprint-artifacts/spec-<slug>.md. CI reads
+#      docs/sprint-artifacts/stories/<key>.md (scripts/lib/story-refs.mjs,
+#      scripts/mark-story-done.mjs, scripts/check-pr-conventions.mjs), and a story has to exist as a
+#      tracked file BEFORE implementation: drafts are committed and reviewed as docs PRs.
+#   2. It marks a spec `done` when its own run ends, before any PR exists. Here `done` means merged:
+#      scripts/mark-story-done.mjs sets it when the PR merges.
+#   3. It commits locally, in step 5 and in the one-shot step. AGENTS.md requires sign-off first.
+#   4. It appends deferrals to deferred-work.md, which is git-ignored scratch here. Follow-ups are
+#      filed from the story itself.
+#   5. The implementation subagent receives the spec and nothing else, and the spec's `context:` list
+#      is the one sanctioned way to carry the house rules in. AGENTS.md is on that list, and its git
+#      workflow tells an implementer to push and to edit the tracker, which the spec must forbid.
+#   6. Its one-shot route has no approval checkpoint and reviews with a single layer, so stories are
+#      kept off it.
+#   7. Its review diff would carry the tracked spec and the tracker edit to every reviewer.
+#   8. Its loopbacks say "revert code changes", written for a spec that lives outside git. Here the
+#      spec and the tracker edit are uncommitted working-tree files, so a blunt revert would destroy
+#      them.
+#
+# HOW A NEW STORY REACHES THE RIGHT PATH. Step 1 takes an EARLY EXIT, skipping its whole INSTRUCTIONS
+# block (epic context, previous-story continuity, the clean-tree and branch check, the scope check),
+# for any file it finds with a frontmatter `status`. So a new story must NOT be pre-created as a draft
+# stub. It goes through step 1's own spec-folder and story-id route instead, which runs INSTRUCTIONS
+# and sets `spec_file` to <spec_folder>/stories/<story_id>-<slug>.md. See STORY RESOLUTION below.
+#
+# The story lifecycle this produces is tabulated in docs/sprint-artifacts/README.md.
+
+[workflow]
+
+# Runs before activation, so the branch check in the BRANCH AND TREE fact compares with the current main.
+activation_steps_prepend = [
+  "Run `git fetch origin --quiet`.",
+]
+
+# Runs after the greeting and before step 1: turn a story reference into the route step 1 expects.
+activation_steps_append = [
+  """
+STORY RESOLUTION (this project). If the intent names a tracker story — a `development_status` key in
+docs/sprint-artifacts/sprint-status.yaml such as `22-2-wallet`, a `Story N.M` reference, or a path
+under docs/sprint-artifacts/stories/ — settle these before step 1.
+
+1. Resolve the key: an exact match on the first two segments, letters included (`21-2a` is not
+   `21-2`). Zero or several matches means stop and ask; this skill never adds a tracker key.
+   `<story_id>` is the key's first two segments (`22-2`, `21-2a`) and `<slug>` is the rest (`wallet`).
+2. If docs/sprint-artifacts/stories/<key>.md already exists:
+   - with a frontmatter `status` of draft, ready-for-dev, in-progress or in-review: use it as step 1's
+     explicit spec path;
+   - with `status: done` while the tracker key is `review`: a run whose on_complete was skipped. Set it
+     back to `in-review` and use it as above. Without this, step 1 would ingest it as context and fork
+     a second flat spec;
+   - with `status: done` while the tracker key is `done`: the story has merged. Stop. More work is a
+     new story;
+   - with `status: done` and any other tracker status: the record is inconsistent. Stop and ask;
+   - with no frontmatter `status` (a classic story file, which is every story written before
+     bmad-build): it is not a spec, and step 1 would fork a flat spec from it. Stop and tell the user
+     it has to be converted or re-planned first.
+   Step 1 routes an existing spec by its status and skips its own INSTRUCTIONS, which is right for a
+   resume. Run the checks in the BRANCH AND TREE fact yourself first.
+3. If it does not exist, write docs/sprint-artifacts/stories.yaml (git-ignored scratch) as a top-level
+   YAML list holding exactly one entry, every value in double quotes and none containing a double
+   quote or a backslash:
+
+       - id: "22-2"
+         title: "wallet"
+         description: "Story 22-2, the wallet screen. Its acceptance criteria are in docs/epics.md."
+
+   `id` is <story_id>, `title` is the slug's words with spaces for hyphens, and `description` is one
+   sentence naming the story and pointing at docs/epics.md. Then carry on as if the user had passed
+   `spec_folder` docs/sprint-artifacts and `story_id` <story_id>. That is step 1's own route for a new
+   story: it runs the whole INSTRUCTIONS block (epic context, previous-story continuity, the
+   clean-tree and branch check, the scope check) and sets `spec_file` to
+   docs/sprint-artifacts/stories/<story_id>-<slug>.md. Confirm that basename is exactly <key>.md.
+   The merge automation matches on the tracker key, so if the derived slug differs, use the tracker's
+   and say so.
+4. Read the story's own section in docs/epics.md (`### Story N.M:`) as the STARTING INTENT. The compiled
+   epic context deliberately leaves out story-level detail, so this section is the only way the
+   acceptance criteria reach the run. The spec may restate them as Given/When/Then but must not drop,
+   weaken or add to them without an Open Question.
+5. Previous story. Step 1 scans only the flat docs/sprint-artifacts folder for an earlier spec with a
+   frontmatter `status: done`. Here stories live in stories/ and most older ones carry a body `Status:`
+   line, so the scan finds nothing. Also read the previous story of the same epic (the highest number
+   below this one) from docs/sprint-artifacts/stories/, in either shape, and take what step 1 asks of a
+   previous spec: its Code Map, Design Notes, change log and tasks, or for a classic story its Dev
+   Notes, File List and Completion Notes.
+""",
+]
+
+persistent_facts = [
+  "file:{project-root}/docs/sprint-artifacts/README.md",
+  "STORY = SPEC. For a tracker story the spec file IS the story file, docs/sprint-artifacts/stories/<key>.md. CI reads that exact path (scripts/lib/story-refs.mjs, scripts/mark-story-done.mjs, scripts/check-pr-conventions.mjs), so a flat spec-<slug>.md, or a second file beside it, is invisible to every merge gate. Work that legitimately has no story may keep the skill's default flat spec-<slug>.md, which stays untracked: a `chore:` or `docs:` change, or a change the spec-first check exempts some other way (scope `catalogue`, or the `catalogue` or `design` label). Anything else that ships as `feat:` or `fix:` needs a tracker key first, allocated by hand (a bug report takes the next free 16-N, scanning every git ref); this skill never adds one.",
+  "STORIES TAKE THE FULL ROUTE. Step 2 may send a small change with no open questions to the one-shot step. For a tracker story never take it: write the full spec, set `route: 'dispatch'`, and stop at Checkpoint 1. The one-shot step has no approval checkpoint, commits by itself, reviews with a single layer and writes no Acceptance Criteria or Verification section, while the spec-first gate needs acceptance criteria approved before any code. Non-story work that does reach it is still bound by COMMIT GATE.",
+  "STATUS CONTRACT. Spec frontmatter `status` follows the skill (draft, ready-for-dev, in-progress, in-review), but in this repository `done` means MERGED. Step 5 sets the spec to `done` and the tracker key to `review`; the on_complete step moves the spec back to `in-review`, and scripts/mark-story-done.mjs sets both to `done` when the PR merges. Never leave a story at `done` before its PR merges, and never write a `Status:` body line into a story file: the frontmatter is the only status field.",
+  "TRACKER AT APPROVAL. The skill syncs the tracker only at `in-progress` (step 3) and `review` (step 5). When the human approves the spec at Checkpoint 1, either way, also set the tracker key to `ready-for-dev` if it is still `backlog`, by the rules in sync-sprint-status.md: never downgrade, preserve comments and structure, update `last_updated`. The refinement gate has to be visible in the tracker before anything is built.",
+  "CONTEXT FILES. Every spec's frontmatter `context:` lists `{project-root}/AGENTS.md` and `{project-root}/docs/project-context.md`. The implementation subagent is given the spec and these files and nothing else, so this list is how the house rules reach it. AGENTS.md still says NativeWind in places; the app styles with react-native-unistyles v3.",
+  "NEVER LIST. The `context:` files include AGENTS.md, whose git workflow tells an implementer to push the branch and to update the tracker, and the implementation subagent sees no other instruction. So every spec's `Never:` constraints include: commit, push, or change sprint-status.yaml or any other tracker file, because the orchestrator owns all three. The human approves that line with the rest of the frozen block at Checkpoint 1.",
+  "COMMIT GATE. AGENTS.md requires stakeholder sign-off before any commit. There are two commit sites and both are DISABLED here: step 5's 'create a local commit' and the one-shot step's '### Commit' section. Leave the working tree uncommitted and say so in one sentence. Do not list the changed files, which is the skill's own summary rule: the human reviews the diff with `git status` and `bmad-walkthrough`. Only after approval are atomic conventional commits made, then push and PR. Steps 3 and 4 diff from `baseline_commit` with untracked files included, so neither needs a commit; REVERTS ARE SCOPED covers the loopbacks. Never push and never pass `--no-verify`.",
+  "REVERTS ARE SCOPED. Nothing is committed here, so the approved spec, sprint-status.yaml and stories.yaml exist only in the working tree. When step 4 says to revert code changes (the intent_gap and bad_spec loopbacks), revert only the implementation files this run changed, path by path from the `{diff_file}` list. Never use a whole-tree revert, stash or clean (`git checkout -- .`, `git restore .`, `git stash`, `git clean`): it would destroy the spec and the tracker edit with no copy left.",
+  "BRANCH AND TREE. Step 1 checks the working tree and branch only when it STARTS a spec. Resuming an existing spec skips that check, and the check judges a branch by its name and history without comparing it to origin. So before any run, check yourself. `git branch --show-current` must be `feature/<story-id>-<slug>` (or fix/, refactor/, docs/, chore/; the pr-conventions check rejects any other prefix), never main and never a `claude/...` session branch; if it is one of those, stop and propose the rename. `git rev-list --left-right --count origin/main...HEAD` must not show the branch behind; say so if it does. For a NEW story `git status --porcelain` must be empty, and step 1 enforces that. On a RESUME the tree legitimately holds this story's own uncommitted work (its code, its spec, the tracker edit), because nothing is committed until the human approves and step 3 keeps the `baseline_commit` it already recorded. Stop and ask only if the tree also holds changes that clearly belong to something else.",
+  "DIFF FOR REVIEW. For a tracker story, when steps 3 and 4 write `{diff_file}`, exclude the story spec (docs/sprint-artifacts/stories/<key>.md) and docs/sprint-artifacts/sprint-status.yaml with pathspec excludes. The skill is built so the spec reaches the edge-case layer alone, as `{claims_file}`, after that layer has done its own tracing. Its default spec is an ignored flat file and so never enters the diff, but here the spec is a tracked path and would ride into every reviewer's input, and the tracker edit is the skill's own status sync, which is bookkeeping. For other work exclude nothing: a chore that edits the tracker on purpose would otherwise have an empty diff.",
+  "DEFERRALS LIVE IN THE STORY. docs/sprint-artifacts/deferred-work.md is git-ignored scratch. Whenever a step appends to it, also record the same item under a `### Found, not fixed` heading inside the spec's `## Implementation Notes`; that committed list is what a follow-up issue is filed from. Flag adjacent problems and do not fix them inside this story.",
+  "VERIFICATION. Every spec's `## Verification` runs `yarn typecheck`, `yarn lint`, `yarn format:check` and `yarn test`, plus `yarn tokens:check` when design tokens change. Untracked files under docs/ are still read by prettier, so run the format check before handing back.",
+  "SPRINT RECORD. The tracker key must already exist; this skill never adds one. The sprint blocks in sprint-status.yaml (last_sprint, current_sprint, next_sprint and their waves) are edited by hand only. If the story is missing from current_sprint.stories or from a wave, say so in the summary and leave the blocks alone.",
+]
+
+# Runs as the final instruction after step 5 (and after the one-shot step, which has the same footer).
+on_complete = """
+FINISH (this project), in order:
+
+1. For a tracker story, set `{spec_file}` frontmatter `status: 'in-review'`. The run marked it `done`;
+   here that word means merged (STATUS CONTRACT). Confirm the tracker key is `review`.
+2. Confirm no commit was made, at step 5 or in the one-shot step. If one was made anyway, say so
+   plainly and leave it: it is local and reversible. Do not amend it and do not push.
+3. Copy every entry this run appended to docs/sprint-artifacts/deferred-work.md into the spec's
+   `### Found, not fixed` list (DEFERRALS LIVE IN THE STORY).
+4. If that list is not empty, offer, without filing it, one GitHub issue for the story: title
+   `chore(<scope>): follow-ups for <story-key> — <topic>`, labels `backlog` and `needs-triage`.
+5. End with the next steps: review the diff (`bmad-walkthrough`), approve the commits, then push and
+   open the PR. The PR body must link docs/sprint-artifacts/stories/<key>.md, which is how the merge
+   gate and the spec-first check find the story.
+"""
+
+# A fourth review layer, beside the three the skill ships. `id` is new, so it appends. It carries the
+# CODE REVIEW CHECKLIST from AGENTS.md into the triage step that routes every finding. It is added to
+# the dispatch route only: stories never take the one-shot route (STORIES TAKE THE FULL ROUTE).
+[[workflow.review_layers]]
+id = "project-conventions"
+name = "Project Conventions Reviewer"
+instruction = """
+Launch a context-free subagent with this prompt:
+
+Review the unified diff at `{diff_file}` against this repository's written conventions. Read
+`{project-root}/AGENTS.md` and `{project-root}/docs/project-context.md` completely first, then judge the
+diff against them, using the CODE REVIEW CHECKLIST in AGENTS.md as the spine. Pay particular attention to:
+styling through react-native-unistyles (AGENTS.md still says NativeWind in places; it is stale), no
+`Pressable` `style={({ pressed }) => ...}` callbacks, safe-area insets on every edge-anchored tappable
+control, arrow-function declarations, tests co-located beside their subject with no `__tests__` folders
+and none under `app/`, and `yarn` only.
+
+You are not given the story or its spec, so skip the checklist line about acceptance criteria: the
+orchestrator verifies those against the spec itself.
+
+Report only violations the diff itself introduces, each with `path:line` and the rule it breaks.
+Output a Markdown list of findings only — no severity, priority, or ranking. If there are none, say so
+in one line.
+
+Do not invoke any skill, and do not spawn subagents of your own — you are the reviewer. Return your
+findings as text in your final message; do not route them through any findings-reporting tool the host
+may offer.
+
+"""

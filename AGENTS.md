@@ -294,6 +294,7 @@ git commit -m "feat(scope): short description
 - Present the minimal diff or a short description of the change to the stakeholder and wait for an approval reply before creating the commit.
 - This applies to all commits that meaningfully affect user-visible behavior (features, fixes, refactors that change behavior, and documentation of UX changes).
 - This is intentionally complementary to the PR-level code review — the purpose is to enable iterative stakeholder feedback during development.
+- `bmad-build` is configured not to commit (the COMMIT GATE fact in `_bmad/custom/bmad-build.toml`): it leaves the working tree for this review, and atomic commits follow the approval.
 
 ### 3. Push and Update Sprint Status
 
@@ -307,48 +308,41 @@ After completing work:
 
 When work is complete, follow this workflow:
 
-1. **Update status to `review`** in `sprint-status.yaml`
+1. **Update status to `review`** in `sprint-status.yaml` — `bmad-build` does this when its run ends, and
+   leaves the story spec at `in-review` until the PR merges (in this repository `done` means merged)
 
-2. **Request Code Review from Dev Agent** (Different LLM):
-
-   ```
-   Use runSubagent with agentName: "bmd-custom-bmm-dev"
-   Provide context:
-   - Files changed in this PR
-   - Implementation approach and design decisions
-   - Acceptance criteria checklist
-   - Any known limitations or TODOs
+2. **Review the change.** `bmad-build` reviews its own work before handing back: three context-free
+   reviewers plus a project-conventions reviewer that applies the checklist below, with every finding
+   verified, routed (`patch` / `bad_spec` / `intent_gap` / `defer`) and logged in the spec's Review
+   Triage Log. Then:
+   - **Human pass** — `bmad-walkthrough` walks Ifero through the change (what it is for, what to look
+     at closely, how to test it). This is the stakeholder sign-off gate above: nothing is committed
+     before it.
+   - **Extra independent pass (optional)** — `bmad-code-review` on the diff, or a fresh session on a
+     different LLM, when the change is risky enough to warrant one.
 
    Wait for review feedback:
    - APPROVED ✅ → Move to step 3
    - CHANGES_REQUESTED ⚠️ → Move to step 4
-   ```
 
-3. **If APPROVED by Dev Agent**:
+3. **If APPROVED**:
    - Create Pull Request with:
      - Clear title: `feat(scope): description (Story X.Y)`
      - Body with:
        - Summary of changes
        - Acceptance criteria checklist (mark completed items)
-       - Link to code review approval message
+       - Link to the story spec (`docs/sprint-artifacts/stories/<key>.md`) and its Review Triage Log
        - Test results summary (test counts, coverage if applicable)
      - Set reviewers if using GitHub PRs
    - **STOP HERE** - Do NOT merge. Wait for user to review and merge the PR
    - Update `sprint-status.yaml`: mark story status as `done` (after user merges)
 
-4. **If CHANGES_REQUESTED by Dev Agent**:
-   - Address all feedback and issues raised
+4. **If CHANGES_REQUESTED**:
+   - Address all feedback and issues raised: re-run `bmad-build <story-key>` — a spec at `in-review`
+     resumes at the review step, so the fixes are triaged and logged like the first pass
    - Make focused commits with clear messages
    - Push changes to feature branch
-   - **Request NEW code review from a different Dev Agent**:
-     ```
-     Use runSubagent with agentName: "bmd-custom-bmm-dev" (or alternate if available)
-     Include:
-     - Summary of changes made in response to feedback
-     - Files modified since last review
-     - Explanation of design decisions
-     ```
-   - Repeat review process until APPROVED
+   - Repeat the review (step 2) until APPROVED
    - Once approved, proceed to step 3
 
 **CODE REVIEW CHECKLIST (for reviewers):**

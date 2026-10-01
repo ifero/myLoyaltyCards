@@ -418,6 +418,13 @@ export default [
       // Nested Claude Code worktrees (gitignored) are full repo copies; linting
       // them errors because their files aren't part of ./tsconfig.json's project.
       '.claude/**',
+      // BMAD installer output. `.claude/**` above already covers the Claude Code copy of the
+      // skills; `.agents/skills/bmad-*` is the same tree again (Cursor, Copilot), and `_bmad/` is
+      // its runtime. Generated third-party code, prettier-ignored for the same reason. TEA 1.27
+      // ships the first lintable file in it, `resources/hooks/tea-enforce.cjs`, which uses Node
+      // globals this config never declares. The project's own `.agents/skills/*` stay linted.
+      '.agents/skills/bmad-*/**',
+      '_bmad/**',
       '.expo/**',
       'dist/**',
       'web-build/**',

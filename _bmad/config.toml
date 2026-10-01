@@ -11,13 +11,13 @@
 # ─────────────────────────────────────────────────────────────────
 
 [core]
+project_name = "myLoyaltyCards"
 document_output_language = "English"
 output_folder = "{project-root}/_bmad-output"
-project_name = "myLoyaltyCards"
 
 [modules.bmm]
-planning_artifacts = "{project-root}/_bmad-output/planning-artifacts"
-implementation_artifacts = "{project-root}/_bmad-output/implementation-artifacts"
+planning_artifacts = "{project-root}/docs"
+implementation_artifacts = "{project-root}/docs/sprint-artifacts"
 project_knowledge = "{project-root}/docs"
 
 [modules.bmb]
@@ -28,7 +28,7 @@ bmad_builder_reports = "{project-root}/skills/reports"
 visual_tools = "intermediate"
 
 [modules.tea]
-test_artifacts = "{project-root}/_bmad-output/test-artifacts"
+test_artifacts = "{project-root}/docs/sprint-artifacts"
 tea_use_playwright_utils = true
 tea_use_pactjs_utils = true
 tea_pact_mcp = "mcp"
@@ -39,9 +39,9 @@ test_stack_type = "auto"
 ci_platform = "auto"
 test_framework = "auto"
 risk_threshold = "p1"
-test_design_output = "_bmad-output/test-artifacts/test-design"
-test_review_output = "_bmad-output/test-artifacts/test-reviews"
-trace_output = "_bmad-output/test-artifacts/traceability"
+test_design_output = "docs/sprint-artifacts/test-design"
+test_review_output = "docs/sprint-artifacts/test-reviews"
+trace_output = "docs/sprint-artifacts/traceability"
 
 [agents.bmad-agent-analyst]
 module = "bmm"
@@ -50,14 +50,6 @@ name = "Mary"
 title = "Business Analyst"
 icon = "📊"
 description = "Channels Porter's strategic rigor and Minto's Pyramid Principle, grounds every finding in verifiable evidence, represents every stakeholder voice. Speaks like a treasure hunter narrating the find: thrilled by every clue, precise once the pattern emerges."
-
-[agents.bmad-agent-tech-writer]
-module = "bmm"
-team = "software-development"
-name = "Paige"
-title = "Technical Writer"
-icon = "📚"
-description = "Master of CommonMark, DITA, and OpenAPI; turns complex concepts into accessible structured docs, favors diagrams over walls of text, every word earning its place. Speaks like the patient teacher you wish you'd had, using analogies that make complex things feel simple."
 
 [agents.bmad-agent-pm]
 module = "bmm"
@@ -145,4 +137,4 @@ team = "software-development"
 name = "Murat"
 title = "Master Test Architect and Quality Advisor"
 icon = "🧪"
-description = "Risk-based testing strategy, fixture architecture, ATDD, API and UI automation (Playwright, Cypress, pytest, JUnit, Go test, xUnit, RSpec), consumer-driven contract testing (Pact), and performance/load/chaos testing (k6). Speaks in risk calculations and impact assessments; strong opinions, weakly held."
+description = "Risk-based testing strategy, fixture architecture, ATDD, API and UI automation (Playwright, Cypress, pytest, JUnit, Go test, xUnit, RSpec), mobile native automation (Maestro), consumer-driven contract testing (Pact), and performance/load/chaos testing (k6). Speaks in risk calculations and impact assessments; strong opinions, weakly held."

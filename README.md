@@ -180,7 +180,7 @@ myLoyaltyCards/
 ├── fastlane/             # Build & signing automation
 ├── scripts/              # Helper scripts (catalogue generation, watch build, vendor fixups)
 ├── docs/                 # SDD artifacts: PRD, architecture, epics, UX, CI/CD, sprint artifacts
-├── _bmad/                # BMAD-METHOD installation (agents, workflows, config) — v6.0.4
+├── _bmad/                # BMAD-METHOD installation (agents, workflows, config) — 6.12.0
 ├── .github/workflows/    # CI & release pipelines
 └── AGENTS.md             # Operating rules for AI agents working in this repo
 ```
@@ -267,7 +267,7 @@ Quality is enforced both locally (git hooks) and in CI:
 
 ## Spec-Driven Development (BMAD)
 
-This project is built **spec-first** using the [BMAD-METHOD](https://github.com/bmad-code-org/BMAD-METHOD) (Breakthrough Method of Agile AI-Driven Development), installed under [`_bmad/`](_bmad/) (v6.0.4). Specialized AI agents (Analyst, PM, UX Designer, Architect, Scrum Master, Dev, QA/Test Architect, Tech Writer) drive the lifecycle through four phases:
+This project is built **spec-first** using the [BMAD-METHOD](https://github.com/bmad-code-org/BMAD-METHOD) (Breakthrough Method of Agile AI-Driven Development), installed under [`_bmad/`](_bmad/) (6.12.0). Specialized AI agents (Analyst, PM, UX Designer, Architect, Scrum Master, Dev, QA/Test Architect, Tech Writer) drive the lifecycle through four phases:
 
 ```
 Phase 0  Discovery     →  brainstorming, research, product brief        (optional)
@@ -278,7 +278,7 @@ Phase 3  Implementation→  Sprint planning → per-story specs → dev →     
                           code review → PR → retrospective
 ```
 
-**The core rule: code follows a spec.** Every implementation traces back to a **story** in `docs/sprint-artifacts/stories/`, which itself traces back to the epics, PRD, and architecture. Stories move through `backlog → drafted → ready-for-dev → in-progress → review → done`, tracked in [`docs/sprint-artifacts/sprint-status.yaml`](docs/sprint-artifacts/sprint-status.yaml).
+**The core rule: code follows a spec.** Every implementation traces back to a **story** in `docs/sprint-artifacts/stories/`, which itself traces back to the epics, PRD, and architecture. Stories move through `backlog → ready-for-dev → in-progress → review → done`, tracked in [`docs/sprint-artifacts/sprint-status.yaml`](docs/sprint-artifacts/sprint-status.yaml).
 
 ➡️ **If you want to contribute, read [CONTRIBUTING.md](CONTRIBUTING.md) first** — it explains how to work within this methodology in detail.
 
