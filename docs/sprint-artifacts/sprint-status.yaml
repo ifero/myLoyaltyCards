@@ -1,5 +1,5 @@
 # generated: 2026-01-03
-# last_updated: 2026-09-30
+# last_updated: 2026-10-04
 # project: myLoyaltyCards
 # project_key: NOKEY
 # tracking_system: file-system
@@ -47,7 +47,7 @@
 # - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
 
 generated: 2026-01-03
-last_updated: 2026-09-30
+last_updated: 2026-10-04
 project: myLoyaltyCards
 project_key: NOKEY
 tracking_system: file-system
@@ -57,128 +57,14 @@ story_location: docs/sprint-artifacts # BMAD implementation_artifacts root; stor
 # LAST SPRINT (completed)
 # ============================================
 last_sprint:
-  number: 19
-  name: 'Sprint 19: Apple Watch Barcode Quality, Lint Debt & Nightly Delivery'
-  goal: "Close the quality gap the Wear OS launch exposed on Apple Watch. Wear OS now renders all six barcode symbologies correctly; the Apple Watch draws a Code128 symbol for three formats that are not Code128 (EAN-8, UPC-A, Code39), quantises 1-module bars to two different pixel widths, dims mid-scan, and shows initials where the complication already shows real brand logos. Four ready-for-dev stories fix all of that, plus 16-24 clears the exhaustive-deps warning backlog on an independent JS/TS track. AMENDED 2026-09-03: 16-36 adds a third, independent theme — nightly internal-track delivery of all four apps, gated on whether anything that reaches a binary actually changed. It continues wave_0's release-plumbing thread rather than the Apple Watch one, and is the first cron in the repository."
-  status: completed # CLOSED 2026-09-14 at the Sprint 19 -> 20 roll-over: all ELEVEN stories done — the ten listed at planning plus 16-40, reconciled in as wave_6 (see its note). Previously `in-progress`. PLANNED 2026-08-20 at the Sprint 18 close / Epic 10 retrospective; moved planned -> in-progress on 2026-08-26 when 16-35 (mid-sprint addition, see wave_0) was drafted and implemented in one pass. NO sprint retrospective has been run — see the `retrospective` field.
-  planning_date: 2026-08-20
-  start_date: 2026-08-25 # first story started (16-28, wave_1)
-  end_date: 2026-09-14 # last story merged (16-40, #232)
-  completed_date: 2026-09-14
-  epics: [16]
-  stories:
-    - 16-35-ship-wear-os-apk-to-play
-    - 16-28-watch-real-symbologies-ean8-upca-code39
-    - 16-34-fix-encodeean13-non-ascii-numeral-trap
-    - 16-37-fix-watch-code128-stop-pattern
-    - 16-29-watch-card-list-brand-logos
-    - 16-27-fix-watch-barcode-geometry
-    - 16-26-hold-watch-display-luminance
-    - 16-24-clear-exhaustive-deps-warnings
-    - 16-36-nightly-internal-track-builds
-    - 16-39-maximise-brightness-on-card-detail
-    - 16-40-fix-unreachable-camera-error-state
-  waves:
-    wave_0:
-      stories: [16-35]
-      note: 'MID-SPRINT ADDITION 2026-08-26, from a field report by ifero ("I''ve released to internal testers the newest app version and the wear os app hasn''t been delivered"). Sequenced AHEAD of the whole Apple Watch chain and fully independent of it — it touches only .github/workflows/, fastlane/Fastfile, watch-android/ and docs/, while waves 1-3 touch targets/watch/*.swift. No shared file, no dependency either way. NOT a regression and NOT a defect in the Wear OS app: there is no release or upload path for watch-android at all, so no RC has ever carried the watch half. Read the story banner before touching YAML — the obvious fix (a parallel wear upload job) DROPS THE PHONE from the Play release, because the shared applicationId means one track release must list both version codes and fastlane cannot upload an AAB and an APK in one call. Drafted and implemented in the same pass (party mode, dev + architect), so it enters the sprint at `review` rather than `ready-for-dev`. ⚠️ Its AC9 cannot be satisfied from the repository — the two-version-code alpha release must be confirmed on a real RC in the Play Console.'
-    wave_1:
-      stories: [16-28, 16-29]
-      note: "Parallel-safe — verified by file overlap, not assumed. 16-28 owns `targets/watch/BarcodeGenerator.swift`; 16-29 owns `targets/watch/CardListView.swift`, `targets/watch/Generated/Brands.swift` and `targets/watch-widget/BrandLogoCatalog.swift`. No shared file. 16-28 goes FIRST in the barcode chain because it changes what the generator PRODUCES (real module arrays for EAN-8/UPC-A/Code39, which today render nothing because `BarcodeGenerator.swift:57` leaves `modules` nil), so 16-27's quantisation fix then applies to all six formats instead of three. 16-29 is the cheapest win in the sprint: Story 10-2 verified the 57 BrandLogo-* imagesets already exist in `targets/watch-widget/Assets.xcassets` covering all 57 catalogue brands — the assets are in the wrong target, not missing. ⚠️ 16-34 was added to this sprint retroactively (see wave_1b) — it shares `BarcodeGenerator.swift` with 16-28 and so is sequenced separately. 16-29's actual footprint turned out WIDER than this note predicted: it also touches `watch-ios/Scripts/generate-catalogue.swift`, `targets/watch/WatchPresentationLayout.swift` and both asset catalogues; still no overlap with 16-28/16-34, so the wave held."
-    wave_1b:
-      stories: [16-34]
-      note: "RECONCILED IN 2026-09-03 (Story 16-29 implementation). 16-34 was added to Sprint 19 on 2026-09-01 as 16-28's follow-up and merged as #216, but was recorded ONLY in a prose comment on `current_sprint.status` — absent from `stories` and from every wave. That is the fourth miss of the standing Epic 16 process action item, and the third of them took exactly this prose-in-a-status-comment form. Given its own wave rather than being folded into wave_1 because it is NOT parallel-safe with 16-28: it depends on #212 and edits the same `targets/watch/BarcodeGenerator.swift`, which is the same reason wave_2 exists. Parallel-safe with 16-29 (no shared file), so 1b rather than a renumber of the later waves."
-    wave_1c:
-      stories: [16-37]
-      note: "MID-SPRINT ADDITION 2026-09-04, from a bug report by ifero. Recorded in `stories` AND in a wave deliberately: the standing Epic 16 process action has now been missed four times, three of them by leaving a story in a prose comment on `current_sprint.status` (see wave_1b). Its own wave for the same reason 1b and 2 exist — it edits `targets/watch/BarcodeGenerator.swift`, so it is NOT parallel-safe with 16-28, 16-34 or 16-27. Parallel-safe with 16-29 (no shared file), hence 1c rather than a renumber. ⚠️ SEQUENCING VERIFIED, NOT ASSUMED: 16-27 had NOT started when this was drafted — both `fix/16-27-watch-barcode-geometry` and `claude/bmad-dev-story-ds-16-27-ae3dfc` were 0 commits ahead of `main` and carried no PR (re-verified after rebasing onto 13b39a3, once 16-36 landed and moved main) — so 16-37 branches from `main` and 16-27 rebases. The code regions do not overlap (16-27 changes `renderCGImage` and `quietZone(for:)`; 16-37 changes `encodeCode128`); the one real collision is that both bump `cacheVersion`, which resolves to a single bump. ⚠️ 16-27 SHOULD INHERIT THE CORRECTED WIDTH: its note says 'a 13-digit Code128 is ≈123 modules', which is right — but the shipped encoder produced 121, so a `modules.count`-driven layout would have been two units short."
-    wave_2:
-      stories: [16-27]
-      note: 'Sequenced AFTER 16-28: both edit `targets/watch/BarcodeGenerator.swift`, so they are not parallel-safe. Root cause per the story is quantisation, not margins — `BarcodeGenerator` renders 1-module bars at two different pixel widths, which is why reducing margins alone would not fix scannability. Also touches `BarcodeFlashView.swift` and `WatchPresentationLayout.swift`.'
-    wave_3:
-      stories: [16-26]
-      note: 'Sequenced AFTER 16-27: both edit `targets/watch/BarcodeFlashView.swift`. Note the story title is NOT literally implementable — watchOS exposes no API to force full luminance — so it delivers the closest achievable behaviour: stop the display dimming mid-scan. Read the story banner before writing code. Wear OS already solved its equivalent in Story 10-4 (screen kept awake + brightness maximised via a per-window WindowManager attribute), so the watchOS gap is now the asymmetric one.'
-    wave_4:
-      stories: [16-36]
-      note: "MID-SPRINT ADDITION 2026-09-03, at ifero's request. Recorded in `stories` AND in a wave in the same pass — the standing Epic 16 process action item has been missed four times, and THREE of those took the form of prose in a `current_sprint.status` comment, so this deliberately does not do that. Continues wave_0's release-plumbing thread (16-35), not the Apple Watch chain: it touches .github/workflows/, fastlane/Fastfile, watch-android/app/build.gradle.kts, scripts/ and docs/ — NO overlap with waves 1-3 (targets/watch/*.swift) or with the parallel_track (eslint.config.mjs + JS), so it is parallel-safe with all of them. ⛔ IT ITS ONE BLOCKER IS CLEARED: PR #218 (fix/wear-track-name-and-diagnostic) MERGED as fe0febc on 2026-09-03, and the story is baselined on it. #218 supplied the WEAR_PLAY_TRACK override seam. ⛔ CORRECTED 2026-09-07: this note previously named the destination `wear:qa`, calling it Play's well-known Wear internal-testing track. IT DOES NOT EXIST on this listing. Play's live API returns wear:internal, wear:alpha, wear:beta, wear:production, so the derived `wear:internal` is correct and NO override is needed. Google's own docs DO document the internal track as `qa`; the API disagrees and the API wins. Three nightlies (2026-09-05/06/07) died on `Track not found: wear:qa`, each AFTER the phone AAB had uploaded — three silent phone-only releases. Still sequenced last in the sprint, but by preference not dependency. ⚠️ Its own AC12 cannot be satisfied from the repository — the cron firing, Play `internal`, `wear:internal` and TestFlight delivery all need real runs."
-    wave_5:
-      stories: [16-39]
-      note: "MID-SPRINT ADDITION 2026-09-05, from ifero while reviewing 16-26. ⚠️ RENUMBERED 16-30 -> 16-39 before merge: 16-30..16-33 are claimed by story FILES on the unmerged `docs/cardi-redesign-carry-over` branch, which a scan of the tracker and of branch NAMES does not reveal. Scan `git ls-tree` across all refs when allocating an Epic 16 number. Recorded in `stories` AND in a wave in the same pass — the standing Epic 16 process action has now been missed five times. PARALLEL-SAFE WITH EVERYTHING IN THIS SPRINT, verified by file overlap rather than assumed: it touches only `features/cards/**` and `shared/i18n/locales/*`, while waves 1-3 are entirely `targets/watch/*.swift`, wave_4 is CI/fastlane/gradle and the parallel_track is eslint.config.mjs. It is the PHONE half of the same complaint 16-26 answered on the watch, but shares no file with it and needs no sequencing against it. ⚠️ It REVERSES story 13-3's brightness-hint AC rather than fixing an oversight — see the story banner before deleting the row."
-    wave_6:
-      stories: [16-40]
-      note: 'RECONCILED IN 2026-09-14 at the Sprint 19 -> 20 roll-over. 16-40 was found while implementing 16-24, merged as #232 on 2026-09-14 and marked `done` by the automation — but it was recorded ONLY as a `development_status` key, absent from `stories` and from every wave. That is the SIXTH miss of the standing Epic 16 process action item, and it happened inside the very sprint block whose wave_1b and wave_1c notes each called out the previous misses by name. The pattern has now survived being named three times in the document it keeps breaking, which is itself the finding: naming it in prose has not changed the outcome, so the action item needs a MECHANISM rather than another note. Consequence for the record: Sprint 19 delivered ELEVEN stories, not the ten its `stories` list showed until today. ⚠️ NOTE the asymmetry that let it through — `check-story-catalogue-sync` validates epics.md <-> tracker keys, so a story that HAS a key and a catalogue section is invisible to it when the only thing missing is its sprint-block membership. Nothing in CI can currently catch this class.'
-    parallel_track:
-      stories: [16-24]
-      note: 'Independent of the entire watch chain — JS/TS and ESLint config only, no Swift, no shared file. Runs throughout. ⚠️ ITS OWN BANNER IS STALE: the story says `⛔ DEPENDS ON PR #185`, but #185 (`chore(lint): enable react-hooks rules-of-hooks and exhaustive-deps`) MERGED 2026-07-31 and the rules are live in `eslint.config.mjs:68-72`. The dependency is cleared; amend the banner when picking it up. Two of the three warnings must NOT be resolved the way the rule suggests — the story explains which.'
-  notes: |
-    Planned 2026-08-20 at the Sprint 18 close, immediately after the Epic 10 retrospective, per
-    ifero. This block REPLACES the Epic 14 (Household Collaboration) sprint staged on 2026-07-20,
-    which could not be committed as written for two reasons found at planning:
-      1. Its wave-2 story `14-2-card-sharing-deeplink` is now `absorbed-into-epic-18` — the scope
-         moved to the share-link epic, so the staged block listed work that no longer exists.
-      2. Its hard prerequisite `14-5a` (household-cards UX design) is still `backlog`. It HAS a
-         story file, but a 62-line outline; Epic 14's other stubs run 88-114 lines against 206-237
-         for a story genuinely in `ready-for-dev`. It needs a UX pass (`bmad-ux`) and then
-         `create-story` before any implementation story can be refined. Epic 14 is deferred to
-         Sprint 20, not dropped.
-    WHY THIS SPRINT INSTEAD. Every story here is already `ready-for-dev` with a refined story file,
-    so the sprint starts with zero refinement gate. More importantly it fixes a LIVE user-facing
-    defect in shipped software: EAN-8, UPC-A and Code39 render NOTHING on Apple Watch today
-    (surfaced by Story 10-4, which had to build the ZXing-equivalent Kotlin maths to notice). The
-    Wear OS launch made the asymmetry concrete and visible — the new platform does six symbologies
-    correctly while the older one does three.
-    SEQUENCING IS FILE-DERIVED, NOT GUESSED. The four watch stories are NOT parallel-safe: 16-27
-    and 16-28 both edit `BarcodeGenerator.swift`, and 16-26 and 16-27 both edit
-    `BarcodeFlashView.swift`. Only 16-29 is fully independent. Hence 16-28 -> 16-27 -> 16-26 as a
-    chain with 16-29 alongside, rather than a single four-story wave.
-    VALIDATION CONSTRAINT — inherited from the Epic 10 retro, read before starting. These are
-    watchOS rendering and scanning changes, and the Epic 10 retro (DEC-E10-RETRO-001) closed with
-    on-device validation NOT performed and the risk accepted. Barcode scannability cannot be proven
-    in the Simulator: 16-27 is about physical scanner behaviour. Plan for a real Apple Watch pass on
-    16-27 and 16-28 specifically, or record the same accepted risk KNOWINGLY rather than by default.
-    NOT CHOSEN, and why — so the alternatives do not have to be re-derived next time:
-      - SDK 57 thread (16-18..16-21): genuinely UN-GATED now that 16-17 is done, but all four are
-        `backlog` with no refined story files, and a risky native upgrade immediately after a
-        platform launch is poor sequencing. Strong Sprint 20/21 candidate.
-      - Epic 18 (share links): blocked on the custom-domain registration, an open action item that
-        only ifero can discharge (payment + registrar account).
-      - Wear OS field observability (Epic 10 retro action item 1, `critical-path`): real and
-        unstoried. Not in this sprint because it needs `create-story` first; it belongs in Sprint 20
-        alongside the SDK work, or sooner if a Wear OS field failure is ever suspected — which, with
-        no crash reporting on `watch-android`, would currently be by user report only.
-      - 16-25 (UPC-E mapping): thematically adjacent barcode-correctness work, held back because the
-        story carries an unresolved `Decision required` for ifero and asks that Sentry be checked
-        before sizing. Fold it in mid-sprint if that decision lands.
-      - 16-16 (FormatJS polyfill): ready-for-dev and independent; available as a fast-follow.
-
-    CLOSED 2026-09-14 at the Sprint 19 -> 20 roll-over. All ELEVEN stories are `done`: the ten listed
-    at planning, plus 16-40 reconciled in as wave_6. SIX of the eleven were unplanned mid-sprint
-    additions (16-35, 16-34, 16-37, 16-36, 16-39, 16-40) against four planned Apple Watch stories and
-    one lint-debt story — the sprint more than doubled around its own plan. That is worth carrying
-    into whichever retrospective covers this period: it is not obviously bad (every addition was a
-    real field report or a defect found while implementing a sibling), but it means the planned
-    content was a minority of the delivered content, and Sprint 20 opens with a store release whose
-    gate does not absorb interruption the way a tech-debt bucket does.
-
-  retrospective: |
-    NOT RUN as of 2026-09-14. Sprint 19 was closed on story completion at the Sprint 20 planning,
-    not at a retrospective — unlike Sprint 18, which closed at the Epic 10 retro. There is no epic
-    close to hang one on: every story here belonged to Epic 16, a standing bucket whose own
-    `epic-16-retrospective` is already `done` (2026-07-11, the Sprint 16 clear-out) and which stays
-    open by design. Running one is still worth it before Sprint 20's release gate, for two specific
-    reasons rather than as ceremony: (1) six of eleven stories were unplanned mid-sprint additions,
-    and Sprint 20 is a single-release sprint with far less tolerance for that shape; (2) the standing
-    Epic 16 process action item was missed for the SIXTH time (16-40, wave_6) despite being named in
-    prose three times inside this very block — which is evidence that the remedy has to be mechanical.
-
-# ============================================
-# CURRENT SPRINT
-# ============================================
-current_sprint:
   number: 20
   name: 'Sprint 20: Cardì Rebrand Release + Redesign Enablement'
   goal: 'Make the app Cardì everywhere the operating system shows it, and leave behind the two enabling pieces that unblock everything after it. Epic 20 drew the identity and wired it only ADDITIVELY — `IDENTITY_COLORS { ink, beam, cream }` ships in `tokens.generated.ts` today while `PRIMARY_COLORS` is still the Google Blue ramp — so the app currently has an identity nothing consumes. This sprint consumes it: the rename, the colour big bang, the watchOS and Wear OS icon sets, the store artwork and the brand typefaces, shipped as ONE store build behind the 21-7 gate because `runtimeVersion.policy` is `appVersion` and no part of a rebrand can go out as an OTA update. Alongside it, 22-1 builds the design-system primitives that eight Epic 22 screen stories consume (absorbing the four filed UI defects 16-30..16-33), and 23-1 writes the watch grammar that gates Epic 23 — a pure design story with no code overlap at all.'
-  status: in-progress # OPENED 2026-09-15 when 23-1 (wave_0) was picked up, per this key's own rule below. COMMITTED 2026-09-14 at the Sprint 19 -> 20 roll-over, per ifero ("let's work on the new redesign!"). REFINEMENT GATE CLEARED 2026-09-14, per ifero ("let's do the creation of the stories before opening the new sprint!"): all ten stories refined `backlog` -> `ready-for-dev` in one create-story pass, and epic-21/22/23 moved `backlog` -> `in-progress` per this file's own transition rule. It STAYS `planned` deliberately — ifero asked for the story files BEFORE the sprint opens, so nothing is in flight. Move it to `in-progress` when the first story is picked up. Refinement corrected the epic's scope in NINE places; the per-story keys carry the details, and the summary is in the notes below.
+  status: completed # CLOSED 2026-10-01 at the Sprint 20 -> 21 roll-over: all TWELVE stories done — the ten refined at planning (nine, plus 21-2a split out of 21-2) and the two mid-sprint additions 16-41 (wave_1c) and 16-43 (wave_6), each recorded in `stories` AND a wave in the same pass. CROSS-CHECKED AT CLOSE against every key this sprint flipped to `done` and every merge in its window: nothing is missing from `stories` or from a wave. Previously `in-progress`: OPENED 2026-09-15 when 23-1 (wave_0) was picked up; COMMITTED 2026-09-14 at the Sprint 19 -> 20 roll-over, per ifero ("let's work on the new redesign!"), with the refinement gate cleared the same day in one create-story pass, per ifero ("let's do the creation of the stories before opening the new sprint!"). NO sprint retrospective has been run — see the `retrospective` field.
   planning_date: 2026-09-14
+  start_date: 2026-09-15 # first story started (23-1, wave_0)
+  end_date: 2026-09-30 # last story merged (21-7: its repository half as #254, closed by #256)
+  completed_date: 2026-10-01
   epics: [16, 21, 22, 23]
   stories:
     - 21-1-rename-the-app-to-cardi
@@ -324,17 +210,62 @@ current_sprint:
         (FormatJS polyfill, `ready-for-dev` and independent), 16-38 (Wear OS barcode width,
         `backlog`, no story file).
 
-next_sprint:
-  # STAGED 2026-09-14 (Sprint 19 -> 20 roll-over), per ifero. Epic 22's Wave A — the eight
-  # illustration-free screen stories, every one of them unblocked by 22-1 landing in Sprint 20.
-  # This slot previously held Epic 14 (Household Collaboration), which is DISPLACED rather than
-  # deferred: the redesign thread continues here instead. Wave sequencing is PROVISIONAL —
-  # confirm it by FILE OVERLAP at the sprint-planning that commits Sprint 21, the way Sprint 20's
-  # waves were derived, rather than inheriting the grouping below on trust.
+    CLOSED 2026-10-01 at the Sprint 20 -> 21 roll-over. All TWELVE stories are `done`: the ten
+    refined at planning plus two mid-sprint additions, 16-41 (wave_1c, from a bug report) and
+    16-43 (wave_6, from the QA review of 21-4). Both additions were recorded in `stories` and in a
+    wave in the same pass, and the close-time cross-check (every key this sprint flipped to
+    `done`, against every merge in its window) found nothing to reconcile in, unlike Sprint 19,
+    which had to add 16-40 at its own close. wave_6's note is candid that 16-43's entry was made
+    only because a reviewer caught the omission, "the mechanism working by luck rather than by
+    design", so this is one clean close, not a fixed process. The shape is the inverse of Sprint
+    19's: ten of twelve stories were planned, against five of eleven. The forced serial chain the
+    planning notes named as the schedule risk (21-2 -> 21-6 -> 22-1) held, so 22-1 landed (#252)
+    and Sprint 21's premise stands.
+
+    THE RELEASE GATE CLOSED BY DECISION, NOT BY RESULT. 21-7's repository half merged as #254, and
+    ifero closed the story on 2026-09-30 (#256) so that this sprint could close. Its AC8 device
+    and store table still reads "not yet performed" on every row: the device pass is owed on the
+    first nightly, and nothing in the repository can stand in for it.
+
+    CARRIED OUT OF THIS SPRINT, `done` on the tracker but still owed:
+      - 21-7: the AC8 device and store pass (above).
+      - 21-5: AC5, the Wear store screenshots, blocked three ways (an unsigned release APK, the
+        R8-stripped seeder, and the stale Wear palette 23-3 owns, now staged as Sprint 22).
+      - Owned by no story: `docs/style.css` still carries the pre-rebrand #1a73e8 / #16a34a
+        (tracked in #253), and the app's "no analytics" privacy claim is untrue while Sentry runs
+        in production (detail in 21-5's key). No issue is filed for the second, and correcting it
+        is ifero's call.
+      - Story follow-up issues still open: #248 (21-6), #251 (22-1), #253 (21-7).
+
+  retrospective: |
+    NOT RUN as of 2026-10-04. Unlike Sprint 19, there IS an epic close to hang one on: Epic 21
+    completed with this sprint, and `epic-21-retrospective` is `optional` (Epic 20's is too). Two
+    reasons make it worth running before Sprint 21's first implementation story, rather than as
+    ceremony: (1) the release gate closed by decision with its acceptance unprovable from the
+    repository, the third sprint running with that shape, after DEC-E10-RETRO-001 in Sprint 18
+    and 16-35's AC9 / 16-36's AC12 in Sprint 19; (2) the story engine changed underneath it. This
+    was the last sprint refined with create-story and Sprint 21 is the first under bmad-build, so a
+    retro now is the last chance to record what the old flow cost before the new one becomes the
+    baseline. Sprint 19's retrospective was never run either; its two reasons (six of eleven
+    stories unplanned, and the standing Epic 16 process action missed for the sixth time) leave
+    this file with its block at this roll-over and survive only in git history.
+
+# ============================================
+# CURRENT SPRINT
+# ============================================
+current_sprint:
+  # COMMITTED 2026-10-01 (Sprint 20 -> 21 roll-over); STAGED 2026-09-14 (Sprint 19 -> 20
+  # roll-over), per ifero both times. Epic 22's Wave A — the eight illustration-free screen
+  # stories, every one of them unblocked by 22-1 landing in Sprint 20. Wave sequencing is STILL
+  # PROVISIONAL: the block was committed before refinement, so there was no Code Map to derive
+  # file overlap from. Confirm it by FILE OVERLAP from the eight specs in the pass that approves
+  # them, the way Sprint 20's waves were derived, rather than inheriting the grouping below on
+  # trust.
   number: 21
   name: 'Sprint 21: Cardì Redesign — Wave A Screens (Epic 22)'
   goal: 'Implement the Cardì frames across the phone app screen by screen, now that the shared primitives exist. Deliberately NOT a big bang, and for a stated reason: unlike colour tokens, layout HAS a supported half-migrated state, so shipping a redesigned Wallet while Settings still waits costs nothing. Wave A is the illustration-free half of Epic 22 and can proceed as soon as 22-1 lands; onboarding (22-10) is not in it and stays blocked on a commissioned illustration set that does not exist.'
-  status: proposed # STAGED 2026-09-14. DOUBLY GATED: on 22-1 (Sprint 20 wave_5) actually landing, and on a create-story pass — none of these eight has a story file on any git ref. Do not commit this block until both are cleared.
+  status: planned # COMMITTED 2026-10-01 at the Sprint 20 -> 21 roll-over, BEFORE its refinement gate, per ifero. Of the two gates it was staged behind, 22-1 landing is CLEARED (#252, 2026-09-28); REFINEMENT IS STILL OPEN — all eight stories are `backlog` with no story file on any git ref (scanned 2026-10-04), and it clears through `bmad-build <story-key>` with "Approve and stop", one story per run (see notes). Move it to `in-progress` when the first story is picked up for implementation.
+  planning_date: 2026-10-01
   epics: [22]
   stories:
     - 22-2-wallet
@@ -348,7 +279,7 @@ next_sprint:
   waves:
     wave_1:
       stories: [22-2, 22-3, 22-4]
-      note: 'The card surfaces — wallet, card detail, barcode flash. PROVISIONAL grouping: confirm file overlap before committing. Four rules carry over from the design system and are NOT negotiable per screen: the two-column wallet grid STAYS (replacing it with single-column rows is forbidden — it is the shipped, correct layout); NO bottom tab bar and NO floating action button (navigation stays a single Home with `+` left and gear right in the header); NOTHING is ever drawn over a barcode — no beam, no scan line, no watermark, no chrome; and branded tiles are never tinted, washed or recoloured, because the ~45 brand colours are CONTENT, not theme. 22-4 additionally keeps the barcode screen white in dark mode by design, and its surround stays neutral rather than a saturated field, which would be glare beside the scan target at maximum brightness.'
+      note: 'The card surfaces — wallet, card detail, barcode flash. PROVISIONAL grouping, still unconfirmed at commit: re-derive it from the Code Map sections once the specs exist. Four rules carry over from the design system and are NOT negotiable per screen: the two-column wallet grid STAYS (replacing it with single-column rows is forbidden — it is the shipped, correct layout); NO bottom tab bar and NO floating action button (navigation stays a single Home with `+` left and gear right in the header); NOTHING is ever drawn over a barcode — no beam, no scan line, no watermark, no chrome; and branded tiles are never tinted, washed or recoloured, because the ~45 brand colours are CONTENT, not theme. 22-4 additionally keeps the barcode screen white in dark mode by design, and its surround stays neutral rather than a saturated field, which would be glare beside the scan target at maximum brightness.'
     wave_2:
       stories: [22-5, 22-6]
       note: "Capture and the form pattern. 22-5 is the one screen where the beam IS allowed — this is our scanner, not the shop's — and it consumes two of the four defects 22-1 absorbs (16-31, viewfinder shaped to the expected symbology rather than a fixed square; 16-30, scan banner not occluded by the bottom actions). 22-6 reconciles the app's TWO current form treatments into one: `AuthScreenLayout` centres its content vertically while `CardForm` is top-aligned with a trailing button and 100px of bottom padding, and neither is bottom-anchored today. Both `add-card/setup` and `card/[id]/edit` adopt the result, against the anchored footer from 22-1 — which is a flex sibling of the scroll area or an auto-top-margin anchor inside it, NEVER `position: absolute`, so it does not fight the keyboard."
@@ -356,6 +287,28 @@ next_sprint:
       stories: [22-7, 22-8, 22-9]
       note: "Settings, document screens and authentication. 22-7 needs the corrected `destructive` Button variant from 22-1 (the 16-32 defect) for its destructive actions. ⚠️ 22-8 carries a CROSS-SPRINT dependency (not the only one — 22-7 needs 22-1's `destructive` variant and 22-9 consumes `AppIconHeader` from 20-4): its body text must meet the size policy decided back in Sprint 20 — SETTLED in Sprint 20: 21-2 takes the policy DECISION and 21-6 performs the EDIT (its AC8b). Read 21-6's AC8b output for the answer; do not re-open the ownership question. 22-9 replaces the password-strength-meter green that is not in the palette, must vary width (33/66/100%) rather than relying on colour alone, and renders the Cardì mark in `AppIconHeader` — already delivered by 20-4, so it is a consumption, not a new asset."
   notes: |
+    Committed 2026-10-01 at the Sprint 20 -> 21 roll-over, per ifero ("close sprint and move the
+    sprint forward first"), with all twelve Sprint 20 stories done. 22-1 merged as #252 on
+    2026-09-28, so the fallback below for a 22-1 slip is moot.
+
+    COMMITTED BEFORE REFINEMENT, the reverse of Sprint 20, which was committed and refined in one
+    pass (#234). The eight stories are refined after this roll-over, through
+    `bmad-build <story-key>` with "Approve and stop" at its approval checkpoint, which leaves each
+    spec `ready-for-dev` at docs/sprint-artifacts/stories/<key>.md and its tracker key with it.
+    This is the first sprint refined under bmad-build (BMAD 6.12, #255, which removed
+    create-story), so the pass is also that engine's first live run: report any drift (a spec
+    outside stories/, `done` before a merge, a commit made) and fix it in
+    _bmad/custom/bmad-build.toml rather than around it. Each new story is one run (the override
+    writes a one-entry stories.yaml), and the run's first step needs a clean tree on a branch that
+    is neither main nor a claude/... session branch, so commit each approved spec before planning
+    the next or the pass halts at the second story (read from the skill, not yet seen in a live
+    run). The specs' Code Maps are then the input the waves were staged without.
+
+    NOT RE-SIZED at commit: eight, as staged. Sprint 20 delivered twelve (ten planned), so eight
+    stays at the low end of observed velocity, and Sprint 20's refinement cost (ten stories in one
+    create-story pass) no longer transfers: this sprint refines under a different engine, whose
+    cost is unknown until its first spec is written. That is the input for any re-size.
+
     Staged 2026-09-14 at the Sprint 19 -> 20 roll-over, per ifero, who chose to keep the redesign
     thread running here rather than return to Epic 14 (Household Collaboration) or leave the slot
     undecided until the Sprint 20 close.
@@ -388,6 +341,56 @@ next_sprint:
         refinement, and a risky native upgrade should not share a sprint with a store rebrand.
       - Epic 6 social sign-in (6-12 Apple / 6-13 Google): both `backlog`, but their story files
         are already at ready-for-dev depth (233 / 227 lines), so promoting them is cheap.
+      - Epic 18 (share links): still blocked on the custom-domain registration, an open action
+        item only ifero can discharge.
+
+next_sprint:
+  # STAGED 2026-10-01 (Sprint 20 -> 21 roll-over), per ifero. Epic 23: the watch half of the
+  # redesign, implementing the watch grammar 23-1 wrote in Sprint 20. No waves yet, on purpose:
+  # none of the three stories has a file, so there is nothing to derive FILE OVERLAP from. Derive
+  # them from the specs at the planning that commits Sprint 22, rather than guessing them here.
+  number: 22
+  name: 'Sprint 22: Cardì on the Watch (Epic 23)'
+  goal: 'Implement the watch grammar Story 23-1 wrote in Sprint 20, surface by surface: the watchOS app (23-2: `CardListView`, `BarcodeFlashView`), the Wear OS app (23-3: `CardListScreen`, `BarcodeScreen`, `SortPickerScreen`) and the Apple Watch widget and complication (23-4). It is the watch half of the redesign, and its Wear part is overdue rather than merely next: the Wear OS app in the Cardì 1.0.0 build still paints the pre-rebrand palette, which 23-3 owns.'
+  status: proposed # STAGED 2026-10-01. GATED on refinement only: 23-1, the design gate, merged in Sprint 20 (#235), but none of 23-2..23-4 has a story file on any git ref (scanned 2026-10-04). Do not commit this block until they are refined.
+  epics: [23]
+  stories:
+    - 23-2-watchos-implementation
+    - 23-3-wear-os-implementation
+    - 23-4-watch-widget-and-complication
+  notes: |
+    Staged 2026-10-01 at the Sprint 20 -> 21 roll-over, per ifero, chosen from four options
+    offered there: Epic 23, the SDK 57 thread, Epic 14, or leaving the slot unstaged. It keeps the
+    redesign thread running after Wave A, as the Sprint 21 block's own alternatives list
+    anticipated ("un-gated if 23-1 lands in Sprint 20 as planned"; it did).
+
+    WHY IT IS MORE THAN NEXT IN LINE. 23-3 owns the Wear OS palette, and on main that palette is
+    still pre-rebrand: `CarbonTheme.kt` keeps `BrandPrimaryDark = #4DA3FF` as the primary and
+    `FavoriteStarTint = #F59E0B`, an orange the Cardì system bans by name. Both are marked stale
+    and left for "the emulator pass 23.3 carries" (see 21-5's key), so every build of the Cardì
+    release carries a Wear app in the old colours, and 21-5's AC5 (the Wear store screenshots)
+    has 23-3 as one of its three blockers: a capture today would bake both colours into the
+    listing.
+
+    VALIDATION CONSTRAINT, read before refining: every story here ends on hardware. 23-2 must be
+    verified on a real Apple Watch; 23-3 on round and square AVDs AND a real device, with rotary
+    input verified on hardware because it cannot be injected headlessly; 23-4 decides between the
+    full mark and its reduction against a rendered complication. That is the DEC-E10-RETRO-001
+    shape again: plan the device passes, or record the accepted risk knowingly rather than by
+    default.
+
+    THREE STORIES, BUT EACH IS A WHOLE SURFACE. Size the sprint from the specs at the planning
+    that commits it, not from the count.
+
+    NOT CHOSEN, and why — so the alternatives do not have to be re-derived next time:
+      - SDK 57 thread (16-18..16-21): un-gated since 16-17, four `backlog` keys with no story
+        files, so they take bmad-build's new-story route. The old objection (not beside a store
+        rebrand) is gone now that 21-7 has closed.
+      - Epic 14 (Household Collaboration): still gated on a bmad-ux pass for 14-5a (a 62-line
+        outline) before anything in it can be refined.
+      - Epic 6 social sign-in (6-12 Apple / 6-13 Google): no longer cheap to promote. Both are
+        classic-layout story files with no frontmatter `status`, and bmad-build stops on those
+        until they are converted or re-planned.
       - Epic 18 (share links): still blocked on the custom-domain registration, an open action
         item only ifero can discharge.
 
@@ -752,7 +755,7 @@ development_status:
   # into an icon/name/colour mismatch and another to get them out. 21-7 is the gate.
   # 21-2 is a BIG BANG by design: tokens funnel into all three apps, so there is no
   # supported half-migrated state.
-  epic-21: in-progress # 2026-09-14: all 8 stories refined backlog -> ready-for-dev in one create-story pass
+  epic-21: done # completed 2026-09-30, when 21-7 (the release gate) closed via #256 with its AC8 device pass still owed; all 8 stories were refined 2026-09-14 in one create-story pass
   21-1-rename-the-app-to-cardi: done # IMPLEMENTED 2026-09-16. AC1 SPIKE ANSWERED, AND THE ANSWER WAS WORSE THAN FEARED: `sanitizedName` strips `\W` BEFORE it normalises to NFD, so precomposed `ì` (U+00EC) is DELETED rather than folded — `Cardì` sanitised to `Card`, losing the letter, not just the accent. The generated project DID move, so all build references were retargeted in this story and `yarn watch:build:ci` proven green against them. ifero chose `Cardi` for the file names, delivered by normalising the name to NFD in `app.config.ts` (`resolveAppName`) — a config plugin cannot reach it, because the project directory is named at tarball-extraction time before any mod runs. TWO LEAKS the story did not anticipate, both fixed: `$(PRODUCT_NAME)` resolves to the SANITISED name so the permission prompts would have read "Allow Card to…" (AC7 anticipated the possibility), and `CFBundleName` keeps the template default because Expo registers `withDisplayName`/`withProductName` but NOT `withName`. A FIFTH SURFACE was found: `docs/` is the public GitHub Pages site — `docs/help.json` is drift-gated against the bundled help copy and went red, and `docs/privacy-policy.html` would otherwise have contradicted the in-app policy with nothing to catch it. ⚠️ THE WIDGETKIT `kind` ("MyLoyaltyCardsWatchComplication") IS A THIRD DATA-LOSING IDENTIFIER the story's table omits — renaming it blanks every configured complication. Task 9 (device verification of AC3/AC7/AC8/AC9/AC11) is NOT satisfiable from the repository. PREVIOUSLY: REFINED 2026-09-14. SCOPE WIDENED 2026-09-14 by ifero: the deep-link scheme DOES change to `cardi` (no user-facing deep link has shipped; Epic 18 is backlog). The epic's reason for freezing it was factually wrong — auth is OTP-based with NO redirectTo and the repo has no deep-link callback at all. The scheme's FIVE sites — `targets/watch/Info.plist:14` (the CFBundleURLSchemes registration, without which nothing resolves), the complication's widgetURL, the watch parser constant, and BOTH contract-test assertions — move in the same commit or the complication silently stops opening the app. `slug` + bundle id + package still unchanged. Refinement found the epic UNDER-SCOPES it: 44 user-visible copy sites across 18 files on FOUR surfaces (phone, watchOS, Wear OS, Supabase email), not the five the epic lists; and the spaced variant "My Loyalty Cards" in 4 places a `myLoyaltyCards` grep misses. ⛔ Its AC1 is a PREBUILD SPIKE: `expo prebuild` derives the Xcode project/scheme name from `expo.name`, and 18 hardcoded `ios/myLoyaltyCards.xcodeproj` references may break on the non-ASCII `i`-grave. Unknown until run.
   21-2-migrate-colour-tokens-to-ink-and-beam: done # READY FOR REVIEW 2026-09-16. PICKED UP 2026-09-16 (wave_1). Delivered the big bang: PRIMARY_COLORS and SEMANTIC_COLORS DELETED (zero consumers each; the Google-Blue ramp has no Cardi successor), `onPrimary` ADDED, and every theme role now derived from IDENTITY_COLORS. Two findings the refinement did not have: (1) beam is NOT usable as a light-mode foreground -- 1.33:1 on cream, 1.52:1 on white -- so `warning` is ink in light and beam in dark, and the two FIXED dark surfaces that read theme tokens (NoCodeFoundBanner, the ScannerOverlay scan line) had to stop, or they go invisible in light; (2) SIX production sites paint a hardcoded white label on `theme.primary`, which dark mode turns into white-on-beam at 1.52:1 -- all repointed at `onPrimary`. A FIFTH drifting literal (`#40404A`, CardTile's dark black-brand outline) was found in the same statement as one of AC8's four. Design system amended twice: the deep-blue `secondary` role RETIRED (contradicted by Forbidden AND by the barcode section's neutral-surround rule; the two prompts citing it cite it only to rule it out), and the card-accent detail-field exemption written down. AC14 decided, not swept: 15px body floor PLUS a named chrome tier (Inter 12-14) -- the 80 literal / 40 file and 25 indirect / 12 file figures were re-measured and both confirmed; the EDIT stays with 21-6. REFINED 2026-09-14. Big bang; the KEYSTONE — Epic 22 depends on it (22-8's AC cites it; 22-1's tonal layers are palette-derived). Refinement corrected three epic figures: 57 brands with 44 DISTINCT colours - 45 literal strings, `#ffffff` vs `#FFFFFF` (not "~45 brands"); sub-15px is 80 instances/40 files (not 70) plus 25 indirect via TYPOGRAPHY tokens; and the "nine styling items" are enumerated NOWHERE — only ~6 are identifiable, so AC10 requires the list or drops the count. Found two gaps the epic omits: `shared/theme/sync-tokens.ts` (13 hand-authored pairs carrying banned oranges/greens, outside tokens/) and `theme.warning` doubling as the FAVOURITE STAR, so changing it repaints every favourited tile.
   21-2a-migrate-card-accents-and-colour-keys: done # SPLIT OUT OF 21-2 on 2026-09-15, at ifero's direction and on evidence: eight review rounds put roughly half of 21-2's defects in its CARD_COLORS clause alone. Scope: the five custom-card accents, the CardColor union (core/schemas/card.ts's zod enum validates on every READ, plus a hand-written duplicate in colors.ts), core/utils/mapHexToCardColor.ts which PRODUCES the keys from RGB buckets tuned to the old hexes, four `?? grey` runtime fallbacks, two pickers, both locale files, and the phone->watch WIRE CONTRACT (watch-connectivity.ts:252 sends the raw key as `colorHex`, resolved three different ways on the watches, with the canonical fixture at the repo root where wear-os-build.yml's path filter cannot see it). ⛔ Its AC1 is a DECISION taken before any code: are the keys NAMES (renameable) or a CONTRACT (frozen)? Everything else branches on it, and it ships in the one release with no OTA remedy.
