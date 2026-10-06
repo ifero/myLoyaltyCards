@@ -8054,6 +8054,11 @@ lru-cache@^5.1.1:
   dependencies:
     yallist "^3.0.2"
 
+lucide-react-native@^1.52.0:
+  version "1.52.0"
+  resolved "https://registry.yarnpkg.com/lucide-react-native/-/lucide-react-native-1.52.0.tgz#afe44f3187fb58d033c35aaf61af3282c7f8a819"
+  integrity sha512-BCkyiFbeCAKvM1q+1GMFbAT6+eq57trBXt4ETyLtWaxGM2X4Ux/iff1S5B/wwDnfcWytcfJo03MkKzHnHFcpyw==
+
 magic-string@^0.30.0, magic-string@^0.30.11, magic-string@^0.30.21:
   version "0.30.21"
   resolved "https://registry.yarnpkg.com/magic-string/-/magic-string-0.30.21.tgz#56763ec09a0fa8091df27879fd94d19078c00d91"

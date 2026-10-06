@@ -22,7 +22,14 @@ module.exports = {
   moduleNameMapper: {
     '\\.svg$': '<rootDir>/__mocks__/svgMock.js',
     '^@/(.*)$': '<rootDir>/$1',
-    '^@bwip-js/react-native$': '<rootDir>/__mocks__/@bwip-js/react-native.js'
+    '^@bwip-js/react-native$': '<rootDir>/__mocks__/@bwip-js/react-native.js',
+    // Story 22.2: the app imports each lucide icon from its own module
+    // (`lucide-react-native/icons/<name>`). The package's `exports` map sends the
+    // jsdom environment's `browser` condition to an ESM `.mjs` file, which Jest
+    // cannot parse untransformed; this points it at the CommonJS build of the same
+    // icon, published alongside, so tests render the real icon.
+    '^lucide-react-native/icons/(.*)$':
+      '<rootDir>/node_modules/lucide-react-native/dist/cjs/icons/$1.js'
   },
   testMatch: ['**/*.test.[jt]s?(x)'],
   // Nested Claude Code worktrees (.claude/worktrees/*) are full repo copies. Left
