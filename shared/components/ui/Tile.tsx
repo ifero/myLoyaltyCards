@@ -1,12 +1,14 @@
 import { MaterialIcons } from '@expo/vector-icons';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import Animated, {
+  cancelAnimation,
   useAnimatedStyle,
   useSharedValue,
   withDelay,
   withTiming
 } from 'react-native-reanimated';
+import { scheduleOnRN } from 'react-native-worklets';
 
 import { useTheme } from '@/shared/theme';
 import { IDENTITY_COLORS, toRgbChannels } from '@/shared/theme/colors';
@@ -72,10 +74,11 @@ type Border = { borderWidth: number; borderColor: string };
 /**
  * The tile's border while `highlighted`: the fading beam ring, then the resting outline.
  *
- * A just-added tile stays `highlighted` for the rest of the session (nothing clears it), so once the
- * ring has faded this must hand the RESTING outline back rather than drop to none. It used to drop
- * to 0, which erased a light brand's hairline for good; the light-mode shadow hid that, and with the
- * shadow gone (AC3) the hairline is the only thing separating a white tile from the cream ground.
+ * A tile can stay `highlighted` after its ring has faded — until the caller clears it from
+ * `onHighlightEnd`, or for good if it never does — so once the ring has faded this must hand the
+ * RESTING outline back rather than drop to none. It used to drop to 0, which erased a light brand's
+ * hairline; the light-mode shadow hid that, and with the shadow gone (AC3) the hairline is the only
+ * thing separating a white tile from the cream ground.
  */
 export const getHighlightBorder = (opacity: number, resting: Border): Border => {
   'worklet';
@@ -100,8 +103,14 @@ type TileProps = {
   children?: React.ReactNode;
   /** An overlay pinned inside the tile above the mark — the `FavouriteBadge`. */
   badge?: React.ReactNode;
-  /** The just-added beam ring, fading out. */
+  /** The just-added beam ring, fading out. It plays when this turns true. */
   highlighted?: boolean;
+  /**
+   * Called once, when the ring has ended: run out, cut short by an unmount, or stopped by
+   * `highlighted` turning false. A caller that clears `highlighted` here makes the ring play
+   * exactly once: a remount, a scroll back or a recycled cell finds it cleared.
+   */
+  onHighlightEnd?: () => void;
   onPress?: () => void;
   /** Defaults to `label`. */
   accessibilityLabel?: string;
@@ -127,6 +136,7 @@ export const Tile = ({
   children,
   badge,
   highlighted = false,
+  onHighlightEnd,
   onPress,
   accessibilityLabel,
   accessibilityHint,
@@ -144,14 +154,34 @@ export const Tile = ({
 
   const highlightOpacity = useSharedValue(highlighted ? 1 : 0);
 
+  // Read through a ref so the ring below depends only on `highlighted`: a caller passing a new
+  // function on every render must not restart the ring, which would also postpone its end.
+  const onHighlightEndRef = useRef(onHighlightEnd);
   useEffect(() => {
-    if (highlighted) {
-      highlightOpacity.value = 1;
-      highlightOpacity.value = withDelay(
-        HIGHLIGHT_HOLD_MS,
-        withTiming(0, { duration: HIGHLIGHT_FADE_MS })
-      );
+    onHighlightEndRef.current = onHighlightEnd;
+  }, [onHighlightEnd]);
+
+  useEffect(() => {
+    if (!highlighted) {
+      return undefined;
     }
+    // A plain function, so the animation callback hands it back to the JS thread, where it
+    // reads the latest callback from the ref.
+    const notifyHighlightEnd = () => onHighlightEndRef.current?.();
+    highlightOpacity.value = 1;
+    highlightOpacity.value = withDelay(
+      HIGHLIGHT_HOLD_MS,
+      // However the ring ends — run out, or cut short by an unmount or by the cleanup below — it
+      // has ended, and an end left unreported would leave the highlight armed to replay.
+      withTiming(0, { duration: HIGHLIGHT_FADE_MS }, () => {
+        scheduleOnRN(notifyHighlightEnd);
+      })
+    );
+    // `highlighted` turning false — a recycled cell now drawing another card — ends the ring at
+    // once, rather than letting it run on and later clear a highlight a re-drawn tile is showing.
+    return () => {
+      cancelAnimation(highlightOpacity);
+    };
   }, [highlighted, highlightOpacity]);
 
   const highlightStyle = useAnimatedStyle(() =>
@@ -242,7 +272,8 @@ const styles = StyleSheet.create({
   label: {
     ...TYPOGRAPHY.labelBold,
     textAlign: 'center',
-    marginTop: 6,
+    // The wallet frame's tile-to-name gap; 6 was off the 8pt grid (Story 22.2).
+    marginTop: 8,
     paddingHorizontal: 2
   },
   badge: {

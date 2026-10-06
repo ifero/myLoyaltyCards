@@ -1,25 +1,53 @@
 /**
  * SearchBar Component Tests
  * Story 13.2: Restyle Home Screen — AC3
+ * Story 22.2: The wallet frames' search field
  */
 
 import { render, screen, fireEvent } from '@testing-library/react-native';
+import { StyleSheet, TextInput } from 'react-native';
 
 import { SearchBar } from './SearchBar';
 
-const mockTheme = {
-  primary: '#1A73E8',
-  textPrimary: '#1F1F24',
-  textSecondary: '#66666B',
-  textTertiary: '#8F8F94'
+let mockIsDark = false;
+
+// The real token values, so every role below is checked against what the app paints. Dark is the
+// scheme where `primary` (beam) and `textPrimary` (cream) differ, so it is what catches a role
+// swapped for its neighbour; in light both are ink.
+jest.mock('@/shared/theme', () => {
+  const { DARK_THEME, LIGHT_THEME } = jest.requireActual('@/shared/theme/colors');
+  return {
+    useTheme: () => ({ theme: mockIsDark ? DARK_THEME : LIGHT_THEME, isDark: mockIsDark })
+  };
+});
+
+type Scheme = 'light' | 'dark';
+
+const PALETTE: Record<
+  Scheme,
+  { surface: string; border: string; primary: string; textPrimary: string; textSecondary: string }
+> = {
+  light: {
+    surface: '#FFFFFF',
+    border: '#D6D6CB',
+    primary: '#181824',
+    textPrimary: '#181824',
+    textSecondary: '#55555F'
+  },
+  dark: {
+    surface: '#181824',
+    border: '#3A3A48',
+    primary: '#FCCC0C',
+    textPrimary: '#F0F0E8',
+    textSecondary: '#B5B5AB'
+  }
 };
 
-jest.mock('@/shared/theme', () => ({
-  useTheme: () => ({
-    theme: mockTheme,
-    isDark: false
-  })
-}));
+const field = () =>
+  StyleSheet.flatten(screen.getByTestId('search-bar').props.style) as Record<string, unknown>;
+
+/** The icons are decorative — the field and the button carry the names — so they are hidden. */
+const icon = (testID: string) => screen.getByTestId(testID, { includeHiddenElements: true });
 
 describe('SearchBar', () => {
   const defaultProps = {
@@ -28,15 +56,15 @@ describe('SearchBar', () => {
     onClear: jest.fn()
   };
 
-  beforeEach(() => {
-    jest.clearAllMocks();
+  afterEach(() => {
+    mockIsDark = false;
   });
 
   describe('rendering', () => {
-    it('renders search icon and input', () => {
+    it('renders the magnifier and the input', () => {
       render(<SearchBar {...defaultProps} />);
 
-      expect(screen.getByText('search')).toBeTruthy();
+      expect(icon('search-bar-icon')).toBeTruthy();
       expect(screen.getByTestId('search-bar-input')).toBeTruthy();
     });
 
@@ -57,6 +85,12 @@ describe('SearchBar', () => {
       render(<SearchBar {...defaultProps} value="test" />);
 
       expect(screen.getByTestId('search-bar-clear')).toBeTruthy();
+    });
+
+    it('draws no visible label: it is not a form field', () => {
+      render(<SearchBar {...defaultProps} />);
+
+      expect(screen.queryByText('Search loyalty cards')).toBeNull();
     });
   });
 
@@ -80,6 +114,18 @@ describe('SearchBar', () => {
 
       expect(onClear).toHaveBeenCalledTimes(1);
     });
+
+    // The I/O matrix's Clear row: the query empties and focus stays in the field.
+    it('keeps focus in the field when the query is cleared', () => {
+      const focus = jest.spyOn(TextInput.prototype, 'focus');
+      try {
+        render(<SearchBar {...defaultProps} value="test" />);
+        fireEvent.press(screen.getByTestId('search-bar-clear'));
+        expect(focus).toHaveBeenCalledTimes(1);
+      } finally {
+        focus.mockRestore();
+      }
+    });
   });
 
   describe('accessibility', () => {
@@ -99,24 +145,105 @@ describe('SearchBar', () => {
     });
   });
 
-  describe('active state styling', () => {
-    it('has 2px border and white bg when value is non-empty (active state)', () => {
-      render(<SearchBar {...defaultProps} value="test" />);
-
-      const container = screen.getByTestId('search-bar');
-      const flatStyle = Object.assign({}, ...container.props.style);
-      expect(flatStyle.borderWidth).toBe(2);
-      expect(flatStyle.borderColor).toBe('#1A73E8');
-      expect(flatStyle.backgroundColor).toBe('#FFFFFF');
-    });
-
-    it('has transparent border when value is empty', () => {
+  describe('the frame field — Story 22.2', () => {
+    it('is the touch target tall, at the 12pt control radius, padded 16 with an 8pt gap', () => {
       render(<SearchBar {...defaultProps} />);
 
-      const container = screen.getByTestId('search-bar');
-      const flatStyle = Object.assign({}, ...container.props.style);
-      expect(flatStyle.borderWidth).toBe(2);
-      expect(flatStyle.borderColor).toBe('transparent');
+      expect(field()).toMatchObject({
+        height: 48,
+        borderRadius: 12,
+        borderWidth: 1,
+        paddingHorizontal: 16,
+        gap: 8
+      });
+    });
+
+    // The whole 48pt height is live: a tap above or below the text still lands in the input.
+    it('fills the field’s height with the input, so the full target focuses it', () => {
+      render(<SearchBar {...defaultProps} />);
+
+      expect(StyleSheet.flatten(screen.getByTestId('search-bar-input').props.style)).toMatchObject({
+        flex: 1,
+        height: '100%'
+      });
+    });
+
+    it('puts the clear × on a 48 × 48 target flush with the right edge', () => {
+      render(<SearchBar {...defaultProps} value="test" />);
+
+      expect(StyleSheet.flatten(screen.getByTestId('search-bar-clear').props.style)).toMatchObject({
+        width: 48,
+        height: 48,
+        marginRight: -16
+      });
+    });
+
+    describe.each<Scheme>(['light', 'dark'])('in %s', (scheme) => {
+      const roles = PALETTE[scheme];
+
+      beforeEach(() => {
+        mockIsDark = scheme === 'dark';
+      });
+
+      it('fills with surface inside the hairline border at rest', () => {
+        render(<SearchBar {...defaultProps} />);
+
+        expect(field()).toMatchObject({
+          backgroundColor: roles.surface,
+          borderColor: roles.border
+        });
+      });
+
+      // Focus, as TextField does — a value alone does not light the border.
+      it('keeps the hairline border when filled but not focused', () => {
+        render(<SearchBar {...defaultProps} value="Ikea" />);
+
+        expect(field().borderColor).toBe(roles.border);
+      });
+
+      it('turns the border primary while focused, and back on blur', () => {
+        render(<SearchBar {...defaultProps} value="Ikea" />);
+        const input = screen.getByTestId('search-bar-input');
+
+        fireEvent(input, 'focus');
+        expect(field().borderColor).toBe(roles.primary);
+
+        fireEvent(input, 'blur');
+        expect(field().borderColor).toBe(roles.border);
+      });
+
+      it('sets the value in textPrimary and the placeholder in textSecondary', () => {
+        render(<SearchBar {...defaultProps} />);
+        const input = screen.getByTestId('search-bar-input');
+
+        expect(StyleSheet.flatten(input.props.style).color).toBe(roles.textPrimary);
+        expect(input.props.placeholderTextColor).toBe(roles.textSecondary);
+      });
+
+      it('draws the magnifier at 20 and the × at 18, both at a 1.8 stroke in textSecondary', () => {
+        render(<SearchBar {...defaultProps} value="Ikea" />);
+
+        expect(icon('search-bar-icon').props).toMatchObject({
+          width: 20,
+          height: 20,
+          strokeWidth: 1.8,
+          stroke: roles.textSecondary
+        });
+        expect(icon('search-bar-clear-icon').props).toMatchObject({
+          width: 18,
+          height: 18,
+          strokeWidth: 1.8,
+          stroke: roles.textSecondary
+        });
+      });
+    });
+
+    it('sets the input in body-lg without a line height, so iOS keeps it in the field', () => {
+      render(<SearchBar {...defaultProps} />);
+      const style = StyleSheet.flatten(screen.getByTestId('search-bar-input').props.style);
+
+      expect(style).toMatchObject({ fontFamily: 'Inter', fontSize: 17, fontWeight: '400' });
+      expect(style.lineHeight).toBeUndefined();
     });
   });
 });

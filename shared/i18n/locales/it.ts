@@ -561,20 +561,21 @@ export const it = {
       searchPlaceholder: 'Cerca carte fedeltà',
       searchAccessibilityLabel: 'Cerca carte fedeltà',
       clearSearchAccessibilityLabel: 'Cancella ricerca',
-      noResults: 'Nessuna carta corrisponde a "{{query}}"',
+      noResults: 'Nessuna carta corrisponde a “{{query}}”',
       singleCardTip: 'Tocca + per aggiungere altre carte al tuo portafoglio',
-      emptyStateIllustrationAccessibilityLabel: 'Illustrazione del portafoglio',
       emptyStateTitle: 'Nessuna carta ancora',
       emptyStateSubtitle:
         'Aggiungi la tua prima carta fedeltà e\nnon perdere mai i premi alla cassa',
-      emptyStateCta: '+ Aggiungi la tua prima carta',
-      cardTileAccessibilityHint: 'Apre i dettagli della carta'
+      emptyStateCta: 'Aggiungi la tua prima carta',
+      cardTileAccessibilityHint: 'Apre i dettagli della carta',
+      cardTileFavouriteAccessibilityLabel: '{{name}}, preferita'
     },
     sort: {
-      count_one: '{{count}} carta fedeltà',
-      count_other: '{{count}} carte fedeltà',
+      count_one: '{{count}} carta',
+      count_other: '{{count}} carte',
       buttonAccessibilityLabel: 'Ordina per {{label}}',
       buttonHint: 'Apre le opzioni di ordinamento',
+      sheetTitle: 'Ordina per',
       frequent: 'Più usate',
       recent: 'Aggiunte di recente',
       az: 'A-Z'

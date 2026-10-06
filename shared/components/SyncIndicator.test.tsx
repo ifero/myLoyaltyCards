@@ -95,6 +95,15 @@ describe('SyncIndicator', () => {
 
     expect(indicator.props.accessibilityLabel).toBe('Cards synced');
   });
+
+  // Story 22.2 — Home's banners sit on the card grid's 16pt margin, in line with the tiles.
+  it('sits on the 16pt grid margin', () => {
+    render(<SyncIndicator syncState="syncing" />);
+    const strip = screen.getByTestId('sync-indicator').children[0];
+    if (typeof strip === 'string' || strip === undefined) throw new Error('no strip');
+
+    expect(StyleSheet.flatten(strip.props.style).marginHorizontal).toBe(16);
+  });
 });
 
 describe('SyncIndicator (dark mode)', () => {

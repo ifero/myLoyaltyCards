@@ -1,24 +1,22 @@
 /**
  * SearchBar Component
  * Story 13.2: Restyle Home Screen — AC3 (Search Bar)
+ * Story 22.2: The wallet frames' search field
  *
- * Theme-aware search input with clear button and MI icons.
- * Visible when card count >= 2.
+ * Visible when card count >= 2. The field from `cardi-wallet-frames.html`: the touch target tall,
+ * a `surface` fill inside a 1px hairline at the 12pt control radius, a magnifier at the left and
+ * a clear × at the right once there is something to clear. It is not a form field, so it carries
+ * no visible label — its accessibility label names it instead.
  */
 
-import { MaterialIcons } from '@expo/vector-icons';
-import React, { useRef } from 'react';
+import Search from 'lucide-react-native/icons/search';
+import X from 'lucide-react-native/icons/x';
+import React, { useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import {
-  TextInput,
-  View,
-  Pressable,
-  StyleSheet,
-  type TextInput as TextInputType
-} from 'react-native';
+import { TextInput, View, Pressable, StyleSheet } from 'react-native';
 
 import { useTheme } from '@/shared/theme';
-import { TOUCH_TARGET } from '@/shared/theme/spacing';
+import { SPACING, TOUCH_TARGET } from '@/shared/theme/spacing';
 import { TYPOGRAPHY, inputFont } from '@/shared/theme/typography';
 
 interface SearchBarProps {
@@ -32,10 +30,16 @@ interface SearchBarProps {
   testID?: string;
 }
 
-const SEARCH_BAR_HEIGHT = 40;
-const SEARCH_BAR_RADIUS = 12;
-const LIGHT_BG = '#EFEFF1';
-const DARK_BG = '#2C2C2E';
+/** The control radius — buttons and inputs (`cardi-design-system.md` § _Shape_). */
+const FIELD_RADIUS = 12;
+
+/**
+ * The frame's two glyphs. Their 1.8 stroke is in the icon's 24-unit grid, so the 20pt magnifier
+ * draws it at 1.5px — the system's icon stroke — and the smaller × a touch finer.
+ */
+const SEARCH_ICON_SIZE = 20;
+const CLEAR_ICON_SIZE = 18;
+const ICON_STROKE_WIDTH = 1.8;
 
 export const SearchBar: React.FC<SearchBarProps> = ({
   value,
@@ -43,9 +47,10 @@ export const SearchBar: React.FC<SearchBarProps> = ({
   onClear,
   testID = 'search-bar'
 }) => {
-  const { theme, isDark } = useTheme();
+  const { theme } = useTheme();
   const { t } = useTranslation();
-  const inputRef = useRef<TextInputType>(null);
+  const inputRef = useRef<TextInput>(null);
+  const [isFocused, setIsFocused] = useState(false);
   const hasValue = value.length > 0;
 
   const handleClear = () => {
@@ -59,20 +64,27 @@ export const SearchBar: React.FC<SearchBarProps> = ({
       style={[
         styles.container,
         {
-          backgroundColor: hasValue && !isDark ? '#FFFFFF' : isDark ? DARK_BG : LIGHT_BG,
-          borderWidth: 2,
-          borderColor: hasValue ? theme.primary : 'transparent'
+          backgroundColor: theme.surface,
+          // Focus, as `TextField` shows it — not a value: a filled field at rest is still at rest.
+          borderColor: isFocused ? theme.primary : theme.border
         }
       ]}
     >
-      <MaterialIcons name="search" size={16} color={theme.textTertiary} style={styles.searchIcon} />
+      <Search
+        testID={`${testID}-icon`}
+        size={SEARCH_ICON_SIZE}
+        strokeWidth={ICON_STROKE_WIDTH}
+        color={theme.textSecondary}
+      />
       <TextInput
         ref={inputRef}
         testID={`${testID}-input`}
         value={value}
         onChangeText={onChangeText}
+        onFocus={() => setIsFocused(true)}
+        onBlur={() => setIsFocused(false)}
         placeholder={t('cards.home.searchPlaceholder')}
-        placeholderTextColor={theme.textTertiary}
+        placeholderTextColor={theme.textSecondary}
         style={[styles.input, { color: theme.textPrimary }]}
         accessibilityLabel={t('cards.home.searchAccessibilityLabel')}
         returnKeyType="search"
@@ -85,10 +97,14 @@ export const SearchBar: React.FC<SearchBarProps> = ({
           onPress={handleClear}
           accessibilityLabel={t('cards.home.clearSearchAccessibilityLabel')}
           accessibilityRole="button"
-          hitSlop={8}
           style={styles.clearButton}
         >
-          <MaterialIcons name="close" size={18} color={theme.textSecondary} />
+          <X
+            testID={`${testID}-clear-icon`}
+            size={CLEAR_ICON_SIZE}
+            strokeWidth={ICON_STROKE_WIDTH}
+            color={theme.textSecondary}
+          />
         </Pressable>
       )}
     </View>
@@ -97,25 +113,30 @@ export const SearchBar: React.FC<SearchBarProps> = ({
 
 const styles = StyleSheet.create({
   container: {
-    height: SEARCH_BAR_HEIGHT,
-    borderRadius: SEARCH_BAR_RADIUS,
+    height: TOUCH_TARGET.min,
+    borderRadius: FIELD_RADIUS,
+    borderWidth: 1,
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 12
-  },
-  searchIcon: {
-    marginRight: 8
+    // 16 + the 20pt magnifier + 8 starts the text 44pt in, where the frame's off-grid 14 / 10 put it.
+    paddingHorizontal: SPACING.md,
+    gap: SPACING.sm
   },
   input: {
     ...inputFont(TYPOGRAPHY.bodyLg),
     flex: 1,
-    paddingVertical: 0
+    // The full height of the field, so a tap above or below the text still focuses it — as
+    // `BrandSearchBar`'s input does. With no platform padding, the field's own height sets the
+    // line, and the text starts where the container's padding says.
+    height: '100%',
+    padding: 0
   },
   clearButton: {
-    minWidth: TOUCH_TARGET.min,
-    minHeight: TOUCH_TARGET.min,
+    width: TOUCH_TARGET.min,
+    height: TOUCH_TARGET.min,
     alignItems: 'center',
     justifyContent: 'center',
-    marginRight: -4
+    // Flush with the field's right edge: the target takes back the field's own padding.
+    marginRight: -SPACING.md
   }
 });

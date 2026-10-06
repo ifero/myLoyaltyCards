@@ -71,6 +71,8 @@ interface CardTileProps {
   enlarged?: boolean;
   /** Beam border highlight for newly added card (fades after 2s) */
   highlighted?: boolean;
+  /** Called once the highlight ring has ended, so the wallet can clear it and never replay it. */
+  onHighlightEnd?: () => void;
   /**
    * Applied tile width (pt), derived from the viewport by the parent.
    * Omit to fall back to the design reference constant.
@@ -95,6 +97,7 @@ export const CardTile: React.FC<CardTileProps> = ({
   card,
   enlarged = false,
   highlighted = false,
+  onHighlightEnd,
   tileWidth: tileWidthProp,
   tileHeight: tileHeightProp
 }) => {
@@ -145,8 +148,14 @@ export const CardTile: React.FC<CardTileProps> = ({
       radius={tileRadius}
       label={card.name}
       highlighted={highlighted}
+      onHighlightEnd={onHighlightEnd}
       onPress={handlePress}
-      accessibilityLabel={card.name}
+      // The badge is drawn, not spoken, so a favourite says so in the tile's own name.
+      accessibilityLabel={
+        card.isFavorite
+          ? t('cards.home.cardTileFavouriteAccessibilityLabel', { name: card.name })
+          : card.name
+      }
       accessibilityHint={t('cards.home.cardTileAccessibilityHint')}
       badge={
         /* Favourite badge (Story 9.2 — AC2, recoloured in Story 21.2 — AC9): shown

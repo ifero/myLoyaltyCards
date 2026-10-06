@@ -631,12 +631,29 @@ describe('CardTile', () => {
       const tile = screen.getByLabelText('Test Store');
       expect(tile.props.accessibilityHint).toBe('Opens card details');
     });
+
+    // Story 22.2 — the badge is drawn, not announced, so a favourite carries it in its name.
+    it('announces a favourite by its name and "favorite"', () => {
+      render(<CardTile card={{ ...mockCard, isFavorite: true }} />);
+      const tile = screen.getByLabelText('Test Store, favorite');
+      expect(tile.props.accessibilityRole).toBe('button');
+      expect(screen.queryByLabelText('Test Store')).toBeNull();
+    });
   });
 
   describe('New Card Highlight', () => {
     it('renders without crashing when highlighted is true', () => {
       const { toJSON } = render(<CardTile card={mockCard} highlighted />);
       expect(toJSON()).toBeTruthy();
+    });
+
+    // Story 22.2 (#251 item 15) — the wallet clears its just-added card when the ring ends, so
+    // the tile must hand the primitive's end-of-ring report on. The Reanimated mock completes
+    // the fade at once.
+    it('reports the end of the highlight ring to its caller', () => {
+      const onHighlightEnd = jest.fn();
+      render(<CardTile card={mockCard} highlighted onHighlightEnd={onHighlightEnd} />);
+      expect(onHighlightEnd).toHaveBeenCalledTimes(1);
     });
   });
 
@@ -649,6 +666,16 @@ describe('CardTile', () => {
     it('does not render the favourite badge when isFavorite is false (AC3)', () => {
       render(<CardTile card={{ ...mockCard, isFavorite: false }} />);
       expect(screen.queryByTestId('favourite-badge')).toBeNull();
+    });
+
+    // Story 22.2, frame C: the single card's enlarged tile follows the data like a grid tile — the
+    // badge when it is a favourite, none when it is not.
+    it.each([
+      [true, 'renders'],
+      [false, 'does not render']
+    ])('on the enlarged single-card tile, isFavorite %s %s the badge', (isFavorite) => {
+      render(<CardTile card={{ ...mockCard, isFavorite }} enlarged />);
+      expect(screen.queryByTestId('favourite-badge') !== null).toBe(isFavorite);
     });
 
     /**

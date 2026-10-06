@@ -1,18 +1,22 @@
 /**
  * SortFilterRow Component
  * Story 13.2: Restyle Home Screen — AC6 (Sort/Filter Controls)
+ * Story 22.2: The wallet frames' sort row, and the shared sheet as its option list
  *
- * Displays card count label and sort dropdown.
- * Visible when card count >= 2.
+ * Visible when card count >= 2. A count and a control, not a toolbar: the number of cards on the
+ * left, and on the right a text button naming the current sort that opens the three sorts as an
+ * option list in the shared `BottomSheet`.
  */
 
-import { MaterialIcons } from '@expo/vector-icons';
+import Check from 'lucide-react-native/icons/check';
+import ChevronDown from 'lucide-react-native/icons/chevron-down';
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Modal, Pressable, Text, View, StyleSheet } from 'react-native';
+import { Pressable, Text, View, StyleSheet } from 'react-native';
 
+import { BottomSheet } from '@/shared/components/ui/BottomSheet';
 import { useTheme } from '@/shared/theme';
-import { TOUCH_TARGET } from '@/shared/theme/spacing';
+import { LAYOUT, SPACING, TOUCH_TARGET } from '@/shared/theme/spacing';
 import { TYPOGRAPHY } from '@/shared/theme/typography';
 
 import { type SortOption } from '../hooks/useCardSort';
@@ -34,6 +38,14 @@ interface SortFilterRowProps {
 
 const SORT_OPTIONS: SortOption[] = ['frequent', 'recent', 'az'];
 
+/** The frame's chevron after the sort label: 14pt, at its own 2 stroke. */
+const CHEVRON_SIZE = 14;
+const CHEVRON_STROKE_WIDTH = 2;
+
+/** The design system's icon: 24pt at a 1.5 stroke (§ _Icons_). */
+const CHECK_SIZE = 24;
+const CHECK_STROKE_WIDTH = 1.5;
+
 export const SortFilterRow: React.FC<SortFilterRowProps> = ({
   cardCount,
   sortOption,
@@ -42,13 +54,15 @@ export const SortFilterRow: React.FC<SortFilterRowProps> = ({
   sortLabels,
   testID = 'sort-filter-row'
 }) => {
-  const { theme, isDark } = useTheme();
+  const { theme } = useTheme();
   const { t } = useTranslation();
-  const [menuVisible, setMenuVisible] = useState(false);
+  const [isSheetVisible, setIsSheetVisible] = useState(false);
+
+  const closeSheet = () => setIsSheetVisible(false);
 
   const handleSelect = (option: SortOption) => {
     onSortChange(option);
-    setMenuVisible(false);
+    closeSheet();
   };
 
   const cardCountText = t('cards.sort.count', { count: cardCount });
@@ -57,7 +71,7 @@ export const SortFilterRow: React.FC<SortFilterRowProps> = ({
     <View testID={testID} style={styles.container}>
       <Text
         testID={`${testID}-count`}
-        style={[styles.countText, { color: theme.textPrimary }]}
+        style={[styles.label, { color: theme.textPrimary }]}
         accessibilityLabel={cardCountText}
       >
         {cardCountText}
@@ -65,107 +79,96 @@ export const SortFilterRow: React.FC<SortFilterRowProps> = ({
 
       <Pressable
         testID={`${testID}-sort-button`}
-        onPress={() => setMenuVisible(true)}
+        onPress={() => setIsSheetVisible(true)}
         accessibilityRole="button"
         accessibilityLabel={t('cards.sort.buttonAccessibilityLabel', { label: sortLabel })}
         accessibilityHint={t('cards.sort.buttonHint')}
         style={styles.sortButton}
       >
-        <Text style={[styles.sortText, { color: theme.primary }]}>{sortLabel}</Text>
-        <MaterialIcons name="arrow-drop-down" size={20} color={theme.primary} />
+        <Text style={[styles.label, { color: theme.textPrimary }]}>{sortLabel}</Text>
+        <ChevronDown
+          testID={`${testID}-chevron`}
+          size={CHEVRON_SIZE}
+          strokeWidth={CHEVRON_STROKE_WIDTH}
+          color={theme.textPrimary}
+        />
       </Pressable>
 
-      <Modal
-        visible={menuVisible}
-        transparent
-        animationType="fade"
-        onRequestClose={() => setMenuVisible(false)}
+      <BottomSheet
+        visible={isSheetVisible}
+        onClose={closeSheet}
+        title={t('cards.sort.sheetTitle')}
+        testID={`${testID}-sheet`}
       >
-        <Pressable
-          testID={`${testID}-backdrop`}
-          style={styles.backdrop}
-          onPress={() => setMenuVisible(false)}
-        >
-          <View
-            style={[
-              styles.menu,
-              {
-                backgroundColor: isDark ? '#2C2C2E' : '#FFFFFF',
-                shadowColor: '#000'
-              }
-            ]}
-          >
-            {SORT_OPTIONS.map((option) => (
+        {/* An option list: choosing IS the action, so there are no buttons. */}
+        <View>
+          {SORT_OPTIONS.map((option) => {
+            const isSelected = option === sortOption;
+
+            return (
               <Pressable
                 key={option}
                 testID={`${testID}-option-${option}`}
                 onPress={() => handleSelect(option)}
-                accessibilityRole="menuitem"
-                accessibilityState={{ selected: option === sortOption }}
-                style={[
-                  styles.menuItem,
-                  option === sortOption && { backgroundColor: theme.primary + '14' }
-                ]}
+                accessibilityRole="button"
+                accessibilityState={{ selected: isSelected }}
+                style={[styles.option, { borderTopColor: theme.border }]}
               >
-                <Text
-                  style={[
-                    option === sortOption ? TYPOGRAPHY.bodyLgStrong : TYPOGRAPHY.bodyLg,
-                    { color: option === sortOption ? theme.primary : theme.textPrimary }
-                  ]}
-                >
+                <Text style={[styles.optionLabel, { color: theme.textPrimary }]}>
                   {sortLabels[option]}
                 </Text>
-                {option === sortOption && (
-                  <MaterialIcons name="check" size={18} color={theme.primary} />
-                )}
+                {isSelected ? (
+                  <Check
+                    testID={`${testID}-option-${option}-check`}
+                    size={CHECK_SIZE}
+                    strokeWidth={CHECK_STROKE_WIDTH}
+                    color={theme.primary}
+                  />
+                ) : null}
               </Pressable>
-            ))}
-          </View>
-        </Pressable>
-      </Modal>
+            );
+          })}
+        </View>
+      </BottomSheet>
     </View>
   );
 };
 
 const styles = StyleSheet.create({
+  // The row is the touch target tall, with no padding of its own, so its text sits about 16pt
+  // from the field above it and from the grid below.
   container: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingVertical: 8
+    justifyContent: 'space-between'
   },
-  countText: {
+  label: {
     ...TYPOGRAPHY.labelBold
   },
+  // A short label — "A-Z" — would leave the button under the touch target, so it takes the
+  // target's width too, and keeps the label against the row's right edge.
   sortButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    minHeight: TOUCH_TARGET.min
+    justifyContent: 'flex-end',
+    gap: SPACING.xs,
+    minHeight: TOUCH_TARGET.min,
+    minWidth: TOUCH_TARGET.min
   },
-  sortText: {
-    ...TYPOGRAPHY.labelBold
-  },
-  backdrop: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: 'rgba(0,0,0,0.3)'
-  },
-  menu: {
-    borderRadius: 12,
-    paddingVertical: 8,
-    minWidth: 220,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.15,
-    shadowRadius: 12,
-    elevation: 8
-  },
-  menuItem: {
+  // Edge to edge: each rule spans the sheet, and the label sits on the sheet's own margin, in
+  // line with its title (`cardi-design-system.md` § _Sheets_).
+  option: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    minHeight: TOUCH_TARGET.min
+    minHeight: TOUCH_TARGET.min,
+    marginHorizontal: -LAYOUT.screenHorizontalMargin,
+    paddingHorizontal: LAYOUT.screenHorizontalMargin,
+    paddingVertical: SPACING.smMd,
+    borderTopWidth: 1
+  },
+  optionLabel: {
+    ...TYPOGRAPHY.bodyLg,
+    flex: 1
   }
 });

@@ -5,6 +5,7 @@
  * half of these tests and only the real `ThemeProvider` flips them (#D6D6CB light, #3A3A48 dark).
  */
 import { fireEvent, render, screen } from '@testing-library/react-native';
+import React from 'react';
 import { StyleSheet, Text } from 'react-native';
 
 import {
@@ -72,6 +73,12 @@ describe('Tile', () => {
       fontSize: 13,
       fontWeight: '600'
     });
+  });
+
+  // The wallet frame sets the name 8pt below the tile; the 6 it replaced was off the 8pt grid.
+  it('sets the name 8pt below the tile (Story 22.2)', () => {
+    renderTile();
+    expect(StyleSheet.flatten(screen.getByText('Esselunga').props.style).marginTop).toBe(8);
   });
 
   // AC3 — "Flat. No drop shadows anywhere." Checked in both schemes because the shadow this
@@ -151,6 +158,133 @@ describe('Tile', () => {
     );
     expect(screen.getByTestId('badge')).toBeTruthy();
   });
+
+  /**
+   * Story 22.2 (#251 item 15) — the just-added ring plays once. The tile reports the end of its
+   * ring, however it ends, so the wallet can clear the highlight and nothing replays it. The
+   * Reanimated mock in `jest.setup.js` completes every animation at once, reporting
+   * `finished: true`.
+   *
+   * That mock's `useSharedValue` also hands back a NEW object on every render, where the real hook
+   * returns the same one for the life of the component — so any effect that lists a shared value
+   * would re-run on every re-render, and these tests could not tell a replay from a re-render.
+   * They get a faithful one here.
+   */
+  describe('the end of the highlight ring', () => {
+    const reanimated: {
+      useSharedValue: (initial: unknown) => { value: unknown };
+      withTiming: (...args: unknown[]) => unknown;
+      cancelAnimation: (sharedValue: unknown) => void;
+    } = jest.requireMock('react-native-reanimated');
+
+    let stableSharedValue: jest.SpyInstance;
+    beforeEach(() => {
+      stableSharedValue = jest
+        .spyOn(reanimated, 'useSharedValue')
+        .mockImplementation((initial: unknown) => React.useState(() => ({ value: initial }))[0]);
+    });
+    afterEach(() => {
+      stableSharedValue.mockRestore();
+    });
+
+    it('reports the end of the ring once, when the fade has finished', () => {
+      const onHighlightEnd = jest.fn();
+      const view = renderTile({ highlighted: true, onHighlightEnd });
+      expect(onHighlightEnd).toHaveBeenCalledTimes(1);
+
+      view.rerender(
+        <StoryDecorator theme="light">
+          <Tile {...BASE} highlighted onHighlightEnd={onHighlightEnd}>
+            <Text>mark</Text>
+          </Tile>
+        </StoryDecorator>
+      );
+      expect(onHighlightEnd).toHaveBeenCalledTimes(1);
+    });
+
+    it('reports nothing for a tile that is not highlighted', () => {
+      const onHighlightEnd = jest.fn();
+      renderTile({ onHighlightEnd });
+      expect(onHighlightEnd).not.toHaveBeenCalled();
+    });
+
+    // A caller that hands over a new function on each render must not restart the ring: that
+    // would replay it, and push its end further out on every render.
+    it('does not replay the ring when the callback changes identity', () => {
+      const first = jest.fn();
+      const second = jest.fn();
+      const view = renderTile({ highlighted: true, onHighlightEnd: first });
+
+      view.rerender(
+        <StoryDecorator theme="light">
+          <Tile {...BASE} highlighted onHighlightEnd={second}>
+            <Text>mark</Text>
+          </Tile>
+        </StoryDecorator>
+      );
+
+      expect(first).toHaveBeenCalledTimes(1);
+      expect(second).not.toHaveBeenCalled();
+    });
+
+    // An unmount cancels the ring (`useSharedValue` does it), and a cancelled ring reports
+    // `finished: false`. That is still the end of the ring: left unreported, the highlight would
+    // stay armed and the ring would replay on the next tile drawn with it.
+    it('reports the end of a ring that was cut short', () => {
+      const cutShort = jest
+        .spyOn(reanimated, 'withTiming')
+        .mockImplementation((value: unknown, _config: unknown, callback: unknown) => {
+          (callback as ((finished: boolean) => void) | undefined)?.(false);
+          return value;
+        });
+      try {
+        const onHighlightEnd = jest.fn();
+        renderTile({ highlighted: true, onHighlightEnd });
+        expect(onHighlightEnd).toHaveBeenCalledTimes(1);
+      } finally {
+        cutShort.mockRestore();
+      }
+    });
+
+    // A recycled cell: the tile now draws another card, so `highlighted` turns false mid-ring.
+    // The ring is cancelled at once — Reanimated then calls its callback with `finished: false`,
+    // which the `cancelAnimation` stand-in below does — and its end is reported.
+    it('ends the ring at once, and reports it, when highlighted turns false mid-ring', () => {
+      let pending: ((finished: boolean) => void) | undefined;
+      const holdRing = jest
+        .spyOn(reanimated, 'withTiming')
+        .mockImplementation((value: unknown, _config: unknown, callback: unknown) => {
+          pending = callback as (finished: boolean) => void;
+          return value;
+        });
+      const cancel = jest.spyOn(reanimated, 'cancelAnimation').mockImplementation(() => {
+        pending?.(false);
+        pending = undefined;
+      });
+      // The spy is the mock's own `jest.fn`, and the previous test's tile unmounts — cancelling
+      // its ring — after the shared `afterEach` has cleared the mocks, so start the count here.
+      cancel.mockClear();
+      try {
+        const onHighlightEnd = jest.fn();
+        const view = renderTile({ highlighted: true, onHighlightEnd });
+        expect(onHighlightEnd).not.toHaveBeenCalled();
+
+        view.rerender(
+          <StoryDecorator theme="light">
+            <Tile {...BASE} highlighted={false} onHighlightEnd={onHighlightEnd}>
+              <Text>mark</Text>
+            </Tile>
+          </StoryDecorator>
+        );
+
+        expect(cancel).toHaveBeenCalledTimes(1);
+        expect(onHighlightEnd).toHaveBeenCalledTimes(1);
+      } finally {
+        holdRing.mockRestore();
+        cancel.mockRestore();
+      }
+    });
+  });
 });
 
 describe('FavouriteBadge', () => {
@@ -198,9 +332,10 @@ describe('getHighlightBorder', () => {
     });
   });
 
-  // A just-added tile stays `highlighted` for the rest of the session, so once the ring has faded
-  // the tile must get its resting outline BACK. Dropping to 0 erased a light brand's only edge —
-  // which the shadow used to hide, and which is all that separates it from the ground now.
+  // A tile stays `highlighted` after its ring has faded — until its caller clears it from
+  // `onHighlightEnd`, or for good if it never does — so once the ring has faded the tile must get its
+  // resting outline BACK. Dropping to 0 erased a light brand's only edge — which the shadow used to
+  // hide, and which is all that separates it from the ground now.
   it('hands back the resting outline once the ring has faded', () => {
     expect(getHighlightBorder(0, resting)).toEqual(resting);
   });

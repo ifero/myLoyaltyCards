@@ -62,6 +62,39 @@ describe('Italian localization rendering', () => {
   });
 
   /**
+   * Story 22.2 — the wallet frames' copy, decided in both locales. `locales/card-colors.test.ts`
+   * holds the two files to the same KEYS; this pins the Italian VALUES the frames decided, as
+   * they render.
+   */
+  it('renders the wallet frames’ Italian copy', async () => {
+    await act(async () => {
+      await changeAppLanguage('it');
+    });
+
+    const WalletProbe = () => {
+      const { t } = useTranslation();
+      return (
+        <View>
+          <Text>{t('cards.sort.count', { count: 1 })}</Text>
+          <Text>{t('cards.sort.count', { count: 8 })}</Text>
+          <Text>{t('cards.sort.sheetTitle')}</Text>
+          <Text>{t('cards.home.emptyStateCta')}</Text>
+          <Text>{t('cards.home.noResults', { query: 'Ikea' })}</Text>
+          <Text>{t('cards.home.cardTileFavouriteAccessibilityLabel', { name: 'Esselunga' })}</Text>
+        </View>
+      );
+    };
+    render(<WalletProbe />);
+
+    expect(screen.getByText('1 carta')).toBeTruthy();
+    expect(screen.getByText('8 carte')).toBeTruthy();
+    expect(screen.getByText('Ordina per')).toBeTruthy();
+    expect(screen.getByText('Aggiungi la tua prima carta')).toBeTruthy();
+    expect(screen.getByText('Nessuna carta corrisponde a “Ikea”')).toBeTruthy();
+    expect(screen.getByText('Esselunga, preferita')).toBeTruthy();
+  });
+
+  /**
    * Story 21.2a, AC5 — the Italian half of the colour labels, as a screen reader
    * would announce it.
    *

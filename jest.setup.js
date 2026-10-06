@@ -146,7 +146,8 @@ jest.mock('expo-router', () => {
   const push = jest.fn();
   const back = jest.fn();
   const replace = jest.fn();
-  const routerObj = { push, back, replace };
+  const setParams = jest.fn();
+  const routerObj = { push, back, replace, setParams };
 
   return {
     router: routerObj,
@@ -213,7 +214,10 @@ jest.mock('@expo/vector-icons', () => {
 global.mockFlashListState = {
   numColumns: undefined,
   contentContainerStyle: undefined,
-  listHeaderStyle: undefined
+  listHeaderStyle: undefined,
+  refreshControl: undefined,
+  keyboardShouldPersistTaps: undefined,
+  maintainVisibleContentPosition: undefined
 };
 jest.mock('@shopify/flash-list', () => {
   const mockReact = require('react');
@@ -228,8 +232,9 @@ jest.mock('@shopify/flash-list', () => {
         ListHeaderComponent,
         testID,
         numColumns,
-        onRefresh,
-        refreshing,
+        refreshControl,
+        keyboardShouldPersistTaps,
+        maintainVisibleContentPosition,
         contentContainerStyle
       } = props;
 
@@ -246,30 +251,40 @@ jest.mock('@shopify/flash-list', () => {
         ListHeaderComponent && typeof ListHeaderComponent !== 'function'
           ? ListHeaderComponent.props?.style
           : undefined;
+      // A custom refresh control replaces FlashList's built-in one (which takes no tint), so
+      // tests read its handler and colours here. Captured rather than forwarded onto the host
+      // view: an element there would make `toJSON()` circular through its owner fiber.
+      global.mockFlashListState.refreshControl = refreshControl;
+      // Forwarded by FlashList to its scroll view, so it decides whether a tap while the keyboard
+      // is up reaches the header's controls and the tiles.
+      global.mockFlashListState.keyboardShouldPersistTaps = keyboardShouldPersistTaps;
+      // FlashList 2 anchors the first visible item across data changes unless this disables it.
+      global.mockFlashListState.maintainVisibleContentPosition = maintainVisibleContentPosition;
 
-      if (data.length === 0 && ListEmptyComponent) {
-        return typeof ListEmptyComponent === 'function'
-          ? mockReact.createElement(ListEmptyComponent)
-          : ListEmptyComponent;
-      }
+      const renderSlot = (Slot) =>
+        typeof Slot === 'function' ? mockReact.createElement(Slot) : Slot;
 
       const children = data.map((item, index) =>
         mockReact.createElement(mockRN.View, { key: item.id || index }, renderItem({ item }))
       );
 
+      // FlashList 2.0.2 renders the header whether or not there is data, and the empty
+      // component AFTER the (empty) item collection, inside the same scroll view
+      // (`recyclerview/hooks/useSecondaryProps.tsx`, `recyclerview/RecyclerView.tsx`). This
+      // mock used to return the empty component on its own, dropping the header, so a
+      // search that matched nothing could not be tested with its controls still on screen.
       return mockReact.createElement(
         mockRN.View,
-        { testID, onRefresh, refreshing },
+        { testID },
         ListHeaderComponent
           ? mockReact.createElement(
               mockRN.View,
               { key: '__header' },
-              typeof ListHeaderComponent === 'function'
-                ? mockReact.createElement(ListHeaderComponent)
-                : ListHeaderComponent
+              renderSlot(ListHeaderComponent)
             )
           : null,
-        ...children
+        ...children,
+        data.length === 0 && ListEmptyComponent ? renderSlot(ListEmptyComponent) : null
       );
     }
   };
@@ -340,9 +355,10 @@ jest.mock('react-native-reanimated', () => {
 });
 
 // Mock react-native-worklets: app code uses only `scheduleOnRN`, which runs a JS-thread function
-// from an animation callback (the shared BottomSheet's slide-out). It runs at once, as the
-// Reanimated mock above completes its animations at once. The package's own `src/mock` is not
-// used: it is TypeScript that `transformIgnorePatterns` leaves untransformed, and it replaces
+// from an animation callback (the shared BottomSheet's slide-out, and the Tile's report that its
+// highlight ring has ended). It runs at once, as the Reanimated mock above completes its
+// animations at once. The package's own `src/mock` is not used: it is TypeScript that
+// `transformIgnorePatterns` leaves untransformed, and it replaces
 // `globalThis.requestAnimationFrame` in every suite that loads it.
 jest.mock('react-native-worklets', () => ({
   scheduleOnRN: (fn, ...args) => {

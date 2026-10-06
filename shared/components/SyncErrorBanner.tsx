@@ -11,7 +11,7 @@ import Animated, { FadeIn, FadeOut } from 'react-native-reanimated';
 import { StyleSheet } from 'react-native-unistyles';
 
 import { useTheme } from '@/shared/theme';
-import { TOUCH_TARGET } from '@/shared/theme/spacing';
+import { SPACING, TOUCH_TARGET } from '@/shared/theme/spacing';
 import { SYNC_TOKENS } from '@/shared/theme/sync-tokens';
 import { TYPOGRAPHY } from '@/shared/theme/typography';
 
@@ -96,7 +96,8 @@ export const SyncErrorBanner = ({ message, onRetry, onDismiss }: SyncErrorBanner
 
 const styles = StyleSheet.create({
   banner: {
-    marginHorizontal: 32,
+    // On the card grid's 16pt margin, in line with the tiles below (Story 22.2).
+    marginHorizontal: SPACING.md,
     marginTop: 16,
     flexDirection: 'row',
     alignItems: 'center',

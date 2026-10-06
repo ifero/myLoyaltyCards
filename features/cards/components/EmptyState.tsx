@@ -1,142 +1,85 @@
 /**
  * EmptyState Component
  * Story 13.2: Restyle Home Screen — AC4 (Empty State)
+ * Story 22.2: Frame B of the wallet frames
  *
- * Displays wallet illustration (SVG from Figma), "No cards yet" title,
- * encouraging subtitle, and primary CTA button with glow shadow.
- * Dark mode compatible.
+ * The wallet with no cards. Type only — a title and a subtitle, centred between the header and
+ * the footer — because the system's illustrations are a commissioned set that does not exist yet,
+ * and inventing one per screen is what it forbids. The add-card action is the last region of the
+ * page: the shared primary-action footer, a hairline over a full-width button, in flow below the
+ * scroll area and never positioned over it. There is no search and no sort: they appear only at
+ * two or more cards.
  */
 
 import { useRouter } from 'expo-router';
 import React from 'react';
 import { useTranslation } from 'react-i18next';
-import { View, Text, StyleSheet, Platform } from 'react-native';
-import Svg, { Rect, Circle, G } from 'react-native-svg';
+import { ScrollView, StyleSheet, Text, View, type RefreshControlProps } from 'react-native';
 
 import { Button } from '@/shared/components/ui/Button';
+import { PrimaryActionFooter } from '@/shared/components/ui/PrimaryActionFooter';
 import { useTheme } from '@/shared/theme';
+import { SPACING } from '@/shared/theme/spacing';
 import { TYPOGRAPHY } from '@/shared/theme/typography';
 
-/**
- * Wallet illustration. Canonical source: this component — the repo is canonical for design
- * (see docs/design/CONTRIBUTING-DESIGN.md). Uses the theme primary color with varying
- * opacities + accent dots.
- * (Historical breadcrumb: originally matched Figma node 52:64 — Figma is now ideation-only.)
- */
-const WalletIllustration: React.FC<{ primary: string }> = ({ primary }) => (
-  <Svg width={160} height={120} viewBox="0 0 160 120" fill="none">
-    <G>
-      {/* Wallet body */}
-      <Rect x={20} y={20} width={120} height={80} rx={16} fill={primary} fillOpacity={0.12} />
-      <Rect
-        x={21}
-        y={21}
-        width={118}
-        height={78}
-        rx={15}
-        stroke={primary}
-        strokeOpacity={0.3}
-        strokeWidth={2}
-        strokeDasharray="6 4"
-      />
-      {/* Flap */}
-      <Rect x={30} y={8} width={100} height={20} rx={8} fill={primary} fillOpacity={0.2} />
-      {/* Accent dots */}
-      <Circle cx={4} cy={44} r={4} fill="#FFCC00" />
-      <Circle cx={153} cy={28} r={3} fill={primary} fillOpacity={0.5} />
-      <Circle cx={12.5} cy={12.5} r={2.5} fill="#E2231A" fillOpacity={0.4} />
-    </G>
-  </Svg>
-);
+interface EmptyStateProps {
+  /** The wallet's pull-to-refresh, so an empty wallet still syncs. */
+  refreshControl?: React.ReactElement<RefreshControlProps>;
+}
 
-/**
- * EmptyState Component
- *
- * Vertically centered layout with:
- * - Wallet SVG illustration (dashed outline + sparkle dots) from Figma
- * - Title: "No cards yet" (22pt SemiBold)
- * - Subtitle: encouraging multi-line copy
- * - CTA: "+ Add Your First Card" with primary glow shadow
- */
-export const EmptyState: React.FC = () => {
-  const { theme, isDark } = useTheme();
+export const EmptyState: React.FC<EmptyStateProps> = ({ refreshControl }) => {
+  const { theme } = useTheme();
   const { t } = useTranslation();
   const router = useRouter();
 
-  const handleAddCard = () => {
-    router.push('/add-card');
-  };
-
   return (
-    <View style={styles.container} accessibilityRole="none">
-      {/* Wallet illustration */}
-      <View
-        style={styles.illustrationContainer}
-        accessibilityLabel={t('cards.home.emptyStateIllustrationAccessibilityLabel')}
+    <View testID="empty-state" style={[styles.container, { backgroundColor: theme.background }]}>
+      <ScrollView
+        testID="empty-state-scroll"
+        contentContainerStyle={styles.content}
+        refreshControl={refreshControl}
+        showsVerticalScrollIndicator={false}
       >
-        <WalletIllustration primary={theme.primary} />
-      </View>
+        <Text accessibilityRole="header" style={[styles.title, { color: theme.textPrimary }]}>
+          {t('cards.home.emptyStateTitle')}
+        </Text>
+        <Text style={[styles.subtitle, { color: theme.textSecondary }]}>
+          {t('cards.home.emptyStateSubtitle')}
+        </Text>
+      </ScrollView>
 
-      {/* Title */}
-      <Text style={[styles.title, { color: theme.textPrimary }]} accessibilityRole="header">
-        {t('cards.home.emptyStateTitle')}
-      </Text>
-
-      {/* Subtitle */}
-      <Text style={[styles.subtitle, { color: theme.textTertiary }]}>
-        {t('cards.home.emptyStateSubtitle')}
-      </Text>
-
-      {/* CTA Button with glow */}
-      <View
-        style={[
-          styles.ctaWrapper,
-          !isDark && {
-            ...Platform.select({
-              ios: {
-                shadowColor: theme.primary,
-                shadowOffset: { width: 0, height: 4 },
-                shadowOpacity: 0.3,
-                shadowRadius: 12
-              },
-              android: { elevation: 6 }
-            })
-          }
-        ]}
-      >
-        <Button variant="primary" onPress={handleAddCard} testID="empty-state-cta">
+      <PrimaryActionFooter margin="grid" testID="empty-state-footer">
+        <Button
+          variant="primary"
+          size="large"
+          onPress={() => router.push('/add-card')}
+          testID="empty-state-cta"
+        >
           {t('cards.home.emptyStateCta')}
         </Button>
-      </View>
+      </PrimaryActionFooter>
     </View>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
+    flex: 1
+  },
+  // Grows to the space above the footer, so the two lines centre between it and the header.
+  content: {
+    flexGrow: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    paddingHorizontal: 32,
-    minHeight: 400
-  },
-  illustrationContainer: {
-    width: 160,
-    height: 120,
-    marginBottom: 24
+    gap: SPACING.sm,
+    paddingHorizontal: SPACING.md
   },
   title: {
     ...TYPOGRAPHY.headlineMd,
-    textAlign: 'center',
-    marginBottom: 8
+    textAlign: 'center'
   },
   subtitle: {
     ...TYPOGRAPHY.bodyMd,
-    textAlign: 'center',
-    marginBottom: 32
-  },
-  ctaWrapper: {
-    width: 240,
-    height: 50
+    textAlign: 'center'
   }
 });

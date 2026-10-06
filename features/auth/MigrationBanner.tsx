@@ -14,6 +14,7 @@ import { ActivityIndicator, Pressable, Text, View } from 'react-native';
 import { StyleSheet } from 'react-native-unistyles';
 
 import { useTheme } from '@/shared/theme';
+import { SPACING } from '@/shared/theme/spacing';
 import { TYPOGRAPHY } from '@/shared/theme/typography';
 
 import { MigrationStatus } from './useGuestMigration';
@@ -111,7 +112,8 @@ const MigrationBanner = ({ status, message, onRetry, onDismiss }: MigrationBanne
 
 const styles = StyleSheet.create({
   banner: {
-    marginHorizontal: 32,
+    // On the card grid's 16pt margin, in line with the tiles below (Story 22.2).
+    marginHorizontal: SPACING.md,
     marginTop: 16,
     flexDirection: 'row',
     alignItems: 'center',

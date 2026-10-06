@@ -156,4 +156,15 @@ describe('MigrationBanner', () => {
 
     expect(getByTestId('migration-banner').props.accessibilityRole).toBe('alert');
   });
+
+  // Story 22.2 — Home's banners sit on the card grid's 16pt margin, in line with the tiles.
+  it('sits on the 16pt grid margin', () => {
+    const { getByTestId } = render(
+      <MigrationBanner {...defaultProps} status="success" message="Success" />
+    );
+
+    expect(StyleSheet.flatten(getByTestId('migration-banner').props.style).marginHorizontal).toBe(
+      16
+    );
+  });
 });

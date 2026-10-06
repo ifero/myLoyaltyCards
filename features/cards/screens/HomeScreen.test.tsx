@@ -27,10 +27,14 @@ type SyncStatusMockProps = {
   onSuccessDismissed: () => void;
 };
 
-const mockCardList = jest.fn((props: { highlightCardId?: string | null }) => {
+type CardListMockProps = { highlightCardId?: string | null; onHighlightEnd?: () => void };
+
+const mockCardList = jest.fn((props: CardListMockProps) => {
   void props;
   return null;
 });
+
+const lastCardListProps = () => mockCardList.mock.calls[mockCardList.mock.calls.length - 1]![0];
 const mockGuestModeBanner = jest.fn((props: { isGuestMode: boolean }) => {
   void props;
   return null;
@@ -72,7 +76,7 @@ const syncProps = () =>
   mockSyncStatusContainer.mock.calls[mockSyncStatusContainer.mock.calls.length - 1]![0];
 
 jest.mock('@/features/cards/components/CardList', () => ({
-  CardList: (props: { highlightCardId?: string | null }) => {
+  CardList: (props: CardListMockProps) => {
     mockCardList(props);
     return null;
   }
@@ -150,7 +154,7 @@ beforeEach(() => {
 });
 
 describe('HomeScreen highlight lifecycle', () => {
-  it('passes newCardId to CardList and clears route params via replace', async () => {
+  it('passes newCardId to CardList and consumes the route params', async () => {
     (useLocalSearchParams as jest.Mock).mockReturnValue({ newCardId: 'new-card-123' });
 
     render(<HomeScreen />);
@@ -162,11 +166,54 @@ describe('HomeScreen highlight lifecycle', () => {
     });
 
     await waitFor(() => {
-      expect(useRouter().replace).toHaveBeenCalledWith('/');
+      expect(useRouter().setParams).toHaveBeenCalledWith({
+        newCardId: undefined,
+        newCardName: undefined
+      });
     });
   });
 
-  it('does not call replace when newCardId is missing', async () => {
+  // Story 22.2: on device, `router.replace('/')` swapped in a new Home route — a remount that
+  // dropped the highlight before any tile drew it, so the ring never played. The params are
+  // consumed in place instead, and the highlight survives consuming them.
+  it('consumes the params in place, without replacing the screen', async () => {
+    (useLocalSearchParams as jest.Mock).mockReturnValue({ newCardId: 'new-card-123' });
+
+    render(<HomeScreen />);
+    await waitFor(() => expect(useRouter().setParams).toHaveBeenCalledTimes(1));
+
+    expect(useRouter().replace).not.toHaveBeenCalled();
+    expect(lastCardListProps().highlightCardId).toBe('new-card-123');
+  });
+
+  // Story 22.2 (#251 item 15): the ring plays once, so its end clears the highlight and nothing
+  // can replay it — not a remount, a scroll back or a recycled cell.
+  it('clears the highlight when the just-added card’s ring has ended', async () => {
+    (useLocalSearchParams as jest.Mock).mockReturnValue({ newCardId: 'new-card-123' });
+
+    render(<HomeScreen />);
+    await waitFor(() => expect(lastCardListProps().highlightCardId).toBe('new-card-123'));
+
+    act(() => lastCardListProps().onHighlightEnd?.());
+
+    await waitFor(() => expect(lastCardListProps().highlightCardId).toBeNull());
+  });
+
+  // A stable callback, so the tile's ring is never restarted by a new identity on re-render.
+  it('hands CardList the same end-of-ring callback on every render', async () => {
+    (useLocalSearchParams as jest.Mock).mockReturnValue({ newCardId: 'new-card-123' });
+
+    const { rerender } = render(<HomeScreen />);
+    await waitFor(() => expect(lastCardListProps().highlightCardId).toBe('new-card-123'));
+    const first = lastCardListProps().onHighlightEnd;
+
+    rerender(<HomeScreen />);
+
+    expect(first).toEqual(expect.any(Function));
+    expect(lastCardListProps().onHighlightEnd).toBe(first);
+  });
+
+  it('touches no route params when newCardId is missing', async () => {
     (useLocalSearchParams as jest.Mock).mockReturnValue({});
 
     render(<HomeScreen />);
@@ -175,6 +222,7 @@ describe('HomeScreen highlight lifecycle', () => {
       expect(mockCardList).toHaveBeenCalledWith(expect.objectContaining({ highlightCardId: null }));
     });
 
+    expect(useRouter().setParams).not.toHaveBeenCalled();
     expect(useRouter().replace).not.toHaveBeenCalled();
   });
 
