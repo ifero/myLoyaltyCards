@@ -438,7 +438,7 @@ You don't have to drive the methodology by hand. BMAD ships agents and skills yo
 | Handle a mid-sprint scope change      | `bmad-correct-course`                                                                                                                         |
 | Close out an epic                     | `bmad-retrospective`                                                                                                                          |
 
-`bmad-build` also has a **one-shot** shortcut for very small changes with no open questions: intent and implementation notes only, no approval checkpoint, one reviewer, and a commit of its own that this repository disables. It is for `chore:` and `docs:` work that has no story; every story takes the full route, so its acceptance criteria are approved before any code. How a story moves from `draft` to `done`, and what sets each status, is tabulated in [`docs/sprint-artifacts/README.md`](docs/sprint-artifacts/README.md#the-story-lifecycle-bmad-build).
+`bmad-build` also has a **one-shot** shortcut for very small changes with no open questions: intent and implementation notes only, no approval checkpoint, a single review layer, and a commit of its own that this repository disables. It is for `chore:` and `docs:` work that has no story; every story takes the full route, so its acceptance criteria are approved before any code. How a story moves from `draft` to `done`, and what sets each status, is tabulated in [`docs/sprint-artifacts/README.md`](docs/sprint-artifacts/README.md#the-story-lifecycle-bmad-build).
 
 ---
 

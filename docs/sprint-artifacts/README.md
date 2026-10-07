@@ -61,6 +61,7 @@ by hand first (the `BRANCH AND TREE` fact).
 | Spec approved at checkpoint 1 | `ready-for-dev`                       | `ready-for-dev` | step 2, plus the TRACKER AT APPROVAL fact                                            |
 | Implementation starts         | `in-progress` (and `baseline_commit`) | `in-progress`   | step 3                                                                               |
 | Built-in review               | `in-review`                           | `in-progress`   | step 4                                                                               |
+| Device check, review loops    | `in-review`                           | `in-progress`   | the DEVICE CHECK and REVIEW LOOPS facts, between step 4 and step 5                   |
 | The run ends                  | `in-review`                           | `review`        | step 5 writes `done` and `review`; `on_complete` moves the spec back to `in-review`  |
 | PR open, human review         | `in-review`                           | `review`        | —                                                                                    |
 | PR merged                     | `done`                                | `done`          | `scripts/mark-story-done.mjs`, in a `[skip ci]` bot commit                           |
@@ -77,9 +78,17 @@ by hand first (the `BRANCH AND TREE` fact).
   step 1 would otherwise fork a second, flat spec from it. The open stories that still have classic
   files have to be converted or re-planned before they go through it.
 - **The one-shot route is for work without a story.** Step 2 can send a small change with no open
-  questions down a one-shot route: no approval checkpoint, one reviewer, no acceptance-criteria
+  questions down a one-shot route: no approval checkpoint, a single review layer, no acceptance-criteria
   section, and a commit of its own. The override forbids it for stories, and the commit gate still
   covers the `chore:` and `docs:` work that may use it.
+- **Two gates come before the handback.** After the skill's own review (between step 4 and step 5, or
+  between the one-shot route's Classify and Finalize Spec sections) the `DEVICE CHECK` fact runs every
+  change that reaches the app on a simulator, with screenshots in light and dark, and the
+  `REVIEW LOOPS` fact (with `LOOP REVIEWER` and `LOOP FINDINGS`) then runs a code-review loop and a QA
+  loop, each round with a fresh Sonnet reviewer, until a reviewer approves with zero comments or, after
+  two rounds of nits only, ifero agrees to stop. A later change to the reviewed diff sends both loops
+  round again, one that reaches the app (other than a comment-only edit) repeats the device check, and
+  the full checks run once more before the handback.
 - **`bmad-build` does not commit**, at its last step or in the one-shot step. It leaves the working tree
   for review (`bmad-walkthrough` is the guided way); atomic commits, the push and the PR follow the
   approval ([AGENTS.md](../../AGENTS.md)).
@@ -122,8 +131,8 @@ non-standard, which is expected.
 
 - **`bmad-build`** is configured by `_bmad/custom/bmad-build.toml`; the lifecycle above is what that
   file produces, and its `persistent_facts` are the contract, so read them before changing the flow.
-  It has not yet been run end to end on a real story: the first one is the test, so report anything
-  that drifts (a spec outside `stories/`, `done` before the merge, a commit made).
+  Report anything that drifts from that lifecycle (a spec outside `stories/`, `done` before the merge,
+  a commit made).
 - **`bmad-sprint-planning`** is guarded by `_bmad/custom/bmad-sprint-planning.toml`, and the guard is a
   **prohibition**: never run its `generate` intent, or the fix flow that uses it, against this tracker.
   The 6.12 `generate` step derives every key from the `docs/epics.md` headings, and this tracker's
