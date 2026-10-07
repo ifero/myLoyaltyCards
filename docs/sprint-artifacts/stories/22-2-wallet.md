@@ -2,7 +2,7 @@
 title: 'Story 22.2: Wallet — the four Cardì wallet frames'
 type: 'feature'
 created: '2026-10-05'
-status: 'in-review'
+status: 'done'
 route: 'dispatch'
 review_loop_iteration: 0
 baseline_commit: '05d95b91259e7d0633baea447f78f1c897c9d9bf'
