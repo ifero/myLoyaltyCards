@@ -15,6 +15,7 @@ jest.mock('@/shared/theme', () => ({
 }));
 
 jest.mock('@/shared/theme/spacing', () => ({
+  ...jest.requireActual('@/shared/theme/spacing'),
   TOUCH_TARGET: { min: 44, recommended: 48 }
 }));
 
@@ -126,6 +127,15 @@ describe('SyncErrorBanner', () => {
     expect(screen.getByTestId('sync-error-dismiss-button').props.accessibilityHint).toBe(
       'Hides the error message'
     );
+  });
+
+  // Story 22.2 — Home's banners sit on the card grid's 16pt margin, in line with the tiles.
+  it('sits on the 16pt grid margin', () => {
+    render(<SyncErrorBanner message="Error" onRetry={jest.fn()} onDismiss={jest.fn()} />);
+
+    expect(
+      StyleSheet.flatten(screen.getByTestId('sync-error-banner').props.style).marginHorizontal
+    ).toBe(16);
   });
 });
 

@@ -8,7 +8,7 @@ import { StyleSheet } from 'react-native-unistyles';
 
 import { Button } from '@/shared/components/ui';
 import { useTheme } from '@/shared/theme';
-import { TOUCH_TARGET } from '@/shared/theme/spacing';
+import { SPACING, TOUCH_TARGET } from '@/shared/theme/spacing';
 import { TYPOGRAPHY } from '@/shared/theme/typography';
 
 const GUEST_BANNER_DISMISSED_KEY = 'guest_banner_dismissed';
@@ -134,9 +134,11 @@ export const GuestModeBanner = ({ isGuestMode }: GuestModeBannerProps) => {
 
         <View style={[styles.actions, { gap: spacingSm }]}>
           <View>
+            {/* Outlined, like Sign in: a filled primary is beam in dark mode, and no beam-filled
+                surface sits above the grid (Story 22.2). */}
             <Button
               testID="guest-mode-banner-create-account"
-              variant="primary"
+              variant="secondary"
               onPress={() => router.push('/create-account')}
               accessibilityLabel={t('common.actions.createAccount')}
             >
@@ -161,7 +163,8 @@ export const GuestModeBanner = ({ isGuestMode }: GuestModeBannerProps) => {
 
 const styles = StyleSheet.create({
   banner: {
-    marginHorizontal: 32,
+    // On the card grid's 16pt margin, in line with the tiles below (Story 22.2).
+    marginHorizontal: SPACING.md,
     marginBottom: 24,
     marginTop: 16,
     overflow: 'hidden',

@@ -30,6 +30,7 @@ jest.mock('@/shared/theme/colors', () => ({
 }));
 
 jest.mock('@/shared/theme/spacing', () => ({
+  ...jest.requireActual('@/shared/theme/spacing'),
   TOUCH_TARGET: { min: 44, recommended: 48 }
 }));
 

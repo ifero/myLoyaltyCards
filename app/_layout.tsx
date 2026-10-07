@@ -33,6 +33,7 @@ import { useBootAuthGate } from '@/shared/supabase/useBootAuthGate';
 import { ThemeProvider, useTheme } from '@/shared/theme';
 import { NAVIGATION_TITLE_FONT, TYPOGRAPHY } from '@/shared/theme/typography';
 
+import { HomeAddButton, HomeSettingsButton } from '@/features/cards/components/HomeHeaderButtons';
 import { completeFirstLaunch, isFirstLaunch } from '@/features/settings';
 
 export const unstable_settings = {
@@ -74,46 +75,14 @@ try {
 }
 
 /**
- * Header Right component with Settings button
- * Story 13.2: MI "settings" icon (26pt), primary color, touch-target-sized (48pt, Story 22.1)
+ * The Home title in `headline-md`'s face, size and weight (Story 22.2, frame A). No colour key, so
+ * it keeps the shared `headerTintColor`; no letter spacing, which a native title does not take.
  */
-const HeaderRight = () => {
-  const router = useRouter();
-  const { theme } = useTheme();
-  const { t } = useTranslation();
-
-  return (
-    <Pressable
-      onPress={() => router.push('/settings')}
-      accessibilityLabel={t('navigation.settings')}
-      accessibilityRole="button"
-      style={styles.headerButton}
-    >
-      <MaterialIcons name="settings" size={26} color={theme.primary} />
-    </Pressable>
-  );
-};
-
-/**
- * Header Left component with Add Card button
- * Story 13.2: MI "add" icon (28pt), primary color, touch-target-sized (48pt, Story 22.1)
- */
-const HeaderLeft = () => {
-  const router = useRouter();
-  const { theme } = useTheme();
-  const { t } = useTranslation();
-
-  return (
-    <Pressable
-      onPress={() => router.push('/add-card')}
-      accessibilityLabel={t('navigation.addCard')}
-      accessibilityRole="button"
-      style={styles.headerButton}
-    >
-      <MaterialIcons name="add" size={28} color={theme.primary} />
-    </Pressable>
-  );
-};
+const HOME_TITLE_FONT = {
+  fontFamily: TYPOGRAPHY.headlineMd.fontFamily,
+  fontSize: TYPOGRAPHY.headlineMd.fontSize,
+  fontWeight: TYPOGRAPHY.headlineMd.fontWeight
+} as const;
 
 const RootLayoutContent = ({ isAuthenticated }: { isAuthenticated: boolean }) => {
   const { isDark, theme } = useTheme();
@@ -181,8 +150,15 @@ const RootLayoutContent = ({ isAuthenticated }: { isAuthenticated: boolean }) =>
           name="index"
           options={{
             title: t('navigation.home'),
-            headerLeft: () => <HeaderLeft />,
-            headerRight: () => <HeaderRight />
+            // The wallet frame's header, on Home only: the ground colour with no divider, the
+            // title centred (Android needs telling; iOS always centres it). The buttons keep the
+            // platform's own treatment — on iOS 26 the system draws its glass around them.
+            headerStyle: { backgroundColor: theme.background },
+            headerShadowVisible: false,
+            headerTitleAlign: 'center',
+            headerTitleStyle: HOME_TITLE_FONT,
+            headerLeft: () => <HomeAddButton />,
+            headerRight: () => <HomeSettingsButton />
           }}
         />
         <Stack.Screen

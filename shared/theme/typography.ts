@@ -132,7 +132,9 @@ export type TypographyTokenName = keyof typeof TYPOGRAPHY;
 /**
  * Native navigation-bar titles take `bodyLgStrong`'s face but deliberately NOT a size: iOS draws a
  * title at 17pt when none is given — the token's own size — and Android keeps its toolbar's. The
- * story that swaps the face is not the one that resizes the header (Epic 22 redesigns it).
+ * story that swaps the face is not the one that resizes the header: Epic 22 redesigns it screen by
+ * screen. Home's title already takes `headlineMd`'s face, size and weight (Story 22.2, in
+ * `app/_layout.tsx`); every other screen keeps this face at the platform's size until its own story.
  */
 export const NAVIGATION_TITLE_FONT = {
   fontFamily: TYPOGRAPHY.bodyLgStrong.fontFamily,

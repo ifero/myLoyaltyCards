@@ -79,4 +79,13 @@ describe('OfflineIndicator', () => {
 
     mockIsDark = false;
   });
+
+  // Story 22.2 — Home's banners sit on the card grid's 16pt margin, in line with the tiles.
+  it('sits on the 16pt grid margin', () => {
+    render(<OfflineIndicator isOffline pendingChangeCount={2} />);
+
+    expect(
+      StyleSheet.flatten(screen.getByTestId('offline-indicator').props.style).marginHorizontal
+    ).toBe(16);
+  });
 });

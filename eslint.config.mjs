@@ -104,6 +104,18 @@ const localPlugin = {
   }
 };
 
+// Story 22.2: Lucide is the system's one outline icon family, imported one icon per module —
+// `lucide-react-native/icons/<name>` — because its package root re-exports every icon and Metro
+// does not tree-shake it, so a root import ships them all. Type-only imports load nothing and stay
+// legal (`LucideIcon`). Listed in every block that configures `no-restricted-imports`: a later
+// flat-config block's options REPLACE an earlier one's, so a block without it would drop it.
+const LUCIDE_ROOT_IMPORT = {
+  name: 'lucide-react-native',
+  allowTypeImports: true,
+  message:
+    "Import each icon from its own module, e.g. `import Plus from 'lucide-react-native/icons/plus'`. The package root pulls every icon into the bundle."
+};
+
 export default [
   eslint.configs.recommended,
   {
@@ -149,6 +161,7 @@ export default [
       // (core/utils/logger.ts) is the single sanctioned logging sink so that
       // production errors are routed to Sentry and dev noise is gated.
       'no-console': 'error',
+      'no-restricted-imports': ['error', { paths: [LUCIDE_ROOT_IMPORT] }],
       // React hook correctness. Until now NEITHER of these ran, so `yarn lint`
       // and CI gave zero assurance about the ~178 dependency-array hook call
       // sites across 66 files.
@@ -350,7 +363,8 @@ export default [
               name: 'react',
               importNames: ['useState', 'useEffect', 'useCallback', 'useMemo'],
               message: 'Route files should only re-export from features. No hooks allowed.'
-            }
+            },
+            LUCIDE_ROOT_IMPORT
           ]
         }
       ]

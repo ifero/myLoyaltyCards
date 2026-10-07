@@ -561,19 +561,20 @@ export const en = {
       searchPlaceholder: 'Search loyalty cards',
       searchAccessibilityLabel: 'Search loyalty cards',
       clearSearchAccessibilityLabel: 'Clear search',
-      noResults: 'No cards matching "{{query}}"',
+      noResults: 'No cards matching “{{query}}”',
       singleCardTip: 'Tap + to add more cards to your wallet',
-      emptyStateIllustrationAccessibilityLabel: 'Wallet illustration',
       emptyStateTitle: 'No cards yet',
       emptyStateSubtitle: 'Add your first loyalty card and\nnever miss rewards at checkout',
-      emptyStateCta: '+ Add Your First Card',
-      cardTileAccessibilityHint: 'Opens card details'
+      emptyStateCta: 'Add your first card',
+      cardTileAccessibilityHint: 'Opens card details',
+      cardTileFavouriteAccessibilityLabel: '{{name}}, favorite'
     },
     sort: {
-      count_one: '{{count}} loyalty card',
-      count_other: '{{count}} loyalty cards',
+      count_one: '{{count}} card',
+      count_other: '{{count}} cards',
       buttonAccessibilityLabel: 'Sort by {{label}}',
       buttonHint: 'Opens sort options',
+      sheetTitle: 'Sort by',
       frequent: 'Frequently used',
       recent: 'Recently added',
       az: 'A-Z'

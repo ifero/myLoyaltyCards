@@ -16,6 +16,7 @@ import Animated, { FadeIn, FadeOut } from 'react-native-reanimated';
 import { StyleSheet } from 'react-native-unistyles';
 
 import { useTheme } from '@/shared/theme';
+import { SPACING } from '@/shared/theme/spacing';
 import { SYNC_TOKENS } from '@/shared/theme/sync-tokens';
 import { TYPOGRAPHY } from '@/shared/theme/typography';
 
@@ -57,7 +58,8 @@ export const OfflineIndicator = ({ isOffline, pendingChangeCount }: OfflineIndic
 
 const styles = StyleSheet.create({
   container: {
-    marginHorizontal: 32,
+    // On the card grid's 16pt margin, in line with the tiles below (Story 22.2).
+    marginHorizontal: SPACING.md,
     marginTop: 16,
     flexDirection: 'row',
     alignItems: 'center',

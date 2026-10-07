@@ -1,6 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react-native';
 import React from 'react';
+import { StyleSheet } from 'react-native';
 
 import { GuestModeBanner } from './GuestModeBanner';
 
@@ -94,4 +95,28 @@ describe('GuestModeBanner', () => {
       expect(screen.queryByTestId('guest-mode-banner')).toBeNull();
     });
   });
+
+  // Story 22.2 — Home's banners sit on the card grid's 16pt margin, in line with the tiles.
+  it('sits on the 16pt grid margin', async () => {
+    render(<GuestModeBanner isGuestMode />);
+
+    await waitFor(() => expect(screen.getByTestId('guest-mode-banner')).toBeTruthy());
+    expect(
+      StyleSheet.flatten(screen.getByTestId('guest-mode-banner').props.style).marginHorizontal
+    ).toBe(16);
+  });
+
+  // Story 22.2 — both actions are outlined. A filled primary is beam in dark mode, and no
+  // beam-filled surface may sit above the grid; outlined in light too, so the pair reads alike.
+  it.each(['guest-mode-banner-create-account', 'guest-mode-banner-sign-in'])(
+    'draws %s as an outlined secondary button, not a filled one',
+    async (testID) => {
+      render(<GuestModeBanner isGuestMode />);
+
+      await waitFor(() => expect(screen.getByTestId(testID)).toBeTruthy());
+      expect(
+        StyleSheet.flatten(screen.getByTestId(`${testID}-container`).props.style)
+      ).toMatchObject({ backgroundColor: 'transparent', borderWidth: 1, borderColor: '#1A73E8' });
+    }
+  );
 });

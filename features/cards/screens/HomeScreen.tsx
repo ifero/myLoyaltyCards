@@ -83,9 +83,18 @@ const HomeScreen = () => {
   useEffect(() => {
     if (typeof newCardId === 'string' && newCardId.length > 0) {
       setHighlightCardId(newCardId);
-      router.replace('/');
+      // Consume the param in place. `router.replace('/')` swapped in a new Home route, which
+      // remounted this screen and dropped the highlight before any tile could draw it, so the
+      // just-added ring never played (seen on device, Story 22.2).
+      router.setParams({ newCardId: undefined, newCardName: undefined });
     }
   }, [newCardId, router]);
+
+  // The just-added ring plays once: cleared when it ends, so a remount, a scroll back or a
+  // recycled cell finds nothing to replay (#251 item 15).
+  const handleHighlightEnd = useCallback(() => {
+    setHighlightCardId(null);
+  }, []);
 
   return (
     <>
@@ -100,7 +109,7 @@ const HomeScreen = () => {
         onDismissError={handleDismissError}
         onSuccessDismissed={handleSuccessDismissed}
       />
-      <CardList highlightCardId={highlightCardId} />
+      <CardList highlightCardId={highlightCardId} onHighlightEnd={handleHighlightEnd} />
     </>
   );
 };

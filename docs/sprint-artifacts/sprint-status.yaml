@@ -1,5 +1,5 @@
 # generated: 2026-01-03
-# last_updated: 2026-10-04
+# last_updated: 2026-10-06
 # project: myLoyaltyCards
 # project_key: NOKEY
 # tracking_system: file-system
@@ -47,7 +47,7 @@
 # - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
 
 generated: 2026-01-03
-last_updated: 2026-10-04
+last_updated: 2026-10-06
 project: myLoyaltyCards
 project_key: NOKEY
 tracking_system: file-system
@@ -264,7 +264,7 @@ current_sprint:
   number: 21
   name: 'Sprint 21: Cardì Redesign — Wave A Screens (Epic 22)'
   goal: 'Implement the Cardì frames across the phone app screen by screen, now that the shared primitives exist. Deliberately NOT a big bang, and for a stated reason: unlike colour tokens, layout HAS a supported half-migrated state, so shipping a redesigned Wallet while Settings still waits costs nothing. Wave A is the illustration-free half of Epic 22 and can proceed as soon as 22-1 lands; onboarding (22-10) is not in it and stays blocked on a commissioned illustration set that does not exist.'
-  status: planned # COMMITTED 2026-10-01 at the Sprint 20 -> 21 roll-over, BEFORE its refinement gate, per ifero. Of the two gates it was staged behind, 22-1 landing is CLEARED (#252, 2026-09-28); REFINEMENT IS STILL OPEN — all eight stories are `backlog` with no story file on any git ref (scanned 2026-10-04), and it clears through `bmad-build <story-key>` with "Approve and stop", one story per run (see notes). Move it to `in-progress` when the first story is picked up for implementation.
+  status: in-progress # OPENED 2026-10-05 when 22-2 was picked up for implementation, refined and approved the same day through bmad-build with "Approve and continue", per ifero; the other seven stories are still `backlog` and refine one per run. Previously `planned`: COMMITTED 2026-10-01 at the Sprint 20 -> 21 roll-over, BEFORE its refinement gate, per ifero. Of the two gates it was staged behind, 22-1 landing is CLEARED (#252, 2026-09-28); refinement clears through `bmad-build <story-key>`, one story per run (see notes).
   planning_date: 2026-10-01
   epics: [22]
   stories:
@@ -774,7 +774,7 @@ development_status:
   # exist; inventing a per-screen illustration style is forbidden by the system.
   epic-22: in-progress # 2026-09-14: 22-1 refined (the Epic 22 enabler); 22-2..22-10 stay backlog
   22-1-design-system-components: done # READY FOR REVIEW 2026-09-27. PICKED UP 2026-09-26 (wave_5). REFINED 2026-09-14. BLOCKS 22-2..22-10; absorbs 16-30..16-33. ⚠️ shared/components/ui/stories.test.tsx:76-77 HARD-ASSERTS exactly 7 story modules and fails the moment an 8th primitive gains a .stories file — update the count deliberately. It TRANSCRIBES the section-header and sheet specs into cardi-design-system.md (AC11) — CORRECTED 2026-09-15: those specs DO exist, at docs/design/cardi/stitch-prompts-settings.txt :120 and :183; the main design document simply never restates them. It does not invent them, and the shared BottomSheet's 40x4 grabber is the OFF-SPEC one, not MultiCodePickerSheet's 36x4. Sequenced after BOTH 21-2 and 21-6: it rewrites the very components those two edit (CardTile, the sheets, NoCodeFoundBanner, the form fields).
-  22-2-wallet: backlog
+  22-2-wallet: review # READY FOR REVIEW 2026-10-06: built, bmad-build's four-layer review passed (34 findings triaged: 26 patched, 6 deferred, 2 rejected), then a Sonnet code-review loop and a Sonnet QA loop each approved with zero comments; checked on the iOS simulator, where clearing a narrowed search was found scrolling the search field off screen, fixed, and re-reviewed by both loops; not committed, awaiting ifero's review. PICKED UP 2026-10-05 (wave_1). REFINED 2026-10-05 through bmad-build (its first live run), approved with "Approve and continue"; spec at docs/sprint-artifacts/stories/22-2-wallet.md
   22-3-card-detail: backlog
   22-4-barcode-flash: backlog
   22-5-capture: backlog

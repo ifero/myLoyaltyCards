@@ -445,6 +445,9 @@ decision, not a constraint. Placeholders, values and error messages stay sentenc
 - **On the watch the card row is 14, not 16** — a radius is a proportion of what it rounds, and 16
   on a 48 pt row reads as a pill. Excepted, with the reason, in
   [`cardi-watch-grammar.md`](cardi-watch-grammar.md) §5.5.
+- **The single-card tile is 20, not 16** — a wallet holding one card draws it alone at 220 × 180,
+  about the proportion 16 is on 171, and no 16px tile shares its screen (Story 22.2; see _Card
+  tile_).
 
 ## Elevation
 
@@ -473,6 +476,9 @@ them.
 
 A **2-column grid** of tiles at a **171 : 140** ratio, 16px radius, width derived from the
 viewport. The card name sits in `label-bold` **below** the tile, never inside it.
+
+A wallet holding exactly one card draws it alone as a **220 × 180** tile at radius **20** — about
+the same proportion as 16 on 171 (Story 22.2).
 
 **The tile is filled with the brand's own colour and carries the brand's own logo**, sized
 generously — roughly 85% of the tile. A card belonging to a catalogue brand shows that
@@ -710,6 +716,21 @@ frames, which carried the whole spec while this document gave a sheet only a rad
 One family, **outline style, 1.5px stroke, 24px** on a 48px target, ink-coloured, square
 corners softened. Icons are chrome — they take ink or beam, never a card accent. No filled
 icons, no duotone, no emoji as iconography.
+
+**The family is Lucide — `lucide-react-native`, DECIDED 2026-10-05 (Story 22.2), starting on the
+wallet.** Import each icon from its own module (`lucide-react-native/icons/<name>`), never from the
+package root, which Metro cannot tree-shake; `eslint.config.mjs` refuses a root import. Screens move
+off MaterialIcons as their Epic 22 story redesigns them, and the wallet has not moved entirely: the
+favourite badge's filled star (`FavouriteBadge` in `Tile`) and the guest, migration and sync
+banners' icons are still `@expo/vector-icons` — MaterialIcons, and MaterialCommunityIcons for the
+guest banner's shield.
+
+**A glyph inside a control is smaller — RULED 2026-10-05 (Story 22.2, from the wallet frame).** The
+24 / 1.5 rule is for an icon that owns its 48px target. A glyph inside a field or beside a label
+takes the frame's size and stroke, the stroke in the icon's 24-unit grid: the search field's
+magnifier **20** and clear × **18** at **1.8** (1.5px rendered at 20), and the sort row's chevron
+**14** at **2**. The × still sits on a 48px target of its own; the chevron is part of its text
+button's.
 
 **On the watch, 14–18 rather than 24** — 24-on-48 is a 50 % fill, which works only when the target
 is otherwise empty, and a watch row is not. The part that carries unchanged is the sentence above
