@@ -2,7 +2,7 @@
 title: 'Story 22.3: Card Detail — the four Cardì card-detail frames'
 type: 'feature'
 created: '2026-10-07'
-status: 'in-review'
+status: 'done'
 route: 'dispatch'
 review_loop_iteration: 2
 baseline_commit: '438816cb5a5ab75da0eee08ddf29cc41efd94c1c'
