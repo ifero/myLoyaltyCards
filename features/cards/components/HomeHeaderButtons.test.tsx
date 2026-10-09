@@ -2,17 +2,19 @@
  * HomeHeaderButtons — the Home header's `+` and gear (Story 22.2).
  *
  * Rendered through the real `StoryDecorator` stack, because the icon colour is the point of two of
- * these tests and only the real `ThemeProvider` flips it (ink in light, cream in dark).
+ * these tests and only the real `ThemeProvider` flips it (ink in light, cream in dark). The guard
+ * that keeps the native header's buttons out of the Unistyles plugin's reach covers this file from
+ * `HeaderIconButton.test.tsx`, beside the `Pressable` it protects.
  */
-import { readFileSync } from 'fs';
-import { dirname, relative } from 'path';
-
 import { fireEvent, render, screen } from '@testing-library/react-native';
 import { useRouter } from 'expo-router';
+import Plus from 'lucide-react-native/icons/plus';
+import Settings from 'lucide-react-native/icons/settings';
 import { StyleSheet } from 'react-native';
 
 import { StoryDecorator } from '@/.storybook/StoryDecorator';
 
+import { HeaderIconButton } from './HeaderIconButton';
 import { HomeAddButton, HomeSettingsButton } from './HomeHeaderButtons';
 
 type Scheme = 'light' | 'dark';
@@ -21,6 +23,7 @@ const BUTTONS = [
   {
     name: 'HomeAddButton',
     Button: HomeAddButton,
+    Glyph: Plus,
     testID: 'home-add-button',
     label: 'Add Card',
     route: '/add-card'
@@ -28,6 +31,7 @@ const BUTTONS = [
   {
     name: 'HomeSettingsButton',
     Button: HomeSettingsButton,
+    Glyph: Settings,
     testID: 'home-settings-button',
     label: 'Settings',
     route: '/settings'
@@ -41,7 +45,7 @@ const renderButton = (Button: () => React.JSX.Element, scheme: Scheme = 'light')
     </StoryDecorator>
   );
 
-describe.each(BUTTONS)('$name', ({ Button, testID, label, route }) => {
+describe.each(BUTTONS)('$name', ({ Button, Glyph, testID, label, route }) => {
   it(`is a button named "${label}" that opens ${route}`, () => {
     renderButton(Button);
     const button = screen.getByLabelText(label);
@@ -49,6 +53,11 @@ describe.each(BUTTONS)('$name', ({ Button, testID, label, route }) => {
 
     fireEvent.press(button);
     expect(useRouter().push).toHaveBeenCalledWith(route);
+  });
+
+  it('is the shared header button, drawing its own glyph', () => {
+    renderButton(Button);
+    expect(screen.UNSAFE_getByType(HeaderIconButton).props).toMatchObject({ icon: Glyph, testID });
   });
 
   it('is a 48 × 48 touch target', () => {
@@ -94,22 +103,4 @@ describe.each(BUTTONS)('$name', ({ Button, testID, label, route }) => {
     fireEvent(button, 'pressOut');
     expect(scale()).toBeUndefined();
   });
-});
-
-/**
- * The buttons sit in the NATIVE header, where the Unistyles Babel plugin's remapped `Pressable`
- * flickers on every press. The plugin processes every file whose path contains `<root>/app` and
- * every file that imports `react-native-unistyles` in any form, so the SUBJECT must stay outside
- * both for its `Pressable` to stay React Native's own. Its own comments may name the package;
- * only an import, a re-export or a require counts.
- */
-it('stays outside what the Unistyles Babel plugin processes', () => {
-  const subject = require.resolve('./HomeHeaderButtons');
-  const repoRoot = dirname(require.resolve('@/package.json'));
-
-  // `^app`, not `^app/`: the plugin tests the path with `includes('<root>/app')`, a prefix.
-  expect(relative(repoRoot, subject)).not.toMatch(/^app/);
-  expect(readFileSync(subject, 'utf8')).not.toMatch(
-    /(?:\bfrom|\bimport|\brequire)\s*\(?\s*['"]react-native-unistyles/
-  );
 });

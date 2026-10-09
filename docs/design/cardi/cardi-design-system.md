@@ -280,9 +280,11 @@ included, because there it is the content rather than the chrome.
 >
 > Why it matters rather than being academic:
 >
-> - It is **reachable in ordinary use**. The card-detail header draws the card's name at 17px
->   weight 600 — under both WCAG large-text thresholds (24px regular, 18.66px bold) — directly
->   on the accent, under the _Three roles_ exemption above.
+> - It is **reachable in ordinary use**, though less than when this was raised. Since Story 22.3
+>   no small text sits on the accent at rest — the card-detail bar has no title over the field,
+>   and a custom card's initial in the hero is large text, 28px bold — but the condensed title, the card's name at 17px weight 600 (under both WCAG large-text
+>   thresholds, 24px regular and 18.66px bold), still crosses it mid-blend, fading in as the
+>   field fades out, and the filled favourite star sits on it (below). See _Card detail_.
 > - It is the **default**. Azure is the accent an unresolvable card colour falls back to, so it
 >   is not only what a user picks, it is what they get when nothing was picked.
 > - It is a **regression**. The colour it replaced was `#64748B`, which passed at 4.76:1.
@@ -511,6 +513,71 @@ the star and the tile people open most. On the **card-detail header** there is n
 added — a plate there would break the single filled region above — so the star is drawn straight on
 the brand's colour and falls back from beam to ink on a light field.
 
+### Card detail
+
+**RULED 2026-10-09 (Story 22.3)**, from `frames/cardi-card-detail-frames.html` and
+`stitch-prompts-card-detail.txt`. The screen you pass through to reach the barcode, and the only
+scroll-linked screen in the app. Where the frames and prompts are silent, or this document overrules
+them, the ruling is recorded here, so the screen cannot drift from either without saying so.
+
+**One field, then a blend.** At rest the status-bar inset, the bar and the 200px hero are one region
+in the card's own colour — its brand's hex, or a custom card's accent (_Three roles_) — carrying the
+mark and no title (frame A). While any of the hero is still under the bar, the bar IS the hero. Once
+the hero has gone, the bar blends from the field to the ground over **48px** of scroll as the title
+fades in, in step (frame B: Esselunga half-way over cream is `#F8DE74`), and it then rests on the
+ground with a **1px hairline**, never a shadow (frame C). The blend follows the scroll and is never
+timed: scrolling back reverses every step, and Reduce Motion needs nothing.
+
+- **No resting mid-blend.** A scroll that comes to rest inside the band — a drag released with no
+  momentum, or a fling whose momentum runs out there — settles to the band's nearer end, so the bar
+  is never left half-faded: red over cream would rest on salmon, yellow over black on olive, both
+  banned. A scroll that rests outside the band is left exactly where it stops. Scrolls that are not
+  drags — a screen reader bringing a row into view, a hardware keyboard — can still stop inside the
+  band; that is recorded, not engineered around.
+- **The midpoint flip.** The back chevron, the favourite star and the status bar take the field's
+  contrast foreground — white or ink — at rest, and the scheme's past the blend's midpoint, where the
+  bar is more ground than field. A favourited star is beam on a dark field and ink on a light one,
+  with no plate (_Card tile_); past the midpoint it is measured against the ground the same way —
+  **ink on cream, beam on black** — because the beam rule lists the filled favourite star.
+- **The title** is the card's name in `body-lg` semibold, `on-surface`, one line, clear of both
+  controls. It does not scale with Dynamic Type, as a native bar title does not, and it is hidden from
+  screen readers until the midpoint: until then the name heading the content below the hero, in
+  `headline-md` and two lines at most, is the screen's title.
+- **Dark.** The field stays the brand's own colour, and the condensed bar is the black ground with
+  the `#3A3A48` hairline.
+- **The hero** carries only the mark: the brand's logo straight on its colour, or a custom card's
+  first letter in an 80px circle, fading out over the first 100px of scroll. On a dark field the
+  circle is a 16 % white wash (frame D); on a light one it is a **1px ring in the foreground, with no
+  wash**, because an ink wash over the beam-yellow accent paints mustard. A very light field takes
+  the system hairline along the hero's bottom edge on cream, as a light brand's tile does, and the
+  bar keeps it through the blend. A field-coloured extension above the hero keeps the field — never
+  the ground — in view when iOS bounces the scroll at the top. ⛔ **OPEN:** the logo sits in an 80px
+  square slot, so a wide wordmark (Decathlon's, IKEA's) reads smaller than frame A's stand-in, a
+  wordmark about 170px wide; no rule yet sizes it.
+- **Loading and error.** Before the card has loaded, and when it cannot, the bar is transparent from
+  the first frame of the push over the ground — an opaque bar turned transparent only as the push
+  ended, and the card jumped up under it — with the same back chevron in `on-surface`. There is no
+  title while loading, which would linger over the field until the push ended; an error is titled
+  "Card Details".
+
+**The barcode card** is the first thing below the name, so the barcode is on screen at rest, and the
+whole card opens the full-screen barcode. It stays **white in both schemes**, so its "Tap to enlarge"
+hint is the light scheme's muted `#55555F` in dark too. Its padding is **16, not the frame's 20**:
+16 is a spacing token and 20 is not. Its side padding is the barcode renderer's own 16px white
+margin, so on a phone too slim for a 280px code and that margin, the bars narrow rather than the
+white overrunning the card's hairline. Card detail asks for QR codes at the renderer's **220px
+floor** — the renderer raises any smaller request to it. Nothing is drawn over the bars at any scroll
+position. The brightness bulb (Story 16.39) sits below the card, outside it: off, an outline in
+`textSecondary` (`#55555F` in light, `#B5B5AB` in dark) inside a `border` ring; on, **filled**, in
+`primary` — ink in light, beam in dark.
+
+**The details card** — Number, Color, Added — is a hairline-outlined surface, as MANAGE is. The
+number is set in **`mono-code`**, this document's card-number face, over the frame's Inter, and it is
+grouped in fours **only when it is all digits**: a QR code's URL or an alphanumeric Code 128 is shown,
+and spoken, exactly as it is. **The Color row is for custom cards only** — the frames draw one for
+Esselunga, but a branded card's colour is its brand's, never the accent its stored key names — and it
+shows the accent's name and nothing else.
+
 ### Buttons
 
 - **Primary:** ink fill, white text, 12px radius, 52px tall, full width, anchored in the
@@ -671,7 +738,7 @@ A container that sits on the ground as a **tonal layer** — **white `#FFFFFF` o
 radius**, never by a shadow. It has no padding of its own, because what it holds pads itself
 (settings rows are 12 / 16, the account block 12 / 16, the guest block 24), and it clips to its
 radius. Rows inside it are separated by **full-width 1px hairline rules**, not by gaps. This is
-the settings list, the account block and the card-detail MANAGE block.
+the settings list, the account block, and card detail's details card and MANAGE block.
 
 ### Sheets
 
@@ -723,7 +790,16 @@ package root, which Metro cannot tree-shake; `eslint.config.mjs` refuses a root 
 off MaterialIcons as their Epic 22 story redesigns them, and the wallet has not moved entirely: the
 favourite badge's filled star (`FavouriteBadge` in `Tile`) and the guest, migration and sync
 banners' icons are still `@expo/vector-icons` — MaterialIcons, and MaterialCommunityIcons for the
-guest banner's shield.
+guest banner's shield. Card detail moved in Story 22.3, all but the shared `ActionRow`'s chevron,
+which it shares with settings and add-card, and the close × of the full-screen barcode it opens
+(`FullscreenBarcode`, Story 22.4's).
+
+**A glyph is filled only where the fill is its state — RULED 2026-10-09 (Story 22.3).** Two glyphs
+are: the favourited star and the brightness bulb while it is on. Neither fill is decoration — the
+outline-or-filled difference is the whole of what each says — so neither is a "filled icon". And on
+card detail's own field, the controls take the field's contrast foreground, white or ink, until the
+bar has blended to the ground (_Card detail_): the field is the card's content, not chrome, so this
+is not an icon taking a card accent.
 
 **A glyph inside a control is smaller — RULED 2026-10-05 (Story 22.2, from the wallet frame).** The
 24 / 1.5 rule is for an icon that owns its 48px target. A glyph inside a field or beside a label

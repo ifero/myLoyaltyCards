@@ -634,8 +634,7 @@ export const en = {
       loadFailed: 'Failed to load card details',
       missingDescription: "The card you're looking for doesn't exist or has been deleted.",
       backAccessibilityLabel: 'Go back',
-      favoriteAccessibilityLabel: 'Add to favorites',
-      unfavoriteAccessibilityLabel: 'Remove from favorites',
+      favoriteToggleLabel: 'Favorite',
       viewFullscreenAccessibilityLabel: 'View full screen barcode',
       viewFullscreenHint: 'Opens the barcode in full screen for scanning',
       tapToEnlarge: 'Tap to enlarge',
@@ -658,8 +657,7 @@ export const en = {
       copyFailedMessage: 'Failed to copy barcode to clipboard',
       fullscreenCloseAccessibilityLabel: 'Close fullscreen barcode',
       fullscreenNumberAccessibilityLabel: 'Barcode: {{barcode}}. Tap to copy.',
-      fullscreenNumberHint: 'Tap to copy barcode to clipboard',
-      colorAccessibilityLabel: '{{color}} color'
+      fullscreenNumberHint: 'Tap to copy barcode to clipboard'
     },
     flash: {
       dismissOverlayA11yLabel: 'Dismiss barcode overlay',

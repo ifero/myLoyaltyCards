@@ -302,6 +302,177 @@ jest.mock('react-native-reanimated', () => {
   const mockReact = require('react');
   const mockRN = require('react-native');
 
+  // A shared value, with the `.value` accessor and the `get`/`set` pair. `useSharedValue` keeps
+  // ONE for the life of the component, as the real hook does — an effect that lists a shared
+  // value must not re-run on every render. A write notifies what reads it: the reactions below.
+  let mockReadsInProgress = null;
+  const makeMutable = (initial) => {
+    let current = initial;
+    const readers = new Set();
+    const read = () => {
+      mockReadsInProgress?.add(readers);
+      return current;
+    };
+    const write = (next) => {
+      current = next;
+      [...readers].forEach((reader) => reader());
+    };
+    return {
+      get value() {
+        return read();
+      },
+      set value(next) {
+        write(next);
+      },
+      get: read,
+      set: (next) => write(typeof next === 'function' ? next(current) : next)
+    };
+  };
+  const useSharedValue = (initial) => mockReact.useState(() => makeMutable(initial))[0];
+
+  // A port of Reanimated's `interpolate` (src/interpolation.ts), so scroll-linked values computed
+  // in a worklet come out in a test exactly as they do on the device.
+  const Extrapolation = { IDENTITY: 'identity', CLAMP: 'clamp', EXTEND: 'extend' };
+  const extrapolate = (type, coef, val, leftEdgeOutput, rightEdgeOutput, x) => {
+    switch (type) {
+      case Extrapolation.IDENTITY:
+        return x;
+      case Extrapolation.CLAMP:
+        return coef * val < coef * leftEdgeOutput ? leftEdgeOutput : rightEdgeOutput;
+      case Extrapolation.EXTEND:
+      default:
+        return val;
+    }
+  };
+  const interpolate = (x, inputRange, outputRange, type) => {
+    if (inputRange.length < 2 || outputRange.length < 2) {
+      throw new Error('Interpolation input and output ranges should contain at least two values.');
+    }
+    const config =
+      typeof type === 'string'
+        ? { extrapolateLeft: type, extrapolateRight: type }
+        : {
+            extrapolateLeft: type?.extrapolateLeft ?? Extrapolation.EXTEND,
+            extrapolateRight: type?.extrapolateRight ?? Extrapolation.EXTEND
+          };
+    const length = inputRange.length;
+    let segment = length - 1;
+    if (x <= inputRange[length - 1]) {
+      let left = 1;
+      let right = length - 1;
+      while (left < right) {
+        const mid = Math.floor((left + right) / 2);
+        if (x <= inputRange[mid]) {
+          right = mid;
+        } else {
+          left = mid + 1;
+        }
+      }
+      segment = left;
+    }
+    const leftEdgeInput = inputRange[segment - 1];
+    const rightEdgeInput = inputRange[segment];
+    const leftEdgeOutput = outputRange[segment - 1];
+    const rightEdgeOutput = outputRange[segment];
+    if (rightEdgeInput - leftEdgeInput === 0) {
+      return leftEdgeOutput;
+    }
+    const progress = (x - leftEdgeInput) / (rightEdgeInput - leftEdgeInput);
+    const val = leftEdgeOutput + progress * (rightEdgeOutput - leftEdgeOutput);
+    const coef = rightEdgeOutput >= leftEdgeOutput ? 1 : -1;
+    if (coef * val < coef * leftEdgeOutput) {
+      return extrapolate(config.extrapolateLeft, coef, val, leftEdgeOutput, rightEdgeOutput, x);
+    }
+    if (coef * val > coef * rightEdgeOutput) {
+      return extrapolate(config.extrapolateRight, coef, val, leftEdgeOutput, rightEdgeOutput, x);
+    }
+    return val;
+  };
+
+  // Scroll. The offset `useScrollOffset` returns is kept per animated ref, and `Animated.ScrollView`
+  // writes every scroll event's offset into the one registered for its ref, as the real hook's
+  // event handler does. `useAnimatedScrollHandler` hands its worklets to the same scroll view,
+  // which calls each with the event's payload and the handler's context — one object for the life
+  // of the hook, shared by all its events, as Reanimated's `useHandler` keeps it — and `scrollTo`
+  // moves the offset at once.
+  const mockScrollOffsets = new WeakMap();
+  const useAnimatedRef = () => mockReact.useRef(null);
+  const useScrollOffset = (animatedRef, providedOffset) => {
+    const internalOffset = useSharedValue(0);
+    const offset = mockReact.useRef(providedOffset ?? internalOffset).current;
+    if (animatedRef) {
+      mockScrollOffsets.set(animatedRef, offset);
+    }
+    return offset;
+  };
+  const useAnimatedScrollHandler = (handlers) => ({
+    mockScrollHandlers: typeof handlers === 'function' ? { onScroll: handlers } : handlers,
+    mockScrollContext: mockReact.useRef({}).current
+  });
+  const scrollTo = jest.fn((animatedRef, _x, y) => {
+    mockScrollOffsets.get(animatedRef)?.set(y);
+  });
+
+  const SCROLL_EVENTS = [
+    ['onScroll', 'onScroll'],
+    ['onScrollBeginDrag', 'onBeginDrag'],
+    ['onScrollEndDrag', 'onEndDrag'],
+    ['onMomentumScrollBegin', 'onMomentumBegin'],
+    ['onMomentumScrollEnd', 'onMomentumEnd']
+  ];
+  const AnimatedScrollView = mockReact.forwardRef((props, ref) => {
+    const workletHandlers = props.onScroll?.mockScrollHandlers;
+    const workletContext = props.onScroll?.mockScrollContext;
+    const eventProps = Object.fromEntries(
+      SCROLL_EVENTS.map(([prop, worklet]) => [
+        prop,
+        (event) => {
+          const y = event?.nativeEvent?.contentOffset?.y;
+          if (typeof y === 'number') {
+            mockScrollOffsets.get(ref)?.set(y);
+          }
+          workletHandlers?.[worklet]?.(event?.nativeEvent ?? {}, workletContext);
+          // `onScroll` IS the worklet handlers' carrier when there are any; every other prop is a
+          // plain JS listener and still hears its event.
+          if (prop !== 'onScroll' || !workletHandlers) {
+            props[prop]?.(event);
+          }
+        }
+      ])
+    );
+    return mockReact.createElement(mockRN.ScrollView, { ...props, ...eventProps, ref });
+  });
+  AnimatedScrollView.displayName = 'Animated.ScrollView';
+
+  // Runs `react` with what `prepare` returns, and again whenever a shared value `prepare` read is
+  // written. Always the latest callbacks, read from a ref, so a re-render never re-subscribes.
+  const useAnimatedReaction = (prepare, react) => {
+    const latest = mockReact.useRef({ prepare, react });
+    latest.current = { prepare, react };
+    mockReact.useEffect(() => {
+      let previous = null;
+      let subscriptions = [];
+      const run = () => {
+        subscriptions.forEach((readers) => readers.delete(run));
+        const reads = new Set();
+        const outer = mockReadsInProgress;
+        mockReadsInProgress = reads;
+        let prepared;
+        try {
+          prepared = latest.current.prepare();
+        } finally {
+          mockReadsInProgress = outer;
+        }
+        subscriptions = [...reads];
+        subscriptions.forEach((readers) => readers.add(run));
+        latest.current.react(prepared, previous);
+        previous = prepared;
+      };
+      run();
+      return () => subscriptions.forEach((readers) => readers.delete(run));
+    }, []);
+  };
+
   const AnimatedView = mockReact.forwardRef((props, ref) =>
     mockReact.createElement(mockRN.View, { ...props, ref })
   );
@@ -311,7 +482,7 @@ jest.mock('react-native-reanimated', () => {
     View: AnimatedView,
     Text: mockRN.Text,
     Image: mockRN.Image,
-    ScrollView: mockRN.ScrollView,
+    ScrollView: AnimatedScrollView,
     FlatList: mockRN.FlatList
   };
 
@@ -331,8 +502,15 @@ jest.mock('react-native-reanimated', () => {
     FadeOut: createAnimationMock(),
     SlideInUp: createAnimationMock(),
     SlideOutUp: createAnimationMock(),
-    useSharedValue: (initial) => ({ value: initial }),
+    useSharedValue,
     useAnimatedStyle: () => ({}),
+    useAnimatedRef,
+    useScrollOffset,
+    useAnimatedScrollHandler,
+    useAnimatedReaction,
+    scrollTo,
+    interpolate,
+    Extrapolation,
     // Completes at once, reporting `finished: true` as the real callback does (false = cancelled).
     withTiming: (value, _config, callback) => {
       if (callback) callback(true);
@@ -355,10 +533,11 @@ jest.mock('react-native-reanimated', () => {
 });
 
 // Mock react-native-worklets: app code uses only `scheduleOnRN`, which runs a JS-thread function
-// from an animation callback (the shared BottomSheet's slide-out, and the Tile's report that its
-// highlight ring has ended). It runs at once, as the Reanimated mock above completes its
-// animations at once. The package's own `src/mock` is not used: it is TypeScript that
-// `transformIgnorePatterns` leaves untransformed, and it replaces
+// from a UI-thread callback — an animation's end (the shared BottomSheet's slide-out, and the
+// Tile's report that its highlight ring has ended) and card detail's midpoint flip, from a
+// `useAnimatedReaction` (Story 22.3). It runs at once, as the Reanimated mock above completes its
+// animations and runs its reactions at once. The package's own `src/mock` is not used: it is
+// TypeScript that `transformIgnorePatterns` leaves untransformed, and it replaces
 // `globalThis.requestAnimationFrame` in every suite that loads it.
 jest.mock('react-native-worklets', () => ({
   scheduleOnRN: (fn, ...args) => {

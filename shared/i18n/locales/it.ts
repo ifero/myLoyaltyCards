@@ -629,8 +629,7 @@ export const it = {
       loadFailed: 'Impossibile caricare i dettagli della carta',
       missingDescription: 'La carta che stai cercando non esiste o è stata eliminata.',
       backAccessibilityLabel: 'Torna indietro',
-      favoriteAccessibilityLabel: 'Aggiungi ai preferiti',
-      unfavoriteAccessibilityLabel: 'Rimuovi dai preferiti',
+      favoriteToggleLabel: 'Preferito',
       viewFullscreenAccessibilityLabel: 'Mostra il codice a barre a schermo intero',
       viewFullscreenHint: 'Apre il codice a barre a schermo intero per la scansione',
       tapToEnlarge: 'Tocca per ingrandire',
@@ -654,8 +653,7 @@ export const it = {
       copyFailedMessage: 'Impossibile copiare il codice a barre negli appunti',
       fullscreenCloseAccessibilityLabel: 'Chiudi il codice a barre a schermo intero',
       fullscreenNumberAccessibilityLabel: 'Codice a barre: {{barcode}}. Tocca per copiare.',
-      fullscreenNumberHint: 'Tocca per copiare il codice a barre negli appunti',
-      colorAccessibilityLabel: 'Colore {{color}}'
+      fullscreenNumberHint: 'Tocca per copiare il codice a barre negli appunti'
     },
     flash: {
       dismissOverlayA11yLabel: 'Chiudi overlay codice a barre',
