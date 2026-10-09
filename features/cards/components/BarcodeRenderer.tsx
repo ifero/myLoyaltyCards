@@ -18,11 +18,12 @@ import { Image, PixelRatio, type ViewStyle, View } from 'react-native';
 import type { BarcodeFormat } from '@/core/schemas';
 import { logger } from '@/core/utils/logger';
 
+import { MIN_QR_SIZE, RENDERER_SIDE_PADDING } from '../utils/barcodeGeometry';
+
 /** Conversion ratio from pixels to millimeters (bwip-js uses mm) */
 const PX_TO_MM_RATIO = 10;
 const DEFAULT_LINEAR_WIDTH = 280;
 const DEFAULT_QR_SIZE = 220;
-const MIN_QR_SIZE = 220;
 const LINEAR_PADDING_WIDTH = 6;
 const LINEAR_PADDING_HEIGHT = 2;
 const QR_PADDING_SIZE = 4;
@@ -170,7 +171,7 @@ export const BarcodeRenderer = memo(function BarcodeRenderer({
 
   return (
     <View
-      style={[{ backgroundColor, paddingHorizontal: 16 }, containerStyle]}
+      style={[{ backgroundColor, paddingHorizontal: RENDERER_SIDE_PADDING }, containerStyle]}
       accessibilityLabel={t('cards.barcodeRenderer.imageA11yLabel', { format, value })}
       accessibilityRole="image"
     >

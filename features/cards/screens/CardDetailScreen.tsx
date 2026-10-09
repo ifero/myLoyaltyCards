@@ -2,32 +2,44 @@
  * Card Details Screen
  * Story 13.3: Restyle Card Detail Screen (AC5)
  * Story 21.2: Migrate the colour tokens to Ink & Beam (AC7, AC9)
+ * Story 22.3: Card Detail — the four Cardì card-detail frames
  *
  * Displays full details of a loyalty card with:
- * - Brand-colored navigation header
- * - BrandHero section
- * - Large barcode with fullscreen overlay
- * - Info section and Manage actions
+ * - a transparent native bar over the card's own field, which blends to the ground colour once the
+ *   hero has scrolled away (`CardDetailHeader`)
+ * - the hero, the barcode with its fullscreen overlay, the details and the Manage actions
+ *   (`CardDetails`)
  */
 
-import { MaterialIcons } from '@expo/vector-icons';
-import { useLocalSearchParams, Stack, useFocusEffect, useRouter } from 'expo-router';
+import { useHeaderHeight } from '@react-navigation/elements';
+import { useLocalSearchParams, Stack, useFocusEffect, useIsFocused, useRouter } from 'expo-router';
+import { StatusBar } from 'expo-status-bar';
+import ChevronLeft from 'lucide-react-native/icons/chevron-left';
+import Star from 'lucide-react-native/icons/star';
 import React, { useState, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
-import { View, Text, ActivityIndicator, Pressable } from 'react-native';
+import { View, Text, ActivityIndicator } from 'react-native';
+import { useAnimatedReaction, useSharedValue } from 'react-native-reanimated';
+import { scheduleOnRN } from 'react-native-worklets';
 
 import { getCardById } from '@/core/database';
 import { LoyaltyCard } from '@/core/schemas';
 import { logger } from '@/core/utils/logger';
 
 import { useTheme } from '@/shared/theme';
-import { CARD_COLORS, DEFAULT_CARD_COLOR_HEX } from '@/shared/theme/colors';
+import { CARD_COLORS, DEFAULT_CARD_COLOR_HEX, NEUTRAL_COLORS } from '@/shared/theme/colors';
 import { getContrastForeground, getFavouriteStarColor } from '@/shared/theme/luminance';
 import { SPACING } from '@/shared/theme/spacing';
-import { NAVIGATION_TITLE_FONT, TYPOGRAPHY } from '@/shared/theme/typography';
+import { TYPOGRAPHY } from '@/shared/theme/typography';
 import { showToast } from '@/shared/toast';
 
+import {
+  CardDetailHeaderBackground,
+  CardDetailHeaderTitle,
+  isPastBlendMidpoint
+} from '@/features/cards/components/CardDetailHeader';
 import { CardDetails } from '@/features/cards/components/CardDetails';
+import { HeaderIconButton } from '@/features/cards/components/HeaderIconButton';
 import { useBrandLogo } from '@/features/cards/hooks/useBrandLogo';
 import { useCardBrightnessBoost } from '@/features/cards/hooks/useCardBrightnessBoost';
 import { useDeleteCard } from '@/features/cards/hooks/useDeleteCard';
@@ -35,10 +47,12 @@ import { useToggleFavorite } from '@/features/cards/hooks/useToggleFavorite';
 import { useTrackCardUsage } from '@/features/cards/hooks/useTrackCardUsage';
 
 const CardDetailsScreen = () => {
-  const { theme } = useTheme();
+  const { theme, isDark } = useTheme();
   const router = useRouter();
   const { t } = useTranslation();
   const { id } = useLocalSearchParams<{ id: string }>();
+  const headerHeight = useHeaderHeight();
+  const isFocused = useIsFocused();
 
   const [card, setCard] = useState<LoyaltyCard | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -70,10 +84,28 @@ const CardDetailsScreen = () => {
     setCard
   );
 
-  // Scroll-aware condensing state (AC5) — hooks MUST be before early returns
-  const [isHeaderCondensed, setIsHeaderCondensed] = useState(false);
-  const handleScrollPastHero = useCallback((isPast: boolean) => {
-    setIsHeaderCondensed(isPast);
+  // The scroll offset, written by the content's scroll view on the UI thread and followed there by
+  // the header's layers and title. Only the blend midpoint comes back to React: the controls, the
+  // star and the status bar flip there, and their colours are props, which cannot animate.
+  const scrollOffset = useSharedValue(0);
+  const [isPastMidpoint, setIsPastMidpoint] = useState(false);
+  useAnimatedReaction(
+    () => isPastBlendMidpoint(scrollOffset.value),
+    (isPast, wasPast) => {
+      if (isPast !== wasPast) {
+        scheduleOnRN(setIsPastMidpoint, isPast);
+      }
+    },
+    [scrollOffset]
+  );
+
+  // iOS 26 draws a scroll-edge effect over the top of a scroll view under a transparent bar — a
+  // dark gradient over the field. react-native-screens applies `scrollEdgeEffects` only when the
+  // option CHANGES, which can come before the scroll view exists, so the option turns `hidden` once
+  // the scroll view has laid out, and goes back to `automatic` on every reload.
+  const [isScrollViewLaidOut, setIsScrollViewLaidOut] = useState(false);
+  const handleScrollViewLayout = useCallback(() => {
+    setIsScrollViewLaidOut(true);
   }, []);
 
   /**
@@ -82,6 +114,12 @@ const CardDetailsScreen = () => {
    */
   useFocusEffect(
     useCallback(() => {
+      // The reload swaps the content for the spinner, and the card comes back at rest: the
+      // header's state goes back with it, so no frame draws the scheme's colours over the field.
+      scrollOffset.set(0);
+      setIsPastMidpoint(false);
+      setIsScrollViewLaidOut(false);
+
       const fetchCard = async () => {
         if (!id) {
           setError(t('cards.details.invalidId'));
@@ -107,7 +145,7 @@ const CardDetailsScreen = () => {
       };
 
       fetchCard();
-    }, [id, t])
+    }, [id, t, scrollOffset])
   );
 
   /**
@@ -122,20 +160,47 @@ const CardDetailsScreen = () => {
     });
   }, [t]);
 
-  // Loading state
+  const renderBackButton = (color: string) => (
+    <HeaderIconButton
+      icon={ChevronLeft}
+      label={t('cards.details.backAccessibilityLabel')}
+      onPress={() => router.back()}
+      color={color}
+      testID="card-details-back"
+    />
+  );
+
+  // The bar is transparent in EVERY state, from the first frame of the push: pushed with the shared
+  // opaque bar, the screen turned transparent only as the push ended, and the card jumped up under
+  // it. And `Stack.Screen` options merge per route (`setOptions` spreads each call into the last),
+  // so every state sets every key the card's header sets — a reload's loading or error state must
+  // not inherit the card's title, field, star or field-coloured chevron.
+  const sharedHeaderOptions = {
+    headerTransparent: true,
+    // The shared screen options paint the bar with the surface fill; transparent overrides it.
+    headerStyle: { backgroundColor: 'transparent' },
+    headerShadowVisible: false,
+    headerTitleAlign: 'center',
+    scrollEdgeEffects: { top: isScrollViewLaidOut ? 'hidden' : 'automatic' },
+    headerTitle: undefined,
+    headerBackground: undefined,
+    headerLeft: () => renderBackButton(theme.textPrimary),
+    headerRight: undefined
+  } as const;
+
+  // Loading state — below the transparent bar, over the ground, with no title: one would linger
+  // over the card's field until the push ended.
   if (isLoading) {
     return (
       <>
-        <Stack.Screen
-          options={{
-            title: t('navigation.cardDetails')
-          }}
-        />
+        <Stack.Screen options={{ ...sharedHeaderOptions, title: '' }} />
         <View
+          testID="card-details-loading"
           style={{
             flex: 1,
             alignItems: 'center',
             justifyContent: 'center',
+            paddingTop: headerHeight,
             backgroundColor: theme.background
           }}
         >
@@ -149,17 +214,15 @@ const CardDetailsScreen = () => {
   if (error || !card) {
     return (
       <>
-        <Stack.Screen
-          options={{
-            title: t('navigation.cardDetails')
-          }}
-        />
+        <Stack.Screen options={{ ...sharedHeaderOptions, title: t('navigation.cardDetails') }} />
         <View
+          testID="card-details-error"
           style={{
             flex: 1,
             alignItems: 'center',
             justifyContent: 'center',
             padding: SPACING.lg,
+            paddingTop: headerHeight + SPACING.lg,
             backgroundColor: theme.background
           }}
         >
@@ -186,77 +249,67 @@ const CardDetailsScreen = () => {
     );
   }
 
-  // Resolve header color: the brand's hex for a catalogue card, the card's own
-  // accent for a custom one.
-  //
-  // This USED to fall back to `theme.primary`, which put a themed header
-  // immediately above a hero that `BrandHero` paints `CARD_COLORS[card.color]`
-  // — two different fills meeting at a seam. The card-detail spec wants the
-  // inset, the header and the hero to read as ONE filled region, because three
-  // separately filled boxes leave visible hairlines where they meet. Story 21.2
-  // makes `theme.primary` ink, which would have turned that seam into a
-  // near-black band above a coloured hero, so the derivation below deliberately
-  // mirrors `BrandHero`'s fallback logic — `?? grey` included, without which a
-  // card carrying an unmapped colour renders TRANSPARENT rather than recoloured.
-  // Not byte-identical: `BrandHero` also guards `brand?.color` itself, which is
-  // unreachable here because the brand descriptor's `color` is non-optional.
-  // Story 21.2a re-points all five sites at its named default.
+  // The card's field: the brand's own hex for a catalogue card — never tinted, washed or overlaid —
+  // and the card's accent for a custom one. It MUST match `BrandHero`'s, because the bar shows the
+  // hero itself at rest and then takes over from it at the same colour: two fills would meet at a
+  // seam. `?? DEFAULT_CARD_COLOR_HEX` keeps a card carrying an unmapped colour filled rather than
+  // transparent; `BrandHero` also guards `brand?.color`, which is unreachable here because the
+  // brand descriptor's `color` is non-optional.
   const headerBg = brand ? brand.color : (CARD_COLORS[card.color] ?? DEFAULT_CARD_COLOR_HEX);
-  const headerTextColor = getContrastForeground(headerBg);
+
+  // The controls take the field's contrast foreground at rest and the scheme's past the midpoint,
+  // where the bar is more ground than field. A favourited star is beam on a dark field and ink on a
+  // light one (Esselunga's #FFCC00 would swallow a beam star), with no plate (design system
+  // § _Card tile_); past the midpoint it is measured against the ground the same way — beam on
+  // black, ink on cream — because the beam rule lists the filled favourite star.
+  const fieldForeground = getContrastForeground(headerBg);
+  const controlColor = isPastMidpoint ? theme.textPrimary : fieldForeground;
+  const favouriteStarColor = getFavouriteStarColor(isPastMidpoint ? theme.background : headerBg);
+  const statusBarStyle = isPastMidpoint
+    ? isDark
+      ? 'light'
+      : 'dark'
+    : fieldForeground === NEUTRAL_COLORS.white
+      ? 'light'
+      : 'dark';
 
   // Success state - render card details
   return (
     <>
       <Stack.Screen
         options={{
-          title: isHeaderCondensed ? card.name : '',
-          headerStyle: { backgroundColor: headerBg },
-          headerTintColor: headerTextColor,
-          // The title string is already '' until the header condenses, so the size is left to
-          // the platform as on every other screen; this style only carries the face.
-          headerTitleStyle: { ...NAVIGATION_TITLE_FONT, color: headerTextColor },
-          headerShadowVisible: isHeaderCondensed,
-          headerLeft: () => (
-            <Pressable
-              onPress={() => router.back()}
-              accessibilityRole="button"
-              accessibilityLabel={t('cards.details.backAccessibilityLabel')}
-              hitSlop={8}
-            >
-              <MaterialIcons name="chevron-left" size={28} color={headerTextColor} />
-            </Pressable>
+          ...sharedHeaderOptions,
+          title: card.name,
+          headerTitle: () => (
+            <CardDetailHeaderTitle
+              title={card.name}
+              scrollOffset={scrollOffset}
+              isPastMidpoint={isPastMidpoint}
+            />
           ),
+          headerBackground: () => (
+            <CardDetailHeaderBackground fieldColor={headerBg} scrollOffset={scrollOffset} />
+          ),
+          headerLeft: () => renderBackButton(controlColor),
           headerRight: () => (
-            <Pressable
+            // One fixed name: whether it is set is `selected`'s to say, so a screen reader hears
+            // the state once rather than in the state and again in a label that flips with it.
+            <HeaderIconButton
+              icon={Star}
+              label={t('cards.details.favoriteToggleLabel')}
               onPress={handleToggleFavorite}
               disabled={isFavoritePending}
-              accessibilityRole="button"
-              accessibilityLabel={
-                card.isFavorite
-                  ? t('cards.details.unfavoriteAccessibilityLabel')
-                  : t('cards.details.favoriteAccessibilityLabel')
-              }
-              accessibilityState={{ disabled: isFavoritePending }}
-              hitSlop={8}
+              accessibilityState={{ selected: card.isFavorite }}
+              color={card.isFavorite ? favouriteStarColor : controlColor}
+              fill={card.isFavorite ? favouriteStarColor : undefined}
               testID="favourite-toggle"
-            >
-              {/* A filled BEAM star when favourited — "that star is the only
-                  yellow on the screen" — with no plate behind it: a plate here
-                  would break the single unbroken accent field above. The star
-                  sits directly on the brand's own colour, so unlike the wallet
-                  tile it cannot assume beam reads; `getFavouriteStarColor`
-                  falls back to ink on a light field (Esselunga #FFCC00). The
-                  unfavourited state stays an OUTLINE star in the header's own
-                  foreground. */}
-              <MaterialIcons
-                name={card.isFavorite ? 'star' : 'star-border'}
-                size={26}
-                color={card.isFavorite ? getFavouriteStarColor(headerBg) : headerTextColor}
-              />
-            </Pressable>
+            />
           )
         }}
       />
+      {/* React Native's status bar is a stack where the last mounted instance wins, and this screen
+          stays mounted under Edit — so it draws its own only while it is the focused screen. */}
+      {isFocused ? <StatusBar style={statusBarStyle} /> : null}
       <CardDetails
         isBrightnessBoosted={isBrightnessBoosted}
         onToggleBrightness={toggleBrightness}
@@ -264,7 +317,9 @@ const CardDetailsScreen = () => {
         onCopy={handleCopy}
         onDelete={deleteCard}
         isDeleting={isDeleting}
-        onScrollPastHero={handleScrollPastHero}
+        scrollOffset={scrollOffset}
+        headerHeight={headerHeight}
+        onScrollViewLayout={handleScrollViewLayout}
       />
     </>
   );

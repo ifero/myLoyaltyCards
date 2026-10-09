@@ -162,9 +162,10 @@ describe('Card accent contrast — the five custom-card colours (Story 21.2a)', 
    * and cannot be fixed by choosing differently; the colour sits in the dead zone
    * where neither black nor white reaches AA.
    *
-   * It reaches a user through `CardDetailScreen`'s condensed header, which draws
-   * `card.name` at 17px weight 600 — under both WCAG large-text thresholds (24px
-   * regular / 18.66px bold), so the 4.5:1 floor applies rather than 3:1. And the key
+   * It reaches a user on card detail mid-blend (Story 22.3): the condensed bar is the
+   * ground, but while it blends from an azure field the title — `card.name` at 17px
+   * weight 600, under both WCAG large-text thresholds (24px regular / 18.66px bold), so
+   * the 4.5:1 floor applies rather than 3:1 — fades in over the azure. And the key
    * is `grey`, which is also `DEFAULT_CARD_COLOR`, so every card whose colour cannot
    * be resolved lands here too.
    *

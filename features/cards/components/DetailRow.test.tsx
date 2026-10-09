@@ -1,113 +1,109 @@
 /**
  * DetailRow Component Tests
  * Story 2.6: View Card Details
+ * Story 22.3: Card Detail — the frame row
+ *
+ * Rendered through the real `StoryDecorator`, because the row's colours are the scheme's roles.
  */
 
-import { render, fireEvent } from '@testing-library/react-native';
+import { fireEvent, render, screen } from '@testing-library/react-native';
 import React from 'react';
-import { Text } from 'react-native';
+import { StyleSheet } from 'react-native';
+
+import { TYPOGRAPHY } from '@/shared/theme/typography';
+
+import { StoryDecorator } from '@/.storybook/StoryDecorator';
 
 import { DetailRow } from './DetailRow';
 
-// Mock theme provider
-jest.mock('@/shared/theme', () => ({
-  useTheme: () => ({
-    theme: {
-      textPrimary: '#1F2937',
-      textSecondary: '#6B7280',
-      border: '#E5E7EB'
-    }
-  })
-}));
+type Scheme = 'light' | 'dark';
+type RowProps = React.ComponentProps<typeof DetailRow>;
+
+const renderRow = (props: Partial<RowProps> = {}, scheme: Scheme = 'light') =>
+  render(
+    <StoryDecorator theme={scheme}>
+      <DetailRow label="Number" value="1234 5678 9012 8" testID="row" {...props} />
+    </StoryDecorator>
+  );
+
+const flat = (element: { props: { style: unknown } }) =>
+  StyleSheet.flatten(element.props.style as never) as Record<string, unknown>;
 
 describe('DetailRow', () => {
-  describe('Rendering', () => {
-    it('renders label and value correctly', () => {
-      const { getByText } = render(<DetailRow label="Format" value="Code 128" />);
-
-      expect(getByText('Format')).toBeTruthy();
-      expect(getByText('Code 128')).toBeTruthy();
-    });
-
-    it('renders with testID when provided', () => {
-      const { getByTestId } = render(
-        <DetailRow label="Format" value="Code 128" testID="detail-row" />
-      );
-
-      expect(getByTestId('detail-row')).toBeTruthy();
-    });
-
-    it('renders right element when provided', () => {
-      const { getByTestId } = render(
-        <DetailRow
-          label="Color"
-          value="Blue"
-          rightElement={<Text testID="right-element">Icon</Text>}
-          testID="detail-row"
-        />
-      );
-
-      expect(getByTestId('right-element')).toBeTruthy();
+  it('is at least 48pt tall, padded 12 / 16, its label and value 12 apart', () => {
+    renderRow();
+    expect(flat(screen.getByTestId('row'))).toMatchObject({
+      flexDirection: 'row',
+      alignItems: 'center',
+      minHeight: 48,
+      paddingVertical: 12,
+      paddingHorizontal: 16,
+      gap: 12
     });
   });
 
-  describe('Interaction', () => {
-    it('calls onPress when tapped and onPress is provided', () => {
-      const mockOnPress = jest.fn();
-      const { getByText } = render(
-        <DetailRow label="Number" value="1234567890" onPress={mockOnPress} />
-      );
+  // The divided `Surface` around the rows draws the rules between them.
+  it('draws no rule of its own', () => {
+    renderRow();
+    expect(flat(screen.getByTestId('row')).borderBottomWidth).toBeUndefined();
+  });
 
-      fireEvent.press(getByText('Number'));
-      expect(mockOnPress).toHaveBeenCalledTimes(1);
-    });
-
-    it('does not crash when tapped without onPress', () => {
-      const { getByText } = render(<DetailRow label="Format" value="Code 128" />);
-
-      // Should not throw
-      expect(() => {
-        fireEvent.press(getByText('Format'));
-      }).not.toThrow();
-    });
-
-    it('dims while pressed and restores on release, from explicit press state', () => {
-      const { getByRole } = render(
-        <DetailRow label="Number" value="1234567890" onPress={jest.fn()} />
-      );
-      const button = getByRole('button');
-
-      expect(button).not.toHaveStyle({ opacity: 0.7 });
-      fireEvent(button, 'pressIn');
-      expect(getByRole('button')).toHaveStyle({ opacity: 0.7 });
-      fireEvent(button, 'pressOut');
-      expect(getByRole('button')).not.toHaveStyle({ opacity: 0.7 });
+  it.each<[Scheme, string, string]>([
+    ['light', '#55555F', '#181824'],
+    ['dark', '#B5B5AB', '#F0F0E8']
+  ])('sets the label and the value in bodyMd, muted and primary, in %s', (scheme, muted, ink) => {
+    renderRow({}, scheme);
+    expect(flat(screen.getByText('Number'))).toMatchObject({ ...TYPOGRAPHY.bodyMd, color: muted });
+    expect(flat(screen.getByText('1234 5678 9012 8'))).toMatchObject({
+      ...TYPOGRAPHY.bodyMd,
+      color: ink
     });
   });
 
-  describe('Accessibility', () => {
-    it('has correct accessibility label when pressable', () => {
-      const { getByRole } = render(
-        <DetailRow
-          label="Number"
-          value="1234567890"
-          onPress={() => {}}
-          accessibilityHint="Double tap to copy"
-        />
-      );
+  // A long value — a QR code's URL — is cut in the middle, so both of its ends stay readable.
+  it('sets the value right, on one line, cut in the middle', () => {
+    renderRow();
+    const value = screen.getByText('1234 5678 9012 8');
+    expect(flat(value)).toMatchObject({ flex: 1, textAlign: 'right' });
+    expect(value.props.numberOfLines).toBe(1);
+    expect(value.props.ellipsizeMode).toBe('middle');
+  });
 
-      const button = getByRole('button');
-      expect(button.props.accessibilityLabel).toBe('Number: 1234567890');
+  it('sets a card number in monoCode', () => {
+    renderRow({ mono: true });
+    expect(flat(screen.getByText('1234 5678 9012 8'))).toMatchObject(TYPOGRAPHY.monoCode);
+  });
+
+  it('is not a button without a handler', () => {
+    renderRow();
+    expect(screen.queryByRole('button')).toBeNull();
+  });
+
+  describe('tappable', () => {
+    it('is one button named by its label and its value', () => {
+      const onPress = jest.fn();
+      renderRow({ onPress, accessibilityHint: 'Double tap to copy' });
+      const button = screen.getByRole('button');
+
+      expect(button.props.accessibilityLabel).toBe('Number: 1234 5678 9012 8');
       expect(button.props.accessibilityHint).toBe('Double tap to copy');
+      fireEvent.press(button);
+      expect(onPress).toHaveBeenCalledTimes(1);
     });
-  });
 
-  describe('Text Handling', () => {
-    it('renders long value without crashing', () => {
-      const longValue = '1234567890123456789012345678901234567890';
-      const { getByText } = render(<DetailRow label="Number" value={longValue} />);
+    // As `ActionRow` does: the surface steps up while the row is held, from explicit press state.
+    it.each<[Scheme, string]>([
+      ['light', '#F7F7F1'],
+      ['dark', '#20202E']
+    ])('takes surfaceElevated while held in %s, and lets go on release', (scheme, elevated) => {
+      renderRow({ onPress: jest.fn() }, scheme);
+      const button = screen.getByRole('button');
 
-      expect(getByText(longValue)).toBeTruthy();
+      expect(flat(button).backgroundColor).toBe('transparent');
+      fireEvent(button, 'pressIn');
+      expect(flat(screen.getByRole('button')).backgroundColor).toBe(elevated);
+      fireEvent(button, 'pressOut');
+      expect(flat(screen.getByRole('button')).backgroundColor).toBe('transparent');
     });
   });
 });

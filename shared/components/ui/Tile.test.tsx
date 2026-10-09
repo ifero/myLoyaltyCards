@@ -163,29 +163,14 @@ describe('Tile', () => {
    * Story 22.2 (#251 item 15) — the just-added ring plays once. The tile reports the end of its
    * ring, however it ends, so the wallet can clear the highlight and nothing replays it. The
    * Reanimated mock in `jest.setup.js` completes every animation at once, reporting
-   * `finished: true`.
-   *
-   * That mock's `useSharedValue` also hands back a NEW object on every render, where the real hook
-   * returns the same one for the life of the component — so any effect that lists a shared value
-   * would re-run on every re-render, and these tests could not tell a replay from a re-render.
-   * They get a faithful one here.
+   * `finished: true`, and its `useSharedValue` keeps one value for the life of the tile, as the
+   * real hook does — so a re-render cannot pass for a replay.
    */
   describe('the end of the highlight ring', () => {
     const reanimated: {
-      useSharedValue: (initial: unknown) => { value: unknown };
       withTiming: (...args: unknown[]) => unknown;
       cancelAnimation: (sharedValue: unknown) => void;
     } = jest.requireMock('react-native-reanimated');
-
-    let stableSharedValue: jest.SpyInstance;
-    beforeEach(() => {
-      stableSharedValue = jest
-        .spyOn(reanimated, 'useSharedValue')
-        .mockImplementation((initial: unknown) => React.useState(() => ({ value: initial }))[0]);
-    });
-    afterEach(() => {
-      stableSharedValue.mockRestore();
-    });
 
     it('reports the end of the ring once, when the fade has finished', () => {
       const onHighlightEnd = jest.fn();

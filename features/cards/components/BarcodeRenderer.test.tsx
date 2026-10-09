@@ -5,8 +5,10 @@
 
 import { render, waitFor } from '@testing-library/react-native';
 import React from 'react';
+import { Image, StyleSheet } from 'react-native';
 
 import { BarcodeRenderer } from './BarcodeRenderer';
+import { MIN_QR_SIZE, RENDERER_SIDE_PADDING } from '../utils/barcodeGeometry';
 
 // Get reference to the mock - this is the same instance used by the component
 // eslint-disable-next-line @typescript-eslint/no-require-imports
@@ -289,6 +291,40 @@ describe('BarcodeRenderer', () => {
 
       await waitFor(() => {
         expect(getByLabelText('CODE128 barcode for test')).toBeTruthy();
+      });
+    });
+
+    // Story 22.3: card detail fits its bars inside the white card from these two numbers, so the
+    // renderer must draw by exactly the values it publishes — and draw a linear code at the
+    // narrower width a slim phone asks for.
+    it('pads the drawn code by the published side padding and floors QR codes at MIN_QR_SIZE', async () => {
+      const qr = render(<BarcodeRenderer value="test" format="QR" width={MIN_QR_SIZE - 40} />);
+
+      await waitFor(() => {
+        expect(qr.getByLabelText('QR barcode for test')).toBeTruthy();
+      });
+
+      expect(RENDERER_SIDE_PADDING).toBe(16);
+      expect(
+        StyleSheet.flatten(qr.getByLabelText('QR barcode for test').props.style)
+      ).toMatchObject({ paddingHorizontal: RENDERER_SIDE_PADDING });
+      expect(StyleSheet.flatten(qr.UNSAFE_getByType(Image).props.style)).toMatchObject({
+        width: MIN_QR_SIZE,
+        height: MIN_QR_SIZE
+      });
+      qr.unmount();
+
+      const linear = render(
+        <BarcodeRenderer value="5901234123457" format="EAN13" width={278} height={100} />
+      );
+
+      await waitFor(() => {
+        expect(linear.getByLabelText('EAN13 barcode for 5901234123457')).toBeTruthy();
+      });
+
+      expect(StyleSheet.flatten(linear.UNSAFE_getByType(Image).props.style)).toMatchObject({
+        width: 278,
+        height: 100
       });
     });
   });

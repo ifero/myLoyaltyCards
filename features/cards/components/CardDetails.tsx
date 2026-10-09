@@ -1,48 +1,65 @@
 /**
  * CardDetails Component
  * Story 13.3: Restyle Card Detail Screen
+ * Story 22.3: Card Detail — the four Cardì card-detail frames
  *
- * Displays full details of a loyalty card with Figma-aligned design:
- * - BrandHero section (catalogue logo or custom avatar)
- * - Barcode on white card with tap-to-enlarge
- * - Info section (number, color for custom, date added)
- * - Manage section with ActionRow pattern (Edit, Delete)
- * - Fullscreen barcode modal overlay
+ * The card detail screen's content, top to bottom:
+ * - the hero: the card's own field, running up under the transparent bar (`BrandHero`);
+ * - the card's name;
+ * - the barcode, on a white card that opens the full-screen barcode — the first thing below the
+ *   name, so it is on screen at rest;
+ * - the brightness bulb (Story 16.39);
+ * - the details card: Number, Color (custom cards only), Added;
+ * - MANAGE: Edit and Delete.
+ *
+ * The scroll view's offset drives the header's blend on the UI thread (`CardDetailHeader`), and a
+ * scroll that comes to rest inside the blend settles to its nearer end.
  */
 
-import { MaterialIcons } from '@expo/vector-icons';
 import * as Clipboard from 'expo-clipboard';
 import * as Haptics from 'expo-haptics';
 import { useRouter } from 'expo-router';
-import React, { useCallback, useRef, useState } from 'react';
+import Lightbulb from 'lucide-react-native/icons/lightbulb';
+import React, { useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
-  View,
-  Text,
-  ScrollView,
+  Alert,
+  PixelRatio,
   Pressable,
   StyleSheet,
-  Alert,
-  LayoutChangeEvent,
-  NativeScrollEvent,
-  NativeSyntheticEvent,
-  useWindowDimensions
+  Text,
+  View,
+  useWindowDimensions,
+  type LayoutChangeEvent
 } from 'react-native';
+import Animated, {
+  scrollTo,
+  useAnimatedRef,
+  useAnimatedScrollHandler,
+  useScrollOffset,
+  type SharedValue
+} from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { LoyaltyCard } from '@/core/schemas';
+import { CARD_COLOR_KEYS, DEFAULT_CARD_COLOR, type LoyaltyCard } from '@/core/schemas';
 import { logger } from '@/core/utils/logger';
 
 import { ActionRow } from '@/shared/components/ui/ActionRow';
 import { SectionHeader } from '@/shared/components/ui/SectionHeader';
-import { useTheme, CARD_COLORS } from '@/shared/theme';
-import { SPACING, LAYOUT, TOUCH_TARGET } from '@/shared/theme/spacing';
+import { Surface } from '@/shared/components/ui/Surface';
+import { useTheme } from '@/shared/theme';
+import { BARCODE_FLASH } from '@/shared/theme/colors';
+import { LAYOUT, SPACING, TOUCH_TARGET } from '@/shared/theme/spacing';
+import { LIGHT_THEME_COLORS } from '@/shared/theme/tokens.generated';
 import { TYPOGRAPHY } from '@/shared/theme/typography';
 
 import { BarcodeRenderer } from './BarcodeRenderer';
 import { BrandHero } from './BrandHero';
+import { HEADER_BLEND_END, getBlendSettleOffset } from './CardDetailHeader';
 import { DetailRow } from './DetailRow';
 import { FullscreenBarcode } from './FullscreenBarcode';
+import { useBrandLogo } from '../hooks/useBrandLogo';
+import { MIN_QR_SIZE, RENDERER_SIDE_PADDING } from '../utils/barcodeGeometry';
 import { formatBarcodeNumber } from '../utils/formatBarcode';
 
 interface CardDetailsProps {
@@ -54,13 +71,49 @@ interface CardDetailsProps {
   onDelete?: () => void;
   /** Whether delete operation is in progress */
   isDeleting?: boolean;
-  /** Callback when scroll position passes the hero section threshold (AC5 condensing header) */
-  onScrollPastHero?: (isPast: boolean) => void;
   /** Whether the screen is currently held at full brightness (Story 16.39). */
   isBrightnessBoosted?: boolean;
   /** Flip the brightness boost for this visit (Story 16.39). */
   onToggleBrightness?: () => void;
+  /** The offset the scroll view writes, which the header follows. One of its own when omitted. */
+  scrollOffset?: SharedValue<number>;
+  /** The native bar's height, which the hero runs up under. */
+  headerHeight?: number;
+  /** Called when the scroll view lays out — it exists from then on. */
+  onScrollViewLayout?: () => void;
 }
+
+/** A linear code's size on the card, as the frames draw it. */
+const LINEAR_BARS_WIDTH = 280;
+const LINEAR_BARS_HEIGHT = 100;
+
+/** The barcode card's rounded corner and outline (`cardi-design-system.md` § _Shape_, _Elevation_). */
+const BARCODE_CARD_RADIUS = 16;
+const BARCODE_CARD_BORDER = 1;
+
+/**
+ * The widest a linear code may be drawn on this card: the window less the screen margin, the
+ * card's border and the renderer's own white padding, each side. The renderer's padding is the
+ * card's side padding; on a phone too narrow for 280 plus all three, the bars narrow rather than
+ * the renderer's white running over the card's hairline.
+ */
+const getLinearBarsWidth = (windowWidth: number) =>
+  Math.min(
+    LINEAR_BARS_WIDTH,
+    windowWidth - 2 * (LAYOUT.screenHorizontalMargin + BARCODE_CARD_BORDER + RENDERER_SIDE_PADDING)
+  );
+
+/** A card number grouped in fours — only when it is all digits; anything else shows as it is. */
+const ALL_DIGITS = /^\d+$/;
+
+/**
+ * What the settle handler remembers between scroll events: whether a finger is down, and whether
+ * the last release went on to decelerate.
+ */
+type SettleContext = { isDragging?: boolean; isDecelerating?: boolean };
+
+/** Tap feedback — the design system's 0.98× scale, never a shadow bloom (§ _Elevation_). */
+const PRESSED_SCALE = 0.98;
 
 /**
  * Format date for display (e.g., "Jan 7, 2026")
@@ -74,13 +127,6 @@ const formatDate = (isoString: string, locale: string): string => {
   });
 };
 
-/** Scroll threshold — ~60% of BrandHero height */
-const HERO_SCROLL_THRESHOLD = 120;
-const HERO_CONDENSING_RATIO = 0.6;
-
-/**
- * CardDetails Component — Figma-aligned Card Detail screen
- */
 export const CardDetails: React.FC<CardDetailsProps> = ({
   card,
   onCopy,
@@ -88,52 +134,93 @@ export const CardDetails: React.FC<CardDetailsProps> = ({
   isBrightnessBoosted = false,
   onToggleBrightness,
   isDeleting = false,
-  onScrollPastHero
+  scrollOffset,
+  headerHeight = 0,
+  onScrollViewLayout
 }) => {
   const { theme } = useTheme();
   const router = useRouter();
   const { t, i18n } = useTranslation();
   const insets = useSafeAreaInsets();
-  const { height: viewportHeight } = useWindowDimensions();
+  const { width: windowWidth } = useWindowDimensions();
+  const brand = useBrandLogo(card.brandId);
   const [fullscreenVisible, setFullscreenVisible] = useState(false);
-  const [heroHeight, setHeroHeight] = useState(200);
   const [isBarcodePressed, setIsBarcodePressed] = useState(false);
-  const [isDeletePressed, setIsDeletePressed] = useState(false);
-  const isPastHeroRef = useRef(false);
+  const [isBulbPressed, setIsBulbPressed] = useState(false);
+  const [viewportHeight, setViewportHeight] = useState(0);
   const locale = i18n.language?.startsWith('it') ? 'it-IT' : 'en-US';
-  const colorLabels: Record<string, string> = {
-    blue: t('cards.colors.blue'),
-    red: t('cards.colors.red'),
-    green: t('cards.colors.green'),
-    orange: t('cards.colors.orange'),
-    grey: t('cards.colors.grey')
-  };
 
-  /**
-   * Track scroll position for header condensing (AC5)
-   */
-  const handleScroll = useCallback(
-    (event: NativeSyntheticEvent<NativeScrollEvent>) => {
-      const y = event.nativeEvent.contentOffset.y;
-      const isPast = y > Math.max(HERO_SCROLL_THRESHOLD, heroHeight * HERO_CONDENSING_RATIO);
-      if (isPast !== isPastHeroRef.current) {
-        isPastHeroRef.current = isPast;
-        onScrollPastHero?.(isPast);
+  const scrollRef = useAnimatedRef<Animated.ScrollView>();
+  const offset = useScrollOffset(scrollRef, scrollOffset);
+  const pixel = 1 / PixelRatio.get();
+
+  // The scroll view mounts at rest. The offset outlives it — the screen owns it, and a reload
+  // swaps this view out for a spinner and back — so it starts from the top with the view.
+  useEffect(() => {
+    offset.set(0);
+  }, [offset]);
+
+  // A scroll that comes to rest inside the blend settles to its nearer end. A release that goes on
+  // to decelerate rests when its momentum ends (on Android every release reports momentum, fling
+  // or not); one that does not decelerate rests where it is released, whatever velocity it reports
+  // — iOS decides deceleration separately, and reports no momentum at all when there is none.
+  // Scrolls that are not drags — a screen reader bringing a row into view, a hardware keyboard —
+  // can still rest inside the band. A momentum end that arrives while a finger is down is not a
+  // rest: on Android a touch that stops a moving scroll cancels its animator, which reports a
+  // momentum end mid-band, and settling then would fight the finger.
+  const settleScroll = useAnimatedScrollHandler<SettleContext>({
+    onBeginDrag: (_event, context) => {
+      context.isDragging = true;
+    },
+    onEndDrag: (event, context) => {
+      context.isDragging = false;
+      context.isDecelerating = false;
+      const target = getBlendSettleOffset(event.contentOffset.y, pixel);
+      if (target !== null) {
+        // On the next frame: a release that decelerates has reported its momentum by then (both
+        // platforms report it straight after the release), and iOS reports the release from
+        // inside UIKit's own end-of-drag callback (`scrollViewWillEndDragging`), from which a
+        // scroll started at once is not guaranteed to survive.
+        requestAnimationFrame(() => {
+          if (!context.isDecelerating) {
+            scrollTo(scrollRef, 0, target, true);
+          }
+        });
       }
     },
-    [heroHeight, onScrollPastHero]
+    onMomentumBegin: (_event, context) => {
+      context.isDecelerating = true;
+    },
+    onMomentumEnd: (event, context) => {
+      if (context.isDragging) {
+        return;
+      }
+      const target = getBlendSettleOffset(event.contentOffset.y, pixel);
+      if (target !== null) {
+        scrollTo(scrollRef, 0, target, true);
+      }
+    }
+  });
+
+  // Every card can scroll far enough to condense the header: the content is at least the scroll
+  // view's own height plus the hero and the blend. Measured rather than taken from the window,
+  // which the scroll view's height need not match — a taller one would cut the range short.
+  const handleScrollViewLayout = useCallback(
+    (event: LayoutChangeEvent) => {
+      setViewportHeight(event.nativeEvent.layout.height);
+      onScrollViewLayout?.();
+    },
+    [onScrollViewLayout]
   );
 
-  /**
-   * Measure hero height so ScrollView can always scroll enough
-   * for barcode section to reach the top under the header.
-   */
-  const handleHeroLayout = useCallback((event: LayoutChangeEvent) => {
-    const nextHeight = Math.round(event.nativeEvent.layout.height);
-    if (nextHeight > 0) {
-      setHeroHeight(nextHeight);
-    }
-  }, []);
+  const isQR = card.barcodeFormat === 'QR';
+  const isCustomCard = brand === undefined;
+  const colorKey = (CARD_COLOR_KEYS as readonly string[]).includes(card.color)
+    ? card.color
+    : DEFAULT_CARD_COLOR;
+  const cardNumber = ALL_DIGITS.test(card.barcode)
+    ? formatBarcodeNumber(card.barcode)
+    : card.barcode;
 
   /**
    * Copy barcode number to clipboard with haptic feedback
@@ -193,30 +280,48 @@ export const CardDetails: React.FC<CardDetailsProps> = ({
 
   return (
     <>
-      <ScrollView
+      <Animated.ScrollView
+        ref={scrollRef}
+        onScroll={settleScroll}
+        onLayout={handleScrollViewLayout}
+        // The hero runs under the transparent bar by design, so iOS must not inset the content.
+        contentInsetAdjustmentBehavior="never"
         style={[styles.container, { backgroundColor: theme.background }]}
         contentContainerStyle={[
-          styles.contentContainer,
           { paddingBottom: insets.bottom + SPACING.xl },
-          { minHeight: viewportHeight + heroHeight - 80 } // Ensure content can scroll enough for header condensing
+          viewportHeight > 0 ? { minHeight: viewportHeight + HEADER_BLEND_END } : null
         ]}
         showsVerticalScrollIndicator={false}
-        onScroll={handleScroll}
-        scrollEventThrottle={16}
         testID="card-details-scroll"
       >
-        {/* Brand Hero Section (AC1) */}
-        <View onLayout={handleHeroLayout}>
-          <BrandHero card={card} testID="card-details-hero" />
-        </View>
+        <BrandHero
+          card={card}
+          headerHeight={headerHeight}
+          scrollOffset={offset}
+          testID="card-details-hero"
+        />
 
-        {/* Barcode Display Area (AC2) */}
-        <View style={styles.barcodeSection}>
+        <View style={styles.stack} testID="card-details-stack">
+          <Text
+            accessibilityRole="header"
+            numberOfLines={2}
+            style={[styles.name, { color: theme.textPrimary }]}
+            testID="card-details-name"
+          >
+            {card.name}
+          </Text>
+
+          {/* The barcode card. Nothing is drawn over the bars: the hint sits below them, inside
+              the card, which stays white in both schemes because the bars are black on white. */}
           <Pressable
             onPress={handleOpenFullscreen}
             onPressIn={() => setIsBarcodePressed(true)}
             onPressOut={() => setIsBarcodePressed(false)}
-            style={[styles.barcodeCard, isBarcodePressed && styles.pressed]}
+            style={[
+              styles.barcodeCard,
+              { borderColor: theme.border },
+              isBarcodePressed ? styles.pressed : null
+            ]}
             accessibilityRole="button"
             accessibilityLabel={t('cards.details.viewFullscreenAccessibilityLabel')}
             accessibilityHint={t('cards.details.viewFullscreenHint')}
@@ -225,45 +330,30 @@ export const CardDetails: React.FC<CardDetailsProps> = ({
             <BarcodeRenderer
               value={card.barcode}
               format={card.barcodeFormat}
-              width={card.barcodeFormat === 'QR' ? 180 : 280}
-              height={card.barcodeFormat === 'QR' ? 180 : 120}
+              width={isQR ? MIN_QR_SIZE : getLinearBarsWidth(windowWidth)}
+              height={isQR ? MIN_QR_SIZE : LINEAR_BARS_HEIGHT}
             />
+            <Text style={styles.barcodeHint}>{t('cards.details.tapToEnlarge')}</Text>
           </Pressable>
 
-          {/* Barcode Number (spaced) */}
-          <Text
-            style={[styles.barcodeNumber, { color: theme.textPrimary }]}
-            testID="card-details-barcode-number-display"
-          >
-            {formatBarcodeNumber(card.barcode)}
-          </Text>
-
-          {/* Tap to enlarge hint */}
-          <Text style={[styles.barcodeHint, { color: theme.textTertiary }]}>
-            {t('cards.details.tapToEnlarge')}
-          </Text>
-
           {/* Brightness toggle (Story 16.39).
-              Sits where Story 13.3's brightness HINT used to. That row told the user to
-              go and raise their own brightness; this does it for them. Rendered only
-              when the screen supplies a handler, so `CardDetails` stays usable without
-              one (Storybook, and any future read-only surface).
+              Rendered only when the screen supplies a handler, so `CardDetails` stays usable
+              without one (Storybook, and any future read-only surface).
 
-              ICON ONLY, and a BULB (ifero, 2026-09-08 — "isn't it faster to understand?").
-              An earlier revision paired a sun icon with the words "Full brightness"; a
-              bulb reads as light at a glance and needs no caption, which matters on the
-              one screen whose whole job is to present a barcode. The state is carried by
-              `lightbulb` vs `lightbulb-outline` — filled means on — so no word is needed
-              to say which way it is set.
+              ICON ONLY, and a BULB (ifero, 2026-09-08 — "isn't it faster to understand?"): a bulb
+              reads as light at a glance and needs no caption, which matters on the one screen
+              whose whole job is to present a barcode. The state is carried by the bulb's fill —
+              filled means on — so no word is needed to say which way it is set.
 
-              ⚠️ With no visible text, `accessibilityLabel` is the ONLY thing a screen
-              reader has for this control; it is load-bearing rather than supplementary,
-              and a test pins it. `accessibilityRole="switch"` rather than `"button"`
-              because it has an on/off state, and the role is what makes the platform
-              announce that state. */}
+              ⚠️ With no visible text, `accessibilityLabel` is the ONLY thing a screen reader has
+              for this control; it is load-bearing rather than supplementary, and a test pins it.
+              `accessibilityRole="switch"` rather than `"button"` because it has an on/off state,
+              and the role is what makes the platform announce that state. */}
           {onToggleBrightness ? (
             <Pressable
               onPress={onToggleBrightness}
+              onPressIn={() => setIsBulbPressed(true)}
+              onPressOut={() => setIsBulbPressed(false)}
               accessibilityRole="switch"
               accessibilityState={{ checked: isBrightnessBoosted }}
               accessibilityLabel={t('cards.details.brightnessToggleLabel')}
@@ -273,108 +363,78 @@ export const CardDetails: React.FC<CardDetailsProps> = ({
                 {
                   borderColor: isBrightnessBoosted ? theme.primary : theme.border,
                   backgroundColor: isBrightnessBoosted ? `${theme.primary}1A` : 'transparent'
-                }
+                },
+                isBulbPressed ? styles.pressed : null
               ]}
               testID="card-details-brightness-toggle"
             >
-              <MaterialIcons
-                name={isBrightnessBoosted ? 'lightbulb' : 'lightbulb-outline'}
+              <Lightbulb
+                testID="card-details-brightness-icon"
                 size={24}
+                strokeWidth={1.5}
                 color={isBrightnessBoosted ? theme.primary : theme.textSecondary}
+                fill={isBrightnessBoosted ? theme.primary : 'none'}
               />
             </Pressable>
           ) : null}
-        </View>
 
-        {/* Card Info Section (AC3) */}
-        <View
-          style={[styles.infoSection, { backgroundColor: theme.surface }]}
-          testID="card-details-info-section"
-        >
-          {/* Barcode Number - Copyable */}
-          <DetailRow
-            label={t('cards.details.numberLabel')}
-            value={card.barcode}
-            onPress={handleCopyBarcode}
-            accessibilityHint={t('cards.details.copyAccessibilityHint')}
-            rightElement={<MaterialIcons name="content-copy" size={20} color={theme.primary} />}
-            testID="card-details-barcode-number"
-          />
-
-          {/* Color — ONLY for custom cards (AC3) */}
-          {card.brandId === null && (
-            <DetailRow
-              label={t('cards.details.colorLabel')}
-              value={colorLabels[card.color] || card.color}
-              rightElement={
-                <View
-                  style={[styles.colorDot, { backgroundColor: CARD_COLORS[card.color] }]}
-                  accessibilityLabel={t('cards.details.colorAccessibilityLabel', {
-                    color: colorLabels[card.color] || card.color
-                  })}
+          <View style={styles.details}>
+            <Surface divided testID="card-details-info-section">
+              <DetailRow
+                label={t('cards.details.numberLabel')}
+                value={cardNumber}
+                mono
+                onPress={handleCopyBarcode}
+                accessibilityHint={t('cards.details.copyAccessibilityHint')}
+                testID="card-details-barcode-number"
+              />
+              {/* The accent's name, for a card with no catalogue brand only: a branded card's
+                  colour is its brand's, never the stored key. */}
+              {isCustomCard ? (
+                <DetailRow
+                  label={t('cards.details.colorLabel')}
+                  value={t(`cards.colors.${colorKey}`)}
+                  testID="card-details-color"
                 />
-              }
-              testID="card-details-color"
-            />
-          )}
+              ) : null}
+              <DetailRow
+                label={t('cards.details.addedLabel')}
+                value={formatDate(card.createdAt, locale)}
+                testID="card-details-date"
+              />
+            </Surface>
+          </View>
 
-          {/* Date Added */}
-          <DetailRow
-            label={t('cards.details.addedLabel')}
-            value={formatDate(card.createdAt, locale)}
-            style={{ borderBottomWidth: 0 }}
-            testID="card-details-date"
-          />
+          <View style={styles.manage} testID="card-details-manage-section">
+            <SectionHeader title={t('cards.details.manageSection')} />
+            <Surface divided testID="card-details-manage-rows">
+              <ActionRow
+                variant="plain"
+                showBottomBorder={false}
+                label={t('cards.details.editAction')}
+                onPress={handleEditCard}
+                disabled={isDeleting}
+                testID="card-details-edit-row"
+              />
+              <ActionRow
+                variant="plain"
+                showBottomBorder={false}
+                destructive
+                showChevron={false}
+                label={isDeleting ? t('cards.details.deleting') : t('cards.details.deleteAction')}
+                accessibilityLabel={
+                  isDeleting
+                    ? t('cards.details.deletingAccessibilityLabel')
+                    : t('cards.details.deleteAccessibilityLabel')
+                }
+                onPress={handleDeleteCard}
+                disabled={isDeleting}
+                testID="card-details-delete-row"
+              />
+            </Surface>
+          </View>
         </View>
-
-        {/* Manage Actions Section (AC4) */}
-        <View style={styles.manageSection} testID="card-details-manage-section">
-          <SectionHeader title={t('cards.details.manageSection')} />
-
-          {/* Edit Card Row */}
-          <ActionRow
-            prefix={<MaterialIcons name="edit" size={24} color={theme.primary} />}
-            label={t('cards.details.editAction')}
-            onPress={handleEditCard}
-            disabled={isDeleting}
-            testID="card-details-edit-row"
-          />
-
-          {/* Separator */}
-          <View style={[styles.separator, { backgroundColor: theme.border }]} />
-
-          {/* Delete Card Row — destructive, no chevron */}
-          <Pressable
-            onPress={handleDeleteCard}
-            onPressIn={() => setIsDeletePressed(true)}
-            onPressOut={() => setIsDeletePressed(false)}
-            disabled={isDeleting}
-            accessibilityRole="button"
-            accessibilityLabel={
-              isDeleting
-                ? t('cards.details.deletingAccessibilityLabel')
-                : t('cards.details.deleteAccessibilityLabel')
-            }
-            accessibilityState={{ disabled: isDeleting }}
-            testID="card-details-delete-row"
-            style={[
-              styles.deleteRow,
-              {
-                backgroundColor: isDeletePressed ? theme.surfaceElevated : theme.surface,
-                borderColor: theme.border,
-                opacity: isDeleting ? 0.6 : 1
-              }
-            ]}
-          >
-            <View style={styles.deleteRowContent}>
-              <MaterialIcons name="delete" size={24} color={theme.error} />
-              <Text style={[styles.deleteText, { color: theme.error }]}>
-                {isDeleting ? t('cards.details.deleting') : t('cards.details.deleteAction')}
-              </Text>
-            </View>
-          </Pressable>
-        </View>
-      </ScrollView>
+      </Animated.ScrollView>
 
       {/* Fullscreen Barcode Overlay (AC6) */}
       <FullscreenBarcode
@@ -391,90 +451,54 @@ const styles = StyleSheet.create({
   container: {
     flex: 1
   },
-  contentContainer: {
-    // No horizontal padding — hero is full-width
+  stack: {
+    paddingHorizontal: LAYOUT.screenHorizontalMargin
   },
-  // Barcode Section (AC2)
-  barcodeSection: {
-    alignItems: 'center',
-    paddingHorizontal: LAYOUT.screenHorizontalMargin,
-    paddingTop: SPACING.lg,
-    paddingBottom: SPACING.md
+  // The name heads the content, 16 above and below; two lines at most, so a long name never
+  // pushes the barcode below the fold.
+  name: {
+    ...TYPOGRAPHY.headlineMd,
+    marginVertical: SPACING.md
   },
+  // White in both schemes, a 1pt hairline, 16 radius, no shadow. The renderer's own white padding
+  // is the card's side padding (see `getLinearBarsWidth`); top and bottom are 16.
   barcodeCard: {
-    padding: SPACING.md,
-    backgroundColor: '#FFFFFF',
-    borderRadius: 12,
     alignItems: 'center',
-    justifyContent: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.08,
-    shadowRadius: 8,
-    elevation: 3,
-    width: '100%'
+    backgroundColor: BARCODE_FLASH.background,
+    borderWidth: BARCODE_CARD_BORDER,
+    borderRadius: BARCODE_CARD_RADIUS,
+    paddingVertical: SPACING.md
   },
-  barcodeNumber: {
-    ...TYPOGRAPHY.monoCode,
-    textAlign: 'center',
-    marginTop: SPACING.sm
-  },
+  // Inside the always-white card, so its colour is the light scheme's in both. Padded and centred,
+  // so at the largest text sizes it wraps in centred lines clear of the card's hairline.
   barcodeHint: {
     ...TYPOGRAPHY.captionMd,
-    marginTop: SPACING.xs
+    color: LIGHT_THEME_COLORS.textSecondary,
+    marginTop: SPACING.smMd,
+    paddingHorizontal: SPACING.md,
+    textAlign: 'center'
+  },
+  pressed: {
+    transform: [{ scale: PRESSED_SCALE }]
   },
   brightnessToggle: {
     alignItems: 'center',
     justifyContent: 'center',
     alignSelf: 'center',
-    // A circle, not a pill: there is no label to make room for any more. Sized to the
-    // minimum tap target on both axes so an icon-only control stays reachable — the
-    // 24 pt glyph alone would be well under it.
+    // A circle, not a pill: there is no label to make room for. Sized to the minimum tap target
+    // on both axes so an icon-only control stays reachable — the 24 pt glyph alone would not be.
     width: TOUCH_TARGET.min,
     height: TOUCH_TARGET.min,
-    borderRadius: 999,
+    borderRadius: TOUCH_TARGET.min / 2,
     borderWidth: 1,
     marginTop: SPACING.md
   },
-  pressed: {
-    opacity: 0.7
+  details: {
+    marginTop: SPACING.lg
   },
-  // Info Section (AC3)
-  infoSection: {
-    borderRadius: 12,
-    paddingHorizontal: SPACING.md,
-    marginHorizontal: LAYOUT.screenHorizontalMargin,
-    marginTop: SPACING.md,
-    marginBottom: SPACING.lg
-  },
-  colorDot: {
-    width: 16,
-    height: 16,
-    borderRadius: 8
-  },
-  // Manage Section (AC4)
-  manageSection: {
-    paddingHorizontal: LAYOUT.screenHorizontalMargin,
+  // "MANAGE" sits 24 below the details card and 8 above its rows.
+  manage: {
+    marginTop: SPACING.lg,
     gap: SPACING.sm
-  },
-  separator: {
-    height: StyleSheet.hairlineWidth,
-    marginHorizontal: SPACING.md
-  },
-  deleteRow: {
-    minHeight: TOUCH_TARGET.min,
-    borderRadius: 14,
-    borderWidth: 1,
-    paddingHorizontal: 12,
-    flexDirection: 'row',
-    alignItems: 'center'
-  },
-  deleteRowContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12
-  },
-  deleteText: {
-    ...TYPOGRAPHY.bodyLg
   }
 });
