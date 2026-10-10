@@ -89,6 +89,9 @@ WHAT READING THE CODE TURNED UP
    intact in both — but `shadowOpacity` is 0.05 vs **0.08** and radius 8 vs **12**, and both
    use Tailwind `#1F2937`. **These should be one component.** Not a design task; a note for the
    tokens and layout PRs.
+   RESOLVED by Story 22.4: one `BarcodeFlash`, two hosts. Card detail presents it in place, in a
+   React Native `Modal`, and the `barcode/[id]` route renders it for `cardi://barcode/<id>`.
+   `FullscreenBarcode` is deleted.
 
 9. THE BARCODE GETS A WHITE CARD HERE, AND NO PLATE AT ALL ON THE FULLSCREEN VIEW. It looks
    like a contradiction and is not. On cream, and tappable, the card separates the code and

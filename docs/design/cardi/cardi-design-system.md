@@ -657,6 +657,103 @@ real beam comes from the scanner at the till. On this screen the app's job is to
 perfect white field and get out of the way. The beam motif belongs to the logo, the splash,
 focus rings and loading states — never to the barcode.
 
+**RULED 2026-10-09 (Story 22.4)**, from `frames/cardi-barcode-frames.html` and
+`stitch-prompts-barcode.txt` — frames A (EAN-13), B (QR) and C (card not found). Where they are silent,
+or this document overrules them, the ruling is recorded here, so the screen cannot drift from either
+without saying so.
+
+**One view, two ways in.** Card detail's barcode card and the `cardi://barcode/<id>` link open the same
+view. Card detail presents it in place, in a full-screen modal that leaves card detail focused beneath
+it, so closing it returns there as it was: no reload, no second usage count, no dip in brightness. The
+`barcode/[id]` route renders it for the link. The two copies it replaced had already drifted apart.
+
+**The stack** sits centred as a group between the system insets, on the 24px screen margin. Top to
+bottom: the store name in `headline-sm` ink, two lines at most; 24px; the code; 16px; the number; 40px;
+"Tap anywhere to close" in Inter 14, muted `#55555F`. Nothing else — no header, close button, icon,
+logo, brightness hint or toast. At the largest text sizes, where the group no longer fits, it starts
+at the top inset instead of spilling over both: the name stays clear of the clock, and the code stays
+whole and unshrunk on screen. Below the code, **the number and the hint can run off the bottom of a
+small phone** — a three-line number under a QR code does — and this record says so rather than
+promising otherwise.
+
+- **The box.** A linear code sits in a box `min(0.8 × window width, 320)` wide — 314px on a 393 phone —
+  and **200px tall, its bars running the box's full height**: the code is stretched to the box, with no
+  white above or below the bars. The width is the shipped rule, which the frames ratify: the white
+  either side is the quiet zone (the prompts' finding 6). The barcode renderer's own 16px white padding
+  either side is white on white, so it does not show.
+- **The stretch is on both axes.** Where the box's width already limits the code — EAN-13, a long Code
+  128 — the bars keep their width and only grow taller. A short code such as EAN-8 widens to the box
+  too, every module by the same factor, as frame A draws its code. Its 67 modules and the renderer's
+  12 units of side padding, stretched across 314px, make a module of about 3.98px — about 0.66mm on a
+  460ppi phone, about 200 % of EAN's nominal 0.33mm and so at the top of its 80–200 % range — and of
+  about 4.05px at the 320px cap: about 203 %, just past it.
+- **QR codes are as wide as linear ones**: a square box of the same width, 314px on a 393 phone against
+  the frame's 200. The symbol inside it draws at about 288px, up from card detail's 220, and the stack
+  ends up about 114px taller than frame B.
+- **The number is shown exactly as stored**, never grouped — unlike card detail's Number row — in
+  `mono-code` as this document has it, without the frame's extra 1px of tracking. A long one wraps to
+  three lines at most; a longer one is cut there with an ellipsis on screen, while its spoken label and
+  the copy carry it whole.
+- **White edge to edge, in both schemes**: `#FFFFFF` under both insets, true-black bars, and text in the
+  light scheme's roles — ink, `#55555F` and `#C41E1E` — whatever the theme, under a dark status bar.
+  One exception is recorded, as the loading state's is below: on Android, card detail's modal may keep
+  card detail's own status-bar style, because its dialog copies the window's style once, as it opens.
+
+**The ground never moves.** The white field is there from the view's first frame and never fades or
+slides; only the content above it does. So nothing but white shows behind the code while the link
+loads, while the content fades in, or while it leaves — with one exception, on the route: on a warm
+link its content can show in the last frames of the route's own fade (_Opening_). The content fades
+in over 200ms; a tap fades it out over 150ms, and a swipe slides it away over 200ms. Every timed
+animation follows the system's Reduce Motion.
+
+**Opening: from card detail, the code is never drawn over the screen beneath. The route has one
+recorded exception.**
+
+- **Card detail on iOS.** The modal fades in. It reports that it is showing once that fade has ended,
+  and only then does the content fade in, so the fade brings in the white alone.
+- **Card detail on Android.** The modal has no animation. Android reports it showing as the dialog's
+  own fade starts, so content waiting for that would still fade in over card detail; with no window
+  animation the white is there at once, and only the content fades.
+- **The route** reveals its content at once, because on Android a cold link's first screen reports no
+  end to its transition to wait for. On a warm link the content can therefore show in the last frames
+  of the route's own fade. That is accepted: the route has no caller inside the app, only the link.
+
+**Closing: the content goes first, then the screen.** Every close runs the content's exit over the
+white — a fade on a tap, on VoiceOver's escape gesture or on Android back, a slide on a swipe — and
+only then is the screen removed: card detail's modal is hidden, which on iOS fades out from the white
+and on Android goes at once, and the route goes back. A close marks the view as closing, the swipe's
+included, so a modal that reports it has finished showing after one does not bring the content back.
+
+**Loading and frame C.** While the link loads its card, the screen is an ink spinner on white. On a cold
+launch by the link, the loading state alone may show the scheme's status bar, because the app's root
+bar mounts after it and wins; that is accepted. A card that cannot be loaded is frame C: its message in
+`body-lg` semibold, `#C41E1E`, centred on the 24px margins, with **"Go back" 32px below it in `body-lg`
+ink** — plain text on a 48px target. The frame says Inter 16, which no token is, and the shipped screen
+already used 17. A press on "Go back" shows an 8 % ink wash behind it, on the 12px radius, as on every
+transparent button (_Buttons_).
+
+**The gestures.** Story 2.5's, kept:
+
+- a **tap anywhere** closes;
+- a **swipe down** past 100px, or flung down, closes;
+- a **long press on the number** copies it, with a success haptic.
+
+Added by this story:
+
+- a tap on **the number** closes too, where its long press used to swallow the tap;
+- **VoiceOver's escape gesture** closes, as a tap does;
+- **Android back** closes from either way in, through the content's exit like any other close. From
+  card detail it did nothing before: the modal's dialog takes the press, and the modal now asks the
+  view to close. On the route the view takes the press itself, before the router could pop the screen
+  with the code still on it — but only while the route is the screen on top, so a screen pushed over
+  it by a second link keeps its own back;
+- a copy shows **no toast**, since the screen draws nothing but the code, its labels and the hint.
+  Card detail's Number row keeps its toast.
+
+**Screen readers** get the store name as a heading, the code by the barcode renderer's own label, the
+number with its copy hint, and one full-screen close button that sits behind the content rather than
+around it, so it hides none of it. The visible hint is for touch only; the button carries its words.
+
 ### The beam rule, both halves
 
 The prohibition above is only half a rule, and half a rule invites the wrong reading — that
@@ -791,8 +888,8 @@ off MaterialIcons as their Epic 22 story redesigns them, and the wallet has not 
 favourite badge's filled star (`FavouriteBadge` in `Tile`) and the guest, migration and sync
 banners' icons are still `@expo/vector-icons` — MaterialIcons, and MaterialCommunityIcons for the
 guest banner's shield. Card detail moved in Story 22.3, all but the shared `ActionRow`'s chevron,
-which it shares with settings and add-card, and the close × of the full-screen barcode it opens
-(`FullscreenBarcode`, Story 22.4's).
+which it shares with settings and add-card. The full-screen barcode it opens draws no icon at all since
+Story 22.4, which dropped its close ×.
 
 **A glyph is filled only where the fill is its state — RULED 2026-10-09 (Story 22.3).** Two glyphs
 are: the favourited star and the brightness bulb while it is on. Neither fill is decoration — the
