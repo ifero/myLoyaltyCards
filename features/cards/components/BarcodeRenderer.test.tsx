@@ -329,6 +329,56 @@ describe('BarcodeRenderer', () => {
     });
   });
 
+  // Story 22.4: the full-screen view asks a linear code to fill its box, so the bars run its whole
+  // height with no white above or below them. Nothing else changes: card detail, which never asks,
+  // keeps the letterboxed draw, and a QR code is never stretched.
+  describe('filling the box (Story 22.4)', () => {
+    it('stretches a linear code to its box, with no padding above or below the bars', async () => {
+      const view = render(
+        <BarcodeRenderer value="5901234123457" format="EAN13" width={314} height={200} fillBox />
+      );
+
+      await waitFor(() => {
+        expect(view.getByLabelText('EAN13 barcode for 5901234123457')).toBeTruthy();
+      });
+
+      expect(mockToDataURL).toHaveBeenCalledWith(
+        expect.objectContaining({ height: 20, paddingwidth: 6, paddingheight: 0 })
+      );
+      const image = view.UNSAFE_getByType(Image);
+      expect(image.props.resizeMode).toBe('stretch');
+      expect(StyleSheet.flatten(image.props.style)).toMatchObject({ width: 314, height: 200 });
+    });
+
+    it('leaves a QR code square and padded, even when asked to fill', async () => {
+      const view = render(<BarcodeRenderer value="test" format="QR" width={314} fillBox />);
+
+      await waitFor(() => {
+        expect(view.getByLabelText('QR barcode for test')).toBeTruthy();
+      });
+
+      expect(mockToDataURL).toHaveBeenCalledWith(
+        expect.objectContaining({ width: 31.4, height: 31.4, paddingwidth: 4, paddingheight: 4 })
+      );
+      expect(view.UNSAFE_getByType(Image).props.resizeMode).toBe('contain');
+    });
+
+    it('letterboxes a linear code by default, as card detail draws it', async () => {
+      const view = render(
+        <BarcodeRenderer value="5901234123457" format="EAN13" width={280} height={100} />
+      );
+
+      await waitFor(() => {
+        expect(view.getByLabelText('EAN13 barcode for 5901234123457')).toBeTruthy();
+      });
+
+      expect(mockToDataURL).toHaveBeenCalledWith(
+        expect.objectContaining({ height: 10, paddingwidth: 6, paddingheight: 2 })
+      );
+      expect(view.UNSAFE_getByType(Image).props.resizeMode).toBe('contain');
+    });
+  });
+
   describe('Error handling', () => {
     it('should show loading state initially', () => {
       // Use a never-resolving promise to keep loading state
