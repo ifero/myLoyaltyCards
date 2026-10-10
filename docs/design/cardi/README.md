@@ -887,6 +887,9 @@ Three more findings:
   plate differs: `shadowOpacity` 0.05 vs **0.08**, radius 8 vs **12**, and both use Tailwind
   `#1F2937`. **These should be one component.** Not a design task; a note for the tokens and
   layout PRs, and the reason `stitch-prompts-barcode.txt` alone does not cover the hero moment.
+  **RESOLVED by Story 22.4: one `BarcodeFlash`, two hosts.** Card detail presents it in place, in
+  a React Native `Modal`, and the `barcode/[id]` route renders it for `cardi://barcode/<id>`.
+  `FullscreenBarcode` is deleted.
 
 One distinction worth keeping, because it looks like a contradiction: the barcode gets a
 **white card here** and **no plate at all** on the fullscreen view. On cream, and tappable, the

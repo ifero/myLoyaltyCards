@@ -6,8 +6,8 @@
  * The card detail screen's content, top to bottom:
  * - the hero: the card's own field, running up under the transparent bar (`BrandHero`);
  * - the card's name;
- * - the barcode, on a white card that opens the full-screen barcode — the first thing below the
- *   name, so it is on screen at rest;
+ * - the barcode, on a white card that opens the full-screen barcode (`BarcodeFlash`, presented in
+ *   place in a React Native `Modal`) — the first thing below the name, so it is on screen at rest;
  * - the brightness bulb (Story 16.39);
  * - the details card: Number, Color (custom cards only), Added;
  * - MANAGE: Edit and Delete.
@@ -20,11 +20,13 @@ import * as Clipboard from 'expo-clipboard';
 import * as Haptics from 'expo-haptics';
 import { useRouter } from 'expo-router';
 import Lightbulb from 'lucide-react-native/icons/lightbulb';
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
   Alert,
+  Modal,
   PixelRatio,
+  Platform,
   Pressable,
   StyleSheet,
   Text,
@@ -53,11 +55,11 @@ import { LAYOUT, SPACING, TOUCH_TARGET } from '@/shared/theme/spacing';
 import { LIGHT_THEME_COLORS } from '@/shared/theme/tokens.generated';
 import { TYPOGRAPHY } from '@/shared/theme/typography';
 
+import { BarcodeFlash, type BarcodeFlashHandle } from './BarcodeFlash';
 import { BarcodeRenderer } from './BarcodeRenderer';
 import { BrandHero } from './BrandHero';
 import { HEADER_BLEND_END, getBlendSettleOffset } from './CardDetailHeader';
 import { DetailRow } from './DetailRow';
-import { FullscreenBarcode } from './FullscreenBarcode';
 import { useBrandLogo } from '../hooks/useBrandLogo';
 import { MIN_QR_SIZE, RENDERER_SIDE_PADDING } from '../utils/barcodeGeometry';
 import { formatBarcodeNumber } from '../utils/formatBarcode';
@@ -145,6 +147,13 @@ export const CardDetails: React.FC<CardDetailsProps> = ({
   const { width: windowWidth } = useWindowDimensions();
   const brand = useBrandLogo(card.brandId);
   const [fullscreenVisible, setFullscreenVisible] = useState(false);
+  // Whether the modal has finished showing: the full-screen view's content waits for it.
+  const [isFullscreenPresented, setIsFullscreenPresented] = useState(false);
+  // One view per showing. On iOS a hidden modal keeps its view until its fade out has ended, so a
+  // barcode opened again during that fade would get the closing view back — its content gone, its
+  // one close spent — and could not be closed. Keyed by this count, each opening mounts a new one.
+  const [fullscreenShowing, setFullscreenShowing] = useState(0);
+  const barcodeFlashRef = useRef<BarcodeFlashHandle>(null);
   const [isBarcodePressed, setIsBarcodePressed] = useState(false);
   const [isBulbPressed, setIsBulbPressed] = useState(false);
   const [viewportHeight, setViewportHeight] = useState(0);
@@ -237,17 +246,36 @@ export const CardDetails: React.FC<CardDetailsProps> = ({
   }, [card.barcode, onCopy, t]);
 
   /**
-   * Open fullscreen barcode overlay
+   * Open the full-screen barcode over this screen
    */
   const handleOpenFullscreen = useCallback(() => {
+    setIsFullscreenPresented(false);
+    setFullscreenShowing((showing) => showing + 1);
     setFullscreenVisible(true);
   }, []);
 
   /**
-   * Close fullscreen barcode overlay
+   * The modal is showing — on iOS its fade has ended; on Android it has none — so only now does the
+   * view's content fade in, over its white
+   */
+  const handleFullscreenShown = useCallback(() => {
+    setIsFullscreenPresented(true);
+  }, []);
+
+  /**
+   * Close the full-screen barcode. The view calls this once its content has gone, whichever way it
+   * was closed
    */
   const handleCloseFullscreen = useCallback(() => {
     setFullscreenVisible(false);
+  }, []);
+
+  /**
+   * Android back, which the modal's dialog takes before any listener of the view's: the view is
+   * asked to close, so its content leaves over the white before the modal goes
+   */
+  const handleFullscreenRequestClose = useCallback(() => {
+    barcodeFlashRef.current?.close();
   }, []);
 
   /**
@@ -436,13 +464,38 @@ export const CardDetails: React.FC<CardDetailsProps> = ({
         </View>
       </Animated.ScrollView>
 
-      {/* Fullscreen Barcode Overlay (AC6) */}
-      <FullscreenBarcode
-        card={card}
+      {/* The full-screen barcode, presented in place (Story 22.4). A React Native `Modal` leaves
+          navigation focus alone, so this screen never blurs under it: no second usage count, no
+          reload and no brightness handover on the way back, as a pushed route would bring. White
+          behind the view's own white, edge to edge, under both system bars.
+          - It stays mounted and toggles `visible`. A new view mounts each time it opens, and goes —
+            its brightness and status bar with it — once it has closed: on iOS after the modal's
+            own fade, which then fades out from the view's white.
+          - Opening, the content is never drawn over this screen. On iOS the modal fades in the
+            white alone, and the view's content fades in once that fade has ended (`onShow`).
+            Android's `onShow` comes as the dialog's fade starts, so there the modal has no
+            animation: the white is there at once, and only the content fades.
+          - Android back reaches the modal's dialog, never the view, so the modal asks the view to
+            close through its handle: the content leaves over the white before the modal goes. */}
+      <Modal
         visible={fullscreenVisible}
-        onClose={handleCloseFullscreen}
-        onCopy={onCopy}
-      />
+        animationType={Platform.OS === 'ios' ? 'fade' : 'none'}
+        presentationStyle="fullScreen"
+        backdropColor={BARCODE_FLASH.background}
+        statusBarTranslucent
+        navigationBarTranslucent
+        onRequestClose={handleFullscreenRequestClose}
+        onShow={handleFullscreenShown}
+        testID="card-details-barcode-modal"
+      >
+        <BarcodeFlash
+          key={fullscreenShowing}
+          ref={barcodeFlashRef}
+          card={card}
+          onDismiss={handleCloseFullscreen}
+          isPresented={isFullscreenPresented}
+        />
+      </Modal>
     </>
   );
 };

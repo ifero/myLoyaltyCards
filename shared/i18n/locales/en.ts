@@ -654,15 +654,12 @@ export const en = {
       deleteConfirmBody:
         'Are you sure you want to delete "{{name}}"? This action cannot be undone.',
       copyFailedTitle: 'Error',
-      copyFailedMessage: 'Failed to copy barcode to clipboard',
-      fullscreenCloseAccessibilityLabel: 'Close fullscreen barcode',
-      fullscreenNumberAccessibilityLabel: 'Barcode: {{barcode}}. Tap to copy.',
-      fullscreenNumberHint: 'Tap to copy barcode to clipboard'
+      copyFailedMessage: 'Failed to copy barcode to clipboard'
     },
     flash: {
       dismissOverlayA11yLabel: 'Dismiss barcode overlay',
       dismissOverlayA11yHint: 'Tap anywhere to close',
-      barcodeValueA11yLabel: 'Barcode number for {{title}}: {{value}}. Long press to copy.',
+      barcodeValueA11yLabel: 'Barcode number for {{title}}: {{value}}',
       copyHint: 'Long press to copy barcode to clipboard',
       tapToClose: 'Tap anywhere to close'
     },

@@ -20,8 +20,13 @@ import { logger } from '@/core/utils/logger';
 
 import { MIN_QR_SIZE, RENDERER_SIDE_PADDING } from '../utils/barcodeGeometry';
 
-/** Conversion ratio from pixels to millimeters (bwip-js uses mm) */
-const PX_TO_MM_RATIO = 10;
+/**
+ * bwip-js takes a code's height (and a QR code's width) in MILLIMETRES, and the renderer asks for a
+ * tenth of the box's points: a 200pt box asks for 20mm. That is not a pixel ratio — a millimetre is
+ * about 2.83pt at bwip-js's 72dpi — it only sets the size of the bitmap bwip-js draws, which the
+ * image then scales into the box.
+ */
+const POINTS_PER_REQUESTED_MM = 10;
 const DEFAULT_LINEAR_WIDTH = 280;
 const DEFAULT_QR_SIZE = 220;
 const LINEAR_PADDING_WIDTH = 6;
@@ -46,6 +51,14 @@ export interface BarcodeRendererProps {
   backgroundColor?: string;
   /** Optional container style override */
   containerStyle?: ViewStyle;
+  /**
+   * Draw a linear code's bars the full height of its box: no white above or below them, the bitmap
+   * stretched to the box. A code the default draw leaves narrower than its box — a short one, such
+   * as EAN-8 — widens to it too, every module by the same factor. Off by default, which letterboxes
+   * the code inside the box. A QR code ignores it, since stretching a square symbol would distort
+   * it.
+   */
+  fillBox?: boolean;
 }
 
 /**
@@ -85,7 +98,8 @@ export const BarcodeRenderer = memo(function BarcodeRenderer({
   height = 120,
   color = '#000000',
   backgroundColor = '#FFFFFF',
-  containerStyle
+  containerStyle,
+  fillBox = false
 }: BarcodeRendererProps) {
   const { t } = useTranslation();
   const [source, setSource] = useState<DataURL | null>(null);
@@ -95,6 +109,10 @@ export const BarcodeRenderer = memo(function BarcodeRenderer({
   const barcodeWidth = isQR
     ? Math.max(width ?? DEFAULT_QR_SIZE, MIN_QR_SIZE)
     : (width ?? DEFAULT_LINEAR_WIDTH);
+  // Stretching scales the bitmap to the box on each axis. The bars run the box's full height. Where
+  // the box's width already limits the default draw (EAN-13, a long Code 128) they keep the width it
+  // gives them; a short code (EAN-8) widens to the box, every module by the same factor.
+  const fillsBox = fillBox && !isQR;
 
   // Memoize bwip-js options to avoid recreating on every render
   const bwipOptions = useMemo((): RenderOptions => {
@@ -106,22 +124,23 @@ export const BarcodeRenderer = memo(function BarcodeRenderer({
       bcid,
       text: value,
       scale,
-      height: isQR ? barcodeWidth / PX_TO_MM_RATIO : height / PX_TO_MM_RATIO,
+      height: isQR ? barcodeWidth / POINTS_PER_REQUESTED_MM : height / POINTS_PER_REQUESTED_MM,
       includetext: false,
       barcolor: barColor,
       ...(backgroundColor !== 'transparent' && {
         backgroundcolor: hexToBwipColor(backgroundColor)
       }),
       paddingwidth: isQR ? QR_PADDING_SIZE : LINEAR_PADDING_WIDTH,
-      paddingheight: isQR ? QR_PADDING_SIZE : LINEAR_PADDING_HEIGHT
+      // bwip-js's padding is the only white above and below a linear code's bars.
+      paddingheight: isQR ? QR_PADDING_SIZE : fillsBox ? 0 : LINEAR_PADDING_HEIGHT
     };
 
     if (isQR) {
-      options.width = barcodeWidth / PX_TO_MM_RATIO;
+      options.width = barcodeWidth / POINTS_PER_REQUESTED_MM;
     }
 
     return options;
-  }, [format, value, barcodeWidth, height, color, backgroundColor, isQR]);
+  }, [format, value, barcodeWidth, height, color, backgroundColor, isQR, fillsBox]);
 
   useEffect(() => {
     let cancelled = false;
@@ -181,7 +200,7 @@ export const BarcodeRenderer = memo(function BarcodeRenderer({
           width: barcodeWidth,
           height: isQR ? barcodeWidth : height
         }}
-        resizeMode="contain"
+        resizeMode={fillsBox ? 'stretch' : 'contain'}
       />
     </View>
   );

@@ -16,6 +16,11 @@ Screen source of truth: features/cards/screens/BarcodeScreen.tsx, which delegate
 features/cards/components/BarcodeFlash.tsx and BarcodeRenderer.tsx; strings in
 shared/i18n/locales/en.ts under `cards.flash`.
 
+OVERRULED IN PART by `cardi-design-system.md` § Barcode view (Story 22.4), which wins where it and
+these prompts disagree: the QR code is as wide as a linear one — a min(0.8 × window width, 320)
+square, 314px on a 393 frame — not 200 x 200; the number is set in `mono-code` without the 1px of
+tracking; and "Go back" is `body-lg` at 17px, not Inter 16, with an 8 % ink wash when pressed.
+
 
 -------------------------------------------------------------------------------
 WHAT READING THE CODE TURNED UP

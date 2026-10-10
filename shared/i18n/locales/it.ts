@@ -650,16 +650,12 @@ export const it = {
       deleteConfirmBody:
         'Vuoi davvero eliminare "{{name}}"? Questa azione non può essere annullata.',
       copyFailedTitle: 'Errore',
-      copyFailedMessage: 'Impossibile copiare il codice a barre negli appunti',
-      fullscreenCloseAccessibilityLabel: 'Chiudi il codice a barre a schermo intero',
-      fullscreenNumberAccessibilityLabel: 'Codice a barre: {{barcode}}. Tocca per copiare.',
-      fullscreenNumberHint: 'Tocca per copiare il codice a barre negli appunti'
+      copyFailedMessage: 'Impossibile copiare il codice a barre negli appunti'
     },
     flash: {
       dismissOverlayA11yLabel: 'Chiudi overlay codice a barre',
       dismissOverlayA11yHint: 'Tocca ovunque per chiudere',
-      barcodeValueA11yLabel:
-        'Numero codice a barre per {{title}}: {{value}}. Tieni premuto per copiare.',
+      barcodeValueA11yLabel: 'Numero codice a barre per {{title}}: {{value}}',
       copyHint: 'Tieni premuto per copiare il codice a barre negli appunti',
       tapToClose: 'Tocca ovunque per chiudere'
     },

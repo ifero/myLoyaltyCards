@@ -3,16 +3,16 @@
  * Story 16.39: Full brightness on the card detail screen — AC4, AC5
  *
  * ⚠️ Every other suite in this story mocks one of the two brightness consumers away.
- * `CardDetails.test.tsx` replaces `FullscreenBarcode` with a stub AND stubs
+ * `CardDetails.test.tsx` replaces `BarcodeFlash` with a stub AND stubs
  * `useBrightness`; `CardDetailScreen.test.tsx` stubs `useCardBrightnessBoost`;
  * and `useBrightness.nesting.test.ts` calls `maximize`/`restore` by hand in an order
  * the author *believes* the effects produce. None of them executes the real wiring, so
- * none of them would notice a change to `FullscreenBarcode`'s effect — its dependency
- * array or its `if (visible)` guards — silently reordering or dropping a call.
+ * none of them would notice a change to `BarcodeFlash`'s effect — its dependency
+ * array, or the mounting that starts and ends it — silently reordering or dropping a call.
  *
  * This file closes that gap. `Harness` below wires the REAL `useCardBrightnessBoost`
  * into the REAL `CardDetails` — so its switch is the real control, driving the real
- * hook — and `CardDetails` renders the REAL `FullscreenBarcode`. Both the screen's and
+ * hook — and `CardDetails` renders the REAL `BarcodeFlash`. Both the screen's and
  * the overlay's `useBrightness` instances are real, and they talk to one mocked
  * `expo-brightness`. Assertions are on the actual `setBrightnessAsync` sequence React's
  * effect scheduling produces. Only the leaves that cannot run under jsdom are stubbed.
@@ -61,6 +61,8 @@ let mockLatestCleanup: (() => void) | null = null;
 
 jest.mock('expo-router', () => ({
   useRouter: () => ({ push: jest.fn() }),
+  // The real `BarcodeFlash` takes Android back only while its screen is focused (Story 22.4).
+  useIsFocused: () => true,
   useFocusEffect: (callback: () => void | (() => void)) => {
     if (callback === mockLatestCallback) {
       return;
@@ -122,7 +124,7 @@ jest.mock('@/shared/theme', () => ({
 }));
 
 // Barcode rendering itself is irrelevant here and needs native modules.
-// `FullscreenBarcode` is deliberately NOT mocked — it is half the subject.
+// `BarcodeFlash` is deliberately NOT mocked — it is half the subject.
 jest.mock('./BarcodeRenderer', () => ({ BarcodeRenderer: () => null }));
 jest.mock('./BrandHero', () => ({
   BrandHero: ({ testID }: { testID?: string }) =>
@@ -193,7 +195,7 @@ describe('card detail brightness — real wiring (Story 16.39 AC4, AC5)', () => 
     await act(async () => {});
     expect(mockSetBrightnessAsync).toHaveBeenLastCalledWith(1.0);
 
-    // Enlarge. This drives FullscreenBarcode's OWN effect — the one no other test in
+    // Enlarge. This drives BarcodeFlash's OWN effect — the one no other test in
     // this story executes — which samples a brightness the screen already set to 1.0.
     await act(async () => {
       fireEvent.press(getByTestId('card-details-barcode-preview'));
@@ -203,7 +205,7 @@ describe('card detail brightness — real wiring (Story 16.39 AC4, AC5)', () => 
     // Close the overlay. Brightness must NOT drop: the barcode is still on screen
     // behind it, which is the entire point of the story.
     await act(async () => {
-      fireEvent.press(getByTestId('fullscreen-barcode-close'));
+      fireEvent.press(getByTestId('barcode-flash-close'));
     });
     expect(mockSetBrightnessAsync).toHaveBeenLastCalledWith(1.0);
 
@@ -265,7 +267,7 @@ describe('card detail brightness — real wiring (Story 16.39 AC4, AC5)', () => 
         fireEvent.press(getByTestId('card-details-barcode-preview'));
       });
       await act(async () => {
-        fireEvent.press(getByTestId('fullscreen-barcode-close'));
+        fireEvent.press(getByTestId('barcode-flash-close'));
       });
       // Never dips mid-cycle — a scanner may be reading throughout.
       expect(mockSetBrightnessAsync).toHaveBeenLastCalledWith(1.0);
