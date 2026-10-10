@@ -2,7 +2,7 @@
 title: 'Story 22.4: Barcode Flash — the three Cardì barcode frames'
 type: 'feature'
 created: '2026-10-09'
-status: 'in-review'
+status: 'done'
 route: 'dispatch'
 review_loop_iteration: 1
 baseline_commit: '35997eae09bc3f52b6ba5104e1b69141f2b49012'
