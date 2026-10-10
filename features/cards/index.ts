@@ -39,7 +39,6 @@ export type { BarcodeFlashProps } from './components/BarcodeFlash';
 export { CardDetails } from './components/CardDetails';
 export { DetailRow } from './components/DetailRow';
 export { BrandHero } from './components/BrandHero';
-export { FullscreenBarcode } from './components/FullscreenBarcode';
 export { CatalogueGrid } from './components/CatalogueGrid';
 export { SearchBar } from './components/SearchBar';
 export { SortFilterRow } from './components/SortFilterRow';

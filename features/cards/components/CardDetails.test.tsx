@@ -18,7 +18,15 @@ import SquarePen from 'lucide-react-native/icons/square-pen';
 import Sun from 'lucide-react-native/icons/sun';
 import Trash from 'lucide-react-native/icons/trash';
 import React, { useEffect } from 'react';
-import { Alert, Dimensions, StyleSheet } from 'react-native';
+import {
+  Alert,
+  Dimensions,
+  Modal,
+  Platform,
+  StyleSheet,
+  View,
+  type ModalProps
+} from 'react-native';
 import { useSharedValue, type SharedValue } from 'react-native-reanimated';
 
 import type { LoyaltyCard } from '@/core/schemas';
@@ -63,21 +71,26 @@ jest.mock('./BarcodeRenderer', () => ({
   }
 }));
 
-jest.mock('./FullscreenBarcode', () => ({
-  FullscreenBarcode: ({ visible, onClose }: { visible: boolean; onClose: () => void }) =>
+// The full-screen view has its own suite. Here it is a close target that calls back as the view
+// does once its content has gone, a handle whose `close()` is recorded, and a count of its mounts.
+const mockBarcodeFlash = jest.fn();
+const mockBarcodeFlashClose = jest.fn();
+const mockBarcodeFlashMounted = jest.fn();
+jest.mock('./BarcodeFlash', () => ({
+  BarcodeFlash: (props: { card: unknown; onDismiss: () => void; ref?: unknown }) => {
+    mockBarcodeFlash(props);
     // eslint-disable-next-line @typescript-eslint/no-require-imports
-    require('react').createElement(
+    const { createElement, useEffect, useImperativeHandle } = require('react');
+    useImperativeHandle(props.ref, () => ({ close: mockBarcodeFlashClose }), []);
+    useEffect(() => {
+      mockBarcodeFlashMounted();
+    }, []);
+    return createElement(
       // eslint-disable-next-line @typescript-eslint/no-require-imports
-      require('react-native').View,
-      { testID: 'fullscreen-barcode-modal', accessibilityState: { expanded: visible } },
-      visible
-        ? // eslint-disable-next-line @typescript-eslint/no-require-imports
-          require('react').createElement(require('react-native').Pressable, {
-            testID: 'fullscreen-barcode-close',
-            onPress: onClose
-          })
-        : null
-    )
+      require('react-native').Pressable,
+      { testID: 'barcode-flash-close', onPress: props.onDismiss }
+    );
+  }
 }));
 
 const reanimated: { scrollTo: jest.Mock } = jest.requireMock('react-native-reanimated');
@@ -261,6 +274,12 @@ describe('CardDetails', () => {
   });
 
   describe('the barcode card', () => {
+    beforeEach(() => {
+      mockBarcodeFlash.mockClear();
+      mockBarcodeFlashClose.mockClear();
+      mockBarcodeFlashMounted.mockClear();
+    });
+
     it.each<[Scheme, string]>([
       ['light', '#D6D6CB'],
       ['dark', '#3A3A48']
@@ -334,28 +353,134 @@ describe('CardDetails', () => {
       }
     );
 
-    it('is one button that opens the full-screen barcode, and closes it again', async () => {
+    // Story 22.4: the one barcode view, presented in place in a React Native `Modal` — which leaves
+    // navigation focus alone, so this screen never blurs under it. The modal stays mounted and
+    // toggles `visible`: on iOS that closes it with its own fade, from the view's white, where
+    // taking the modal down would cut straight to this screen.
+    it('is one button that opens the full-screen barcode in place, and closes it again', () => {
       renderDetails();
       const card = screen.getByTestId('card-details-barcode-preview');
+      const modal = () => screen.UNSAFE_getByType(Modal);
+      const mounted = modal().instance;
       expect(card.props.accessibilityRole).toBe('button');
       expect(card.props.accessibilityLabel).toBe('View full screen barcode');
-      expect(screen.getByTestId('fullscreen-barcode-modal').props.accessibilityState.expanded).toBe(
-        false
-      );
+      // The card carries no `expanded` state, as before this story.
+      expect(card.props.accessibilityState?.expanded).toBeUndefined();
+      expect(modal().props.visible).toBe(false);
+      expect(mockBarcodeFlash).not.toHaveBeenCalled();
 
       fireEvent.press(card);
-      await waitFor(() =>
-        expect(
-          screen.getByTestId('fullscreen-barcode-modal').props.accessibilityState.expanded
-        ).toBe(true)
+      expect(modal().props.visible).toBe(true);
+      expect(mockBarcodeFlash).toHaveBeenLastCalledWith(
+        expect.objectContaining({ card: mockCustomCard })
       );
 
-      fireEvent.press(screen.getByTestId('fullscreen-barcode-close'));
-      await waitFor(() =>
-        expect(
-          screen.getByTestId('fullscreen-barcode-modal').props.accessibilityState.expanded
-        ).toBe(false)
+      // The view calls back once its content has gone; only then is the modal hidden.
+      fireEvent.press(screen.getByTestId('barcode-flash-close'));
+      expect(modal().props.visible).toBe(false);
+      // The same modal throughout: shown and hidden, never mounted afresh.
+      expect(modal().instance).toBe(mounted);
+    });
+
+    it('covers the full screen, white behind the view and under both system bars', () => {
+      renderDetails();
+      fireEvent.press(screen.getByTestId('card-details-barcode-preview'));
+
+      expect(screen.getByTestId('card-details-barcode-modal').props).toMatchObject({
+        visible: true,
+        presentationStyle: 'fullScreen',
+        backdropColor: '#FFFFFF',
+        statusBarTranslucent: true,
+        navigationBarTranslucent: true
+      });
+    });
+
+    // iOS reports `onShow` once the modal's fade has ended; Android, as the dialog's own fade
+    // starts. Content let in then would fade in over this screen, so on Android the modal has no
+    // animation: its white is there at once, and only the view's content fades.
+    it.each<['ios' | 'android', string]>([
+      ['ios', 'fade'],
+      ['android', 'none']
+    ])('brings the modal in on %s with animation "%s"', (os, animationType) => {
+      const platform = jest.replaceProperty(Platform, 'OS', os);
+      try {
+        renderDetails();
+        expect(screen.UNSAFE_getByType(Modal).props.animationType).toBe(animationType);
+      } finally {
+        platform.restore();
+      }
+    });
+
+    // The modal's fade brings in the view's white alone: its content waits for the modal to have
+    // shown, so the code is never drawn over this screen.
+    it('lets the view’s content in only once the modal has shown, each time it opens', () => {
+      renderDetails();
+      const open = () => fireEvent.press(screen.getByTestId('card-details-barcode-preview'));
+
+      open();
+      expect(mockBarcodeFlash).toHaveBeenLastCalledWith(
+        expect.objectContaining({ isPresented: false })
       );
+      act(() => {
+        screen.UNSAFE_getByType(Modal).props.onShow();
+      });
+      expect(mockBarcodeFlash).toHaveBeenLastCalledWith(
+        expect.objectContaining({ isPresented: true })
+      );
+
+      // Closed and opened again, it waits for the modal again.
+      fireEvent.press(screen.getByTestId('barcode-flash-close'));
+      open();
+      expect(mockBarcodeFlash).toHaveBeenLastCalledWith(
+        expect.objectContaining({ isPresented: false })
+      );
+    });
+
+    // iOS keeps a hidden modal's view until its fade out has ended; Jest's mock drops it at once,
+    // so here the mock keeps it too. A barcode opened again inside that fade must get a new view:
+    // the closing one has its content gone and its one close spent, and could never be closed.
+    it('mounts a new view for each showing, even one opened while the last is fading out', () => {
+      const keepsItsView = jest
+        .spyOn(Modal.prototype, 'render')
+        .mockImplementation(function (this: { props: ModalProps; hasShown?: boolean }) {
+          this.hasShown = this.hasShown || this.props.visible === true;
+          return this.hasShown ? React.createElement(View, null, this.props.children) : null;
+        });
+      try {
+        renderDetails();
+        const open = () => fireEvent.press(screen.getByTestId('card-details-barcode-preview'));
+
+        open();
+        expect(mockBarcodeFlashMounted).toHaveBeenCalledTimes(1);
+
+        fireEvent.press(screen.getByTestId('barcode-flash-close'));
+        expect(screen.UNSAFE_getByType(Modal).props.visible).toBe(false);
+        // Still mounted, as on iOS while the modal fades out.
+        expect(screen.getByTestId('barcode-flash-close')).toBeTruthy();
+
+        open();
+        expect(mockBarcodeFlashMounted).toHaveBeenCalledTimes(2);
+        expect(screen.getAllByTestId('barcode-flash-close')).toHaveLength(1);
+      } finally {
+        keepsItsView.mockRestore();
+      }
+    });
+
+    // Android back reaches the modal's dialog, never the view. Hiding the modal there would take
+    // the code away over this screen; the modal asks the view instead, which runs its exit over
+    // the white and then calls back.
+    it('on Android back, asks the view to close, and hides only once the view calls back', () => {
+      renderDetails();
+      fireEvent.press(screen.getByTestId('card-details-barcode-preview'));
+
+      act(() => {
+        screen.UNSAFE_getByType(Modal).props.onRequestClose();
+      });
+      expect(mockBarcodeFlashClose).toHaveBeenCalledTimes(1);
+      expect(screen.UNSAFE_getByType(Modal).props.visible).toBe(true);
+
+      fireEvent.press(screen.getByTestId('barcode-flash-close'));
+      expect(screen.UNSAFE_getByType(Modal).props.visible).toBe(false);
     });
 
     it('scales to 0.98 while held', () => {

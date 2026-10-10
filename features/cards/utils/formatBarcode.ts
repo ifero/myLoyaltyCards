@@ -2,7 +2,8 @@
  * Barcode Formatting Utility
  * Story 13.3: Restyle Card Detail Screen
  *
- * Shared barcode number formatting used by CardDetails and FullscreenBarcode.
+ * Barcode number formatting for card detail's Number row (CardDetails). The full-screen barcode
+ * shows the number as stored, never grouped (Story 22.4).
  */
 
 /**
